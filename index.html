@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Shellfish Tracker — V1.5 ESM</title>
+<style>
+:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55)}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
+.phone{width:430px;max-width:100vw;border-radius:30px;background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);border:1px solid rgba(255,255,255,.10);box-shadow:var(--sh);overflow:hidden}
+header{padding:18px 18px 12px;border-bottom:1px solid var(--line);background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 100%)}
+header h1{margin:0;font-size:18px;letter-spacing:.2px}
+header p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
+.boot{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--muted);vertical-align:middle}
+.boot.err{border-color:rgba(255,77,79,.6);color:#ffd7e1;background:rgba(255,77,79,.12)}
+main{padding:14px 14px 18px}
+.card{background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn.primary{background:linear-gradient(180deg, rgba(47,109,246,.92) 0%, rgba(31,111,235,.92) 100%);border-color:rgba(47,109,246,.9);box-shadow:0 10px 26px rgba(31,111,235,.20)}
+.btn.good{background:rgba(46,160,67,.22);border-color:rgba(46,160,67,.55)}
+.btn.danger{background:rgba(255,77,79,.14);border-color:rgba(255,77,79,.45);color:#ffd7e1}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
+.pillbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{background:rgba(11,18,32,.85);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:999px;font-size:12px}
+.sep{height:1px;background:var(--line);margin:12px 0;opacity:.9}
+</style>
+</head>
+<body>
+  <div class="phone">
+    <header>
+      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-004</span></h1>
+      <p>Professional UI shell restored (Phase 2C-UI). Modules stay intact.</p>
+    </header>
+    <main id="app"></main>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
