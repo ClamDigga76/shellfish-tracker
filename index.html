@@ -24,97 +24,23 @@ main{padding:14px 14px 18px}
 .btn.danger{background:rgba(255,77,79,.14);border-color:rgba(255,77,79,.45);color:#ffd7e1}
 .btn.ghost{background:transparent}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-input,textarea,select{width:100%;padding:12px 14px;border-radius:16px;background:rgba(11,18,32,.85);border:1px solid var(--line);color:var(--text);font-size:16px}
-textarea{min-height:130px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:13px}
 .muted{color:var(--muted)}
 .small{font-size:12px}
 .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
-.sep{height:1px;background:var(--line);margin:12px 0;opacity:.9}
-.list{display:flex;flex-direction:column;gap:10px}
-.trip{padding:12px;border-radius:18px;background:rgba(11,18,32,.85);border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
-.trip b{display:block;font-size:14px}
-.trip span{display:block;font-size:12px;color:var(--muted);margin-top:4px}
-.trip .right{display:flex;align-items:center;gap:10px}
-.trip .right .btn{padding:10px 12px;border-radius:14px;min-height:40px}
 .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .pill{background:rgba(11,18,32,.85);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:999px;font-size:12px}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.chip{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:999px;padding:8px 10px;font-weight:800;cursor:pointer;font-size:12px;min-height:36px}
-.chip.active{border-color:rgba(47,109,246,.9);box-shadow:0 10px 26px rgba(31,111,235,.12)}
-.togRow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 0}
-.togTxt b{display:block;font-size:13px}
-.togTxt span{display:block;font-size:12px;color:var(--muted);margin-top:4px}
-.switch{position:relative;width:52px;height:30px;flex:0 0 auto}
-.switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;background:rgba(11,18,32,.85);border:1px solid var(--line);border-radius:999px;cursor:pointer;transition:.15s ease}
-.slider:before{content:"";position:absolute;height:24px;width:24px;left:3px;top:2px;border-radius:999px;background:rgba(255,255,255,.22);transition:.15s ease}
-.switch input:checked + .slider{background:rgba(47,109,246,.35);border-color:rgba(47,109,246,.7)}
-.switch input:checked + .slider:before{transform:translateX(22px);background:rgba(255,255,255,.65)}
-.imgWrap{margin-top:10px}
-.imgPreview{width:100%;max-height:280px;object-fit:contain;border-radius:18px;border:1px solid var(--line);background:#050a12;display:block}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:14px;z-index:9999}
-.overlay.show{display:flex}
-.sheet{width:min(980px, 100%);max-height:92vh;overflow:auto;background:linear-gradient(180deg, rgba(15,23,42,.98) 0%, rgba(11,18,32,.98) 100%);border:1px solid rgba(255,255,255,.14);border-radius:22px;box-shadow:var(--sh)}
-.sheetHeader{position:sticky;top:0;z-index:2;padding:12px;border-bottom:1px solid rgba(255,255,255,.10);background:rgba(15,23,42,.88);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:space-between;gap:10px}
-.sheetHeader h2{margin:0;font-size:14px}
-.sheetBody{padding:12px}
-.stickyBar{position:sticky;bottom:0;z-index:3;background:rgba(15,23,42,.92);backdrop-filter:blur(6px);border-top:1px solid rgba(255,255,255,.10);padding:10px;display:none;gap:10px}
-.stickyBar .btn{flex:1}
-@media (max-width:520px){.hideOnPhone{display:none}.stickyBar{display:flex}}
-.sheetActions{display:flex;gap:8px}
-.subhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sep{height:1px;background:var(--line);margin:12px 0;opacity:.9}
 </style>
 </head>
 <body>
   <div class="phone">
     <header>
-      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-005D</span></h1>
-      <p>Phase 2C: V1.4.2 parity restored (Trips + Settings + Areas + New Trip sheet)</p>
+      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-004</span></h1>
+      <p>Professional UI shell restored (Phase 2C-UI). Modules stay intact.</p>
     </header>
-    <main id="app" style="padding-bottom:10px"></main>
+    <main id="app"></main>
   </div>
 
-  <div class="overlay" id="tripOverlay" aria-hidden="true">
-    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tripTitle">
-      <div class="sheetHeader">
-        <h2 id="tripTitle">New Trip</h2>
-        <div class="sheetActions hideOnPhone">
-          <button class="btn ghost" id="tripCancelBtn">Close</button>
-          <button class="btn good" id="tripSaveBtn">Save</button>
-        </div>
-      </div>
-      <div class="sheetBody" id="tripBody"></div>
-      <div class="stickyBar" id="tripStickyBar">
-        <button class="btn ghost" id="tripCancelBtn2">Close</button>
-        <button class="btn primary" id="tripSaveBtn2">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script type="module">
-    const pill = document.getElementById("bootPill");
-    const app = document.getElementById("app");
-    if(app && !app.innerHTML.trim()){
-      app.innerHTML = '<div class="card"><b>Loading…</b><div class="hint">ESM module loader started.</div></div>';
-    }
-    try{
-      await import("./js/app.js");
-      if(pill) pill.textContent = "ESM-005D OK";
-    }catch(err){
-      if(pill){
-        pill.textContent = "ERROR";
-        pill.classList.add("err");
-        pill.title = String(err && (err.stack || err.message || err) || "Module import failed");
-      }
-      if(app){
-        const msg = (err && (err.stack || err.message || err)) ? String(err.stack || err.message || err) : "Module import failed";
-        const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-        app.innerHTML = '<div class="card"><b>Module failed to load on this device.</b><div class="sep"></div><div class="muted small" style="white-space:pre-wrap">' + esc + '</div></div>';
-      }
-      console.error(err);
-    }
-  </script>
+  <script type="module" src="./js/app.js"></script>
 </body>
 </html>
