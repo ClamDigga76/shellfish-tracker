@@ -103,7 +103,7 @@ function renderHome(){
     const area = (t?.area||"").toString();
     const safeDealer = dealer ? dealer : "(dealer)";
     return `
-      <div class="trip">
+      <div class="trip" data-id="${t?.id||""}" role="button" tabindex="0">
         <div class="trip-top">
           <div class="trip-date">${date || ""}</div>
           <div class="trip-dealer">${safeDealer}</div>
@@ -154,6 +154,23 @@ function renderHome(){
 
   // ensure top of view on iPhone
   app.scrollTop = 0;
+
+
+  // Open trip to edit
+  app.querySelectorAll(".trip[data-id]").forEach(card=>{
+    const open = ()=>{
+      const id = card.getAttribute("data-id");
+      if(!id) return;
+      state.view = "edit";
+      state.editId = id;
+      saveState();
+      render();
+    };
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); }
+    });
+  });
 
   // Filters
   app.querySelectorAll("button.chip").forEach(btn=>{
@@ -355,6 +372,133 @@ function renderNewTrip(){
   };
 }
 
+
+function renderEditTrip(){
+  const id = String(state.editId || "");
+  const trips = Array.isArray(state.trips) ? state.trips : [];
+  const t = trips.find(x => String(x?.id||"") === id);
+  if(!t){
+    state.view = "home";
+    saveState();
+    return renderHome();
+  }
+
+  const draft = {
+    dateISO: t.dateISO || "",
+    dealer: t.dealer || "",
+    pounds: String(t.pounds ?? ""),
+    amount: String(t.amount ?? ""),
+    area: t.area || ""
+  };
+
+  const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
+    const label = a ? a : "—";
+    const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
+    return `<option value="${String(a||"").replaceAll('"',"&quot;")}" ${sel}>${label}</option>`;
+  }).join("");
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <button class="smallbtn" id="backHome">← Back</button>
+        <b>Edit Trip</b>
+        <span class="muted small">Phase 2C-3</span>
+      </div>
+      <div class="hint">Tap Save Changes when finished. Delete removes the trip from your phone.</div>
+    </div>
+
+    <div class="card">
+      <div class="form">
+        <div class="field">
+          <div class="label">Harvest date</div>
+          <input class="input" id="e_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
+        </div>
+
+        <div class="field">
+          <div class="label">Dealer</div>
+          <input class="input" id="e_dealer" placeholder="Machias Bay Seafood" value="${String(draft.dealer||"").replaceAll('"',"&quot;")}" />
+        </div>
+
+        <div class="field">
+          <div class="label">Pounds</div>
+          <input class="input" id="e_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
+        </div>
+
+        <div class="field">
+          <div class="label">Amount</div>
+          <input class="input" id="e_amount" inputmode="decimal" placeholder="$0.00" value="${String(draft.amount??"")}" />
+        </div>
+
+        <div class="field">
+          <div class="label">Area</div>
+          <select class="select" id="e_area">
+            ${areaOptions}
+          </select>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="saveEdit">Save Changes</button>
+          <button class="btn" id="cancelEdit">Cancel</button>
+          <button class="btn danger" id="deleteTrip">Delete</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // ensure top on iPhone
+  app.scrollTop = 0;
+
+  const elDate = document.getElementById("e_date");
+  const elDealer = document.getElementById("e_dealer");
+  const elPounds = document.getElementById("e_pounds");
+  const elAmount = document.getElementById("e_amount");
+  const elArea = document.getElementById("e_area");
+
+  const goHome = ()=>{
+    state.view = "home";
+    saveState();
+    render();
+  };
+
+  document.getElementById("backHome").onclick = goHome;
+  document.getElementById("cancelEdit").onclick = goHome;
+
+  document.getElementById("saveEdit").onclick = ()=>{
+    const dateISO = parseMDYToISO(elDate.value);
+    const dealer = String(elDealer.value||"").trim();
+    const pounds = parseNum(elPounds.value);
+    const amount = parseMoney(elAmount.value);
+
+    const errs = [];
+    if(!dateISO) errs.push("Date");
+    if(!dealer) errs.push("Dealer");
+    if(!(pounds > 0)) errs.push("Pounds");
+    if(!(amount > 0)) errs.push("Amount");
+    if(errs.length){
+      alert("Missing/invalid: " + errs.join(", "));
+      return;
+    }
+
+    t.dateISO = dateISO;
+    t.dealer = dealer;
+    t.pounds = to2(pounds);
+    t.amount = to2(amount);
+    t.area = String(elArea.value||"");
+
+    saveState();
+    goHome();
+  };
+
+  document.getElementById("deleteTrip").onclick = ()=>{
+    if(!confirm("Delete this trip?")) return;
+    state.trips = trips.filter(x => String(x?.id||"") !== id);
+    delete state.editId;
+    saveState();
+    goHome();
+  };
+}
+
+
 function renderSettings(){
   app.innerHTML = `
     <div class="card">
@@ -376,6 +520,7 @@ function render(){
   if(!state.view) state.view = "home";
   if(state.view === "settings") return renderSettings();
   if(state.view === "new") return renderNewTrip();
+  if(state.view === "edit") return renderEditTrip();
   return renderHome();
 }
 
