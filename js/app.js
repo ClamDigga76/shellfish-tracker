@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney } from "./core/utils.js";
+import { toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey } from "./core/utils.js";
 
 const bootPill = document.getElementById("bootPill");
 function setBootError(msg){
@@ -82,7 +82,33 @@ function setFilter(f){
   render();
 }
 
+function ensureAreas(){
+  if(!Array.isArray(state.areas)) state.areas = [];
+  // normalize + de-dupe (case-insensitive)
+  const seen = new Set();
+  const out = [];
+  for(const a of state.areas){
+    const v = String(a||"").trim();
+    if(!v) continue;
+    const k = normalizeKey(v);
+    if(seen.has(k)) continue;
+    seen.add(k);
+    out.push(v);
+  }
+  state.areas = out;
+}
+
+function findDuplicateTrip(candidate, excludeId=""){
+  const trips = Array.isArray(state.trips) ? state.trips : [];
+  for(const t of trips){
+    if(excludeId && String(t?.id||"") === String(excludeId)) continue;
+    if(likelyDuplicate(t, candidate)) return t;
+  }
+  return null;
+}
+
 let state = loadState();
+ensureAreas();
 function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 
 function renderHome(){
@@ -361,6 +387,15 @@ function renderNewTrip(){
     };
 
     state.trips = Array.isArray(state.trips) ? state.trips : [];
+    // Duplicate warning
+    const candidate = { dateISO, dealer, pounds: to2(pounds), amount: to2(amount) };
+    const dup = findDuplicateTrip(candidate, "");
+    if(dup){
+      const msg = `This looks like a duplicate trip:\n\nDate: ${formatDateMDY(dup.dateISO)}\nDealer: ${dup.dealer}\nLbs: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
+      if(!confirm(msg)) return;
+    }
+
+
     state.trips.push(trip);
 
     // clear draft after save
@@ -478,6 +513,15 @@ function renderEditTrip(){
       alert("Missing/invalid: " + errs.join(", "));
       return;
     }
+    // Duplicate warning (excluding this trip)
+    const candidate = { dateISO, dealer, pounds: to2(pounds), amount: to2(amount) };
+    const dup = findDuplicateTrip(candidate, id);
+    if(dup){
+      const msg = `This edit matches another trip:\n\nDate: ${formatDateMDY(dup.dateISO)}\nDealer: ${dup.dealer}\nLbs: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`;
+      if(!confirm(msg)) return;
+    }
+
+
 
     t.dateISO = dateISO;
     t.dealer = dealer;
@@ -500,17 +544,77 @@ function renderEditTrip(){
 
 
 function renderSettings(){
+  ensureAreas();
+
+  const areaRows = state.areas.length ? state.areas.map((a, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${a}</b></div>
+      <button class="smallbtn danger" data-del-area="${i}">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small" style="margin-top:10px">No areas yet. Add one below.</div>`;
+
   app.innerHTML = `
     <div class="card">
-      <div class="row" style="justify-content:space-between;width:100%">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <button class="smallbtn" id="backHome">← Back</button>
         <b>Settings</b>
-        <button class="btn" id="back">← Back</button>
+        <span class="muted small">Phase 2C-4/5</span>
       </div>
-      <div class="hint">Phase 2C will restore full settings + areas manager.</div>
+      <div class="hint">Manage areas used on trips. Duplicate-warning is now enabled on Save.</div>
+    </div>
+
+    <div class="card">
+      <b>Areas</b>
+      <div class="sep"></div>
+
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
+        <button class="btn primary" id="addArea">Add</button>
+      </div>
+
+      ${areaRows}
+    </div>
+
+    <div class="card">
+      <b>Data</b>
+      <div class="sep"></div>
+      <div class="muted small" style="margin-top:10px">Reset clears all trips and settings on this device.</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn danger" id="resetData">Reset app data</button>
+      </div>
     </div>
   `;
-  document.getElementById("back").onclick = () => {
-    state.view = "home";
+
+  app.scrollTop = 0;
+
+  const goHome = ()=>{ state.view="home"; saveState(); render(); };
+  document.getElementById("backHome").onclick = goHome;
+
+  document.getElementById("addArea").onclick = ()=>{
+    const v = String(document.getElementById("newArea").value||"").trim();
+    if(!v) return;
+    state.areas = Array.isArray(state.areas) ? state.areas : [];
+    state.areas.push(v);
+    ensureAreas();
+    saveState();
+    renderSettings();
+  };
+
+  app.querySelectorAll("[data-del-area]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const idx = Number(btn.getAttribute("data-del-area"));
+      if(!(idx >= 0)) return;
+      const label = state.areas[idx];
+      if(!confirm(`Delete area "${label}"?`)) return;
+      state.areas.splice(idx,1);
+      saveState();
+      renderSettings();
+    });
+  });
+
+  document.getElementById("resetData").onclick = ()=>{
+    if(!confirm("This will delete ALL trips and settings on this device. Continue?")) return;
+    state = { trips: [], areas: [], filter: "YTD", view: "home" };
     saveState();
     render();
   };
