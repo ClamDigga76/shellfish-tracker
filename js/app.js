@@ -152,6 +152,9 @@ function renderHome(){
     </div>
   `;
 
+  // ensure top of view on iPhone
+  app.scrollTop = 0;
+
   // Filters
   app.querySelectorAll("button.chip").forEach(btn=>{
     btn.addEventListener("click", ()=> setFilter(btn.getAttribute("data-f")));
@@ -187,6 +190,7 @@ function renderNewTrip(){
   app.innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
+        <button class="smallbtn" id="backHome">← Back</button>
         <b>New Trip</b>
         <span class="muted small">Phase 2C-2</span>
       </div>
@@ -301,6 +305,10 @@ function renderNewTrip(){
     saveState();
     render();
   };
+
+  const backBtn = document.getElementById("backHome");
+  if(backBtn){ backBtn.onclick = () => document.getElementById("cancelTrip").click(); }
+
 
   document.getElementById("clearDraft").onclick = ()=>{
     delete state.draft;
