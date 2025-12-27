@@ -61,12 +61,30 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 <body>
   <div class="phone">
     <header>
-      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-004H</span></h1>
+      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-004I</span></h1>
       <p>Professional UI shell restored (Phase 2C-UI). Modules stay intact.</p>
     </header>
     <main id="app"></main>
   </div>
 
-  <script type="module">import("./js/app.js?v=ESM-004H");</script>
+  <script type="module">
+  const pill = document.getElementById("bootPill");
+  const app = document.getElementById("app");
+  try{
+    await import("./js/app.js?v=ESM-004I");
+  }catch(err){
+    if(pill){
+      pill.textContent = "ERROR";
+      pill.classList.add("err");
+      pill.title = String(err && (err.stack || err.message || err) || "Module import failed");
+    }
+    if(app){
+      const msg = String(err && (err.stack || err.message || err) || "Module import failed");
+      const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+      app.innerHTML = `<div class="card"><b>Module failed to load.</b><div class="sep"></div><div class="muted small" style="white-space:pre-wrap">${esc}</div></div>`;
+    }
+    console.error(err);
+  }
+</script>
 </body>
 </html>
