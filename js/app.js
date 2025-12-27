@@ -76,6 +76,36 @@ function getFilteredTrips(){
   return trips.filter(t=> within(toDate(t?.dateISO)));
 }
 
+function mdyLabelFromISO(iso){
+  const s = String(iso||"");
+  if(s.length===10) return s.replaceAll("-","");
+  return "unknown";
+}
+
+function filenameFor(label, startISO="", endISO=""){
+  const base = "shellfish_trips";
+  if(label === "ALL") return base + "_ALL.csv";
+  if(label === "YTD" || label === "Month" || label === "7D") return base + "_" + label + ".csv";
+  if(startISO && endISO) return base + "_" + mdyLabelFromISO(startISO) + "_to_" + mdyLabelFromISO(endISO) + ".csv";
+  return base + ".csv";
+}
+
+function exportTrips(trips, label, startISO="", endISO=""){
+  const csv = toCSV(trips);
+  downloadText(filenameFor(label, startISO, endISO), csv);
+}
+
+function filterByRange(trips, startISO, endISO){
+  const s = String(startISO||"");
+  const e = String(endISO||"");
+  if(!(s.length===10 && e.length===10)) return trips;
+  return trips.filter(t=>{
+    const d = String(t?.dateISO||"");
+    if(d.length!==10) return true;
+    return d >= s && d <= e;
+  });
+}
+
 function setFilter(f){
   state.filter = f;
   saveState();
@@ -204,8 +234,39 @@ function renderHome(){
   });
 
   document.getElementById("export").onclick = () => {
-    const csv = toCSV(trips);
-    downloadText("shellfish_trips.csv", csv);
+    const tripsFiltered = getFilteredTrips();
+    const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
+
+    // Simple export menu (fast + iPhone friendly)
+    const choice = prompt(
+      "Export options:
+1 = Filtered (" + (state.filter||"YTD") + ")
+2 = All trips
+3 = Date range
+
+Enter 1, 2, or 3:",
+      "1"
+    );
+
+    if(choice === "2"){
+      exportTrips(tripsAll, "ALL");
+      return;
+    }
+    if(choice === "3"){
+      const start = prompt("Start date (MM/DD/YYYY):", "");
+      const end = prompt("End date (MM/DD/YYYY):", "");
+      const startISO = parseMDYToISO(start);
+      const endISO = parseMDYToISO(end);
+      if(!startISO || !endISO){
+        alert("Invalid date range.");
+        return;
+      }
+      const ranged = filterByRange(tripsAll, startISO, endISO);
+      exportTrips(ranged, "RANGE", startISO, endISO);
+      return;
+    }
+    // default: filtered
+    exportTrips(tripsFiltered, (state.filter||"YTD"));
   };
   document.getElementById("settings").onclick = () => {
     state.view = "settings";
