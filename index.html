@@ -41,17 +41,27 @@ main{padding:14px 14px 18px}
 .trip-dealer{font-weight:800}
 .trip-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 
+/* Phase 2C-2 additions */
+.form{display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(235,245,255,.75);font-weight:800}
+.input, .select, .textarea{width:100%;padding:12px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.20);color:#eef3ff;font-weight:700}
+.textarea{min-height:110px;resize:vertical;font-weight:600}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.btn.danger{background:rgba(255,80,80,.18);border:1px solid rgba(255,80,80,.30)}
+.smallbtn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#eaf0ff;font-weight:800;cursor:pointer}
+
 </style>
 </head>
 <body>
   <div class="phone">
     <header>
-      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-004B</span></h1>
+      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-004D</span></h1>
       <p>Professional UI shell restored (Phase 2C-UI). Modules stay intact.</p>
     </header>
     <main id="app"></main>
   </div>
 
-  <script type="module">import("./js/app.js?v=ESM-004B");</script>
+  <script type="module">import("./js/app.js?v=ESM-004D");</script>
 </body>
 </html>

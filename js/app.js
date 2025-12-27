@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO } from "./core/utils.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney } from "./core/utils.js";
 
 const bootPill = document.getElementById("bootPill");
 function setBootError(msg){
@@ -126,17 +126,18 @@ function renderHome(){
         <button class="btn" id="settings">⚙️ Settings</button>
       </div>
 
-      <div class="filters">
-        ${chip("YTD","YTD")}
-        ${chip("Month","Month")}
-        ${chip("7D","Last 7 days")}
-      </div>
-
       <div class="hint">Phase 2C-1: Trip list + filters restored (no edit overlay yet).</div>
     </div>
 
     <div class="card">
-      <b>Totals (filtered)</b>
+      <div class="row" style="align-items:center;justify-content:space-between">
+        <b>Totals (filtered)</b>
+        <div class="filters" style="margin-top:0">
+          ${chip("YTD","YTD")}
+          ${chip("Month","Month")}
+          ${chip("7D","Last 7 days")}
+        </div>
+      </div>
       <div class="pillbar">
         <span class="pill">Trips: <b>${trips.length}</b></span>
         <span class="pill">Lbs: <b>${to2(totalLbs)}</b></span>
@@ -166,7 +167,183 @@ function renderHome(){
     render();
   };
   document.getElementById("newTrip").onclick = () => {
-    alert("Phase 2C-2 will restore the full New Trip overlay. For now, trip list + filters are restored.");
+    state.view = "new";
+    saveState();
+    render();
+  };
+}
+
+function renderNewTrip(){
+  // Defaults
+  const todayISO = new Date().toISOString().slice(0,10);
+  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
+
+  const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
+    const label = a ? a : "—";
+    const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
+    return `<option value="${String(a||"").replaceAll('"',"&quot;")}" ${sel}>${label}</option>`;
+  }).join("");
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <b>New Trip</b>
+        <span class="muted small">Phase 2C-2</span>
+      </div>
+      <div class="hint">Enter the check info. Date should be harvest date (MM/DD/YYYY).</div>
+    </div>
+
+    <div class="card">
+      <div class="form">
+        <div class="field">
+          <div class="label">Harvest date</div>
+          <input class="input" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
+        </div>
+
+        <div class="field">
+          <div class="label">Dealer</div>
+          <input class="input" id="t_dealer" placeholder="Machias Bay Seafood" value="${(draft.dealer||"").replaceAll('"',"&quot;")}" />
+        </div>
+
+        <div class="field">
+          <div class="label">Pounds</div>
+          <input class="input" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
+        </div>
+
+        <div class="field">
+          <div class="label">Amount</div>
+          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${String(draft.amount??"")}" />
+        </div>
+
+        <div class="field">
+          <div class="label">Area</div>
+          <select class="select" id="t_area">
+            ${areaOptions}
+          </select>
+        </div>
+
+        <div class="field">
+          <div class="label">Quick paste (optional)</div>
+          <textarea class="textarea" id="t_paste" placeholder="Paste OCR text here (optional)"></textarea>
+          <div class="actions">
+            <button class="smallbtn" id="parsePaste">Parse paste</button>
+            <span class="muted small">Parses date, pounds, and amount when it can.</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="saveTrip">Save Trip</button>
+          <button class="btn" id="cancelTrip">Cancel</button>
+          <button class="btn danger" id="clearDraft">Clear</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const elDate = document.getElementById("t_date");
+  const elDealer = document.getElementById("t_dealer");
+  const elPounds = document.getElementById("t_pounds");
+  const elAmount = document.getElementById("t_amount");
+  const elArea = document.getElementById("t_area");
+  const elPaste = document.getElementById("t_paste");
+
+  const saveDraft = ()=>{
+    state.draft = {
+      dateISO: parseMDYToISO(elDate.value) || draft.dateISO || todayISO,
+      dealer: elDealer.value || "",
+      pounds: elPounds.value || "",
+      amount: elAmount.value || "",
+      area: elArea.value || ""
+    };
+    saveState();
+  };
+
+  ["input","change","blur"].forEach(ev=>{
+    elDate.addEventListener(ev, saveDraft);
+    elDealer.addEventListener(ev, saveDraft);
+    elPounds.addEventListener(ev, saveDraft);
+    elAmount.addEventListener(ev, saveDraft);
+    elArea.addEventListener(ev, saveDraft);
+  });
+
+  document.getElementById("parsePaste").onclick = ()=>{
+    const txt = String(elPaste.value||"");
+    if(!txt.trim()) return;
+
+    // naive date search mm/dd/yy or mm-dd-yy
+    const m = txt.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+    if(m){
+      const iso = parseMDYToISO(`${m[1]}/${m[2]}/${m[3]}`);
+      if(iso) elDate.value = formatDateMDY(iso);
+    }
+
+    // pounds: look for something like 43.5 near "lb" or standalone decimal
+    const lbm = txt.match(/(\d{1,3}(?:\.\d{1,2})?)\s*(?:lb|lbs|pounds)/i) || txt.match(/\b(\d{1,3}\.\d{1,2})\b/);
+    if(lbm) elPounds.value = String(lbm[1]);
+
+    // amount: $ or plain digits
+    const am = txt.match(/\$\s*([\d,]+(?:\.\d{1,2})?)/);
+    if(am) elAmount.value = String(am[1]).replaceAll(",","");
+    else{
+      // fallback: last long-ish number
+      const nums = txt.match(/[\d]{3,7}/g);
+      if(nums && nums.length) elAmount.value = String(parseMoney(nums[nums.length-1]));
+    }
+
+    saveDraft();
+    render(); // re-render to update computed fields if needed later
+    state.view = "new"; // keep view
+    saveState();
+  };
+
+  document.getElementById("cancelTrip").onclick = ()=>{
+    state.view = "home";
+    saveState();
+    render();
+  };
+
+  document.getElementById("clearDraft").onclick = ()=>{
+    delete state.draft;
+    saveState();
+    render();
+    state.view = "new";
+    saveState();
+  };
+
+  document.getElementById("saveTrip").onclick = ()=>{
+    const dateISO = parseMDYToISO(elDate.value);
+    const dealer = String(elDealer.value||"").trim();
+    const pounds = parseNum(elPounds.value);
+    const amount = parseMoney(elAmount.value);
+
+    const errs = [];
+    if(!dateISO) errs.push("Date");
+    if(!dealer) errs.push("Dealer");
+    if(!(pounds > 0)) errs.push("Pounds");
+    if(!(amount > 0)) errs.push("Amount");
+    if(errs.length){
+      alert("Missing/invalid: " + errs.join(", "));
+      return;
+    }
+
+    const trip = {
+      id: uid(),
+      dateISO,
+      dealer,
+      pounds: to2(pounds),
+      amount: to2(amount),
+      area: String(elArea.value||"")
+    };
+
+    state.trips = Array.isArray(state.trips) ? state.trips : [];
+    state.trips.push(trip);
+
+    // clear draft after save
+    delete state.draft;
+
+    state.view = "home";
+    saveState();
+    render();
   };
 }
 
@@ -190,6 +367,7 @@ function renderSettings(){
 function render(){
   if(!state.view) state.view = "home";
   if(state.view === "settings") return renderSettings();
+  if(state.view === "new") return renderNewTrip();
   return renderHome();
 }
 
