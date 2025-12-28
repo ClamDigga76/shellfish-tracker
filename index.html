@@ -1,102 +1,213 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Shellfish Tracker — V1.5 ESM</title>
-<style>
-:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55)}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
-.phone{width:430px;max-width:100vw;border-radius:30px;background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);border:1px solid rgba(255,255,255,.10);box-shadow:var(--sh);overflow:hidden}
-header{padding:18px 18px 12px;border-bottom:1px solid var(--line);background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 100%)}
-header h1{margin:0;font-size:18px;letter-spacing:.2px}
-header p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
-.boot{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--muted);vertical-align:middle}
-.boot.err{border-color:rgba(255,77,79,.6);color:#ffd7e1;background:rgba(255,77,79,.12)}
-main{padding:14px 14px 18px}
-.card{background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
-.row{display:flex;gap:10px;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.btn.primary{background:linear-gradient(180deg, rgba(47,109,246,.92) 0%, rgba(31,111,235,.92) 100%);border-color:rgba(47,109,246,.9);box-shadow:0 10px 26px rgba(31,111,235,.20)}
-.btn.good{background:rgba(46,160,67,.22);border-color:rgba(46,160,67,.55)}
-.btn.danger{background:rgba(255,77,79,.14);border-color:rgba(255,77,79,.45);color:#ffd7e1}
-.btn.ghost{background:transparent}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.muted{color:var(--muted)}
-.small{font-size:12px}
-.hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
-.pillbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.pill{background:rgba(11,18,32,.85);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:999px;font-size:12px}
-.sep{height:1px;background:var(--line);margin:12px 0;opacity:.9}
-/* Phase 2C-1 additions */
-.filters{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.chip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#eaf0ff;padding:10px 12px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer}
-.chip.on{background:rgba(80,130,255,.35);border-color:rgba(120,160,255,.55)}
-.triplist{display:flex;flex-direction:column;gap:12px}
-.trip{padding:12px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08)}
-.trip-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-.trip-date{font-weight:800;color:#dbe6ff}
-.trip-dealer{font-weight:800}
-.trip-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-
-/* Phase 2C-2 additions */
-.form{display:flex;flex-direction:column;gap:12px}
-.field{display:flex;flex-direction:column;gap:6px}
-.label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(235,245,255,.75);font-weight:800}
-.input, .select, .textarea{width:100%;padding:12px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.20);color:#eef3ff;font-weight:700}
-.textarea{min-height:110px;resize:vertical;font-weight:600}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-.btn.danger{background:rgba(255,80,80,.18);border:1px solid rgba(255,80,80,.30)}
-.smallbtn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#eaf0ff;font-weight:800;cursor:pointer}
-
-
-/* Phase 2C-2.1: iPhone scroll + back button usability */
-.phone{display:flex;flex-direction:column}
-main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
-
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Shellfish Harvest Tracker</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
+
 <body>
-  <div class="phone">
-    <header>
-      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-004K</span></h1>
-      <p>Professional UI shell restored (Phase 2C-UI). Modules stay intact.</p>
-    </header>
-    <main id="app"></main>
-  </div>
+  <header class="app-header">
+    <h1>Shellfish Harvest Tracker</h1>
+    <div class="sub">Phase 3A • Review → Save • Local Storage • Totals • CSV</div>
+  </header>
 
-  <script type="module">
-  const pill = document.getElementById("bootPill");
-  const app = document.getElementById("app");
+  <main class="app">
+    <!-- GLOBAL STATUS / ERROR BANNER -->
+    <section id="banner" class="banner hidden" role="status" aria-live="polite"></section>
 
-  function showModuleError(err){
-    if(pill){
-      pill.textContent = "ERROR";
-      pill.classList.add("err");
-      pill.title = String(err && (err.stack || err.message || err) || "Module import failed");
-    }
-    if(app){
-      const msg = String(err && (err.stack || err.message || err) || "Module import failed");
-      const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-      app.innerHTML = `
-        <div class="card">
-          <b>Module failed to load.</b>
-          <div class="sep"></div>
-          <div class="muted small" style="white-space:pre-wrap">${esc}</div>
-          <div class="row" style="margin-top:12px">
-            <button class="btn" id="reload">Reload</button>
+    <!-- NAV -->
+    <nav class="tabs" role="tablist" aria-label="Main navigation">
+      <button class="tab active" data-tab="capture" role="tab" aria-selected="true">Capture</button>
+      <button class="tab" data-tab="review" role="tab" aria-selected="false">Review</button>
+      <button class="tab" data-tab="totals" role="tab" aria-selected="false">Totals</button>
+      <button class="tab" data-tab="history" role="tab" aria-selected="false">History</button>
+      <button class="tab" data-tab="export" role="tab" aria-selected="false">Export</button>
+    </nav>
+
+    <!-- CAPTURE -->
+    <section id="tab-capture" class="panel active" role="tabpanel">
+      <h2>Capture</h2>
+
+      <div class="card">
+        <div class="row">
+          <label for="captureMode">Input mode</label>
+          <select id="captureMode">
+            <option value="manual" selected>Manual entry</option>
+            <option value="ocr">OCR (paste text)</option>
+          </select>
+        </div>
+
+        <!-- MANUAL ENTRY -->
+        <div id="manualBox" class="stack">
+          <div class="grid2">
+            <div>
+              <label for="m_date">Harvest date (MM/DD/YYYY)</label>
+              <input id="m_date" inputmode="numeric" placeholder="12/11/2025" />
+            </div>
+            <div>
+              <label for="m_dealer">Dealer</label>
+              <input id="m_dealer" placeholder="Machias Bay Seafood" />
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label for="m_pounds">Pounds</label>
+              <input id="m_pounds" inputmode="decimal" placeholder="43.5" />
+            </div>
+            <div>
+              <label for="m_total">Total $</label>
+              <input id="m_total" inputmode="decimal" placeholder="152.25" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="m_notes">Notes (optional)</label>
+            <input id="m_notes" placeholder="Any quick note…" />
+          </div>
+
+          <div class="actions">
+            <button id="btnBuildReviewManual" class="primary">Build Review</button>
+            <button id="btnClearManual" class="ghost">Clear</button>
           </div>
         </div>
-      `;
-      const r = document.getElementById("reload");
-      if(r) r.onclick = ()=> location.reload();
-    }
-    console.error(err);
-  }
 
-  import("./js/app.js?v=ESM-004K").catch(showModuleError);
-</script>
+        <!-- OCR PASTE -->
+        <div id="ocrBox" class="stack hidden">
+          <label for="ocrText">Paste OCR text here</label>
+          <textarea id="ocrText" rows="8" placeholder="Paste OCR text from the check…"></textarea>
+
+          <div class="actions">
+            <button id="btnBuildReviewOCR" class="primary">Parse → Review</button>
+            <button id="btnClearOCR" class="ghost">Clear</button>
+          </div>
+
+          <p class="hint">
+            OCR parsing in Phase 3A is intentionally “best effort.” The safety is the Review screen.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEW -->
+    <section id="tab-review" class="panel" role="tabpanel">
+      <h2>Review & Confirm</h2>
+
+      <div class="card">
+        <p class="hint">
+          Edit anything that looks off. Nothing saves until you hit <b>Confirm & Save</b>.
+        </p>
+
+        <div class="grid2">
+          <div>
+            <label for="r_date">Harvest date (MM/DD/YYYY)</label>
+            <input id="r_date" inputmode="numeric" />
+          </div>
+          <div>
+            <label for="r_dealer">Dealer</label>
+            <input id="r_dealer" />
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <label for="r_pounds">Pounds</label>
+            <input id="r_pounds" inputmode="decimal" />
+          </div>
+          <div>
+            <label for="r_total">Total $</label>
+            <input id="r_total" inputmode="decimal" />
+          </div>
+        </div>
+
+        <div class="row">
+          <label for="r_notes">Notes (optional)</label>
+          <input id="r_notes" />
+        </div>
+
+        <div class="row">
+          <label for="r_raw">Raw source (optional)</label>
+          <textarea id="r_raw" rows="5" placeholder="Stored for audit/debug…"></textarea>
+        </div>
+
+        <div class="actions">
+          <button id="btnConfirmSave" class="primary">Confirm & Save</button>
+          <button id="btnBackToCapture" class="ghost">Go Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOTALS -->
+    <section id="tab-totals" class="panel" role="tabpanel">
+      <h2>Totals</h2>
+
+      <div class="card">
+        <div class="row">
+          <label for="totalsRange">Range</label>
+          <select id="totalsRange">
+            <option value="7d">Last 7 days</option>
+            <option value="mtd">Month-to-date</option>
+            <option value="ytd" selected>Year-to-date</option>
+          </select>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="kpiLabel">Trips</div><div id="k_trips" class="kpiVal">0</div></div>
+          <div class="kpi"><div class="kpiLabel">Total Pounds</div><div id="k_pounds" class="kpiVal">0</div></div>
+          <div class="kpi"><div class="kpiLabel">Total $</div><div id="k_total" class="kpiVal">0</div></div>
+          <div class="kpi"><div class="kpiLabel">Avg $/lb</div><div id="k_avg" class="kpiVal">0</div></div>
+        </div>
+
+        <div class="row">
+          <button id="btnRefreshTotals" class="ghost">Refresh</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="tab-history" class="panel" role="tabpanel">
+      <h2>History</h2>
+
+      <div class="card">
+        <div class="row">
+          <label for="searchText">Search (dealer, notes, date)</label>
+          <input id="searchText" placeholder="Type to filter…" />
+        </div>
+
+        <div id="historyList" class="list"></div>
+
+        <div class="actions">
+          <button id="btnDeleteAll" class="danger ghost">Delete ALL records</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPORT -->
+    <section id="tab-export" class="panel" role="tabpanel">
+      <h2>Export</h2>
+
+      <div class="card">
+        <p class="hint">Exports Excel-safe CSV. One row per trip.</p>
+        <div class="actions">
+          <button id="btnExportCSV" class="primary">Download CSV</button>
+          <button id="btnCopyCSV" class="ghost">Copy CSV to clipboard</button>
+        </div>
+        <div class="row">
+          <label for="csvPreview">Preview</label>
+          <textarea id="csvPreview" rows="10" readonly></textarea>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div>Local-only storage • No cloud • Designed to stay stable on iPhone Safari</div>
+  </footer>
+
+  <!-- IMPORTANT: your repo uses /js. This must stay as ./js/app.js -->
+  <script defer src="./js/app.js"></script>
 </body>
 </html>
