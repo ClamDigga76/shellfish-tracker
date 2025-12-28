@@ -56,12 +56,14 @@ main{padding:14px 14px 18px}
 .phone{display:flex;flex-direction:column}
 main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 
+
+button, .btn, .smallbtn, .chip{touch-action:manipulation}
 </style>
 </head>
 <body>
   <div class="phone">
     <header>
-      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-004I</span></h1>
+      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-004J</span></h1>
       <p>Professional UI shell restored (Phase 2C-UI). Modules stay intact.</p>
     </header>
     <main id="app"></main>
@@ -70,9 +72,8 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
   <script type="module">
   const pill = document.getElementById("bootPill");
   const app = document.getElementById("app");
-  try{
-    await import("./js/app.js?v=ESM-004I");
-  }catch(err){
+
+  function showModuleError(err){
     if(pill){
       pill.textContent = "ERROR";
       pill.classList.add("err");
@@ -81,10 +82,23 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
     if(app){
       const msg = String(err && (err.stack || err.message || err) || "Module import failed");
       const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-      app.innerHTML = `<div class="card"><b>Module failed to load.</b><div class="sep"></div><div class="muted small" style="white-space:pre-wrap">${esc}</div></div>`;
+      app.innerHTML = `
+        <div class="card">
+          <b>Module failed to load.</b>
+          <div class="sep"></div>
+          <div class="muted small" style="white-space:pre-wrap">${esc}</div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="reload">Reload</button>
+          </div>
+        </div>
+      `;
+      const r = document.getElementById("reload");
+      if(r) r.onclick = ()=> location.reload();
     }
     console.error(err);
   }
+
+  import("./js/app.js?v=ESM-004J").catch(showModuleError);
 </script>
 </body>
 </html>
