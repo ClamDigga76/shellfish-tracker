@@ -1,7 +1,25 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-005A";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-005B";
+
+
+function normalizeDealerDisplay(name){
+  let s = String(name||"").trim();
+  if(!s) return "";
+  // collapse whitespace
+  s = s.replace(/\s+/g, " ");
+  // remove common trailing business suffixes (display-only)
+  s = s.replace(/\b(inc\.?|incorporated|llc|co\.?|company)\b\.?/gi, "").replace(/\s+/g," ").trim();
+  // Title-case words (keeps & and numbers)
+  return s.split(" ").map(w=>{
+    if(!w) return w;
+    // keep all-caps short tokens like "USA"
+    if(w.length <= 3 && w.toUpperCase() === w) return w;
+    const lower = w.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }).join(" ");
+}
 
 const bootPill = document.getElementById("bootPill");
 function setBootError(msg){
@@ -454,7 +472,7 @@ function renderNewTrip(){
   document.getElementById("saveTrip").onclick = ()=>{
     // Phase 3A: Build Review first (nothing saves until Confirm)
     const dateISO = parseMDYToISO(elDate.value);
-    const dealer = String(elDealer.value||"").trim();
+    const dealer = normalizeDealerDisplay(String(elDealer.value||"").trim());
     const pounds = parseNum(elPounds.value);
     const amount = parseMoney(elAmount.value);
 
@@ -577,7 +595,7 @@ function renderReviewTrip(){
     const elArea = document.getElementById("r_area");
 
     const dateISO = parseMDYToISO(elDate.value);
-    const dealer = String(elDealer.value||"").trim();
+    const dealer = normalizeDealerDisplay(String(elDealer.value||"").trim());
     const pounds = parseNum(elPounds.value);
     const amount = parseMoney(elAmount.value);
 
@@ -712,7 +730,7 @@ function renderEditTrip(){
 
   document.getElementById("saveEdit").onclick = ()=>{
     const dateISO = parseMDYToISO(elDate.value);
-    const dealer = String(elDealer.value||"").trim();
+    const dealer = normalizeDealerDisplay(String(elDealer.value||"").trim());
     const pounds = parseNum(elPounds.value);
     const amount = parseMoney(elAmount.value);
 
@@ -770,9 +788,9 @@ function renderSettings(){
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
         <b>Settings</b>
-        <span class="muted small">Phase 2C-4/5</span>
+        <span class="muted small">Phase 3B-1/3</span>
       </div>
-      <div class="hint">Manage areas used on trips. Duplicate-warning is now enabled on Save.</div>
+      <div class="hint">Manage areas used on trips. Delete-all now requires typing DELETE.</div>
     </div>
 
     <div class="card">
@@ -825,7 +843,9 @@ function renderSettings(){
   });
 
   document.getElementById("resetData").onclick = ()=>{
-    if(!confirm("This will delete ALL trips and settings on this device. Continue?")) return;
+    // Phase 3B-1: Typed confirm to prevent accidental wipe
+    const typed = prompt('Type DELETE to permanently erase ALL trips and settings on this device.');
+    if(typed !== "DELETE") return;
     state = { trips: [], areas: [], filter: "YTD", view: "home" };
     saveState();
     render();
