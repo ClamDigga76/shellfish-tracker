@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey } from "./core/utils.js?v=ESM-004J";
+import { toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey } from "./core/utils.js?v=ESM-004K";
 
 const bootPill = document.getElementById("bootPill");
 function setBootError(msg){
@@ -78,10 +78,8 @@ function getFilteredTrips(){
 
 function mdyLabelFromISO(iso){
   const s = String(iso||"");
-  if(s.length===10) return s.replaceAll("-","");
-  return "unknown";
+  return (s.length===10) ? s.replaceAll("-","") : "unknown";
 }
-
 function filenameFor(label, startISO="", endISO=""){
   const base = "shellfish_trips";
   if(label === "ALL") return base + "_ALL.csv";
@@ -89,12 +87,10 @@ function filenameFor(label, startISO="", endISO=""){
   if(startISO && endISO) return base + "_" + mdyLabelFromISO(startISO) + "_to_" + mdyLabelFromISO(endISO) + ".csv";
   return base + ".csv";
 }
-
 function exportTrips(trips, label, startISO="", endISO=""){
   const csv = toCSV(trips);
   downloadText(filenameFor(label, startISO, endISO), csv);
 }
-
 function filterByRange(trips, startISO, endISO){
   const s = String(startISO||"");
   const e = String(endISO||"");
@@ -105,6 +101,7 @@ function filterByRange(trips, startISO, endISO){
     return d >= s && d <= e;
   });
 }
+
 
 function setFilter(f){
   state.filter = f;
@@ -139,6 +136,39 @@ function findDuplicateTrip(candidate, excludeId=""){
 
 let state = loadState();
 ensureAreas();
+function showFatal(err){
+  try{
+    const pill = document.getElementById("bootPill");
+    if(pill){
+      pill.textContent = "ERROR";
+      pill.classList.add("err");
+      pill.title = String(err && (err.stack || err.message || err) || "Error");
+    }
+    const app = document.getElementById("app");
+    if(app){
+      const msg = String(err && (err.stack || err.message || err) || err || "Unknown error");
+      const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+      app.innerHTML = `
+        <div class="card">
+          <b>App Error</b>
+          <div class="sep"></div>
+          <div class="muted small" style="white-space:pre-wrap">${esc}</div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="copyErr">Copy</button>
+            <button class="btn" id="reload">Reload</button>
+          </div>
+        </div>
+      `;
+      const c = document.getElementById("copyErr");
+      if(c) c.onclick = ()=> navigator.clipboard?.writeText(msg).catch(()=>{});
+      const r = document.getElementById("reload");
+      if(r) r.onclick = ()=> location.reload();
+    }
+  }catch{}
+}
+window.addEventListener("error", (e)=> showFatal(e?.error || e?.message || e));
+window.addEventListener("unhandledrejection", (e)=> showFatal(e?.reason || e));
+
 function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 
 function renderHome(){
@@ -237,14 +267,8 @@ function renderHome(){
     const tripsFiltered = getFilteredTrips();
     const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
 
-    // Simple export menu (fast + iPhone friendly)
     const choice = prompt(
-      "Export options:
-1 = Filtered (" + (state.filter||"YTD") + ")
-2 = All trips
-3 = Date range
-
-Enter 1, 2, or 3:",
+      "Export options:\n1 = Filtered (" + (state.filter||"YTD") + ")\n2 = All trips\n3 = Date range\n\nEnter 1, 2, or 3:",
       "1"
     );
 
@@ -265,7 +289,7 @@ Enter 1, 2, or 3:",
       exportTrips(ranged, "RANGE", startISO, endISO);
       return;
     }
-    // default: filtered
+
     exportTrips(tripsFiltered, (state.filter||"YTD"));
   };
   document.getElementById("settings").onclick = () => {
