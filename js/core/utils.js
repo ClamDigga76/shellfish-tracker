@@ -102,6 +102,19 @@ export function formatMoney(n){
   }
 }
 
+
+export function normalizeDealerForExport(name){
+  // Display-friendly, stable normalization for CSV (non-destructive)
+  let s = String(name||"").trim();
+  if(!s) return "";
+  s = s.replace(/\s+/g, " ");
+  // remove common trailing business suffixes
+  s = s.replace(/\b(inc\.?|incorporated|llc|l\.l\.c\.|co\.?|company|corp\.?|corporation)\b\s*$/i, "");
+  // strip trailing punctuation/whitespace
+  s = s.replace(/[\s,\.]+$/g, "");
+  return s;
+}
+
 export function normalizeKey(s){
   return String(s || "")
     .trim()
@@ -145,7 +158,7 @@ export function downloadText(filename, text){
 }
 
 export function toCSV(trips){
-  const headers = ["Date", "Dealer", "Pounds", "Amount", "PricePerLb", "Area"];
+  const headers = ["Date","Dealer","Pounds","Amount","PricePerLb","Area","RecordID"];
   const lines = [headers.join(",")];
   const clean = (v) => String(v ?? "").replace(/[\r\n]+/g, " ").trim();
 
@@ -153,11 +166,12 @@ export function toCSV(trips){
     const ppl = computePPL(t.pounds, t.amount);
     const cells = [
       clean(formatDateMDY(t.dateISO)),
-      clean(t.dealer),
+      clean(normalizeDealerForExport(t.dealer)),
       String(to2(t.pounds)),
       String(to2(t.amount)),
       String(to2(ppl)),
-      clean(t.area || "")
+      clean(t.area || ""),
+      clean(t.id || "")
     ].map(v => {
       const needs = v.includes(",") || v.includes('"');
       const esc = v.split('"').join('""');

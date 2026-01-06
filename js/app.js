@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-005B";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006A";
 
 
 function normalizeDealerDisplay(name){
@@ -239,6 +239,7 @@ function renderHome(){
       <div class="row">
         <button class="btn primary" id="newTrip">＋ New Trip</button>
         <button class="btn" id="export">🧾 Export CSV</button>
+        <button class="btn" id="reports">📊 Reports</button>
         <button class="btn" id="settings">⚙️ Settings</button>
       </div>
 
@@ -322,7 +323,9 @@ function renderHome(){
 
     exportTrips(tripsFiltered, (state.filter||"YTD"));
   };
-  document.getElementById("settings").onclick = () => {
+    document.getElementById("reports").onclick = ()=>{ state.view="reports"; saveState(); render(); };
+
+document.getElementById("settings").onclick = () => {
     state.view = "settings";
     saveState();
     render();
@@ -780,6 +783,195 @@ function renderEditTrip(){
 }
 
 
+
+function renderReports(){
+  const trips = getFilteredTrips();
+  const f = state.filter || "YTD";
+  const chip = (key,label) => `<button class="chip ${f===key?'on':''}" data-f="${key}">${label}</button>`;
+
+  // Aggregations
+  const byDealer = new Map();
+  const byArea = new Map();
+  const byMonth = new Map(); // 1-12
+  for(let m=1;m<=12;m++) byMonth.set(m, { trips:0, lbs:0, amt:0 });
+
+  trips.forEach(t=>{
+    const dealerRaw = (t?.dealer||"").toString();
+    const dealer = normalizeDealerDisplay(dealerRaw) || "(Unspecified)";
+    const dealerKey = dealer.toLowerCase();
+    const area = ((t?.area||"").toString().trim()) || "(Unspecified)";
+    const areaKey = area.toLowerCase();
+
+    const lbs = Number(t?.pounds)||0;
+    const amt = Number(t?.amount)||0;
+
+    const d = byDealer.get(dealerKey) || { name: dealer, trips:0, lbs:0, amt:0 };
+    d.trips += 1; d.lbs += lbs; d.amt += amt;
+    byDealer.set(dealerKey, d);
+
+    const a = byArea.get(areaKey) || { name: area, trips:0, lbs:0, amt:0 };
+    a.trips += 1; a.lbs += lbs; a.amt += amt;
+    byArea.set(areaKey, a);
+
+    const iso = String(t?.dateISO||"");
+    const mm = parseInt(iso.slice(5,7), 10);
+    if(mm>=1 && mm<=12){
+      const mo = byMonth.get(mm);
+      mo.trips += 1; mo.lbs += lbs; mo.amt += amt;
+    }
+  });
+
+  const dealerRows = Array.from(byDealer.values()).map(x=>{
+    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
+    return { ...x, avg };
+  }).sort((a,b)=> b.amt - a.amt || b.lbs - a.lbs);
+
+  const areaRows = Array.from(byArea.values()).map(x=>{
+    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
+    return { ...x, avg };
+  }).sort((a,b)=> b.amt - a.amt || b.lbs - a.lbs);
+
+  const monthRows = Array.from(byMonth.entries()).map(([m,x])=>{
+    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
+    return { month:m, ...x, avg };
+  });
+
+  const priceTrips = trips.map(t=>{
+    const lbs = Number(t?.pounds)||0;
+    const amt = Number(t?.amount)||0;
+    const ppl = computePPL(lbs, amt);
+    return {
+      id: t?.id||"",
+      dateISO: t?.dateISO||"",
+      date: formatDateMDY(t?.dateISO),
+      dealer: normalizeDealerDisplay(t?.dealer||"") || "(Unspecified)",
+      area: ((t?.area||"").toString().trim()) || "(Unspecified)",
+      lbs: to2(lbs),
+      ppl
+    };
+  }).filter(x=> Number(x.ppl) > 0);
+
+  const best = priceTrips.slice().sort((a,b)=> b.ppl - a.ppl).slice(0,3);
+  const worst = priceTrips.slice().sort((a,b)=> a.ppl - b.ppl).slice(0,3);
+
+  const renderAggList = (rows, emptyMsg) => {
+    if(!rows.length) return `<div class="muted small">${emptyMsg}</div>`;
+    return rows.map(r=>`
+      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
+        <div>
+          <b>${escapeHtml(r.name)}</b>
+          <div class="muted small">Trips: ${r.trips}</div>
+        </div>
+        <div class="muted small" style="text-align:right">
+          <div>Lbs: <b>${to2(r.lbs)}</b></div>
+          <div>Total: <b>${formatMoney(to2(r.amt))}</b></div>
+          <div>Avg $/lb: <b>${formatMoney(to2(r.avg))}</b></div>
+        </div>
+      </div>
+      <div class="sep"></div>
+    `).join("").replace(/<div class="sep"><\/div>\s*$/,"");
+  };
+
+  const renderMonthList = () => {
+    const names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return monthRows.map(r=>`
+      <div class="row" style="justify-content:space-between;gap:12px">
+        <div><b>${names[r.month-1]}</b><div class="muted small">Trips: ${r.trips}</div></div>
+        <div class="muted small" style="text-align:right">
+          <div>Lbs: <b>${to2(r.lbs)}</b></div>
+          <div>Total: <b>${formatMoney(to2(r.amt))}</b></div>
+          <div>Avg $/lb: <b>${formatMoney(to2(r.avg))}</b></div>
+        </div>
+      </div>
+      <div class="sep"></div>
+    `).join("").replace(/<div class="sep"><\/div>\s*$/,"");
+  };
+
+  const renderTripPriceList = (rows, emptyMsg) => {
+    if(!rows.length) return `<div class="muted small">${emptyMsg}</div>`;
+    return rows.map(r=>`
+      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
+        <div>
+          <b>${escapeHtml(r.date || "")}</b>
+          <div class="muted small">${escapeHtml(r.dealer)} • ${escapeHtml(r.area)}</div>
+        </div>
+        <div class="muted small" style="text-align:right">
+          <div>Lbs: <b>${escapeHtml(r.lbs)}</b></div>
+          <div>$ / lb: <b>${formatMoney(to2(r.ppl))}</b></div>
+        </div>
+      </div>
+      <div class="sep"></div>
+    `).join("").replace(/<div class="sep"><\/div>\s*$/,"");
+  };
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="row">
+        <button class="btn" id="home">← Home</button>
+        <button class="btn" id="export">🧾 Export CSV</button>
+        <button class="btn" id="settings">⚙️ Settings</button>
+      </div>
+
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+        <b>Reports</b>
+        <span class="pill">Range: <b>${escapeHtml(f)}</b></span>
+      </div>
+
+      <div class="filters" style="margin-top:10px">
+        ${chip("YTD","YTD")}
+        ${chip("Month","Month")}
+        ${chip("7D","Last 7 days")}
+      </div>
+      <div class="hint">Reporting v2 (tables only). Read-only.</div>
+    </div>
+
+    <div class="card">
+      <b>Dealer Summary</b>
+      <div class="sep"></div>
+      ${renderAggList(dealerRows, "No trips in this range yet.")}
+    </div>
+
+    <div class="card">
+      <b>Area Summary</b>
+      <div class="sep"></div>
+      ${renderAggList(areaRows, "No trips in this range yet.")}
+    </div>
+
+    <div class="card">
+      <b>Monthly Totals</b>
+      <div class="sep"></div>
+      ${renderMonthList()}
+    </div>
+
+    <div class="card">
+      <b>Best / Worst Price</b>
+      <div class="sep"></div>
+      <div class="muted small" style="margin-bottom:6px"><b>Best $/lb</b></div>
+      ${renderTripPriceList(best, "No priced trips found.")}
+      <div class="sep"></div>
+      <div class="muted small" style="margin-bottom:6px"><b>Worst $/lb</b></div>
+      ${renderTripPriceList(worst, "No priced trips found.")}
+    </div>
+  `;
+
+  app.scrollTop = 0;
+
+  // nav
+  document.getElementById("home").onclick = ()=>{ state.view="home"; saveState(); render(); };
+  document.getElementById("export").onclick = ()=>{ document.getElementById("export").blur(); /* reuse home export */ state.view="home"; saveState(); render(); setTimeout(()=>{ const b=document.getElementById("export"); if(b) b.click(); }, 0); };
+  document.getElementById("settings").onclick = ()=>{ state.view="settings"; saveState(); render(); };
+
+  // filter chips
+  app.querySelectorAll(".chip[data-f]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const key = btn.getAttribute("data-f");
+      state.filter = key;
+      saveState();
+      renderReports();
+    };
+  });
+}
+
 function renderSettings(){
   ensureAreas();
 
@@ -865,6 +1057,7 @@ function render(){
   if(state.view === "new") return renderNewTrip();
   if(state.view === "review") return renderReviewTrip();
   if(state.view === "edit") return renderEditTrip();
+  if(state.view === "reports") return renderReports();
   return renderHome();
 }
 
