@@ -194,6 +194,13 @@ window.addEventListener("unhandledrejection", (e)=> showFatal(e?.reason || e));
 
 function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 
+
+function openEditTrip(id){
+  state.editId = id;
+  state.view = "edit";
+  saveState();
+  render();
+}
 function renderHome(){
   const tripsAll = Array.isArray(state.trips) ? state.trips : [];
   const trips = getFilteredTrips();
