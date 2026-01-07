@@ -1,8 +1,101 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006B";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006C";
 
+
+
+function parseOcrText(raw, knownAreas){
+  const text = String(raw||"").replace(/\r/g,"\n");
+  const lines = text.split("\n").map(s=>s.trim()).filter(Boolean);
+
+  const out = {
+    dateMDY: "",
+    pounds: "",
+    amount: "",
+    dealer: "",
+    area: "",
+    confidence: { date:"low", pounds:"low", amount:"low", dealer:"low", area:"low" }
+  };
+
+  // DATE: prefer MM/DD/YYYY
+  const dateFull = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](20\d{2}|19\d{2})\b/);
+  const dateShort = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](\d{2})\b/);
+  if(dateFull){
+    out.dateMDY = `${dateFull[1]}/${dateFull[2]}/${dateFull[3]}`;
+    out.confidence.date = "high";
+  }else if(dateShort){
+    const yy = parseInt(dateShort[3],10);
+    const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
+    out.dateMDY = `${dateShort[1]}/${dateShort[2]}/${yyyy}`;
+    out.confidence.date = "med";
+  }
+
+  // AMOUNT
+  const money = [...text.matchAll(/\$\s*([0-9]{1,6}(?:,[0-9]{3})*(?:\.[0-9]{2})?|\d+\.\d{2})\b/g)].map(m=>m[1].replace(/,/g,""));
+  if(money.length){
+    out.amount = money[0];
+    out.confidence.amount = "high";
+  }else{
+    const money2 = [...text.matchAll(/\b([0-9]{1,6}(?:\.[0-9]{2}))\b/g)].map(m=>m[1]);
+    if(money2.length){
+      let maxv=-1, maxs="";
+      money2.forEach(s=>{ const v=parseFloat(s); if(v>maxv){maxv=v; maxs=s;} });
+      if(maxs){ out.amount=maxs; out.confidence.amount="med"; }
+    }
+  }
+
+  // POUNDS
+  const lbs1 = text.match(/\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b/i);
+  if(lbs1){
+    out.pounds = lbs1[1];
+    out.confidence.pounds = "high";
+  }else{
+    const nums = [...text.matchAll(/\b(\d+(?:\.\d+)?)\b/g)].map(m=>m[1]);
+    const candidates=[];
+    nums.forEach(s=>{
+      const v=parseFloat(s);
+      if(!(v>0)) return;
+      if(out.amount && Math.abs(v-parseFloat(out.amount))<0.001) return;
+      if(v>=1 && v<=500) candidates.push(v);
+    });
+    if(candidates.length){
+      const v = candidates.reduce((a,b)=>a>b?a:b, -Infinity);
+      out.pounds = String(v);
+      out.confidence.pounds = "low";
+    }
+  }
+
+  // AREA
+  const areas = Array.isArray(knownAreas) ? knownAreas.filter(Boolean) : [];
+  if(areas.length){
+    const lower = text.toLowerCase();
+    for(const a of areas){
+      const al = String(a).toLowerCase();
+      if(al && lower.includes(al)){
+        out.area = a;
+        out.confidence.area = "high";
+        break;
+      }
+    }
+  }
+
+  // DEALER
+  const noise = ["date","harvest","amount","total","subtotal","balance","lbs","lb","pounds","check","pay to","memo","account","routing","bank","deposit"];
+  for(const line of lines){
+    const l = line.toLowerCase();
+    if(l.length<3) continue;
+    if(!/[a-zA-Z]/.test(line)) continue;
+    if(noise.some(n=>l.includes(n))) continue;
+    const letters=(line.match(/[A-Za-z]/g)||[]).length;
+    if(letters<4) continue;
+    out.dealer=line;
+    out.confidence.dealer="med";
+    break;
+  }
+
+  return out;
+}
 
 function normalizeDealerDisplay(name){
   let s = String(name||"").trim();
@@ -353,7 +446,7 @@ function renderNewTrip(){
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
         <b>New Trip</b>
-        <span class="muted small">Phase 2C-2</span>
+        <span class="muted small">OCR v1 (Phase 4B)</span>
       </div>
       <div class="hint">Enter the check info. Date should be harvest date (MM/DD/YYYY).</div>
     </div>
@@ -391,8 +484,9 @@ function renderNewTrip(){
           <div class="label">Quick paste (optional)</div>
           <textarea class="textarea" id="t_paste" placeholder="Paste OCR text here (optional)"></textarea>
           <div class="actions">
-            <button class="smallbtn" id="parsePaste">Parse paste</button>
-            <span class="muted small">Parses date, pounds, and amount when it can.</span>
+            <button class="smallbtn" id="parsePaste">Parse OCR</button>
+            <button class="smallbtn" id="ocrToReview">Send to Review</button>
+            <span class="muted small">Parses date / dealer / lbs / amount (best-effort). Nothing saves until Review & Confirm.</span>
           </div>
         </div>
 
@@ -432,34 +526,39 @@ function renderNewTrip(){
   });
 
   document.getElementById("parsePaste").onclick = ()=>{
-    const txt = String(elPaste.value||"");
-    if(!txt.trim()) return;
-
-    // naive date search mm/dd/yy or mm-dd-yy
-    const m = txt.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
-    if(m){
-      const iso = parseMDYToISO(`${m[1]}/${m[2]}/${m[3]}`);
-      if(iso) elDate.value = formatDateMDY(iso);
-    }
-
-    // pounds: look for something like 43.5 near "lb" or standalone decimal
-    const lbm = txt.match(/(\d{1,3}(?:\.\d{1,2})?)\s*(?:lb|lbs|pounds)/i) || txt.match(/\b(\d{1,3}\.\d{1,2})\b/);
-    if(lbm) elPounds.value = String(lbm[1]);
-
-    // amount: $ or plain digits
-    const am = txt.match(/\$\s*([\d,]+(?:\.\d{1,2})?)/);
-    if(am) elAmount.value = String(am[1]).replaceAll(",","");
-    else{
-      // fallback: last long-ish number
-      const nums = txt.match(/[\d]{3,7}/g);
-      if(nums && nums.length) elAmount.value = String(parseMoney(nums[nums.length-1]));
-    }
+    const parsed = parseOcrText(elPaste.value, state.areas||[]);
+    if(parsed.dateMDY) elDate.value = parsed.dateMDY;
+    if(parsed.dealer) elDealer.value = parsed.dealer;
+    if(parsed.pounds) elPounds.value = parsed.pounds;
+    if(parsed.amount) elAmount.value = parsed.amount;
+    if(parsed.area) elArea.value = parsed.area;
 
     saveDraft();
-    render(); // re-render to update computed fields if needed later
-    state.view = "new"; // keep view
-    saveState();
+
+    const msg =
+      `OCR Parse Results:\n`+
+      `Date: ${parsed.dateMDY||"(none)"} (${parsed.confidence.date})\n`+
+      `Dealer: ${parsed.dealer||"(none)"} (${parsed.confidence.dealer})\n`+
+      `Pounds: ${parsed.pounds||"(none)"} (${parsed.confidence.pounds})\n`+
+      `Amount: ${parsed.amount||"(none)"} (${parsed.confidence.amount})\n`+
+      `Area: ${parsed.area||"(none)"} (${parsed.confidence.area})\n\n`+
+      `Tip: Always verify in Review before saving.`;
+    alert(msg);
   };
+  document.getElementById("ocrToReview").onclick = ()=>{
+    const parsed = parseOcrText(elPaste.value, state.areas||[]);
+    if(parsed.dateMDY) elDate.value = parsed.dateMDY;
+    if(parsed.dealer) elDealer.value = parsed.dealer;
+    if(parsed.pounds) elPounds.value = parsed.pounds;
+    if(parsed.amount) elAmount.value = parsed.amount;
+    if(parsed.area) elArea.value = parsed.area;
+
+    saveDraft();
+
+    // Jump straight to Review (still requires Confirm & Save)
+    document.getElementById("saveTrip").click();
+  };
+
 
   document.getElementById("cancelTrip").onclick = ()=>{
     state.view = "home";
