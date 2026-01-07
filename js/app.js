@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006A";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006B";
 
 
 function normalizeDealerDisplay(name){
@@ -787,7 +787,10 @@ function renderEditTrip(){
 function renderReports(){
   const trips = getFilteredTrips();
   const f = state.filter || "YTD";
+  const mode = state.reportsMode || "tables"; // "charts" | "tables"
+
   const chip = (key,label) => `<button class="chip ${f===key?'on':''}" data-f="${key}">${label}</button>`;
+  const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
 
   // Aggregations
   const byDealer = new Map();
@@ -904,6 +907,59 @@ function renderReports(){
     `).join("").replace(/<div class="sep"><\/div>\s*$/,"");
   };
 
+  const renderChartsSection = ()=>{
+    return `
+      <div class="card">
+        <b>Charts</b>
+        <div class="hint">Read-only. Uses the same range filter.</div>
+        <div class="sep"></div>
+
+        <div class="muted small" style="margin-bottom:6px"><b>Avg $/lb by Month</b></div>
+        <canvas id="c_ppl" class="chart" height="180"></canvas>
+
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Total $ by Dealer (Top 8)</b></div>
+        <canvas id="c_dealer" class="chart" height="220"></canvas>
+
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Total Lbs by Month</b></div>
+        <canvas id="c_lbs" class="chart" height="200"></canvas>
+      </div>
+    `;
+  };
+
+  const renderTablesSection = ()=>{
+    return `
+      <div class="card">
+        <b>Dealer Summary</b>
+        <div class="sep"></div>
+        ${renderAggList(dealerRows, "No trips in this range yet.")}
+      </div>
+
+      <div class="card">
+        <b>Area Summary</b>
+        <div class="sep"></div>
+        ${renderAggList(areaRows, "No trips in this range yet.")}
+      </div>
+
+      <div class="card">
+        <b>Monthly Totals</b>
+        <div class="sep"></div>
+        ${renderMonthList()}
+      </div>
+
+      <div class="card">
+        <b>Best / Worst Price</b>
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Best $/lb</b></div>
+        ${renderTripPriceList(best, "No priced trips found.")}
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Worst $/lb</b></div>
+        ${renderTripPriceList(worst, "No priced trips found.")}
+      </div>
+    `;
+  };
+
   app.innerHTML = `
     <div class="card">
       <div class="row">
@@ -922,46 +978,26 @@ function renderReports(){
         ${chip("Month","Month")}
         ${chip("7D","Last 7 days")}
       </div>
-      <div class="hint">Reporting v2 (tables only). Read-only.</div>
+
+      <div class="filters" style="margin-top:10px">
+        ${seg("charts","Charts")}
+        ${seg("tables","Tables")}
+      </div>
+
+      <div class="hint">Reporting v2. Read-only.</div>
     </div>
 
-    <div class="card">
-      <b>Dealer Summary</b>
-      <div class="sep"></div>
-      ${renderAggList(dealerRows, "No trips in this range yet.")}
-    </div>
-
-    <div class="card">
-      <b>Area Summary</b>
-      <div class="sep"></div>
-      ${renderAggList(areaRows, "No trips in this range yet.")}
-    </div>
-
-    <div class="card">
-      <b>Monthly Totals</b>
-      <div class="sep"></div>
-      ${renderMonthList()}
-    </div>
-
-    <div class="card">
-      <b>Best / Worst Price</b>
-      <div class="sep"></div>
-      <div class="muted small" style="margin-bottom:6px"><b>Best $/lb</b></div>
-      ${renderTripPriceList(best, "No priced trips found.")}
-      <div class="sep"></div>
-      <div class="muted small" style="margin-bottom:6px"><b>Worst $/lb</b></div>
-      ${renderTripPriceList(worst, "No priced trips found.")}
-    </div>
+    ${mode === "charts" ? renderChartsSection() : renderTablesSection()}
   `;
 
   app.scrollTop = 0;
 
   // nav
   document.getElementById("home").onclick = ()=>{ state.view="home"; saveState(); render(); };
-  document.getElementById("export").onclick = ()=>{ document.getElementById("export").blur(); /* reuse home export */ state.view="home"; saveState(); render(); setTimeout(()=>{ const b=document.getElementById("export"); if(b) b.click(); }, 0); };
+  document.getElementById("export").onclick = ()=>{ state.view="home"; saveState(); render(); setTimeout(()=>{ const b=document.getElementById("export"); if(b) b.click(); }, 0); };
   document.getElementById("settings").onclick = ()=>{ state.view="settings"; saveState(); render(); };
 
-  // filter chips
+  // range chips
   app.querySelectorAll(".chip[data-f]").forEach(btn=>{
     btn.onclick = ()=>{
       const key = btn.getAttribute("data-f");
@@ -970,7 +1006,171 @@ function renderReports(){
       renderReports();
     };
   });
+
+  // mode chips
+  app.querySelectorAll(".chip[data-m]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const key = btn.getAttribute("data-m");
+      state.reportsMode = key;
+      saveState();
+      renderReports();
+    };
+  });
+
+  if(mode === "charts"){
+    setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows); }, 0);
+  }
 }
+
+function drawReportsCharts(monthRows, dealerRows){
+  function setupCanvas(canvas){
+    if(!canvas) return null;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(280, rect.width || canvas.parentElement?.clientWidth || 320);
+    const h = canvas.height || 180;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return { ctx, w, h };
+  }
+
+  function clear(ctx, w, h){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "rgba(255,255,255,0.02)";
+    ctx.fillRect(0,0,w,h);
+  }
+
+  function drawAxes(ctx, w, h, pad){
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad, pad);
+    ctx.lineTo(pad, h - pad);
+    ctx.lineTo(w - pad, h - pad);
+    ctx.stroke();
+  }
+
+  function formatShortMoney(v){
+    const n = Number(v)||0;
+    return "$" + (Math.round(n*100)/100).toFixed(2);
+  }
+
+  // Line: Avg $/lb by month
+  {
+    const c = setupCanvas(document.getElementById("c_ppl"));
+    if(c){
+      const {ctx,w,h} = c;
+      const pad = 22;
+      clear(ctx,w,h);
+      drawAxes(ctx,w,h,pad);
+
+      const vals = monthRows.map(r=> Number(r.avg)||0);
+      const maxV = Math.max(1e-6, ...vals);
+      const minV = Math.min(...vals);
+      const span = (maxV - minV) || maxV || 1;
+
+      const plotW = w - pad*2;
+      const plotH = h - pad*2;
+
+      ctx.strokeStyle = "rgba(43,135,255,0.9)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      vals.forEach((v,i)=>{
+        const x = pad + (i/(vals.length-1 || 1))*plotW;
+        const y = (h - pad) - ((v - minV)/span)*plotH;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(43,135,255,0.9)";
+      vals.forEach((v,i)=>{
+        const x = pad + (i/(vals.length-1 || 1))*plotW;
+        const y = (h - pad) - ((v - minV)/span)*plotH;
+        ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
+      });
+
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "11px system-ui, -apple-system, Segoe UI, Arial";
+      ctx.fillText("Jan", pad, h-6);
+      ctx.fillText("Dec", w-pad-22, h-6);
+      ctx.fillText(formatShortMoney(maxV), pad+4, pad+10);
+    }
+  }
+
+  // Bar: Total $ by dealer (top 8)
+  {
+    const c = setupCanvas(document.getElementById("c_dealer"));
+    if(c){
+      const {ctx,w,h} = c;
+      const pad = 22;
+      clear(ctx,w,h);
+      drawAxes(ctx,w,h,pad);
+
+      const top = dealerRows.slice(0,8);
+      const vals = top.map(r=> Number(r.amt)||0);
+      const maxV = Math.max(1e-6, ...vals);
+
+      const plotW = w - pad*2;
+      const plotH = h - pad*2;
+      const barW = plotW / (top.length || 1);
+
+      top.forEach((r,i)=>{
+        const v = Number(r.amt)||0;
+        const bh = (v/maxV)*plotH;
+        const x = pad + i*barW + 4;
+        const y = (h - pad) - bh;
+        ctx.fillStyle = "rgba(43,135,255,0.7)";
+        ctx.fillRect(x, y, Math.max(6, barW-8), bh);
+      });
+
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "10px system-ui, -apple-system, Segoe UI, Arial";
+      top.forEach((r,i)=>{
+        const lab = (r.name||"").slice(0,6);
+        const x = pad + i*barW + 4;
+        ctx.fillText(lab, x, h-6);
+      });
+
+      ctx.fillText(formatShortMoney(maxV), pad+4, pad+10);
+    }
+  }
+
+  // Bar: Total Lbs by month
+  {
+    const c = setupCanvas(document.getElementById("c_lbs"));
+    if(c){
+      const {ctx,w,h} = c;
+      const pad = 22;
+      clear(ctx,w,h);
+      drawAxes(ctx,w,h,pad);
+
+      const vals = monthRows.map(r=> Number(r.lbs)||0);
+      const maxV = Math.max(1e-6, ...vals);
+      const plotW = w - pad*2;
+      const plotH = h - pad*2;
+      const barW = plotW / (vals.length || 1);
+
+      vals.forEach((v,i)=>{
+        const bh = (v/maxV)*plotH;
+        const x = pad + i*barW + 1;
+        const y = (h - pad) - bh;
+        ctx.fillStyle = "rgba(43,135,255,0.7)";
+        ctx.fillRect(x, y, Math.max(2, barW-2), bh);
+      });
+
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "11px system-ui, -apple-system, Segoe UI, Arial";
+      ctx.fillText("Jan", pad, h-6);
+      ctx.fillText("Dec", w-pad-22, h-6);
+      ctx.fillText(String(Math.round(maxV)), pad+4, pad+10);
+    }
+  }
+}
+
 
 function renderSettings(){
   ensureAreas();
