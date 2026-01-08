@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006C";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006D";
 
 
 
@@ -32,6 +32,7 @@ function parseOcrText(raw, knownAreas){
   }
 
   // AMOUNT
+  // Prefer explicit $ with cents, then explicit decimals, then check-style digits (e.g., 19350 => 193.50)
   const money = [...text.matchAll(/\$\s*([0-9]{1,6}(?:,[0-9]{3})*(?:\.[0-9]{2})?|\d+\.\d{2})\b/g)].map(m=>m[1].replace(/,/g,""));
   if(money.length){
     out.amount = money[0];
@@ -42,6 +43,29 @@ function parseOcrText(raw, knownAreas){
       let maxv=-1, maxs="";
       money2.forEach(s=>{ const v=parseFloat(s); if(v>maxv){maxv=v; maxs=s;} });
       if(maxs){ out.amount=maxs; out.confidence.amount="med"; }
+    }else{
+      // Check OCR often drops the decimal: "CHECK AMOUNT 19350" => 193.50
+      let centsDigits = "";
+      const near = text.match(/\b(?:check\s*)?amount\b[\s:]*\n?\s*(\d{4,6})\b/i);
+      if(near) centsDigits = near[1];
+
+      if(!centsDigits){
+        for(let i=0;i<lines.length;i++){
+          if(/^(?:check\s*)?amount$/i.test(lines[i])){
+            const next = lines[i+1] || "";
+            const mm = next.match(/\b(\d{4,6})\b/);
+            if(mm){ centsDigits = mm[1]; break; }
+          }
+        }
+      }
+
+      if(centsDigits){
+        const n = parseInt(centsDigits,10);
+        if(Number.isFinite(n) && n>=1000){
+          out.amount = (n/100).toFixed(2);
+          out.confidence.amount = "med";
+        }
+      }
     }
   }
 
