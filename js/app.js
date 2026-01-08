@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006E";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006F";
 
 
 
@@ -544,6 +544,30 @@ function renderNewTrip(){
           <div class="actions">
             <button class="smallbtn" id="parsePaste">Parse OCR</button>
             <button class="smallbtn" id="ocrToReview">Send to Review</button>
+
+            <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap;">
+              <button class="smallbtn" id="scanReceiptBtn">Scan Receipt (Camera)</button>
+              <button class="smallbtn" id="runOcrBtn" disabled>Run OCR</button>
+            </div>
+            <div class="muted small" style="margin-top:6px;">
+              Tip: Take a clear photo, adjust crop if needed, then Run OCR. Still requires Review & Confirm.
+            </div>
+
+            <input id="scanFile" type="file" accept="image/*" capture="environment" style="display:none;" />
+
+            <div id="ocrPreviewWrap" style="margin-top:10px; display:none;">
+              <div class="muted small" style="margin-bottom:6px;">Preview + Crop (vertical)</div>
+              <canvas id="ocrCanvas" style="width:100%; border-radius:14px; border:1px solid rgba(255,255,255,0.12);"></canvas>
+
+              <div style="margin-top:10px;">
+                <div class="muted small">Crop start (%)</div>
+                <input id="cropStart" type="range" min="0" max="80" value="10" style="width:100%;">
+                <div class="muted small" style="margin-top:6px;">Crop end (%)</div>
+                <input id="cropEnd" type="range" min="20" max="100" value="90" style="width:100%;">
+              </div>
+
+              <div id="ocrStatus" class="muted small" style="margin-top:8px;"></div>
+            </div>
             <span class="muted small">Parses date / dealer / lbs / amount (best-effort). Nothing saves until Review & Confirm.</span>
           </div>
         </div>
@@ -615,6 +639,142 @@ function renderNewTrip(){
 
     // Jump straight to Review (still requires Confirm & Save)
     document.getElementById("saveTrip").click();
+  };
+
+  // Option 2 (Phase 4B-2): Camera capture + simple crop + in-app OCR (Tesseract)
+  const btnScan = document.getElementById("scanReceiptBtn");
+  const btnOcr  = document.getElementById("runOcrBtn");
+  const inpFile = document.getElementById("scanFile");
+  const wrapPrev= document.getElementById("ocrPreviewWrap");
+  const canvas  = document.getElementById("ocrCanvas");
+  const ctx     = canvas.getContext("2d");
+  const rngStart= document.getElementById("cropStart");
+  const rngEnd  = document.getElementById("cropEnd");
+  const elStatus= document.getElementById("ocrStatus");
+
+  let imgObj = null;
+
+  function drawPreview(){
+    if(!imgObj) return;
+    const maxW = 1000; // internal canvas width for OCR quality
+    const scale = Math.min(1, maxW / imgObj.naturalWidth);
+    const w = Math.round(imgObj.naturalWidth * scale);
+    const h = Math.round(imgObj.naturalHeight * scale);
+
+    canvas.width = w;
+    canvas.height = h;
+    ctx.clearRect(0,0,w,h);
+    ctx.drawImage(imgObj, 0, 0, w, h);
+
+    const s0 = parseInt(rngStart.value,10);
+    const e0 = parseInt(rngEnd.value,10);
+    const s = Math.min(s0, e0-5);
+    const e = Math.max(e0, s+5);
+    rngStart.value = String(s);
+    rngEnd.value = String(e);
+
+    const y1 = Math.round(h * (s/100));
+    const y2 = Math.round(h * (e/100));
+
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(0,0,w,y1);
+    ctx.fillRect(0,y2,w,h-y2);
+
+    ctx.strokeStyle = "rgba(80,160,255,0.9)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(2, y1+2, w-4, Math.max(0,(y2-y1)-4));
+  }
+
+  btnScan.onclick = ()=> inpFile.click();
+
+  inpFile.onchange = ()=>{
+    const f = inpFile.files && inpFile.files[0];
+    if(!f) return;
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    img.onload = ()=>{
+      imgObj = img;
+      wrapPrev.style.display = "block";
+      btnOcr.disabled = false;
+      elStatus.textContent = "Ready. Adjust crop, then Run OCR.";
+      drawPreview();
+    };
+    img.src = url;
+  };
+
+  rngStart.oninput = drawPreview;
+  rngEnd.oninput = drawPreview;
+
+  btnOcr.onclick = async ()=>{
+    if(!imgObj){
+      alert("Take a photo first.");
+      return;
+    }
+    if(typeof Tesseract === "undefined"){
+      alert("OCR engine not loaded. Check connection and reload.");
+      return;
+    }
+
+    btnOcr.disabled = true;
+    btnScan.disabled = true;
+
+    const w = canvas.width, h = canvas.height;
+    const s = Math.min(parseInt(rngStart.value,10), parseInt(rngEnd.value,10)-5);
+    const e = Math.max(parseInt(rngEnd.value,10), s+5);
+    const y1 = Math.round(h * (s/100));
+    const y2 = Math.round(h * (e/100));
+    const cropH = Math.max(20, y2-y1);
+
+    const crop = document.createElement("canvas");
+    crop.width = w;
+    crop.height = cropH;
+    const cctx = crop.getContext("2d");
+    cctx.drawImage(canvas, 0, y1, w, cropH, 0, 0, w, cropH);
+
+    elStatus.textContent = "Running OCR… (this can take 10–30s on iPhone)";
+    try{
+      const res = await Tesseract.recognize(crop, "eng", {
+        logger: m=>{
+          if(m && m.status){
+            const pct = (m.progress!=null) ? ` ${(m.progress*100).toFixed(0)}%` : "";
+            elStatus.textContent = `${m.status}${pct}`;
+          }
+        }
+      });
+
+      const rawText = (res && res.data && res.data.text) ? res.data.text : "";
+      if(!rawText.trim()){
+        alert("OCR returned no text. Try a clearer photo or adjust crop.");
+      }else{
+        elPaste.value = rawText.trim();
+
+        const parsed = parseOcrText(elPaste.value, state.areas||[]);
+        if(parsed.dateMDY) elDate.value = parsed.dateMDY;
+        if(parsed.dealer) elDealer.value = parsed.dealer;
+        if(parsed.pounds) elPounds.value = parsed.pounds;
+        if(parsed.amount) elAmount.value = parsed.amount;
+        if(parsed.area) elArea.value = parsed.area;
+
+        saveDraft();
+        elStatus.textContent = "OCR complete. Verify fields, then Review.";
+
+        alert(
+          `OCR complete:\n`+
+          `Date: ${parsed.dateMDY||"(none)"} (${parsed.confidence.date})\n`+
+          `Dealer: ${parsed.dealer||"(none)"} (${parsed.confidence.dealer})\n`+
+          `Pounds: ${parsed.pounds||"(none)"} (${parsed.confidence.pounds})\n`+
+          `Amount: ${parsed.amount||"(none)"} (${parsed.confidence.amount})\n`+
+          `Area: ${parsed.area||"(none)"} (${parsed.confidence.area})\n\n`+
+          `Next: Send to Review → Confirm & Save`
+        );
+      }
+    }catch(err){
+      console.error(err);
+      alert("OCR failed. Try again with better lighting and tighter crop.");
+    }finally{
+      btnOcr.disabled = false;
+      btnScan.disabled = false;
+    }
   };
 
 
