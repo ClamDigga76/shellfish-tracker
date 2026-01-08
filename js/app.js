@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006D";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006E";
 
 
 
@@ -70,23 +70,57 @@ function parseOcrText(raw, knownAreas){
   }
 
   // POUNDS
+  // Prefer explicit lbs markers; then use DESCRIPTION box (common on checks); fallback heuristic
   const lbs1 = text.match(/\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b/i);
   if(lbs1){
     out.pounds = lbs1[1];
     out.confidence.pounds = "high";
   }else{
-    const nums = [...text.matchAll(/\b(\d+(?:\.\d+)?)\b/g)].map(m=>m[1]);
-    const candidates=[];
-    nums.forEach(s=>{
-      const v=parseFloat(s);
-      if(!(v>0)) return;
-      if(out.amount && Math.abs(v-parseFloat(out.amount))<0.001) return;
-      if(v>=1 && v<=500) candidates.push(v);
-    });
-    if(candidates.length){
-      const v = candidates.reduce((a,b)=>a>b?a:b, -Infinity);
-      out.pounds = String(v);
-      out.confidence.pounds = "low";
+    // Many Machias Bay Seafood checks put lbs under "DESCRIPTION"
+    let descLbs = "";
+    const descNear = text.match(/\bdescription\b[\s:]*\n?\s*(\d{1,3}(?:\.\d+)?)\b/i);
+    if(descNear) descLbs = descNear[1];
+
+    if(!descLbs){
+      for(let i=0;i<lines.length;i++){
+        if(/^description$/i.test(lines[i])){
+          const next = lines[i+1] || "";
+          const mm = next.match(/\b(\d{1,3}(?:\.\d+)?)\b/);
+          if(mm){ descLbs = mm[1]; break; }
+        }
+      }
+    }
+
+    if(descLbs){
+      out.pounds = descLbs;
+      out.confidence.pounds = "med";
+    }else{
+      // Avoid phone/ids (TEL, routing/account). Choose most frequent plausible number (<=300).
+      const candidates = [];
+      for(const line of lines){
+        const l = line.toLowerCase();
+        if(l.includes("tel") || l.includes("phone") || l.includes("routing") || l.includes("account") || l.includes("po box")) continue;
+        const ms = [...line.matchAll(/\b(\d+(?:\.\d+)?)\b/g)].map(m=>m[1]);
+        for(const s of ms){
+          const v = parseFloat(s);
+          if(!(v>0)) continue;
+          if(out.amount && Math.abs(v-parseFloat(out.amount))<0.001) continue;
+          if(v>=1 && v<=300) candidates.push(v);
+        }
+      }
+      if(candidates.length){
+        const freq = {};
+        candidates.forEach(v=>{ const k=String(v); freq[k]=(freq[k]||0)+1; });
+        let bestV = candidates[0], bestCount = 0;
+        Object.keys(freq).forEach(k=>{
+          const v=parseFloat(k), c=freq[k];
+          if(c>bestCount || (c===bestCount && v>bestV)){
+            bestV=v; bestCount=c;
+          }
+        });
+        out.pounds = String(bestV);
+        out.confidence.pounds = "low";
+      }
     }
   }
 
