@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006F";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006G";
 
 
 
@@ -560,10 +560,15 @@ function renderNewTrip(){
               <canvas id="ocrCanvas" style="width:100%; border-radius:14px; border:1px solid rgba(255,255,255,0.12);"></canvas>
 
               <div style="margin-top:10px;">
-                <div class="muted small">Crop start (%)</div>
-                <input id="cropStart" type="range" min="0" max="80" value="10" style="width:100%;">
-                <div class="muted small" style="margin-top:6px;">Crop end (%)</div>
-                <input id="cropEnd" type="range" min="20" max="100" value="90" style="width:100%;">
+                <div class="muted small">Crop top (%)</div>
+                <input id="cropTop" type="range" min="0" max="80" value="10" style="width:100%;">
+                <div class="muted small" style="margin-top:6px;">Crop bottom (%)</div>
+                <input id="cropBottom" type="range" min="20" max="100" value="90" style="width:100%;">
+
+                <div class="muted small" style="margin-top:10px;">Crop left (%)</div>
+                <input id="cropLeft" type="range" min="0" max="80" value="5" style="width:100%;">
+                <div class="muted small" style="margin-top:6px;">Crop right (%)</div>
+                <input id="cropRight" type="range" min="20" max="100" value="95" style="width:100%;">
               </div>
 
               <div id="ocrStatus" class="muted small" style="margin-top:8px;"></div>
@@ -648,15 +653,19 @@ function renderNewTrip(){
   const wrapPrev= document.getElementById("ocrPreviewWrap");
   const canvas  = document.getElementById("ocrCanvas");
   const ctx     = canvas.getContext("2d");
-  const rngStart= document.getElementById("cropStart");
-  const rngEnd  = document.getElementById("cropEnd");
-  const elStatus= document.getElementById("ocrStatus");
+  const rngTop   = document.getElementById("cropTop");
+  const rngBottom= document.getElementById("cropBottom");
+  const rngLeft  = document.getElementById("cropLeft");
+  const rngRight = document.getElementById("cropRight");
+  const elStatus = document.getElementById("ocrStatus");
 
   let imgObj = null;
 
   function drawPreview(){
     if(!imgObj) return;
-    const maxW = 1000; // internal canvas width for OCR quality
+
+    // Scale for preview (does NOT affect OCR source crop; we crop from the original image)
+    const maxW = 1000;
     const scale = Math.min(1, maxW / imgObj.naturalWidth);
     const w = Math.round(imgObj.naturalWidth * scale);
     const h = Math.round(imgObj.naturalHeight * scale);
@@ -666,23 +675,38 @@ function renderNewTrip(){
     ctx.clearRect(0,0,w,h);
     ctx.drawImage(imgObj, 0, 0, w, h);
 
-    const s0 = parseInt(rngStart.value,10);
-    const e0 = parseInt(rngEnd.value,10);
-    const s = Math.min(s0, e0-5);
-    const e = Math.max(e0, s+5);
-    rngStart.value = String(s);
-    rngEnd.value = String(e);
+    // clamp sliders
+    let top = parseInt(rngTop.value,10);
+    let bottom = parseInt(rngBottom.value,10);
+    let left = parseInt(rngLeft.value,10);
+    let right = parseInt(rngRight.value,10);
 
-    const y1 = Math.round(h * (s/100));
-    const y2 = Math.round(h * (e/100));
+    top = Math.min(top, bottom-5);
+    bottom = Math.max(bottom, top+5);
+    left = Math.min(left, right-5);
+    right = Math.max(right, left+5);
 
+    rngTop.value = String(top);
+    rngBottom.value = String(bottom);
+    rngLeft.value = String(left);
+    rngRight.value = String(right);
+
+    const x1 = Math.round(w * (left/100));
+    const x2 = Math.round(w * (right/100));
+    const y1 = Math.round(h * (top/100));
+    const y2 = Math.round(h * (bottom/100));
+
+    // shade outside crop
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.fillRect(0,0,w,y1);
     ctx.fillRect(0,y2,w,h-y2);
+    ctx.fillRect(0,y1,x1,y2-y1);
+    ctx.fillRect(x2,y1,w-x2,y2-y1);
 
-    ctx.strokeStyle = "rgba(80,160,255,0.9)";
+    // draw crop rectangle
+    ctx.strokeStyle = "rgba(80,160,255,0.95)";
     ctx.lineWidth = 3;
-    ctx.strokeRect(2, y1+2, w-4, Math.max(0,(y2-y1)-4));
+    ctx.strokeRect(x1+2, y1+2, Math.max(0,(x2-x1)-4), Math.max(0,(y2-y1)-4));
   }
 
   btnScan.onclick = ()=> inpFile.click();
@@ -702,8 +726,10 @@ function renderNewTrip(){
     img.src = url;
   };
 
-  rngStart.oninput = drawPreview;
-  rngEnd.oninput = drawPreview;
+  rngTop.oninput = drawPreview;
+  rngBottom.oninput = drawPreview;
+  rngLeft.oninput = drawPreview;
+  rngRight.oninput = drawPreview;
 
   btnOcr.onclick = async ()=>{
     if(!imgObj){
@@ -718,22 +744,54 @@ function renderNewTrip(){
     btnOcr.disabled = true;
     btnScan.disabled = true;
 
-    const w = canvas.width, h = canvas.height;
-    const s = Math.min(parseInt(rngStart.value,10), parseInt(rngEnd.value,10)-5);
-    const e = Math.max(parseInt(rngEnd.value,10), s+5);
-    const y1 = Math.round(h * (s/100));
-    const y2 = Math.round(h * (e/100));
-    const cropH = Math.max(20, y2-y1);
+    // Crop from ORIGINAL image (avoid overlay contamination)
+    const top = Math.min(parseInt(rngTop.value,10), parseInt(rngBottom.value,10)-5);
+    const bottom = Math.max(parseInt(rngBottom.value,10), top+5);
+    const left = Math.min(parseInt(rngLeft.value,10), parseInt(rngRight.value,10)-5);
+    const right = Math.max(parseInt(rngRight.value,10), left+5);
+
+    const srcW = imgObj.naturalWidth;
+    const srcH = imgObj.naturalHeight;
+
+    const sx = Math.round(srcW * (left/100));
+    const sy = Math.round(srcH * (top/100));
+    const sw = Math.max(40, Math.round(srcW * ((right-left)/100)));
+    const sh = Math.max(40, Math.round(srcH * ((bottom-top)/100)));
+
+    // Destination size for OCR
+    const maxDestW = 1400;
+    const dScale = Math.min(1, maxDestW / sw);
+    const dw = Math.max(200, Math.round(sw * dScale));
+    const dh = Math.max(200, Math.round(sh * dScale));
 
     const crop = document.createElement("canvas");
-    crop.width = w;
-    crop.height = cropH;
+    crop.width = dw;
+    crop.height = dh;
     const cctx = crop.getContext("2d");
-    cctx.drawImage(canvas, 0, y1, w, cropH, 0, 0, w, cropH);
+
+    cctx.drawImage(imgObj, sx, sy, sw, sh, 0, 0, dw, dh);
+
+    // Light preprocessing: grayscale + contrast boost
+    try{
+      const imgData = cctx.getImageData(0,0,dw,dh);
+      const data = imgData.data;
+      for(let i=0;i<data.length;i+=4){
+        const r=data[i], g=data[i+1], b=data[i+2];
+        // luminance
+        let y = 0.2126*r + 0.7152*g + 0.0722*b;
+        // contrast
+        y = (y - 128) * 1.25 + 128;
+        y = Math.max(0, Math.min(255, y));
+        data[i]=data[i+1]=data[i+2]=y;
+      }
+      cctx.putImageData(imgData,0,0);
+    }catch(_e){}
 
     elStatus.textContent = "Running OCR… (this can take 10–30s on iPhone)";
     try{
       const res = await Tesseract.recognize(crop, "eng", {
+        tessedit_pageseg_mode: 6,
+        preserve_interword_spaces: "1",
         logger: m=>{
           if(m && m.status){
             const pct = (m.progress!=null) ? ` ${(m.progress*100).toFixed(0)}%` : "";
