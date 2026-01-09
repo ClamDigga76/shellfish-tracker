@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006I";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006G";
 
 
 
@@ -548,15 +548,6 @@ function renderNewTrip(){
             <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap;">
               <button class="smallbtn" id="scanReceiptBtn">Scan Receipt (Camera)</button>
               <button class="smallbtn" id="runOcrBtn" disabled>Run OCR</button>
-              <button class="smallbtn" id="rotateOcrImg" disabled>Rotate 90°</button>
-              <label class="muted small" style="display:flex;align-items:center;gap:8px;">
-                <input id="ocrInvert" type="checkbox" style="transform:scale(1.1);"/>
-                Invert
-              </label>
-              <label class="muted small" style="display:flex;align-items:center;gap:8px;">
-                <input id="ocrHighAcc" type="checkbox" style="transform:scale(1.1);"/>
-                High accuracy
-              </label>
             </div>
             <div class="muted small" style="margin-top:6px;">
               Tip: Take a clear photo, adjust crop if needed, then Run OCR. Still requires Review & Confirm.
@@ -565,11 +556,11 @@ function renderNewTrip(){
             <input id="scanFile" type="file" accept="image/*" capture="environment" style="display:none;" />
 
             <div id="ocrPreviewWrap" style="margin-top:10px; display:none;">
-              <div class="muted small" style="margin-bottom:6px;">Preview + Crop (drag the box)</div>
+              <div class="muted small" style="margin-bottom:6px;">Preview + Crop (vertical)</div>
               <canvas id="ocrCanvas" style="width:100%; border-radius:14px; border:1px solid rgba(255,255,255,0.12);"></canvas>
 
               <div style="margin-top:10px;">
-                <div class="muted small">Crop top (%) (or drag crop box)</div>
+                <div class="muted small">Crop top (%)</div>
                 <input id="cropTop" type="range" min="0" max="80" value="10" style="width:100%;">
                 <div class="muted small" style="margin-top:6px;">Crop bottom (%)</div>
                 <input id="cropBottom" type="range" min="20" max="100" value="90" style="width:100%;">
@@ -658,7 +649,6 @@ function renderNewTrip(){
   // Option 2 (Phase 4B-2): Camera capture + simple crop + in-app OCR (Tesseract)
   const btnScan = document.getElementById("scanReceiptBtn");
   const btnOcr  = document.getElementById("runOcrBtn");
-  const btnRot = document.getElementById("rotateOcrImg");
   const inpFile = document.getElementById("scanFile");
   const wrapPrev= document.getElementById("ocrPreviewWrap");
   const canvas  = document.getElementById("ocrCanvas");
@@ -668,28 +658,13 @@ function renderNewTrip(){
   const rngLeft  = document.getElementById("cropLeft");
   const rngRight = document.getElementById("cropRight");
   const elStatus = document.getElementById("ocrStatus");
-  const chkAcc  = document.getElementById("ocrHighAcc");
-  const chkInv  = document.getElementById("ocrInvert");
 
   let imgObj = null;
-  let rotDeg = 0; // 0,90,180,270
-  // Crop rectangle in percent (relative to preview canvas)
-  let cropRect = { left: 5, top: 10, right: 95, bottom: 90 };
-  let dragMode = null; // "move","l","r","t","b","tl","tr","bl","br"
-  let dragStart = null;
-function clampCrop(){
-    cropRect.left = Math.max(0, Math.min(95, cropRect.left));
-    cropRect.right = Math.max(5, Math.min(100, cropRect.right));
-    cropRect.top = Math.max(0, Math.min(95, cropRect.top));
-    cropRect.bottom = Math.max(5, Math.min(100, cropRect.bottom));
-    if(cropRect.right - cropRect.left < 5) cropRect.right = Math.min(100, cropRect.left + 5);
-    if(cropRect.bottom - cropRect.top < 5) cropRect.bottom = Math.min(100, cropRect.top + 5);
-  }
 
   function drawPreview(){
     if(!imgObj) return;
 
-    // Scale for preview
+    // Scale for preview (does NOT affect OCR source crop; we crop from the original image)
     const maxW = 1000;
     const scale = Math.min(1, maxW / imgObj.naturalWidth);
     const w = Math.round(imgObj.naturalWidth * scale);
@@ -698,52 +673,28 @@ function clampCrop(){
     canvas.width = w;
     canvas.height = h;
     ctx.clearRect(0,0,w,h);
+    ctx.drawImage(imgObj, 0, 0, w, h);
 
-    // draw rotated image
-    ctx.save();
-    if(rotDeg === 0){
-      ctx.drawImage(imgObj, 0, 0, w, h);
-    }else{
-      // rotate around center
-      ctx.translate(w/2, h/2);
-      ctx.rotate(rotDeg * Math.PI/180);
-      const rw = (rotDeg % 180 === 0) ? w : h;
-      const rh = (rotDeg % 180 === 0) ? h : w;
-      ctx.drawImage(imgObj, -rw/2, -rh/2, rw, rh);
-      ctx.setTransform(1,0,0,1,0,0);
-      // redraw using an offscreen canvas to avoid transform confusion
-      const off = document.createElement("canvas");
-      off.width = w; off.height = h;
-      const octx = off.getContext("2d");
-      octx.save();
-      octx.translate(w/2, h/2);
-      octx.rotate(rotDeg * Math.PI/180);
-      const rw2 = (rotDeg % 180 === 0) ? w : h;
-      const rh2 = (rotDeg % 180 === 0) ? h : w;
-      octx.drawImage(imgObj, -rw2/2, -rh2/2, rw2, rh2);
-      octx.restore();
-      ctx.clearRect(0,0,w,h);
-      ctx.drawImage(off,0,0);
-    }
-    ctx.restore();
+    // clamp sliders
+    let top = parseInt(rngTop.value,10);
+    let bottom = parseInt(rngBottom.value,10);
+    let left = parseInt(rngLeft.value,10);
+    let right = parseInt(rngRight.value,10);
 
-    // sync cropRect from sliders if user used them
-    cropRect.top = parseInt(rngTop.value,10);
-    cropRect.bottom = parseInt(rngBottom.value,10);
-    cropRect.left = parseInt(rngLeft.value,10);
-    cropRect.right = parseInt(rngRight.value,10);
-    clampCrop();
+    top = Math.min(top, bottom-5);
+    bottom = Math.max(bottom, top+5);
+    left = Math.min(left, right-5);
+    right = Math.max(right, left+5);
 
-    // write back to sliders (in case drag changed)
-    rngTop.value = String(cropRect.top);
-    rngBottom.value = String(cropRect.bottom);
-    rngLeft.value = String(cropRect.left);
-    rngRight.value = String(cropRect.right);
+    rngTop.value = String(top);
+    rngBottom.value = String(bottom);
+    rngLeft.value = String(left);
+    rngRight.value = String(right);
 
-    const x1 = Math.round(w * (cropRect.left/100));
-    const x2 = Math.round(w * (cropRect.right/100));
-    const y1 = Math.round(h * (cropRect.top/100));
-    const y2 = Math.round(h * (cropRect.bottom/100));
+    const x1 = Math.round(w * (left/100));
+    const x2 = Math.round(w * (right/100));
+    const y1 = Math.round(h * (top/100));
+    const y2 = Math.round(h * (bottom/100));
 
     // shade outside crop
     ctx.fillStyle = "rgba(0,0,0,0.35)";
@@ -752,20 +703,10 @@ function clampCrop(){
     ctx.fillRect(0,y1,x1,y2-y1);
     ctx.fillRect(x2,y1,w-x2,y2-y1);
 
-    // draw crop rectangle + handles
+    // draw crop rectangle
     ctx.strokeStyle = "rgba(80,160,255,0.95)";
     ctx.lineWidth = 3;
     ctx.strokeRect(x1+2, y1+2, Math.max(0,(x2-x1)-4), Math.max(0,(y2-y1)-4));
-
-    const hs = 10;
-    ctx.fillStyle = "rgba(80,160,255,0.95)";
-    const handles = [
-      [x1,y1],[x2,y1],[x1,y2],[x2,y2],
-      [(x1+x2)/2,y1],[(x1+x2)/2,y2],[x1,(y1+y2)/2],[x2,(y1+y2)/2]
-    ];
-    for(const [hx,hy] of handles){
-      ctx.fillRect(Math.round(hx-hs/2), Math.round(hy-hs/2), hs, hs);
-    }
   }
 
   btnScan.onclick = ()=> inpFile.click();
@@ -779,96 +720,9 @@ function clampCrop(){
       imgObj = img;
       wrapPrev.style.display = "block";
       btnOcr.disabled = false;
-      btnRot.disabled = false;
       elStatus.textContent = "Ready. Adjust crop, then Run OCR.";
       drawPreview();
     };
-
-  function hitTest(px, py){
-    const w = canvas.width, h = canvas.height;
-    const x1 = w * (cropRect.left/100), x2 = w * (cropRect.right/100);
-    const y1 = h * (cropRect.top/100),  y2 = h * (cropRect.bottom/100);
-    const tol = 18;
-
-    function near(a,b){ return Math.abs(a-b) <= tol; }
-    const inBox = (px>=x1 && px<=x2 && py>=y1 && py<=y2);
-
-    // corners
-    if(near(px,x1) && near(py,y1)) return "tl";
-    if(near(px,x2) && near(py,y1)) return "tr";
-    if(near(px,x1) && near(py,y2)) return "bl";
-    if(near(px,x2) && near(py,y2)) return "br";
-    // edges
-    if(near(py,y1) && px>=x1 && px<=x2) return "t";
-    if(near(py,y2) && px>=x1 && px<=x2) return "b";
-    if(near(px,x1) && py>=y1 && py<=y2) return "l";
-    if(near(px,x2) && py>=y1 && py<=y2) return "r";
-    if(inBox) return "move";
-    return null;
-  }
-
-  function pctFromPx(px,py){
-    return { x: (px/canvas.width)*100, y: (py/canvas.height)*100 };
-  }
-
-  function onDown(ev){
-    if(!imgObj) return;
-    const rect = canvas.getBoundingClientRect();
-    const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
-    const cy = (ev.touches ? ev.touches[0].clientY : ev.clientY) - rect.top;
-    const mode = hitTest(cx,cy);
-    if(!mode) return;
-    dragMode = mode;
-    dragStart = { ...cropRect, ...pctFromPx(cx,cy) };
-    ev.preventDefault();
-  }
-
-  function onMove(ev){
-    if(!dragMode || !dragStart) return;
-    const rect = canvas.getBoundingClientRect();
-    const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
-    const cy = (ev.touches ? ev.touches[0].clientY : ev.clientY) - rect.top;
-    const p = pctFromPx(cx,cy);
-
-    const dx = p.x - dragStart.x;
-    const dy = p.y - dragStart.y;
-
-    cropRect = { left: dragStart.left, right: dragStart.right, top: dragStart.top, bottom: dragStart.bottom };
-
-    if(dragMode === "move"){
-      cropRect.left += dx; cropRect.right += dx;
-      cropRect.top  += dy; cropRect.bottom += dy;
-    }else{
-      if(dragMode.includes("l")) cropRect.left += dx;
-      if(dragMode.includes("r")) cropRect.right += dx;
-      if(dragMode.includes("t")) cropRect.top += dy;
-      if(dragMode.includes("b")) cropRect.bottom += dy;
-      if(dragMode === "l") cropRect.left += dx;
-      if(dragMode === "r") cropRect.right += dx;
-      if(dragMode === "t") cropRect.top += dy;
-      if(dragMode === "b") cropRect.bottom += dy;
-    }
-    clampCrop();
-    rngTop.value = String(Math.round(cropRect.top));
-    rngBottom.value = String(Math.round(cropRect.bottom));
-    rngLeft.value = String(Math.round(cropRect.left));
-    rngRight.value = String(Math.round(cropRect.right));
-    drawPreview();
-    ev.preventDefault();
-  }
-
-  function onUp(){
-    dragMode = null;
-    dragStart = null;
-  }
-
-  canvas.addEventListener("mousedown", onDown);
-  canvas.addEventListener("mousemove", onMove);
-  window.addEventListener("mouseup", onUp);
-
-  canvas.addEventListener("touchstart", onDown, {passive:false});
-  canvas.addEventListener("touchmove", onMove, {passive:false});
-  canvas.addEventListener("touchend", onUp);
     img.src = url;
   };
 
@@ -876,11 +730,6 @@ function clampCrop(){
   rngBottom.oninput = drawPreview;
   rngLeft.oninput = drawPreview;
   rngRight.oninput = drawPreview;
-
-  btnRot.onclick = ()=>{
-    rotDeg = (rotDeg + 90) % 360;
-    drawPreview();
-  };
 
   btnOcr.onclick = async ()=>{
     if(!imgObj){
@@ -910,7 +759,7 @@ function clampCrop(){
     const sh = Math.max(40, Math.round(srcH * ((bottom-top)/100)));
 
     // Destination size for OCR
-    const maxDestW = (chkAcc && chkAcc.checked) ? 2000 : 1600;
+    const maxDestW = 1400;
     const dScale = Math.min(1, maxDestW / sw);
     const dw = Math.max(200, Math.round(sw * dScale));
     const dh = Math.max(200, Math.round(sh * dScale));
@@ -922,30 +771,27 @@ function clampCrop(){
 
     cctx.drawImage(imgObj, sx, sy, sw, sh, 0, 0, dw, dh);
 
-    // Preprocessing: grayscale + contrast + binarize (helps receipts/checks)
+    // Light preprocessing: grayscale + contrast boost
     try{
       const imgData = cctx.getImageData(0,0,dw,dh);
       const data = imgData.data;
-      const contrast = (chkAcc && chkAcc.checked) ? 1.45 : 1.25;
-      const thresh = (chkAcc && chkAcc.checked) ? 160 : 175;
       for(let i=0;i<data.length;i+=4){
         const r=data[i], g=data[i+1], b=data[i+2];
+        // luminance
         let y = 0.2126*r + 0.7152*g + 0.0722*b;
-        y = (y - 128) * contrast + 128;
-        let v = (y >= thresh) ? 255 : 0;
-        if(chkInv && chkInv.checked) v = 255 - v;
-        data[i]=data[i+1]=data[i+2]=v;
+        // contrast
+        y = (y - 128) * 1.25 + 128;
+        y = Math.max(0, Math.min(255, y));
+        data[i]=data[i+1]=data[i+2]=y;
       }
       cctx.putImageData(imgData,0,0);
-    }catch(_e){}elStatus.textContent = "Running OCR… (10–30s, or up to ~60s in High accuracy)";
+    }catch(_e){}
+
+    elStatus.textContent = "Running OCR… (this can take 10–30s on iPhone)";
     try{
-      async function runTess(psm){
       const res = await Tesseract.recognize(crop, "eng", {
-        tessedit_pageseg_mode: (psm==="digits") ? 6 : psm,
-        tessedit_char_whitelist: (psm==="digits") ? "0123456789./$- 
-" : undefined,
+        tessedit_pageseg_mode: 6,
         preserve_interword_spaces: "1",
-        user_defined_dpi: "300",
         logger: m=>{
           if(m && m.status){
             const pct = (m.progress!=null) ? ` ${(m.progress*100).toFixed(0)}%` : "";
@@ -953,28 +799,8 @@ function clampCrop(){
           }
         }
       });
-      const txt = (res && res.data && res.data.text) ? res.data.text : "";
-      return String(txt||"").trim();
-    }
 
-    // Multi-pass OCR: try a couple modes and keep the best output
-    const tries = (chkAcc && chkAcc.checked) ? [6, 11, 7, "digits"] : [6, 11];
-    let bestText = "";
-    let bestScore = -1;
-
-    for(const psm of tries){
-      elStatus.textContent = `Running OCR (mode ${psm})…`;
-      const txt = await runTess(psm);
-      const digits = (txt.match(/\d/g)||[]).length;
-      const letters = (txt.match(/[A-Za-z]/g)||[]).length;
-      const score = digits*2 + letters;
-      if(score > bestScore){
-        bestScore = score;
-        bestText = txt;
-      }
-    }
-
-    const rawText = bestText;
+      const rawText = (res && res.data && res.data.text) ? res.data.text : "";
       if(!rawText.trim()){
         alert("OCR returned no text. Try a clearer photo or adjust crop.");
       }else{
@@ -1005,7 +831,6 @@ function clampCrop(){
       alert("OCR failed. Try again with better lighting and tighter crop.");
     }finally{
       btnOcr.disabled = false;
-      btnRot.disabled = false;
       btnScan.disabled = false;
     }
   };
