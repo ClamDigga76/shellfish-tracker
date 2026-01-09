@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006I";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006J";
 
 
 
@@ -542,8 +542,8 @@ function renderNewTrip(){
           <div class="label">Quick paste (optional)</div>
           <textarea class="textarea" id="t_paste" placeholder="Paste OCR text here (optional)"></textarea>
           <div class="actions">
-            <button class="smallbtn" id="parsePaste">Parse OCR</button>
-            <button class="smallbtn" id="ocrToReview">Send to Review</button>
+            <button class="smallbtn" id="pasteClip">Paste</button>
+            <button class="smallbtn" id="ocrToReview">Review</button>
 
             <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap;">
               <button class="smallbtn" id="scanReceiptBtn">Scan Receipt (Camera)</button>
@@ -612,27 +612,28 @@ function renderNewTrip(){
     elArea.addEventListener(ev, saveDraft);
   });
 
-  document.getElementById("parsePaste").onclick = ()=>{
-    const parsed = parseOcrText(elPaste.value, state.areas||[]);
-    if(parsed.dateMDY) elDate.value = parsed.dateMDY;
-    if(parsed.dealer) elDealer.value = parsed.dealer;
-    if(parsed.pounds) elPounds.value = parsed.pounds;
-    if(parsed.amount) elAmount.value = parsed.amount;
-    if(parsed.area) elArea.value = parsed.area;
+    
+document.getElementById("pasteClip").onclick = async ()=>{
+  try{
+    if(!navigator.clipboard || !navigator.clipboard.readText){
+      alert("Clipboard not available in this browser. Long-press the text box and Paste.");
+      return;
+    }
+    const txt = await navigator.clipboard.readText();
+    if(!txt || !txt.trim()){
+      alert("Clipboard is empty.");
+      return;
+    }
+    elPaste.value = txt.trim();
+    // Always go to Review (still requires Confirm & Save)
+    document.getElementById("ocrToReview").click();
+  }catch(err){
+    console.error(err);
+    alert("Paste failed. Try long-press → Paste, or check browser permissions.");
+  }
+};
 
-    saveDraft();
-
-    const msg =
-      `OCR Parse Results:\n`+
-      `Date: ${parsed.dateMDY||"(none)"} (${parsed.confidence.date})\n`+
-      `Dealer: ${parsed.dealer||"(none)"} (${parsed.confidence.dealer})\n`+
-      `Pounds: ${parsed.pounds||"(none)"} (${parsed.confidence.pounds})\n`+
-      `Amount: ${parsed.amount||"(none)"} (${parsed.confidence.amount})\n`+
-      `Area: ${parsed.area||"(none)"} (${parsed.confidence.area})\n\n`+
-      `Tip: Always verify in Review before saving.`;
-    alert(msg);
-  };
-  document.getElementById("ocrToReview").onclick = ()=>{
+document.getElementById("ocrToReview").onclick = ()=>{
     const parsed = parseOcrText(elPaste.value, state.areas||[]);
     if(parsed.dateMDY) elDate.value = parsed.dateMDY;
     if(parsed.dealer) elDealer.value = parsed.dealer;
