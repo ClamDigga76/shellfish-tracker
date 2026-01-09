@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006G";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006I";
 
 
 
@@ -661,6 +661,10 @@ function renderNewTrip(){
 
   let imgObj = null;
 
+  // Draggable crop edges (keeps sliders as the primary UI)
+  let lastRect = null; // {w,h,x1,x2,y1,y2}
+  let dragEdge = null; // 'left'|'right'|'top'|'bottom'
+
   function drawPreview(){
     if(!imgObj) return;
 
@@ -696,6 +700,8 @@ function renderNewTrip(){
     const y1 = Math.round(h * (top/100));
     const y2 = Math.round(h * (bottom/100));
 
+    lastRect = { w, h, x1, x2, y1, y2 };
+
     // shade outside crop
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.fillRect(0,0,w,y1);
@@ -729,6 +735,102 @@ function renderNewTrip(){
   rngTop.oninput = drawPreview;
   rngBottom.oninput = drawPreview;
   rngLeft.oninput = drawPreview;
+
+  // Enable dragging crop edges directly on the preview canvas (optional power feature)
+  try{ canvas.style.touchAction = "none"; }catch(_e){}
+
+  function clampCropSliders(){
+    let top = parseInt(rngTop.value,10);
+    let bottom = parseInt(rngBottom.value,10);
+    let left = parseInt(rngLeft.value,10);
+    let right = parseInt(rngRight.value,10);
+
+    top = Math.min(top, bottom-5);
+    bottom = Math.max(bottom, top+5);
+    left = Math.min(left, right-5);
+    right = Math.max(right, left+5);
+
+    rngTop.value = String(top);
+    rngBottom.value = String(bottom);
+    rngLeft.value = String(left);
+    rngRight.value = String(right);
+  }
+
+  function pickEdge(px, py){
+    if(!lastRect) return null;
+    const {x1,x2,y1,y2} = lastRect;
+    const tol = 14; // px
+    const inY = (py >= y1 - tol && py <= y2 + tol);
+    const inX = (px >= x1 - tol && px <= x2 + tol);
+
+    const dL = Math.abs(px - x1);
+    const dR = Math.abs(px - x2);
+    const dT = Math.abs(py - y1);
+    const dB = Math.abs(py - y2);
+
+    let best = null;
+    let bestD = 1e9;
+
+    if(inY && dL <= tol && dL < bestD){ best="left"; bestD=dL; }
+    if(inY && dR <= tol && dR < bestD){ best="right"; bestD=dR; }
+    if(inX && dT <= tol && dT < bestD){ best="top"; bestD=dT; }
+    if(inX && dB <= tol && dB < bestD){ best="bottom"; bestD=dB; }
+    return best;
+  }
+
+  function onPointerDown(e){
+    if(!imgObj) return;
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    const edge = pickEdge(px, py);
+    if(!edge) return;
+
+    dragEdge = edge;
+    try{ canvas.setPointerCapture(e.pointerId); }catch(_e){}
+    e.preventDefault();
+  }
+
+  function onPointerMove(e){
+    if(!dragEdge || !lastRect) return;
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+
+    const w = Math.max(1, rect.width);
+    const h = Math.max(1, rect.height);
+
+    if(dragEdge === "left"){
+      const p = Math.round((px / w) * 100);
+      rngLeft.value = String(Math.max(0, Math.min(p, parseInt(rngRight.value,10)-5)));
+    }else if(dragEdge === "right"){
+      const p = Math.round((px / w) * 100);
+      rngRight.value = String(Math.min(100, Math.max(p, parseInt(rngLeft.value,10)+5)));
+    }else if(dragEdge === "top"){
+      const p = Math.round((py / h) * 100);
+      rngTop.value = String(Math.max(0, Math.min(p, parseInt(rngBottom.value,10)-5)));
+    }else if(dragEdge === "bottom"){
+      const p = Math.round((py / h) * 100);
+      rngBottom.value = String(Math.min(100, Math.max(p, parseInt(rngTop.value,10)+5)));
+    }
+
+    clampCropSliders();
+    drawPreview();
+    e.preventDefault();
+  }
+
+  function onPointerUp(e){
+    if(!dragEdge) return;
+    dragEdge = null;
+    try{ canvas.releasePointerCapture(e.pointerId); }catch(_e){}
+    e.preventDefault();
+  }
+
+  canvas.addEventListener("pointerdown", onPointerDown);
+  canvas.addEventListener("pointermove", onPointerMove);
+  canvas.addEventListener("pointerup", onPointerUp);
+  canvas.addEventListener("pointercancel", onPointerUp);
+
   rngRight.oninput = drawPreview;
 
   btnOcr.onclick = async ()=>{
@@ -771,26 +873,78 @@ function renderNewTrip(){
 
     cctx.drawImage(imgObj, sx, sy, sw, sh, 0, 0, dw, dh);
 
-    // Light preprocessing: grayscale + contrast boost
+    // Light preprocessing: grayscale + contrast + binarize (helps receipts)
     try{
       const imgData = cctx.getImageData(0,0,dw,dh);
       const data = imgData.data;
+
+      // 1) grayscale + contrast
+      let mean = 0;
       for(let i=0;i<data.length;i+=4){
         const r=data[i], g=data[i+1], b=data[i+2];
-        // luminance
         let y = 0.2126*r + 0.7152*g + 0.0722*b;
-        // contrast
-        y = (y - 128) * 1.25 + 128;
+        y = (y - 128) * 1.35 + 128; // contrast
         y = Math.max(0, Math.min(255, y));
         data[i]=data[i+1]=data[i+2]=y;
+        mean += y;
       }
+      mean = mean / (data.length/4);
+
+      // 2) auto-invert if image is unusually dark
+      if(mean < 110){
+        for(let i=0;i<data.length;i+=4){
+          const y = 255 - data[i];
+          data[i]=data[i+1]=data[i+2]=y;
+        }
+      }
+
+      // 3) Otsu threshold (fast histogram, slight downsample)
+      const hist = new Array(256).fill(0);
+      const stride = 4; // sample every 4th pixel for speed
+      for(let i=0;i<data.length;i+=4*stride){
+        hist[data[i] | 0] += 1;
+      }
+
+      const total = hist.reduce((a,b)=>a+b,0) || 1;
+      let sum = 0;
+      for(let t=0;t<256;t++) sum += t * hist[t];
+
+      let sumB = 0;
+      let wB = 0;
+      let wF = 0;
+      let varMax = -1;
+      let threshold = 160;
+
+      for(let t=0;t<256;t++){
+        wB += hist[t];
+        if(wB === 0) continue;
+        wF = total - wB;
+        if(wF === 0) break;
+        sumB += t * hist[t];
+        const mB = sumB / wB;
+        const mF = (sum - sumB) / wF;
+        const varBetween = wB * wF * (mB - mF) * (mB - mF);
+        if(varBetween > varMax){
+          varMax = varBetween;
+          threshold = t;
+        }
+      }
+
+      // Apply threshold
+      for(let i=0;i<data.length;i+=4){
+        const y = data[i];
+        const v = y >= threshold ? 255 : 0;
+        data[i]=data[i+1]=data[i+2]=v;
+      }
+
       cctx.putImageData(imgData,0,0);
     }catch(_e){}
 
     elStatus.textContent = "Running OCR… (this can take 10–30s on iPhone)";
     try{
       const res = await Tesseract.recognize(crop, "eng", {
-        tessedit_pageseg_mode: 6,
+        tessedit_pageseg_mode: "6",
+        user_defined_dpi: "300",
         preserve_interword_spaces: "1",
         logger: m=>{
           if(m && m.status){
