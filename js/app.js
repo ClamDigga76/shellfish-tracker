@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006J";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006L";
 
 
 
@@ -512,6 +512,34 @@ function renderNewTrip(){
     <div class="card">
       <div class="form">
         <div class="field">
+          <div class="label">Receipt text (copy → paste)</div>
+
+          <div id="entryPrompt" class="muted small" style="display:none; margin-bottom:10px; padding:10px 12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:14px;">
+            <div class="row" style="justify-content:space-between;align-items:center;gap:10px">
+              <div><b>Clipboard text detected.</b> <span class="muted small">Paste and go to Review?</span></div>
+              <div class="row" style="gap:8px;flex-wrap:nowrap">
+                <button class="smallbtn" id="entryUse">Paste → Review</button>
+                <button class="smallbtn" id="entryDismiss">Dismiss</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn primary" id="pasteToReviewPrimary" style="width:100%;">Paste → Review</button>
+          <div class="hint">After copying receipt text with Live Text, tap <b>Paste → Review</b>.</div>
+
+          <div id="pasteFallbackHint" class="muted small" style="display:none; margin-top:10px;">
+            If Paste doesn’t work, tap and hold in the box below and choose Paste, then tap <b>Paste → Review</b>.
+          </div>
+
+          <div id="recentPastes" class="row" style="margin-top:10px; display:none; gap:8px;"></div>
+
+          <details id="pasteDetails" style="margin-top:10px;">
+            <summary class="muted small" style="cursor:pointer;">Show/edit pasted text (optional)</summary>
+            <textarea class="textarea" id="t_paste" placeholder="Tap and hold to Paste receipt text here (optional)" style="min-height:70px;"></textarea>
+          </details>
+        </div>
+
+        <div class="field">
           <div class="label">Harvest date</div>
           <input class="input" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
         </div>
@@ -538,45 +566,6 @@ function renderNewTrip(){
           </select>
         </div>
 
-        <div class="field">
-          <div class="label">Quick paste (optional)</div>
-          <textarea class="textarea" id="t_paste" placeholder="Paste OCR text here (optional)"></textarea>
-          <div class="actions">
-            <button class="smallbtn" id="pasteClip">Paste</button>
-            <button class="smallbtn" id="ocrToReview">Review</button>
-
-            <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap;">
-              <button class="smallbtn" id="scanReceiptBtn">Scan Receipt (Camera)</button>
-              <button class="smallbtn" id="runOcrBtn" disabled>Run OCR</button>
-            </div>
-            <div class="muted small" style="margin-top:6px;">
-              Tip: Take a clear photo, adjust crop if needed, then Run OCR. Still requires Review & Confirm.
-            </div>
-
-            <input id="scanFile" type="file" accept="image/*" capture="environment" style="display:none;" />
-
-            <div id="ocrPreviewWrap" style="margin-top:10px; display:none;">
-              <div class="muted small" style="margin-bottom:6px;">Preview + Crop (vertical)</div>
-              <canvas id="ocrCanvas" style="width:100%; border-radius:14px; border:1px solid rgba(255,255,255,0.12);"></canvas>
-
-              <div style="margin-top:10px;">
-                <div class="muted small">Crop top (%)</div>
-                <input id="cropTop" type="range" min="0" max="80" value="10" style="width:100%;">
-                <div class="muted small" style="margin-top:6px;">Crop bottom (%)</div>
-                <input id="cropBottom" type="range" min="20" max="100" value="90" style="width:100%;">
-
-                <div class="muted small" style="margin-top:10px;">Crop left (%)</div>
-                <input id="cropLeft" type="range" min="0" max="80" value="5" style="width:100%;">
-                <div class="muted small" style="margin-top:6px;">Crop right (%)</div>
-                <input id="cropRight" type="range" min="20" max="100" value="95" style="width:100%;">
-              </div>
-
-              <div id="ocrStatus" class="muted small" style="margin-top:8px;"></div>
-            </div>
-            <span class="muted small">Parses date / dealer / lbs / amount (best-effort). Nothing saves until Review & Confirm.</span>
-          </div>
-        </div>
-
         <div class="actions">
           <button class="btn primary" id="saveTrip">Save Trip</button>
           <button class="btn" id="cancelTrip">Cancel</button>
@@ -591,50 +580,115 @@ function renderNewTrip(){
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
   const elArea = document.getElementById("t_area");
+  
   const elPaste = document.getElementById("t_paste");
 
-  const saveDraft = ()=>{
-    state.draft = {
-      dateISO: parseMDYToISO(elDate.value) || draft.dateISO || todayISO,
-      dealer: elDealer.value || "",
-      pounds: elPounds.value || "",
-      amount: elAmount.value || "",
-      area: elArea.value || ""
-    };
-    saveState();
-  };
+  // --- Outside-first Live Text intake (copy → paste) ---
+  const entryPrompt = document.getElementById("entryPrompt");
+  const entryUseBtn = document.getElementById("entryUse");
+  const entryDismissBtn = document.getElementById("entryDismiss");
+  const btnPastePrimary = document.getElementById("pasteToReviewPrimary");
+  const fallbackHint = document.getElementById("pasteFallbackHint");
+  const recentWrap = document.getElementById("recentPastes");
+  const pasteDetails = document.getElementById("pasteDetails");
 
-  ["input","change","blur"].forEach(ev=>{
-    elDate.addEventListener(ev, saveDraft);
-    elDealer.addEventListener(ev, saveDraft);
-    elPounds.addEventListener(ev, saveDraft);
-    elAmount.addEventListener(ev, saveDraft);
-    elArea.addEventListener(ev, saveDraft);
-  });
+  const KEY_ENTRY_DISMISSED = "shellfish_clip_entry_dismissed";
+  const KEY_ENTRY_TRIED = "shellfish_clip_entry_tried";
+  const KEY_FOCUS_TRIED = "shellfish_clip_focus_tried";
+  const KEY_FALLBACK_SHOWN = "shellfish_clip_fallback_shown";
+  const KEY_RECENT_PASTES = "shellfish_recent_pastes_v1"; // session-only
 
-    
-document.getElementById("pasteClip").onclick = async ()=>{
-  try{
-    if(!navigator.clipboard || !navigator.clipboard.readText){
-      alert("Clipboard not available in this browser. Long-press the text box and Paste.");
-      return;
-    }
-    const txt = await navigator.clipboard.readText();
-    if(!txt || !txt.trim()){
-      alert("Clipboard is empty.");
-      return;
-    }
-    elPaste.value = txt.trim();
-    // Always go to Review (still requires Confirm & Save)
-    document.getElementById("ocrToReview").click();
-  }catch(err){
-    console.error(err);
-    alert("Paste failed. Try long-press → Paste, or check browser permissions.");
+  let clipCandidate = "";
+
+  function looksReceiptLike(txt){
+    const s = String(txt||"").trim();
+    if(s.length < 25) return false;
+    if(/https?:\/\//i.test(s)) return false;
+    if(/\b(subject|from|sent):/i.test(s) && s.split(/\r?\n/).length < 8) return false;
+
+    const lines = s.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    if(lines.length < 3) return false;
+
+    if(!/[0-9]/.test(s) || !/[A-Za-z]/.test(s)) return false;
+
+    const kw = /\b(amount|total|subtotal|balance|description|check|pay to|machias|seafood)\b|\$|\b(lbs?|pounds?)\b/i;
+    return kw.test(s);
   }
-};
 
-document.getElementById("ocrToReview").onclick = ()=>{
-    const parsed = parseOcrText(elPaste.value, state.areas||[]);
+  async function readClipboardBestEffort(){
+    if(!navigator.clipboard || !navigator.clipboard.readText) return "";
+    try{
+      const t = await navigator.clipboard.readText();
+      return String(t||"").trim();
+    }catch{
+      return "";
+    }
+  }
+
+  function showFallbackHintOnce(){
+    try{
+      if(sessionStorage.getItem(KEY_FALLBACK_SHOWN) === "1") return;
+      sessionStorage.setItem(KEY_FALLBACK_SHOWN, "1");
+    }catch{}
+    if(fallbackHint) fallbackHint.style.display = "block";
+    if(pasteDetails) pasteDetails.open = true;
+    if(elPaste) elPaste.focus();
+  }
+
+  function getRecents(){
+    try{
+      const raw = sessionStorage.getItem(KEY_RECENT_PASTES);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch{
+      return [];
+    }
+  }
+
+  function setRecents(arr){
+    try{ sessionStorage.setItem(KEY_RECENT_PASTES, JSON.stringify(arr||[])); }catch{}
+  }
+
+  function addRecent(text){
+    const t = String(text||"").trim();
+    if(!t) return;
+    const cur = getRecents();
+    // de-dupe by first 60 chars
+    const sig = t.slice(0,60);
+    const next = [t, ...cur.filter(x => String(x||"").slice(0,60) !== sig)].slice(0,3);
+    setRecents(next);
+    renderRecents();
+  }
+
+  function renderRecents(){
+    if(!recentWrap) return;
+    const rec = getRecents();
+    if(!rec.length){
+      recentWrap.style.display = "none";
+      recentWrap.innerHTML = "";
+      return;
+    }
+    recentWrap.style.display = "flex";
+    recentWrap.innerHTML = rec.map((_,i)=>`<button class="smallbtn" data-recent="${i}">${i===0 ? "Use last paste" : "Use previous"}</button>`).join("");
+    recentWrap.querySelectorAll("button[data-recent]").forEach(btn=>{
+      btn.onclick = ()=>{
+        const i = Number(btn.getAttribute("data-recent"));
+        const txt = getRecents()[i] || "";
+        if(txt) applyPastedText(txt);
+      };
+    });
+  }
+
+  function applyPastedText(txt){
+    const t = String(txt||"").trim();
+    if(!t) return;
+
+    // keep the raw text available for audit/edit
+    if(elPaste) elPaste.value = t;
+    addRecent(t);
+
+    // Parse into draft fields
+    const parsed = parseOcrText(t, state.areas||[]);
     if(parsed.dateMDY) elDate.value = parsed.dateMDY;
     if(parsed.dealer) elDealer.value = parsed.dealer;
     if(parsed.pounds) elPounds.value = parsed.pounds;
@@ -643,361 +697,80 @@ document.getElementById("ocrToReview").onclick = ()=>{
 
     saveDraft();
 
-    // Jump straight to Review (still requires Confirm & Save)
+    // Always go to Review (still requires Confirm & Save)
     document.getElementById("saveTrip").click();
-  };
-
-  // Option 2 (Phase 4B-2): Camera capture + simple crop + in-app OCR (Tesseract)
-  const btnScan = document.getElementById("scanReceiptBtn");
-  const btnOcr  = document.getElementById("runOcrBtn");
-  const inpFile = document.getElementById("scanFile");
-  const wrapPrev= document.getElementById("ocrPreviewWrap");
-  const canvas  = document.getElementById("ocrCanvas");
-  const ctx     = canvas.getContext("2d");
-  const rngTop   = document.getElementById("cropTop");
-  const rngBottom= document.getElementById("cropBottom");
-  const rngLeft  = document.getElementById("cropLeft");
-  const rngRight = document.getElementById("cropRight");
-  const elStatus = document.getElementById("ocrStatus");
-
-  let imgObj = null;
-
-  // Draggable crop edges (keeps sliders as the primary UI)
-  let lastRect = null; // {w,h,x1,x2,y1,y2}
-  let dragEdge = null; // 'left'|'right'|'top'|'bottom'
-
-  function drawPreview(){
-    if(!imgObj) return;
-
-    // Scale for preview (does NOT affect OCR source crop; we crop from the original image)
-    const maxW = 1000;
-    const scale = Math.min(1, maxW / imgObj.naturalWidth);
-    const w = Math.round(imgObj.naturalWidth * scale);
-    const h = Math.round(imgObj.naturalHeight * scale);
-
-    canvas.width = w;
-    canvas.height = h;
-    ctx.clearRect(0,0,w,h);
-    ctx.drawImage(imgObj, 0, 0, w, h);
-
-    // clamp sliders
-    let top = parseInt(rngTop.value,10);
-    let bottom = parseInt(rngBottom.value,10);
-    let left = parseInt(rngLeft.value,10);
-    let right = parseInt(rngRight.value,10);
-
-    top = Math.min(top, bottom-5);
-    bottom = Math.max(bottom, top+5);
-    left = Math.min(left, right-5);
-    right = Math.max(right, left+5);
-
-    rngTop.value = String(top);
-    rngBottom.value = String(bottom);
-    rngLeft.value = String(left);
-    rngRight.value = String(right);
-
-    const x1 = Math.round(w * (left/100));
-    const x2 = Math.round(w * (right/100));
-    const y1 = Math.round(h * (top/100));
-    const y2 = Math.round(h * (bottom/100));
-
-    lastRect = { w, h, x1, x2, y1, y2 };
-
-    // shade outside crop
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
-    ctx.fillRect(0,0,w,y1);
-    ctx.fillRect(0,y2,w,h-y2);
-    ctx.fillRect(0,y1,x1,y2-y1);
-    ctx.fillRect(x2,y1,w-x2,y2-y1);
-
-    // draw crop rectangle
-    ctx.strokeStyle = "rgba(80,160,255,0.95)";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x1+2, y1+2, Math.max(0,(x2-x1)-4), Math.max(0,(y2-y1)-4));
   }
 
-  btnScan.onclick = ()=> inpFile.click();
-
-  inpFile.onchange = ()=>{
-    const f = inpFile.files && inpFile.files[0];
-    if(!f) return;
-    const url = URL.createObjectURL(f);
-    const img = new Image();
-    img.onload = ()=>{
-      imgObj = img;
-      wrapPrev.style.display = "block";
-      btnOcr.disabled = false;
-      elStatus.textContent = "Ready. Adjust crop, then Run OCR.";
-      drawPreview();
-    };
-    img.src = url;
-  };
-
-  rngTop.oninput = drawPreview;
-  rngBottom.oninput = drawPreview;
-  rngLeft.oninput = drawPreview;
-
-  // Enable dragging crop edges directly on the preview canvas (optional power feature)
-  try{ canvas.style.touchAction = "none"; }catch(_e){}
-
-  function clampCropSliders(){
-    let top = parseInt(rngTop.value,10);
-    let bottom = parseInt(rngBottom.value,10);
-    let left = parseInt(rngLeft.value,10);
-    let right = parseInt(rngRight.value,10);
-
-    top = Math.min(top, bottom-5);
-    bottom = Math.max(bottom, top+5);
-    left = Math.min(left, right-5);
-    right = Math.max(right, left+5);
-
-    rngTop.value = String(top);
-    rngBottom.value = String(bottom);
-    rngLeft.value = String(left);
-    rngRight.value = String(right);
-  }
-
-  function pickEdge(px, py){
-    if(!lastRect) return null;
-    const {x1,x2,y1,y2} = lastRect;
-    const tol = 14; // px
-    const inY = (py >= y1 - tol && py <= y2 + tol);
-    const inX = (px >= x1 - tol && px <= x2 + tol);
-
-    const dL = Math.abs(px - x1);
-    const dR = Math.abs(px - x2);
-    const dT = Math.abs(py - y1);
-    const dB = Math.abs(py - y2);
-
-    let best = null;
-    let bestD = 1e9;
-
-    if(inY && dL <= tol && dL < bestD){ best="left"; bestD=dL; }
-    if(inY && dR <= tol && dR < bestD){ best="right"; bestD=dR; }
-    if(inX && dT <= tol && dT < bestD){ best="top"; bestD=dT; }
-    if(inX && dB <= tol && dB < bestD){ best="bottom"; bestD=dB; }
-    return best;
-  }
-
-  function onPointerDown(e){
-    if(!imgObj) return;
-    const rect = canvas.getBoundingClientRect();
-    const px = e.clientX - rect.left;
-    const py = e.clientY - rect.top;
-    const edge = pickEdge(px, py);
-    if(!edge) return;
-
-    dragEdge = edge;
-    try{ canvas.setPointerCapture(e.pointerId); }catch(_e){}
-    e.preventDefault();
-  }
-
-  function onPointerMove(e){
-    if(!dragEdge || !lastRect) return;
-    const rect = canvas.getBoundingClientRect();
-    const px = e.clientX - rect.left;
-    const py = e.clientY - rect.top;
-
-    const w = Math.max(1, rect.width);
-    const h = Math.max(1, rect.height);
-
-    if(dragEdge === "left"){
-      const p = Math.round((px / w) * 100);
-      rngLeft.value = String(Math.max(0, Math.min(p, parseInt(rngRight.value,10)-5)));
-    }else if(dragEdge === "right"){
-      const p = Math.round((px / w) * 100);
-      rngRight.value = String(Math.min(100, Math.max(p, parseInt(rngLeft.value,10)+5)));
-    }else if(dragEdge === "top"){
-      const p = Math.round((py / h) * 100);
-      rngTop.value = String(Math.max(0, Math.min(p, parseInt(rngBottom.value,10)-5)));
-    }else if(dragEdge === "bottom"){
-      const p = Math.round((py / h) * 100);
-      rngBottom.value = String(Math.min(100, Math.max(p, parseInt(rngTop.value,10)+5)));
+  function hideEntryPrompt(markDismissed){
+    if(entryPrompt) entryPrompt.style.display = "none";
+    clipCandidate = "";
+    if(markDismissed){
+      try{ sessionStorage.setItem(KEY_ENTRY_DISMISSED, "1"); }catch{}
     }
-
-    clampCropSliders();
-    drawPreview();
-    e.preventDefault();
   }
 
-  function onPointerUp(e){
-    if(!dragEdge) return;
-    dragEdge = null;
-    try{ canvas.releasePointerCapture(e.pointerId); }catch(_e){}
-    e.preventDefault();
-  }
-
-  canvas.addEventListener("pointerdown", onPointerDown);
-  canvas.addEventListener("pointermove", onPointerMove);
-  canvas.addEventListener("pointerup", onPointerUp);
-  canvas.addEventListener("pointercancel", onPointerUp);
-
-  rngRight.oninput = drawPreview;
-
-  btnOcr.onclick = async ()=>{
-    if(!imgObj){
-      alert("Take a photo first.");
-      return;
-    }
-    if(typeof Tesseract === "undefined"){
-      alert("OCR engine not loaded. Check connection and reload.");
-      return;
-    }
-
-    btnOcr.disabled = true;
-    btnScan.disabled = true;
-
-    // Crop from ORIGINAL image (avoid overlay contamination)
-    const top = Math.min(parseInt(rngTop.value,10), parseInt(rngBottom.value,10)-5);
-    const bottom = Math.max(parseInt(rngBottom.value,10), top+5);
-    const left = Math.min(parseInt(rngLeft.value,10), parseInt(rngRight.value,10)-5);
-    const right = Math.max(parseInt(rngRight.value,10), left+5);
-
-    const srcW = imgObj.naturalWidth;
-    const srcH = imgObj.naturalHeight;
-
-    const sx = Math.round(srcW * (left/100));
-    const sy = Math.round(srcH * (top/100));
-    const sw = Math.max(40, Math.round(srcW * ((right-left)/100)));
-    const sh = Math.max(40, Math.round(srcH * ((bottom-top)/100)));
-
-    // Destination size for OCR
-    const maxDestW = 1400;
-    const dScale = Math.min(1, maxDestW / sw);
-    const dw = Math.max(200, Math.round(sw * dScale));
-    const dh = Math.max(200, Math.round(sh * dScale));
-
-    const crop = document.createElement("canvas");
-    crop.width = dw;
-    crop.height = dh;
-    const cctx = crop.getContext("2d");
-
-    cctx.drawImage(imgObj, sx, sy, sw, sh, 0, 0, dw, dh);
-
-    // Light preprocessing: grayscale + contrast + binarize (helps receipts)
+  async function maybePromptOnEntry(){
     try{
-      const imgData = cctx.getImageData(0,0,dw,dh);
-      const data = imgData.data;
+      if(sessionStorage.getItem(KEY_ENTRY_DISMISSED) === "1") return;
+      if(sessionStorage.getItem(KEY_ENTRY_TRIED) === "1") return;
+      sessionStorage.setItem(KEY_ENTRY_TRIED, "1");
+    }catch{}
 
-      // 1) grayscale + contrast
-      let mean = 0;
-      for(let i=0;i<data.length;i+=4){
-        const r=data[i], g=data[i+1], b=data[i+2];
-        let y = 0.2126*r + 0.7152*g + 0.0722*b;
-        y = (y - 128) * 1.35 + 128; // contrast
-        y = Math.max(0, Math.min(255, y));
-        data[i]=data[i+1]=data[i+2]=y;
-        mean += y;
-      }
-      mean = mean / (data.length/4);
+    const txt = await readClipboardBestEffort();
+    if(!looksReceiptLike(txt)) return;
 
-      // 2) auto-invert if image is unusually dark
-      if(mean < 110){
-        for(let i=0;i<data.length;i+=4){
-          const y = 255 - data[i];
-          data[i]=data[i+1]=data[i+2]=y;
-        }
-      }
+    clipCandidate = txt;
+    if(entryPrompt) entryPrompt.style.display = "block";
+  }
 
-      // 3) Otsu threshold (fast histogram, slight downsample)
-      const hist = new Array(256).fill(0);
-      const stride = 4; // sample every 4th pixel for speed
-      for(let i=0;i<data.length;i+=4*stride){
-        hist[data[i] | 0] += 1;
-      }
-
-      const total = hist.reduce((a,b)=>a+b,0) || 1;
-      let sum = 0;
-      for(let t=0;t<256;t++) sum += t * hist[t];
-
-      let sumB = 0;
-      let wB = 0;
-      let wF = 0;
-      let varMax = -1;
-      let threshold = 160;
-
-      for(let t=0;t<256;t++){
-        wB += hist[t];
-        if(wB === 0) continue;
-        wF = total - wB;
-        if(wF === 0) break;
-        sumB += t * hist[t];
-        const mB = sumB / wB;
-        const mF = (sum - sumB) / wF;
-        const varBetween = wB * wF * (mB - mF) * (mB - mF);
-        if(varBetween > varMax){
-          varMax = varBetween;
-          threshold = t;
-        }
-      }
-
-      // Apply threshold
-      for(let i=0;i<data.length;i+=4){
-        const y = data[i];
-        const v = y >= threshold ? 255 : 0;
-        data[i]=data[i+1]=data[i+2]=v;
-      }
-
-      cctx.putImageData(imgData,0,0);
-    }catch(_e){}
-
-    elStatus.textContent = "Running OCR… (this can take 10–30s on iPhone)";
+  async function maybePromptOnFocus(){
+    // Focus is a user gesture; some browsers allow clipboard read here (best-effort).
     try{
-      const res = await Tesseract.recognize(crop, "eng", {
-        tessedit_pageseg_mode: "6",
-        user_defined_dpi: "300",
-        preserve_interword_spaces: "1",
-        logger: m=>{
-          if(m && m.status){
-            const pct = (m.progress!=null) ? ` ${(m.progress*100).toFixed(0)}%` : "";
-            elStatus.textContent = `${m.status}${pct}`;
-          }
-        }
-      });
+      if(sessionStorage.getItem(KEY_ENTRY_DISMISSED) === "1") return;
+      if(sessionStorage.getItem(KEY_FOCUS_TRIED) === "1") return;
+      sessionStorage.setItem(KEY_FOCUS_TRIED, "1");
+    }catch{}
 
-      const rawText = (res && res.data && res.data.text) ? res.data.text : "";
-      if(!rawText.trim()){
-        alert("OCR returned no text. Try a clearer photo or adjust crop.");
+    const txt = await readClipboardBestEffort();
+    if(!looksReceiptLike(txt)) return;
+
+    clipCandidate = txt;
+    if(entryPrompt) entryPrompt.style.display = "block";
+  }
+
+  if(entryUseBtn){
+    entryUseBtn.onclick = async ()=>{
+      const txt = clipCandidate || await readClipboardBestEffort();
+      if(txt){
+        hideEntryPrompt(false);
+        applyPastedText(txt);
       }else{
-        elPaste.value = rawText.trim();
-
-        const parsed = parseOcrText(elPaste.value, state.areas||[]);
-        if(parsed.dateMDY) elDate.value = parsed.dateMDY;
-        if(parsed.dealer) elDealer.value = parsed.dealer;
-        if(parsed.pounds) elPounds.value = parsed.pounds;
-        if(parsed.amount) elAmount.value = parsed.amount;
-        if(parsed.area) elArea.value = parsed.area;
-
-        saveDraft();
-        elStatus.textContent = "OCR complete. Verify fields, then Review.";
-
-        alert(
-          `OCR complete:\n`+
-          `Date: ${parsed.dateMDY||"(none)"} (${parsed.confidence.date})\n`+
-          `Dealer: ${parsed.dealer||"(none)"} (${parsed.confidence.dealer})\n`+
-          `Pounds: ${parsed.pounds||"(none)"} (${parsed.confidence.pounds})\n`+
-          `Amount: ${parsed.amount||"(none)"} (${parsed.confidence.amount})\n`+
-          `Area: ${parsed.area||"(none)"} (${parsed.confidence.area})\n\n`+
-          `Next: Send to Review → Confirm & Save`
-        );
+        showFallbackHintOnce();
       }
-    }catch(err){
-      console.error(err);
-      alert("OCR failed. Try again with better lighting and tighter crop.");
-    }finally{
-      btnOcr.disabled = false;
-      btnScan.disabled = false;
-    }
-  };
+    };
+  }
+  if(entryDismissBtn){
+    entryDismissBtn.onclick = ()=> hideEntryPrompt(true);
+  }
 
+  if(btnPastePrimary){
+    btnPastePrimary.onclick = async ()=>{
+      const txt = await readClipboardBestEffort();
+      if(txt){
+        applyPastedText(txt);
+      }else{
+        showFallbackHintOnce();
+      }
+    };
+  }
 
-  document.getElementById("cancelTrip").onclick = ()=>{
-    state.view = "home";
-    saveState();
-    render();
-  };
+  if(elPaste){
+    elPaste.addEventListener("focus", ()=>{ maybePromptOnFocus(); });
+  }
 
-  const backBtn = document.getElementById("backHome");
+  renderRecents();
+  maybePromptOnEntry();
+const backBtn = document.getElementById("backHome");
   if(backBtn){ backBtn.onclick = () => document.getElementById("cancelTrip").click(); }
 
 
