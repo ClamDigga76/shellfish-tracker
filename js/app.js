@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006L";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006M";
 
 
 
@@ -771,7 +771,7 @@ function renderNewTrip(){
   renderRecents();
   maybePromptOnEntry();
 const backBtn = document.getElementById("backHome");
-  if(backBtn){ backBtn.onclick = () => document.getElementById("cancelTrip").click(); }
+  if(backBtn){ backBtn.onclick = ()=>{ state.view="home"; saveState(); render(); }; }
 
 
   document.getElementById("clearDraft").onclick = ()=>{
@@ -781,6 +781,13 @@ const backBtn = document.getElementById("backHome");
     state.view = "new";
     saveState();
   };
+
+  document.getElementById("cancelTrip").onclick = ()=>{
+    state.view = "home";
+    saveState();
+    render();
+  };
+
 
   document.getElementById("saveTrip").onclick = ()=>{
     // Phase 3A: Build Review first (nothing saves until Confirm)
