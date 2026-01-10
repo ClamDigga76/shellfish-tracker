@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./core/utils.js?v=ESM-006M";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006N";
 
 
 
@@ -677,6 +677,20 @@ function renderNewTrip(){
         if(txt) applyPastedText(txt);
       };
     });
+  }
+
+  function saveDraft(){
+    // Persist a lightweight draft so users don't lose progress.
+    // Draft may be partial; validation still happens on Review.
+    const dateISO = parseMDYToISO(String(elDate?.value||"")) || (state.draft?.dateISO || todayISO);
+    state.draft = {
+      dateISO: dateISO || todayISO,
+      dealer: String(elDealer?.value || ""),
+      pounds: String(elPounds?.value || ""),
+      amount: String(elAmount?.value || ""),
+      area: String(elArea?.value || "")
+    };
+    saveState();
   }
 
   function applyPastedText(txt){
