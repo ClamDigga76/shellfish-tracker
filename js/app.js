@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006Q";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006R";
 
 
 
@@ -516,7 +516,21 @@ function renderNewTrip(){
   }).join("");
 
   app.innerHTML = `
-    <div class="card">
+    <div class="card
+  // Top 3 most-used Areas (from saved trips) for quick selection
+  const topAreas = (()=>{
+    const counts = new Map();
+    for(const t of (Array.isArray(state.trips)?state.trips:[])){
+      const a = String(t.area||"").trim();
+      if(!a) continue;
+      counts.set(a, (counts.get(a)||0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((x,y)=> (y[1]-x[1]) || x[0].localeCompare(y[0]))
+      .slice(0,3)
+      .map(([a])=>a);
+  })();
+">
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
         <b>New Trip</b>
@@ -577,6 +591,12 @@ function renderNewTrip(){
 
         <div class="field">
           <div class="label">Area</div>
+
+          ${topAreas && topAreas.length ? `
+            <div class="pillbar" id="topAreas" style="margin-top:8px">
+              ${topAreas.map(a=>`<button class="chip" type="button" data-area="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join("")}
+            </div>
+          ` : ``}
           <select class="select" id="t_area">
             ${areaOptions}
           </select>
@@ -607,8 +627,22 @@ function renderNewTrip(){
     el.addEventListener("change", persistDraft);
   });
   if(elArea){
+    elArea.addEventListener("input", persistDraft);
     elArea.addEventListener("change", persistDraft);
   }
+  // Quick-pick top Areas
+  const topAreaWrap = document.getElementById("topAreas");
+  if(topAreaWrap && elArea){
+    topAreaWrap.querySelectorAll("button[data-area]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const a = btn.getAttribute("data-area") || "";
+        elArea.value = a;
+        try{ saveDraft(); }catch{}
+      });
+    });
+  }
+
+
 
 
   // --- Outside-first Live Text intake (copy → paste) ---
