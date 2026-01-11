@@ -69,18 +69,9 @@ export function parseMoney(s){
   const raw = String(s || "").replace(/[$,]/g, "").trim();
   if(!raw) return 0;
 
-  let digitsOnly = true;
-  for(let i=0;i<raw.length;i++){
-    const ch = raw[i];
-    if(!(ch >= "0" && ch <= "9")) { digitsOnly = false; break; }
-  }
-
-  if(digitsOnly && raw.length >= 3 && raw.length <= 9){
-    const cents = Number(raw);
-    const usd = cents / 100;
-    if(Number.isFinite(usd) && usd >= 1 && usd <= 500000) return usd;
-  }
-
+  // NOTE (Outside-first Live Text mode): do NOT apply cents-inference to digits-only values.
+  // iOS Live Text often captures "$189.00" as "189" in some contexts; interpreting that as cents
+  // would incorrectly become "$1.89". Users always review/confirm anyway.
   return parseNum(raw);
 }
 

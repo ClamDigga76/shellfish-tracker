@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006N";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006Q";
 
 
 
@@ -31,70 +31,50 @@ function parseOcrText(raw, knownAreas){
     out.confidence.date = "med";
   }
 
-  // AMOUNT
-  // Prefer explicit "CHECK AMOUNT"/"AMOUNT" with decimals, then $ amounts with decimals,
-  // then any decimals (pick max), then check-style digits where the decimal was dropped (e.g., 19350 => 193.50).
+  // AMOUNT (Outside-first Live Text mode)
+  // Rule: checks always include a decimal amount. Prefer the decimal nearest "CHECK AMOUNT"/"AMOUNT",
+  // otherwise use the largest plausible decimal in the text. Never infer cents from digits-only values.
   let amt = "";
   let amtConf = "low";
 
-  // 1) Strong signal: keyword + decimal (handles lines like "CHECK AMOUNT 189.00")
-  const kwDec = text.match(/\b(?:check\s*)?amount\b[^0-9\n]{0,40}(\d{1,6}\.\d{2})\b/i);
-  if(kwDec){
-    amt = kwDec[1];
-    amtConf = "high";
+  const decimals = [...text.matchAll(/\b(\d{1,6}\.\d{2})\b/g)]
+    .map(m=>m[1])
+    .filter(s=>{
+      const v = parseFloat(s);
+      return Number.isFinite(v) && v >= 1 && v <= 500000;
+    });
+
+  // 1) Strongest signal: a decimal amount appearing shortly after an AMOUNT label (across newlines)
+  if(decimals.length){
+    const kw = text.match(/\b(?:check\s*)?amount\b[\s\S]{0,120}?(\d{1,6}\.\d{2})\b/i);
+    if(kw){
+      amt = kw[1];
+      amtConf = "high";
+    }
   }
 
-  // 2) $ + decimal (handles "$ 189.00")
+  // 2) $ + decimal anywhere
   if(!amt){
-    const usd = [...text.matchAll(/\$\s*(\d{1,6}(?:,\d{3})*\.\d{2})\b/g)].map(m=>m[1].replace(/,/g,""));
+    const usd = [...text.matchAll(/\$\s*(\d{1,6}(?:,\d{3})*\.\d{2})\b/g)]
+      .map(m=>m[1].replace(/,/g,""));
     if(usd.length){
       amt = usd[0];
       amtConf = "high";
     }
   }
 
-  // 3) Any decimals (pick max plausible)
-  if(!amt){
-    const decs = [...text.matchAll(/\b(\d{1,6}\.\d{2})\b/g)].map(m=>m[1]);
-    if(decs.length){
-      let maxv = -1, maxs = "";
-      for(const s of decs){
-        const v = parseFloat(s);
-        if(Number.isFinite(v) && v > maxv){
-          maxv = v; maxs = s;
-        }
-      }
-      if(maxs){
-        amt = maxs;
-        amtConf = "med";
+  // 3) Fallback: choose the largest plausible decimal
+  if(!amt && decimals.length){
+    let maxv = -1, maxs = "";
+    for(const s of decimals){
+      const v = parseFloat(s);
+      if(Number.isFinite(v) && v > maxv){
+        maxv = v; maxs = s;
       }
     }
-  }
-
-  // 4) Decimal dropped near AMOUNT keyword (only 4-6 digits; avoids "189" => 1.89 mistakes)
-  if(!amt){
-    let centsDigits = "";
-    const near = text.match(/\b(?:check\s*)?amount\b[\s:]*\n?\s*(\d{4,6})\b/i);
-    if(near) centsDigits = near[1];
-
-    if(!centsDigits){
-      // fallback: search line-by-line around "amount"
-      for(let i=0;i<lines.length;i++){
-        const l = lines[i].toLowerCase();
-        if(l.includes("amount")){
-          const next = (lines[i+1]||"");
-          const mm = next.match(/\b(\d{4,6})\b/);
-          if(mm){ centsDigits = mm[1]; break; }
-        }
-      }
-    }
-
-    if(centsDigits){
-      const n = parseInt(centsDigits,10);
-      if(Number.isFinite(n) && n>=1000){
-        amt = (n/100).toFixed(2);
-        amtConf = "med";
-      }
+    if(maxs){
+      amt = maxs;
+      amtConf = "med";
     }
   }
 
@@ -526,6 +506,8 @@ function renderNewTrip(){
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
+  const amountDisp = (draft.amount === "" || draft.amount == null) ? "" : (Number.isFinite(Number(draft.amount)) ? to2(Number(draft.amount)).toFixed(2) : String(draft.amount));
+
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
     const label = a ? a : "—";
@@ -590,7 +572,7 @@ function renderNewTrip(){
 
         <div class="field">
           <div class="label">Amount</div>
-          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${String(draft.amount??"")}" />
+          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
         </div>
 
         <div class="field">
@@ -895,6 +877,7 @@ function renderReviewTrip(){
   }
 
   const ppl = computePPL(Number(d.pounds||0), Number(d.amount||0));
+  const amountDispR = (d.amount === "" || d.amount == null) ? "" : (Number.isFinite(Number(d.amount)) ? to2(Number(d.amount)).toFixed(2) : String(d.amount));
 
   app.innerHTML = `
     <div class="card">
@@ -925,7 +908,7 @@ function renderReviewTrip(){
 
         <div class="field">
           <div class="label">Amount</div>
-          <input class="input" id="r_amount" inputmode="decimal" value="${escapeHtml(String(d.amount??""))}" />
+          <input class="input" id="r_amount" inputmode="decimal" value="${escapeHtml(String(amountDispR))}" />
         </div>
 
         <div class="field">
@@ -1071,7 +1054,7 @@ function renderEditTrip(){
 
         <div class="field">
           <div class="label">Amount</div>
-          <input class="input" id="e_amount" inputmode="decimal" placeholder="$0.00" value="${String(draft.amount??"")}" />
+          <input class="input" id="e_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
         </div>
 
         <div class="field">
