@@ -32,44 +32,78 @@ function parseOcrText(raw, knownAreas){
   }
 
   // AMOUNT
-  // Prefer explicit $ with cents, then explicit decimals, then check-style digits (e.g., 19350 => 193.50)
-  const money = [...text.matchAll(/\$\s*([0-9]{1,6}(?:,[0-9]{3})*(?:\.[0-9]{2})?|\d+\.\d{2})\b/g)].map(m=>m[1].replace(/,/g,""));
-  if(money.length){
-    out.amount = money[0];
-    out.confidence.amount = "high";
-  }else{
-    const money2 = [...text.matchAll(/\b([0-9]{1,6}(?:\.[0-9]{2}))\b/g)].map(m=>m[1]);
-    if(money2.length){
-      let maxv=-1, maxs="";
-      money2.forEach(s=>{ const v=parseFloat(s); if(v>maxv){maxv=v; maxs=s;} });
-      if(maxs){ out.amount=maxs; out.confidence.amount="med"; }
-    }else{
-      // Check OCR often drops the decimal: "CHECK AMOUNT 19350" => 193.50
-      let centsDigits = "";
-      const near = text.match(/\b(?:check\s*)?amount\b[\s:]*\n?\s*(\d{4,6})\b/i);
-      if(near) centsDigits = near[1];
+  // Prefer explicit "CHECK AMOUNT"/"AMOUNT" with decimals, then $ amounts with decimals,
+  // then any decimals (pick max), then check-style digits where the decimal was dropped (e.g., 19350 => 193.50).
+  let amt = "";
+  let amtConf = "low";
 
-      if(!centsDigits){
-        for(let i=0;i<lines.length;i++){
-          if(/^(?:check\s*)?amount$/i.test(lines[i])){
-            const next = lines[i+1] || "";
-            const mm = next.match(/\b(\d{4,6})\b/);
-            if(mm){ centsDigits = mm[1]; break; }
-          }
+  // 1) Strong signal: keyword + decimal (handles lines like "CHECK AMOUNT 189.00")
+  const kwDec = text.match(/\b(?:check\s*)?amount\b[^0-9\n]{0,40}(\d{1,6}\.\d{2})\b/i);
+  if(kwDec){
+    amt = kwDec[1];
+    amtConf = "high";
+  }
+
+  // 2) $ + decimal (handles "$ 189.00")
+  if(!amt){
+    const usd = [...text.matchAll(/\$\s*(\d{1,6}(?:,\d{3})*\.\d{2})\b/g)].map(m=>m[1].replace(/,/g,""));
+    if(usd.length){
+      amt = usd[0];
+      amtConf = "high";
+    }
+  }
+
+  // 3) Any decimals (pick max plausible)
+  if(!amt){
+    const decs = [...text.matchAll(/\b(\d{1,6}\.\d{2})\b/g)].map(m=>m[1]);
+    if(decs.length){
+      let maxv = -1, maxs = "";
+      for(const s of decs){
+        const v = parseFloat(s);
+        if(Number.isFinite(v) && v > maxv){
+          maxv = v; maxs = s;
         }
       }
-
-      if(centsDigits){
-        const n = parseInt(centsDigits,10);
-        if(Number.isFinite(n) && n>=1000){
-          out.amount = (n/100).toFixed(2);
-          out.confidence.amount = "med";
-        }
+      if(maxs){
+        amt = maxs;
+        amtConf = "med";
       }
     }
   }
 
-  // POUNDS
+  // 4) Decimal dropped near AMOUNT keyword (only 4-6 digits; avoids "189" => 1.89 mistakes)
+  if(!amt){
+    let centsDigits = "";
+    const near = text.match(/\b(?:check\s*)?amount\b[\s:]*\n?\s*(\d{4,6})\b/i);
+    if(near) centsDigits = near[1];
+
+    if(!centsDigits){
+      // fallback: search line-by-line around "amount"
+      for(let i=0;i<lines.length;i++){
+        const l = lines[i].toLowerCase();
+        if(l.includes("amount")){
+          const next = (lines[i+1]||"");
+          const mm = next.match(/\b(\d{4,6})\b/);
+          if(mm){ centsDigits = mm[1]; break; }
+        }
+      }
+    }
+
+    if(centsDigits){
+      const n = parseInt(centsDigits,10);
+      if(Number.isFinite(n) && n>=1000){
+        amt = (n/100).toFixed(2);
+        amtConf = "med";
+      }
+    }
+  }
+
+  if(amt){
+    out.amount = amt;
+    out.confidence.amount = amtConf;
+  }
+
+// POUNDS
   // Prefer explicit lbs markers; then use DESCRIPTION box (common on checks); fallback heuristic
   const lbs1 = text.match(/\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b/i);
   if(lbs1){
@@ -582,6 +616,18 @@ function renderNewTrip(){
   const elArea = document.getElementById("t_area");
   
   const elPaste = document.getElementById("t_paste");
+
+  // Persist draft as the user edits fields (fixes iOS select + prevents resets)
+  const persistDraft = ()=>{ try{ saveDraft(); }catch{} };
+  [elDate, elDealer, elPounds, elAmount].forEach(el=>{
+    if(!el) return;
+    el.addEventListener("input", persistDraft);
+    el.addEventListener("change", persistDraft);
+  });
+  if(elArea){
+    elArea.addEventListener("change", persistDraft);
+  }
+
 
   // --- Outside-first Live Text intake (copy → paste) ---
   const entryPrompt = document.getElementById("entryPrompt");

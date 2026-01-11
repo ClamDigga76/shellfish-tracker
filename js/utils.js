@@ -66,7 +66,7 @@ export function parseNum(s){
 }
 
 export function parseMoney(s){
-  const raw = String(s || "").replace("$", "").trim();
+  const raw = String(s || "").replace(/[$,]/g, "").trim();
   if(!raw) return 0;
 
   let digitsOnly = true;
@@ -75,10 +75,10 @@ export function parseMoney(s){
     if(!(ch >= "0" && ch <= "9")) { digitsOnly = false; break; }
   }
 
-  if(digitsOnly && raw.length >= 3 && raw.length <= 7){
+  if(digitsOnly && raw.length >= 3 && raw.length <= 9){
     const cents = Number(raw);
     const usd = cents / 100;
-    if(Number.isFinite(usd) && usd >= 1 && usd <= 50000) return usd;
+    if(Number.isFinite(usd) && usd >= 1 && usd <= 500000) return usd;
   }
 
   return parseNum(raw);
