@@ -587,7 +587,7 @@ const topAreas = (()=>{
 
         <div class="field">
           <div class="label">Amount</div>
-          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}" />
+          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
         </div>
 
         <div class="field">
