@@ -587,7 +587,7 @@ const topAreas = (()=>{
 
         <div class="field">
           <div class="label">Amount</div>
-          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
+          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}" />
         </div>
 
         <div class="field">
@@ -1128,6 +1128,8 @@ function renderEditTrip(){
     area: t.area || ""
   };
 
+  const amountDispE = (draft.amount === "" || draft.amount == null) ? "" : (Number.isFinite(Number(draft.amount)) ? to2(Number(draft.amount)).toFixed(2) : String(draft.amount));
+
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
     const label = a ? a : "—";
     const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
@@ -1163,7 +1165,7 @@ function renderEditTrip(){
 
         <div class="field">
           <div class="label">Amount</div>
-          <input class="input" id="e_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
+          <input class="input" id="e_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}" />
         </div>
 
         <div class="field">
