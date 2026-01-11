@@ -1,7 +1,7 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006S";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006U";
 
 
 
@@ -914,6 +914,26 @@ function renderReviewTrip(){
   const ppl = computePPL(Number(d.pounds||0), Number(d.amount||0));
   const amountDispR = (d.amount === "" || d.amount == null) ? "" : (Number.isFinite(Number(d.amount)) ? to2(Number(d.amount)).toFixed(2) : String(d.amount));
 
+  // Build area options + top areas (same logic as New Trip)
+  const areaOptionsR = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
+    const label = a ? a : "—";
+    const sel = (String(d.area||"") === String(a||"")) ? "selected" : "";
+    return `<option value="${String(a||"").replaceAll('"','&quot;')}" ${sel}>${label}</option>`;
+  }).join("");
+
+  const topAreasR = (()=>{
+    const counts = new Map();
+    for(const t of (Array.isArray(state.trips)?state.trips:[])){
+      const a = String(t.area||"").trim();
+      if(!a) continue;
+      counts.set(a, (counts.get(a)||0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((x,y)=> (y[1]-x[1]) || x[0].localeCompare(y[0]))
+      .slice(0,3)
+      .map(([a])=>a);
+  })();
+
   app.innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
@@ -948,11 +968,18 @@ function renderReviewTrip(){
 
         <div class="field">
           <div class="label">Area</div>
-          <input class="input" id="r_area" placeholder="(optional)" value="${escapeHtml(String(d.area||""))}" />
+          ${topAreasR && topAreasR.length ? `
+            <div class="pillbar" id="topAreasR" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+              ${topAreasR.map(a=>`<button class="chip" type="button" data-area="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join("")}
+            </div>
+          ` : ``}
+          <select class="select" id="r_area">
+            ${areaOptionsR}
+          </select>
         </div>
 
         <div class="pillbar">
-          <span class="pill">Price/Lb: <b>${formatMoney(ppl)}</b></span>
+          <span class="pill" id="pplPill">Price/Lb: <b>${formatMoney(ppl)}</b></span>
         </div>
 
         ${d.raw ? `
@@ -984,6 +1011,53 @@ function renderReviewTrip(){
       render();
     }
   };
+
+  // Persist draft + live-update Price/Lb + Area selection
+  const pplPill = document.getElementById("pplPill");
+  const elPoundsLive = document.getElementById("r_pounds");
+  const elAmountLive = document.getElementById("r_amount");
+  const elAreaLive = document.getElementById("r_area");
+
+  const updateReviewDerived = ()=>{
+    if(!state.reviewDraft) return;
+    const p = parseNum(elPoundsLive ? elPoundsLive.value : "");
+    const a = parseMoney(elAmountLive ? elAmountLive.value : "");
+    const area = String(elAreaLive ? elAreaLive.value : "").trim();
+    state.reviewDraft.pounds = p;
+    state.reviewDraft.amount = a;
+    state.reviewDraft.area = area;
+    if(pplPill){
+      const v = computePPL(Number(p||0), Number(a||0));
+      pplPill.innerHTML = `Price/Lb: <b>${formatMoney(v)}</b>`;
+    }
+    saveState();
+  };
+
+  // iOS sometimes fires change more reliably than input for certain keyboards/pickers.
+  [elPoundsLive, elAmountLive].forEach(el=>{
+    if(!el) return;
+    el.addEventListener("input", updateReviewDerived);
+    el.addEventListener("change", updateReviewDerived);
+    el.addEventListener("blur", updateReviewDerived);
+  });
+  if(elAreaLive){
+    elAreaLive.addEventListener("input", updateReviewDerived);
+    elAreaLive.addEventListener("change", updateReviewDerived);
+  }
+
+  const topAreaWrapR = document.getElementById("topAreasR");
+  if(topAreaWrapR && elAreaLive){
+    topAreaWrapR.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button[data-area]");
+      if(!btn) return;
+      const a = btn.getAttribute("data-area") || "";
+      elAreaLive.value = a;
+      updateReviewDerived();
+    });
+  }
+
+  // Ensure pill reflects whatever is currently in the inputs.
+  updateReviewDerived();
 
   document.getElementById("confirmSave").onclick = ()=>{
     const elDate = document.getElementById("r_date");
