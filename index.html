@@ -3,7 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Shellfish Tracker — ESM-007B</title>
+  <title>Shellfish Tracker</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f6df6">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shellfish Tracker">
+
 <style>
 :root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55)}
 *{box-sizing:border-box}
@@ -67,8 +76,8 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 <body>
   <div class="phone">
     <header>
-      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-007B</span></h1>
-      <p>Polished UI (ESM-007B) + Outside-first Live Text (Copy→Paste) + Phase 3A Review → Confirm Save.</p>
+      <h1>Shellfish Tracker <span id="bootPill" class="boot">Field Test</span></h1>
+      <p>Copy receipt text with Live Text, then tap Paste → Review. Review → Confirm saves.</p>
     </header>
     <main id="app"></main>
   </div>
@@ -102,7 +111,17 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
     console.error(err);
   }
 
-  import("./js/app.js?v=ESM-007B").catch(showModuleError);
+  import("./js/app.js?v=ESM-007C").catch(showModuleError);
 </script>
+
+<script>
+  // PWA offline support
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+</script>
+
 </body>
 </html>
