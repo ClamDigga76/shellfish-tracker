@@ -1209,7 +1209,8 @@ function renderEditTrip(){
     area: t.area || ""
   };
 
-  const amountDispE = displayAmount(trip.amount);
+  // Display formatting for amount input (edit view)
+  const amountDispE = displayAmount(t.amount);
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
     const label = a ? a : "—";
