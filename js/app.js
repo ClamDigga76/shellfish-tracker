@@ -1,9 +1,43 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007C";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007D";
 
-const APP_VERSION = "ESM-007C";
+const VERSION = "ESM-007D";
+// ---- Toasts ----
+let toastTimer = null;
+function showToast(msg){
+  try{
+    const el = document.getElementById("toast");
+    if(!el) return;
+    el.textContent = String(msg||"");
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, 2400);
+  }catch{}
+}
+
+function copyTextToClipboard(txt){
+  return navigator.clipboard?.writeText(String(txt||""))
+    .then(()=>true).catch(()=>false);
+}
+
+function getDebugInfo(){
+  const trips = Array.isArray(state?.trips) ? state.trips.length : 0;
+  const areas = Array.isArray(state?.areas) ? state.areas.length : 0;
+  const last = state?.lastAction ? String(state.lastAction) : "";
+  return [
+    `Shellfish Tracker ${VERSION}` ,
+    `UserAgent: ${navigator.userAgent}` ,
+    `Trips: ${trips}` ,
+    `Areas: ${areas}` ,
+    last ? `LastAction: ${last}` : "" ,
+    `Time: ${new Date().toISOString()}`
+  ].filter(Boolean).join("\n");
+}
+
+
+const APP_VERSION = VERSION;
 
 
 
@@ -486,18 +520,18 @@ function renderHome(){
         </div>
       </div>
     `;
-  }).join("") : `<div class="muted small">No trips in this range yet.</div>`;
+  }).join("") : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
 
   app.innerHTML = `
     <div class="card">
       <div class="row">
         <button class="btn primary" id="newTrip">＋ New Trip</button>
-        <button class="btn" id="export">🧾 Export CSV</button>
         <button class="btn" id="reports">📊 Reports</button>
         <button class="btn" id="settings">⚙️ Settings</button>
+        <button class="btn" id="help">❓ Help</button>
       </div>
 
-      <div class="hint">Phase 2C-1: Trip list + filters restored (no edit overlay yet).</div>
+      <div class="hint">Log a trip using Live Text copy/paste. Review → Confirm saves it.</div>
     </div>
 
     <div class="card">
@@ -548,44 +582,18 @@ function renderHome(){
     btn.addEventListener("click", ()=> setFilter(btn.getAttribute("data-f")));
   });
 
-  document.getElementById("export").onclick = () => {
-    const tripsFiltered = getFilteredTrips();
-    const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
+    document.getElementById("reports").onclick = ()=>{ state.view="reports"; state.lastAction="nav:reports"; saveState(); render(); };
+    document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
 
-    const choice = prompt(
-      "Export options:\n1 = Filtered (" + (state.filter||"YTD") + ")\n2 = All trips\n3 = Date range\n\nEnter 1, 2, or 3:",
-      "1"
-    );
-
-    if(choice === "2"){
-      exportTrips(tripsAll, "ALL");
-      return;
-    }
-    if(choice === "3"){
-      const start = prompt("Start date (MM/DD/YYYY):", "");
-      const end = prompt("End date (MM/DD/YYYY):", "");
-      const startISO = parseMDYToISO(start);
-      const endISO = parseMDYToISO(end);
-      if(!startISO || !endISO){
-        alert("Invalid date range.");
-        return;
-      }
-      const ranged = filterByRange(tripsAll, startISO, endISO);
-      exportTrips(ranged, "RANGE", startISO, endISO);
-      return;
-    }
-
-    exportTrips(tripsFiltered, (state.filter||"YTD"));
-  };
-    document.getElementById("reports").onclick = ()=>{ state.view="reports"; saveState(); render(); };
-
-document.getElementById("settings").onclick = () => {
+  document.getElementById("settings").onclick = () => {
     state.view = "settings";
+    state.lastAction="nav:settings";
     saveState();
     render();
   };
   document.getElementById("newTrip").onclick = () => {
     state.view = "new";
+    state.lastAction="nav:new";
     saveState();
     render();
   };
@@ -946,8 +954,10 @@ const backBtn = document.getElementById("backHome");
 
   document.getElementById("cancelTrip").onclick = ()=>{
     state.view = "home";
+    state.lastAction="trip:saved";
     saveState();
     render();
+    showToast("Trip saved");
   };
 
 
@@ -1024,7 +1034,7 @@ function renderReviewTrip(){
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backToNew">← Back</button>
         <b>Review & Confirm</b>
-        <span class="muted small">Phase 3A</span>
+        <span class="muted small"></span>
       </div>
       <div class="hint">Nothing saves until you press <b>Confirm & Save</b>. Edit any field if needed.</div>
     </div>
@@ -1237,7 +1247,7 @@ function renderEditTrip(){
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
         <b>Edit Trip</b>
-        <span class="muted small">Phase 2C-3</span>
+        <span class="muted small"></span>
       </div>
       <div class="hint">Tap Save Changes when finished. Delete removes the trip from your phone.</div>
     </div>
@@ -1300,6 +1310,26 @@ function renderEditTrip(){
   };
 
   document.getElementById("backHome").onclick = goHome;
+
+  const hBtn = document.getElementById("openHelp");
+  if(hBtn) hBtn.onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
+
+  const aBtn = document.getElementById("openAbout");
+  if(aBtn) aBtn.onclick = ()=>{ state.view="about"; state.lastAction="nav:about"; saveState(); render(); };
+
+  const cBtn = document.getElementById("copyDebug");
+  if(cBtn) cBtn.onclick = async ()=>{
+    const ok = await copyTextToClipboard(getDebugInfo());
+    showToast(ok ? "Debug info copied" : "Copy failed");
+  };
+
+  const fBtn = document.getElementById("feedback");
+  if(fBtn) fBtn.onclick = ()=>{
+    const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
+    const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
+    location.href = `mailto:?subject=${subj}&body=${body}`;
+  };
+
   document.getElementById("cancelEdit").onclick = goHome;
 
   document.getElementById("saveEdit").onclick = ()=>{
@@ -1352,6 +1382,45 @@ function renderReports(){
   const trips = getFilteredTrips();
   const f = state.filter || "YTD";
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
+
+  if(!trips.length){
+    app.innerHTML = `
+      <div class="card">
+        <div class="row">
+          <button class="btn" id="home">← Home</button>
+          <button class="btn" id="export" disabled>🧾 Export CSV</button>
+          <button class="btn" id="settings">⚙️ Settings</button>
+          <button class="btn" id="help">❓ Help</button>
+        </div>
+
+        <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+          <b>Reports</b>
+          <span class="pill">Range: <b>${escapeHtml(f)}</b></span>
+        </div>
+
+        <div class="filters" style="margin-top:10px">
+          <button class="chip ${f==="YTD"?"on":""}" data-f="YTD">YTD</button>
+          <button class="chip ${f==="Month"?"on":""}" data-f="Month">Month</button>
+          <button class="chip ${f==="7D"?"on":""}" data-f="7D">Last 7 days</button>
+        </div>
+
+        <div class="hint">Save at least one trip to see totals, tables, charts, and export.</div>
+      </div>
+    `;
+    app.scrollTop = 0;
+    document.getElementById("home").onclick = ()=>{ state.view="home"; state.lastAction="nav:home"; saveState(); render(); };
+    document.getElementById("settings").onclick = ()=>{ state.view="settings"; state.lastAction="nav:settings"; saveState(); render(); };
+    document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
+    app.querySelectorAll(".chip[data-f]").forEach(btn=>{
+      btn.onclick = ()=>{
+        state.filter = btn.getAttribute("data-f");
+        saveState();
+        renderReports();
+      };
+    });
+    return;
+  }
+
 
   const chip = (key,label) => `<button class="chip ${f===key?'on':''}" data-f="${key}">${label}</button>`;
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
@@ -1530,6 +1599,7 @@ function renderReports(){
         <button class="btn" id="home">← Home</button>
         <button class="btn" id="export">🧾 Export CSV</button>
         <button class="btn" id="settings">⚙️ Settings</button>
+        <button class="btn" id="help">❓ Help</button>
       </div>
 
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
@@ -1558,8 +1628,34 @@ function renderReports(){
 
   // nav
   document.getElementById("home").onclick = ()=>{ state.view="home"; saveState(); render(); };
-  document.getElementById("export").onclick = ()=>{ state.view="home"; saveState(); render(); setTimeout(()=>{ const b=document.getElementById("export"); if(b) b.click(); }, 0); };
-  document.getElementById("settings").onclick = ()=>{ state.view="settings"; saveState(); render(); };
+  document.getElementById("export").onclick = () => {
+    const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
+    const tripsFiltered = getFilteredTrips();
+
+    const choice = prompt(
+      "Export options:\n1 = Filtered (" + (state.filter||"YTD") + ")\n2 = All trips\n3 = Date range\n\nEnter 1, 2, or 3:",
+      "1"
+    );
+
+    if(choice === "2"){ exportTrips(tripsAll, "ALL"); showToast("CSV exported"); return; }
+    if(choice === "3"){
+      const start = prompt("Start date (MM/DD/YYYY):", "");
+      const end = prompt("End date (MM/DD/YYYY):", "");
+      const startISO = parseMDYToISO(start);
+      const endISO = parseMDYToISO(end);
+      if(!startISO || !endISO){ alert("Invalid date range."); return; }
+      const ranged = filterByRange(tripsAll, startISO, endISO);
+      exportTrips(ranged, "RANGE", startISO, endISO);
+      showToast("CSV exported");
+      return;
+    }
+
+    exportTrips(tripsFiltered, (state.filter||"YTD"));
+    showToast("CSV exported");
+  };
+  document.getElementById("settings").onclick = ()=>{ state.view="settings"; state.lastAction="nav:settings"; saveState(); render(); };
+  const h = document.getElementById("help");
+  if(h) h.onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
 
   // range chips
   app.querySelectorAll(".chip[data-f]").forEach(btn=>{
@@ -1751,7 +1847,7 @@ function renderSettings(){
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
         <b>Settings</b>
-        <span class="muted small">Phase 3B-1/3</span>
+        <span class="muted small"></span>
       </div>
       <div class="hint">Manage areas used on trips. Delete-all now requires typing DELETE.</div>
     </div>
@@ -1780,6 +1876,20 @@ function renderSettings(){
       <div class="muted small" style="margin-top:10px">Reset clears all trips and settings on this device.</div>
       <div class="row" style="margin-top:12px">
         <button class="btn danger" id="resetData">Reset app data</button>
+    <div class="card">
+      <b>Help & About</b>
+      <div class="sep"></div>
+      <div class="muted small" style="margin-top:10px">Need a refresher or want to report a bug? Use Help, or copy debug info for troubleshooting.</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="openHelp">❓ Help</button>
+        <button class="btn" id="openAbout">ℹ️ About</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="copyDebug">Copy Debug Info</button>
+        <button class="btn" id="feedback">Send Feedback</button>
+      </div>
+    </div>
+
       </div>
     </div>
   `;
@@ -1792,7 +1902,7 @@ function renderSettings(){
   // Backup / Restore (JSON)
   const backupFile = document.getElementById("backupFile");
   document.getElementById("downloadBackup").onclick = ()=>{
-    try{ exportBackup(); }catch(e){ alert("Backup failed: " + (e?.message||e)); }
+    try{ exportBackup(); showToast("Backup downloaded"); }catch(e){ showToast("Backup failed"); }
   };
   document.getElementById("restoreBackup").onclick = ()=>{
     if(backupFile) backupFile.click();
@@ -1803,11 +1913,11 @@ function renderSettings(){
       if(!file) return;
       try{
         await importBackupFromFile(file);
-        alert("Backup restored.");
+        showToast("Backup restored");
         renderSettings();
       }catch(e){
         console.error(e);
-        alert("Restore failed: " + (e?.message||e));
+        showToast("Restore failed");
       }finally{
         backupFile.value = "";
       }
@@ -1848,6 +1958,107 @@ function renderSettings(){
   // (backup handlers are wired above)
 }
 
+
+function renderHelp(){
+  app.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <button class="smallbtn" id="backHome">← Back</button>
+        <b>Help</b>
+        <span class="muted small"></span>
+      </div>
+      <div class="hint">Fast reference for field testing.</div>
+    </div>
+
+    <div class="card">
+      <b>Quick Start</b>
+      <div class="sep"></div>
+      <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
+        <li>Take a photo of the check/receipt (Camera).</li>
+        <li>Tap the photo thumbnail → Live Text → Copy.</li>
+        <li>Open Shellfish Tracker → tap <b>Paste → Review</b>.</li>
+        <li>Fix anything that looks wrong (especially pounds), then <b>Confirm</b>.</li>
+      </ol>
+      <div class="hint">Note: iOS may show a small <b>Paste</b> bubble for privacy. Tap it once to allow paste.</div>
+    </div>
+
+    <div class="card">
+      <b>Backup</b>
+      <div class="sep"></div>
+      <div class="muted small">Settings → Data → <b>Download backup</b> saves a .json file (Trips + Areas). Keep it in Files/Drive.</div>
+    </div>
+
+    <div class="card">
+      <b>Add to Home Screen (PWA)</b>
+      <div class="sep"></div>
+      <div class="muted small"><b>iPhone:</b> Share → Add to Home Screen. Launch from the icon for the best app-like feel.</div>
+      <div class="muted small" style="margin-top:8px"><b>Android:</b> Menu → Install app (or Add to Home screen).</div>
+    </div>
+
+    <div class="card">
+      <b>About / Debug</b>
+      <div class="sep"></div>
+      <div class="muted small">Version: <b>${VERSION}</b></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="copyDebug">Copy Debug Info</button>
+        <button class="btn" id="feedback">Send Feedback</button>
+      </div>
+    </div>
+  `;
+  app.scrollTop = 0;
+
+  document.getElementById("backHome").onclick = ()=>{ state.view="home"; state.lastAction="nav:home"; saveState(); render(); };
+
+  document.getElementById("copyDebug").onclick = async ()=>{
+    const ok = await copyTextToClipboard(getDebugInfo());
+    showToast(ok ? "Debug info copied" : "Copy failed");
+  };
+
+  document.getElementById("feedback").onclick = ()=>{
+    const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
+    const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
+    location.href = `mailto:?subject=${subj}&body=${body}`;
+  };
+}
+
+function renderAbout(){
+  app.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <button class="smallbtn" id="backSettings">← Back</button>
+        <b>About</b>
+        <span class="muted small"></span>
+      </div>
+      <div class="hint">Version & diagnostics.</div>
+    </div>
+
+    <div class="card">
+      <b>Shellfish Tracker</b>
+      <div class="sep"></div>
+      <div class="muted small">Version: <b>${VERSION}</b></div>
+      <div class="muted small" style="margin-top:8px">All data stays on this device unless you export/backup.</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="copyDebug">Copy Debug Info</button>
+        <button class="btn" id="feedback">Send Feedback</button>
+      </div>
+    </div>
+  `;
+  app.scrollTop = 0;
+
+  document.getElementById("backSettings").onclick = ()=>{ state.view="settings"; state.lastAction="nav:settings"; saveState(); render(); };
+
+  document.getElementById("copyDebug").onclick = async ()=>{
+    const ok = await copyTextToClipboard(getDebugInfo());
+    showToast(ok ? "Debug info copied" : "Copy failed");
+  };
+
+  document.getElementById("feedback").onclick = ()=>{
+    const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
+    const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
+    location.href = `mailto:?subject=${subj}&body=${body}`;
+  };
+}
+
 function render(){
   if(!state.view) state.view = "home";
   if(state.view === "settings") return renderSettings();
@@ -1855,6 +2066,8 @@ function render(){
   if(state.view === "review") return renderReviewTrip();
   if(state.view === "edit") return renderEditTrip();
   if(state.view === "reports") return renderReports();
+  if(state.view === "help") return renderHelp();
+  if(state.view === "about") return renderAbout();
   return renderHome();
 }
 
