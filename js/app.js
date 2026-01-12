@@ -1,9 +1,9 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006Z";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007B";
 
-const APP_VERSION = "ESM-006Z";
+const APP_VERSION = "ESM-007B";
 
 
 
@@ -1209,7 +1209,6 @@ function renderEditTrip(){
     area: t.area || ""
   };
 
-  // Display formatting for amount input (edit view)
   const amountDispE = displayAmount(t.amount);
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -1847,19 +1846,6 @@ function renderSettings(){
   };
 
   // (backup handlers are wired above)
-  if(fileInput){
-    fileInput.onchange = async ()=>{
-      const f = fileInput.files && fileInput.files[0];
-      if(!f) return;
-      try{
-        await importBackupFromFile(f);
-        alert("Backup restored.");
-        renderSettings();
-      }catch(e){
-        alert("Restore failed: " + (e?.message||e));
-      }
-    };
-  }
 }
 
 function render(){
