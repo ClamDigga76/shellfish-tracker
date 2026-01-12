@@ -75,6 +75,10 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 /* Toast */
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+footer{padding:10px 16px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.35} 
+footer a{color:var(--text);text-decoration:none;font-weight:800}
+
 </style>
 </head>
 <body>
@@ -84,6 +88,9 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
       <p>Copy receipt text with Live Text, then tap Paste → Review. Review → Confirm saves.</p>
     </header>
     <main id="app"></main>
+    <footer>
+      Jeremy Wood — <a href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>
+    </footer>
   </div>
 
   <script type="module">
@@ -115,7 +122,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
     console.error(err);
   }
 
-  import("./js/app.js?v=ESM-007D").catch(showModuleError);
+  import("./js/app.js?v=ESM-007E").catch(showModuleError);
 </script>
 
 <script>
