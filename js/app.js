@@ -1,9 +1,9 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007E";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007G-CLEAN";
 
-const VERSION = "ESM-007E";
+const VERSION = "ESM-007G-CLEAN";
 // ---- Toasts ----
 let toastTimer = null;
 function showToast(msg){
@@ -870,20 +870,23 @@ const backBtn = document.getElementById("backHome");
   if(backBtn){ backBtn.onclick = ()=>{ state.view="home"; saveState(); render(); }; }
 
 
-  document.getElementById("clearDraft").onclick = ()=>{
-    delete state.draft;
+    document.getElementById("clearDraft").onclick = ()=>{
+    // Clear only the in-progress draft (does not save a trip)
+    state.view = "new";
+    state.lastAction = "draft:cleared";
+    state.reviewDraft = null;
+    state.draft = { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
+    saveDraft();
     saveState();
     render();
-    state.view = "new";
-    saveState();
   };
 
-  document.getElementById("cancelTrip").onclick = ()=>{
+    document.getElementById("cancelTrip").onclick = ()=>{
+    // Cancel returns home without saving anything
     state.view = "home";
-    state.lastAction="trip:saved";
+    state.lastAction = "trip:cancel";
     saveState();
     render();
-    showToast("Trip saved");
   };
 
 

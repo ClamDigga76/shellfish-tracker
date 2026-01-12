@@ -1,17 +1,24 @@
 // Simple offline cache for Shellfish Tracker (field test)
-const CACHE_NAME = "shellfish-tracker-"+self.registration.scope+"-v2";
+const CACHE_NAME = "shellfish-tracker-ESM-007G-CLEAN";
 const CORE_ASSETS = [
   "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./js/app.js",
-  "./js/utils.js",
+  "./index.html?v=ESM-007G-CLEAN",
+  "./manifest.webmanifest?v=ESM-007G-CLEAN",
+  "./js/app.js?v=ESM-007G-CLEAN",
+  "./js/utils.js?v=ESM-007G-CLEAN",
   "./icons/favicon-32.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-512-maskable.png",
   "./icons/icon-180.png"
 ];
+
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -37,11 +44,11 @@ self.addEventListener("fetch", (event) => {
       try {
         const fresh = await fetch(req);
         const cache = await caches.open(CACHE_NAME);
-        cache.put("./index.html", fresh.clone());
+        cache.put("./index.html?v=ESM-007G-CLEAN", fresh.clone());
         return fresh;
       } catch (e) {
         const cache = await caches.open(CACHE_NAME);
-        return (await cache.match("./index.html")) || (await cache.match("./"));
+        return (await cache.match("./index.html?v=ESM-007G-CLEAN")) || (await cache.match("./"));
       }
     })());
     return;
