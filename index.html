@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Shellfish Tracker — ESM-006W</title>
+<title>Shellfish Tracker — ESM-006Z</title>
 <style>
 :root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55)}
 *{box-sizing:border-box}
@@ -34,6 +34,11 @@ main{padding:14px 14px 18px}
 .filters{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 .chip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#eaf0ff;padding:10px 12px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer}
 .chip.on{background:rgba(80,130,255,.35);border-color:rgba(120,160,255,.55)}
+
+/* Area quick-pick chips (smaller than filter chips) */
+.areachips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.areachip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#eaf0ff;padding:8px 10px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer}
+.areachip:active{transform:scale(.99)}
 .triplist{display:flex;flex-direction:column;gap:12px}
 .trip{padding:12px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08)}
 .trip-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
@@ -62,8 +67,8 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 <body>
   <div class="phone">
     <header>
-      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-006W</span></h1>
-      <p>Polished UI (ESM-006W) + Phase 3A Review → Confirm Save.</p>
+      <h1>Shellfish Tracker — V1.5 ESM <span id="bootPill" class="boot">ESM-006Z</span></h1>
+      <p>Polished UI (ESM-006Z) + Outside-first Live Text (Copy→Paste) + Phase 3A Review → Confirm Save.</p>
     </header>
     <main id="app"></main>
   </div>
@@ -97,7 +102,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
     console.error(err);
   }
 
-  import("./js/app.js?v=ESM-006W").catch(showModuleError);
+  import("./js/app.js?v=ESM-006Z").catch(showModuleError);
 </script>
 </body>
 </html>

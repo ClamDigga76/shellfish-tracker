@@ -1,7 +1,9 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006U";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-006Z";
+
+const APP_VERSION = "ESM-006Z";
 
 
 
@@ -279,6 +281,93 @@ function exportTrips(trips, label, startISO="", endISO=""){
   const csv = toCSV(trips);
   downloadText(filenameFor(label, startISO, endISO), csv);
 }
+
+function exportBackup(){
+  const payload = {
+    app: "Shellfish Tracker",
+    schema: 1,
+    version: APP_VERSION,
+    exportedAt: new Date().toISOString(),
+    data: {
+      trips: Array.isArray(state.trips) ? state.trips : [],
+      areas: Array.isArray(state.areas) ? state.areas : []
+    }
+  };
+  const y = new Date();
+  const pad = (n)=> String(n).padStart(2,"0");
+  const fname = `shellfish_backup_${y.getFullYear()}-${pad(y.getMonth()+1)}-${pad(y.getDate())}_${pad(y.getHours())}${pad(y.getMinutes())}.json`;
+  downloadText(fname, JSON.stringify(payload, null, 2));
+}
+
+function normalizeTripForImport(t){
+  const o = (t && typeof t === "object") ? t : {};
+  const id = String(o.id || "").trim() || uid("t");
+  const dateISO = String(o.dateISO || o.date || "").trim();
+  const dealer = String(o.dealer || "").trim();
+  const area = String(o.area || "").trim();
+  const pounds = Number(o.pounds);
+  const amount = Number(o.amount);
+  return {
+    ...o,
+    id,
+    dateISO,
+    dealer,
+    area,
+    pounds: Number.isFinite(pounds) ? pounds : 0,
+    amount: Number.isFinite(amount) ? amount : 0,
+  };
+}
+
+function importBackupFromFile(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = ()=> reject(new Error("Failed to read file"));
+    reader.onload = ()=>{
+      try{
+        const txt = String(reader.result || "");
+        const json = JSON.parse(txt);
+        const tripsIn = Array.isArray(json?.data?.trips) ? json.data.trips : (Array.isArray(json?.trips) ? json.trips : []);
+        const areasIn = Array.isArray(json?.data?.areas) ? json.data.areas : (Array.isArray(json?.areas) ? json.areas : []);
+
+        const importedTrips = tripsIn.map(normalizeTripForImport).filter(t=>t.dateISO || t.dealer || t.amount || t.pounds);
+        const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
+
+        // Decide merge vs replace
+        const replace = confirm("Restore backup?\n\nOK = Replace all current trips on this device\nCancel = Merge (skip likely duplicates)");
+
+        const nextTrips = replace ? [] : (Array.isArray(state.trips) ? [...state.trips] : []);
+        const seen = new Set(nextTrips.map(t=> normalizeKey(`${t?.dateISO||""}|${t?.dealer||""}|${t?.area||""}|${to2(Number(t?.pounds)||0)}|${to2(Number(t?.amount)||0)}`)));
+
+        for(const t of importedTrips){
+          const key = normalizeKey(`${t.dateISO}|${t.dealer}|${t.area}|${to2(t.pounds)}|${to2(t.amount)}`);
+          if(!replace){
+            // Keep existing likelyDuplicate rules too
+            if(seen.has(key)) continue;
+            const dup = nextTrips.some(x=> likelyDuplicate(x, t));
+            if(dup) continue;
+          }
+          // Ensure unique id
+          if(nextTrips.some(x=>x.id === t.id)) t.id = uid("t");
+          nextTrips.push(t);
+          seen.add(key);
+        }
+
+        const nextAreas = Array.isArray(state.areas) ? [...state.areas] : [];
+        for(const a of importedAreas){
+          if(!nextAreas.includes(a)) nextAreas.push(a);
+        }
+
+        state.trips = nextTrips;
+        state.areas = nextAreas;
+        saveState();
+        resolve({ tripsAdded: importedTrips.length, mode: replace ? "replace" : "merge" });
+      }catch(e){
+        reject(e);
+      }
+    };
+    reader.readAsText(file);
+  });
+}
 function filterByRange(trips, startISO, endISO){
   const s = String(startISO||"");
   const e = String(endISO||"");
@@ -506,7 +595,7 @@ function renderNewTrip(){
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-  const amountDisp = (draft.amount === "" || draft.amount == null) ? "" : (Number.isFinite(Number(draft.amount)) ? to2(Number(draft.amount)).toFixed(2) : String(draft.amount));
+  const amountDisp = displayAmount(draft.amount);
 
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -535,7 +624,7 @@ const topAreas = (()=>{
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
         <b>New Trip</b>
-        <span class="muted small">OCR v1 (Phase 4B)</span>
+        <span class="muted small">Live Text (Copy/Paste)</span>
       </div>
       <div class="hint">Enter the check info. Date should be harvest date (MM/DD/YYYY).</div>
     </div>
@@ -592,11 +681,7 @@ const topAreas = (()=>{
 
         <div class="field">
           <div class="label">Area</div>
-          ${topAreas && topAreas.length ? `
-            <div class="pillbar" id="topAreas" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-              ${topAreas.map(a=>`<button class="chip" type="button" data-area="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join("")}
-            </div>
-          ` : ``}
+          ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
 <select class="select" id="t_area">
             ${areaOptions}
           </select>
@@ -912,7 +997,7 @@ function renderReviewTrip(){
   }
 
   const ppl = computePPL(Number(d.pounds||0), Number(d.amount||0));
-  const amountDispR = (d.amount === "" || d.amount == null) ? "" : (Number.isFinite(Number(d.amount)) ? to2(Number(d.amount)).toFixed(2) : String(d.amount));
+  const amountDispR = displayAmount(draft.amount);
 
   // Build area options + top areas (same logic as New Trip)
   const areaOptionsR = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -968,11 +1053,7 @@ function renderReviewTrip(){
 
         <div class="field">
           <div class="label">Area</div>
-          ${topAreasR && topAreasR.length ? `
-            <div class="pillbar" id="topAreasR" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-              ${topAreasR.map(a=>`<button class="chip" type="button" data-area="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join("")}
-            </div>
-          ` : ``}
+          ${renderTopAreaChips(topAreasR, draft.area, "topAreasR")}
           <select class="select" id="r_area">
             ${areaOptionsR}
           </select>
@@ -1128,13 +1209,28 @@ function renderEditTrip(){
     area: t.area || ""
   };
 
-  const amountDispE = (draft.amount === "" || draft.amount == null) ? "" : (Number.isFinite(Number(draft.amount)) ? to2(Number(draft.amount)).toFixed(2) : String(draft.amount));
+  const amountDispE = displayAmount(trip.amount);
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
     const label = a ? a : "—";
     const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
     return `<option value="${String(a||"").replaceAll('"',"&quot;")}" ${sel}>${label}</option>`;
   }).join("");
+
+  // Top 3 most-used Areas (from saved trips) for quick selection
+  const topAreasE = (()=>{
+    const counts = new Map();
+    for(const x of trips){
+      const a = String(x.area||"").trim();
+      if(!a) continue;
+      counts.set(a, (counts.get(a)||0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((x,y)=> (y[1]-x[1]) || x[0].localeCompare(y[0]))
+      .slice(0,3)
+      .map(([a])=>a);
+  })();
+
 
   app.innerHTML = `
     <div class="card">
@@ -1170,6 +1266,7 @@ function renderEditTrip(){
 
         <div class="field">
           <div class="label">Area</div>
+          ${renderTopAreaChips(topAreasE, trip.area, "topAreasE")}
           <select class="select" id="e_area">
             ${areaOptions}
           </select>
@@ -1192,6 +1289,9 @@ function renderEditTrip(){
   const elPounds = document.getElementById("e_pounds");
   const elAmount = document.getElementById("e_amount");
   const elArea = document.getElementById("e_area");
+
+  bindAreaChips("topAreasE", (a)=>{ trip.area = a; saveState(); renderEditTrip(trip.id); });
+
 
   const goHome = ()=>{
     state.view = "home";
@@ -1671,6 +1771,12 @@ function renderSettings(){
     <div class="card">
       <b>Data</b>
       <div class="sep"></div>
+      <div class="muted small" style="margin-top:10px">Backup lets you save trips/areas as a <b>.json</b> file on this device (Files/Drive) for safekeeping.</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="downloadBackup">💾 Download backup</button>
+        <button class="btn" id="restoreBackup">📥 Restore backup</button>
+        <input id="backupFile" type="file" accept="application/json,.json" style="display:none" />
+      </div>
       <div class="muted small" style="margin-top:10px">Reset clears all trips and settings on this device.</div>
       <div class="row" style="margin-top:12px">
         <button class="btn danger" id="resetData">Reset app data</button>
@@ -1682,6 +1788,31 @@ function renderSettings(){
 
   const goHome = ()=>{ state.view="home"; saveState(); render(); };
   document.getElementById("backHome").onclick = goHome;
+
+  // Backup / Restore (JSON)
+  const backupFile = document.getElementById("backupFile");
+  document.getElementById("downloadBackup").onclick = ()=>{
+    try{ exportBackup(); }catch(e){ alert("Backup failed: " + (e?.message||e)); }
+  };
+  document.getElementById("restoreBackup").onclick = ()=>{
+    if(backupFile) backupFile.click();
+  };
+  if(backupFile){
+    backupFile.onchange = async ()=>{
+      const file = backupFile.files && backupFile.files[0];
+      if(!file) return;
+      try{
+        await importBackupFromFile(file);
+        alert("Backup restored.");
+        renderSettings();
+      }catch(e){
+        console.error(e);
+        alert("Restore failed: " + (e?.message||e));
+      }finally{
+        backupFile.value = "";
+      }
+    };
+  }
 
   document.getElementById("addArea").onclick = ()=>{
     const v = String(document.getElementById("newArea").value||"").trim();
@@ -1713,6 +1844,21 @@ function renderSettings(){
     saveState();
     render();
   };
+
+  // (backup handlers are wired above)
+  if(fileInput){
+    fileInput.onchange = async ()=>{
+      const f = fileInput.files && fileInput.files[0];
+      if(!f) return;
+      try{
+        await importBackupFromFile(f);
+        alert("Backup restored.");
+        renderSettings();
+      }catch(e){
+        alert("Restore failed: " + (e?.message||e));
+      }
+    };
+  }
 }
 
 function render(){
@@ -1726,3 +1872,41 @@ function render(){
 }
 
 try{ render(); }catch(err){ setBootError(err?.message || err); throw err; }
+
+// ---- Display helpers (no state) ----
+function display2(val){
+  if(val === "" || val == null) return "";
+  const n = Number(val);
+  return Number.isFinite(n) ? to2(n).toFixed(2) : String(val);
+}
+function displayPounds(val){
+  // pounds are numeric; show up to 2 decimals like amount (no currency symbol)
+  return display2(val);
+}
+function displayAmount(val){
+  return display2(val);
+}
+
+function renderTopAreaChips(topAreas, currentArea, containerId){
+  if(!topAreas || !topAreas.length) return "";
+  return `
+    <div class="muted small" style="margin-top:6px;margin-bottom:6px"><b>Top areas</b> <span class="muted small">(quick pick)</span></div>
+    <div class="areachips" id="${containerId}">
+      ${topAreas.map(a=>{
+        const on = (String(currentArea||"").trim() === String(a||"").trim());
+        return `<button class="areachip${on ? " on" : ""}" type="button" data-area="${escapeHtml(a)}">${escapeHtml(a)}</button>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+function bindAreaChips(containerId, onPick){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.addEventListener("click", (e)=>{
+    const btn = e.target && e.target.closest && e.target.closest("button[data-area]");
+    if(!btn) return;
+    const a = btn.getAttribute("data-area") || "";
+    onPick(String(a));
+  });
+}
