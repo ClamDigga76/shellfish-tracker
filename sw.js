@@ -1,5 +1,5 @@
 // Simple offline cache for Shellfish Tracker (field test)
-const CACHE_NAME = "shellfish-tracker-"+self.registration.scope+"-v3";
+const CACHE_NAME = "shellfish-tracker-"+self.registration.scope+"-v4";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -49,7 +49,7 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(req, { ignoreSearch: true });
+    const cached = await cache.match(req);
     if (cached) return cached;
     try {
       const fresh = await fetch(req);

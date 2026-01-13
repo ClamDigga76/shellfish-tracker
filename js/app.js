@@ -1,9 +1,9 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007D";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007Q";
 
-const VERSION = "ESM-007D";
+const VERSION = "ESM-007Q";
 // ---- Toasts ----
 let toastTimer = null;
 function showToast(msg){
@@ -1869,13 +1869,13 @@ function renderSettings(){
       <div class="sep"></div>
       <div class="muted small" style="margin-top:10px">Backup lets you save trips/areas as a <b>.json</b> file on this device (Files/Drive) for safekeeping.</div>
       <div class="row" style="margin-top:12px">
-        <button class="btn" id="downloadBackup">💾 Download backup</button>
-        <button class="btn" id="restoreBackup">📥 Restore backup</button>
+        <button class="btn" id="downloadBackup">💾 Create Backup</button>
+        <button class="btn" id="restoreBackup">📥 Restore Backup</button>
         <input id="backupFile" type="file" accept="application/json,.json" style="display:none" />
       </div>
       <div class="muted small" style="margin-top:10px">Reset clears all trips and settings on this device.</div>
       <div class="row" style="margin-top:12px">
-        <button class="btn danger" id="resetData">Reset app data</button>
+        <button class="btn danger" id="resetData">Reset App Data</button>
     <div class="card">
       <b>Help & About</b>
       <div class="sep"></div>
@@ -1985,7 +1985,7 @@ function renderHelp(){
     <div class="card">
       <b>Backup</b>
       <div class="sep"></div>
-      <div class="muted small">Settings → Data → <b>Download backup</b> saves a .json file (Trips + Areas). Keep it in Files/Drive.</div>
+      <div class="muted small">Settings → Data → <b>Create Backup</b> saves a .json file (Trips + Areas). Keep it in Files/Drive.</div>
     </div>
 
     <div class="card">
