@@ -107,7 +107,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
         pill.title = String(err && (err.stack || err.message || err) || "Module load failed");
       }
       if(app){
-        \
+        
         const msg = (function(e){
           try{
             if(!e) return "Module load failed";
@@ -118,8 +118,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
               parts.push(`at ${e.filename||"?"}:${e.lineno||"?"}:${e.colno||"?"}`);
             }
             if(e.stack) parts.push(String(e.stack));
-            return parts.join("
-");
+            return parts.join("\n");
           }catch(_){
             return "Module load failed";
           }
@@ -133,33 +132,35 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
             '<div class="sep"></div>'+
             '<div class="muted small" style="white-space:pre-wrap">'+esc+'</div>'+
             '<div class="row" style="margin-top:12px">'+
+              '<button class="btn" id="copyErr">Copy</button>'+
               '<button class="btn" id="reload">Reload</button>'+
+              '<button class="btn" id="resetCache">Reset Cache</button>'+
             '</div>'+
           '</div>';
         const r = document.getElementById("reload");
         if(r) r.onclick = function(){ location.reload(); };
-const c = document.getElementById("copyErr");
-if(c) c.onclick = async function(){
-  try{
-    await navigator.clipboard.writeText(msg);
-    c.textContent = "Copied";
-    setTimeout(()=>{ c.textContent="Copy"; }, 1200);
-  }catch(e){}
-};
-const z = document.getElementById("resetCache");
-if(z) z.onclick = async function(){
-  try{
-    if(navigator.serviceWorker){
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r=>r.unregister()));
-    }
-    if(window.caches){
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k=>caches.delete(k)));
-    }
-  }catch(e){}
-  location.reload();
-};
+        const c = document.getElementById("copyErr");
+        if(c) c.onclick = async function(){
+          try{
+            await navigator.clipboard.writeText(msg);
+            c.textContent = "Copied";
+            setTimeout(()=>{ c.textContent="Copy"; }, 1200);
+          }catch(e){}
+        };
+        const z = document.getElementById("resetCache");
+        if(z) z.onclick = async function(){
+          try{
+            if(navigator.serviceWorker){
+              const regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map(r=>r.unregister()));
+            }
+            if(window.caches){
+              const keys = await caches.keys();
+              await Promise.all(keys.map(k=>caches.delete(k)));
+            }
+          }catch(e){}
+          location.reload();
+        };
       }
       console.error(err);
     }catch(e){
@@ -213,7 +214,7 @@ if(z) z.onclick = async function(){
 })();
 </script>
 <script type="module">
-  import("./js/app_007M.js").catch((e)=>{
+  import("./js/app_007N.js").catch((e)=>{
     try{ window.__BOOT_SHOW_ERROR__ && window.__BOOT_SHOW_ERROR__(e); }catch{}
   });
 </script>
