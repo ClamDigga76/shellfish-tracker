@@ -1,5 +1,5 @@
 // Simple offline cache for Shellfish Tracker (field test)
-const CACHE_NAME = "shellfish-tracker-"+self.registration.scope+"-v4";
+const CACHE_NAME = "shellfish-tracker--ESM-007S"+self.registration.scope+"-v5";
 const CORE_ASSETS = [
   "./",
   "./index.html",

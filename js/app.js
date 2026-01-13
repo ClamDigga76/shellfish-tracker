@@ -3,7 +3,7 @@
 
 import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007Q";
 
-const VERSION = "ESM-007Q";
+const VERSION = "ESM-007S";
 // ---- Toasts ----
 let toastTimer = null;
 function showToast(msg){
@@ -1211,6 +1211,8 @@ function renderEditTrip(){
     return renderHome();
   }
 
+  const trip = t;
+
   const draft = {
     dateISO: t.dateISO || "",
     dealer: t.dealer || "",
@@ -1276,7 +1278,7 @@ function renderEditTrip(){
 
         <div class="field">
           <div class="label">Area</div>
-          ${renderTopAreaChips(topAreasE, trip.area, "topAreasE")}
+          ${renderTopAreaChips(topAreasE, draft.area, "topAreasE")}
           <select class="select" id="e_area">
             ${areaOptions}
           </select>
@@ -1310,26 +1312,6 @@ function renderEditTrip(){
   };
 
   document.getElementById("backHome").onclick = goHome;
-
-  const hBtn = document.getElementById("openHelp");
-  if(hBtn) hBtn.onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
-
-  const aBtn = document.getElementById("openAbout");
-  if(aBtn) aBtn.onclick = ()=>{ state.view="about"; state.lastAction="nav:about"; saveState(); render(); };
-
-  const cBtn = document.getElementById("copyDebug");
-  if(cBtn) cBtn.onclick = async ()=>{
-    const ok = await copyTextToClipboard(getDebugInfo());
-    showToast(ok ? "Debug info copied" : "Copy failed");
-  };
-
-  const fBtn = document.getElementById("feedback");
-  if(fBtn) fBtn.onclick = ()=>{
-    const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
-    const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
-    location.href = `mailto:?subject=${subj}&body=${body}`;
-  };
-
   document.getElementById("cancelEdit").onclick = goHome;
 
   document.getElementById("saveEdit").onclick = ()=>{
@@ -1876,14 +1858,6 @@ function renderSettings(){
       <div class="muted small" style="margin-top:10px">Reset clears all trips and settings on this device.</div>
       <div class="row" style="margin-top:12px">
         <button class="btn danger" id="resetData">Reset App Data</button>
-    <div class="card">
-      <b>Help & About</b>
-      <div class="sep"></div>
-      <div class="muted small" style="margin-top:10px">Need a refresher or want to report a bug? Use Help, or copy debug info for troubleshooting.</div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn" id="openHelp">❓ Help</button>
-        <button class="btn" id="openAbout">ℹ️ About</button>
-      </div>
       <div class="row" style="margin-top:10px">
         <button class="btn" id="copyDebug">Copy Debug Info</button>
         <button class="btn" id="feedback">Send Feedback</button>
