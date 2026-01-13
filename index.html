@@ -93,37 +93,55 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
     <main id="app"></main>
   </div>
 
-  <script type="module">
+  <script>
+(function(){
   const pill = document.getElementById("bootPill");
   const app = document.getElementById("app");
 
-  function showModuleError(err){
-    if(pill){
-      pill.textContent = "ERROR";
-      pill.classList.add("err");
-      pill.title = String(err && (err.stack || err.message || err) || "Module import failed");
+  function showError(err){
+    try{
+      if(pill){
+        pill.textContent = "ERROR";
+        pill.classList.add("err");
+        pill.title = String(err && (err.stack || err.message || err) || "Module load failed");
+      }
+      if(app){
+        const msg = String(err && (err.stack || err.message || err) || "Module load failed");
+        // Escape minimal HTML chars
+        const esc = msg.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+        app.innerHTML =
+          '<div class="card">'+
+            '<b>Module failed to load.</b>'+
+            '<div class="sep"></div>'+
+            '<div class="muted small" style="white-space:pre-wrap">'+esc+'</div>'+
+            '<div class="row" style="margin-top:12px">'+
+              '<button class="btn" id="reload">Reload</button>'+
+            '</div>'+
+          '</div>';
+        const r = document.getElementById("reload");
+        if(r) r.onclick = function(){ location.reload(); };
+      }
+      console.error(err);
+    }catch(e){
+      console.error("boot error", e, err);
     }
-    if(app){
-      const msg = String(err && (err.stack || err.message || err) || "Module import failed");
-      const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-      app.innerHTML = `
-        <div class="card">
-          <b>Module failed to load.</b>
-          <div class="sep"></div>
-          <div class="muted small" style="white-space:pre-wrap">${esc}</div>
-          <div class="row" style="margin-top:12px">
-            <button class="btn" id="reload">Reload</button>
-          </div>
-        </div>
-      `;
-      const r = document.getElementById("reload");
-      if(r) r.onclick = ()=> location.reload();
-    }
-    console.error(err);
   }
 
-  import("./js/app_007J.js").catch(showModuleError);
+  window.addEventListener("error", function(ev){
+    // Most module parse errors surface here with filename/lineno
+    if(ev && (ev.error || ev.message)){
+      showError(ev.error || ev.message);
+    }
+  });
+
+  window.addEventListener("unhandledrejection", function(ev){
+    if(ev && ev.reason){
+      showError(ev.reason);
+    }
+  });
+})();
 </script>
+<script type="module" src="./js/app_007K.js"></script>
 
 <script>
   // PWA offline support

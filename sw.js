@@ -1,11 +1,11 @@
 // Simple offline cache for Shellfish Tracker 
-const CACHE_NAME = "shellfish-tracker-ESM-007J"+self.registration.scope+"-v6";
+const CACHE_NAME = "shellfish-tracker-ESM-007K"+self.registration.scope+"-v7";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./js/app_007J.js",
-  "./js/utils_007J.js",
+  "./js/app_007K.js",
+  "./js/utils_007K.js",
   "./js/utils_007H1B.js",
   "./icons/favicon-32.png",
   "./icons/icon-192.png",
