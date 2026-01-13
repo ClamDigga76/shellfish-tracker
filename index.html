@@ -91,6 +91,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
       <p>Copy receipt text with Live Text, then tap Paste → Review. Review → Confirm saves.</p>
     </header>
     <main id="app"></main>
+    <div id="footer" style="padding:10px 14px 14px;color:rgba(159,176,208,.9);font-size:12px;border-top:1px solid rgba(255,255,255,.10)">Created by <b>Jeremy Wood</b> — <a href="mailto:jeremywwood76@gmail.com" style="color:rgba(159,176,208,.95);text-decoration:none">jeremywwood76@gmail.com</a></div>
   </div>
 
   <script>
@@ -106,7 +107,24 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
         pill.title = String(err && (err.stack || err.message || err) || "Module load failed");
       }
       if(app){
-        const msg = String(err && (err.stack || err.message || err) || "Module load failed");
+        \
+        const msg = (function(e){
+          try{
+            if(!e) return "Module load failed";
+            if(typeof e === "string") return e;
+            const parts = [];
+            if(e.message) parts.push(String(e.message));
+            if(e.filename || e.lineno || e.colno){
+              parts.push(`at ${e.filename||"?"}:${e.lineno||"?"}:${e.colno||"?"}`);
+            }
+            if(e.stack) parts.push(String(e.stack));
+            return parts.join("
+");
+          }catch(_){
+            return "Module load failed";
+          }
+        })(err);
+
         // Escape minimal HTML chars
         const esc = msg.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
         app.innerHTML =
@@ -120,6 +138,28 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
           '</div>';
         const r = document.getElementById("reload");
         if(r) r.onclick = function(){ location.reload(); };
+const c = document.getElementById("copyErr");
+if(c) c.onclick = async function(){
+  try{
+    await navigator.clipboard.writeText(msg);
+    c.textContent = "Copied";
+    setTimeout(()=>{ c.textContent="Copy"; }, 1200);
+  }catch(e){}
+};
+const z = document.getElementById("resetCache");
+if(z) z.onclick = async function(){
+  try{
+    if(navigator.serviceWorker){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    if(window.caches){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+  }catch(e){}
+  location.reload();
+};
       }
       console.error(err);
     }catch(e){
@@ -130,7 +170,8 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
   window.addEventListener("error", function(ev){
     // Most module parse errors surface here with filename/lineno
     if(ev && (ev.error || ev.message)){
-      showError(ev.error || ev.message);
+      const meta = { message: ev.message, filename: ev.filename, lineno: ev.lineno, colno: ev.colno, stack: ev.error && ev.error.stack };
+      showError(meta);
     }
   });
 
@@ -141,7 +182,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
   });
 })();
 </script>
-<script type="module" src="./js/app_007K.js"></script>
+<script type="module" src="./js/app_007L.js"></script>
 
 <script>
   // PWA offline support
