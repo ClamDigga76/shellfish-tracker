@@ -75,41 +75,15 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 /* Toast */
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-footer{padding:10px 16px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.35} 
-footer a{color:var(--text);text-decoration:none;font-weight:800}
-
 </style>
-
-<style>
-  .updateBanner{position:sticky;top:0;z-index:50;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;margin:0 0 10px 0;border:1px solid rgba(0,0,0,.12);border-radius:12px;background:rgba(255,255,255,.95);backdrop-filter:saturate(180%) blur(10px)}
-  .updateBanner.hidden{display:none}
-  .updateBanner__text{display:flex;flex-direction:column;gap:2px}
-  .updateBanner__text strong{font-size:14px}
-  .updateBanner__text span{font-size:12px;opacity:.8}
-  .btn.btn-ghost{background:transparent;border:1px solid rgba(0,0,0,.12)}
-</style>
-
 </head>
 <body>
-  
-<div id="updateBanner" class="updateBanner hidden" role="status" aria-live="polite">
-  <div class="updateBanner__text">
-    <strong>Update available</strong>
-    <span>Reload to get the latest version.</span>
-  </div>
-  <button id="updateReloadBtn" class="btn btn-primary" type="button">Reload</button>
-  <button id="updateDismissBtn" class="btn btn-ghost" type="button" aria-label="Dismiss update banner">Later</button>
-</div>
-<div class="phone">
+  <div class="phone">
     <header>
       <h1>Shellfish Tracker <span id="bootPill" class="boot">Field Test</span></h1>
       <p>Copy receipt text with Live Text, then tap Paste → Review. Review → Confirm saves.</p>
     </header>
     <main id="app"></main>
-    <footer>
-      Jeremy Wood — <a href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>
-    </footer>
   </div>
 
   <script type="module">
@@ -141,74 +115,16 @@ footer a{color:var(--text);text-decoration:none;font-weight:800}
     console.error(err);
   }
 
-  import("./js/app.js?v=ESM-007G-CLEAN").catch(showModuleError);
+  import("./js/app_007G.js").catch(showModuleError);
 </script>
 
 <script>
-  // PWA offline + update handling (ESM-007G-CLEAN)
-  (function() {
-    if (!("serviceWorker" in navigator)) return;
-
-    const banner = () => document.getElementById("updateBanner");
-    const showBanner = (reg) => {
-      const b = banner();
-      if (!b) return;
-      if (!b.classList.contains("hidden")) return;
-
-      b.classList.remove("hidden");
-      const reloadBtn = document.getElementById("updateReloadBtn");
-      const dismissBtn = document.getElementById("updateDismissBtn");
-
-      const doReload = () => {
-        try {
-          if (reg && reg.waiting) {
-            reg.waiting.postMessage({ type: "SKIP_WAITING" });
-          }
-        } catch(e) {}
-        location.reload();
-      };
-
-      if (reloadBtn) reloadBtn.onclick = doReload;
-      if (dismissBtn) dismissBtn.onclick = () => b.classList.add("hidden");
-    };
-
-    window.addEventListener("load", async () => {
-      try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=ESM-007G-CLEAN");
-
-        // If a new SW is found, surface an update banner once it's installed.
-        reg.addEventListener("updatefound", () => {
-          const sw = reg.installing;
-          if (!sw) return;
-          sw.addEventListener("statechange", () => {
-            if (sw.state === "installed") {
-              // Only show if there is an existing controller (i.e., this is an update).
-              if (navigator.serviceWorker.controller) {
-                showBanner(reg);
-              }
-            }
-          });
-        });
-
-        // If controller changes, reload (new version now controlling)
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (refreshing) return;
-          refreshing = true;
-          location.reload();
-        });
-
-        // Proactively check for an update shortly after load
-        setTimeout(() => {
-          try { reg.update(); } catch(e) {}
-        }, 1500);
-
-      } catch (e) {
-        // ignore
-      }
+  // PWA offline support
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
     });
-  })();
-
+  }
 </script>
 
   <div id="toast"></div>

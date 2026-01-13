@@ -1,7 +1,7 @@
 {
   "name": "Shellfish Tracker",
   "short_name": "Shellfish",
-  "start_url": "./?v=ESM-007G-CLEAN",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0b0f16",
   "theme_color": "#2f6df6",
@@ -22,6 +22,5 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ],
-  "scope": "./"
+  ]
 }
