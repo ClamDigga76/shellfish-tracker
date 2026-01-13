@@ -76,7 +76,9 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-.pre{white-space:pre-wrap;word-break:break-word;margin-top:10px;padding:10px;border-radius:12px;background:rgba(0,0,0,.25);font-size:12px;line-height:1.25}
+#credit{position:fixed;left:0;right:0;bottom:0;padding:8px 14px;font-size:13px;color:rgba(232,238,252,.75);border-top:1px solid var(--line);background:rgba(10,14,22,.75);backdrop-filter:blur(10px)}
+#credit a{color:rgba(232,238,252,.85);text-decoration:none}
+#credit a:active{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -92,36 +94,58 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
   const pill = document.getElementById("bootPill");
   const app = document.getElementById("app");
 
-  function showModuleError(err){
-    if(pill){
-      pill.textContent = "ERROR";
-      pill.classList.add("err");
-      pill.title = String(e
-  const pill = document.getElementById("bootPill");
-  const app = document.getElementById("app");
-
-  function showModuleError(err){
-    if(pill){
-      pill.textContent = "ERROR";
-      pill.classList.add("err");
-      pill.title = String(err && (err.stack || err.message || err) || "Module import failed");
-    }
-    if(app){
-      const msg = String(err && (err.stack || err.message || err) || "Module import failed");
+  // Make error handler available to non-module scripts if needed
+  window.__showModuleError = function(err){
+    try{
+      if(pill){
+        pill.textContent = "ERROR";
+        pill.classList.add("err");
+        pill.title = "Module error";
+      }
+      const msg =
+        (err && (err.stack || err.message)) ? String(err.stack || err.message)
+        : String(err || "Module import failed");
       const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+
       app.innerHTML = `
         <div class="card">
           <b>Module failed to load.</b>
           <div class="sep"></div>
           <div class="muted small" style="white-space:pre-wrap">${esc}</div>
-          <div class="row" style="margin-top:12px">
+          <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
+            <button class="btn" id="copyErr">Copy</button>
             <button class="btn" id="reload">Reload</button>
             <button class="btn" id="resetCache">Reset Cache</button>
           </div>
         </div>
       `;
+
+      const copyBtn = document.getElementById("copyErr");
+      if(copyBtn){
+        copyBtn.onclick = async ()=>{
+          try{
+            await navigator.clipboard.writeText(msg);
+            copyBtn.textContent = "Copied";
+            setTimeout(()=> copyBtn.textContent="Copy", 900);
+          }catch(e){
+            // fallback: select text
+            const pre = document.createElement("textarea");
+            pre.value = msg;
+            pre.style.position="fixed";
+            pre.style.left="-9999px";
+            document.body.appendChild(pre);
+            pre.select();
+            document.execCommand("copy");
+            document.body.removeChild(pre);
+            copyBtn.textContent = "Copied";
+            setTimeout(()=> copyBtn.textContent="Copy", 900);
+          }
+        };
+      }
+
       const r = document.getElementById("reload");
       if(r) r.onclick = ()=> location.reload();
+
       const z = document.getElementById("resetCache");
       if(z) z.onclick = async ()=>{
         try{
@@ -136,10 +160,27 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
         }catch(e){}
         location.reload();
       };
+    }catch(e){
+      console.error("Error rendering module error UI", e);
     }
     console.error(err);
-  }
+  };
 
-  import("./js/app.js").catch(showModuleError);
+  // Import the app. Version query helps break stale caches.
+  import("./js/app.js?v=ESM-007P").catch(window.__showModuleError);
+</script>
+
+<script>
+  // PWA offline support
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+</script>
+
+
+  <footer id="credit">Created by Jeremy Wood — <a href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></footer>
+  <div id="toast"></div>
 </body>
 </html>

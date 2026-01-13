@@ -1,9 +1,9 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007D";
 
-const VERSION = "ESM-007O";
+const VERSION = "ESM-007D";
 // ---- Toasts ----
 let toastTimer = null;
 function showToast(msg){
