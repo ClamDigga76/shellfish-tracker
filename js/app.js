@@ -1,9 +1,9 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js?v=ESM-007G-CLEAN";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils.js";
 
-const VERSION = "ESM-007G-CLEAN";
+const VERSION = "ESM-007O";
 // ---- Toasts ----
 let toastTimer = null;
 function showToast(msg){
@@ -642,6 +642,16 @@ const topAreas = (()=>{
         <div class="field">
           <div class="label">Receipt text (copy → paste)</div>
 
+          <div id="entryPrompt" class="muted small" style="display:none; margin-bottom:10px; padding:10px 12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:14px;">
+            <div class="row" style="justify-content:space-between;align-items:center;gap:10px">
+              <div><b>Clipboard text detected.</b> <span class="muted small">Paste and go to Review?</span></div>
+              <div class="row" style="gap:8px;flex-wrap:nowrap">
+                <button class="smallbtn" id="entryUse">Paste → Review</button>
+                <button class="smallbtn" id="entryDismiss">Dismiss</button>
+              </div>
+            </div>
+          </div>
+
           <button class="btn primary" id="pasteToReviewPrimary" style="width:100%;">Paste → Review</button>
           <div class="hint">After copying receipt text with Live Text, tap <b>Paste → Review</b>.</div>
 
@@ -730,12 +740,21 @@ if(topAreaWrap && elArea){
 
 
   // --- Outside-first Live Text intake (copy → paste) ---
+  const entryPrompt = document.getElementById("entryPrompt");
+  const entryUseBtn = document.getElementById("entryUse");
+  const entryDismissBtn = document.getElementById("entryDismiss");
   const btnPastePrimary = document.getElementById("pasteToReviewPrimary");
   const fallbackHint = document.getElementById("pasteFallbackHint");
   const recentWrap = document.getElementById("recentPastes");
   const pasteDetails = document.getElementById("pasteDetails");
+
+  const KEY_ENTRY_DISMISSED = "shellfish_clip_entry_dismissed";
+  const KEY_ENTRY_TRIED = "shellfish_clip_entry_tried";
+  const KEY_FOCUS_TRIED = "shellfish_clip_focus_tried";
   const KEY_FALLBACK_SHOWN = "shellfish_clip_fallback_shown";
   const KEY_RECENT_PASTES = "shellfish_recent_pastes_v1"; // session-only
+
+  let clipCandidate = "";
 
   function looksReceiptLike(txt){
     const s = String(txt||"").trim();
@@ -851,6 +870,57 @@ if(topAreaWrap && elArea){
     // Always go to Review (still requires Confirm & Save)
     document.getElementById("saveTrip").click();
   }
+
+  function hideEntryPrompt(markDismissed){
+    if(entryPrompt) entryPrompt.style.display = "none";
+    clipCandidate = "";
+    if(markDismissed){
+      try{ sessionStorage.setItem(KEY_ENTRY_DISMISSED, "1"); }catch{}
+    }
+  }
+
+  async function maybePromptOnEntry(){
+    try{
+      if(sessionStorage.getItem(KEY_ENTRY_DISMISSED) === "1") return;
+      if(sessionStorage.getItem(KEY_ENTRY_TRIED) === "1") return;
+      sessionStorage.setItem(KEY_ENTRY_TRIED, "1");
+    }catch{}
+
+    const txt = await readClipboardBestEffort();
+    if(!looksReceiptLike(txt)) return;
+
+    clipCandidate = txt;
+    if(entryPrompt) entryPrompt.style.display = "block";
+  }
+
+  async function maybePromptOnFocus(){
+    // Focus is a user gesture; some browsers allow clipboard read here (best-effort).
+    try{
+      if(sessionStorage.getItem(KEY_ENTRY_DISMISSED) === "1") return;
+      if(sessionStorage.getItem(KEY_FOCUS_TRIED) === "1") return;
+      sessionStorage.setItem(KEY_FOCUS_TRIED, "1");
+    }catch{}
+
+    const txt = await readClipboardBestEffort();
+    if(!looksReceiptLike(txt)) return;
+
+    clipCandidate = txt;
+    if(entryPrompt) entryPrompt.style.display = "block";
+  }
+
+  if(entryUseBtn){
+    entryUseBtn.onclick = async ()=>{
+      const txt = clipCandidate || await readClipboardBestEffort();
+      if(txt){
+        hideEntryPrompt(false);
+        applyPastedText(txt);
+      }else{
+        showFallbackHintOnce();
+      }
+    };
+  }
+  if(entryDismissBtn){
+    entryDismissBtn.onclick = ()=> hideEntryPrompt(true);
   }
 
   if(btnPastePrimary){
@@ -864,29 +934,30 @@ if(topAreaWrap && elArea){
     };
   }
 
-  renderRecents();
+  if(elPaste){
+    elPaste.addEventListener("focus", ()=>{ maybePromptOnFocus(); });
+  }
 
+  renderRecents();
+  maybePromptOnEntry();
 const backBtn = document.getElementById("backHome");
   if(backBtn){ backBtn.onclick = ()=>{ state.view="home"; saveState(); render(); }; }
 
 
-    document.getElementById("clearDraft").onclick = ()=>{
-    // Clear only the in-progress draft (does not save a trip)
-    state.view = "new";
-    state.lastAction = "draft:cleared";
-    state.reviewDraft = null;
-    state.draft = { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-    saveDraft();
+  document.getElementById("clearDraft").onclick = ()=>{
+    delete state.draft;
     saveState();
     render();
+    state.view = "new";
+    saveState();
   };
 
-    document.getElementById("cancelTrip").onclick = ()=>{
-    // Cancel returns home without saving anything
+  document.getElementById("cancelTrip").onclick = ()=>{
     state.view = "home";
-    state.lastAction = "trip:cancel";
+    state.lastAction="trip:saved";
     saveState();
     render();
+    showToast("Trip saved");
   };
 
 
@@ -936,7 +1007,7 @@ function renderReviewTrip(){
   }
 
   const ppl = computePPL(Number(d.pounds||0), Number(d.amount||0));
-  const amountDispR = displayAmount(d.amount);
+  const amountDispR = displayAmount(draft.amount);
 
   // Build area options + top areas (same logic as New Trip)
   const areaOptionsR = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -992,7 +1063,7 @@ function renderReviewTrip(){
 
         <div class="field">
           <div class="label">Area</div>
-          ${renderTopAreaChips(topAreasR, d.area, "topAreasR")}
+          ${renderTopAreaChips(topAreasR, draft.area, "topAreasR")}
           <select class="select" id="r_area">
             ${areaOptionsR}
           </select>
@@ -1239,10 +1310,24 @@ function renderEditTrip(){
   };
 
   document.getElementById("backHome").onclick = goHome;
+
+  const hBtn = document.getElementById("openHelp");
+  if(hBtn) hBtn.onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
+
+  const aBtn = document.getElementById("openAbout");
+  if(aBtn) aBtn.onclick = ()=>{ state.view="about"; state.lastAction="nav:about"; saveState(); render(); };
+
+  const cBtn = document.getElementById("copyDebug");
+  if(cBtn) cBtn.onclick = async ()=>{
+    const ok = await copyTextToClipboard(getDebugInfo());
     showToast(ok ? "Debug info copied" : "Copy failed");
   };
+
+  const fBtn = document.getElementById("feedback");
+  if(fBtn) fBtn.onclick = ()=>{
+    const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
     const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
-    location.href = `mailto:jeremywwood76@gmail.com?subject=${subj}&body=${body}`;
+    location.href = `mailto:?subject=${subj}&body=${body}`;
   };
 
   document.getElementById("cancelEdit").onclick = goHome;
@@ -1784,13 +1869,27 @@ function renderSettings(){
       <div class="sep"></div>
       <div class="muted small" style="margin-top:10px">Backup lets you save trips/areas as a <b>.json</b> file on this device (Files/Drive) for safekeeping.</div>
       <div class="row" style="margin-top:12px">
-        <button class="btn" id="downloadBackup">💾 Create backup</button>
+        <button class="btn" id="downloadBackup">💾 Download backup</button>
         <button class="btn" id="restoreBackup">📥 Restore backup</button>
         <input id="backupFile" type="file" accept="application/json,.json" style="display:none" />
       </div>
       <div class="muted small" style="margin-top:10px">Reset clears all trips and settings on this device.</div>
       <div class="row" style="margin-top:12px">
         <button class="btn danger" id="resetData">Reset app data</button>
+    <div class="card">
+      <b>Help & About</b>
+      <div class="sep"></div>
+      <div class="muted small" style="margin-top:10px">Need a refresher or want to report a bug? Use Help, or copy debug info for troubleshooting.</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="openHelp">❓ Help</button>
+        <button class="btn" id="openAbout">ℹ️ About</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="copyDebug">Copy Debug Info</button>
+        <button class="btn" id="feedback">Send Feedback</button>
+      </div>
+    </div>
+
       </div>
     </div>
   `;
@@ -1803,7 +1902,7 @@ function renderSettings(){
   // Backup / Restore (JSON)
   const backupFile = document.getElementById("backupFile");
   document.getElementById("downloadBackup").onclick = ()=>{
-    try{ exportBackup(); showToast("Backup created"); }catch(e){ showToast("Backup failed"); }
+    try{ exportBackup(); showToast("Backup downloaded"); }catch(e){ showToast("Backup failed"); }
   };
   document.getElementById("restoreBackup").onclick = ()=>{
     if(backupFile) backupFile.click();
@@ -1886,7 +1985,7 @@ function renderHelp(){
     <div class="card">
       <b>Backup</b>
       <div class="sep"></div>
-      <div class="muted small">Settings → Data → <b>Create backup</b> saves a .json file (Trips + Areas). Keep it in Files/Drive.</div>
+      <div class="muted small">Settings → Data → <b>Download backup</b> saves a .json file (Trips + Areas). Keep it in Files/Drive.</div>
     </div>
 
     <div class="card">
@@ -1905,14 +2004,6 @@ function renderHelp(){
         <button class="btn" id="feedback">Send Feedback</button>
       </div>
     </div>
-
-    <div class="card">
-      <b>Contact</b>
-      <div class="sep"></div>
-      <div class="muted small">Questions or feedback?</div>
-      <div class="muted small" style="margin-top:6px"><b>Jeremy Wood</b></div>
-      <div class="muted small"><a href="mailto:jeremywwood76@gmail.com" style="color:inherit">jeremywwood76@gmail.com</a></div>
-    </div>
   `;
   app.scrollTop = 0;
 
@@ -1926,7 +2017,7 @@ function renderHelp(){
   document.getElementById("feedback").onclick = ()=>{
     const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
     const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
-    location.href = `mailto:jeremywwood76@gmail.com?subject=${subj}&body=${body}`;
+    location.href = `mailto:?subject=${subj}&body=${body}`;
   };
 }
 
@@ -1964,7 +2055,7 @@ function renderAbout(){
   document.getElementById("feedback").onclick = ()=>{
     const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
     const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
-    location.href = `mailto:jeremywwood76@gmail.com?subject=${subj}&body=${body}`;
+    location.href = `mailto:?subject=${subj}&body=${body}`;
   };
 }
 

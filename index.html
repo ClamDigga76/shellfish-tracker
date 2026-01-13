@@ -25,7 +25,7 @@ header p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
 .boot{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--muted);vertical-align:middle}
 .boot.err{border-color:rgba(255,77,79,.6);color:#ffd7e1;background:rgba(255,77,79,.12)}
 main{padding:14px 14px 18px}
-.card{background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.card{background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .btn.primary{background:linear-gradient(180deg, rgba(47,109,246,.92) 0%, rgba(31,111,235,.92) 100%);border-color:rgba(47,109,246,.9);box-shadow:0 10px 26px rgba(31,111,235,.20)}
@@ -48,12 +48,12 @@ main{padding:14px 14px 18px}
 .areachips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .areachip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#eaf0ff;padding:8px 10px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer}
 .areachip:active{transform:scale(.99)}
-.triplist{display:flex;flex-direction:column;gap:10px}
-.trip{padding:14px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08)}
+.triplist{display:flex;flex-direction:column;gap:12px}
+.trip{padding:12px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08)}
 .trip-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .trip-date{font-weight:800;color:#dbe6ff}
 .trip-dealer{font-weight:800}
-.trip-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.trip-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 
 /* Phase 2C-2 additions */
 .form{display:flex;flex-direction:column;gap:12px}
@@ -76,158 +76,70 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* Phase 3A — Trip list readability */
-.trip-top{ display:flex; gap:10px; align-items:baseline; justify-content:space-between; }
-.trip-area{ font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid rgba(0,0,0,.12); }
-.trip-dealer{ margin-top:4px; }
-.trip{ padding:12px; }
-
+.pre{white-space:pre-wrap;word-break:break-word;margin-top:10px;padding:10px;border-radius:12px;background:rgba(0,0,0,.25);font-size:12px;line-height:1.25}
 </style>
 </head>
 <body>
   <div class="phone">
     <header>
-      <h1>Shellfish Tracker <span id="bootPill" class="boot">Ready</span></h1>
+      <h1>Shellfish Tracker <span id="bootPill" class="boot">Field Test</span></h1>
       <p>Copy receipt text with Live Text, then tap Paste → Review. Review → Confirm saves.</p>
     </header>
     <main id="app"></main>
-    <div id="footer" style="padding:10px 14px 14px;color:rgba(159,176,208,.9);font-size:12px;border-top:1px solid rgba(255,255,255,.10)">Created by <b>Jeremy Wood</b> — <a href="mailto:jeremywwood76@gmail.com" style="color:rgba(159,176,208,.95);text-decoration:none">jeremywwood76@gmail.com</a></div>
   </div>
 
-  <script>
-(function(){
+  <script type="module">
   const pill = document.getElementById("bootPill");
   const app = document.getElementById("app");
 
-  function showError(err){
-    try{
-      if(pill){
-        pill.textContent = "ERROR";
-        pill.classList.add("err");
-        pill.title = String(err && (err.stack || err.message || err) || "Module load failed");
-      }
-      if(app){
-        
-        const msg = (function(e){
-          try{
-            if(!e) return "Module load failed";
-            if(typeof e === "string") return e;
-            const parts = [];
-            if(e.message) parts.push(String(e.message));
-            if(e.filename || e.lineno || e.colno){
-              parts.push(`at ${e.filename||"?"}:${e.lineno||"?"}:${e.colno||"?"}`);
-            }
-            if(e.stack) parts.push(String(e.stack));
-            return parts.join("\n");
-          }catch(_){
-            return "Module load failed";
+  function showModuleError(err){
+    if(pill){
+      pill.textContent = "ERROR";
+      pill.classList.add("err");
+      pill.title = String(e
+  const pill = document.getElementById("bootPill");
+  const app = document.getElementById("app");
+
+  function showModuleError(err){
+    if(pill){
+      pill.textContent = "ERROR";
+      pill.classList.add("err");
+      pill.title = String(err && (err.stack || err.message || err) || "Module import failed");
+    }
+    if(app){
+      const msg = String(err && (err.stack || err.message || err) || "Module import failed");
+      const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+      app.innerHTML = `
+        <div class="card">
+          <b>Module failed to load.</b>
+          <div class="sep"></div>
+          <div class="muted small" style="white-space:pre-wrap">${esc}</div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="reload">Reload</button>
+            <button class="btn" id="resetCache">Reset Cache</button>
+          </div>
+        </div>
+      `;
+      const r = document.getElementById("reload");
+      if(r) r.onclick = ()=> location.reload();
+      const z = document.getElementById("resetCache");
+      if(z) z.onclick = async ()=>{
+        try{
+          if("serviceWorker" in navigator){
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r=>r.unregister()));
           }
-        })(err);
-
-        // Escape minimal HTML chars
-        const esc = msg.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-        app.innerHTML =
-          '<div class="card">'+
-            '<b>Module failed to load.</b>'+
-            '<div class="sep"></div>'+
-            '<div class="muted small" style="white-space:pre-wrap">'+esc+'</div>'+
-            '<div class="row" style="margin-top:12px">'+
-              '<button class="btn" id="copyErr">Copy</button>'+
-              '<button class="btn" id="reload">Reload</button>'+
-              '<button class="btn" id="resetCache">Reset Cache</button>'+
-            '</div>'+
-          '</div>';
-        const r = document.getElementById("reload");
-        if(r) r.onclick = function(){ location.reload(); };
-        const c = document.getElementById("copyErr");
-        if(c) c.onclick = async function(){
-          try{
-            await navigator.clipboard.writeText(msg);
-            c.textContent = "Copied";
-            setTimeout(()=>{ c.textContent="Copy"; }, 1200);
-          }catch(e){}
-        };
-        const z = document.getElementById("resetCache");
-        if(z) z.onclick = async function(){
-          try{
-            if(navigator.serviceWorker){
-              const regs = await navigator.serviceWorker.getRegistrations();
-              await Promise.all(regs.map(r=>r.unregister()));
-            }
-            if(window.caches){
-              const keys = await caches.keys();
-              await Promise.all(keys.map(k=>caches.delete(k)));
-            }
-          }catch(e){}
-          location.reload();
-        };
-      }
-      console.error(err);
-    }catch(e){
-      console.error("boot error", e, err);
+          if("caches" in window){
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k=>caches.delete(k)));
+          }
+        }catch(e){}
+        location.reload();
+      };
     }
+    console.error(err);
   }
 
-  window.addEventListener("error", function(ev){
-    // Most module parse errors surface here with filename/lineno
-    if(ev && (ev.error || ev.message)){
-      const meta = { message: ev.message, filename: ev.filename, lineno: ev.lineno, colno: ev.colno, stack: ev.error && ev.error.stack };
-      showError(meta);
-    }
-  });
-
-  window.addEventListener("unhandledrejection", function(ev){
-    if(ev && ev.reason){
-      showError(ev.reason);
-    }
-  });
-
-  // Expose for module import catch
-  window.__BOOT_SHOW_ERROR__ = showError;
-
-  // Default loading UI (prevents blank screen)
-  const appEl = document.getElementById("app");
-  if(appEl){
-    appEl.innerHTML = `<div class="card"><b>Loading…</b><div class="sep"></div><div class="muted small">Starting app module. If this takes more than a few seconds, tap Reload or Reset Cache.</div><div class="row" style="margin-top:12px"><button class="btn" id="bootReload">Reload</button><button class="btn" id="bootReset">Reset Cache</button></div></div>`;
-    const br=document.getElementById("bootReload"); if(br) br.onclick=()=>location.reload();
-    const bs=document.getElementById("bootReset"); if(bs) bs.onclick=async()=>{
-      try{
-        if(navigator.serviceWorker){
-          const regs = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(regs.map(r=>r.unregister()));
-        }
-        if(window.caches){
-          const keys = await caches.keys();
-          await Promise.all(keys.map(k=>caches.delete(k)));
-        }
-      }catch{}
-      location.reload();
-    };
-  }
-
-  // Watchdog: if module never boots, show a useful error
-  setTimeout(()=>{
-    if(window.__APP_BOOTED) return;
-    showError(new Error("App module did not start (possible cached/failed JS). Try Reset Cache."));
-  }, 4000);
-
-})();
-</script>
-<script type="module">
-  import("./js/app_007N.js").catch((e)=>{
-    try{ window.__BOOT_SHOW_ERROR__ && window.__BOOT_SHOW_ERROR__(e); }catch{}
-  });
-</script>
-
-<script>
-  // PWA offline support
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
-    });
-  }
-</script>
-
-  <div id="toast"></div>
+  import("./js/app.js").catch(showModuleError);
 </body>
 </html>
