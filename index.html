@@ -180,9 +180,43 @@ if(z) z.onclick = async function(){
       showError(ev.reason);
     }
   });
+
+  // Expose for module import catch
+  window.__BOOT_SHOW_ERROR__ = showError;
+
+  // Default loading UI (prevents blank screen)
+  const appEl = document.getElementById("app");
+  if(appEl){
+    appEl.innerHTML = `<div class="card"><b>Loading…</b><div class="sep"></div><div class="muted small">Starting app module. If this takes more than a few seconds, tap Reload or Reset Cache.</div><div class="row" style="margin-top:12px"><button class="btn" id="bootReload">Reload</button><button class="btn" id="bootReset">Reset Cache</button></div></div>`;
+    const br=document.getElementById("bootReload"); if(br) br.onclick=()=>location.reload();
+    const bs=document.getElementById("bootReset"); if(bs) bs.onclick=async()=>{
+      try{
+        if(navigator.serviceWorker){
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r=>r.unregister()));
+        }
+        if(window.caches){
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k=>caches.delete(k)));
+        }
+      }catch{}
+      location.reload();
+    };
+  }
+
+  // Watchdog: if module never boots, show a useful error
+  setTimeout(()=>{
+    if(window.__APP_BOOTED) return;
+    showError(new Error("App module did not start (possible cached/failed JS). Try Reset Cache."));
+  }, 4000);
+
 })();
 </script>
-<script type="module" src="./js/app_007L.js"></script>
+<script type="module">
+  import("./js/app_007M.js").catch((e)=>{
+    try{ window.__BOOT_SHOW_ERROR__ && window.__BOOT_SHOW_ERROR__(e); }catch{}
+  });
+</script>
 
 <script>
   // PWA offline support
