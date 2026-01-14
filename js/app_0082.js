@@ -69,7 +69,8 @@ function getDebugInfo(){
     lastErrAt ? `LastErrorAt: ${lastErrAt}` : "",
     lastErr ? `LastError: ${lastErr}` : "",
     `Time: ${new Date().toISOString()}`
-  ].filter(Boolean).join("\n");
+  ].filter(Boolean).join("
+");
 }
 
 
