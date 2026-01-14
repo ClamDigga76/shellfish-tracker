@@ -1,17 +1,26 @@
-// Simple offline cache for Shellfish Tracker (field test)
-const CACHE_NAME = "shellfish-tracker--ESM-0081"+self.registration.scope+"-v12";
+// Simple offline cache for Shellfish Tracker (RC)
+const APP_VERSION = "ESM-0083-RC1";
+const CACHE_VERSION = "v1";
+const CACHE_NAME = `shellfish-tracker-${APP_VERSION}-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./js/app_0081.js",
-  "./js/utils_0081.js",
+  "./js/app_0083.js",
+  "./js/utils_0083.js",
   "./icons/favicon-32.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-512-maskable.png",
   "./icons/icon-180.png"
 ];
+
+
+self.addEventListener("message", (event) => {
+  if (event?.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -31,32 +40,43 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  // Network-first for navigation; cache-first for assets
-  if (req.mode === "navigate") {
-    event.respondWith((async () => {
-      try {
-        const fresh = await fetch(req);
-        const cache = await caches.open(CACHE_NAME);
-        cache.put("./index.html", fresh.clone());
-        return fresh;
-      } catch (e) {
-        const cache = await caches.open(CACHE_NAME);
-        return (await cache.match("./index.html")) || (await cache.match("./"));
-      }
-    })());
-    return;
-  }
+  if (!req || req.method !== "GET") return;
+
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
     const cached = await cache.match(req);
-    if (cached) return cached;
-    try {
+
+    const fetchAndCache = async () => {
       const fresh = await fetch(req);
-      if (fresh && fresh.ok) cache.put(req, fresh.clone());
+      if (fresh && fresh.ok) {
+        try { await cache.put(req, fresh.clone()); } catch (_) {}
+      }
       return fresh;
-    } catch (e) {
+    };
+
+    // Prefer fresh HTML for navigations; fall back to cache when offline.
+    if (req.mode === "navigate") {
+      try {
+        return await fetchAndCache();
+      } catch (_) {
+        return cached || (await cache.match("./index.html")) || Response.error();
+      }
+    }
+
+    // Stale-while-revalidate for other same-origin assets.
+    if (cached) {
+      event.waitUntil(fetchAndCache().catch(() => {}));
+      return cached;
+    }
+
+    try {
+      return await fetchAndCache();
+    } catch (_) {
       return cached || Response.error();
     }
   })());
 });
+

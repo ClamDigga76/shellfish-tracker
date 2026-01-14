@@ -108,13 +108,13 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
       const msg =
         (err && (err.stack || err.message)) ? String(err.stack || err.message)
         : String(err || "Module import failed");
-      try{ localStorage.setItem("SHELLFISH_LAST_ERROR", msg); }catch{}
-      try{ localStorage.setItem("SHELLFISH_LAST_ERROR_AT", new Date().toISOString()); }catch{}
+      try{ localStorage.setItem("shellfish-last-error", msg); }catch{}
+      try{ localStorage.setItem("shellfish-last-error-at", new Date().toISOString()); }catch{}
 
       const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
       try{
-        localStorage.setItem("SHELLFISH_LAST_ERROR", msg);
-        localStorage.setItem("SHELLFISH_LAST_ERROR_AT", new Date().toISOString());
+        localStorage.setItem("shellfish-last-error", msg);
+        localStorage.setItem("shellfish-last-error-at", new Date().toISOString());
       }catch(e){}
 
       app.innerHTML = `
@@ -176,22 +176,98 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
     console.error(err);
   };
 
-  // Load the app module (direct src, avoids dynamic import syntax issues on some Safari builds).
+    // Boot watchdog: if the module never starts (common with stale SW caches), show recovery UI.
+  window.__BOOT_WATCHDOG__ = setTimeout(()=>{
+    try{
+      if(!window.__SHELLFISH_APP_STARTED){
+        const errMsg = (function(){
+          try{ return localStorage.getItem("shellfish-last-error") || localStorage.getItem("SHELLFISH_LAST_ERROR") || "App did not start (possible cached/stale JS)."; }catch(_){ return "App did not start (possible cached/stale JS)."; }
+        })();
+        window.__showModuleError({message: errMsg});
+      }
+    }catch(e){}
+  }, 4000);
+
+// Load the app module (direct src, avoids dynamic import syntax issues on some Safari builds).
 </script>
 
-  <script type="module" src="./js/app_0081.js"></script>
+  <script type="module" src="./js/app_0083.js" onerror="window.__showModuleError && window.__showModuleError(event)"></script>
+
+
+  <script>
+    // Watchdog: if the module doesn't start, show a helpful error card.
+    window.__SHELLFISH_STARTED = false;
+    window.__SHELLFISH_BOOT_AT = Date.now();
+    setTimeout(function(){
+      if(window.__SHELLFISH_STARTED) return;
+      try{
+        const msg = "App did not start. This usually means the JS module failed to load (cached old files or a network error). Tap Reset Cache then Reload.
+
+If it still fails: open Safari Settings → Advanced → Website Data → delete this site, then reload.";
+        if(window.__showModuleError) window.__showModuleError(new Error(msg));
+        else console.error(msg);
+      }catch(e){}
+    }, 1800);
+  </script>
 
 <script>
-  // PWA offline support
+  // PWA offline support + deterministic update UX (RC)
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    window.addEventListener("load", async () => {
+      try {
+        const reg = await navigator.serviceWorker.register("./sw.js");
+
+        const banner = document.getElementById("swUpdateBanner");
+        const btnApply = document.getElementById("swUpdateApply");
+        const btnDismiss = document.getElementById("swUpdateDismiss");
+
+        const showBanner = () => { if (banner) banner.style.display = "block"; };
+        const hideBanner = () => { if (banner) banner.style.display = "none"; };
+
+        if (btnDismiss) btnDismiss.onclick = hideBanner;
+
+        if (btnApply) {
+          btnApply.onclick = async () => {
+            try {
+              const waiting = reg.waiting;
+              if (waiting) waiting.postMessage({ type: "SKIP_WAITING" });
+            } catch (_) {}
+          };
+        }
+
+        // If there's already a waiting worker, prompt immediately.
+        if (reg.waiting) showBanner();
+
+        // When a new SW is found, prompt once it's installed (and we already have a controller).
+        reg.addEventListener("updatefound", () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener("statechange", () => {
+            if (nw.state === "installed" && navigator.serviceWorker.controller) showBanner();
+          });
+        });
+
+        // Once the new SW takes control, reload to get fresh assets.
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          window.location.reload();
+        });
+      } catch (_) {}
     });
   }
 </script>
 
+<div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
+    <b>Update available</b>
+    <div class="muted small" style="margin-top:6px;line-height:1.35">
+      A new version is ready. Reload to apply it.
+    </div>
+    <div class="row" style="margin-top:10px;gap:10px">
+      <button class="btn good" id="swUpdateApply">Reload now</button>
+      <button class="btn" id="swUpdateDismiss">Later</button>
+    </div>
+  </div>
 
-  <footer id="credit">Created by Jeremy Wood — <a href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></footer>
+<footer id="credit">Created by Jeremy Wood — <a href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></footer>
   <div id="toast"></div>
 </body>
 </html>
