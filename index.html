@@ -108,7 +108,14 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
       const msg =
         (err && (err.stack || err.message)) ? String(err.stack || err.message)
         : String(err || "Module import failed");
+      try{ localStorage.setItem("SHELLFISH_LAST_ERROR", msg); }catch{}
+      try{ localStorage.setItem("SHELLFISH_LAST_ERROR_AT", new Date().toISOString()); }catch{}
+
       const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+      try{
+        localStorage.setItem("SHELLFISH_LAST_ERROR", msg);
+        localStorage.setItem("SHELLFISH_LAST_ERROR_AT", new Date().toISOString());
+      }catch(e){}
 
       app.innerHTML = `
         <div class="card">
@@ -170,7 +177,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
   };
 
   // Import the app. Version query helps break stale caches.
-  import("./js/app.js?v=ESM-007S").catch(window.__showModuleError);
+  import("./js/app_0080.js").catch(window.__showModuleError);
 </script>
 
 <script>
