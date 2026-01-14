@@ -126,7 +126,7 @@ export function likelyDuplicate(a, b){
 }
 
 export function escapeHtml(s){
-  return String(s == null ? "" : s)
+  return String(s ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -167,7 +167,7 @@ export function downloadText(filename, text){
 export function toCSV(trips){
   const headers = ["Date","Dealer","Pounds","Amount","PricePerLb","Area","RecordID"];
   const lines = [headers.join(",")];
-  const clean = (v) => String(v == null ? "" : v).replace(/[\r\n]+/g, " ").trim();
+  const clean = (v) => String(v ?? "").replace(/[\r\n]+/g, " ").trim();
 
   for(const t of trips){
     const ppl = computePPL(t.pounds, t.amount);

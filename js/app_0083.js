@@ -5,7 +5,7 @@ window.__SHELLFISH_APP_STARTED = false;
 
 import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_0083.js";
 
-const VERSION = 'ESM-0083-RC1.2.1';
+const VERSION = 'ESM-0083-RC1.1';
 const LAST_ERROR_KEY = "shellfish-last-error";
 const LAST_ERROR_AT_KEY = "shellfish-last-error-at";
 const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
@@ -32,11 +32,11 @@ async function collectDiagnostics(){
     language: navigator.language,
     timezone: (Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown"),
     storage: {
-      trips: Array.isArray(((state) == null ? undefined : (state).trips)) ? state.trips.length : null,
-      areas: Array.isArray(((state) == null ? undefined : (state).areas)) ? state.areas.length : null,
+      trips: Array.isArray(state?.trips) ? state.trips.length : null,
+      areas: Array.isArray(state?.areas) ? state.areas.length : null,
     },
     backup: {
-      lastBackupAt:((((state) == null ? undefined : (state).settings)) == null ? undefined : (((state) == null ? undefined : (state).settings)).lastBackupAt) || null,
+      lastBackupAt: state?.settings?.lastBackupAt || null,
     },
     serviceWorker: {
       supported: ("serviceWorker" in navigator),
@@ -77,23 +77,20 @@ function showToast(msg){
     el.textContent = String(msg||"");
     el.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, 2400);((}catch{}
+    toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, 2400);
+  }catch{}
 }
 
 function copyTextToClipboard(txt){
-  return navigator.clipboard) == null ? undefined : (}catch{}
-}
-
-function copyTextToClipboard(txt){
-  return navigator.clipboard).writeText)(String(txt||""))
+  return navigator.clipboard?.writeText(String(txt||""))
     .then(()=>true).catch(()=>false);
 }
 
 function getDebugInfo(){
-  const trips = Array.isArray(((state) == null ? undefined : (state).trips)) ? state.trips.length : 0;
-  const areas = Array.isArray(((state) == null ? undefined : (state).areas)) ? state.areas.length : 0;
-  const last =((state) == null ? undefined : (state).lastAction) ? String(state.lastAction) : "";
-  const settings =((state) == null ? undefined : (state).settings) || {};
+  const trips = Array.isArray(state?.trips) ? state.trips.length : 0;
+  const areas = Array.isArray(state?.areas) ? state.areas.length : 0;
+  const last = state?.lastAction ? String(state.lastAction) : "";
+  const settings = state?.settings || {};
 
   const isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (window.navigator && window.navigator.standalone === true);
   const dm = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ? "standalone" : "browser";
@@ -114,7 +111,7 @@ function getDebugInfo(){
   try{ lastErrAt = localStorage.getItem(LAST_ERROR_AT_KEY) || localStorage.getItem(LEGACY_LAST_ERROR_AT_KEY)||""; }catch{}
 
   const lb = settings.lastBackupAt ? new Date(settings.lastBackupAt).toISOString() : "";
-  const lbCount = ((settings.lastBackupTripCount == null ? "" : settings.lastBackupTripCount));
+  const lbCount = (settings.lastBackupTripCount ?? "");
   const snooze = settings.backupSnoozeUntil ? new Date(settings.backupSnoozeUntil).toISOString() : "";
 
   return [
@@ -335,8 +332,8 @@ function setBootError(msg){
     bootPill.classList.add("err");
   }catch{}
 }
-window.addEventListener("error", e => setBootError(((e) == null ? undefined : (e).message) ||((e) == null ? undefined : (e).error) || "Script error"));
-window.addEventListener("unhandledrejection", e => setBootError(((e) == null ? undefined : (e).reason) || "Unhandled rejection"));
+window.addEventListener("error", e => setBootError(e?.message || e?.error || "Script error"));
+window.addEventListener("unhandledrejection", e => setBootError(e?.reason || "Unhandled rejection"));
 
 const LS_KEY = "shellfish-v1.5.0";
 // Signal to the page watchdog that the module loaded
@@ -354,11 +351,11 @@ function loadState(){
     if(!raw) throw 0;
     const p = JSON.parse(raw);
     return {
-      trips: Array.isArray(((p) == null ? undefined : (p).trips)) ? p.trips : [],
-      view:((p) == null ? undefined : (p).view) || "home",
-      filter:((p) == null ? undefined : (p).filter) || "YTD",
-      settings:((p) == null ? undefined : (p).settings) || {},
-      areas:((p) == null ? undefined : (p).areas) || []
+      trips: Array.isArray(p?.trips) ? p.trips : [],
+      view: p?.view || "home",
+      filter: p?.filter || "YTD",
+      settings: p?.settings || {},
+      areas: p?.areas || []
     };
   }catch{
     return { trips: [], view: "home", filter: "YTD", settings: {}, areas: [] };
@@ -369,10 +366,10 @@ function getFilteredTrips(){
   const trips = Array.isArray(state.trips) ? state.trips.slice() : [];
   // Ensure newest first by date (and fallback to createdAt/id)
   trips.sort((a,b)=>{
-    const da = String(((a) == null ? undefined : (a).dateISO)||"");
-    const db = String(((b) == null ? undefined : (b).dateISO)||"");
+    const da = String(a?.dateISO||"");
+    const db = String(b?.dateISO||"");
     if(da !== db) return db.localeCompare(da);
-    return String(((b) == null ? undefined : (b).id)||"").localeCompare(String(((a) == null ? undefined : (a).id)||""));
+    return String(b?.id||"").localeCompare(String(a?.id||""));
   });
 
   const f = state.filter || "YTD";
@@ -403,7 +400,7 @@ function getFilteredTrips(){
     return true;
   };
 
-  return trips.filter(t=> within(toDate(((t) == null ? undefined : (t).dateISO))));
+  return trips.filter(t=> within(toDate(t?.dateISO)));
 }
 
 function mdyLabelFromISO(iso){
@@ -455,8 +452,8 @@ function normalizeBackupPayload(raw){
   const obj = (raw && typeof raw === "object") ? raw : null;
   if(!obj) return { ok:false, errors:["Backup file is not valid JSON object"], warnings:[], normalized:null };
 
-  const schemaVersion = Number(((obj.schemaVersion == null ? (obj.schema == null ? 0 : obj.schema) : obj.schemaVersion))) || 0;
-  const appVersion = String(((obj.appVersion == null ? (obj.version == null ? "" : obj.version) : obj.appVersion)));
+  const schemaVersion = Number(obj.schemaVersion ?? obj.schema ?? 0) || 0;
+  const appVersion = String(obj.appVersion ?? obj.version ?? "");
   const exportedAt = String(obj.exportedAt || "");
 
   const data = (obj.data && typeof obj.data === "object") ? obj.data : obj;
@@ -568,7 +565,7 @@ function importBackupFromFile(file){
         }
 
         const nextTrips = replace ? [] : (Array.isArray(state.trips) ? [...state.trips] : []);
-        const seen = new Set(nextTrips.map(t=> normalizeKey(`${((t && t.dateISO) || "")}|${((t && t.dealer) || "")}|${((t && t.area) || "")}|${to2(Number((t && t.pounds))||0)}|${to2(Number((t && t.amount))||0)}`)));
+        const seen = new Set(nextTrips.map(t=> normalizeKey(`${t?.dateISO||""}|${t?.dealer||""}|${t?.area||""}|${to2(Number(t?.pounds)||0)}|${to2(Number(t?.amount)||0)}`)));
 
         let added = 0;
         for(const t of importedTrips){
@@ -632,7 +629,7 @@ function filterByRange(trips, startISO, endISO){
   const e = String(endISO||"");
   if(!(s.length===10 && e.length===10)) return trips;
   return trips.filter(t=>{
-    const d = String(((t) == null ? undefined : (t).dateISO)||"");
+    const d = String(t?.dateISO||"");
     if(d.length!==10) return true;
     return d >= s && d <= e;
   });
@@ -664,7 +661,7 @@ function ensureAreas(){
 function findDuplicateTrip(candidate, excludeId=""){
   const trips = Array.isArray(state.trips) ? state.trips : [];
   for(const t of trips){
-    if(excludeId && String(((t) == null ? undefined : (t).id)||"") === String(excludeId)) continue;
+    if(excludeId && String(t?.id||"") === String(excludeId)) continue;
     if(likelyDuplicate(t, candidate)) return t;
   }
   return null;
@@ -672,11 +669,11 @@ function findDuplicateTrip(candidate, excludeId=""){
 
 
 function commitTripFromDraft({ mode, editId="", inputs }){
-  const dateISO = parseMDYToISO(String(((inputs) == null ? undefined : (inputs).date)||""));
-  const dealer = normalizeDealerDisplay(String(((inputs) == null ? undefined : (inputs).dealer)||"").trim());
-  const poundsNum = parseNum(((inputs) == null ? undefined : (inputs).pounds));
-  const amountNum = parseMoney(((inputs) == null ? undefined : (inputs).amount));
-  const area = String(((inputs) == null ? undefined : (inputs).area)||"").trim();
+  const dateISO = parseMDYToISO(String(inputs?.date||""));
+  const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
+  const poundsNum = parseNum(inputs?.pounds);
+  const amountNum = parseMoney(inputs?.amount);
+  const area = String(inputs?.area||"").trim();
 
   const errs = [];
   if(!dateISO) errs.push("Date");
@@ -695,7 +692,7 @@ function commitTripFromDraft({ mode, editId="", inputs }){
   let id = "";
   if(isEdit){
     id = String(editId||"");
-    existing = trips.find(t => String(((t) == null ? undefined : (t).id)||"") === id) || null;
+    existing = trips.find(t => String(t?.id||"") === id) || null;
     if(!existing){
       alert("Trip not found. Returning home.");
       state.view = "home";
@@ -727,7 +724,7 @@ function commitTripFromDraft({ mode, editId="", inputs }){
   };
 
   const nextTrips = isEdit
-    ? trips.map(t => (String(((t) == null ? undefined : (t).id)||"") === id ? trip : t))
+    ? trips.map(t => (String(t?.id||"") === id ? trip : t))
     : trips.concat([trip]);
 
   state.trips = nextTrips;
@@ -842,7 +839,7 @@ function showFatal(err){
   };
 
   const btnCopy = document.getElementById("fatalCopy");
-  if(btnCopy) btnCopy.onclick = ()=>((navigator.clipboard) == null ? undefined : (navigator.clipboard).writeText)(dump).catch(()=>{});
+  if(btnCopy) btnCopy.onclick = ()=> navigator.clipboard?.writeText(dump).catch(()=>{});
 
   const btnReload = document.getElementById("fatalReload");
   if(btnReload) btnReload.onclick = ()=> location.reload();
@@ -857,8 +854,8 @@ function showFatal(err){
     }
   };
 }
-window.addEventListener("error", (e)=> showFatal(((e) == null ? undefined : (e).error) ||((e) == null ? undefined : (e).message) || e));
-window.addEventListener("unhandledrejection", (e)=> showFatal(((e) == null ? undefined : (e).reason) || e));
+window.addEventListener("error", (e)=> showFatal(e?.error || e?.message || e));
+window.addEventListener("unhandledrejection", (e)=> showFatal(e?.reason || e));
 
 function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 
@@ -866,8 +863,8 @@ function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 function renderHome(){
   const tripsAll = Array.isArray(state.trips) ? state.trips : [];
   const trips = getFilteredTrips();
-  const totalAmount = trips.reduce((s,t)=> s + (Number(((t) == null ? undefined : (t).amount))||0), 0);
-  const totalLbs = trips.reduce((s,t)=> s + (Number(((t) == null ? undefined : (t).pounds))||0), 0);
+  const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
+  const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
 
 
   // Backup reminder (browser-only): encourages manual "Create Backup" periodically
@@ -921,15 +918,15 @@ function renderHome(){
   const chip = (key,label) => `<button class="chip ${f===key?'on':''}" data-f="${key}">${label}</button>`;
 
   const rows = trips.length ? trips.map(t=>{
-    const date = formatDateMDY(((t) == null ? undefined : (t).dateISO));
-    const dealer = (((t) == null ? undefined : (t).dealer)||"").toString();
-    const lbs = to2(Number(((t) == null ? undefined : (t).pounds))||0);
-    const amt = to2(Number(((t) == null ? undefined : (t).amount))||0);
+    const date = formatDateMDY(t?.dateISO);
+    const dealer = (t?.dealer||"").toString();
+    const lbs = to2(Number(t?.pounds)||0);
+    const amt = to2(Number(t?.amount)||0);
     const ppl = computePPL(lbs, amt);
-    const area = (((t) == null ? undefined : (t).area)||"").toString();
+    const area = (t?.area||"").toString();
     const safeDealer = dealer ? dealer : "(dealer)";
     return `
-      <div class="trip" data-id="${((t && t.id) || "")}" role="button" tabindex="0">
+      <div class="trip" data-id="${t?.id||""}" role="button" tabindex="0">
         <div class="trip-top">
           <div class="trip-date">${date || ""}</div>
           <div class="trip-dealer">${safeDealer}</div>
@@ -1161,7 +1158,7 @@ const topAreas = (()=>{
 
         <div class="field">
           <div class="label">Pounds</div>
-          <input class="input" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String((draft.pounds == null ? "" : draft.pounds))}" />
+          <input class="input" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
         </div>
 
         <div class="field">
@@ -1320,13 +1317,13 @@ if(topAreaWrap && elArea){
   function saveDraft(){
     // Persist a lightweight draft so users don't lose progress.
     // Draft may be partial; validation still happens on Review.
-    const dateISO = parseMDYToISO(String(((elDate) == null ? undefined : (elDate).value)||"")) || (((state.draft) == null ? undefined : (state.draft).dateISO) || todayISO);
+    const dateISO = parseMDYToISO(String(elDate?.value||"")) || (state.draft?.dateISO || todayISO);
     state.draft = {
       dateISO: dateISO || todayISO,
-      dealer: String(((elDealer) == null ? undefined : (elDealer).value) || ""),
-      pounds: String(((elPounds) == null ? undefined : (elPounds).value) || ""),
-      amount: String(((elAmount) == null ? undefined : (elAmount).value) || ""),
-      area: String(((elArea) == null ? undefined : (elArea).value) || "")
+      dealer: String(elDealer?.value || ""),
+      pounds: String(elPounds?.value || ""),
+      amount: String(elAmount?.value || ""),
+      area: String(elArea?.value || "")
     };
     saveState();
   }
@@ -1538,7 +1535,7 @@ function renderReviewTrip(){
 
         <div class="field">
           <div class="label">Pounds</div>
-          <input class="input" id="r_pounds" inputmode="decimal" value="${escapeHtml(String((d.pounds == null ? "" : d.pounds)))}" />
+          <input class="input" id="r_pounds" inputmode="decimal" value="${escapeHtml(String(d.pounds??""))}" />
         </div>
 
         <div class="field">
@@ -1610,8 +1607,8 @@ function renderReviewTrip(){
     try{
       const warnEl = document.getElementById("reviewWarnings");
       if(warnEl){
-        const dateISO = parseMDYToISO(((document.getElementById("r_date")) == null ? undefined : (document.getElementById("r_date")).value) || "");
-        const dealer = normalizeDealerDisplay(String(((document.getElementById("r_dealer")) == null ? undefined : (document.getElementById("r_dealer")).value) || "").trim());
+        const dateISO = parseMDYToISO(document.getElementById("r_date")?.value || "");
+        const dealer = normalizeDealerDisplay(String(document.getElementById("r_dealer")?.value || "").trim());
         const pounds = p;
         const amount = a;
 
@@ -1699,7 +1696,7 @@ function renderReviewTrip(){
 function renderEditTrip(){
   const id = String(state.editId || "");
   const trips = Array.isArray(state.trips) ? state.trips : [];
-  const t = trips.find(x => String(((x) == null ? undefined : (x).id)||"") === id);
+  const t = trips.find(x => String(x?.id||"") === id);
   if(!t){
     state.view = "home";
     saveState();
@@ -1711,8 +1708,8 @@ function renderEditTrip(){
   const draft = {
     dateISO: t.dateISO || "",
     dealer: t.dealer || "",
-    pounds: String((t.pounds == null ? "" : t.pounds)),
-    amount: String((t.amount == null ? "" : t.amount)),
+    pounds: String(t.pounds ?? ""),
+    amount: String(t.amount ?? ""),
     area: t.area || ""
   };
 
@@ -1763,7 +1760,7 @@ function renderEditTrip(){
 
         <div class="field">
           <div class="label">Pounds</div>
-          <input class="input" id="e_pounds" inputmode="decimal" placeholder="0.0" value="${String((draft.pounds == null ? "" : draft.pounds))}" />
+          <input class="input" id="e_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
         </div>
 
         <div class="field">
@@ -1825,7 +1822,7 @@ function renderEditTrip(){
 
   document.getElementById("deleteTrip").onclick = ()=>{
     if(!confirm("Delete this trip?")) return;
-    state.trips = trips.filter(x => String(((x) == null ? undefined : (x).id)||"") !== id);
+    state.trips = trips.filter(x => String(x?.id||"") !== id);
     delete state.editId;
     saveState();
     goHome();
@@ -1888,14 +1885,14 @@ function renderReports(){
   for(let m=1;m<=12;m++) byMonth.set(m, { trips:0, lbs:0, amt:0 });
 
   trips.forEach(t=>{
-    const dealerRaw = (((t) == null ? undefined : (t).dealer)||"").toString();
+    const dealerRaw = (t?.dealer||"").toString();
     const dealer = normalizeDealerDisplay(dealerRaw) || "(Unspecified)";
     const dealerKey = dealer.toLowerCase();
-    const area = ((((t) == null ? undefined : (t).area)||"").toString().trim()) || "(Unspecified)";
+    const area = ((t?.area||"").toString().trim()) || "(Unspecified)";
     const areaKey = area.toLowerCase();
 
-    const lbs = Number(((t) == null ? undefined : (t).pounds))||0;
-    const amt = Number(((t) == null ? undefined : (t).amount))||0;
+    const lbs = Number(t?.pounds)||0;
+    const amt = Number(t?.amount)||0;
 
     const d = byDealer.get(dealerKey) || { name: dealer, trips:0, lbs:0, amt:0 };
     d.trips += 1; d.lbs += lbs; d.amt += amt;
@@ -1905,7 +1902,7 @@ function renderReports(){
     a.trips += 1; a.lbs += lbs; a.amt += amt;
     byArea.set(areaKey, a);
 
-    const iso = String(((t) == null ? undefined : (t).dateISO)||"");
+    const iso = String(t?.dateISO||"");
     const mm = parseInt(iso.slice(5,7), 10);
     if(mm>=1 && mm<=12){
       const mo = byMonth.get(mm);
@@ -1929,15 +1926,15 @@ function renderReports(){
   });
 
   const priceTrips = trips.map(t=>{
-    const lbs = Number(((t) == null ? undefined : (t).pounds))||0;
-    const amt = Number(((t) == null ? undefined : (t).amount))||0;
+    const lbs = Number(t?.pounds)||0;
+    const amt = Number(t?.amount)||0;
     const ppl = computePPL(lbs, amt);
     return {
-      id:((t) == null ? undefined : (t).id)||"",
-      dateISO:((t) == null ? undefined : (t).dateISO)||"",
-      date: formatDateMDY(((t) == null ? undefined : (t).dateISO)),
-      dealer: normalizeDealerDisplay(((t) == null ? undefined : (t).dealer)||"") || "(Unspecified)",
-      area: ((((t) == null ? undefined : (t).area)||"").toString().trim()) || "(Unspecified)",
+      id: t?.id||"",
+      dateISO: t?.dateISO||"",
+      date: formatDateMDY(t?.dateISO),
+      dealer: normalizeDealerDisplay(t?.dealer||"") || "(Unspecified)",
+      area: ((t?.area||"").toString().trim()) || "(Unspecified)",
       lbs: to2(lbs),
       ppl
     };
@@ -2143,7 +2140,7 @@ function drawReportsCharts(monthRows, dealerRows){
     if(!canvas) return null;
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    const w = Math.max(280, rect.width ||((canvas.parentElement) == null ? undefined : (canvas.parentElement).clientWidth) || 320);
+    const w = Math.max(280, rect.width || canvas.parentElement?.clientWidth || 320);
     const h = canvas.height || 180;
     canvas.width = Math.floor(w * dpr);
     canvas.height = Math.floor(h * dpr);
