@@ -1,6 +1,6 @@
 // Simple offline cache for Shellfish Tracker (RC)
 const APP_VERSION = "ESM-0083-RC1.1";
-const CACHE_VERSION = "v4";
+const CACHE_VERSION = "v5";
 const CACHE_NAME = `shellfish-tracker-${APP_VERSION}-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   "./",
@@ -25,7 +25,7 @@ self.addEventListener("message", (event) => {
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(CORE_ASSETS.map((u)=> new Request(u, { cache: 'reload' })));
+    await cache.addAll(CORE_ASSETS);
     self.skipWaiting();
   })());
 });

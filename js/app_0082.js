@@ -90,64 +90,118 @@ function parseOcrText(raw, knownAreas){
     confidence: { date:"low", pounds:"low", amount:"low", dealer:"low", area:"low" }
   };
 
-  // DATE: prefer MM/DD/YYYY
+
+  function normPoundsToken(tok){
+    return String(tok||"").trim().replace(",",".");
+  }
+
+  // DATE: prefer MM/DD/YYYY, support MM/DD/YY and glued MMDD-YY
   const dateFull = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](20\d{2}|19\d{2})\b/);
   const dateShort = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](\d{2})\b/);
+  const dateGlue1 = text.match(/\b(0?[1-9]|1[0-2])([0-3]\d)[\/\-](\d{2})\b/); // e.g., 1231-25
+  const dateGlue2 = text.match(/\b(0?[1-9]|1[0-2])([0-3]\d)(\d{2})\b/); // e.g., 123125
+
   if(dateFull){
     out.dateMDY = `${dateFull[1]}/${dateFull[2]}/${dateFull[3]}`;
     out.confidence.date = "high";
   }else if(dateShort){
     const yy = parseInt(dateShort[3],10);
-    const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
+    const yyyy = (yy<=79?2000:1900)+yy;
     out.dateMDY = `${dateShort[1]}/${dateShort[2]}/${yyyy}`;
     out.confidence.date = "med";
+  }else if(dateGlue1){
+    const yy = parseInt(dateGlue1[3],10);
+    const yyyy = (yy<=79?2000:1900)+yy;
+    out.dateMDY = `${dateGlue1[1]}/${dateGlue1[2]}/${yyyy}`;
+    out.confidence.date = "med";
+  }else if(dateGlue2){
+    const yy = parseInt(dateGlue2[3],10);
+    const yyyy = (yy<=79?2000:1900)+yy;
+    out.dateMDY = `${dateGlue2[1]}/${dateGlue2[2]}/${yyyy}`;
+    out.confidence.date = "low";
   }
 
-  // AMOUNT (Outside-first Live Text mode)
-  // Rule: checks always include a decimal amount. Prefer the decimal nearest "CHECK AMOUNT"/"AMOUNT",
-  // otherwise use the largest plausible decimal in the text. Never infer cents from digits-only values.
+// AMOUNT (Outside-first Live Text mode)
+  // Robustly extract the check amount even when OCR drops/warps punctuation.
+  // Supports:
+  // - "189.00"
+  // - "193 50"  (space as decimal)
+  // - "26775"   (implied cents)
+  // - "208 c0"  (OCR '00' corruption using C/O)
   let amt = "";
   let amtConf = "low";
 
-  const decimals = [...text.matchAll(/\b(\d{1,6}\.\d{2})\b/g)]
-    .map(m=>m[1])
-    .filter(s=>{
-      const v = parseFloat(s);
-      return Number.isFinite(v) && v >= 1 && v <= 500000;
-    });
+  function normAmtToken(tok){
+    const t = String(tok||"").trim()
+      .replace(/,/g,"")
+      .replace(/\s+/g," ")
+      .replace(/\$/g,"");
+    if(!t) return "";
 
-  // 1) Strongest signal: a decimal amount appearing shortly after an AMOUNT label (across newlines)
-  if(decimals.length){
-    const kw = text.match(/\b(?:check\s*)?amount\b[\s\S]{0,120}?(\d{1,6}\.\d{2})\b/i);
-    if(kw){
-      amt = kw[1];
-      amtConf = "high";
+    if(/^\d{1,6}\.\d{2}$/.test(t)) return t;             // 189.00
+    if(/^\d{1,6} \d{2}$/.test(t)) return t.replace(" ","."); // 193 50
+
+    if(/^\d{1,6}\s*[cCoO]\s*0$/.test(t)){               // 208 c0
+      const dollars = t.match(/^(\d{1,6})/)[1];
+      return dollars + ".00";
+    }
+
+    if(/^\d{4,6}$/.test(t)){                               // 26775
+      const v = Number(t) / 100;
+      if(Number.isFinite(v)) return v.toFixed(2);
+    }
+
+    return "";
+  }
+
+  function pickBestAmt(blob){
+    const str = String(blob||"");
+    const raw = [];
+
+    for(const m of str.matchAll(/\$?\s*(\d{1,6}(?:,\d{3})*(?:[\.| ]\d{2}))\b/g)) raw.push(m[1]);
+    for(const m of str.matchAll(/\b(\d{1,6}\s*[cCoO]\s*0)\b/g)) raw.push(m[1]);
+    for(const m of str.matchAll(/\b(\d{4,6})\b/g)) raw.push(m[1]);
+
+    const candidates = raw
+      .map(normAmtToken)
+      .filter(Boolean)
+      .map(s=>{
+        const v = parseFloat(s);
+        return Number.isFinite(v) ? { s, v } : null;
+      })
+      .filter(Boolean)
+      .filter(o=>o.v>=0 && o.v<=500000);
+
+    if(!candidates.length) return null;
+    candidates.sort((a,b)=>b.v-a.v);
+    return candidates[0];
+  }
+
+  // 1) Strongest signal: "CHECK AMOUNT" (even if split across lines)
+  for(let i=0;i<lines.length && !amt;i++){
+    const w = [lines[i], lines[i+1]||"", lines[i+2]||""].join(" ");
+    const wl = w.toLowerCase();
+    if(wl.includes("check") && wl.includes("amount")){
+      const best = pickBestAmt(w);
+      if(best){ amt = best.s; amtConf = "high"; }
     }
   }
 
-  // 2) $ + decimal anywhere
+  // 2) Next: any AMOUNT label vicinity
   if(!amt){
-    const usd = [...text.matchAll(/\$\s*(\d{1,6}(?:,\d{3})*\.\d{2})\b/g)]
-      .map(m=>m[1].replace(/,/g,""));
-    if(usd.length){
-      amt = usd[0];
-      amtConf = "high";
-    }
-  }
-
-  // 3) Fallback: choose the largest plausible decimal
-  if(!amt && decimals.length){
-    let maxv = -1, maxs = "";
-    for(const s of decimals){
-      const v = parseFloat(s);
-      if(Number.isFinite(v) && v > maxv){
-        maxv = v; maxs = s;
+    for(let i=0;i<lines.length && !amt;i++){
+      const w = [lines[i], lines[i+1]||"", lines[i+2]||""].join(" ");
+      if(/\bamount\b/i.test(w)){
+        const best = pickBestAmt(w);
+        if(best){ amt = best.s; amtConf = "med"; }
       }
     }
-    if(maxs){
-      amt = maxs;
-      amtConf = "med";
-    }
+  }
+
+  // 3) Fallback: best candidate anywhere (often still correct)
+  if(!amt){
+    const best = pickBestAmt(text);
+    if(best){ amt = best.s; amtConf = "low"; }
   }
 
   if(amt){
@@ -157,28 +211,28 @@ function parseOcrText(raw, knownAreas){
 
 // POUNDS
   // Prefer explicit lbs markers; then use DESCRIPTION box (common on checks); fallback heuristic
-  const lbs1 = text.match(/\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b/i);
+  const lbs1 = text.match(/\b(\d+(?:[.,]\d+)?)\s*(?:lb|lbs|ibs|1bs|\|bs|pounds?)\b/i);
   if(lbs1){
-    out.pounds = lbs1[1];
+    out.pounds = normPoundsToken(lbs1[1]);
     out.confidence.pounds = "high";
   }else{
     // Many Machias Bay Seafood checks put lbs under "DESCRIPTION"
     let descLbs = "";
-    const descNear = text.match(/\bdescription\b[\s:]*\n?\s*(\d{1,3}(?:\.\d+)?)\b/i);
+    const descNear = text.match(/\bdescription\b[\s:]*\n?\s*(\d{1,3}(?:[.,]\d{1,2})?)\b/i);
     if(descNear) descLbs = descNear[1];
 
     if(!descLbs){
       for(let i=0;i<lines.length;i++){
         if(/^description$/i.test(lines[i])){
           const next = lines[i+1] || "";
-          const mm = next.match(/\b(\d{1,3}(?:\.\d+)?)\b/);
+          const mm = next.match(/\b(\d{1,3}(?:[.,]\d{1,2})?)\b/);
           if(mm){ descLbs = mm[1]; break; }
         }
       }
     }
 
     if(descLbs){
-      out.pounds = descLbs;
+      out.pounds = normPoundsToken(descLbs);
       out.confidence.pounds = "med";
     }else{
       // Avoid phone/ids (TEL, routing/account). Choose most frequent plausible number (<=300).
@@ -186,7 +240,7 @@ function parseOcrText(raw, knownAreas){
       for(const line of lines){
         const l = line.toLowerCase();
         if(l.includes("tel") || l.includes("phone") || l.includes("routing") || l.includes("account") || l.includes("po box")) continue;
-        const ms = [...line.matchAll(/\b(\d+(?:\.\d+)?)\b/g)].map(m=>m[1]);
+        const ms = [...line.replace(/,/g,".").matchAll(/\b(\d+(?:\.\d+)?)\b/g)].map(m=>m[1]);
         for(const s of ms){
           const v = parseFloat(s);
           if(!(v>0)) continue;
@@ -747,7 +801,7 @@ function renderNewTrip(){
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-  const amountDisp = displayAmount(draft.amount);
+  const amountDisp = displayAmount(d.amount);
 
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -1008,6 +1062,9 @@ if(topAreaWrap && elArea){
     if(parsed.pounds) elPounds.value = parsed.pounds;
     if(parsed.amount) elAmount.value = parsed.amount;
     if(parsed.area) elArea.value = parsed.area;
+
+    if(parsed.amount && !parsed.pounds) showToast("Pounds not found — please enter it.");
+    if(parsed.pounds && !parsed.amount) showToast("Amount not found — please enter it.");
 
     saveDraft();
 
@@ -2217,8 +2274,7 @@ try{ render(); }catch(err){ setBootError(err?.message || err); throw err; }
 function display2(val){
   if(val === "" || val == null) return "";
   const n = Number(val);
-  if(!Number.isFinite(n)) return String(val);
-  return (Math.round(n * 100) / 100).toFixed(2);
+  return Number.isFinite(n) ? to2(n).toFixed(2) : String(val);
 }
 function displayPounds(val){
   // pounds are numeric; show up to 2 decimals like amount (no currency symbol)
