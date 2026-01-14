@@ -747,7 +747,7 @@ function renderNewTrip(){
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-  const amountDisp = displayAmount(draft.amount);
+  const amountDisp = displayAmount(d.amount);
 
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -1154,7 +1154,7 @@ function renderReviewTrip(){
   }
 
   const ppl = computePPL(Number(d.pounds||0), Number(d.amount||0));
-  const amountDispR = displayAmount(draft.amount);
+  const amountDispR = displayAmount(d.amount);
 
   // Build area options + top areas (same logic as New Trip)
   const areaOptionsR = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -1210,7 +1210,7 @@ function renderReviewTrip(){
 
         <div class="field">
           <div class="label">Area</div>
-          ${renderTopAreaChips(topAreasR, draft.area, "topAreasR")}
+          ${renderTopAreaChips(topAreasR, d.area, "topAreasR")}
           <select class="select" id="r_area">
             ${areaOptionsR}
           </select>
