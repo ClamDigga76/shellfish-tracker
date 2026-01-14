@@ -176,9 +176,10 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
     console.error(err);
   };
 
-  // Import the app. Version query helps break stale caches.
-  import("./js/app_0080.js").catch(window.__showModuleError);
+  // Load the app module (direct src, avoids dynamic import syntax issues on some Safari builds).
 </script>
+
+  <script type="module" src="./js/app_0081.js"></script>
 
 <script>
   // PWA offline support
