@@ -3,14 +3,9 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_0083.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_0083.js";
+
 const VERSION = 'ESM-0083-RC1.1';
-
-
-function to2(n){
-  const v = Number.isFinite(n) ? n : 0;
-  return Math.round(v * 100) / 100;
-}
 const LAST_ERROR_KEY = "shellfish-last-error";
 const LAST_ERROR_AT_KEY = "shellfish-last-error-at";
 const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
@@ -1087,7 +1082,7 @@ function renderNewTrip(){
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-  const amountDisp = displayAmount(d.amount);
+  const amountDisp = displayAmount(draft.amount);
 
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -2592,7 +2587,8 @@ try{
 function display2(val){
   if(val === "" || val == null) return "";
   const n = Number(val);
-  return Number.isFinite(n) ? to2(n).toFixed(2) : String(val);
+  if(!Number.isFinite(n)) return String(val);
+  return (Math.round(n * 100) / 100).toFixed(2);
 }
 function displayAmount(val){
   return display2(val);

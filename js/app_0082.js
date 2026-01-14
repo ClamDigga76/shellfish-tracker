@@ -1,14 +1,9 @@
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_0082.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_0082.js";
+
 const VERSION = "ESM-0082";
-
-
-function to2(n){
-  const v = Number.isFinite(n) ? n : 0;
-  return Math.round(v * 100) / 100;
-}
 // ---- Toasts ----
 let toastTimer = null;
 function showToast(msg){
@@ -752,7 +747,7 @@ function renderNewTrip(){
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-  const amountDisp = displayAmount(d.amount);
+  const amountDisp = displayAmount(draft.amount);
 
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -2222,7 +2217,8 @@ try{ render(); }catch(err){ setBootError(err?.message || err); throw err; }
 function display2(val){
   if(val === "" || val == null) return "";
   const n = Number(val);
-  return Number.isFinite(n) ? to2(n).toFixed(2) : String(val);
+  if(!Number.isFinite(n)) return String(val);
+  return (Math.round(n * 100) / 100).toFixed(2);
 }
 function displayPounds(val){
   // pounds are numeric; show up to 2 decimals like amount (no currency symbol)
