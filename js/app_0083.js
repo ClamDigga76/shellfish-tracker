@@ -5,7 +5,7 @@ window.__SHELLFISH_APP_STARTED = false;
 
 import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, to2, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_0083.js";
 
-const VERSION = 'ESM-0083-RC1';
+const VERSION = 'ESM-0083-RC1.1';
 const LAST_ERROR_KEY = "shellfish-last-error";
 const LAST_ERROR_AT_KEY = "shellfish-last-error-at";
 const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
@@ -133,8 +133,7 @@ function getDebugInfo(){
     lastErrAt ? `LastErrorAt: ${lastErrAt}` : "",
     lastErr ? `LastError: ${lastErr}` : "",
     `Time: ${new Date().toISOString()}`
-  ].filter(Boolean).join("
-");
+  ].filter(Boolean).join("\n");
 }
 
 
