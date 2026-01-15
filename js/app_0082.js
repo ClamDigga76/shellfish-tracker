@@ -747,7 +747,7 @@ function renderNewTrip(){
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-  const amountDisp = displayAmount(d.amount);
+  const amountDisp = displayAmount(draft.amount);
 
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
