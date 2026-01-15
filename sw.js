@@ -1,6 +1,6 @@
 // Simple offline cache for Shellfish Tracker (RC)
 const APP_VERSION = "ESM-0083-RC1.1";
-const CACHE_VERSION = "v6";
+const CACHE_VERSION = "v8";
 const CACHE_NAME = `shellfish-tracker-${APP_VERSION}-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   "./",
@@ -57,7 +57,22 @@ self.addEventListener("fetch", (event) => {
       return fresh;
     };
 
-    // Prefer fresh HTML for navigations; fall back to cache when offline.
+    
+// Network-first for JS modules to avoid mixed-version crashes on iOS Safari.
+if (url.pathname.includes("/js/") && url.pathname.endsWith(".js")) {
+  try {
+    const reqNoCache = new Request(req, { cache: "no-store" });
+    const fresh = await fetch(reqNoCache);
+    if (fresh && fresh.ok) {
+      try { await cache.put(req, fresh.clone()); } catch (_) {}
+      return fresh;
+    }
+  } catch (_) {}
+  if (cached) return cached;
+  return Response.error();
+}
+
+// Prefer fresh HTML for navigations; fall back to cache when offline.
     if (req.mode === "navigate") {
       try {
         return await fetchAndCache();

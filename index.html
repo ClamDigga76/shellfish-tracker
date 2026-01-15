@@ -215,10 +215,12 @@ If it still fails: open Safari Settings → Advanced → Website Data → delete
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
-        await reg.update();
+        const swUrl = "./sw.js?v=8";
+        const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
 
-        const banner = document.getElementById("swUpdateBanner");
+        
+        await reg.update();
+const banner = document.getElementById("swUpdateBanner");
         const btnApply = document.getElementById("swUpdateApply");
         const btnDismiss = document.getElementById("swUpdateDismiss");
 

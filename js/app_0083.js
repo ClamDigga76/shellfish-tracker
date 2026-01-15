@@ -11,6 +11,13 @@ const LAST_ERROR_AT_KEY = "shellfish-last-error-at";
 const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
 const LEGACY_LAST_ERROR_AT_KEY = "SHELLFISH_LAST_ERROR_AT";
 
+
+// Local helper to avoid hard dependency on utils export during SW update races (iOS Safari).
+function to2(n){
+  const x = Number(n);
+  return Number.isFinite(x) ? Math.round((x + Number.EPSILON) * 100) / 100 : x;
+}
+
 // ---- Toasts ----
 
 function getDisplayMode(){
@@ -2584,14 +2591,12 @@ try{
 }catch(err){ showFatal(err); }
 
 // ---- Display helpers (no state) ----
-function to2(n){
-  const x = Number(n);
-  return Number.isFinite(x) ? Math.round((x + Number.EPSILON) * 100) / 100 : x;
-}
 function display2(val){
   if(val === "" || val == null) return "";
   const n = Number(val);
-  return Number.isFinite(n) ? to2(n).toFixed(2) : String(val);
+  if(!Number.isFinite(n)) return String(val);
+  const rounded = Math.round((n + Number.EPSILON) * 100) / 100;
+  return rounded.toFixed(2);
 }
 function displayAmount(val){
   return display2(val);

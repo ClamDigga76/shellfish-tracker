@@ -2214,14 +2214,12 @@ function render(){
 try{ render(); }catch(err){ setBootError(err?.message || err); throw err; }
 
 // ---- Display helpers (no state) ----
-function to2(n){
-  const x = Number(n);
-  return Number.isFinite(x) ? Math.round((x + Number.EPSILON) * 100) / 100 : x;
-}
 function display2(val){
   if(val === "" || val == null) return "";
   const n = Number(val);
-  return Number.isFinite(n) ? to2(n).toFixed(2) : String(val);
+  if(!Number.isFinite(n)) return String(val);
+  const rounded = Math.round((n + Number.EPSILON) * 100) / 100;
+  return rounded.toFixed(2);
 }
 function displayPounds(val){
   // pounds are numeric; show up to 2 decimals like amount (no currency symbol)
