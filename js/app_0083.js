@@ -151,6 +151,7 @@ const APP_VERSION = VERSION;
 
 function parseOcrText(raw, knownAreas){
   const text = String(raw||"").replace(/\r/g,"\n");
+  const upper = text.toUpperCase();
   const lines = text.split("\n").map(s=>s.trim()).filter(Boolean);
 
   const out = {
@@ -162,9 +163,12 @@ function parseOcrText(raw, knownAreas){
     confidence: { date:"low", pounds:"low", amount:"low", dealer:"low", area:"low" }
   };
 
-  // DATE: prefer MM/DD/YYYY
+  // ---- DATE ----
+  // Supports: MM/DD/YYYY, MM-DD-YY, and glued MMDD-YY (e.g. 1231-25).
   const dateFull = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](20\d{2}|19\d{2})\b/);
   const dateShort = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](\d{2})\b/);
+  const dateGlued = text.match(/\b(0?[1-9]|1[0-2])([0-3]\d)[\/\-](\d{2})\b/);
+
   if(dateFull){
     out.dateMDY = `${dateFull[1]}/${dateFull[2]}/${dateFull[3]}`;
     out.confidence.date = "high";
@@ -173,116 +177,140 @@ function parseOcrText(raw, knownAreas){
     const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
     out.dateMDY = `${dateShort[1]}/${dateShort[2]}/${yyyy}`;
     out.confidence.date = "med";
+  }else if(dateGlued){
+    const mm = dateGlued[1];
+    const dd = dateGlued[2];
+    const yy = parseInt(dateGlued[3],10);
+    const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
+    out.dateMDY = `${mm}/${dd}/${yyyy}`;
+    out.confidence.date = "med";
   }
 
-  // AMOUNT (Outside-first Live Text mode)
-  // Rule: checks always include a decimal amount. Prefer the decimal nearest "CHECK AMOUNT"/"AMOUNT",
-  // otherwise use the largest plausible decimal in the text. Never infer cents from digits-only values.
-  let amt = "";
-  let amtConf = "low";
+  // ---- AMOUNT ----
+  // Prioritize CHECK AMOUNT (even split across lines). Accept common OCR:
+  // - digits-only cents: 26775 => 267.75 (anchor-only)
+  // - space decimal: 193 50 => 193.50
+  // - C/O confusion: 208 C0 / 208 O0 => 208.00
+  function parseMoneyToken(tok, allowCentsInference){
+    let t = String(tok||"").trim();
+    if(!t) return null;
 
-  const decimals = [...text.matchAll(/\b(\d{1,6}\.\d{2})\b/g)]
-    .map(m=>m[1])
-    .filter(s=>{
-      const v = parseFloat(s);
-      return Number.isFinite(v) && v >= 1 && v <= 500000;
-    });
+    // Normalize dollars/cents separators and OCR confusions
+    t = t.replace(/^[^0-9]+/g,"").replace(/[^0-9A-Za-z\s\.,]/g,"").trim();
+    t = t.replace(/[,]/g,""); // money commas are usually thousands seps
+    t = t.replace(/\s+/g," ");
 
-  // 1) Strongest signal: a decimal amount appearing shortly after an AMOUNT label (across newlines)
-  if(decimals.length){
-    const kw = text.match(/\b(?:check\s*)?amount\b[\s\S]{0,120}?(\d{1,6}\.\d{2})\b/i);
-    if(kw){
-      amt = kw[1];
-      amtConf = "high";
-    }
+    // 254.20
+    if(/^\d{1,6}\.\d{2}$/.test(t)) return parseFloat(t);
+
+    // 193 50
+    if(/^\d{1,6} \d{2}$/.test(t)) return parseFloat(t.replace(" ", "."));
+
+    // 208 C0 / 208 O0 / 208 c0
+    if(/^\d{1,6}\s*[cCoO]\s*0$/.test(t)) return parseFloat(t.replace(/\s*[cCoO]\s*0$/,".00"));
+
+    // Digits only (anchor-only): 26775 => 267.75
+    if(allowCentsInference && /^\d{4,6}$/.test(t)) return parseInt(t,10) / 100;
+
+    return null;
   }
 
-  // 2) $ + decimal anywhere
-  if(!amt){
-    const usd = [...text.matchAll(/\$\s*(\d{1,6}(?:,\d{3})*\.\d{2})\b/g)]
-      .map(m=>m[1].replace(/,/g,""));
-    if(usd.length){
-      amt = usd[0];
-      amtConf = "high";
-    }
+  function isIdOrPhoneLine(line){
+    const l = String(line||"").toLowerCase();
+    return l.includes("tel") || l.includes("phone") || l.includes("routing") || l.includes("account")
+      || l.includes("bank") || l.includes("office") || l.includes("deposit") || l.includes("po box");
   }
 
-  // 3) Fallback: choose the largest plausible decimal
-  if(!amt && decimals.length){
-    let maxv = -1, maxs = "";
-    for(const s of decimals){
-      const v = parseFloat(s);
-      if(Number.isFinite(v) && v > maxv){
-        maxv = v; maxs = s;
+  function findAnchoredAmount(){
+    for(let i=0;i<lines.length;i++){
+      const window = (lines[i]||"") + " " + (lines[i+1]||"") + " " + (lines[i+2]||"") + " " + (lines[i+3]||"");
+      const wUpper = window.toUpperCase();
+      if(!/(\bCHECK\b\s*)?\bAMOUNT\b/.test(wUpper)) continue;
+
+      // Search the same window for money-like tokens
+      const tokens = window.match(/\b\$?\d{1,6}(?:[\.]\d{2}|\s\d{2})?\b|\b\d{4,6}\b|\b\d{1,6}\s*[cCoO]\s*0\b/g) || [];
+      for(const t of tokens){
+        const v = parseMoneyToken(t, true);
+        if(v == null) continue;
+        if(!Number.isFinite(v) || v < 0.5 || v > 500000) continue;
+        return { val: v, conf: "high" };
       }
     }
-    if(maxs){
-      amt = maxs;
-      amtConf = "med";
+    return null;
+  }
+
+  function findFallbackAmount(){
+    // Prefer explicit decimals or space-decimals; pick the largest plausible.
+    const candidates = [];
+    for(const line of lines){
+      if(isIdOrPhoneLine(line)) continue;
+      const toks = line.match(/\b\d{1,6}\.\d{2}\b|\b\d{1,6} \d{2}\b|\b\d{1,6}\s*[cCoO]\s*0\b/g) || [];
+      for(const t of toks){
+        const v = parseMoneyToken(t, false);
+        if(v == null) continue;
+        if(!Number.isFinite(v) || v < 0.5 || v > 500000) continue;
+        candidates.push(v);
+      }
+    }
+    if(!candidates.length) return null;
+    candidates.sort((a,b)=>b-a);
+    return { val: candidates[0], conf: "med" };
+  }
+
+  const anchoredAmt = findAnchoredAmount() || findFallbackAmount();
+  if(anchoredAmt){
+    out.amount = anchoredAmt.val.toFixed(2);
+    out.confidence.amount = anchoredAmt.conf;
+  }
+
+  // ---- POUNDS ----
+  // Supports: 59,5 ; 59.5 ; integer under DESCRIPTION ; and lb/lbs OCR variants (IBS/1BS/|BS).
+  function parsePoundsToken(tok){
+    const t = String(tok||"").trim().replace(",",".");
+    if(!/^\d{1,3}(?:\.\d{1,2})?$/.test(t)) return null;
+    const v = parseFloat(t);
+    if(!Number.isFinite(v) || v < 0.1 || v > 500) return null;
+    return v;
+  }
+
+  const lbsMarked = text.match(/\b(\d{1,3}(?:[\.,]\d{1,2})?)\s*(?:LB|LBS|POUNDS?|IBS|1BS|\|BS)\b/i);
+  if(lbsMarked){
+    const v = parsePoundsToken(lbsMarked[1]);
+    if(v != null){
+      out.pounds = String(v);
+      out.confidence.pounds = "high";
     }
   }
 
-  if(amt){
-    out.amount = amt;
-    out.confidence.amount = amtConf;
-  }
-
-// POUNDS
-  // Prefer explicit lbs markers; then use DESCRIPTION box (common on checks); fallback heuristic
-  const lbs1 = text.match(/\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b/i);
-  if(lbs1){
-    out.pounds = lbs1[1];
-    out.confidence.pounds = "high";
-  }else{
-    // Many Machias Bay Seafood checks put lbs under "DESCRIPTION"
-    let descLbs = "";
-    const descNear = text.match(/\bdescription\b[\s:]*\n?\s*(\d{1,3}(?:\.\d+)?)\b/i);
-    if(descNear) descLbs = descNear[1];
-
-    if(!descLbs){
-      for(let i=0;i<lines.length;i++){
-        if(/^description$/i.test(lines[i])){
-          const next = lines[i+1] || "";
-          const mm = next.match(/\b(\d{1,3}(?:\.\d+)?)\b/);
-          if(mm){ descLbs = mm[1]; break; }
-        }
-      }
-    }
-
-    if(descLbs){
-      out.pounds = descLbs;
-      out.confidence.pounds = "med";
-    }else{
-      // Avoid phone/ids (TEL, routing/account). Choose most frequent plausible number (<=300).
-      const candidates = [];
-      for(const line of lines){
-        const l = line.toLowerCase();
-        if(l.includes("tel") || l.includes("phone") || l.includes("routing") || l.includes("account") || l.includes("po box")) continue;
-        const ms = [...line.matchAll(/\b(\d+(?:\.\d+)?)\b/g)].map(m=>m[1]);
-        for(const s of ms){
-          const v = parseFloat(s);
-          if(!(v>0)) continue;
-          if(out.amount && Math.abs(v-parseFloat(out.amount))<0.001) continue;
-          if(v>=1 && v<=300) candidates.push(v);
-        }
-      }
-      if(candidates.length){
-        const freq = {};
-        candidates.forEach(v=>{ const k=String(v); freq[k]=(freq[k]||0)+1; });
-        let bestV = candidates[0], bestCount = 0;
-        Object.keys(freq).forEach(k=>{
-          const v=parseFloat(k), c=freq[k];
-          if(c>bestCount || (c===bestCount && v>bestV)){
-            bestV=v; bestCount=c;
+  if(!out.pounds){
+    // DESCRIPTION window: find a standalone number within 10 lines after DESCRIPTION
+    let found = null;
+    for(let i=0;i<lines.length;i++){
+      if(/^DESCRIPTION$/i.test(lines[i])){
+        for(let j=i+1;j<Math.min(lines.length, i+12);j++){ 
+          const line = lines[j];
+          if(!line) continue;
+          if(isIdOrPhoneLine(line)) continue;
+          // Prefer line that is just a number (42, 59,5)
+          const solo = line.match(/^\s*(\d{1,3}(?:[\.,]\d{1,2})?)\s*$/);
+          const tok = solo ? solo[1] : null;
+          if(tok){
+            const v = parsePoundsToken(tok);
+            if(v != null){ found = v; break; }
           }
-        });
-        out.pounds = String(bestV);
-        out.confidence.pounds = "low";
+        }
+        if(found != null) break;
       }
+    }
+
+    if(found != null){
+      out.pounds = String(found);
+      out.confidence.pounds = "med";
     }
   }
 
-  // AREA
+  // If still missing, leave blank (UI should prompt user)
+// AREA
   const areas = Array.isArray(knownAreas) ? knownAreas.filter(Boolean) : [];
   if(areas.length){
     const lower = text.toLowerCase();
@@ -312,6 +340,7 @@ function parseOcrText(raw, knownAreas){
 
   return out;
 }
+
 
 function normalizeDealerDisplay(name){
   let s = String(name||"").trim();
