@@ -176,7 +176,7 @@ function parseOcrText(raw, knownAreas){
 }
 
 
-  function findFallbackAmount(){function findFallbackAmount(){
+  function findFallbackAmount(){
     // Prefer explicit decimals or space-decimals; pick the largest plausible.
     const candidates = [];
     for(const line of lines){
