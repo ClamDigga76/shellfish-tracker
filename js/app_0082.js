@@ -81,6 +81,7 @@ function parseOcrText(raw, knownAreas){
   const text = String(raw||"").replace(/\r/g,"\n");
   const upper = text.toUpperCase();
   const lines = text.split("\n").map(s=>s.trim()).filter(Boolean);
+  const isMachias = upper.includes("MACHIAS BAY SEAFOOD");
 
   const out = {
     dateMDY: "",
@@ -145,8 +146,21 @@ function parseOcrText(raw, knownAreas){
 
   function isIdOrPhoneLine(line){
     const l = String(line||"").toLowerCase();
-    return l.includes("tel") || l.includes("phone") || l.includes("routing") || l.includes("account")
-      || l.includes("bank") || l.includes("office") || l.includes("deposit") || l.includes("po box");
+
+    if(l.includes("tel") || l.includes("phone")) return true;
+    if(l.includes("routing") || l.includes("account")) return true;
+    if(l.includes("bank") || l.includes("office") || l.includes("deposit")) return true;
+    if(l.includes("po box")) return true;
+
+    // Common ID formats on checks (e.g., 52-7453/2112) that produce false "amounts" like 74.53
+    if(/[\/]/.test(l)) return true;
+    if(/\b\d{2}-\d{4}\/?\d{4}\b/.test(l)) return true;
+
+    // Reject long digit runs (account/routing style)
+    const digits = l.replace(/[^0-9]/g, "");
+    if(digits.length >= 8) return true;
+
+    return false;
   }
 
   function findAnchoredAmount(){
@@ -169,7 +183,7 @@ function parseOcrText(raw, knownAreas){
       const v = parseMoneyToken(t, hasCheck);
       if(v == null) continue;
       if(!Number.isFinite(v) || v < 0.5 || v > 500000) continue;
-      return { val: v, conf: hasCheck ? "high" : "med" };
+      return { val: v, conf: hasCheck ? "high" : "med", hasCheck };
     }
   }
   return null;
@@ -194,10 +208,23 @@ function parseOcrText(raw, knownAreas){
     return { val: candidates[0], conf: "med" };
   }
 
-  const anchoredAmt = findAnchoredAmount() || findFallbackAmount();
-  if(anchoredAmt){
-    out.amount = anchoredAmt.val.toFixed(2);
-    out.confidence.amount = anchoredAmt.conf;
+  const anchored = findAnchoredAmount();
+
+  // Machias Bay Seafood checks: amount is always under CHECK AMOUNT.
+  if(isMachias){
+    if(anchored && anchored.hasCheck){
+      out.amount = anchored.val.toFixed(2);
+      out.confidence.amount = "high";
+    }else{
+      out.amount = "";
+      out.confidence.amount = "low";
+    }
+  }else{
+    const best = anchored || findFallbackAmount();
+    if(best){
+      out.amount = best.val.toFixed(2);
+      out.confidence.amount = best.conf;
+    }
   }
 
   // ---- POUNDS ----
