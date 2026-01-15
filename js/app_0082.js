@@ -150,24 +150,33 @@ function parseOcrText(raw, knownAreas){
   }
 
   function findAnchoredAmount(){
-    for(let i=0;i<lines.length;i++){
-      const window = (lines[i]||"") + " " + (lines[i+1]||"") + " " + (lines[i+2]||"") + " " + (lines[i+3]||"");
-      const wUpper = window.toUpperCase();
-      if(!/(\bCHECK\b\s*)?\bAMOUNT\b/.test(wUpper)) continue;
+  for(let i=0;i<lines.length;i++){
+    const window = (lines[i]||"") + " " + (lines[i+1]||"") + " " + (lines[i+2]||"") + " " + (lines[i+3]||"");
+    const wUpper = window.toUpperCase();
 
-      // Search the same window for money-like tokens
-      const tokens = window.match(/\b\$?\d{1,6}(?:[\.]\d{2}|\s\d{2})?\b|\b\d{4,6}\b|\b\d{1,6}\s*[cCoO]\s*0\b/g) || [];
-      for(const t of tokens){
-        const v = parseMoneyToken(t, true);
-        if(v == null) continue;
-        if(!Number.isFinite(v) || v < 0.5 || v > 500000) continue;
-        return { val: v, conf: "high" };
-      }
+    const hasAmount = /\bAMOUNT\b/.test(wUpper);
+    if(!hasAmount) continue;
+
+    const hasCheck = /\bCHECK\b/.test(wUpper);
+
+    // If we only have an "AMOUNT" header (no CHECK), do NOT infer cents from bare digits.
+    // This prevents parsing routing/account fragments like "7453" => 74.53.
+    const tokens = hasCheck
+      ? (window.match(/\b\$?\d{1,6}(?:[\.]\d{2}|\s\d{2})?\b|\b\d{4,6}\b|\b\d{1,6}\s*[cCoO]\s*0\b/g) || [])
+      : (window.match(/\b\$?\d{1,6}(?:[\.]\d{2}|\s\d{2})\b|\b\d{1,6}\s*[cCoO]\s*0\b/g) || []);
+
+    for(const t of tokens){
+      const v = parseMoneyToken(t, hasCheck);
+      if(v == null) continue;
+      if(!Number.isFinite(v) || v < 0.5 || v > 500000) continue;
+      return { val: v, conf: hasCheck ? "high" : "med" };
     }
-    return null;
   }
+  return null;
+}
 
-  function findFallbackAmount(){
+
+  function findFallbackAmount(){function findFallbackAmount(){
     // Prefer explicit decimals or space-decimals; pick the largest plausible.
     const candidates = [];
     for(const line of lines){
