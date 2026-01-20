@@ -78,10 +78,10 @@ const APP_VERSION = VERSION;
 
 
 function parseOcrText(raw, knownAreas){
-  const text = String(raw||"").replace(/\r/g,"\n");
-  const upper = text.toUpperCase();
-  const lines = text.split("\n").map(s=>s.trim()).filter(Boolean);
-  const isMachias = upper.includes("MACHIAS BAY SEAFOOD");
+  const textRaw = String(raw||"").replace(/\r/g,"\n");
+  const text = textRaw.toUpperCase();
+  const lines = textRaw.split("\n").map(s=>String(s).trim()).filter(Boolean);
+  const linesU = lines.map(l=>l.toUpperCase());
 
   const out = {
     dateMDY: "",
@@ -92,219 +92,213 @@ function parseOcrText(raw, knownAreas){
     confidence: { date:"low", pounds:"low", amount:"low", dealer:"low", area:"low" }
   };
 
-  // ---- DATE ----
-  // Supports: MM/DD/YYYY, MM-DD-YY, and glued MMDD-YY (e.g. 1231-25).
-  const dateFull = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](20\d{2}|19\d{2})\b/);
-  const dateShort = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](\d{2})\b/);
-  const dateGlued = text.match(/\b(0?[1-9]|1[0-2])([0-3]\d)[\/\-](\d{2})\b/);
+  const isMachias = text.includes("MACHIAS BAY SEAFOOD");
 
-  if(dateFull){
-    out.dateMDY = `${dateFull[1]}/${dateFull[2]}/${dateFull[3]}`;
+  // --- DATE ---
+  // Support MM/DD/YYYY, MM-DD-YY, and glued MMDD-YY / MMDDYY.
+  const full = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](20\d{2}|19\d{2})\b/);
+  if(full){
+    out.dateMDY = `${full[1]}/${full[2]}/${full[3]}`;
     out.confidence.date = "high";
-  }else if(dateShort){
-    const yy = parseInt(dateShort[3],10);
-    const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
-    out.dateMDY = `${dateShort[1]}/${dateShort[2]}/${yyyy}`;
-    out.confidence.date = "med";
-  }else if(dateGlued){
-    const mm = dateGlued[1];
-    const dd = dateGlued[2];
-    const yy = parseInt(dateGlued[3],10);
-    const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
-    out.dateMDY = `${mm}/${dd}/${yyyy}`;
-    out.confidence.date = "med";
-  }
-
-  // ---- AMOUNT ----
-  // Prioritize CHECK AMOUNT (even split across lines). Accept common OCR:
-  // - digits-only cents: 26775 => 267.75 (anchor-only)
-  // - space decimal: 193 50 => 193.50
-  // - C/O confusion: 208 C0 / 208 O0 => 208.00
-  function parseMoneyToken(tok, allowCentsInference){
-    let t = String(tok||"").trim();
-    if(!t) return null;
-
-    // Normalize dollars/cents separators and OCR confusions
-    t = t.replace(/^[^0-9]+/g,"").replace(/[^0-9A-Za-z\s\.,]/g,"").trim();
-    t = t.replace(/[,]/g,""); // money commas are usually thousands seps
-    t = t.replace(/\s+/g," ");
-
-    // 254.20
-    if(/^\d{1,6}\.\d{2}$/.test(t)) return parseFloat(t);
-
-    // 193 50
-    if(/^\d{1,6} \d{2}$/.test(t)) return parseFloat(t.replace(" ", "."));
-
-    // 208 C0 / 208 O0 / 208 c0
-    if(/^\d{1,6}\s*[cCoO]\s*0$/.test(t)) return parseFloat(t.replace(/\s*[cCoO]\s*0$/,".00"));
-
-    // Digits only (anchor-only): 26775 => 267.75
-    if(allowCentsInference && /^\d{4,6}$/.test(t)) return parseInt(t,10) / 100;
-
-    return null;
-  }
-
-  function isIdOrPhoneLine(line){
-    const l = String(line||"").toLowerCase();
-
-    if(l.includes("tel") || l.includes("phone")) return true;
-    if(l.includes("routing") || l.includes("account")) return true;
-    if(l.includes("bank") || l.includes("office") || l.includes("deposit")) return true;
-    if(l.includes("po box")) return true;
-
-    // Common ID formats on checks (e.g., 52-7453/2112) that produce false "amounts" like 74.53
-    if(/[\/]/.test(l)) return true;
-    if(/\b\d{2}-\d{4}\/?\d{4}\b/.test(l)) return true;
-
-    // Reject long digit runs (account/routing style)
-    const digits = l.replace(/[^0-9]/g, "");
-    if(digits.length >= 8) return true;
-
-    return false;
-  }
-
-  function findAnchoredAmount(){
-  for(let i=0;i<lines.length;i++){
-    const window = (lines[i]||"") + " " + (lines[i+1]||"") + " " + (lines[i+2]||"") + " " + (lines[i+3]||"");
-    const wUpper = window.toUpperCase();
-
-    const hasAmount = /\bAMOUNT\b/.test(wUpper);
-    if(!hasAmount) continue;
-
-    const hasCheck = /\bCHECK\b/.test(wUpper);
-
-    // If we only have an "AMOUNT" header (no CHECK), do NOT infer cents from bare digits.
-    // This prevents parsing routing/account fragments like "7453" => 74.53.
-    const tokens = hasCheck
-      ? (window.match(/\b\$?\d{1,6}(?:[\.]\d{2}|\s\d{2})?\b|\b\d{4,6}\b|\b\d{1,6}\s*[cCoO]\s*0\b/g) || [])
-      : (window.match(/\b\$?\d{1,6}(?:[\.]\d{2}|\s\d{2})\b|\b\d{1,6}\s*[cCoO]\s*0\b/g) || []);
-
-    for(const t of tokens){
-      const v = parseMoneyToken(t, hasCheck);
-      if(v == null) continue;
-      if(!Number.isFinite(v) || v < 0.5 || v > 500000) continue;
-      return { val: v, conf: hasCheck ? "high" : "med", hasCheck };
-    }
-  }
-  return null;
-}
-
-
-  function findFallbackAmount(){
-    // Prefer explicit decimals or space-decimals; pick the largest plausible.
-    const candidates = [];
-    for(const line of lines){
-      if(isIdOrPhoneLine(line)) continue;
-      const toks = line.match(/\b\d{1,6}\.\d{2}\b|\b\d{1,6} \d{2}\b|\b\d{1,6}\s*[cCoO]\s*0\b/g) || [];
-      for(const t of toks){
-        const v = parseMoneyToken(t, false);
-        if(v == null) continue;
-        if(!Number.isFinite(v) || v < 0.5 || v > 500000) continue;
-        candidates.push(v);
+  } else {
+    const short = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](\d{2})\b/);
+    if(short){
+      const yy = parseInt(short[3],10);
+      const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
+      out.dateMDY = `${short[1]}/${short[2]}/${yyyy}`;
+      out.confidence.date = "med";
+    } else {
+      const glued = text.match(/\b(0[1-9]|1[0-2])([0-2]\d|3[01])[\/\-]?(\d{2})\b/);
+      if(glued){
+        const mm = glued[1];
+        const dd = glued[2];
+        const yy = parseInt(glued[3],10);
+        const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
+        out.dateMDY = `${mm}/${dd}/${yyyy}`;
+        out.confidence.date = "med";
       }
     }
-    if(!candidates.length) return null;
-    candidates.sort((a,b)=>b-a);
-    return { val: candidates[0], conf: "med" };
   }
 
-  const anchored = findAnchoredAmount();
+  // --- DEALER ---
+  // Known dealer match (from Settings)
+  if(Array.isArray(state.dealers) && state.dealers.length){
+    const hay = text;
+    let best = "";
+    for(const d of state.dealers){
+      const du = String(d||"").toUpperCase();
+      if(du && hay.includes(du)){
+        if(du.length > best.length) best = d;
+      }
+    }
+    if(best){
+      out.dealer = best;
+      out.confidence.dealer = "high";
+    }
+  }
+  // Prefer first ALLCAPS line ending with INC./LLC/CO., else first line.
+  for(const l of linesU.slice(0,8)){
+    if(l.includes("SEAFOOD")){
+      out.dealer = "Machias BAY Seafood";
+      out.confidence.dealer = "high";
+      break;
+    }
+  }
+  if(!out.dealer && lines.length){
+    out.dealer = lines[0].trim().slice(0,40);
+    out.confidence.dealer = "low";
+  }
 
-  // Machias Bay Seafood checks: amount is always under CHECK AMOUNT.
+  // --- AMOUNT ---
+  // Machias checks: amount must come from CHECK AMOUNT block.
+  const parseMoneyFromWindow = (windowText, allowCents)=>{
+    // normalize OCR C/O confusion in cents
+    const w = windowText.replace(/[oO]/g,"0").replace(/[cC]/g,"0");
+    const dec = w.match(/\b(\d{1,6}[.,]\d{2})\b/);
+    if(dec){
+      const v = parseFloat(dec[1].replace(",","."));
+      if(Number.isFinite(v)) return v.toFixed(2);
+    }
+    const sp = w.match(/\b(\d{1,6})\s+(\d{2})\b/);
+    if(sp){
+      const v = parseFloat(`${sp[1]}.${sp[2]}`);
+      if(Number.isFinite(v)) return v.toFixed(2);
+    }
+    const c0 = w.match(/\b(\d{1,6})\s*0\s*0\b/);
+    if(c0){
+      const v = parseFloat(`${c0[1]}.00`);
+      if(Number.isFinite(v)) return v.toFixed(2);
+    }
+    if(allowCents){
+      const digs = [...w.matchAll(/\b(\d{4,6})\b/g)].map(m=>m[1]);
+      if(digs.length){
+        const last = digs[digs.length-1];
+        const v = parseInt(last,10)/100;
+        if(Number.isFinite(v)) return v.toFixed(2);
+      }
+    }
+    return "";
+  };
+
+  const findCheckAmount = ()=>{
+    for(let i=0;i<linesU.length;i++){
+      const winLines = linesU.slice(i, i+4);
+      const winText = winLines.join(" ");
+      const hasCheck = winText.includes("CHECK");
+      const hasAmount = winText.includes("AMOUNT");
+      if(hasCheck && hasAmount){
+        // avoid MICR lines with slashes/hyphens unless they also contain CHECK/AMOUNT
+        const val = parseMoneyFromWindow(winText, true);
+        if(val) return val;
+      }
+    }
+    return "";
+  };
+
+  let amt = "";
   if(isMachias){
-    if(anchored && anchored.hasCheck){
-      out.amount = anchored.val.toFixed(2);
+    amt = findCheckAmount();
+    if(amt){
+      out.amount = amt;
       out.confidence.amount = "high";
-    }else{
+    } else {
+      // Do not fallback for Machias; leave blank rather than guess from MICR numbers.
       out.amount = "";
       out.confidence.amount = "low";
     }
-  }else{
-    const best = anchored || findFallbackAmount();
-    if(best){
-      out.amount = best.val.toFixed(2);
-      out.confidence.amount = best.conf;
-    }
-  }
-
-  // ---- POUNDS ----
-  // Supports: 59,5 ; 59.5 ; integer under DESCRIPTION ; and lb/lbs OCR variants (IBS/1BS/|BS).
-  function parsePoundsToken(tok){
-    const t = String(tok||"").trim().replace(",",".");
-    if(!/^\d{1,3}(?:\.\d{1,2})?$/.test(t)) return null;
-    const v = parseFloat(t);
-    if(!Number.isFinite(v) || v < 0.1 || v > 500) return null;
-    return v;
-  }
-
-  const lbsMarked = text.match(/\b(\d{1,3}(?:[\.,]\d{1,2})?)\s*(?:LB|LBS|POUNDS?|IBS|1BS|\|BS)\b/i);
-  if(lbsMarked){
-    const v = parsePoundsToken(lbsMarked[1]);
-    if(v != null){
-      out.pounds = String(v);
-      out.confidence.pounds = "high";
-    }
-  }
-
-  if(!out.pounds){
-    // DESCRIPTION window: find a standalone number within 10 lines after DESCRIPTION
-    let found = null;
-    for(let i=0;i<lines.length;i++){
-      if(/^DESCRIPTION$/i.test(lines[i])){
-        for(let j=i+1;j<Math.min(lines.length, i+12);j++){ 
-          const line = lines[j];
-          if(!line) continue;
-          if(isIdOrPhoneLine(line)) continue;
-          // Prefer line that is just a number (42, 59,5)
-          const solo = line.match(/^\s*(\d{1,3}(?:[\.,]\d{1,2})?)\s*$/);
-          const tok = solo ? solo[1] : null;
-          if(tok){
-            const v = parsePoundsToken(tok);
-            if(v != null){ found = v; break; }
-          }
+  } else {
+    // Generic: try CHECK AMOUNT first, then any decimal money-like token excluding MICR/phone/account lines.
+    amt = findCheckAmount();
+    if(!amt){
+      const candidates = [];
+      for(const l of linesU){
+        if(l.includes("/") || l.includes("TEL") || l.includes("ACCOUNT") || l.includes("ROUTING") || l.includes("PO BOX")) continue;
+        const m = l.match(/\b(\d{1,6}[.,]\d{2})\b/);
+        if(m){
+          const v = parseFloat(m[1].replace(",","."));
+          if(Number.isFinite(v) && v>=1) candidates.push(v);
         }
-        if(found != null) break;
+      }
+      if(candidates.length){
+        const best = Math.max(...candidates);
+        amt = best.toFixed(2);
       }
     }
-
-    if(found != null){
-      out.pounds = String(found);
-      out.confidence.pounds = "med";
+    if(amt){
+      out.amount = amt;
+      out.confidence.amount = "med";
     }
   }
 
-  // If still missing, leave blank (UI should prompt user)
-// AREA
-  const areas = Array.isArray(knownAreas) ? knownAreas.filter(Boolean) : [];
-  if(areas.length){
-    const lower = text.toLowerCase();
-    for(const a of areas){
-      const al = String(a).toLowerCase();
-      if(al && lower.includes(al)){
-        out.area = a;
-        out.confidence.area = "high";
-        break;
+  // --- POUNDS ---
+  // 1) decimal with comma or dot (e.g., 59,5) near DESCRIPTION
+  const findPounds = ()=>{
+    // explicit lb/lbs markers incl OCR IBS/1BS/|BS
+    const marker = textRaw.match(/\b(\d+(?:[.,]\d+)?)\s*(?:lb|lbs|pounds?|i?bs|\|bs|1bs)\b/i);
+    if(marker){
+      const v = parseFloat(marker[1].replace(",","."));
+      if(Number.isFinite(v) && v>0) return {v:String(v), conf:"high"};
+    }
+    // DESCRIPTION block integer/decimal
+    let descIdx = -1;
+    for(let i=0;i<linesU.length;i++){
+      if(linesU[i].includes("DESCRIPTION")){ descIdx = i; break; }
+    }
+    if(descIdx>=0){
+      const slice = linesU.slice(descIdx, descIdx+12);
+      // prefer decimal with one digit
+      for(const l of slice){
+        const m = l.match(/^\s*(\d{1,3}[.,]\d{1,2})\s*$/);
+        if(m){
+          const v = parseFloat(m[1].replace(",","."));
+          if(Number.isFinite(v) && v>0) return {v:String(v), conf:"high"};
+        }
+      }
+      for(const l of slice){
+        const m = l.match(/^\s*(\d{1,3})\s*$/);
+        if(m){
+          const v = parseInt(m[1],10);
+          if(Number.isFinite(v) && v>0 && v<=500) return {v:String(v), conf:"med"};
+        }
       }
     }
+    // fallback: first plausible number in range
+    for(const l of linesU){
+      if(l.includes("TEL") || l.includes("ACCOUNT") || l.includes("PO BOX") || l.includes("CHECK")) continue;
+      const ms = [...l.matchAll(/\b(\d{1,3}(?:[.,]\d{1,2})?)\b/g)].map(m=>m[1]);
+      for(const s of ms){
+        const v = parseFloat(s.replace(",","."));
+        if(Number.isFinite(v) && v>0 && v<=500) return {v:String(v), conf:"low"};
+      }
+    }
+    return {v:"", conf:"low"};
+  };
+
+  const pounds = findPounds();
+  if(pounds.v){
+    out.pounds = pounds.v;
+    out.confidence.pounds = pounds.conf;
   }
 
-  // DEALER
-  const noise = ["date","harvest","amount","total","subtotal","balance","lbs","lb","pounds","check","pay to","memo","account","routing","bank","deposit"];
-  for(const line of lines){
-    const l = line.toLowerCase();
-    if(l.length<3) continue;
-    if(!/[a-zA-Z]/.test(line)) continue;
-    if(noise.some(n=>l.includes(n))) continue;
-    const letters=(line.match(/[A-Za-z]/g)||[]).length;
-    if(letters<4) continue;
-    out.dealer=line;
-    out.confidence.dealer="med";
-    break;
+  // --- AREA ---
+  // Existing behavior: try to match a known area substring in OCR text.
+  if(Array.isArray(knownAreas) && knownAreas.length){
+    const hay = text;
+    let best = "";
+    for(const a of knownAreas){
+      const au = String(a||"").toUpperCase();
+      if(au && hay.includes(au)){
+        if(au.length > best.length) best = a;
+      }
+    }
+    if(best){
+      out.area = best;
+      out.confidence.area = "med";
+    }
   }
 
   return out;
 }
-
 
 function normalizeDealerDisplay(name){
   let s = String(name||"").trim();
@@ -538,6 +532,23 @@ function ensureAreas(){
   }
   state.areas = out;
 }
+
+function ensureDealers(){
+  if(!Array.isArray(state.dealers)) state.dealers = [];
+  // normalize + de-dupe (case-insensitive)
+  const seen = new Set();
+  const out = [];
+  for(const d of state.dealers){
+    const v = String(d||"").trim();
+    if(!v) continue;
+    const k = normalizeKey(v);
+    if(seen.has(k)) continue;
+    seen.add(k);
+    out.push(v);
+  }
+  state.dealers = out;
+}
+
 
 function findDuplicateTrip(candidate, excludeId=""){
   const trips = Array.isArray(state.trips) ? state.trips : [];
@@ -809,6 +820,8 @@ function renderHome(){
 }
 
 function renderNewTrip(){
+  ensureAreas();
+  ensureDealers();
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
@@ -835,8 +848,33 @@ const topAreas = (()=>{
     .map(([a])=>a);
 })();
 
+// Top 3 most-used Dealers (from saved trips) for quick selection
+const topDealers = (()=>{
+  const counts = new Map(); // key=normalized, value={label,count}
+  for(const t of (Array.isArray(state.trips)?state.trips:[])){
+    const raw = String(t.dealer||"").trim();
+    if(!raw) continue;
+    const key = raw.toLowerCase();
+    const cur = counts.get(key);
+    if(cur) cur.count += 1;
+    else counts.set(key, { label: raw, count: 1 });
+  }
 
-  getApp().innerHTML = `
+  const pool = (Array.isArray(state.dealers) && state.dealers.length)
+    ? state.dealers.map(d=>String(d||"").trim()).filter(Boolean)
+    : Array.from(counts.values()).map(o=>o.label);
+
+  const scored = pool.map(label=>{
+    const key = label.toLowerCase();
+    const c = counts.get(key);
+    return { label, count: c ? c.count : 0 };
+  });
+
+  return scored
+    .sort((x,y)=> (y.count-x.count) || x.label.localeCompare(y.label))
+    .slice(0,3)
+    .map(o=>o.label);
+})();getApp().innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
@@ -935,6 +973,7 @@ const topAreas = (()=>{
 
 
 const topAreaWrap = document.getElementById("topAreas");
+const topDealerWrap = document.getElementById("topDealers");
 if(topAreaWrap && elArea){
   topAreaWrap.addEventListener("click", (e)=>{
     const btn = e.target.closest("button[data-area]");
@@ -943,6 +982,19 @@ if(topAreaWrap && elArea){
     elArea.value = a;
     state.draft = state.draft || {};
     state.draft.area = a;
+    saveDraft();
+  });
+}
+
+
+if(topDealerWrap && elDealer){
+  topDealerWrap.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button[data-dealer]");
+    if(!btn) return;
+    const d = btn.getAttribute("data-dealer") || "";
+    elDealer.value = d;
+    state.draft = state.draft || {};
+    state.draft.dealer = d;
     saveDraft();
   });
 }
@@ -1211,6 +1263,8 @@ const backBtn = document.getElementById("backHome");
 
 
 function renderReviewTrip(){
+  ensureAreas();
+  ensureDealers();
   const d = state.reviewDraft;
   if(!d){
     state.view = "new";
@@ -1241,7 +1295,33 @@ function renderReviewTrip(){
       .map(([a])=>a);
   })();
 
-  getApp().innerHTML = `
+// Top 3 most-used Dealers (from saved trips) for quick selection
+const topDealersR = (()=>{
+  const counts = new Map(); // key=normalized, value={label,count}
+  for(const t of (Array.isArray(state.trips)?state.trips:[])){
+    const raw = String(t.dealer||"").trim();
+    if(!raw) continue;
+    const key = raw.toLowerCase();
+    const cur = counts.get(key);
+    if(cur) cur.count += 1;
+    else counts.set(key, { label: raw, count: 1 });
+  }
+
+  const pool = (Array.isArray(state.dealers) && state.dealers.length)
+    ? state.dealers.map(d=>String(d||"").trim()).filter(Boolean)
+    : Array.from(counts.values()).map(o=>o.label);
+
+  const scored = pool.map(label=>{
+    const key = label.toLowerCase();
+    const c = counts.get(key);
+    return { label, count: c ? c.count : 0 };
+  });
+
+  return scored
+    .sort((x,y)=> (y.count-x.count) || x.label.localeCompare(y.label))
+    .slice(0,3)
+    .map(o=>o.label);
+})();getApp().innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backToNew">← Back</button>
@@ -1260,6 +1340,7 @@ function renderReviewTrip(){
 
         <div class="field">
           <div class="label">Dealer</div>
+          ${renderTopDealerChips(topDealersR, d.dealer, "topDealersR")}
           <input class="input" id="r_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(d.dealer||""))}" />
         </div>
 
@@ -1349,6 +1430,7 @@ function renderReviewTrip(){
   }
 
   const topAreaWrapR = document.getElementById("topAreasR");
+const topDealerWrapR = document.getElementById("topDealersR");
   if(topAreaWrapR && elAreaLive){
     topAreaWrapR.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-area]");
@@ -2028,8 +2110,9 @@ function drawReportsCharts(monthRows, dealerRows){
 
 function renderSettings(){
   ensureAreas();
+  ensureDealers();
 
-  const areaRows = state.areas.length ? state.areas.map((a, i)=>`
+const areaRows = state.areas.length ? state.areas.map((a, i)=>`
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${a}</b></div>
       <button class="smallbtn danger" data-del-area="${i}">Delete</button>
@@ -2056,6 +2139,18 @@ function renderSettings(){
       </div>
 
       ${areaRows}
+    </div>
+
+    <div class="card">
+      <b>Dealers</b>
+      <div class="sep"></div>
+
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
+        <button class="btn primary" id="addDealer">Add</button>
+      </div>
+
+      ${dealerRows}
     </div>
 
     <div class="card">
@@ -2133,6 +2228,17 @@ function renderSettings(){
     renderSettings();
   };
 
+  document.getElementById("addDealer").onclick = ()=>{
+    const v = String(document.getElementById("newDealer").value||"").trim();
+    if(!v) return;
+    state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
+    state.dealers.push(v);
+    ensureDealers();
+    saveState();
+    renderSettings();
+  };
+
+
   getApp().querySelectorAll("[data-del-area]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const idx = Number(btn.getAttribute("data-del-area"));
@@ -2143,6 +2249,18 @@ function renderSettings(){
       saveState();
       renderSettings();
     });
+
+  getApp().querySelectorAll("[data-del-dealer]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const i = parseInt(btn.getAttribute("data-del-dealer")||"-1", 10);
+      if(!(i>=0)) return;
+      state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
+      state.dealers.splice(i,1);
+      ensureDealers();
+      saveState();
+      renderSettings();
+    });
+  });
   });
 
   document.getElementById("resetData").onclick = ()=>{
@@ -2306,6 +2424,20 @@ function renderTopAreaChips(topAreas, currentArea, containerId){
     </div>
   `;
 }
+
+function renderTopDealerChips(topDealers, currentDealer, containerId){
+  if(!topDealers || !topDealers.length) return "";
+  return `
+    <div class="muted small" style="margin-top:6px;margin-bottom:4px"><b>Top dealers</b> <span class="muted small">(quick pick)</span></div>
+    <div class="areachips" id="${containerId}">
+      ${topDealers.map(d=>{
+        const on = (String(currentDealer||"").trim().toLowerCase() === String(d||"").trim().toLowerCase());
+        return `<button class="areachip${on ? " on" : ""}" type="button" data-dealer="${escapeHtml(d)}">${escapeHtml(d)}</button>`;
+      }).join("")}
+    </div>
+  `;
+}
+
 
 function bindAreaChips(containerId, onPick){
   const el = document.getElementById(containerId);
