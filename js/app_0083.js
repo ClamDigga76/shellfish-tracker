@@ -1624,6 +1624,12 @@ function renderReviewTrip(){
     return `<option value="${String(a||"").replaceAll('"','&quot;')}" ${sel}>${label}</option>`;
   }).join("");
 
+  const dealerOptionsR = [""].concat(Array.isArray(state.dealers)?state.dealers:[]).map(dv=>{
+    const label = dv ? dv : "—";
+    const sel = (String(d.dealer||"").trim().toLowerCase() === String(dv||"").trim().toLowerCase()) ? "selected" : "";
+    return `<option value="${String(dv||"").replaceAll('"',"&quot;")}" ${sel}>${label}</option>`;
+  }).join("");
+
   const topAreasR = (()=>{
     const counts = new Map();
     for(const t of (Array.isArray(state.trips)?state.trips:[])){
@@ -1639,31 +1645,24 @@ function renderReviewTrip(){
 
 // Top 3 most-used Dealers (from saved trips) for quick selection
 const topDealersR = (()=>{
-  const counts = new Map(); // key=normalized, value={label,count}
+  const counts = new Map();
   for(const t of (Array.isArray(state.trips)?state.trips:[])){
     const raw = String(t.dealer||"").trim();
     if(!raw) continue;
     const key = raw.toLowerCase();
-    const cur = counts.get(key);
-    if(cur) cur.count += 1;
-    else counts.set(key, { label: raw, count: 1 });
+    counts.set(key, (counts.get(key)||0) + 1);
   }
-
-  const pool = (Array.isArray(state.dealers) && state.dealers.length)
-    ? state.dealers.map(d=>String(d||"").trim()).filter(Boolean)
-    : Array.from(counts.values()).map(o=>o.label);
-
-  const scored = pool.map(label=>{
-    const key = label.toLowerCase();
-    const c = counts.get(key);
-    return { label, count: c ? c.count : 0 };
-  });
-
-  return scored
-    .sort((x,y)=> (y.count-x.count) || x.label.localeCompare(y.label))
+  const fromTrips = Array.from(counts.entries())
+    .sort((x,y)=> (y[1]-x[1]) || x[0].localeCompare(y[0]))
     .slice(0,3)
-    .map(o=>o.label);
-})();getApp().innerHTML = `
+    .map(([k])=>{
+      const match = (Array.isArray(state.dealers)?state.dealers:[]).find(dv=>String(dv||"").trim().toLowerCase()===k);
+      return match || k;
+    });
+  if(fromTrips.length) return fromTrips;
+  return (Array.isArray(state.dealers)?state.dealers:[]).slice(0,3);
+})();
+getApp().innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backToNew">← Back</button>
@@ -1683,6 +1682,7 @@ const topDealersR = (()=>{
         <div class="field">
           <div class="label">Dealer</div>
           ${renderTopDealerChips(topDealersR, d.dealer, "topDealersR")}
+          <select class="select" id="r_dealerSelect">${dealerOptionsR}</select>
           <input class="input" id="r_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(d.dealer||""))}" />
         </div>
 
