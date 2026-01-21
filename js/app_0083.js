@@ -2450,6 +2450,14 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
     </div>
   `).join("") : `<div class="muted small" style="margin-top:10px">No areas yet. Add one below.</div>`;
 
+  const dealerRows = state.dealers.length ? state.dealers.map((d, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
+      <button class="smallbtn danger" data-del-dealer="${i}">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
+
+
   getApp().innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
