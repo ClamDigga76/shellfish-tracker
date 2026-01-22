@@ -4,6 +4,45 @@
 import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_0082.js";
 
 const VERSION = "ESM-0082";
+
+async function updateBuildBadge(){
+  const el = document.getElementById("buildBadge");
+  if(!el) return;
+
+  const schema = (typeof SCHEMA_VERSION !== "undefined" ? SCHEMA_VERSION : null);
+  const parts = [`App ${VERSION}`];
+  if(schema !== null) parts.push(`Schema ${schema}`);
+
+  // Service Worker info
+  let swCtrl = false;
+  let swV = null;
+  try{
+    swCtrl = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+    if(navigator.serviceWorker && navigator.serviceWorker.getRegistration){
+      const reg = await navigator.serviceWorker.getRegistration();
+      const w = (reg && (reg.active || reg.waiting || reg.installing)) || null;
+      const scriptURL = w ? (w.scriptURL || "") : "";
+      const m = scriptURL.match(/[?&]v=(\d+)/);
+      if(m) swV = m[1];
+    }
+  }catch{}
+
+  parts.push(`SW ${swCtrl ? "on" : "off"}${swV ? " v"+swV : ""}`);
+
+  // Cache name info (best-effort)
+  try{
+    if(window.caches && caches.keys){
+      const keys = await caches.keys();
+      const k = keys.find(x=>String(x||"").startsWith("shellfish-tracker-")) || "";
+      if(k){
+        const m = String(k).match(/-v(\d+)$/);
+        if(m) parts.push(`Cache v${m[1]}`);
+      }
+    }
+  }catch{}
+
+  el.textContent = parts.join(" • ");
+}
 // ---- Toasts ----
 let toastTimer = null;
 function showToast(msg){
@@ -348,11 +387,12 @@ function loadState(){
       trips: Array.isArray(p?.trips) ? p.trips : [],
       view: p?.view || "home",
       filter: p?.filter || "YTD",
-      settings: p?.settings || {},
-      areas: p?.areas || []
+      settings: (p?.settings && typeof p.settings === "object") ? p.settings : {},
+      areas: Array.isArray(p?.areas) ? p.areas : [],
+      dealers: Array.isArray(p?.dealers) ? p.dealers : []
     };
   }catch{
-    return { trips: [], view: "home", filter: "YTD", settings: {}, areas: [] };
+    return { trips: [], view: "home", filter: "YTD", settings: {}, areas: [], dealers: [] };
   }
 }
 
@@ -459,12 +499,14 @@ function importBackupFromFile(file){
         const json = JSON.parse(txt);
         const tripsIn = Array.isArray(json?.data?.trips) ? json.data.trips : (Array.isArray(json?.trips) ? json.trips : []);
         const areasIn = Array.isArray(json?.data?.areas) ? json.data.areas : (Array.isArray(json?.areas) ? json.areas : []);
+        const dealersIn = Array.isArray(json?.data?.dealers) ? json.data.dealers : (Array.isArray(json?.dealers) ? json.dealers : []);
 
         const importedTrips = tripsIn.map(normalizeTripForImport).filter(t=>t.dateISO || t.dealer || t.amount || t.pounds);
         const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
+        const importedDealers = dealersIn.map(d=>String(d||"").trim()).filter(Boolean);
 
         // Decide merge vs replace
-        const replace = confirm("Restore backup?\n\nOK = Replace all current trips on this device\nCancel = Merge (skip likely duplicates)");
+        const replace = confirm("Restore backup?\n\nOK = Replace current trips/areas/dealers on this device\nCancel = Merge (skip likely duplicates)");
 
         const nextTrips = replace ? [] : (Array.isArray(state.trips) ? [...state.trips] : []);
         const seen = new Set(nextTrips.map(t=> normalizeKey(`${t?.dateISO||""}|${t?.dealer||""}|${t?.area||""}|${to2(Number(t?.pounds)||0)}|${to2(Number(t?.amount)||0)}`)));
@@ -483,15 +525,23 @@ function importBackupFromFile(file){
           seen.add(key);
         }
 
-        const nextAreas = Array.isArray(state.areas) ? [...state.areas] : [];
+        const nextAreas = replace ? [] : (Array.isArray(state.areas) ? [...state.areas] : []);
         for(const a of importedAreas){
           if(!nextAreas.includes(a)) nextAreas.push(a);
         }
 
+        const nextDealers = replace ? [] : (Array.isArray(state.dealers) ? [...state.dealers] : []);
+        for(const d of importedDealers){
+          if(!nextDealers.includes(d)) nextDealers.push(d);
+        }
+
         state.trips = nextTrips;
         state.areas = nextAreas;
+        state.dealers = nextDealers;
+        ensureAreas();
+        ensureDealers();
         saveState();
-        resolve({ tripsAdded: importedTrips.length, mode: replace ? "replace" : "merge" });
+        resolve({ mode: replace ? "replace" : "merge", tripsInFile: importedTrips.length, areasInFile: importedAreas.length, dealersInFile: importedDealers.length });
       }catch(e){
         reject(e);
       }
@@ -550,6 +600,37 @@ function ensureDealers(){
 }
 
 
+function getLastUniqueFromTrips(field, maxN){
+  const out = [];
+  const seen = new Set();
+  const trips = Array.isArray(state.trips) ? state.trips : [];
+  for(let i = trips.length - 1; i >= 0; i--){
+    const t = trips[i];
+    const raw = String(t?.[field] || "").trim();
+    if(!raw) continue;
+    const key = raw.toLowerCase();
+    if(seen.has(key)) continue;
+    seen.add(key);
+    out.push(raw);
+    if(out.length >= maxN) break;
+  }
+  return out;
+}
+
+function findCanonicalFromList(value, list){
+  const v = String(value||"").trim();
+  if(!v) return "";
+  const key = v.toLowerCase();
+  for(const item of (Array.isArray(list)?list:[])){
+    const s = String(item||"").trim();
+    if(!s) continue;
+    if(s.toLowerCase() === key) return s;
+  }
+  return "";
+}
+
+
+
 function findDuplicateTrip(candidate, excludeId=""){
   const trips = Array.isArray(state.trips) ? state.trips : [];
   for(const t of trips){
@@ -561,6 +642,7 @@ function findDuplicateTrip(candidate, excludeId=""){
 
 let state = loadState();
 ensureAreas();
+ensureDealers();
 function showFatal(err){
   try{
     const pill = document.getElementById("bootPill");
@@ -726,6 +808,8 @@ function renderHome(){
   // ensure top of view on iPhone
   getApp().scrollTop = 0;
 
+  updateBuildBadge();
+
 
   // Open trip to edit
   getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
@@ -834,47 +918,27 @@ function renderNewTrip(){
     return `<option value="${String(a||"").replaceAll('"',"&quot;")}" ${sel}>${label}</option>`;
   }).join("");
 
-// Top 3 most-used Areas (from saved trips) for quick selection
-const topAreas = (()=>{
-  const counts = new Map();
-  for(const t of (Array.isArray(state.trips)?state.trips:[])){
-    const a = String(t.area||"").trim();
-    if(!a) continue;
-    counts.set(a, (counts.get(a)||0) + 1);
-  }
-  return Array.from(counts.entries())
-    .sort((x,y)=> (y[1]-x[1]) || x[0].localeCompare(y[0]))
-    .slice(0,3)
-    .map(([a])=>a);
-})();
+const dealerOptions = [""].concat(Array.isArray(state.dealers)?state.dealers:[]).map(d=>{
+  const label = d ? d : "—";
+  const sel = (String(draft.dealer||"").trim().toLowerCase() === String(d||"").trim().toLowerCase()) ? "selected" : "";
+  const v = String(d||"").replaceAll('"',"&quot;");
+  return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
+}).join("");
 
-// Top 3 most-used Dealers (from saved trips) for quick selection
-const topDealers = (()=>{
-  const counts = new Map(); // key=normalized, value={label,count}
-  for(const t of (Array.isArray(state.trips)?state.trips:[])){
-    const raw = String(t.dealer||"").trim();
-    if(!raw) continue;
-    const key = raw.toLowerCase();
-    const cur = counts.get(key);
-    if(cur) cur.count += 1;
-    else counts.set(key, { label: raw, count: 1 });
-  }
+// Last 3 unique Areas (based on entry order; ignores filters)
+const topAreas = (getLastUniqueFromTrips("area", 3));
+if(!topAreas.length){
+  topAreas.push(...(Array.isArray(state.areas)?state.areas:[]).slice(0,3));
+}
 
-  const pool = (Array.isArray(state.dealers) && state.dealers.length)
-    ? state.dealers.map(d=>String(d||"").trim()).filter(Boolean)
-    : Array.from(counts.values()).map(o=>o.label);
 
-  const scored = pool.map(label=>{
-    const key = label.toLowerCase();
-    const c = counts.get(key);
-    return { label, count: c ? c.count : 0 };
-  });
 
-  return scored
-    .sort((x,y)=> (y.count-x.count) || x.label.localeCompare(y.label))
-    .slice(0,3)
-    .map(o=>o.label);
-})();getApp().innerHTML = `
+// Last 3 unique Dealers (based on entry order; ignores filters)
+const topDealers = (getLastUniqueFromTrips("dealer", 3));
+if(!topDealers.length){
+  topDealers.push(...(Array.isArray(state.dealers)?state.dealers:[]).slice(0,3));
+}
+;getApp().innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
@@ -921,7 +985,10 @@ const topDealers = (()=>{
 
         <div class="field">
           <div class="label">Dealer</div>
+          ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
+          <select class="select" id="t_dealerSelect">${dealerOptions}</select>
           <input class="input" id="t_dealer" placeholder="Machias Bay Seafood" value="${(draft.dealer||"").replaceAll('"',"&quot;")}" />
+          <div id="t_dealerPrompt"></div>
         </div>
 
         <div class="field">
@@ -953,6 +1020,7 @@ const topDealers = (()=>{
 
   const elDate = document.getElementById("t_date");
   const elDealer = document.getElementById("t_dealer");
+  const elDealerSelect = document.getElementById("t_dealerSelect");
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
   const elArea = document.getElementById("t_area");
@@ -970,6 +1038,52 @@ const topDealers = (()=>{
     elArea.addEventListener("input", persistDraft);
     elArea.addEventListener("change", persistDraft);
   }
+
+  if(elDealerSelect && elDealer){
+    elDealerSelect.addEventListener("change", ()=>{
+      const v = String(elDealerSelect.value||"").trim();
+      elDealer.value = v;
+      state.draft = state.draft || {};
+      state.draft.dealer = v;
+      saveDraft();
+      renderNewTrip();
+    });
+  }
+
+  if(elDealer){
+    elDealer.addEventListener("input", ()=>{
+      // typing resets prompt; canonicalize on blur instead of mid-typing
+      dealerPromptArmed = "";
+      updateDealerPrompt();
+    });
+
+    elDealer.addEventListener("blur", ()=>{
+      const raw = String(elDealer.value||"").trim();
+      const canonical = findCanonicalFromList(raw, state.dealers);
+      if(canonical){
+        // Q10=A: replace typed with saved canonical + sync dropdown
+        elDealer.value = canonical;
+        if(elDealerSelect) elDealerSelect.value = canonical;
+        dealerPromptArmed = "";
+        dealerPromptSuppressed = "";
+        updateDealerPrompt();
+        saveDraft();
+        return;
+      }
+      if(!raw){
+        dealerPromptArmed = "";
+        updateDealerPrompt();
+        saveDraft();
+        return;
+      }
+      // Q6=A: arm prompt on blur only (if not saved)
+      dealerPromptArmed = raw;
+      updateDealerPrompt();
+      saveDraft();
+      renderNewTrip();
+    });
+  }
+
 
 
 const topAreaWrap = document.getElementById("topAreas");
@@ -993,6 +1107,7 @@ if(topDealerWrap && elDealer){
     if(!btn) return;
     const d = btn.getAttribute("data-dealer") || "";
     elDealer.value = d;
+    if(elDealerSelect) elDealerSelect.value = d;
     state.draft = state.draft || {};
     state.draft.dealer = d;
     saveDraft();
@@ -1216,6 +1331,61 @@ const backBtn = document.getElementById("backHome");
     render();
   };
 
+  let dealerPromptArmed = "";
+  let dealerPromptSuppressed = "";
+
+  function updateDealerPrompt(){
+    const box = document.getElementById("t_dealerPrompt");
+    if(!box) return;
+    const current = String(document.getElementById("t_dealer")?.value||"").trim();
+    const canonical = findCanonicalFromList(current, state.dealers);
+    if(!current || canonical){
+      box.innerHTML = "";
+      return;
+    }
+    if(!dealerPromptArmed || dealerPromptArmed.toLowerCase() !== current.toLowerCase()){
+      box.innerHTML = "";
+      return;
+    }
+    if(dealerPromptSuppressed && dealerPromptSuppressed.toLowerCase() === current.toLowerCase()){
+      box.innerHTML = "";
+      return;
+    }
+
+    box.innerHTML = `<div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">
+      <div class="muted small">Save <b>${escapeHtml(current)}</b> to Dealers?</div>
+      <button class="smallbtn" id="t_saveDealer">Save</button>
+      <button class="smallbtn" id="t_noSaveDealer">Not now</button>
+    </div>`;
+
+    document.getElementById("t_saveDealer")?.addEventListener("click", ()=>{
+      state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
+      state.dealers.push(current);
+      ensureDealers();
+      saveState();
+
+      const canon = findCanonicalFromList(current, state.dealers) || current;
+      const el = document.getElementById("t_dealer");
+      if(el) el.value = canon;
+      const sel = document.getElementById("t_dealerSelect");
+      if(sel) sel.value = canon;
+
+      dealerPromptArmed = "";
+      dealerPromptSuppressed = "";
+      box.innerHTML = "";
+      saveDraft();
+      renderNewTrip();
+    });
+
+    document.getElementById("t_noSaveDealer")?.addEventListener("click", ()=>{
+      dealerPromptSuppressed = current;
+      dealerPromptArmed = "";
+      box.innerHTML = "";
+    });
+  }
+
+
+
   document.getElementById("cancelTrip").onclick = ()=>{
     // Cancel returns home without saving
     state.view = "home";
@@ -1285,41 +1455,21 @@ function renderReviewTrip(){
   const dealerOptionsR = [""].concat(Array.isArray(state.dealers)?state.dealers:[]).map(dv=>{
     const label = dv ? dv : "—";
     const sel = (String(d.dealer||"").trim().toLowerCase() === String(dv||"").trim().toLowerCase()) ? "selected" : "";
-    return `<option value="${String(dv||"").replaceAll('"',"&quot;")}" ${sel}>${label}</option>`;
+    const v = String(dv||"").replaceAll('"',"&quot;");
+    return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
   }).join("");
 
-  const topAreasR = (()=>{
-    const counts = new Map();
-    for(const t of (Array.isArray(state.trips)?state.trips:[])){
-      const a = String(t.area||"").trim();
-      if(!a) continue;
-      counts.set(a, (counts.get(a)||0) + 1);
-    }
-    return Array.from(counts.entries())
-      .sort((x,y)=> (y[1]-x[1]) || x[0].localeCompare(y[0]))
-      .slice(0,3)
-      .map(([a])=>a);
-  })();
+  const topAreasR = (getLastUniqueFromTrips("area", 3));
+  if(!topAreasR.length){
+    topAreasR.push(...(Array.isArray(state.areas)?state.areas:[]).slice(0,3));
+  }
 
 // Top 3 most-used Dealers (from saved trips) for quick selection
-const topDealersR = (()=>{
-  const counts = new Map();
-  for(const t of (Array.isArray(state.trips)?state.trips:[])){
-    const raw = String(t.dealer||"").trim();
-    if(!raw) continue;
-    const key = raw.toLowerCase();
-    counts.set(key, (counts.get(key)||0) + 1);
+  // Last 3 unique Dealers (based on entry order; ignores filters)
+  const topDealersR = (getLastUniqueFromTrips("dealer", 3));
+  if(!topDealersR.length){
+    topDealersR.push(...(Array.isArray(state.dealers)?state.dealers:[]).slice(0,3));
   }
-  const fromTrips = Array.from(counts.entries())
-    .sort((x,y)=> (y[1]-x[1]) || x[0].localeCompare(y[0]))
-    .slice(0,3)
-    .map(([k])=>{
-      const match = (Array.isArray(state.dealers)?state.dealers:[]).find(dv=>String(dv||"").trim().toLowerCase()===k);
-      return match || k;
-    });
-  if(fromTrips.length) return fromTrips;
-  return (Array.isArray(state.dealers)?state.dealers:[]).slice(0,3);
-})();
 getApp().innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
@@ -1342,6 +1492,7 @@ getApp().innerHTML = `
           ${renderTopDealerChips(topDealersR, d.dealer, "topDealersR")}
           <select class="select" id="r_dealerSelect">${dealerOptionsR}</select>
           <input class="input" id="r_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(d.dealer||""))}" />
+          <div id="r_dealerPrompt"></div>
         </div>
 
         <div class="field">
@@ -1401,21 +1552,85 @@ getApp().innerHTML = `
   const elPoundsLive = document.getElementById("r_pounds");
   const elAmountLive = document.getElementById("r_amount");
   const elAreaLive = document.getElementById("r_area");
+  const elDateLive = document.getElementById("r_date");
+  const elDealerLive = document.getElementById("r_dealer");
+  const elDealerSelectLive = document.getElementById("r_dealerSelect");
 
   const updateReviewDerived = ()=>{
     if(!state.reviewDraft) return;
     const p = parseNum(elPoundsLive ? elPoundsLive.value : "");
     const a = parseMoney(elAmountLive ? elAmountLive.value : "");
     const area = String(elAreaLive ? elAreaLive.value : "").trim();
+    const dateMDY = String(elDateLive ? elDateLive.value : "").trim();
+    const dealer = normalizeDealerDisplay(String(elDealerLive ? elDealerLive.value : "").trim());
     state.reviewDraft.pounds = p;
     state.reviewDraft.amount = a;
     state.reviewDraft.area = area;
+    state.reviewDraft.dateMDY = dateMDY;
+    state.reviewDraft.dealer = dealer;
     if(pplPill){
       const v = computePPL(Number(p||0), Number(a||0));
       pplPill.innerHTML = `Price/Lb: <b>${formatMoney(v)}</b>`;
     }
     saveState();
   };
+
+  function updateReviewDealerPrompt(){
+    const box = document.getElementById("r_dealerPrompt");
+    if(!box) return;
+    const current = String(document.getElementById("r_dealer")?.value||"").trim();
+    const canonical = findCanonicalFromList(current, state.dealers);
+    if(!current || canonical){
+      box.innerHTML = "";
+      return;
+    }
+    const rd = state.reviewDraft || {};
+    const armed = String(rd._dealerPromptValue||"").trim();
+    const suppressed = String(rd._dealerPromptSuppressed||"").trim();
+    if(!armed || armed.toLowerCase() !== current.toLowerCase()){
+      box.innerHTML = "";
+      return;
+    }
+    if(suppressed && suppressed.toLowerCase() === current.toLowerCase()){
+      box.innerHTML = "";
+      return;
+    }
+    box.innerHTML = `<div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">
+      <div class="muted small">Save <b>${escapeHtml(current)}</b> to Dealers?</div>
+      <button class="smallbtn" id="r_saveDealer">Save</button>
+      <button class="smallbtn" id="r_noSaveDealer">Not now</button>
+    </div>`;
+
+    document.getElementById("r_saveDealer")?.addEventListener("click", ()=>{
+      state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
+      state.dealers.push(current);
+      ensureDealers();
+      saveState();
+
+      const canon = findCanonicalFromList(current, state.dealers) || current;
+      const el = document.getElementById("r_dealer");
+      if(el) el.value = canon;
+      const sel = document.getElementById("r_dealerSelect");
+      if(sel) sel.value = canon;
+
+      state.reviewDraft = state.reviewDraft || {};
+      state.reviewDraft.dealer = canon;
+      state.reviewDraft._dealerPromptValue = null;
+      state.reviewDraft._dealerPromptSuppressed = null;
+      saveState();
+      renderReviewTrip();
+    });
+
+    document.getElementById("r_noSaveDealer")?.addEventListener("click", ()=>{
+      state.reviewDraft = state.reviewDraft || {};
+      state.reviewDraft._dealerPromptSuppressed = current;
+      state.reviewDraft._dealerPromptValue = null;
+      saveState();
+      updateReviewDealerPrompt();
+    });
+  }
+
+
 
   // iOS sometimes fires change more reliably than input for certain keyboards/pickers.
   [elPoundsLive, elAmountLive].forEach(el=>{
@@ -1429,6 +1644,52 @@ getApp().innerHTML = `
     elAreaLive.addEventListener("change", updateReviewDerived);
   }
 
+
+  [elDateLive, elDealerLive].forEach(el=>{
+    if(!el) return;
+    el.addEventListener("input", updateReviewDerived);
+    el.addEventListener("change", updateReviewDerived);
+    el.addEventListener("blur", updateReviewDerived);
+  });
+
+  if(elDealerLive){
+    elDealerLive.addEventListener("blur", ()=>{
+      const raw = String(elDealerLive.value||"").trim();
+      const canonical = findCanonicalFromList(raw, state.dealers);
+      if(canonical){
+        elDealerLive.value = canonical;
+        if(elDealerSelectLive) elDealerSelectLive.value = canonical;
+        state.reviewDraft = state.reviewDraft || {};
+        state.reviewDraft.dealer = canonical;
+        state.reviewDraft._dealerPromptValue = null;
+        state.reviewDraft._dealerPromptSuppressed = null;
+        saveState();
+        updateReviewDealerPrompt();
+        updateReviewDerived();
+        return;
+      }
+      state.reviewDraft = state.reviewDraft || {};
+      state.reviewDraft.dealer = raw;
+      state.reviewDraft._dealerPromptValue = raw ? raw : null;
+      saveState();
+      updateReviewDealerPrompt();
+      updateReviewDerived();
+    });
+    elDealerLive.addEventListener("input", ()=>{
+      state.reviewDraft = state.reviewDraft || {};
+      state.reviewDraft._dealerPromptValue = null;
+      saveState();
+      updateReviewDealerPrompt();
+    });
+  }
+  if(elDealerSelectLive && elDealerLive){
+    elDealerSelectLive.addEventListener("change", ()=>{
+      const v = String(elDealerSelectLive.value||"").trim();
+      elDealerLive.value = v;
+      updateReviewDerived();
+    });
+  }
+
   const topAreaWrapR = document.getElementById("topAreasR");
 const topDealerWrapR = document.getElementById("topDealersR");
   if(topAreaWrapR && elAreaLive){
@@ -1437,6 +1698,17 @@ const topDealerWrapR = document.getElementById("topDealersR");
       if(!btn) return;
       const a = btn.getAttribute("data-area") || "";
       elAreaLive.value = a;
+      updateReviewDerived();
+    });
+  }
+
+  if(topDealerWrapR && elDealerLive){
+    topDealerWrapR.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button[data-dealer]");
+      if(!btn) return;
+      const d = btn.getAttribute("data-dealer") || "";
+      elDealerLive.value = d;
+      if(elDealerSelectLive) elDealerSelectLive.value = d;
       updateReviewDerived();
     });
   }
@@ -2135,6 +2407,7 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
         <span class="muted small"></span>
       </div>
       <div class="hint">Manage areas used on trips. Delete-all now requires typing DELETE.</div>
+      <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
     </div>
 
     <div class="card">
@@ -2247,6 +2520,7 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
   };
 
 
+  getApp().
   getApp().querySelectorAll("[data-del-area]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const idx = Number(btn.getAttribute("data-del-area"));
@@ -2257,21 +2531,22 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
       saveState();
       renderSettings();
     });
+  });
 
   getApp().querySelectorAll("[data-del-dealer]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const i = parseInt(btn.getAttribute("data-del-dealer")||"-1", 10);
       if(!(i>=0)) return;
-      state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
+      const label = state.dealers[i];
+      if(!confirm(`Delete dealer "${label}"?`)) return;
       state.dealers.splice(i,1);
       ensureDealers();
       saveState();
       renderSettings();
     });
   });
-  });
 
-  document.getElementById("resetData").onclick = ()=>{
+document.getElementById("resetData").onclick = ()=>{
     // Phase 3B-1: Typed confirm to prevent accidental wipe
     const typed = prompt('Type DELETE to permanently erase ALL trips and settings on this device.');
     if(typed !== "DELETE") return;
