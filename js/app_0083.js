@@ -2450,9 +2450,15 @@ getApp().innerHTML = `
       </div>
     `;
     getApp().scrollTop = 0;
-    document.getElementById("home").onclick = ()=>{ state.view="home"; state.lastAction="nav:home"; saveState(); render(); };
-    document.getElementById("settings").onclick = ()=>{ state.view="settings"; state.lastAction="nav:settings"; saveState(); render(); };
-    document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
+  const _el_home = document.getElementById("home");
+  if(_el_home) _el_home.onclick = ()=>{ state.view="home";
+state.lastAction="nav:home"; saveState(); render(); };
+  const _el_settings = document.getElementById("settings");
+  if(_el_settings) _el_settings.onclick = ()=>{ state.view="settings";
+state.lastAction="nav:settings"; saveState(); render(); };
+  const _el_help = document.getElementById("help");
+  if(_el_help) _el_help.onclick = ()=>{ state.view="help";
+state.lastAction="nav:help"; saveState(); render(); };
     getApp().querySelectorAll(".chip[data-f]").forEach(btn=>{
       btn.onclick = ()=>{
         state.filter = btn.getAttribute("data-f");
@@ -2708,7 +2714,7 @@ const renderTablesSection = ()=>{
         ${seg("tables","Tables")}
       </div>
 
-      <div class="hint">Reporting v2. Read-only.</div>
+      <div class="hint"></div>
     </div>
 
     ${mode === "charts" ? renderChartsSection() : renderTablesSection()}
@@ -2717,10 +2723,13 @@ const renderTablesSection = ()=>{
   getApp().scrollTop = 0;
 
   // nav
-  document.getElementById("home").onclick = ()=>{ state.view="home"; saveState(); render(); };
-  document.getElementById("export").onclick = () => {
+  const _el_home = document.getElementById("home");
+  if(_el_home) _el_home.onclick = ()=>{ state.view="home";
+saveState(); render(); };
+  const _el_export = document.getElementById("export");
+  if(_el_export) _el_export.onclick = () => {
     const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
-    const tripsFiltered = getFilteredTrips();
+const tripsFiltered = getFilteredTrips();
 
     const choice = prompt(
       "Export options:\n1 = Filtered (" + (state.filter||"YTD") + ")\n2 = All trips\n3 = Date range\n\nEnter 1, 2, or 3:",
@@ -2743,7 +2752,9 @@ const renderTablesSection = ()=>{
     exportTrips(tripsFiltered, (state.filter||"YTD"));
     showToast("CSV exported");
   };
-  document.getElementById("settings").onclick = ()=>{ state.view="settings"; state.lastAction="nav:settings"; saveState(); render(); };
+  const _el_settings = document.getElementById("settings");
+  if(_el_settings) _el_settings.onclick = ()=>{ state.view="settings";
+state.lastAction="nav:settings"; saveState(); render(); };
   const h = document.getElementById("help");
   if(h) h.onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
 
