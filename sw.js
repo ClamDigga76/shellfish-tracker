@@ -1,6 +1,6 @@
 // Simple offline cache for Shellfish Tracker (RC)
 const APP_VERSION = "ESM-0083-RC1.1";
-const CACHE_VERSION = "v39";
+const CACHE_VERSION = "v40";
 const CACHE_NAME = `shellfish-tracker-${APP_VERSION}-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   "./",

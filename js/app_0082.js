@@ -1458,13 +1458,7 @@ if(topDealerWrap && elDealer){
       }
     };
   }
-
-  if(elPaste){
-    elPaste.addEventListener("focus", ()=>{ maybePromptOnFocus(); });
-  }
-
-  renderRecents();
-  maybePromptOnEntry();
+renderRecents();
 const backBtn = document.getElementById("backHome");
   if(backBtn){ backBtn.onclick = ()=>{ state.view="home"; saveState(); render(); }; }
 
