@@ -2018,38 +2018,8 @@ function renderReports(){
   const f = state.filter || "YTD";
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
 
-  if(!trips.length){
-    
-  const renderExtremeTrip = (row, label, valFn)=>{
-    if(!row) return `<div class="muted small">No matching trips found.</div>`;
-    return `
-      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
-        <div>
-          <b>${escapeHtml(row.date || "")}</b>
-          <div class="muted small">${escapeHtml(row.dealer)} • ${escapeHtml(row.area)}</div>
-        </div>
-        <div class="muted small" style="text-align:right">
-          <div>${escapeHtml(label)}: <b>${escapeHtml(String(valFn(row)))}</b></div>
-        </div>
-      </div>
-    `;
-  };
 
-  const renderExtremePriceTrip = (row)=>{
-    if(!row) return `<div class="muted small">No priced trips found.</div>`;
-    return `
-      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
-        <div>
-          <b>${escapeHtml(row.date || "")}</b>
-          <div class="muted small">${escapeHtml(row.dealer)} • ${escapeHtml(row.area)}</div>
-        </div>
-        <div class="muted small" style="text-align:right">
-          <div>Lbs: <b>${to2(row.lbs)}</b></div>
-          <div>$ / lb: <b>${formatMoney(to2(row.ppl))}</b></div>
-        </div>
-      </div>
-    `;
-  };
+  if(!trips.length){
 
 getApp().innerHTML = `
       <div class="card">
@@ -2138,24 +2108,10 @@ getApp().innerHTML = `
     const avg = x.lbs>0 ? x.amt/x.lbs : 0;
     return { month:m, ...x, avg };
   });
-
-  const priceTrips = trips.map(t=>{
-    const lbs = Number(t?.pounds)||0;
-    const amt = Number(t?.amount)||0;
-    const ppl = computePPL(lbs, amt);
-    return {
-      id: t?.id||"",
-      dateISO: t?.dateISO||"",
-      date: formatDateMDY(t?.dateISO),
-      dealer: normalizeDealerDisplay(t?.dealer||"") || "(Unspecified)",
-      area: ((t?.area||"").toString().trim()) || "(Unspecified)",
-      lbs: to2(lbs),
-      ppl
-    };
-  }).filter(x=> Number(x.ppl) > 0);
   const safe = trips.map(t=>{
     const lbs = Number(t?.pounds)||0;
     const amt = Number(t?.amount)||0;
+    const pplRaw = (lbs>0 && amt>0) ? (amt / lbs) : 0;
     return {
       id: t?.id||"",
       dateISO: t?.dateISO||"",
@@ -2164,7 +2120,8 @@ getApp().innerHTML = `
       area: ((t?.area||"").toString().trim()) || "(Unspecified)",
       lbs,
       amt,
-      ppl: computePPL(lbs, amt)
+      pplRaw,
+      ppl: to2(pplRaw)
     };
   });
 
@@ -2189,10 +2146,9 @@ getApp().innerHTML = `
 
   const maxAmt = pickExtreme(safe.filter(x=>x.amt>0), x=>x.amt, +1);
   const minAmt = pickExtreme(safe.filter(x=>x.amt>0), x=>x.amt, -1);
-
-  const pplRows = safe.filter(x=>x.ppl>0);
-  const maxPpl = pickExtreme(pplRows, x=>x.ppl, +1);
-  const minPpl = pickExtreme(pplRows, x=>x.ppl, -1);
+  const pplRows = safe.filter(x=>Number.isFinite(x.pplRaw) && x.pplRaw>0);
+  const maxPpl = pickExtreme(pplRows, x=>x.pplRaw, +1);
+  const minPpl = pickExtreme(pplRows, x=>x.pplRaw, -1);
 
   const renderAggList = (rows, emptyMsg) => {
     if(!rows.length) return `<div class="muted small">${emptyMsg}</div>`;
@@ -2227,23 +2183,6 @@ getApp().innerHTML = `
     `).join("").replace(/<div class="sep"><\/div>\s*$/,"");
   };
 
-  const renderTripPriceList = (rows, emptyMsg) => {
-    if(!rows.length) return `<div class="muted small">${emptyMsg}</div>`;
-    return rows.map(r=>`
-      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
-        <div>
-          <b>${escapeHtml(r.date || "")}</b>
-          <div class="muted small">${escapeHtml(r.dealer)} • ${escapeHtml(r.area)}</div>
-        </div>
-        <div class="muted small" style="text-align:right">
-          <div>Lbs: <b>${escapeHtml(r.lbs)}</b></div>
-          <div>$ / lb: <b>${formatMoney(to2(r.ppl))}</b></div>
-        </div>
-      </div>
-      <div class="sep"></div>
-    `).join("").replace(/<div class="sep"><\/div>\s*$/,"");
-  };
-
   const renderChartsSection = ()=>{
     return `
       <div class="card">
@@ -2265,7 +2204,27 @@ getApp().innerHTML = `
     `;
   };
 
-  const renderTablesSection = ()=>{
+  
+  const renderExtremeRow = (row, headlineLabel, headlineValue)=>{
+    if(!row) return `<div class="muted small">No matching trips found.</div>`;
+    const hasPrice = Number.isFinite(row.pplRaw) && row.pplRaw>0;
+    return `
+      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
+        <div style="min-width:55%">
+          <b>${escapeHtml(row.date || "")}</b>
+          <div class="muted small">${escapeHtml(row.dealer)} • ${escapeHtml(row.area)}</div>
+        </div>
+        <div class="muted small" style="text-align:right;white-space:nowrap">
+          <div>${escapeHtml(headlineLabel)}: <b>${escapeHtml(String(headlineValue))}</b></div>
+          <div>Lbs: <b>${to2(row.lbs)}</b></div>
+          <div>Amount: <b>${formatMoney(to2(row.amt))}</b></div>
+          <div>$ / lb: <b>${hasPrice ? formatMoney(to2(row.ppl)) : "—"}</b></div>
+        </div>
+      </div>
+    `;
+  };
+
+const renderTablesSection = ()=>{
     return `
       <div class="card">
         <b>Dealer Summary</b>
@@ -2285,29 +2244,53 @@ getApp().innerHTML = `
         ${renderMonthList()}
       </div>
 
+      
       <div class="card">
         <b>High / Low Summary</b>
         <div class="sep"></div>
 
         <div class="muted small" style="margin-bottom:6px"><b>Highest lbs</b></div>
-        ${renderExtremeTrip(maxLbs, "Lbs", x=>to2(x.lbs))}
+        ${renderExtremeRow(maxLbs, "Lbs", to2(maxLbs?.lbs||0))}
         <div class="sep"></div>
         <div class="muted small" style="margin-bottom:6px"><b>Lowest lbs</b></div>
-        ${renderExtremeTrip(minLbs, "Lbs", x=>to2(x.lbs))}
+        ${renderExtremeRow(minLbs, "Lbs", to2(minLbs?.lbs||0))}
 
         <div class="sep"></div>
         <div class="muted small" style="margin-bottom:6px"><b>Highest $ amount</b></div>
-        ${renderExtremeTrip(maxAmt, "Amount", x=>formatMoney(to2(x.amt)))}
+        ${renderExtremeRow(maxAmt, "Amount", formatMoney(to2(maxAmt?.amt||0)))}
         <div class="sep"></div>
         <div class="muted small" style="margin-bottom:6px"><b>Lowest $ amount</b></div>
-        ${renderExtremeTrip(minAmt, "Amount", x=>formatMoney(to2(x.amt)))}
+        ${renderExtremeRow(minAmt, "Amount", formatMoney(to2(minAmt?.amt||0)))}
+
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>$ / lb</b></div>
+        ${pplRows.length ? `
+          <div class="muted small" style="margin-bottom:6px"><b>Highest $/lb</b></div>
+          ${renderExtremeRow(maxPpl, "$ / lb", formatMoney(to2(maxPpl?.pplRaw||0)))}
+          <div class="sep"></div>
+          <div class="muted small" style="margin-bottom:6px"><b>Lowest $/lb</b></div>
+          ${renderExtremeRow(minPpl, "$ / lb", formatMoney(to2(minPpl?.pplRaw||0)))}
+        ` : `<div class="muted small">No trips with valid pounds + amount in this range.</div>`}
+      </div>
+    <div class="muted small" style="margin-bottom:6px"><b>Highest lbs</b></div>
+        ${renderExtremeRow(maxLbs, "Lbs", x=>to2(x.lbs))}
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Lowest lbs</b></div>
+        ${renderExtremeRow(minLbs, "Lbs", x=>to2(x.lbs))}
+
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Highest $ amount</b></div>
+        ${renderExtremeRow(maxAmt, "Amount", x=>formatMoney(to2(x.amt)))}
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Lowest $ amount</b></div>
+        ${renderExtremeRow(minAmt, "Amount", x=>formatMoney(to2(x.amt)))}
 
         <div class="sep"></div>
         <div class="muted small" style="margin-bottom:6px"><b>Highest $/lb</b></div>
-        ${renderExtremePriceTrip(maxPpl)}
+        ${renderExtremeRow(maxPpl)}
         <div class="sep"></div>
         <div class="muted small" style="margin-bottom:6px"><b>Lowest $/lb</b></div>
-        ${renderExtremePriceTrip(minPpl)}
+        ${renderExtremeRow(minPpl)}
       </div>
 `;
   };
