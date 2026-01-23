@@ -2309,13 +2309,7 @@ getApp().innerHTML = `
         <div class="muted small" style="margin-bottom:6px"><b>Lowest $/lb</b></div>
         ${renderExtremePriceTrip(minPpl)}
       </div>
-        <div class="muted small" style="margin-bottom:6px"><b>Best $/lb</b></div>
-        ${renderTripPriceList(best, "No priced trips found.")}
-        <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>Worst $/lb</b></div>
-        ${renderTripPriceList(worst, "No priced trips found.")}
-      </div>
-    `;
+`;
   };
 
   getApp().innerHTML = `
