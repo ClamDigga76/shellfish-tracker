@@ -790,14 +790,19 @@ function renderHome(){
 
   getApp().innerHTML = `
     <div class="card">
-      <div class="row">
+      <div class="row" style="gap:10px;flex-wrap:wrap">
         <button class="btn primary" id="newTrip">＋ New Trip</button>
+        <button class="btn" id="pasteExp">📋 Paste Receipt <span class="muted small">(Experimental)</span> <span id="expWarn" style="cursor:pointer">⚠️</span></button>
+      </div>
+      <div id="expTip" class="muted small" style="display:none;margin-top:8px;line-height:1.35;padding:8px 10px;border:1px solid rgba(0,0,0,.08);border-radius:12px">Experimental. Always review Amount, Pounds, and Date before saving.</div>
+
+      <div class="row" style="margin-top:10px">
         <button class="btn" id="reports">📊 Reports</button>
         <button class="btn" id="settings">⚙️ Settings</button>
         <button class="btn" id="help">❓ Help</button>
       </div>
 
-      <div class="hint">Log a trip using Live Text copy/paste. Review → Confirm saves it.</div>
+      <div class="hint">Manual entry is recommended. Receipt paste is optional.</div>
     </div>
 
     ${pwaStorageNoteHTML}
@@ -852,7 +857,30 @@ function renderHome(){
   });
 
     document.getElementById("reports").onclick = ()=>{ state.view="reports"; state.lastAction="nav:reports"; saveState(); render(); };
-    document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
+    
+  const tip = document.getElementById("expTip");
+  const warn = document.getElementById("expWarn");
+  const toggleTip = (on)=>{
+    if(!tip) return;
+    tip.style.display = on ? "block" : "none";
+  };
+  if(warn){
+    warn.onclick = (e)=>{ e.stopPropagation(); toggleTip(true); };
+  }
+  // hide tooltip on outside tap
+  getApp().addEventListener("click", ()=> toggleTip(false));
+
+  const btnPaste = document.getElementById("pasteExp");
+  if(btnPaste){
+    btnPaste.onclick = ()=>{
+      state.view = "newTrip";
+      state.openPasteOnNewTrip = true;
+      saveState();
+      render();
+    };
+  }
+
+document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
 
   document.getElementById("settings").onclick = () => {
     state.view = "settings";
@@ -962,7 +990,7 @@ if(!topDealers.length){
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
         <b>New Trip</b>
-        <span class="muted small">Live Text (Copy/Paste)</span>
+        <span class="muted small">Manual entry</span>
       </div>
       <div class="hint">Enter the check info. Date should be harvest date (MM/DD/YYYY).</div>
     </div>
@@ -970,7 +998,7 @@ if(!topDealers.length){
     <div class="card">
       <div class="form">
         <div class="field">
-          <div class="label">Receipt text (copy → paste)</div>
+          <div class="label">Receipt paste (Experimental)</div>
 
           <div id="entryPrompt" class="muted small" style="display:none; margin-bottom:10px; padding:10px 12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:14px;">
             <div class="row" style="justify-content:space-between;align-items:center;gap:10px">
@@ -983,7 +1011,7 @@ if(!topDealers.length){
           </div>
 
           <button class="btn primary" id="pasteToReviewPrimary" style="width:100%;">Paste → Review</button>
-          <div class="hint">After copying receipt text with Live Text, tap <b>Paste → Review</b>.</div>
+          <div class="hint">Optional. Paste receipt text, then review before saving.</div>
 
           <div id="pasteFallbackHint" class="muted small" style="display:none; margin-top:10px;">
             If Paste doesn’t work, tap and hold in the box below and choose Paste, then tap <b>Paste → Review</b>.
@@ -1043,6 +1071,16 @@ if(!topDealers.length){
   const elArea = document.getElementById("t_area");
   
   const elPaste = document.getElementById("t_paste");
+
+  try{
+    if(state.openPasteOnNewTrip){
+      const det = document.getElementById("pasteDetails");
+      if(det) det.open = true;
+      det?.scrollIntoView?.({behavior:"smooth", block:"start"});
+      state.openPasteOnNewTrip = false;
+      saveState();
+    }
+  }catch{}
 
   // Persist draft as the user edits fields (fixes iOS select + prevents resets)
   const persistDraft = ()=>{ try{ saveDraft(); }catch{} };
@@ -2083,9 +2121,46 @@ function renderReports(){
       ppl
     };
   }).filter(x=> Number(x.ppl) > 0);
+  const safe = trips.map(t=>{
+    const lbs = Number(t?.pounds)||0;
+    const amt = Number(t?.amount)||0;
+    return {
+      id: t?.id||"",
+      dateISO: t?.dateISO||"",
+      date: formatDateMDY(t?.dateISO),
+      dealer: normalizeDealerDisplay(t?.dealer||"") || "(Unspecified)",
+      area: ((t?.area||"").toString().trim()) || "(Unspecified)",
+      lbs,
+      amt,
+      ppl: computePPL(lbs, amt)
+    };
+  });
 
-  const best = priceTrips.slice().sort((a,b)=> b.ppl - a.ppl).slice(0,3);
-  const worst = priceTrips.slice().sort((a,b)=> a.ppl - b.ppl).slice(0,3);
+  const pickExtreme = (rows, valueFn, dir)=>{
+    let best = null;
+    let bestVal = null;
+    for(const r of rows){
+      const v = Number(valueFn(r));
+      if(!Number.isFinite(v)) continue;
+      if(best === null){
+        best = r; bestVal = v; continue;
+      }
+      if(dir > 0 ? (v > bestVal) : (v < bestVal)){
+        best = r; bestVal = v;
+      }
+    }
+    return best;
+  };
+
+  const maxLbs = pickExtreme(safe.filter(x=>x.lbs>0), x=>x.lbs, +1);
+  const minLbs = pickExtreme(safe.filter(x=>x.lbs>0), x=>x.lbs, -1);
+
+  const maxAmt = pickExtreme(safe.filter(x=>x.amt>0), x=>x.amt, +1);
+  const minAmt = pickExtreme(safe.filter(x=>x.amt>0), x=>x.amt, -1);
+
+  const pplRows = safe.filter(x=>x.ppl>0);
+  const maxPpl = pickExtreme(pplRows, x=>x.ppl, +1);
+  const minPpl = pickExtreme(pplRows, x=>x.ppl, -1);
 
   const renderAggList = (rows, emptyMsg) => {
     if(!rows.length) return `<div class="muted small">${emptyMsg}</div>`;
@@ -2179,8 +2254,29 @@ function renderReports(){
       </div>
 
       <div class="card">
-        <b>Best / Worst Price</b>
+        <b>High / Low Summary</b>
         <div class="sep"></div>
+
+        <div class="muted small" style="margin-bottom:6px"><b>Highest lbs</b></div>
+        ${renderExtremeTrip(maxLbs, "Lbs", x=>to2(x.lbs))}
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Lowest lbs</b></div>
+        ${renderExtremeTrip(minLbs, "Lbs", x=>to2(x.lbs))}
+
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Highest $ amount</b></div>
+        ${renderExtremeTrip(maxAmt, "Amount", x=>formatMoney(to2(x.amt)))}
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Lowest $ amount</b></div>
+        ${renderExtremeTrip(minAmt, "Amount", x=>formatMoney(to2(x.amt)))}
+
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Highest $/lb</b></div>
+        ${renderExtremePriceTrip(maxPpl)}
+        <div class="sep"></div>
+        <div class="muted small" style="margin-bottom:6px"><b>Lowest $/lb</b></div>
+        ${renderExtremePriceTrip(minPpl)}
+      </div>
         <div class="muted small" style="margin-bottom:6px"><b>Best $/lb</b></div>
         ${renderTripPriceList(best, "No priced trips found.")}
         <div class="sep"></div>
@@ -2433,9 +2529,9 @@ function renderSettings(){
   ensureAreas();
   ensureDealers();
 
-const areaRows = state.areas.length ? state.areas.map((a, i)=>`
+  const areaRows = state.areas.length ? state.areas.map((a, i)=>`
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
-      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${a}</b></div>
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
       <button class="smallbtn danger" data-del-area="${i}">Delete</button>
     </div>
   `).join("") : `<div class="muted small" style="margin-top:10px">No areas yet. Add one below.</div>`;
@@ -2447,7 +2543,6 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
     </div>
   `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
 
-
   getApp().innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
@@ -2455,73 +2550,91 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
         <b>Settings</b>
         <span class="muted small"></span>
       </div>
-      <div class="hint">Manage areas used on trips. Delete-all now requires typing DELETE.</div>
-      <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
+      <div class="hint">Lists, backups, and help.</div>
     </div>
 
     <div class="card">
-      <b>Areas</b>
+      <b>Lists</b>
       <div class="sep"></div>
 
-      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-        <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
-        <button class="btn primary" id="addArea">Add</button>
+      <div style="margin-top:10px">
+        <div class="muted small"><b>Areas</b></div>
+        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+          <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
+          <button class="btn primary" id="addArea">Add</button>
+        </div>
+        ${areaRows}
       </div>
 
-      ${areaRows}
-    </div>
-
-    <div class="card">
-      <b>Dealers</b>
-      <div class="sep"></div>
-
-      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-        <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
-        <button class="btn primary" id="addDealer">Add</button>
+      <div style="margin-top:18px">
+        <div class="muted small"><b>Dealers</b></div>
+        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+          <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
+          <button class="btn primary" id="addDealer">Add</button>
+        </div>
+        ${dealerRows}
       </div>
-
-      ${dealerRows}
     </div>
 
     <div class="card">
       <b>Data</b>
       <div class="sep"></div>
-      <div class="muted small" style="margin-top:10px">Backup lets you save trips/areas as a <b>.json</b> file on this device (Files/Drive) for safekeeping.</div>
-      <div class="row" style="margin-top:12px">
+      <div class="muted small" style="margin-top:10px">Create a backup file you can store in Files/Drive. Restore brings it back later.</div>
+      <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
         <button class="btn" id="downloadBackup">💾 Create Backup</button>
         <button class="btn" id="restoreBackup">📥 Restore Backup</button>
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" style="display:none" />
       </div>
-      <div class="muted small" style="margin-top:10px">Reset clears all trips and settings on this device.</div>
+    </div>
+
+    <div class="card">
+      <b>Help</b>
+      <div class="sep"></div>
+      <div class="muted small" style="margin-top:10px">Short instructions for manual entry, receipt paste, backups, and install.</div>
       <div class="row" style="margin-top:12px">
-        <button class="btn danger" id="resetData">Reset App Data</button>
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="copyDebug">Copy Debug Info</button>
-        <button class="btn" id="feedback">Send Feedback</button>
+        <button class="btn" id="openHelp">Open Help</button>
       </div>
     </div>
 
-      </div>
+    <div class="card">
+      <b>About</b>
+      <div class="sep"></div>
+      <div class="muted small" style="margin-top:10px">Version: <b>${VERSION}</b></div>
+      <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
     </div>
+
+    <details class="card" id="advancedBox">
+      <summary style="cursor:pointer;"><b>Advanced</b></summary>
+      <div class="sep" style="margin-top:10px"></div>
+
+      <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="copyDebug">Copy Details</button>
+        <button class="btn" id="refreshApp">Refresh App</button>
+      </div>
+
+      <div class="muted small" style="margin-top:10px">Erase removes all trips and lists on this device. Use a backup first.</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn danger" id="resetData">Erase All Data</button>
+      </div>
+    </details>
   `;
 
   getApp().scrollTop = 0;
-
   updateBuildBadge();
 
   const goHome = ()=>{ state.view="home"; saveState(); render(); };
   document.getElementById("backHome").onclick = goHome;
+
+  document.getElementById("openHelp").onclick = ()=>{ state.view="help"; saveState(); render(); };
 
   // Backup / Restore (JSON)
   const backupFile = document.getElementById("backupFile");
   document.getElementById("downloadBackup").onclick = ()=>{
     try{
       exportBackup();
-      // Mark last backup time for reminders
       state.settings = state.settings || {};
       state.settings.lastBackupAt = Date.now();
       state.settings.lastBackupTripCount = Array.isArray(state.trips) ? state.trips.length : 0;
-      // Clear any snooze since user backed up
       state.settings.backupSnoozeUntil = 0;
       saveState();
       showToast("Backup created");
@@ -2538,8 +2651,15 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
       const file = backupFile.files && backupFile.files[0];
       if(!file) return;
       try{
-        await importBackupFromFile(file);
-        showToast("Backup restored");
+        const res = await importBackupFromFile(file);
+        const msg = res.mode === "replace"
+          ? `Restored backup (${res.tripsAdded} trips)`
+          : `Merged backup (+${res.tripsAdded} trips)`;
+        showToast(msg);
+        if(res.warnings && res.warnings.length){
+          const top = res.warnings.slice(0,3).join("\n");
+          alert(`Restore warnings:\n\n${top}${res.warnings.length>3 ? `\n\n(+${res.warnings.length-3} more)` : ""}`);
+        }
         renderSettings();
       }catch(e){
         console.error(e);
@@ -2570,7 +2690,6 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
     renderSettings();
   };
 
-
   getApp().querySelectorAll("[data-del-area]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const idx = Number(btn.getAttribute("data-del-area"));
@@ -2596,16 +2715,32 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
     });
   });
 
-document.getElementById("resetData").onclick = ()=>{
-    // Phase 3B-1: Typed confirm to prevent accidental wipe
-    const typed = prompt('Type DELETE to permanently erase ALL trips and settings on this device.');
+  document.getElementById("copyDebug").onclick = async ()=>{
+    const ok = await copyTextToClipboard(getDebugInfo());
+    showToast(ok ? "Details copied" : "Copy failed");
+  };
+
+  document.getElementById("refreshApp").onclick = async ()=>{
+    try{
+      if("serviceWorker" in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r=>r.unregister()));
+      }
+      if("caches" in window){
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k=>caches.delete(k)));
+      }
+    }catch(_){}
+    location.reload();
+  };
+
+  document.getElementById("resetData").onclick = ()=>{
+    const typed = prompt('Type DELETE to permanently erase ALL trips and lists on this device.');
     if(typed !== "DELETE") return;
-    state = { trips: [], areas: [], filter: "YTD", view: "home" };
+    state = { trips: [], areas: [], dealers: [], filter: "YTD", view: "home", settings: {} };
     saveState();
     render();
   };
-
-  // (backup handlers are wired above)
 }
 
 
@@ -2617,64 +2752,52 @@ function renderHelp(){
         <b>Help</b>
         <span class="muted small"></span>
       </div>
-      <div class="hint">Fast reference for field testing.</div>
+      <div class="hint">Quick help for entering trips and installing the app.</div>
     </div>
 
     <div class="card">
-      <b>Quick Start</b>
+      <b>Manual Entry (Recommended)</b>
       <div class="sep"></div>
       <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
-        <li>Take a photo of the check/receipt (Camera).</li>
-        <li>Tap the photo thumbnail → Live Text → Copy.</li>
-        <li>Open Shellfish Tracker → tap <b>Paste → Review</b>.</li>
-        <li>Fix anything that looks wrong (especially pounds), then <b>Confirm</b>.</li>
+        <li>Pick <b>Dealer</b> (chips or type).</li>
+        <li>Pick <b>Area</b> (chips or dropdown).</li>
+        <li>Enter <b>Pounds + Amount + Date</b>, then <b>Save</b>.</li>
       </ol>
-      <div class="hint">Note: iOS may show a small <b>Paste</b> bubble for privacy. Tap it once to allow paste.</div>
     </div>
 
     <div class="card">
-      <b>Backup</b>
+      <b>Receipt Paste (Experimental)</b>
       <div class="sep"></div>
-      <div class="muted small">Settings → Data → <b>Create Backup</b> downloads a <b>.json</b> file (Trips + Areas).</div>
-      <ul class="muted small" style="margin:8px 0 0 18px;line-height:1.45">
-        <li><b>iPhone/iPad:</b> after tapping Create Backup, open Safari’s <b>Downloads</b> (down-arrow icon) to view it, or save it into the <b>Files</b> app.</li>
-        <li><b>Android:</b> backups usually go to the <b>Downloads</b> folder. You can move them to Drive if you want.</li>
-      </ul>
+      <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
+        <li>iPhone: Photo → Live Text → Copy.</li>
+        <li><b>Paste</b> into the app.</li>
+        <li><b>Review</b> the fields.</li>
+        <li><b>Save</b>.</li>
+      </ol>
+      <div class="hint">Tip: iOS may show a small <b>Paste</b> bubble for privacy. Tap it once to allow paste.</div>
     </div>
 
     <div class="card">
-      <b>Add to Home Screen (PWA)</b>
+      <b>Backup & Restore</b>
       <div class="sep"></div>
-      <div class="muted small"><b>iPhone:</b> Share → Add to Home Screen. Launch from the icon for the best app-like feel.</div>
-      <div class="muted small" style="margin-top:8px"><b>Android:</b> Menu → Install app (or Add to Home screen).</div>
+      <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
+        <li>Backup often.</li>
+        <li>Restore if you reinstall.</li>
+        <li><b>Trips + Areas + Dealers</b> included.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <b>Install the App (iPhone & Android)</b>
+      <div class="sep"></div>
+      <div class="muted small"><b>iPhone/iPad:</b> Share → <b>Add to Home Screen</b>. Launch from the icon for the best app-like feel.</div>
+      <div class="muted small" style="margin-top:8px"><b>Android:</b> Menu → <b>Install app</b> (or Add to Home screen).</div>
       <div class="muted small" style="margin-top:8px;line-height:1.45"><b>Data note:</b> Trips saved in Safari may not appear in the installed Home Screen app (and vice-versa) because they can use separate on-device storage. Use <b>Create Backup</b> in the one that has your trips, then <b>Restore Backup</b> in the other to move them.</div>
-
-    </div>
-
-    <div class="card">
-      <b>About / Debug</b>
-      <div class="sep"></div>
-      <div class="muted small">Version: <b>${VERSION}</b></div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn" id="copyDebug">Copy Debug Info</button>
-        <button class="btn" id="feedback">Send Feedback</button>
-      </div>
     </div>
   `;
   getApp().scrollTop = 0;
 
   document.getElementById("backHome").onclick = ()=>{ state.view="home"; state.lastAction="nav:home"; saveState(); render(); };
-
-  document.getElementById("copyDebug").onclick = async ()=>{
-    const ok = await copyTextToClipboard(getDebugInfo());
-    showToast(ok ? "Debug info copied" : "Copy failed");
-  };
-
-  document.getElementById("feedback").onclick = ()=>{
-    const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
-    const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
-    location.href = `mailto:?subject=${subj}&body=${body}`;
-  };
 }
 
 function renderAbout(){
