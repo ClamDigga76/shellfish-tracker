@@ -82,6 +82,19 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 
 #credits{margin-top:14px;padding:10px 14px 12px;color:rgba(255,255,255,.65);font-size:13px;border-top:1px solid rgba(255,255,255,.08)}
 #credits a{color:inherit;text-decoration:none}
+
+/* Reports: High / Low Summary (stacked) */
+.hlHeader{font-size:18px;font-weight:800;letter-spacing:0.3px;margin:10px 0 6px;}
+.hlRow{padding:8px 0;}
+.hlTop{margin-bottom:6px;}
+.hlDate{font-size:28px;font-weight:800;line-height:1.05;}
+.hlSub{opacity:.78;font-size:15px;}
+.hlStats{display:flex;flex-direction:column;gap:4px;}
+.hlHeadline{display:flex;justify-content:space-between;gap:12px;}
+.hlLine{display:flex;justify-content:space-between;gap:12px;}
+.hlLabel{opacity:.78;}
+.hlValue{font-weight:800;}
+
 </style>
 </head>
 <body>
@@ -215,7 +228,7 @@ If it still fails: open Safari Settings → Advanced → Website Data → delete
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const swUrl = "./sw.js?v=33";
+        const swUrl = "./sw.js?v=34";
         const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
 
         

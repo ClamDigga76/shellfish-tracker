@@ -2531,15 +2531,15 @@ getApp().innerHTML = `
         <div class="hint">Read-only. Uses the same range filter.</div>
         <div class="sep"></div>
 
-        <div class="muted small" style="margin-bottom:6px"><b>Avg $/lb by Month</b></div>
+        <div class="hlHeader">Avg $/lb by Month</div>
         <canvas id="c_ppl" class="chart" height="180"></canvas>
 
         <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>Total $ by Dealer (Top 8)</b></div>
+        <div class="hlHeader">Total $ by Dealer (Top 8)</div>
         <canvas id="c_dealer" class="chart" height="220"></canvas>
 
         <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>Total Lbs by Month</b></div>
+        <div class="hlHeader">Total Lbs by Month</div>
         <canvas id="c_lbs" class="chart" height="200"></canvas>
       </div>
     `;
@@ -2555,17 +2555,30 @@ getApp().innerHTML = `
     const showAmt = !hide.includes("amt");
     const showPpl = !hide.includes("ppl");
 
+    const parts = [
+      {key:"lbs", label:"Lbs", show: showLbs, value: to2(row.lbs)},
+      {key:"amt", label:"Amount", show: showAmt, value: formatMoney(to2(row.amt))},
+      {key:"ppl", label:"$ / lb", show: showPpl, value: hasPrice ? formatMoney(to2(row.pplRaw)) : "—"},
+    ].filter(p=>p.show);
+
     return `
-      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
-        <div style="min-width:55%">
-          <b>${escapeHtml(row.date || "")}</b>
-          <div class="muted small">${escapeHtml(row.dealer)} • ${escapeHtml(row.area)}</div>
+      <div class="hlRow">
+        <div class="hlTop">
+          <div class="hlDate">${escapeHtml(row.date || "")}</div>
+          <div class="hlSub">${escapeHtml(row.dealer)} • ${escapeHtml(row.area)}</div>
         </div>
-        <div class="muted small" style="text-align:right;white-space:nowrap">
-          <div>${escapeHtml(headlineLabel)}: <b>${escapeHtml(String(headlineValue))}</b></div>
-          ${showLbs ? `<div>Lbs: <b>${to2(row.lbs)}</b></div>` : ``}
-          ${showAmt ? `<div>Amount: <b>${formatMoney(to2(row.amt))}</b></div>` : ``}
-          ${showPpl ? `<div>$ / lb: <b>${hasPrice ? formatMoney(to2(row.pplRaw)) : "—"}</b></div>` : ``}
+
+        <div class="hlStats">
+          <div class="hlHeadline">
+            <span class="hlLabel">${escapeHtml(headlineLabel)}</span>
+            <span class="hlValue">${escapeHtml(String(headlineValue))}</span>
+          </div>
+          ${parts.map(p=>`
+            <div class="hlLine">
+              <span class="hlLabel">${escapeHtml(p.label)}</span>
+              <span class="hlValue">${escapeHtml(String(p.value))}</span>
+            </div>
+          `).join("")}
         </div>
       </div>
     `;
@@ -2595,26 +2608,25 @@ const renderTablesSection = ()=>{
         <b>High / Low Summary</b>
         <div class="sep"></div>
 
-        <div class="muted small" style="margin-bottom:6px"><b>Highest lbs</b></div>
+        <div class="hlHeader">Highest lbs</div>
         ${renderExtremeRow(maxLbs, "Lbs", to2(maxLbs?.lbs||0), {hide:["lbs"]})}
         <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>Lowest lbs</b></div>
+        <div class="hlHeader">Lowest lbs</div>
         ${renderExtremeRow(minLbs, "Lbs", to2(minLbs?.lbs||0), {hide:["lbs"]})}
 
         <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>Highest $ amount</b></div>
+        <div class="hlHeader">Highest $ amount</div>
         ${renderExtremeRow(maxAmt, "Amount", formatMoney(to2(maxAmt?.amt||0)), {hide:["amt"]})}
         <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>Lowest $ amount</b></div>
+        <div class="hlHeader">Lowest $ amount</div>
         ${renderExtremeRow(minAmt, "Amount", formatMoney(to2(minAmt?.amt||0)), {hide:["amt"]})}
 
         <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>$ / lb</b></div>
-        ${pplRows.length ? `
-          <div class="muted small" style="margin-bottom:6px"><b>Highest $/lb</b></div>
+                ${pplRows.length ? `
+          <div class="hlHeader">Highest $/lb</div>
           ${renderExtremeRow(maxPpl, "$ / lb", formatMoney(to2(maxPpl?.pplRaw||0)), {hide:["ppl"]})}
           <div class="sep"></div>
-          <div class="muted small" style="margin-bottom:6px"><b>Lowest $/lb</b></div>
+          <div class="hlHeader">Lowest $/lb</div>
           ${renderExtremeRow(minPpl, "$ / lb", formatMoney(to2(minPpl?.pplRaw||0)), {hide:["ppl"]})}
         ` : `<div class="muted small">No trips with valid pounds + amount in this range.</div>`}
       </div>
