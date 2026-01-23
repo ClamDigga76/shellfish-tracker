@@ -2360,7 +2360,39 @@ function renderReports(){
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
 
   if(!trips.length){
-    getApp().innerHTML = `
+    
+  const renderExtremeTrip = (row, label, valFn)=>{
+    if(!row) return `<div class="muted small">No matching trips found.</div>`;
+    return `
+      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
+        <div>
+          <b>${escapeHtml(row.date || "")}</b>
+          <div class="muted small">${escapeHtml(row.dealer)} • ${escapeHtml(row.area)}</div>
+        </div>
+        <div class="muted small" style="text-align:right">
+          <div>${escapeHtml(label)}: <b>${escapeHtml(String(valFn(row)))}</b></div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderExtremePriceTrip = (row)=>{
+    if(!row) return `<div class="muted small">No priced trips found.</div>`;
+    return `
+      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
+        <div>
+          <b>${escapeHtml(row.date || "")}</b>
+          <div class="muted small">${escapeHtml(row.dealer)} • ${escapeHtml(row.area)}</div>
+        </div>
+        <div class="muted small" style="text-align:right">
+          <div>Lbs: <b>${to2(row.lbs)}</b></div>
+          <div>$ / lb: <b>${formatMoney(to2(row.ppl))}</b></div>
+        </div>
+      </div>
+    `;
+  };
+
+getApp().innerHTML = `
       <div class="card">
         <div class="row">
           <button class="btn" id="home">← Home</button>
