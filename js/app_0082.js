@@ -630,6 +630,28 @@ function findCanonicalFromList(value, list){
 }
 
 
+function renderSuggestions(list, current, dataAttr){
+  const cur = String(current||"").trim().toLowerCase();
+  if(!cur) return "";
+  const matches = [];
+  for(const item of (Array.isArray(list)?list:[])){
+    const s = String(item||"").trim();
+    if(!s) continue;
+    const key = s.toLowerCase();
+    if(key === cur) continue;
+    if(key.includes(cur)) matches.push(s);
+    if(matches.length >= 8) break;
+  }
+  if(!matches.length) return "";
+  return `<div class="muted small" style="margin-top:8px">Suggestions</div>
+    <div class="chips" style="margin-top:8px">
+      ${matches.map(s=>`<button class="chip" ${dataAttr}="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
+    </div>`;
+}
+
+
+
+
 
 function findDuplicateTrip(candidate, excludeId=""){
   const trips = Array.isArray(state.trips) ? state.trips : [];
@@ -808,10 +830,7 @@ function renderHome(){
   // ensure top of view on iPhone
   getApp().scrollTop = 0;
 
-  updateBuildBadge();
-
-
-  // Open trip to edit
+// Open trip to edit
   getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
     const open = ()=>{
       const id = card.getAttribute("data-id");
@@ -985,9 +1004,8 @@ if(!topDealers.length){
 
         <div class="field">
           <div class="label">Dealer</div>
-          ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
-          <select class="select" id="t_dealerSelect">${dealerOptions}</select>
-          <input class="input" id="t_dealer" placeholder="Machias Bay Seafood" value="${(draft.dealer||"").replaceAll('"',"&quot;")}" />
+          ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}<input class="input" id="t_dealer" placeholder="Machias Bay Seafood" value="${(draft.dealer||"").replaceAll('"',"&quot;")}" />
+          <div id="t_dealerSugg"></div>
           <div id="t_dealerPrompt"></div>
         </div>
 
@@ -1020,7 +1038,6 @@ if(!topDealers.length){
 
   const elDate = document.getElementById("t_date");
   const elDealer = document.getElementById("t_dealer");
-  const elDealerSelect = document.getElementById("t_dealerSelect");
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
   const elArea = document.getElementById("t_area");
@@ -1039,17 +1056,7 @@ if(!topDealers.length){
     elArea.addEventListener("change", persistDraft);
   }
 
-  if(elDealerSelect && elDealer){
-    elDealerSelect.addEventListener("change", ()=>{
-      const v = String(elDealerSelect.value||"").trim();
-      elDealer.value = v;
-      state.draft = state.draft || {};
-      state.draft.dealer = v;
-      saveDraft();
-      renderNewTrip();
-    });
-  }
-
+  
   if(elDealer){
     elDealer.addEventListener("input", ()=>{
       // typing resets prompt; canonicalize on blur instead of mid-typing
@@ -1063,7 +1070,6 @@ if(!topDealers.length){
       if(canonical){
         // Q10=A: replace typed with saved canonical + sync dropdown
         elDealer.value = canonical;
-        if(elDealerSelect) elDealerSelect.value = canonical;
         dealerPromptArmed = "";
         dealerPromptSuppressed = "";
         updateDealerPrompt();
@@ -1086,8 +1092,36 @@ if(!topDealers.length){
 
 
 
+
+function updateDealerSuggestions(){
+  const wrap = document.getElementById("t_dealerSugg");
+  const el = document.getElementById("t_dealer");
+  if(!wrap || !el) return;
+  wrap.innerHTML = renderSuggestions(state.dealers, el.value, "data-dealer-sugg");
+}
 const topAreaWrap = document.getElementById("topAreas");
 const topDealerWrap = document.getElementById("topDealers");
+
+const dealerSuggWrap = document.getElementById("t_dealerSugg");
+if(dealerSuggWrap && elDealer){
+  dealerSuggWrap.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button[data-dealer-sugg]");
+    if(!btn) return;
+    const d = btn.getAttribute("data-dealer-sugg") || "";
+    elDealer.value = d;
+    dealerPromptArmed = "";
+    dealerPromptSuppressed = "";
+    updateDealerPrompt();
+    saveDraft();
+    updateDealerSuggestions();
+  });
+}
+
+if(elDealer){
+  elDealer.addEventListener("input", ()=>{
+    updateDealerSuggestions();
+  });
+}
 if(topAreaWrap && elArea){
   topAreaWrap.addEventListener("click", (e)=>{
     const btn = e.target.closest("button[data-area]");
@@ -1107,7 +1141,6 @@ if(topDealerWrap && elDealer){
     if(!btn) return;
     const d = btn.getAttribute("data-dealer") || "";
     elDealer.value = d;
-    if(elDealerSelect) elDealerSelect.value = d;
     state.draft = state.draft || {};
     state.draft.dealer = d;
     saveDraft();
@@ -1367,9 +1400,7 @@ const backBtn = document.getElementById("backHome");
       const canon = findCanonicalFromList(current, state.dealers) || current;
       const el = document.getElementById("t_dealer");
       if(el) el.value = canon;
-      const sel = document.getElementById("t_dealerSelect");
-      if(sel) sel.value = canon;
-
+      
       dealerPromptArmed = "";
       dealerPromptSuppressed = "";
       box.innerHTML = "";
@@ -1489,9 +1520,8 @@ getApp().innerHTML = `
 
         <div class="field">
           <div class="label">Dealer</div>
-          ${renderTopDealerChips(topDealersR, d.dealer, "topDealersR")}
-          <select class="select" id="r_dealerSelect">${dealerOptionsR}</select>
-          <input class="input" id="r_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(d.dealer||""))}" />
+          ${renderTopDealerChips(topDealersR, d.dealer, "topDealersR")}<input class="input" id="r_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(d.dealer||""))}" />
+          <div id="r_dealerSugg"></div>
           <div id="r_dealerPrompt"></div>
         </div>
 
@@ -1554,7 +1584,6 @@ getApp().innerHTML = `
   const elAreaLive = document.getElementById("r_area");
   const elDateLive = document.getElementById("r_date");
   const elDealerLive = document.getElementById("r_dealer");
-  const elDealerSelectLive = document.getElementById("r_dealerSelect");
 
   const updateReviewDerived = ()=>{
     if(!state.reviewDraft) return;
@@ -1610,9 +1639,7 @@ getApp().innerHTML = `
       const canon = findCanonicalFromList(current, state.dealers) || current;
       const el = document.getElementById("r_dealer");
       if(el) el.value = canon;
-      const sel = document.getElementById("r_dealerSelect");
-      if(sel) sel.value = canon;
-
+      
       state.reviewDraft = state.reviewDraft || {};
       state.reviewDraft.dealer = canon;
       state.reviewDraft._dealerPromptValue = null;
@@ -1658,7 +1685,6 @@ getApp().innerHTML = `
       const canonical = findCanonicalFromList(raw, state.dealers);
       if(canonical){
         elDealerLive.value = canonical;
-        if(elDealerSelectLive) elDealerSelectLive.value = canonical;
         state.reviewDraft = state.reviewDraft || {};
         state.reviewDraft.dealer = canonical;
         state.reviewDraft._dealerPromptValue = null;
@@ -1682,16 +1708,40 @@ getApp().innerHTML = `
       updateReviewDealerPrompt();
     });
   }
-  if(elDealerSelectLive && elDealerLive){
-    elDealerSelectLive.addEventListener("change", ()=>{
-      const v = String(elDealerSelectLive.value||"").trim();
-      elDealerLive.value = v;
-      updateReviewDerived();
-    });
-  }
-
-  const topAreaWrapR = document.getElementById("topAreasR");
+  
+  
+function updateReviewDealerSuggestions(){
+  const wrap = document.getElementById("r_dealerSugg");
+  const el = document.getElementById("r_dealer");
+  if(!wrap || !el) return;
+  wrap.innerHTML = renderSuggestions(state.dealers, el.value, "data-dealer-sugg-r");
+}
+const topAreaWrapR = document.getElementById("topAreasR");
 const topDealerWrapR = document.getElementById("topDealersR");
+
+const dealerSuggWrapR = document.getElementById("r_dealerSugg");
+if(dealerSuggWrapR && elDealerLive){
+  dealerSuggWrapR.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button[data-dealer-sugg-r]");
+    if(!btn) return;
+    const d = btn.getAttribute("data-dealer-sugg-r") || "";
+    elDealerLive.value = d;
+    state.reviewDraft = state.reviewDraft || {};
+    state.reviewDraft.dealer = d;
+    state.reviewDraft._dealerPromptValue = null;
+    state.reviewDraft._dealerPromptSuppressed = null;
+    saveState();
+    updateReviewDealerPrompt();
+    updateReviewDerived();
+    updateReviewDealerSuggestions();
+  });
+}
+
+if(elDealerLive){
+  elDealerLive.addEventListener("input", ()=>{
+    updateReviewDealerSuggestions();
+  });
+}
   if(topAreaWrapR && elAreaLive){
     topAreaWrapR.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-area]");
@@ -1708,7 +1758,6 @@ const topDealerWrapR = document.getElementById("topDealersR");
       if(!btn) return;
       const d = btn.getAttribute("data-dealer") || "";
       elDealerLive.value = d;
-      if(elDealerSelectLive) elDealerSelectLive.value = d;
       updateReviewDerived();
     });
   }
@@ -2458,6 +2507,8 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
 
   getApp().scrollTop = 0;
 
+  updateBuildBadge();
+
   const goHome = ()=>{ state.view="home"; saveState(); render(); };
   document.getElementById("backHome").onclick = goHome;
 
@@ -2520,7 +2571,6 @@ const areaRows = state.areas.length ? state.areas.map((a, i)=>`
   };
 
 
-  getApp().
   getApp().querySelectorAll("[data-del-area]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const idx = Number(btn.getAttribute("data-del-area"));
