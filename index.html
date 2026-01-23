@@ -157,6 +157,12 @@ header{padding:14px 18px 12px}
 .hlMetrics{margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;opacity:.9}
 .hlMetrics b{opacity:1}
 .chartCard .chart{margin-top:10px}
+.pasteModule{
+  padding:12px 12px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.18);
+}
 </style>
 </head>
 <body>
@@ -289,7 +295,7 @@ If it still fails: open Safari Settings → Advanced → Website Data → delete
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const swUrl = "./sw.js?v=37";
+        const swUrl = "./sw.js?v=38";
         const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
 
         

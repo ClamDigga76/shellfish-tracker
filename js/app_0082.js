@@ -934,29 +934,31 @@ function renderHome(){
   });
 
     document.getElementById("reports").onclick = ()=>{ state.view="reports"; state.lastAction="nav:reports"; saveState(); render(); };
-    
-  const tip = document.getElementById("expTip");
-  const warn = document.getElementById("expWarn");
-  const toggleTip = (on)=>{
-    if(!tip) return;
-    tip.style.display = on ? "block" : "none";
-  };
-  if(warn){
-    warn.onclick = (e)=>{ e.stopPropagation(); toggleTip(true); };
-  }
-  // hide tooltip on outside tap
-  getApp().addEventListener("click", ()=> toggleTip(false));
+    const warn = document.getElementById("expWarn");
+const btnPaste = document.getElementById("pasteExp");
+const tipMsg = "Paste Check is optional. Copy check text, open New Trip, then tap Paste → Review and confirm the Amount, Pounds, and Date.";
 
-  const btnPaste = document.getElementById("pasteExp");
-  if(btnPaste){
-    btnPaste.onclick = ()=>{
-      state.view = "newTrip";
-      state.openPasteOnNewTrip = true;
-      saveState();
-      render();
-    };
+const toggleToast = (e)=>{
+  try{
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    const t = document.getElementById("toast");
+    if(t?.classList?.contains?.("show")){      t.classList.remove("show");
+      return;
+    }
+    showToast(tipMsg);
+  }catch{
+    showToast(tipMsg);
   }
+};
 
+if(btnPaste){
+  btnPaste.onclick = toggleToast;
+  btnPaste.onkeydown = (e)=>{ if(e.key==="Enter"||e.key===" ") toggleToast(e); };
+}
+if(warn){
+  warn.onclick = toggleToast;
+}
 document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
 
   document.getElementById("settings").onclick = () => {
@@ -1076,6 +1078,8 @@ if(!topDealers.length){
       <div class="form">
         <div class="field">
           <div class="label">Paste Check (Experimental)</div>
+          <div class="sep" style="margin:10px 0;"></div>
+          <div class="pasteModule">
 
           <div id="entryPrompt" class="muted small" style="display:none; margin-bottom:10px; padding:10px 12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:14px;">
             <div class="row" style="justify-content:space-between;align-items:center;gap:10px">
@@ -1100,6 +1104,8 @@ if(!topDealers.length){
             <summary class="muted small" style="cursor:pointer;">Show/edit pasted text (optional)</summary>
             <textarea class="textarea" id="t_paste" placeholder="Tap and hold to Paste check text here (optional)" style="min-height:70px;"></textarea>
           </details>
+
+          </div>
         </div>
 
         <div class="field">
@@ -1148,18 +1154,7 @@ if(!topDealers.length){
   const elArea = document.getElementById("t_area");
   
   const elPaste = document.getElementById("t_paste");
-
-  try{
-    if(state.openPasteOnNewTrip){
-      const det = document.getElementById("pasteDetails");
-      if(det) det.open = true;
-      det?.scrollIntoView?.({behavior:"smooth", block:"start"});
-      state.openPasteOnNewTrip = false;
-      saveState();
-    }
-  }catch{}
-
-  // Persist draft as the user edits fields (fixes iOS select + prevents resets)
+// Persist draft as the user edits fields (fixes iOS select + prevents resets)
   const persistDraft = ()=>{ try{ saveDraft(); }catch{} };
   [elDate, elDealer, elPounds, elAmount].forEach(el=>{
     if(!el) return;
@@ -2114,6 +2109,7 @@ getApp().innerHTML = `
           <button class="chip ${f==="YTD"?"on":""}" data-f="YTD">YTD</button>
           <button class="chip ${f==="Month"?"on":""}" data-f="Month">Month</button>
           <button class="chip ${f==="7D"?"on":""}" data-f="7D">Last 7 days</button>
+          <button class="chip" id="allTrips" type="button">All Trips</button>
         </div>
 
         <div class="hint">Save at least one trip to see totals, tables, charts, and export.</div>
@@ -2400,14 +2396,12 @@ const renderTablesSection = ()=>{
       
       </div>
 
-<div class="row" style="margin-top:10px">
-  <button class="btn" id="allTrips">📄 All Trips</button>
-</div>
 
 <div class="filters" style="margin-top:10px">
         ${chip("YTD","YTD")}
         ${chip("Month","Month")}
         ${chip("7D","Last 7 days")}
+        <button class="chip" id="allTrips" type="button">All Trips</button>
       </div>
 
       <div class="filters" style="margin-top:10px">
