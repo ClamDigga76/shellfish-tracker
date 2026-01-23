@@ -1108,30 +1108,34 @@ if(!topDealers.length){
           </div>
         </div>
 
+        <div class="sep" style="margin:14px 0;"></div>
+        <div class="manualHdr">Manual entry</div>
+        <div class="manualModule">
+
         <div class="field">
-          <div class="label">Harvest date</div>
+          <div class="label fieldLabel">Harvest date</div>
           <input class="input" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
         </div>
 
         <div class="field">
-          <div class="label">Dealer</div>
+          <div class="label fieldLabel">Dealer</div>
           ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}<input class="input" id="t_dealer" placeholder="Machias Bay Seafood" value="${(draft.dealer||"").replaceAll('"',"&quot;")}" />
           <div id="t_dealerSugg"></div>
           <div id="t_dealerPrompt"></div>
         </div>
 
         <div class="field">
-          <div class="label">Pounds</div>
+          <div class="label fieldLabel">Pounds</div>
           <input class="input" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
         </div>
 
         <div class="field">
-          <div class="label">Amount</div>
+          <div class="label fieldLabel">Amount</div>
           <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
         </div>
 
         <div class="field">
-          <div class="label">Area</div>
+          <div class="label fieldLabel">Area</div>
           ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
 <select class="select" id="t_area">
             ${areaOptions}
@@ -1143,8 +1147,10 @@ if(!topDealers.length){
           <button class="btn" id="cancelTrip">Cancel</button>
           <button class="btn danger" id="clearDraft">Clear</button>
         </div>
+
+        </div>
       </div>
-    </div>
+    </div
   `;
 
   const elDate = document.getElementById("t_date");
