@@ -6,6 +6,7 @@ window.__SHELLFISH_APP_STARTED = false;
 import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_0083.js";
 
 const VERSION = 'ESM-0083-RC1.1';
+const HOME_TRIPS_LIMIT = 15;
 const LAST_ERROR_KEY = "shellfish-last-error";
 const LAST_ERROR_AT_KEY = "shellfish-last-error-at";
 const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
@@ -1057,6 +1058,66 @@ window.addEventListener("unhandledrejection", (e)=> showFatal(e?.reason || e));
 function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 
 
+
+function renderAllTrips(){
+  const trips = Array.isArray(state.trips) ? state.trips : [];
+  const sorted = [...trips].sort((a,b)=> String(b?.dateISO||"").localeCompare(String(a?.dateISO||"")));
+  const rows = sorted.length ? sorted.map(t=>{
+    const date = formatDateMDY(t?.dateISO||"");
+    const dealer = escapeHtml(String(t?.dealer||""));
+    const area = escapeHtml(String(t?.area||""));
+    const lbs = Number(t?.pounds)||0;
+    const amt = Number(t?.amount)||0;
+    const ppl = (lbs>0 && amt>0) ? (amt/lbs) : 0;
+    return `
+      <div class="trip">
+        <div class="row" style="justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <b>${escapeHtml(date)}</b>
+          <b>${dealer}</b>
+        </div>
+        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">
+          <span class="pill">Lbs: <b>${to2(lbs)}</b></span>
+          <span class="pill">Amt: <b>${formatMoney(amt)}</b></span>
+          <span class="pill">PPL: <b>${formatMoney(ppl)}</b></span>
+          ${area ? `<span class="pill">Area: <b>${area}</b></span>` : ""}
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn" data-edit="${escapeHtml(String(t?.id||""))}">Edit</button>
+        </div>
+      </div>
+    `;
+  }).join("") : `<div class="muted small">No trips saved yet.</div>`;
+
+  getApp().innerHTML = `
+    <div class="card">
+      <div class="row">
+        <button class="btn" id="home">← Home</button>
+        <button class="btn" id="export">🧾 Export CSV</button>
+      </div>
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+        <b>All Trips</b>
+        <span class="pill">${sorted.length} total</span>
+      </div>
+    </div>
+
+    <div class="card">
+      ${rows}
+    </div>
+  `;
+
+  document.getElementById("home").onclick = ()=>{ state.view="home"; saveState(); render(); };
+  document.getElementById("export").onclick = ()=> exportCSV();
+
+  getApp().querySelectorAll("button[data-edit]").forEach(btn=>{
+    btn.onclick = ()=>{
+      state.view="edit";
+      state.editId = btn.getAttribute("data-edit") || "";
+      saveState();
+      render();
+    };
+  });
+}
+
 function renderHome(){
   const tripsAll = Array.isArray(state.trips) ? state.trips : [];
   const trips = getFilteredTrips();
@@ -1114,7 +1175,7 @@ function renderHome(){
   const f = state.filter || "YTD";
   const chip = (key,label) => `<button class="chip ${f===key?'on':''}" data-f="${key}">${label}</button>`;
 
-  const rows = trips.length ? trips.map(t=>{
+  const rows = trips.length ? trips.slice(0, HOME_TRIPS_LIMIT).map(t=>{
     const date = formatDateMDY(t?.dateISO);
     const dealer = (t?.dealer||"").toString();
     const lbs = to2(Number(t?.pounds)||0);
@@ -1142,9 +1203,9 @@ function renderHome(){
     <div class="card">
       <div class="row" style="gap:10px;flex-wrap:wrap">
         <button class="btn primary" id="newTrip">＋ New Trip</button>
-        <button class="btn" id="pasteExp">📋 Paste Receipt <span class="muted small">(Experimental)</span> <span id="expWarn" style="cursor:pointer">⚠️</span></button>
+        <button class="chipLink" id="pasteExp">📋 Paste Check <span class="expTag">Experimental</span></button><span id="expWarn" class="expWarn" title="Experimental. Always review Amount, Pounds, and Date.">⚠️</span>
       </div>
-      <div id="expTip" class="muted small" style="display:none;margin-top:8px;line-height:1.35;padding:8px 10px;border:1px solid rgba(0,0,0,.08);border-radius:12px">Experimental. Always review Amount, Pounds, and Date before saving.</div>
+      <div id="expTip" class="muted small expTip" style="display:none;">Experimental. Always review Amount, Pounds, and Date before saving.</div>
 
       <div class="row" style="margin-top:10px">
         <button class="btn" id="reports">📊 Reports</button>
@@ -1181,11 +1242,16 @@ function renderHome(){
       <b>Trips</b>
       <div class="sep"></div>
       <div class="triplist">${rows}</div>
+      ${trips.length > HOME_TRIPS_LIMIT ? `<div style="margin-top:10px"><button class="btn" id="viewAllTrips">View all trips</button></div>` : ``}
     </div>
   `;
 
   // ensure top of view on iPhone
   getApp().scrollTop = 0;
+
+  const vbtn = document.getElementById("viewAllTrips");
+  if(vbtn){ vbtn.onclick = ()=>{ state.view = "all_trips"; saveState(); render(); }; }
+
 
 // Open trip to edit
   getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
@@ -1350,7 +1416,7 @@ if(!topDealers.length){
     <div class="card">
       <div class="form">
         <div class="field">
-          <div class="label">Receipt paste (Experimental)</div>
+          <div class="label">Paste Check (Experimental)</div>
 
           <div id="entryPrompt" class="muted small" style="display:none; margin-bottom:10px; padding:10px 12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:14px;">
             <div class="row" style="justify-content:space-between;align-items:center;gap:10px">
@@ -1363,7 +1429,7 @@ if(!topDealers.length){
           </div>
 
           <button class="btn primary" id="pasteToReviewPrimary" style="width:100%;">Paste → Review</button>
-          <div class="hint">Optional. Paste receipt text, then review before saving.</div>
+          <div class="hint">Optional. Paste check text, then review before saving.</div>
 
           <div id="pasteFallbackHint" class="muted small" style="display:none; margin-top:10px;">
             If Paste doesn’t work, tap and hold in the box below and choose Paste, then tap <b>Paste → Review</b>.
@@ -1373,7 +1439,7 @@ if(!topDealers.length){
 
           <details id="pasteDetails" style="margin-top:10px;">
             <summary class="muted small" style="cursor:pointer;">Show/edit pasted text (optional)</summary>
-            <textarea class="textarea" id="t_paste" placeholder="Tap and hold to Paste receipt text here (optional)" style="min-height:70px;"></textarea>
+            <textarea class="textarea" id="t_paste" placeholder="Tap and hold to Paste check text here (optional)" style="min-height:70px;"></textarea>
           </details>
         </div>
 
@@ -2367,8 +2433,6 @@ getApp().innerHTML = `
         <div class="row">
           <button class="btn" id="home">← Home</button>
           <button class="btn" id="export" disabled>🧾 Export CSV</button>
-          <button class="btn" id="settings">⚙️ Settings</button>
-          <button class="btn" id="help">❓ Help</button>
         </div>
 
         <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
@@ -2531,15 +2595,15 @@ getApp().innerHTML = `
         <div class="hint">Read-only. Uses the same range filter.</div>
         <div class="sep"></div>
 
-        <div class="hlHeader">Avg $/lb by Month</div>
+        <div class="muted small" style="margin-bottom:6px"><b>Avg $/lb by Month</b></div>
         <canvas id="c_ppl" class="chart" height="180"></canvas>
 
         <div class="sep"></div>
-        <div class="hlHeader">Total $ by Dealer (Top 8)</div>
+        <div class="muted small" style="margin-bottom:6px"><b>Total $ by Dealer (Top 8)</b></div>
         <canvas id="c_dealer" class="chart" height="220"></canvas>
 
         <div class="sep"></div>
-        <div class="hlHeader">Total Lbs by Month</div>
+        <div class="muted small" style="margin-bottom:6px"><b>Total Lbs by Month</b></div>
         <canvas id="c_lbs" class="chart" height="200"></canvas>
       </div>
     `;
@@ -2555,30 +2619,17 @@ getApp().innerHTML = `
     const showAmt = !hide.includes("amt");
     const showPpl = !hide.includes("ppl");
 
-    const parts = [
-      {key:"lbs", label:"Lbs", show: showLbs, value: to2(row.lbs)},
-      {key:"amt", label:"Amount", show: showAmt, value: formatMoney(to2(row.amt))},
-      {key:"ppl", label:"$ / lb", show: showPpl, value: hasPrice ? formatMoney(to2(row.pplRaw)) : "—"},
-    ].filter(p=>p.show);
-
     return `
-      <div class="hlRow">
-        <div class="hlTop">
-          <div class="hlDate">${escapeHtml(row.date || "")}</div>
-          <div class="hlSub">${escapeHtml(row.dealer)} • ${escapeHtml(row.area)}</div>
+      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
+        <div style="min-width:55%">
+          <b>${escapeHtml(row.date || "")}</b>
+          <div class="muted small">${escapeHtml(row.dealer)} • ${escapeHtml(row.area)}</div>
         </div>
-
-        <div class="hlStats">
-          <div class="hlHeadline">
-            <span class="hlLabel">${escapeHtml(headlineLabel)}</span>
-            <span class="hlValue">${escapeHtml(String(headlineValue))}</span>
-          </div>
-          ${parts.map(p=>`
-            <div class="hlLine">
-              <span class="hlLabel">${escapeHtml(p.label)}</span>
-              <span class="hlValue">${escapeHtml(String(p.value))}</span>
-            </div>
-          `).join("")}
+        <div class="muted small" style="text-align:right;white-space:nowrap">
+          <div>${escapeHtml(headlineLabel)}: <b>${escapeHtml(String(headlineValue))}</b></div>
+          ${showLbs ? `<div>Lbs: <b>${to2(row.lbs)}</b></div>` : ``}
+          ${showAmt ? `<div>Amount: <b>${formatMoney(to2(row.amt))}</b></div>` : ``}
+          ${showPpl ? `<div>$ / lb: <b>${hasPrice ? formatMoney(to2(row.pplRaw)) : "—"}</b></div>` : ``}
         </div>
       </div>
     `;
@@ -2608,25 +2659,26 @@ const renderTablesSection = ()=>{
         <b>High / Low Summary</b>
         <div class="sep"></div>
 
-        <div class="hlHeader">Highest lbs</div>
+        <div class="muted small" style="margin-bottom:6px"><b>Highest lbs</b></div>
         ${renderExtremeRow(maxLbs, "Lbs", to2(maxLbs?.lbs||0), {hide:["lbs"]})}
         <div class="sep"></div>
-        <div class="hlHeader">Lowest lbs</div>
+        <div class="muted small" style="margin-bottom:6px"><b>Lowest lbs</b></div>
         ${renderExtremeRow(minLbs, "Lbs", to2(minLbs?.lbs||0), {hide:["lbs"]})}
 
         <div class="sep"></div>
-        <div class="hlHeader">Highest $ amount</div>
+        <div class="muted small" style="margin-bottom:6px"><b>Highest $ amount</b></div>
         ${renderExtremeRow(maxAmt, "Amount", formatMoney(to2(maxAmt?.amt||0)), {hide:["amt"]})}
         <div class="sep"></div>
-        <div class="hlHeader">Lowest $ amount</div>
+        <div class="muted small" style="margin-bottom:6px"><b>Lowest $ amount</b></div>
         ${renderExtremeRow(minAmt, "Amount", formatMoney(to2(minAmt?.amt||0)), {hide:["amt"]})}
 
         <div class="sep"></div>
-                ${pplRows.length ? `
-          <div class="hlHeader">Highest $/lb</div>
+        <div class="muted small" style="margin-bottom:6px"><b>$ / lb</b></div>
+        ${pplRows.length ? `
+          <div class="muted small" style="margin-bottom:6px"><b>Highest $/lb</b></div>
           ${renderExtremeRow(maxPpl, "$ / lb", formatMoney(to2(maxPpl?.pplRaw||0)), {hide:["ppl"]})}
           <div class="sep"></div>
-          <div class="hlHeader">Lowest $/lb</div>
+          <div class="muted small" style="margin-bottom:6px"><b>Lowest $/lb</b></div>
           ${renderExtremeRow(minPpl, "$ / lb", formatMoney(to2(minPpl?.pplRaw||0)), {hide:["ppl"]})}
         ` : `<div class="muted small">No trips with valid pounds + amount in this range.</div>`}
       </div>
@@ -2638,8 +2690,6 @@ const renderTablesSection = ()=>{
       <div class="row">
         <button class="btn" id="home">← Home</button>
         <button class="btn" id="export">🧾 Export CSV</button>
-        <button class="btn" id="settings">⚙️ Settings</button>
-        <button class="btn" id="help">❓ Help</button>
       </div>
 
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
@@ -3193,6 +3243,7 @@ function render(){
   if(state.view === "edit") return renderEditTrip();
   if(state.view === "reports") return renderReports();
   if(state.view === "help") return renderHelp();
+  if(state.view === "all_trips") return renderAllTrips();
   if(state.view === "about") return renderAbout();
   return renderHome();
 }
