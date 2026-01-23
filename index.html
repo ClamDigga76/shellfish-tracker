@@ -123,6 +123,40 @@ header{padding:18px 22px 14px}
 }
 header{padding:14px 18px 12px}
 
+.full{width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pasteBannerWrap{width:100%}
+.pasteBanner{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.04);
+  user-select:none;
+}
+.pasteBanner:active{transform:scale(.995)}
+.pasteIcon{font-size:18px}
+.pasteText{display:flex;align-items:baseline;gap:12px;min-width:0}
+.pasteTitle{font-weight:850;letter-spacing:.2px;white-space:nowrap}
+.pasteMeta{opacity:.7;font-weight:800;white-space:nowrap}
+.expWarn{flex:0 0 auto;opacity:.75}
+.hlHdr{
+  font-size:18px;
+  font-weight:850;
+  letter-spacing:.2px;
+  margin-bottom:8px;
+  opacity:.95;
+}
+.hlItem{padding:6px 0}
+.hlDate{font-size:26px;font-weight:900;letter-spacing:.2px}
+.hlSub{margin-top:2px;opacity:.72}
+.hlMetrics{margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;opacity:.9}
+.hlMetrics b{opacity:1}
+.chartCard .chart{margin-top:10px}
 </style>
 </head>
 <body>
@@ -255,7 +289,7 @@ If it still fails: open Safari Settings → Advanced → Website Data → delete
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const swUrl = "./sw.js?v=36";
+        const swUrl = "./sw.js?v=37";
         const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
 
         

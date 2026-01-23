@@ -1201,19 +1201,31 @@ function renderHome(){
 
   getApp().innerHTML = `
     <div class="card">
-      <div class="row" style="gap:10px;flex-wrap:wrap">
-        <button class="btn primary" id="newTrip">＋ New Trip</button>
-        <button class="chipLink" id="pasteExp">📋 Paste Check <span class="expTag">Experimental</span></button><span id="expWarn" class="expWarn" title="Experimental. Always review Amount, Pounds, and Date.">⚠️</span>
-      </div>
-      <div id="expTip" class="muted small expTip" style="display:none;">Experimental. Always review Amount, Pounds, and Date before saving.</div>
+      <div class="pasteBannerWrap">
+  <div class="pasteBanner" id="pasteExp" role="button" tabindex="0" aria-label="Paste Check (Experimental)">
+    <span class="pasteIcon">📋</span>
+    <span class="pasteText">
+      <span class="pasteTitle">Paste Check</span>
+      <span class="pasteMeta">Experimental</span>
+    </span>
+    <span id="expWarn" class="expWarn" title="Experimental. Always review Amount, Pounds, and Date.">⚠️</span>
+  </div>
+  <div id="expTip" class="muted small expTip" style="display:none;">Experimental. Always review Amount, Pounds, and Date before saving.</div>
+</div>
 
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="reports">📊 Reports</button>
-        <button class="btn" id="settings">⚙️ Settings</button>
-        <button class="btn" id="help">❓ Help</button>
-      </div>
+<div class="row" style="margin-top:10px">
+  <button class="btn primary full" id="newTrip">＋ New Trip</button>
+</div>
 
-      <div class="hint">Manual entry is recommended. Receipt paste is optional.</div>
+      <div class="grid2" style="margin-top:12px">
+  <button class="btn" id="reports">📊 Reports</button>
+  <button class="btn" id="settings">⚙️ Settings</button>
+</div>
+<div class="row" style="margin-top:10px">
+  <button class="btn" id="help">❓ Help</button>
+</div>
+
+      <div class="hint">Manual entry is recommended. Check paste is optional.</div>
     </div>
 
     ${pwaStorageNoteHTML}
@@ -2450,7 +2462,10 @@ getApp().innerHTML = `
       </div>
     `;
     getApp().scrollTop = 0;
-  const _el_home = document.getElementById("home");
+    const _el_allTrips = document.getElementById("allTrips");
+  if(_el_allTrips) _el_allTrips.onclick = ()=>{ state.view="all_trips"; saveState(); render(); };
+
+const _el_home = document.getElementById("home");
   if(_el_home) _el_home.onclick = ()=>{ state.view="home";
 state.lastAction="nav:home"; saveState(); render(); };
   const _el_settings = document.getElementById("settings");
@@ -2610,7 +2625,7 @@ state.lastAction="nav:help"; saveState(); render(); };
 
         <div class="sep"></div>
         <div class="muted small" style="margin-bottom:6px"><b>Total Lbs by Month</b></div>
-        <canvas id="c_lbs" class="chart" height="200"></canvas>
+        <canvas id="c_lbs" class="chart" height="220"></canvas>
       </div>
     `;
   };
@@ -2641,6 +2656,28 @@ state.lastAction="nav:help"; saveState(); render(); };
     `;
   };
 
+const renderHLItem = (row)=>{
+  if(!row) return `<div class="muted small">No matching trips found.</div>`;
+  const date = escapeHtml(row.date || "");
+  const dealer = escapeHtml(row.dealer || "");
+  const area = escapeHtml(row.area || "");
+  const lbs = Number(row.lbs)||0;
+  const amt = Number(row.amt)||0;
+  const ppl = (Number.isFinite(row.pplRaw) && row.pplRaw>0) ? row.pplRaw : ((lbs>0 && amt>0) ? (amt/lbs) : 0);
+
+  return `
+    <div class="hlItem">
+      <div class="hlDate">${date}</div>
+      <div class="hlSub">${dealer}${area ? ` • ${area}` : ``}</div>
+      <div class="hlMetrics">
+        <div>Lbs: <b>${to2(lbs)}</b></div>
+        <div>Amount: <b>${formatMoney(to2(amt))}</b></div>
+        <div>$ / lb: <b>${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
+      </div>
+    </div>
+  `;
+};
+
 const renderTablesSection = ()=>{
     return `
       <div class="card">
@@ -2662,33 +2699,34 @@ const renderTablesSection = ()=>{
       </div>
 
       <div class="card">
-        <b>High / Low Summary</b>
-        <div class="sep"></div>
+  <b>High / Low Summary</b>
+  <div class="sep"></div>
 
-        <div class="muted small" style="margin-bottom:6px"><b>Highest lbs</b></div>
-        ${renderExtremeRow(maxLbs, "Lbs", to2(maxLbs?.lbs||0), {hide:["lbs"]})}
-        <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>Lowest lbs</b></div>
-        ${renderExtremeRow(minLbs, "Lbs", to2(minLbs?.lbs||0), {hide:["lbs"]})}
+  <div class="hlHdr">Highest lbs</div>
+  ${renderHLItem(maxLbs)}
+  <div class="sep"></div>
 
-        <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>Highest $ amount</b></div>
-        ${renderExtremeRow(maxAmt, "Amount", formatMoney(to2(maxAmt?.amt||0)), {hide:["amt"]})}
-        <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>Lowest $ amount</b></div>
-        ${renderExtremeRow(minAmt, "Amount", formatMoney(to2(minAmt?.amt||0)), {hide:["amt"]})}
+  <div class="hlHdr">Lowest lbs</div>
+  ${renderHLItem(minLbs)}
+  <div class="sep"></div>
 
-        <div class="sep"></div>
-        <div class="muted small" style="margin-bottom:6px"><b>$ / lb</b></div>
-        ${pplRows.length ? `
-          <div class="muted small" style="margin-bottom:6px"><b>Highest $/lb</b></div>
-          ${renderExtremeRow(maxPpl, "$ / lb", formatMoney(to2(maxPpl?.pplRaw||0)), {hide:["ppl"]})}
-          <div class="sep"></div>
-          <div class="muted small" style="margin-bottom:6px"><b>Lowest $/lb</b></div>
-          ${renderExtremeRow(minPpl, "$ / lb", formatMoney(to2(minPpl?.pplRaw||0)), {hide:["ppl"]})}
-        ` : `<div class="muted small">No trips with valid pounds + amount in this range.</div>`}
-      </div>
-    `;
+  <div class="hlHdr">Highest $ amount</div>
+  ${renderHLItem(maxAmt)}
+  <div class="sep"></div>
+
+  <div class="hlHdr">Lowest $ amount</div>
+  ${renderHLItem(minAmt)}
+  <div class="sep"></div>
+
+  ${pplRows.length ? `
+    <div class="hlHdr">Highest $/lb</div>
+    ${renderHLItem(maxPpl)}
+    <div class="sep"></div>
+
+    <div class="hlHdr">Lowest $/lb</div>
+    ${renderHLItem(minPpl)}
+  ` : `<div class="muted small">No trips with valid pounds + amount in this range.</div>`}
+</div>`;
   };
 
   getApp().innerHTML = `
@@ -2701,9 +2739,14 @@ const renderTablesSection = ()=>{
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
         <b>Reports</b>
         <span class="pill">Range: <b>${escapeHtml(f)}</b></span>
+      
       </div>
 
-      <div class="filters" style="margin-top:10px">
+<div class="row" style="margin-top:10px">
+  <button class="btn" id="allTrips">📄 All Trips</button>
+</div>
+
+<div class="filters" style="margin-top:10px">
         ${chip("YTD","YTD")}
         ${chip("Month","Month")}
         ${chip("7D","Last 7 days")}
