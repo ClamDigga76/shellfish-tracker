@@ -216,7 +216,7 @@ function loadState(){
     };
   }catch{
     try{ showCorruptStorageBanner("Your saved data was corrupted, so the app reset local storage. Your device can keep using the app normally now."); }catch{}
-    return { trips: [], view: "home", filter: "YTD", settings: {}, areas: [], dealers: [], tideFavorites: [], tideRecents: [], tideLastStationId: "", tideCacheByStationId: {}, lastDealer: "", lastArea: "", quickPresets: [], lastBackupAt: 0 };
+    return { trips: [], view: "home", filter: "YTD", settings: {}, areas: [], dealers: [], tideFavorites: [], tideRecents: [], tideLastStationId: "", tideCacheByStationId: {}, lastDealer:"", lastArea:"", quickPresets:[], lastBackupAt:0 };
   }
 }
 
@@ -3162,10 +3162,10 @@ function showCorruptStorageBanner(message){
 }
 
 function todayISO(){
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
+  const dt = new Date();
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth()+1).padStart(2,"0");
+  const day = String(dt.getDate()).padStart(2,"0");
   return `${y}-${m}-${day}`;
 }
 
@@ -3196,10 +3196,10 @@ function applyQuickPresetToDraft(idx){
   const p = state.quickPresets[idx] || {};
   state.draft = {
     dateISO: todayISO(),
-    dealer: p.dealer || state.lastDealer || "",
+    dealer: (p.dealer || state.lastDealer || ""),
     pounds: "",
     amount: "",
-    area: p.area || state.lastArea || ""
+    area: (p.area || state.lastArea || "")
   };
   state.view = "new";
   saveState();
