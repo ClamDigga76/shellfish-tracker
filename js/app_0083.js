@@ -1,3 +1,10 @@
+async function readClipboardBestEffort(){
+    if(!navigator.clipboard || !navigator.clipboard.readText) return "";
+    try{
+      const t = await navigator.clipboard.readText();
+      return String(t||"").trim();
+    }
+
 // Shellfish Tracker — V1.5 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
@@ -31,51 +38,6 @@ function getDisplayMode(){
   }
 }
 
-async function collectDiagnostics(){
-  const diag = {
-    appVersion: VERSION,
-    schemaVersion: (typeof SCHEMA_VERSION !== "undefined" ? SCHEMA_VERSION : null),
-    displayMode: getDisplayMode(),
-    userAgent: navigator.userAgent,
-    language: navigator.language,
-    timezone: (Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown"),
-    storage: {
-      trips: Array.isArray(state?.trips) ? state.trips.length : null,
-      areas: Array.isArray(state?.areas) ? state.areas.length : null,
-    },
-    backup: {
-      lastBackupAt: state?.settings?.lastBackupAt || null,
-    },
-    serviceWorker: {
-      supported: ("serviceWorker" in navigator),
-      controller: (navigator.serviceWorker && navigator.serviceWorker.controller) ? true : false,
-    },
-  };
-
-  try{
-    if(navigator.serviceWorker){
-      const reg = await navigator.serviceWorker.getRegistration();
-      if(reg){
-        diag.serviceWorker.scope = reg.scope || null;
-        diag.serviceWorker.installing = !!reg.installing;
-        diag.serviceWorker.waiting = !!reg.waiting;
-        diag.serviceWorker.active = !!reg.active;
-      }
-    }
-  }catch{}
-
-  try{
-    if(window.caches && caches.keys){
-      diag.caches = await caches.keys();
-    }
-  }catch{}
-
-  try{
-    diag.lastError = {    };
-  }catch{}
-
-  return diag;
-}
 
 
 async function updateBuildBadge(){
@@ -190,228 +152,6 @@ const APP_VERSION = VERSION;
 
 
 
-function parseOcrText(raw, knownAreas){
-  const textRaw = String(raw||"").replace(/\r/g,"\n");
-  const text = textRaw.toUpperCase();
-  const lines = textRaw.split("\n").map(s=>String(s).trim()).filter(Boolean);
-  const linesU = lines.map(l=>l.toUpperCase());
-
-  const out = {
-    dateMDY: "",
-    pounds: "",
-    amount: "",
-    dealer: "",
-    area: "",
-    confidence: { date:"low", pounds:"low", amount:"low", dealer:"low", area:"low" }
-  };
-
-  const isMachias = text.includes("MACHIAS BAY SEAFOOD");
-
-  // --- DATE ---
-  // Support MM/DD/YYYY, MM-DD-YY, and glued MMDD-YY / MMDDYY.
-  const full = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](20\d{2}|19\d{2})\b/);
-  if(full){
-    out.dateMDY = `${full[1]}/${full[2]}/${full[3]}`;
-    out.confidence.date = "high";
-  } else {
-    const short = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](\d{2})\b/);
-    if(short){
-      const yy = parseInt(short[3],10);
-      const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
-      out.dateMDY = `${short[1]}/${short[2]}/${yyyy}`;
-      out.confidence.date = "med";
-    } else {
-      const glued = text.match(/\b(0[1-9]|1[0-2])([0-2]\d|3[01])[\/\-]?(\d{2})\b/);
-      if(glued){
-        const mm = glued[1];
-        const dd = glued[2];
-        const yy = parseInt(glued[3],10);
-        const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
-        out.dateMDY = `${mm}/${dd}/${yyyy}`;
-        out.confidence.date = "med";
-      }
-    }
-  }
-
-  // --- DEALER ---
-  // Known dealer match (from Settings)
-  if(Array.isArray(state.dealers) && state.dealers.length){
-    const hay = text;
-    let best = "";
-    for(const d of state.dealers){
-      const du = String(d||"").toUpperCase();
-      if(du && hay.includes(du)){
-        if(du.length > best.length) best = d;
-      }
-    }
-    if(best){
-      out.dealer = best;
-      out.confidence.dealer = "high";
-    }
-  }
-  // Prefer first ALLCAPS line ending with INC./LLC/CO., else first line.
-  for(const l of linesU.slice(0,8)){
-    if(l.includes("SEAFOOD")){
-      out.dealer = "Machias BAY Seafood";
-      out.confidence.dealer = "high";
-      break;
-    }
-  }
-  if(!out.dealer && lines.length){
-    out.dealer = lines[0].trim().slice(0,40);
-    out.confidence.dealer = "low";
-  }
-
-  // --- AMOUNT ---
-  // Machias checks: amount must come from CHECK AMOUNT block.
-  const parseMoneyFromWindow = (windowText, allowCents)=>{
-    // normalize OCR C/O confusion in cents
-    const w = windowText.replace(/[oO]/g,"0").replace(/[cC]/g,"0");
-    const dec = w.match(/\b(\d{1,6}[.,]\d{2})\b/);
-    if(dec){
-      const v = parseFloat(dec[1].replace(",","."));
-      if(Number.isFinite(v)) return v.toFixed(2);
-    }
-    const sp = w.match(/\b(\d{1,6})\s+(\d{2})\b/);
-    if(sp){
-      const v = parseFloat(`${sp[1]}.${sp[2]}`);
-      if(Number.isFinite(v)) return v.toFixed(2);
-    }
-    const c0 = w.match(/\b(\d{1,6})\s*0\s*0\b/);
-    if(c0){
-      const v = parseFloat(`${c0[1]}.00`);
-      if(Number.isFinite(v)) return v.toFixed(2);
-    }
-    if(allowCents){
-      const digs = [...w.matchAll(/\b(\d{4,6})\b/g)].map(m=>m[1]);
-      if(digs.length){
-        const last = digs[digs.length-1];
-        const v = parseInt(last,10)/100;
-        if(Number.isFinite(v)) return v.toFixed(2);
-      }
-    }
-    return "";
-  };
-
-  const findCheckAmount = ()=>{
-    for(let i=0;i<linesU.length;i++){
-      const winLines = linesU.slice(i, i+4);
-      const winText = winLines.join(" ");
-      const hasCheck = winText.includes("CHECK");
-      const hasAmount = winText.includes("AMOUNT");
-      if(hasCheck && hasAmount){
-        // avoid MICR lines with slashes/hyphens unless they also contain CHECK/AMOUNT
-        const val = parseMoneyFromWindow(winText, true);
-        if(val) return val;
-      }
-    }
-    return "";
-  };
-
-  let amt = "";
-  if(isMachias){
-    amt = findCheckAmount();
-    if(amt){
-      out.amount = amt;
-      out.confidence.amount = "high";
-    } else {
-      // Do not fallback for Machias; leave blank rather than guess from MICR numbers.
-      out.amount = "";
-      out.confidence.amount = "low";
-    }
-  } else {
-    // Generic: try CHECK AMOUNT first, then any decimal money-like token excluding MICR/phone/account lines.
-    amt = findCheckAmount();
-    if(!amt){
-      const candidates = [];
-      for(const l of linesU){
-        if(l.includes("/") || l.includes("TEL") || l.includes("ACCOUNT") || l.includes("ROUTING") || l.includes("PO BOX")) continue;
-        const m = l.match(/\b(\d{1,6}[.,]\d{2})\b/);
-        if(m){
-          const v = parseFloat(m[1].replace(",","."));
-          if(Number.isFinite(v) && v>=1) candidates.push(v);
-        }
-      }
-      if(candidates.length){
-        const best = Math.max(...candidates);
-        amt = best.toFixed(2);
-      }
-    }
-    if(amt){
-      out.amount = amt;
-      out.confidence.amount = "med";
-    }
-  }
-
-  // --- POUNDS ---
-  // 1) decimal with comma or dot (e.g., 59,5) near DESCRIPTION
-  const findPounds = ()=>{
-    // explicit lb/lbs markers incl OCR IBS/1BS/|BS
-    const marker = textRaw.match(/\b(\d+(?:[.,]\d+)?)\s*(?:lb|lbs|pounds?|i?bs|\|bs|1bs)\b/i);
-    if(marker){
-      const v = parseFloat(marker[1].replace(",","."));
-      if(Number.isFinite(v) && v>0) return {v:String(v), conf:"high"};
-    }
-    // DESCRIPTION block integer/decimal
-    let descIdx = -1;
-    for(let i=0;i<linesU.length;i++){
-      if(linesU[i].includes("DESCRIPTION")){ descIdx = i; break; }
-    }
-    if(descIdx>=0){
-      const slice = linesU.slice(descIdx, descIdx+12);
-      // prefer decimal with one digit
-      for(const l of slice){
-        const m = l.match(/^\s*(\d{1,3}[.,]\d{1,2})\s*$/);
-        if(m){
-          const v = parseFloat(m[1].replace(",","."));
-          if(Number.isFinite(v) && v>0) return {v:String(v), conf:"high"};
-        }
-      }
-      for(const l of slice){
-        const m = l.match(/^\s*(\d{1,3})\s*$/);
-        if(m){
-          const v = parseInt(m[1],10);
-          if(Number.isFinite(v) && v>0 && v<=500) return {v:String(v), conf:"med"};
-        }
-      }
-    }
-    // fallback: first plausible number in range
-    for(const l of linesU){
-      if(l.includes("TEL") || l.includes("ACCOUNT") || l.includes("PO BOX") || l.includes("CHECK")) continue;
-      const ms = [...l.matchAll(/\b(\d{1,3}(?:[.,]\d{1,2})?)\b/g)].map(m=>m[1]);
-      for(const s of ms){
-        const v = parseFloat(s.replace(",","."));
-        if(Number.isFinite(v) && v>0 && v<=500) return {v:String(v), conf:"low"};
-      }
-    }
-    return {v:"", conf:"low"};
-  };
-
-  const pounds = findPounds();
-  if(pounds.v){
-    out.pounds = pounds.v;
-    out.confidence.pounds = pounds.conf;
-  }
-
-  // --- AREA ---
-  // Existing behavior: try to match a known area substring in OCR text.
-  if(Array.isArray(knownAreas) && knownAreas.length){
-    const hay = text;
-    let best = "";
-    for(const a of knownAreas){
-      const au = String(a||"").toUpperCase();
-      if(au && hay.includes(au)){
-        if(au.length > best.length) best = a;
-      }
-    }
-    if(best){
-      out.area = best;
-      out.confidence.area = "med";
-    }
-  }
-
-  return out;
-}
 
 function normalizeDealerDisplay(name){
   let s = String(name||"").trim();
@@ -456,17 +196,27 @@ function loadState(){
       if(raw){ try{ localStorage.setItem(LS_KEY, raw); }catch{} }
     }
     if(!raw) throw 0;
-    const p = JSON.parse(raw);
+    const p = safeJsonParse(raw, null);
+    if(!p) throw 0;
     return {
       trips: Array.isArray(p?.trips) ? p.trips : [],
       view: p?.view || "home",
       filter: p?.filter || "YTD",
       settings: (p?.settings && typeof p.settings === "object") ? p.settings : {},
       areas: Array.isArray(p?.areas) ? p.areas : [],
-      dealers: Array.isArray(p?.dealers) ? p.dealers : []
+      dealers: Array.isArray(p?.dealers) ? p.dealers : [],
+      tideFavorites: Array.isArray(p?.tideFavorites) ? p.tideFavorites : [],
+      tideRecents: Array.isArray(p?.tideRecents) ? p.tideRecents : [],
+      tideLastStationId: p?.tideLastStationId || "",
+      tideCacheByStationId: (p?.tideCacheByStationId && typeof p.tideCacheByStationId === "object") ? p.tideCacheByStationId : {},
+      lastDealer: typeof p?.lastDealer === "string" ? p.lastDealer : "",
+      lastArea: typeof p?.lastArea === "string" ? p.lastArea : "",
+      quickPresets: Array.isArray(p?.quickPresets) ? p.quickPresets : [],
+      lastBackupAt: (typeof p?.lastBackupAt === "number" && Number.isFinite(p.lastBackupAt)) ? p.lastBackupAt : 0
     };
   }catch{
-    return { trips: [], view: "home", filter: "YTD", settings: {}, areas: [], dealers: [] };
+    try{ showCorruptStorageBanner("Your saved data was corrupted, so the app reset local storage. Your device can keep using the app normally now."); }catch{}
+    return { trips: [], view: "home", filter: "YTD", settings: {}, areas: [], dealers: [], tideFavorites: [], tideRecents: [], tideLastStationId: "", tideCacheByStationId: {}, lastDealer: "", lastArea: "", quickPresets: [], lastBackupAt: 0 };
   }
 }
 
@@ -645,7 +395,8 @@ function importBackupFromFile(file){
     reader.onload = ()=>{
       try{
         const txt = String(reader.result || "");
-        const raw = JSON.parse(txt);
+        const raw = safeJsonParse(txt, null);
+        if(!raw) throw new Error("bad_json");
 
         const normalizedResult = normalizeBackupPayload(raw);
         if(!normalizedResult.ok){
@@ -800,6 +551,310 @@ function ensureDealers(){
   }
   state.dealers = out;
 }
+// ---- Tides (RC-safe, no GPS) ----
+const DEFAULT_TIDE_STATIONS = [
+  // NOTE: Station IDs are NOAA CO-OPS station numbers. If any ID is wrong, the UI will show a friendly error and you can adjust the list in a later patch.
+  { id: "8411467", name: "Machiasport — Machias River" },
+  { id: "8411411", name: "Machias Bay — Stone Island" },
+  { id: "8411250", name: "Cutler — Naval Base" },
+  { id: "8411060", name: "Cutler — Farris Wharf" },
+  { id: "8410902", name: "Jonesport" },
+  { id: "8410884", name: "Beals / Great Wass" },
+  { id: "8410800", name: "Addison" },
+  { id: "8410736", name: "Milbridge" },
+  { id: "8410579", name: "Cherryfield" },
+  { id: "8410470", name: "Steuben" }
+];
+
+function ensureTides(){
+  if(!Array.isArray(state.tideFavorites)) state.tideFavorites = [];
+  if(!Array.isArray(state.tideRecents)) state.tideRecents = [];
+  if(!state.tideCacheByStationId || typeof state.tideCacheByStationId !== "object") state.tideCacheByStationId = {};
+  if(typeof state.tideLastStationId !== "string") state.tideLastStationId = "";
+
+  const s = state.settings || (state.settings = {});
+  if(!s.tideInitialized){
+    const def = DEFAULT_TIDE_STATIONS[0];
+    state.tideFavorites = [ { id: def.id, name: def.name } ];
+    state.tideRecents = [ { id: def.id, name: def.name } ];
+    state.tideLastStationId = def.id;
+    s.tideInitialized = true;
+    saveState();
+  }
+}
+
+function tideIsFavorite(id){
+  return Array.isArray(state.tideFavorites) && state.tideFavorites.some(x=> String(x.id)===String(id));
+}
+
+function tideToggleFavorite(st){
+  if(!st) return;
+  const id=String(st.id);
+  state.tideFavorites = Array.isArray(state.tideFavorites) ? state.tideFavorites : [];
+  const exists = state.tideFavorites.some(x=>String(x.id)===id);
+  state.tideFavorites = exists ? state.tideFavorites.filter(x=>String(x.id)!==id) : [{id, name: st.name}, ...state.tideFavorites];
+  saveState();
+}
+
+function tidePushRecent(st){
+  if(!st) return;
+  const id=String(st.id);
+  state.tideRecents = Array.isArray(state.tideRecents) ? state.tideRecents : [];
+  state.tideRecents = [{id, name: st.name}, ...state.tideRecents.filter(x=>String(x.id)!==id)].slice(0,3);
+  state.tideLastStationId = id;
+  saveState();
+}
+
+function tideFmtTime(date){
+  try{
+    return date.toLocaleTimeString([], { hour:"numeric", minute:"2-digit" });
+  }catch{
+    return "";
+  }
+}
+
+function tideHumanizeMs(ms){
+  const s=Math.max(0, Math.floor(ms/1000));
+  const h=Math.floor(s/3600);
+  const m=Math.floor((s%3600)/60);
+  if(h<=0) return `${m}m`;
+  return `${h}h ${m}m`;
+}
+
+function tideTodayYYYYMMDD(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}${m}${day}`;
+}
+
+async function tideFetchPredictions(stationId){
+  const now=new Date();
+  const begin=tideTodayYYYYMMDD(now);
+  const end=tideTodayYYYYMMDD(new Date(now.getTime()+48*3600*1000));
+  const url = `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=ShellfishTracker&begin_date=${begin}&end_date=${end}&datum=MLLW&station=${encodeURIComponent(String(stationId))}&time_zone=lst_ldt&units=english&interval=hilo&format=json`;
+  const r=await fetch(url, { cache:"no-store" });
+  if(!r.ok) throw new Error("network");
+  const j=await r.json();
+  if(j?.error) throw new Error(j.error?.message || "api");
+  if(!Array.isArray(j?.predictions)) throw new Error("format");
+  return j;
+}
+
+function tideParsePayload(payload){
+  const preds = Array.isArray(payload?.predictions) ? payload.predictions : [];
+  const events = preds.map(p=>{
+    const dt = new Date(String(p.t).replace(" ", "T"));
+    const type = String(p.type||"").toUpperCase()==="H" ? "High" : "Low";
+    const ft = Number(p.v);
+    return { dt, type, ft: Number.isFinite(ft) ? ft : null };
+  }).filter(x=> x.dt instanceof Date && !Number.isNaN(x.dt.getTime()))
+    .sort((a,b)=> a.dt.getTime()-b.dt.getTime());
+
+  const now=new Date();
+  const last = [...events].reverse().find(e=> e.dt.getTime()<=now.getTime()) || null;
+  const next = events.find(e=> e.dt.getTime()>now.getTime()) || null;
+
+  const byDay = (d)=> events.filter(e=>{
+    const dd=e.dt;
+    return dd.getFullYear()===d.getFullYear() && dd.getMonth()===d.getMonth() && dd.getDate()===d.getDate();
+  });
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1);
+
+  return {
+    events,
+    last,
+    next,
+    untilMs: next ? (next.dt.getTime()-now.getTime()) : null,
+    todayRows: byDay(today),
+    tomorrowRows: byDay(tomorrow)
+  };
+}
+
+function renderTides(){
+  const fav = Array.isArray(state.tideFavorites) ? state.tideFavorites : [];
+  const rec = Array.isArray(state.tideRecents) ? state.tideRecents : [];
+  const q = state.tideSearch || "";
+  const list = DEFAULT_TIDE_STATIONS.filter(s=> !q || s.name.toLowerCase().includes(String(q).toLowerCase()));
+
+  const row = (s)=>`
+    <div class="tideRow" data-st="${escapeHtml(String(s.id))}">
+      <div class="tideRowMain">${escapeHtml(s.name)}</div>
+      <button class="starBtn" data-star="${escapeHtml(String(s.id))}" aria-label="Toggle favorite">${tideIsFavorite(s.id) ? "★" : "☆"}</button>
+    </div>
+  `;
+
+  getApp().innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <button class="btn" id="home">← Home</button>
+        <b>Tides</b>
+      </div>
+
+      <div class="field" style="margin-top:12px">
+        <div class="label fieldLabel">Search</div>
+        <input id="tideSearch" value="${escapeHtml(String(q))}" placeholder="Type a harbor / town..." />
+      </div>
+    </div>
+
+    <div class="card">
+      <b>Favorites</b>
+      <div class="sep"></div>
+      ${fav.length ? fav.map(row).join("") : `<div class="muted small">No favorites yet.</div>`}
+    </div>
+
+    <div class="card">
+      <b>Recent</b>
+      <div class="sep"></div>
+      ${rec.length ? rec.map(row).join("") : `<div class="muted small">No recent stations yet.</div>`}
+    </div>
+
+    <div class="card">
+      <b>All stations</b>
+      <div class="sep"></div>
+      ${list.map(row).join("")}
+      <div class="muted small" style="margin-top:10px">Feet-only. Data from NOAA when online.</div>
+    </div>
+  `;
+
+  document.getElementById("home").onclick = ()=>{ state.view="home"; saveState(); render(); };
+  const inSearch = document.getElementById("tideSearch");
+  inSearch.oninput = ()=>{
+    state.tideSearch = inSearch.value || "";
+    saveState();
+    renderTides();
+  };
+
+  getApp().querySelectorAll(".tideRow").forEach(el=>{
+    el.onclick = (e)=>{
+      const id = el.getAttribute("data-st");
+      const st = DEFAULT_TIDE_STATIONS.find(x=>String(x.id)===String(id));
+      if(!st) return;
+      tidePushRecent(st);
+      state.view="tide_station";
+      saveState();
+      render();
+    };
+  });
+
+  getApp().querySelectorAll(".starBtn").forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      const id = btn.getAttribute("data-star");
+      const st = DEFAULT_TIDE_STATIONS.find(x=>String(x.id)===String(id));
+      tideToggleFavorite(st);
+      renderTides();
+    };
+  });
+}
+
+function renderTideStation(){
+  const id = state.tideLastStationId || "";
+  const st = DEFAULT_TIDE_STATIONS.find(x=>String(x.id)===String(id)) || (Array.isArray(state.tideRecents) ? state.tideRecents.find(x=>String(x.id)===String(id)) : null);
+  const name = st?.name || "Station";
+
+  const cache = (state.tideCacheByStationId && typeof state.tideCacheByStationId==="object") ? state.tideCacheByStationId[String(id)] : null;
+  const cachedPayload = cache?.payload || null;
+  const cachedAt = typeof cache?.fetchedAt === "number" ? cache.fetchedAt : null;
+
+  const parsed = cachedPayload ? tideParsePayload(cachedPayload) : null;
+
+  const row = (e)=> `
+    <div class="row" style="justify-content:space-between;gap:10px">
+      <div>${e.type==="High" ? "↑ High" : "↓ Low"}</div>
+      <div><b>${tideFmtTime(e.dt)}</b></div>
+      <div>${e.ft===null ? "—" : `${to2(e.ft)} ft`}</div>
+    </div>
+  `;
+
+  const nowCard = ()=>{
+    if(!parsed?.next) return `<div class="muted small">No tide predictions available yet.</div>`;
+    const last = parsed.last;
+    const next = parsed.next;
+    return `
+      <div class="tideNow">
+        <div class="tideNowTitle">Now</div>
+        <div class="tideNowGrid">
+          <div class="tideNowCell">
+            <div class="muted small">Last</div>
+            <div><b>${last ? (last.type==="High" ? "High" : "Low") : "—"}</b> ${last ? tideFmtTime(last.dt) : ""}</div>
+            <div class="muted small">${last?.ft===null ? "—" : `${to2(last.ft)} ft`}</div>
+          </div>
+          <div class="tideNowCell">
+            <div class="muted small">Next</div>
+            <div><b>${next.type==="High" ? "High" : "Low"}</b> ${tideFmtTime(next.dt)}</div>
+            <div class="muted small">${next.ft===null ? "—" : `${to2(next.ft)} ft`}</div>
+          </div>
+          <div class="tideNowCell">
+            <div class="muted small">In</div>
+            <div><b>${parsed.untilMs===null ? "—" : tideHumanizeMs(parsed.untilMs)}</b></div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  getApp().innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <button class="btn" id="back">← Tides</button>
+        <button class="btn" id="refresh">↻ Refresh</button>
+      </div>
+      <div style="margin-top:10px">
+        <b>${escapeHtml(name)}</b>
+      </div>
+      ${cachedAt ? `<div class="muted small" style="margin-top:6px">Last updated ${new Date(cachedAt).toLocaleString()}</div>` : ``}
+    </div>
+
+    <div class="card">
+      ${nowCard()}
+    </div>
+
+    <div class="card">
+      <b>Today</b>
+      <div class="sep"></div>
+      ${parsed?.todayRows?.length ? parsed.todayRows.map(row).join("") : `<div class="muted small">—</div>`}
+    </div>
+
+    <div class="card">
+      <b>Tomorrow</b>
+      <div class="sep"></div>
+      ${parsed?.tomorrowRows?.length ? parsed.tomorrowRows.map(row).join("") : `<div class="muted small">—</div>`}
+    </div>
+
+    <div class="card" id="tideErr" style="display:none"></div>
+  `;
+
+  document.getElementById("back").onclick = ()=>{ state.view="tides"; saveState(); render(); };
+  document.getElementById("refresh").onclick = async ()=>{
+    const err = document.getElementById("tideErr");
+    err.style.display="none";
+    try{
+      const payload = await tideFetchPredictions(id);
+      state.tideCacheByStationId[String(id)] = { fetchedAt: Date.now(), payload };
+      saveState();
+      render();
+    }catch(e){
+      err.style.display="block";
+      err.innerHTML = `<div class="muted small">Can't load tides right now. Check signal and try again.</div>`;
+    }
+  };
+
+  // Auto-refresh on open (best-effort); never blocks rendering.
+  (async ()=>{
+    try{
+      const payload = await tideFetchPredictions(id);
+      state.tideCacheByStationId[String(id)] = { fetchedAt: Date.now(), payload };
+      saveState();
+      render();
+    }catch{
+      // silent: cached view already shown
+    }
+  })();
+}
+
 
 
 function getLastUniqueFromTrips(field, maxN){
@@ -944,6 +999,7 @@ function commitTripFromDraft({ mode, editId="", inputs }){
 let state = loadState();
 ensureAreas();
 ensureDealers();
+ensureTides();
 function showFatal(err){
   // Persist last error so index.html can show a recovery UI even if modules fail next time.
   try{
@@ -1201,31 +1257,23 @@ function renderHome(){
 
   getApp().innerHTML = `
     <div class="card">
-      <div class="pasteBannerWrap">
-  <div class="pasteBanner" id="pasteExp" role="button" tabindex="0" aria-label="Paste Check (Experimental)">
-    <span class="pasteIcon">📋</span>
-    <span class="pasteText">
-      <span class="pasteTitle">Paste Check</span>
-      <span class="pasteMeta">Experimental</span>
-    </span>
-    <span id="expWarn" class="expWarn" title="Experimental. Always review Amount, Pounds, and Date.">⚠️</span>
-  </div>
-  <div id="expTip" class="muted small expTip" style="display:none;">Experimental. Always review Amount, Pounds, and Date before saving.</div>
-</div>
 
-<div class="row" style="margin-top:10px">
-  <button class="btn primary full" id="newTrip">＋ New Trip</button>
-</div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary full" id="newTrip">＋ New Trip</button>
+        </div>
 
       <div class="grid2" style="margin-top:12px">
   <button class="btn" id="reports">📊 Reports</button>
+  <button class="btn" id="tides">🌊 Tides</button>
+</div>
+<div class="row" style="margin-top:10px">
   <button class="btn" id="settings">⚙️ Settings</button>
 </div>
 <div class="row" style="margin-top:10px">
   <button class="btn" id="help">❓ Help</button>
 </div>
 
-      <div class="hint">Manual entry is recommended. Check paste is optional.</div>
+      <div class="hint">Manual entry is recommended. Use chips + quick selections for fast entry.</div>
     </div>
 
     ${pwaStorageNoteHTML}
@@ -1287,31 +1335,8 @@ function renderHome(){
   });
 
     document.getElementById("reports").onclick = ()=>{ state.view="reports"; state.lastAction="nav:reports"; saveState(); render(); };
-    const warn = document.getElementById("expWarn");
-const btnPaste = document.getElementById("pasteExp");
-const tipMsg = "Paste Check is optional. Copy check text, open New Trip, then tap Paste → Review and confirm the Amount, Pounds, and Date.";
-
-const toggleToast = (e)=>{
-  try{
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
-    const t = document.getElementById("toast");
-    if(t?.classList?.contains?.("show")){      t.classList.remove("show");
-      return;
-    }
-    showToast(tipMsg);
-  }catch{
-    showToast(tipMsg);
-  }
-};
-
-if(btnPaste){
-  btnPaste.onclick = toggleToast;
-  btnPaste.onkeydown = (e)=>{ if(e.key==="Enter"||e.key===" ") toggleToast(e); };
-}
-if(warn){
-  warn.onclick = toggleToast;
-}
+  const tidesBtn = document.getElementById("tides");
+  if(tidesBtn) tidesBtn.onclick = ()=>{ state.view="tides"; state.lastAction="nav:tides"; saveState(); render(); };
 document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
 
   document.getElementById("settings").onclick = () => {
@@ -1385,9 +1410,12 @@ document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAct
 function renderNewTrip(){
   ensureAreas();
   ensureDealers();
+  ensureQuickPresets();
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
-  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
+  const draft = state.draft || { dateISO: todayISO(), dealer:"", pounds:"", amount:"", area:"" };
+  applyLastUsedDefaultsToDraft(draft);
+  state.draft = draft;
   const amountDisp = displayAmount(draft.amount);
 
 
@@ -1429,38 +1457,13 @@ if(!topDealers.length){
 
     <div class="card">
       <div class="form">
-        <div class="field">
-          <div class="label">Paste Check (Experimental)</div>
-          <div class="sep" style="margin:10px 0;"></div>
-          <div class="pasteModule">
-
-          <div id="entryPrompt" class="muted small" style="display:none; margin-bottom:10px; padding:10px 12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:14px;">
-            <div class="row" style="justify-content:space-between;align-items:center;gap:10px">
-              <div><b>Clipboard text detected.</b> <span class="muted small">Paste and go to Review?</span></div>
-              <div class="row" style="gap:8px;flex-wrap:nowrap">
-                <button class="smallbtn" id="entryUse">Paste → Review</button>
-                <button class="smallbtn" id="entryDismiss">Dismiss</button>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn primary" id="pasteToReviewPrimary" style="width:100%;">Paste → Review</button>
-          <div class="hint">Optional. Paste check text, then review before saving.</div>
-
-          <div id="pasteFallbackHint" class="muted small" style="display:none; margin-top:10px;">
-            If Paste doesn’t work, tap and hold in the box below and choose Paste, then tap <b>Paste → Review</b>.
-          </div>
-
-          <div id="recentPastes" class="row" style="margin-top:10px; display:none; gap:8px;"></div>
-
-          <details id="pasteDetails" style="margin-top:10px;">
-            <summary class="muted small" style="cursor:pointer;">Show/edit pasted text (optional)</summary>
-            <textarea class="textarea" id="t_paste" placeholder="Tap and hold to Paste check text here (optional)" style="min-height:70px;"></textarea>
-          </details>
-
-          </div>
-        </div>
-
+        
+        
+<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">
+  <button class="btn" id="qp0">${escapeHtml(state.quickPresets?.[0]?.name || "Quick 1")}</button>
+  <button class="btn" id="qp1">${escapeHtml(state.quickPresets?.[1]?.name || "Quick 2")}</button>
+  <button class="btn" id="qp2">${escapeHtml(state.quickPresets?.[2]?.name || "Quick 3")}</button>
+</div>
         <div class="sep" style="margin:14px 0;"></div>
         <div class="manualHdr">Manual entry</div>
         <div class="manualModule">
@@ -1511,8 +1514,6 @@ if(!topDealers.length){
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
   const elArea = document.getElementById("t_area");
-  
-  const elPaste = document.getElementById("t_paste");
 // Persist draft as the user edits fields (fixes iOS select + prevents resets)
   const persistDraft = ()=>{ try{ saveDraft(); }catch{} };
   [elDate, elDealer, elPounds, elAmount].forEach(el=>{
@@ -1617,311 +1618,7 @@ if(topDealerWrap && elDealer){
 }
 
 
-  // --- Outside-first Live Text intake (copy → paste) ---
-  const entryPrompt = document.getElementById("entryPrompt");
-  const entryUseBtn = document.getElementById("entryUse");
-  const entryDismissBtn = document.getElementById("entryDismiss");
-  const btnPastePrimary = document.getElementById("pasteToReviewPrimary");
-  const fallbackHint = document.getElementById("pasteFallbackHint");
-  const recentWrap = document.getElementById("recentPastes");
-  const pasteDetails = document.getElementById("pasteDetails");
-
-  const KEY_ENTRY_DISMISSED = "shellfish_clip_entry_dismissed";
-  const KEY_ENTRY_TRIED = "shellfish_clip_entry_tried";
-  const KEY_FOCUS_TRIED = "shellfish_clip_focus_tried";
-  const KEY_FALLBACK_SHOWN = "shellfish_clip_fallback_shown";
-  const KEY_RECENT_PASTES = "shellfish_recent_pastes_v1"; // session-only
-
-  let clipCandidate = "";
-
-  function looksReceiptLike(txt){
-    const s = String(txt||"").trim();
-    if(s.length < 25) return false;
-    if(/https?:\/\//i.test(s)) return false;
-    if(/\b(subject|from|sent):/i.test(s) && s.split(/\r?\n/).length < 8) return false;
-
-    const lines = s.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-    if(lines.length < 3) return false;
-
-    if(!/[0-9]/.test(s) || !/[A-Za-z]/.test(s)) return false;
-
-    const kw = /\b(amount|total|subtotal|balance|description|check|pay to|machias|seafood)\b|\$|\b(lbs?|pounds?)\b/i;
-    return kw.test(s);
-  }
-
-  async function readClipboardBestEffort(){
-    if(!navigator.clipboard || !navigator.clipboard.readText) return "";
-    try{
-      const t = await navigator.clipboard.readText();
-      return String(t||"").trim();
-    }catch{
-      return "";
-    }
-  }
-
-  function showFallbackHintOnce(){
-    try{
-      if(sessionStorage.getItem(KEY_FALLBACK_SHOWN) === "1") return;
-      sessionStorage.setItem(KEY_FALLBACK_SHOWN, "1");
-    }catch{}
-    if(fallbackHint) fallbackHint.style.display = "block";
-    if(pasteDetails) pasteDetails.open = true;
-    if(elPaste) elPaste.focus();
-  }
-
-  function getRecents(){
-    try{
-      const raw = sessionStorage.getItem(KEY_RECENT_PASTES);
-      const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr : [];
-    }catch{
-      return [];
-    }
-  }
-
-  function setRecents(arr){
-    try{ sessionStorage.setItem(KEY_RECENT_PASTES, JSON.stringify(arr||[])); }catch{}
-  }
-
-  function addRecent(text){
-    const t = String(text||"").trim();
-    if(!t) return;
-    const cur = getRecents();
-    // de-dupe by first 60 chars
-    const sig = t.slice(0,60);
-    const next = [t, ...cur.filter(x => String(x||"").slice(0,60) !== sig)].slice(0,3);
-    setRecents(next);
-    renderRecents();
-  }
-
-  function renderRecents(){
-    if(!recentWrap) return;
-    const rec = getRecents();
-    if(!rec.length){
-      recentWrap.style.display = "none";
-      recentWrap.innerHTML = "";
-      return;
-    }
-    recentWrap.style.display = "flex";
-    recentWrap.innerHTML = rec.map((_,i)=>`<button class="smallbtn" data-recent="${i}">${i===0 ? "Use last paste" : "Use previous"}</button>`).join("");
-    recentWrap.querySelectorAll("button[data-recent]").forEach(btn=>{
-      btn.onclick = ()=>{
-        const i = Number(btn.getAttribute("data-recent"));
-        const txt = getRecents()[i] || "";
-        if(txt) applyPastedText(txt);
-      };
-    });
-  }
-
-  function saveDraft(){
-    // Persist a lightweight draft so users don't lose progress.
-    // Draft may be partial; validation still happens on Review.
-    const dateISO = parseMDYToISO(String(elDate?.value||"")) || (state.draft?.dateISO || todayISO);
-    state.draft = {
-      dateISO: dateISO || todayISO,
-      dealer: String(elDealer?.value || ""),
-      pounds: String(elPounds?.value || ""),
-      amount: String(elAmount?.value || ""),
-      area: String(elArea?.value || "")
-    };
-    saveState();
-  }
-
-  function applyPastedText(txt){
-    const t = String(txt||"").trim();
-    if(!t) return;
-
-    // keep the raw text available for audit/edit
-    if(elPaste) elPaste.value = t;
-    addRecent(t);
-
-    // Parse into draft fields
-    const parsed = parseOcrText(t, state.areas||[]);
-    if(parsed.dateMDY) elDate.value = parsed.dateMDY;
-    if(parsed.dealer) elDealer.value = parsed.dealer;
-    if(parsed.pounds) elPounds.value = parsed.pounds;
-    if(parsed.amount) elAmount.value = parsed.amount;
-    if(parsed.area) elArea.value = parsed.area;
-
-    saveDraft();
-
-    // Always go to Review (still requires Confirm & Save)
-    document.getElementById("saveTrip").click();
-  }
-
-  function hideEntryPrompt(markDismissed){
-    if(entryPrompt) entryPrompt.style.display = "none";
-    clipCandidate = "";
-    if(markDismissed){
-      try{ sessionStorage.setItem(KEY_ENTRY_DISMISSED, "1"); }catch{}
-    }
-  }
-
-  async function maybePromptOnEntry(){
-    try{
-      if(sessionStorage.getItem(KEY_ENTRY_DISMISSED) === "1") return;
-      if(sessionStorage.getItem(KEY_ENTRY_TRIED) === "1") return;
-      sessionStorage.setItem(KEY_ENTRY_TRIED, "1");
-    }catch{}
-
-    const txt = await readClipboardBestEffort();
-    if(!looksReceiptLike(txt)) return;
-
-    clipCandidate = txt;
-    if(entryPrompt) entryPrompt.style.display = "block";
-  }
-
-  async function maybePromptOnFocus(){
-    // Focus is a user gesture; some browsers allow clipboard read here (best-effort).
-    try{
-      if(sessionStorage.getItem(KEY_ENTRY_DISMISSED) === "1") return;
-      if(sessionStorage.getItem(KEY_FOCUS_TRIED) === "1") return;
-      sessionStorage.setItem(KEY_FOCUS_TRIED, "1");
-    }catch{}
-
-    const txt = await readClipboardBestEffort();
-    if(!looksReceiptLike(txt)) return;
-
-    clipCandidate = txt;
-    if(entryPrompt) entryPrompt.style.display = "block";
-  }
-
-  if(entryUseBtn){
-    entryUseBtn.onclick = async ()=>{
-      const txt = clipCandidate || await readClipboardBestEffort();
-      if(txt){
-        hideEntryPrompt(false);
-        applyPastedText(txt);
-      }else{
-        showFallbackHintOnce();
-      }
-    };
-  }
-  if(entryDismissBtn){
-    entryDismissBtn.onclick = ()=> hideEntryPrompt(true);
-  }
-
-  if(btnPastePrimary){
-    btnPastePrimary.onclick = async ()=>{
-      const txt = await readClipboardBestEffort();
-      if(txt){
-        applyPastedText(txt);
-      }else{
-        showFallbackHintOnce();
-      }
-    };
-  }
-renderRecents();
-const backBtn = document.getElementById("backHome");
-  if(backBtn){ backBtn.onclick = ()=>{ state.view="home"; saveState(); render(); }; }
-
-
-  document.getElementById("clearDraft").onclick = ()=>{
-    // Clear only the in-progress draft (does not save a trip)
-    state.view = "new";
-    state.lastAction = "draft:cleared";
-    delete state.reviewDraft;
-    const todayISO = new Date().toISOString().slice(0,10);
-    state.draft = { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-    saveState();
-    render();
-  };
-
-  let dealerPromptArmed = "";
-  let dealerPromptSuppressed = "";
-
-  function updateDealerPrompt(){
-    const box = document.getElementById("t_dealerPrompt");
-    if(!box) return;
-    const current = String(document.getElementById("t_dealer")?.value||"").trim();
-    const canonical = findCanonicalFromList(current, state.dealers);
-    if(!current || canonical){
-      box.innerHTML = "";
-      return;
-    }
-    if(!dealerPromptArmed || dealerPromptArmed.toLowerCase() !== current.toLowerCase()){
-      box.innerHTML = "";
-      return;
-    }
-    if(dealerPromptSuppressed && dealerPromptSuppressed.toLowerCase() === current.toLowerCase()){
-      box.innerHTML = "";
-      return;
-    }
-
-    box.innerHTML = `<div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">
-      <div class="muted small">Save <b>${escapeHtml(current)}</b> to Dealers?</div>
-      <button class="smallbtn" id="t_saveDealer">Save</button>
-      <button class="smallbtn" id="t_noSaveDealer">Not now</button>
-    </div>`;
-
-    document.getElementById("t_saveDealer")?.addEventListener("click", ()=>{
-      state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
-      state.dealers.push(current);
-      ensureDealers();
-      saveState();
-
-      const canon = findCanonicalFromList(current, state.dealers) || current;
-      const el = document.getElementById("t_dealer");
-      if(el) el.value = canon;
-      
-      dealerPromptArmed = "";
-      dealerPromptSuppressed = "";
-      box.innerHTML = "";
-      saveDraft();
-      renderNewTrip();
-    });
-
-    document.getElementById("t_noSaveDealer")?.addEventListener("click", ()=>{
-      dealerPromptSuppressed = current;
-      dealerPromptArmed = "";
-      box.innerHTML = "";
-    });
-  }
-
-
-
-  document.getElementById("cancelTrip").onclick = ()=>{
-    // Cancel returns home without saving
-    state.view = "home";
-    state.lastAction = "trip:cancel";
-    saveState();
-    render();
-  };
-
-
-  document.getElementById("saveTrip").onclick = ()=>{
-    // Phase 3A: Build Review first (nothing saves until Confirm)
-    const dateISO = parseMDYToISO(elDate.value);
-    const dealer = normalizeDealerDisplay(String(elDealer.value||"").trim());
-    const pounds = parseNum(elPounds.value);
-    const amount = parseMoney(elAmount.value);
-
-    const errs = [];
-    if(!dateISO) errs.push("Date");
-    if(!dealer) errs.push("Dealer");
-    if(!(pounds > 0)) errs.push("Pounds");
-    if(!(amount > 0)) errs.push("Amount");
-    if(errs.length){
-      alert("Missing/invalid: " + errs.join(", "));
-      return;
-    }
-
-    const candidate = {
-      dateISO,
-      dealer,
-      pounds: to2(pounds),
-      amount: to2(amount),
-      area: String(elArea.value||""),
-      // keep draft fields for review
-      raw: String(elPaste.value||"").trim()
-    };
-
-    // Store review draft and go to Review screen
-    state.reviewDraft = candidate;
-    state.view = "review";
-    saveState();
-    render();
-  };
+  // --- Outside-first Live Text in
 }
 
 
@@ -2973,6 +2670,7 @@ function drawReportsCharts(monthRows, dealerRows){
 function renderSettings(){
   ensureAreas();
   ensureDealers();
+  ensureQuickPresets();
 
   const areaRows = state.areas.length ? state.areas.map((a, i)=>`
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
@@ -2989,7 +2687,61 @@ function renderSettings(){
   `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
 
   getApp().innerHTML = `
-    <div class="card">
+    
+<div class="card">
+  <div class="h2">Quick presets</div>
+  <div class="muted small" style="margin-top:6px">Edit the 3 Quick buttons shown on New Trip.</div>
+
+  <div class="field" style="margin-top:10px">
+    <div class="label">Quick 1 name</div>
+    <input id="qp_name_0" value="${escapeHtml(state.quickPresets?.[0]?.name || "Quick 1")}" />
+  </div>
+  <div class="grid2" style="margin-top:8px">
+    <div class="field">
+      <div class="label">Quick 1 dealer</div>
+      <input id="qp_dealer_0" list="dealerList" value="${escapeHtml(state.quickPresets?.[0]?.dealer || "")}" />
+    </div>
+    <div class="field">
+      <div class="label">Quick 1 area</div>
+      <input id="qp_area_0" list="areaList" value="${escapeHtml(state.quickPresets?.[0]?.area || "")}" />
+    </div>
+  </div>
+
+  <div class="field" style="margin-top:10px">
+    <div class="label">Quick 2 name</div>
+    <input id="qp_name_1" value="${escapeHtml(state.quickPresets?.[1]?.name || "Quick 2")}" />
+  </div>
+  <div class="grid2" style="margin-top:8px">
+    <div class="field">
+      <div class="label">Quick 2 dealer</div>
+      <input id="qp_dealer_1" list="dealerList" value="${escapeHtml(state.quickPresets?.[1]?.dealer || "")}" />
+    </div>
+    <div class="field">
+      <div class="label">Quick 2 area</div>
+      <input id="qp_area_1" list="areaList" value="${escapeHtml(state.quickPresets?.[1]?.area || "")}" />
+    </div>
+  </div>
+
+  <div class="field" style="margin-top:10px">
+    <div class="label">Quick 3 name</div>
+    <input id="qp_name_2" value="${escapeHtml(state.quickPresets?.[2]?.name || "Quick 3")}" />
+  </div>
+  <div class="grid2" style="margin-top:8px">
+    <div class="field">
+      <div class="label">Quick 3 dealer</div>
+      <input id="qp_dealer_2" list="dealerList" value="${escapeHtml(state.quickPresets?.[2]?.dealer || "")}" />
+    </div>
+    <div class="field">
+      <div class="label">Quick 3 area</div>
+      <input id="qp_area_2" list="areaList" value="${escapeHtml(state.quickPresets?.[2]?.area || "")}" />
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="btn primary" id="saveQuickPresets">Save quick presets</button>
+  </div>
+</div>
+      <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="backHome">← Back</button>
         <b>Settings</b>
@@ -3186,6 +2938,27 @@ function renderSettings(){
     saveState();
     render();
   };
+
+const saveQP = document.getElementById("saveQuickPresets");
+if(saveQP) saveQP.onclick = ()=>{
+  ensureQuickPresets();
+  const next = [0,1,2].map(i=>({
+    name: (document.getElementById(`qp_name_${i}`)?.value || `Quick ${i+1}`).trim() || `Quick ${i+1}`,
+    dealer: (document.getElementById(`qp_dealer_${i}`)?.value || "").trim(),
+    area: (document.getElementById(`qp_area_${i}`)?.value || "").trim()
+  }));
+  state.quickPresets = next;
+  saveState();
+  render();
+};
+
+const expCsv = document.getElementById("exportCsvFiltered");
+if(expCsv) expCsv.onclick = ()=>{
+  const trips = getFilteredTrips();
+  const csv = buildTripsCsv(trips);
+  const tag = String(state.filter||"filtered").toLowerCase();
+  downloadTextFile(`shellfish_trips_${tag}.csv`, csv, "text/csv");
+};
 }
 
 
@@ -3210,10 +2983,7 @@ function renderHelp(){
       </ol>
     </div>
 
-    <div class="card">
-      <b>Receipt Paste (Experimental)</b>
-      <div class="sep"></div>
-      <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
+    <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
         <li>iPhone: Photo → Live Text → Copy.</li>
         <li><b>Paste</b> into the app.</li>
         <li><b>Review</b> the fields.</li>
@@ -3293,6 +3063,8 @@ function render(){
   if(state.view === "help") return renderHelp();
   if(state.view === "all_trips") return renderAllTrips();
   if(state.view === "about") return renderAbout();
+  if(state.view === "tides") return renderTides();
+  if(state.view === "tide_station") return renderTideStation();
   return renderHome();
 }
 
@@ -3351,4 +3123,123 @@ function bindAreaChips(containerId, onPick){
     const a = btn.getAttribute("data-area") || "";
     onPick(String(a));
   });
+}function safeJsonParse(str, fallback){
+  try{
+    return JSON.parse(str);
+  }catch{
+    return fallback;
+  }
 }
+
+const LS_KEY_CORRUPT_BANNER = "esmt_corrupt_banner_dismissed_v1";
+
+function showCorruptStorageBanner(message){
+  try{
+    if(localStorage.getItem(LS_KEY_CORRUPT_BANNER)==="1") return;
+    localStorage.setItem(LS_KEY_CORRUPT_BANNER, "1");
+  }catch{}
+  try{
+    const root = document.getElementById("app");
+    if(!root) return;
+    const banner = document.createElement("div");
+    banner.className = "card";
+    banner.style.border = "1px solid rgba(255,120,0,.35)";
+    banner.style.background = "rgba(255,120,0,.08)";
+    banner.style.marginTop = "10px";
+    banner.innerHTML = `
+      <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start">
+        <div>
+          <b>Storage reset</b>
+          <div class="muted small" style="margin-top:6px">${escapeHtml(String(message||"We had to reset local storage due to corrupted data."))}</div>
+        </div>
+        <button class="btn" id="dismissCorrupt">OK</button>
+      </div>
+    `;
+    root.prepend(banner);
+    const btn = banner.querySelector("#dismissCorrupt");
+    if(btn) btn.onclick = ()=>{ try{ banner.remove(); }catch{} };
+  }catch{}
+}
+
+function todayISO(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+function ensureQuickPresets(){
+  state.quickPresets = Array.isArray(state.quickPresets) ? state.quickPresets : [];
+  if(state.quickPresets.length >= 3) return;
+  const base = [
+    { name: "Quick 1", dealer: state.lastDealer || "", area: state.lastArea || "" },
+    { name: "Quick 2", dealer: "", area: "" },
+    { name: "Quick 3", dealer: "", area: "" }
+  ];
+  const merged = [...state.quickPresets];
+  for(let i=merged.length;i<3;i++) merged.push(base[i]);
+  state.quickPresets = merged.slice(0,3);
+  saveState();
+}
+
+function applyLastUsedDefaultsToDraft(draft){
+  if(!draft) return draft;
+  if(!draft.dateISO) draft.dateISO = todayISO();
+  if(!draft.dealer && state.lastDealer) draft.dealer = state.lastDealer;
+  if(!draft.area && state.lastArea) draft.area = state.lastArea;
+  return draft;
+}
+
+function applyQuickPresetToDraft(idx){
+  ensureQuickPresets();
+  const p = state.quickPresets[idx] || {};
+  state.draft = {
+    dateISO: todayISO(),
+    dealer: p.dealer || state.lastDealer || "",
+    pounds: "",
+    amount: "",
+    area: p.area || state.lastArea || ""
+  };
+  state.view = "new";
+  saveState();
+  render();
+}
+
+function csvEscape(v){
+  const s = String(v ?? "");
+  if(/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+  return s;
+}
+
+function buildTripsCsv(trips){
+  const head = ["date","dealer","area","pounds","amount","price_per_lb"];
+  const rows = [head.join(",")];
+  for(const t of trips){
+    const lbs = Number(t?.pounds);
+    const amt = Number(t?.amount);
+    const ppl = (Number.isFinite(lbs) && lbs>0 && Number.isFinite(amt)) ? (amt/lbs) : "";
+    rows.push([
+      csvEscape(t?.dateISO || ""),
+      csvEscape(t?.dealer || ""),
+      csvEscape(t?.area || ""),
+      csvEscape(Number.isFinite(lbs) ? lbs : ""),
+      csvEscape(Number.isFinite(amt) ? amt : ""),
+      csvEscape(ppl==="" ? "" : to2(ppl))
+    ].join(","));
+  }
+  return rows.join("\n");
+}
+
+function downloadTextFile(filename, text, mime){
+  const blob = new Blob([text], { type: mime || "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ try{ URL.revokeObjectURL(url); a.remove(); }catch{} }, 1500);
+}
+
+
