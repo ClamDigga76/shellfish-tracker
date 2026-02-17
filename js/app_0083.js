@@ -1413,7 +1413,7 @@ function renderNewTrip(){
   ensureQuickPresets();
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
-  const draft = state.draft || { dateISO: todayISO(), dealer:"", pounds:"", amount:"", area:"" };
+  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
   applyLastUsedDefaultsToDraft(draft);
   state.draft = draft;
   const amountDisp = displayAmount(draft.amount);
@@ -3241,5 +3241,4 @@ function downloadTextFile(filename, text, mime){
   a.click();
   setTimeout(()=>{ try{ URL.revokeObjectURL(url); a.remove(); }catch{} }, 1500);
 }
-
 
