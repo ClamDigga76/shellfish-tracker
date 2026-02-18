@@ -1,11 +1,11 @@
-// Shellfish Tracker — V4 ESM (Phase 2C-UI)
+// Shellfish Tracker — V2 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
 window.__SHELLFISH_APP_STARTED = false;
 
 import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v4.js";
 
-const APP_VERSION = "v3";
+const APP_VERSION = "v4";
 window.__SHELLFISH_BUILD__ = APP_VERSION;
 const HOME_TRIPS_LIMIT = 15;
 const LAST_ERROR_KEY = "shellfish-last-error";
@@ -34,7 +34,7 @@ function getDisplayMode(){
 
 async function collectDiagnostics(){
   const diag = {
-    appVersion: APP_VERSION,
+    appVersion: VERSION,
     schemaVersion: (typeof SCHEMA_VERSION !== "undefined" ? SCHEMA_VERSION : null),
     displayMode: getDisplayMode(),
     userAgent: navigator.userAgent,
@@ -84,7 +84,7 @@ async function updateBuildBadge(){
   if(!el) return;
 
   const schema = (typeof SCHEMA_VERSION !== "undefined" ? SCHEMA_VERSION : null);
-  const parts = [`App ${APP_VERSION}`];
+  const parts = [`App ${VERSION}`];
   if(schema !== null) parts.push(`Schema ${schema}`);
 
   // Service Worker info
@@ -187,7 +187,7 @@ function getDebugInfo(){
 
 
 const SCHEMA_VERSION = 1;
-const APP_VERSION = APP_VERSION;
+const APP_VERSION = VERSION;
 
 
 
@@ -2615,7 +2615,7 @@ function renderSettings(){
     <div class="card">
       <b>About</b>
       <div class="sep"></div>
-      <div class="muted small" style="margin-top:10px">Version: <b>${APP_VERSION}</b></div>
+      <div class="muted small" style="margin-top:10px">Version: <b>${VERSION}</b></div>
       <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
     </div>
 
@@ -2811,7 +2811,7 @@ function renderAbout(){
     <div class="card">
       <b>Shellfish Tracker</b>
       <div class="sep"></div>
-      <div class="muted small">Version: <b>${APP_VERSION}</b></div>
+      <div class="muted small">Version: <b>${VERSION}</b></div>
       <div class="muted small" style="margin-top:8px">All data stays on this device unless you export/backup.</div>
       <div class="row" style="margin-top:12px">
         <button class="btn" id="copyDebug">Copy Debug Info</button>
@@ -2830,7 +2830,7 @@ function renderAbout(){
 
   document.getElementById("feedback").onclick = ()=>{
     const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
-    const subj = encodeURIComponent("Shellfish Tracker Feedback ("+APP_VERSION+")");
+    const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
     location.href = `mailto:?subject=${subj}&body=${body}`;
   };
 }
@@ -2852,7 +2852,7 @@ try{
   window.__SHELLFISH_APP_STARTED = true;
   render();
   const bp = document.getElementById("bootPill");
-  if(bp && !bp.classList.contains("err")){ bp.textContent = "OK"; bp.title = `v ${APP_VERSION}`; }
+  if(bp && !bp.classList.contains("err")){ bp.textContent = "OK"; bp.title = `v ${VERSION}`; }
 }catch(err){ showFatal(err); }
 
 // ---- Display helpers (no state) ----

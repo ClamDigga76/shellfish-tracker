@@ -1,3 +1,18 @@
+async function __assertAssetExists(path) {
+  const r = await fetch(path, { cache: "no-store" });
+  if (!r.ok) throw new Error(`Missing required asset: ${path} (HTTP ${r.status})`);
+}
+
+(async () => {
+  try {
+    await __assertAssetExists("./js/utils_v4.js");
+    await __assertAssetExists("./js/app_v4.js");
+  } catch (e) {
+    if (typeof window.__showModuleError === "function") window.__showModuleError(e);
+    else console.error(e);
+  }
+})();
+
 function detectShellfishStateKey() {
   const canonical = "shellfish-state";
   try {
@@ -20,7 +35,7 @@ function detectShellfishStateKey() {
   }
 }
 
-const BOOT_BUILD = "v4";
+const BOOT_BUILD = "v3";
 window.__SHELLFISH_BUILD__ = window.__SHELLFISH_BUILD__ || BOOT_BUILD;
 const pill = document.getElementById("bootPill");
   const app = document.getElementById("app");
