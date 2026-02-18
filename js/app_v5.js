@@ -188,7 +188,6 @@ function getDebugInfo(){
 
 
 const SCHEMA_VERSION = 1;
-const APP_VERSION = VERSION;
 
 
 
@@ -1380,7 +1379,7 @@ if(!topDealers.length){
 
         </div>
       </div>
-    </div
+    </div>
   `;
   bindNavHandlers(state);
 
@@ -1507,6 +1506,9 @@ if(topDealerWrap && elDealer){
     state.draft = state.draft || {};
     state.draft.dealer = d;
     saveDraft();
+  });
+}
+}
 
 function renderReviewTrip(){
   ensureAreas();
