@@ -1237,7 +1237,7 @@ function renderNewTrip(){
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
     const label = a ? a : "—";
     const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
-    return `<option value="${String(a||"").replaceAll('"',"&quot;")}" ${sel}>${label}</option>`;
+    return `<option value="${escapeHtml(String(a||""))}" ${sel}>${label}</option>`;
   }).join("");
 
 const dealerOptions = [""].concat(Array.isArray(state.dealers)?state.dealers:[]).map(d=>{
@@ -1838,7 +1838,7 @@ function renderEditTrip(){
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
     const label = a ? a : "—";
     const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
-    return `<option value="${String(a||"").replaceAll('"',"&quot;")}" ${sel}>${label}</option>`;
+    return `<option value="${escapeHtml(String(a||""))}" ${sel}>${label}</option>`;
   }).join("");
 
   // Top 3 most-used Areas (from saved trips) for quick selection
@@ -1875,7 +1875,7 @@ function renderEditTrip(){
 
         <div class="field">
           <div class="label">Dealer</div>
-          <input class="input" id="e_dealer" placeholder="Machias Bay Seafood" value="${String(draft.dealer||"").replaceAll('"',"&quot;")}" />
+          <input class="input" id="e_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(draft.dealer||""))}" />
         </div>
 
         <div class="field">
@@ -1916,15 +1916,7 @@ function renderEditTrip(){
 
   bindAreaChips("topAreasE", (a)=>{ elArea.value = String(a||""); });
 
-
-  const goHome = ()=>{
-    state.view = "home";
-    saveState();
-    render();
-  };
-
-  document.getElementById("backHome").onclick = goHome;
-  document.getElementById("cancelEdit").onclick = goHome;
+  bindNavHandlers(state);
 
   document.getElementById("saveEdit").onclick = ()=>{
     commitTripFromDraft({
@@ -1945,7 +1937,7 @@ function renderEditTrip(){
     state.trips = trips.filter(x => String(x?.id||"") !== id);
     delete state.editId;
     saveState();
-    goHome();
+    goBack(state);
   };
 }
 
@@ -2559,7 +2551,7 @@ function renderSettings(){
     <div class="card">
       <b>Help</b>
       <div class="sep"></div>
-      <div class="muted small" style="margin-top:10px">Short instructions for manual entry, receipt paste, backups, and install.</div>
+      <div class="muted small" style="margin-top:10px">Short instructions for manual entry, clipboard paste, backups, and install.</div>
       <div class="row" style="margin-top:12px">
         <button class="btn" id="openHelp">Open Help</button>
       </div>
@@ -2591,8 +2583,7 @@ function renderSettings(){
   getApp().scrollTop = 0;
   updateBuildBadge();
 
-  const goHome = ()=>{ state.view="home"; saveState(); render(); };
-  document.getElementById("backHome").onclick = goHome;
+  bindNavHandlers(state);
 
   document.getElementById("openHelp").onclick = ()=>{ pushView(state, "help"); };
 
@@ -2717,7 +2708,7 @@ function renderHelp(){
   getApp().innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
-        <button class="smallbtn" id="navBack">← Back</button>
+        <button class="smallbtn" id="navBack" type="button">← Back</button>
         <b>Help</b>
         <span class="muted small"></span>
       </div>
@@ -2725,49 +2716,30 @@ function renderHelp(){
     </div>
 
     <div class="card">
-      <b>Manual Entry (Recommended)</b>
+      <b>Manual Entry</b>
       <div class="sep"></div>
       <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
-  <li>Copy text in any app.</li>
-  <li>Open <b>New Trip</b> and tap the field you want to fill.</li>
-  <li>Tap <b>Paste</b> to insert clipboard text into that field.</li>
-  <li><b>Save</b>.</li>
-</ol>
-    </div>
-
-    <div class="card">
-      <b>Receipt Paste (Experimental)</b>
-      <div class="sep"></div>
-      <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
-        <li>Copy text (any source).</li>
-        <li><b>Paste</b> into the app.</li>
-        <li><b>Review</b> the fields.</li>
-        <li><b>Save</b>.</li>
+        <li>Copy text in any app.</li>
+        <li>Open <b>New Trip</b> and tap the field you want to fill.</li>
+        <li>Tap <b>Paste</b> to insert clipboard text into that field.</li>
+        <li>Finish the remaining fields and tap <b>Save</b>.</li>
       </ol>
-      <div class="hint">Tip: iOS may show a small <b>Paste</b> bubble for privacy. Tap it once to allow paste.</div>
+      <div class="hint">No receipt parsing or OCR is used; paste inserts text only.</div>
     </div>
 
     <div class="card">
-      <b>Backup & Restore</b>
+      <b>Install / Offline</b>
       <div class="sep"></div>
-      <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
-        <li>Backup often.</li>
-        <li>Restore if you reinstall.</li>
-        <li><b>Trips + Areas + Dealers</b> included.</li>
-      </ol>
-    </div>
-
-    <div class="card">
-      <b>Install the App (iPhone & Android)</b>
-      <div class="sep"></div>
-      <div class="muted small"><b>iPhone/iPad:</b> Share → <b>Add to Home Screen</b>. Launch from the icon for the best app-like feel.</div>
-      <div class="muted small" style="margin-top:8px"><b>Android:</b> Menu → <b>Install app</b> (or Add to Home screen).</div>
-      <div class="muted small" style="margin-top:8px;line-height:1.45"><b>Data note:</b> Trips saved in Safari may not appear in the installed Home Screen app (and vice-versa) because they can use separate on-device storage. Use <b>Create Backup</b> in the one that has your trips, then <b>Restore Backup</b> in the other to move them.</div>
+      <div class="muted small" style="line-height:1.5">
+        On iPhone/iPad: Safari → Share → <b>Add to Home Screen</b>.
+        Installed PWAs can lag behind updates due to cached files. If something looks wrong, use <b>Reset cache</b> then reload.
+      </div>
     </div>
   `;
+
   getApp().scrollTop = 0;
 
-  document.getElementById("backHome").onclick = ()=>{ state.view="home"; state.lastAction="nav:home"; saveState(); render(); };
+  if (typeof bindNavHandlers === "function") bindNavHandlers(state);
 }
 
 function renderAbout(){
