@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'">
   <title>Shellfish Tracker</title>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -15,39 +14,38 @@
 <meta name="apple-mobile-web-app-title" content="Shellfish Tracker">
 
 <style>
-:root{--font-base:16px;--font-scale:1;--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55)}
+:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55)}
 *{box-sizing:border-box}
 html,body{height:100%}
-html{font-size:calc(var(--font-base)*var(--font-scale))}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
 .phone{width:430px;max-width:100vw;border-radius:30px;background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);border:1px solid rgba(255,255,255,.10);box-shadow:var(--sh);overflow:hidden}
-header h1{margin:0;font-size:1.125rem;letter-spacing:.2px}
-header p{margin:8px 0 0;color:var(--muted);font-size:0.75rem;line-height:1.35}
-.boot{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:0.6875rem;color:var(--muted);vertical-align:middle}
+header h1{margin:0;font-size:18px;letter-spacing:.2px}
+header p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
+.boot{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--muted);vertical-align:middle}
 .boot.err{border-color:rgba(255,77,79,.6);color:#ffd7e1;background:rgba(255,77,79,.12)}
 main{padding:14px 14px 18px}
 .card{background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:0.875rem;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .btn.primary{background:linear-gradient(180deg, rgba(47,109,246,.92) 0%, rgba(31,111,235,.92) 100%);border-color:rgba(47,109,246,.9);box-shadow:0 10px 26px rgba(31,111,235,.20)}
 .btn.good{background:rgba(46,160,67,.22);border-color:rgba(46,160,67,.55)}
 .btn.danger{background:rgba(255,77,79,.14);border-color:rgba(255,77,79,.45);color:#ffd7e1}
 .btn.ghost{background:transparent}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .muted{color:var(--muted)}
-.small{font-size:0.75rem}
-.hint{margin-top:8px;color:var(--muted);font-size:0.75rem;line-height:1.35}
+.small{font-size:12px}
+.hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
 .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.pill{background:rgba(11,18,32,.85);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:999px;font-size:0.75rem}
+.pill{background:rgba(11,18,32,.85);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:999px;font-size:12px}
 .sep{height:1px;background:var(--line);margin:12px 0;opacity:.9}
 /* Phase 2C-1 additions */
 .filters{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.chip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#eaf0ff;padding:10px 12px;border-radius:999px;font-weight:700;font-size:0.875rem;cursor:pointer}
+.chip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#eaf0ff;padding:10px 12px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer}
 .chip.on{background:rgba(80,130,255,.35);border-color:rgba(120,160,255,.55)}
 
 /* Area quick-pick chips (smaller than filter chips) */
 .areachips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.areachip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#eaf0ff;padding:8px 10px;border-radius:999px;font-weight:800;font-size:0.8125rem;cursor:pointer}
+.areachip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#eaf0ff;padding:8px 10px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer}
 .areachip:active{transform:scale(.99)}
 .triplist{display:flex;flex-direction:column;gap:12px}
 .trip{padding:12px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08)}
@@ -59,7 +57,7 @@ main{padding:14px 14px 18px}
 /* Phase 2C-2 additions */
 .form{display:flex;flex-direction:column;gap:12px}
 .field{display:flex;flex-direction:column;gap:6px}
-.label{font-size:0.75rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(235,245,255,.75);font-weight:800}
+.label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(235,245,255,.75);font-weight:800}
 .input, .select, .textarea{width:100%;padding:12px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.20);color:#eef3ff;font-weight:700}
 .textarea{min-height:110px;resize:vertical;font-weight:600}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
@@ -74,14 +72,14 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
 /* Toast */
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:0.8125rem;z-index:9999;transition:opacity .18s ease, transform .18s ease}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-#credit{position:fixed;left:0;right:0;bottom:0;padding:8px 14px;font-size:0.8125rem;color:rgba(232,238,252,.75);border-top:1px solid var(--line);background:rgba(10,14,22,.75);backdrop-filter:blur(10px)}
+#credit{position:fixed;left:0;right:0;bottom:0;padding:8px 14px;font-size:13px;color:rgba(232,238,252,.75);border-top:1px solid var(--line);background:rgba(10,14,22,.75);backdrop-filter:blur(10px)}
 #credit a{color:rgba(232,238,252,.85);text-decoration:none}
 #credit a:active{text-decoration:underline}
 
-#credits{margin-top:14px;padding:10px 14px 12px;color:rgba(255,255,255,.65);font-size:0.8125rem;border-top:1px solid rgba(255,255,255,.08)}
+#credits{margin-top:14px;padding:10px 14px 12px;color:rgba(255,255,255,.65);font-size:13px;border-top:1px solid rgba(255,255,255,.08)}
 #credits a{color:inherit;text-decoration:none}
 
 header{padding:18px 22px 14px}
@@ -99,7 +97,7 @@ header{padding:18px 22px 14px}
   gap:8px;
 }
 .chipLink:active{transform:scale(.99)}
-.expTag{font-size:0.75rem;opacity:.7;font-weight:700}
+.expTag{font-size:12px;opacity:.7;font-weight:700}
 .expWarn{opacity:.75;cursor:pointer;user-select:none}
 .expTip{padding:8px 10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.03)}
 
@@ -121,7 +119,7 @@ header{padding:18px 22px 14px}
 }
 .brandTitle #bootPill{
   flex:0 0 auto;
-  font-size:0.8125rem;
+  font-size:13px;
 }
 header{padding:14px 18px 12px}
 
@@ -141,20 +139,20 @@ header{padding:14px 18px 12px}
   user-select:none;
 }
 .pasteBanner:active{transform:scale(.995)}
-.pasteIcon{font-size:1.125rem}
+.pasteIcon{font-size:18px}
 .pasteText{display:flex;align-items:baseline;gap:12px;min-width:0}
 .pasteTitle{font-weight:850;letter-spacing:.2px;white-space:nowrap}
 .pasteMeta{opacity:.7;font-weight:800;white-space:nowrap}
 .expWarn{flex:0 0 auto;opacity:.75}
 .hlHdr{
-  font-size:1.125rem;
+  font-size:18px;
   font-weight:850;
   letter-spacing:.2px;
   margin-bottom:8px;
   opacity:.95;
 }
 .hlItem{padding:6px 0}
-.hlDate{font-size:1.625rem;font-weight:900;letter-spacing:.2px}
+.hlDate{font-size:26px;font-weight:900;letter-spacing:.2px}
 .hlSub{margin-top:2px;opacity:.72}
 .hlMetrics{margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;opacity:.9}
 .hlMetrics b{opacity:1}
@@ -166,7 +164,7 @@ header{padding:14px 18px 12px}
   background:rgba(0,0,0,.18);
 }
 .manualHdr{
-  font-size:1.125rem;
+  font-size:18px;
   font-weight:900;
   letter-spacing:.2px;
   margin:4px 0 10px;
@@ -179,14 +177,14 @@ header{padding:14px 18px 12px}
   background:rgba(255,255,255,.03);
 }
 .fieldLabel{
-  font-size:1rem;
+  font-size:16px;
   font-weight:850;
   letter-spacing:.2px;
   opacity:.95;
 }
 /* IOS input zoom guard */
 input, select, textarea{
-  font-size:1rem !important;
+  font-size:16px !important;
 }
 </style>
 </head>
@@ -198,8 +196,171 @@ input, select, textarea{
     <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_0083.js"></script>
-<script type="module" id="appModule" src="./js/app_0083.js"></script>
+  <script type="module">
+  const pill = document.getElementById("bootPill");
+  const app = document.getElementById("app");
+
+  // Make error handler available to non-module scripts if needed
+  window.__showModuleError = function(err){
+    try{
+      if(pill){
+        pill.textContent = "ERROR";
+        pill.classList.add("err");
+        pill.title = "Module error";
+      }
+      const msg =
+        (err && (err.stack || err.message)) ? String(err.stack || err.message)
+        : String(err || "Module import failed");
+      try{ localStorage.setItem("shellfish-last-error", msg); }catch{}
+      try{ localStorage.setItem("shellfish-last-error-at", new Date().toISOString()); }catch{}
+
+      const esc = msg.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+      try{
+        localStorage.setItem("shellfish-last-error", msg);
+        localStorage.setItem("shellfish-last-error-at", new Date().toISOString());
+      }catch(e){}
+
+      app.innerHTML = `
+        <div class="card">
+          <b>Module failed to load.</b>
+          <div class="sep"></div>
+          <div class="muted small" style="white-space:pre-wrap">${esc}</div>
+          <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
+            <button class="btn" id="copyErr">Copy</button>
+            <button class="btn" id="reload">Reload</button>
+            <button class="btn" id="resetCache">Reset Cache</button>
+          </div>
+        </div>
+      `;
+
+      const copyBtn = document.getElementById("copyErr");
+      if(copyBtn){
+        copyBtn.onclick = async ()=>{
+          try{
+            await navigator.clipboard.writeText(msg);
+            copyBtn.textContent = "Copied";
+            setTimeout(()=> copyBtn.textContent="Copy", 900);
+          }catch(e){
+            // fallback: select text
+            const pre = document.createElement("textarea");
+            pre.value = msg;
+            pre.style.position="fixed";
+            pre.style.left="-9999px";
+            document.body.appendChild(pre);
+            pre.select();
+            document.execCommand("copy");
+            document.body.removeChild(pre);
+            copyBtn.textContent = "Copied";
+            setTimeout(()=> copyBtn.textContent="Copy", 900);
+          }
+        };
+      }
+
+      const r = document.getElementById("reload");
+      if(r) r.onclick = ()=> location.reload();
+
+      const z = document.getElementById("resetCache");
+      if(z) z.onclick = async ()=>{
+        try{
+          if("serviceWorker" in navigator){
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r=>r.unregister()));
+          }
+          if("caches" in window){
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k=>caches.delete(k)));
+          }
+        }catch(e){}
+        location.reload();
+      };
+    }catch(e){
+      console.error("Error rendering module error UI", e);
+    }
+    console.error(err);
+  };
+
+    // Boot watchdog: if the module never starts (common with stale SW caches), show recovery UI.
+  window.__BOOT_WATCHDOG__ = setTimeout(()=>{
+    try{
+      if(!window.__SHELLFISH_APP_STARTED){
+        const errMsg = (function(){
+          try{ return localStorage.getItem("shellfish-last-error") || localStorage.getItem("SHELLFISH_LAST_ERROR") || "App did not start (possible cached/stale JS)."; }catch(_){ return "App did not start (possible cached/stale JS)."; }
+        })();
+        window.__showModuleError({message: errMsg});
+      }
+    }catch(e){}
+  }, 4000);
+
+// Load the app module (direct src, avoids dynamic import syntax issues on some Safari builds).
+</script>
+
+  <script type="module" src="./js/app_0083.js" onerror="window.__showModuleError && window.__showModuleError(event)"></script>
+
+
+  <script>
+    // Watchdog: if the module doesn't start, show a helpful error card.
+    window.__SHELLFISH_STARTED = false;
+    window.__SHELLFISH_BOOT_AT = Date.now();
+    setTimeout(function(){
+      if(window.__SHELLFISH_STARTED) return;
+      try{
+        const msg = "App did not start. This usually means the JS module failed to load (cached old files or a network error). Tap Reset Cache then Reload.
+
+If it still fails: open Safari Settings → Advanced → Website Data → delete this site, then reload.";
+        if(window.__showModuleError) window.__showModuleError(new Error(msg));
+        else console.error(msg);
+      }catch(e){}
+    }, 1800);
+  </script>
+
+<script>
+  // PWA offline support + deterministic update UX (RC)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", async () => {
+      try {
+        const swUrl = "./sw.js?v=44";
+        const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
+
+        
+        await reg.update();
+const banner = document.getElementById("swUpdateBanner");
+        const btnApply = document.getElementById("swUpdateApply");
+        const btnDismiss = document.getElementById("swUpdateDismiss");
+
+        const showBanner = () => { if (banner) banner.style.display = "block"; };
+        const hideBanner = () => { if (banner) banner.style.display = "none"; };
+
+        if (btnDismiss) btnDismiss.onclick = hideBanner;
+
+        if (btnApply) {
+          btnApply.onclick = async () => {
+            try {
+              const waiting = reg.waiting;
+              if (waiting) waiting.postMessage({ type: "SKIP_WAITING" });
+            } catch (_) {}
+          };
+        }
+
+        // If there's already a waiting worker, prompt immediately.
+        if (reg.waiting) showBanner();
+
+        // When a new SW is found, prompt once it's installed (and we already have a controller).
+        reg.addEventListener("updatefound", () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener("statechange", () => {
+            if (nw.state === "installed" && navigator.serviceWorker.controller) showBanner();
+          });
+        });
+
+        // Once the new SW takes control, reload to get fresh assets.
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          window.location.reload();
+        });
+      } catch (_) {}
+    });
+  }
+</script>
 
 <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
