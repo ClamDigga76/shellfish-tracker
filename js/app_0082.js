@@ -116,228 +116,6 @@ const APP_VERSION = VERSION;
 
 
 
-function parseOcrText(raw, knownAreas){
-  const textRaw = String(raw||"").replace(/\r/g,"\n");
-  const text = textRaw.toUpperCase();
-  const lines = textRaw.split("\n").map(s=>String(s).trim()).filter(Boolean);
-  const linesU = lines.map(l=>l.toUpperCase());
-
-  const out = {
-    dateMDY: "",
-    pounds: "",
-    amount: "",
-    dealer: "",
-    area: "",
-    confidence: { date:"low", pounds:"low", amount:"low", dealer:"low", area:"low" }
-  };
-
-  const isMachias = text.includes("MACHIAS BAY SEAFOOD");
-
-  // --- DATE ---
-  // Support MM/DD/YYYY, MM-DD-YY, and glued MMDD-YY / MMDDYY.
-  const full = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](20\d{2}|19\d{2})\b/);
-  if(full){
-    out.dateMDY = `${full[1]}/${full[2]}/${full[3]}`;
-    out.confidence.date = "high";
-  } else {
-    const short = text.match(/\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](\d{2})\b/);
-    if(short){
-      const yy = parseInt(short[3],10);
-      const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
-      out.dateMDY = `${short[1]}/${short[2]}/${yyyy}`;
-      out.confidence.date = "med";
-    } else {
-      const glued = text.match(/\b(0[1-9]|1[0-2])([0-2]\d|3[01])[\/\-]?(\d{2})\b/);
-      if(glued){
-        const mm = glued[1];
-        const dd = glued[2];
-        const yy = parseInt(glued[3],10);
-        const yyyy = yy <= 79 ? (2000+yy) : (1900+yy);
-        out.dateMDY = `${mm}/${dd}/${yyyy}`;
-        out.confidence.date = "med";
-      }
-    }
-  }
-
-  // --- DEALER ---
-  // Known dealer match (from Settings)
-  if(Array.isArray(state.dealers) && state.dealers.length){
-    const hay = text;
-    let best = "";
-    for(const d of state.dealers){
-      const du = String(d||"").toUpperCase();
-      if(du && hay.includes(du)){
-        if(du.length > best.length) best = d;
-      }
-    }
-    if(best){
-      out.dealer = best;
-      out.confidence.dealer = "high";
-    }
-  }
-  // Prefer first ALLCAPS line ending with INC./LLC/CO., else first line.
-  for(const l of linesU.slice(0,8)){
-    if(l.includes("SEAFOOD")){
-      out.dealer = "Machias BAY Seafood";
-      out.confidence.dealer = "high";
-      break;
-    }
-  }
-  if(!out.dealer && lines.length){
-    out.dealer = lines[0].trim().slice(0,40);
-    out.confidence.dealer = "low";
-  }
-
-  // --- AMOUNT ---
-  // Machias checks: amount must come from CHECK AMOUNT block.
-  const parseMoneyFromWindow = (windowText, allowCents)=>{
-    // normalize OCR C/O confusion in cents
-    const w = windowText.replace(/[oO]/g,"0").replace(/[cC]/g,"0");
-    const dec = w.match(/\b(\d{1,6}[.,]\d{2})\b/);
-    if(dec){
-      const v = parseFloat(dec[1].replace(",","."));
-      if(Number.isFinite(v)) return v.toFixed(2);
-    }
-    const sp = w.match(/\b(\d{1,6})\s+(\d{2})\b/);
-    if(sp){
-      const v = parseFloat(`${sp[1]}.${sp[2]}`);
-      if(Number.isFinite(v)) return v.toFixed(2);
-    }
-    const c0 = w.match(/\b(\d{1,6})\s*0\s*0\b/);
-    if(c0){
-      const v = parseFloat(`${c0[1]}.00`);
-      if(Number.isFinite(v)) return v.toFixed(2);
-    }
-    if(allowCents){
-      const digs = [...w.matchAll(/\b(\d{4,6})\b/g)].map(m=>m[1]);
-      if(digs.length){
-        const last = digs[digs.length-1];
-        const v = parseInt(last,10)/100;
-        if(Number.isFinite(v)) return v.toFixed(2);
-      }
-    }
-    return "";
-  };
-
-  const findCheckAmount = ()=>{
-    for(let i=0;i<linesU.length;i++){
-      const winLines = linesU.slice(i, i+4);
-      const winText = winLines.join(" ");
-      const hasCheck = winText.includes("CHECK");
-      const hasAmount = winText.includes("AMOUNT");
-      if(hasCheck && hasAmount){
-        // avoid MICR lines with slashes/hyphens unless they also contain CHECK/AMOUNT
-        const val = parseMoneyFromWindow(winText, true);
-        if(val) return val;
-      }
-    }
-    return "";
-  };
-
-  let amt = "";
-  if(isMachias){
-    amt = findCheckAmount();
-    if(amt){
-      out.amount = amt;
-      out.confidence.amount = "high";
-    } else {
-      // Do not fallback for Machias; leave blank rather than guess from MICR numbers.
-      out.amount = "";
-      out.confidence.amount = "low";
-    }
-  } else {
-    // Generic: try CHECK AMOUNT first, then any decimal money-like token excluding MICR/phone/account lines.
-    amt = findCheckAmount();
-    if(!amt){
-      const candidates = [];
-      for(const l of linesU){
-        if(l.includes("/") || l.includes("TEL") || l.includes("ACCOUNT") || l.includes("ROUTING") || l.includes("PO BOX")) continue;
-        const m = l.match(/\b(\d{1,6}[.,]\d{2})\b/);
-        if(m){
-          const v = parseFloat(m[1].replace(",","."));
-          if(Number.isFinite(v) && v>=1) candidates.push(v);
-        }
-      }
-      if(candidates.length){
-        const best = Math.max(...candidates);
-        amt = best.toFixed(2);
-      }
-    }
-    if(amt){
-      out.amount = amt;
-      out.confidence.amount = "med";
-    }
-  }
-
-  // --- POUNDS ---
-  // 1) decimal with comma or dot (e.g., 59,5) near DESCRIPTION
-  const findPounds = ()=>{
-    // explicit lb/lbs markers incl OCR IBS/1BS/|BS
-    const marker = textRaw.match(/\b(\d+(?:[.,]\d+)?)\s*(?:lb|lbs|pounds?|i?bs|\|bs|1bs)\b/i);
-    if(marker){
-      const v = parseFloat(marker[1].replace(",","."));
-      if(Number.isFinite(v) && v>0) return {v:String(v), conf:"high"};
-    }
-    // DESCRIPTION block integer/decimal
-    let descIdx = -1;
-    for(let i=0;i<linesU.length;i++){
-      if(linesU[i].includes("DESCRIPTION")){ descIdx = i; break; }
-    }
-    if(descIdx>=0){
-      const slice = linesU.slice(descIdx, descIdx+12);
-      // prefer decimal with one digit
-      for(const l of slice){
-        const m = l.match(/^\s*(\d{1,3}[.,]\d{1,2})\s*$/);
-        if(m){
-          const v = parseFloat(m[1].replace(",","."));
-          if(Number.isFinite(v) && v>0) return {v:String(v), conf:"high"};
-        }
-      }
-      for(const l of slice){
-        const m = l.match(/^\s*(\d{1,3})\s*$/);
-        if(m){
-          const v = parseInt(m[1],10);
-          if(Number.isFinite(v) && v>0 && v<=500) return {v:String(v), conf:"med"};
-        }
-      }
-    }
-    // fallback: first plausible number in range
-    for(const l of linesU){
-      if(l.includes("TEL") || l.includes("ACCOUNT") || l.includes("PO BOX") || l.includes("CHECK")) continue;
-      const ms = [...l.matchAll(/\b(\d{1,3}(?:[.,]\d{1,2})?)\b/g)].map(m=>m[1]);
-      for(const s of ms){
-        const v = parseFloat(s.replace(",","."));
-        if(Number.isFinite(v) && v>0 && v<=500) return {v:String(v), conf:"low"};
-      }
-    }
-    return {v:"", conf:"low"};
-  };
-
-  const pounds = findPounds();
-  if(pounds.v){
-    out.pounds = pounds.v;
-    out.confidence.pounds = pounds.conf;
-  }
-
-  // --- AREA ---
-  // Existing behavior: try to match a known area substring in OCR text.
-  if(Array.isArray(knownAreas) && knownAreas.length){
-    const hay = text;
-    let best = "";
-    for(const a of knownAreas){
-      const au = String(a||"").toUpperCase();
-      if(au && hay.includes(au)){
-        if(au.length > best.length) best = a;
-      }
-    }
-    if(best){
-      out.area = best;
-      out.confidence.area = "med";
-    }
-  }
-
-  return out;
-}
 
 function normalizeDealerDisplay(name){
   let s = String(name||"").trim();
@@ -851,10 +629,10 @@ function renderHome(){
   getApp().innerHTML = `
     <div class="card">
       <div class="pasteBannerWrap">
-  <div class="pasteBanner" id="pasteExp" role="button" tabindex="0" aria-label="Paste Check (Experimental)">
+  <div class="pasteBanner" id="pasteExp" role="button" tabindex="0" aria-label=" (Experimental)">
     <span class="pasteIcon">📋</span>
     <span class="pasteText">
-      <span class="pasteTitle">Paste Check</span>
+      <span class="pasteTitle"></span>
       <span class="pasteMeta">Experimental</span>
     </span>
     <span id="expWarn" class="expWarn" title="Experimental. Always review Amount, Pounds, and Date.">⚠️</span>
@@ -936,7 +714,7 @@ function renderHome(){
     document.getElementById("reports").onclick = ()=>{ state.view="reports"; state.lastAction="nav:reports"; saveState(); render(); };
     const warn = document.getElementById("expWarn");
 const btnPaste = document.getElementById("pasteExp");
-const tipMsg = "Paste Check is optional. Copy check text, open New Trip, then tap Paste → Review and confirm the Amount, Pounds, and Date.";
+const tipMsg = " is optional. Copy check text, open New Trip, then tap Paste → Review and confirm the Amount, Pounds, and Date.";
 
 const toggleToast = (e)=>{
   try{
@@ -1077,7 +855,7 @@ if(!topDealers.length){
     <div class="card">
       <div class="form">
         <div class="field">
-          <div class="label">Paste Check (Experimental)</div>
+          <div class="label"> (Experimental)</div>
           <div class="sep" style="margin:10px 0;"></div>
           <div class="pasteModule">
 
@@ -2869,7 +2647,7 @@ function renderHelp(){
     </div>
 
     <div class="card">
-      <b>Receipt Paste (Experimental)</b>
+      <b>Manual Entry (Experimental)</b>
       <div class="sep"></div>
       <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
         <li>iPhone: Photo → Live Text → Copy.</li>

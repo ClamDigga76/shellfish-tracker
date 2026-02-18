@@ -1,8 +1,10 @@
 // Shellfish Tracker — V1.5 ESM Branch
 // Phase 2A: Extracted pure utilities (no DOM, no state)
 
-export function uid(){
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+export function uid(prefix=""){
+  const p = String(prefix || "").trim();
+  const core = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  return p ? `${p}_${core}` : core;
 }
 
 export function to2(n){
@@ -51,6 +53,11 @@ export function parseMDYToISO(mdy){
   }
   const y = Number(yy);
   if(!(mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31 && y >= 1900 && y <= 2100)) return "";
+
+  // Reject impossible dates (e.g. 02/31)
+  const dt = new Date(y, mm - 1, dd);
+  if(dt.getFullYear() !== y || (dt.getMonth()+1) !== mm || dt.getDate() !== dd) return "";
+
   return y + "-" + pad2(mm) + "-" + pad2(dd);
 }
 
