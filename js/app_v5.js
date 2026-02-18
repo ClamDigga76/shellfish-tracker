@@ -1203,6 +1203,9 @@ const toggleToast = (e)=>{
   }
 };
 
+const btnPaste = document.getElementById("paste");
+const warn = document.getElementById("warn");
+
 if(btnPaste){
   btnPaste.onclick = toggleToast;
   btnPaste.onkeydown = (e)=>{ if(e.key==="Enter"||e.key===" ") toggleToast(e); };

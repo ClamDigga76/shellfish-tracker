@@ -1,6 +1,6 @@
 // Simple offline cache for Shellfish Tracker (v5)
 const APP_VERSION = "v5";
-const CACHE_VERSION = "v6";
+const CACHE_VERSION = "v7";
 const CACHE_NAME = `shellfish-tracker-${APP_VERSION}-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   "./",
