@@ -981,21 +981,20 @@ function renderAllTrips(){
     const amt = Number(t?.amount)||0;
     const ppl = (lbs>0 && amt>0) ? (amt/lbs) : 0;
     return `
-      <div class="trip">
-        <div class="row" style="justify-content:space-between;gap:10px;flex-wrap:wrap">
-          <b>${escapeHtml(date)}</b>
-          <b>${dealer}</b>
-        </div>
-        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">
-          <span class="pill">Lbs: <b>${to2(lbs)}</b></span>
-          <span class="pill">Amt: <b>${formatMoney(amt)}</b></span>
-          <span class="pill">PPL: <b>${formatMoney(ppl)}</b></span>
-          ${area ? `<span class="pill">Area: <b>${area}</b></span>` : ""}
-        </div>
-        <div style="margin-top:10px">
-          <button class="btn" data-edit="${escapeHtml(String(t?.id||""))}">Edit</button>
+      <div class="trip triprow" data-id="${escapeHtml(String(t?.id||""))}" role="button" tabindex="0">
+        <div class="trow">
+          <div>
+            <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${area?` <span class="dot">•</span> <span class="tmeta">${area}</span>`:""}</div>
+            <div class="tname">${dealer || "(dealer)"}</div>
+            <div class="tsub">PPL: <b>${formatMoney(ppl)}</b></div>
+          </div>
+          <div class="tright">
+            <div><b>${to2(lbs)}</b> lbs</div>
+            <div><b>${formatMoney(amt)}</b></div>
+          </div>
         </div>
       </div>
+    `;
     `;
   }).join("") : `<div class="muted small">No trips saved yet.</div>`;
 
@@ -1019,13 +1018,18 @@ function renderAllTrips(){
   document.getElementById("home").onclick = ()=>{ state.view="home"; saveState(); render(); };
   document.getElementById("export").onclick = ()=> exportCSV();
 
-  getApp().querySelectorAll("button[data-edit]").forEach(btn=>{
-    btn.onclick = ()=>{
+  // Open trip to edit
+  getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
+    const open = ()=>{
       state.view="edit";
-      state.editId = btn.getAttribute("data-edit") || "";
+      state.editId = card.getAttribute("data-id") || "";
       saveState();
       render();
     };
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); }
+    });
   });
 }
 
@@ -1095,18 +1099,20 @@ function renderHome(){
     const area = (t?.area||"").toString();
     const safeDealer = dealer ? dealer : "(dealer)";
     return `
-      <div class="trip" data-id="${t?.id||""}" role="button" tabindex="0">
-        <div class="trip-top">
-          <div class="trip-date">${date || ""}</div>
-          <div class="trip-dealer">${safeDealer}</div>
-        </div>
-        <div class="trip-meta">
-          <span class="pill">Lbs: <b>${lbs}</b></span>
-          <span class="pill">Amt: <b>${formatMoney(amt)}</b></span>
-          <span class="pill">PPL: <b>${formatMoney(ppl)}</b></span>
-          ${area ? `<span class="pill">Area: <b>${area}</b></span>` : ""}
+      <div class="trip triprow" data-id="${t?.id||""}" role="button" tabindex="0">
+        <div class="trow">
+          <div>
+            <div class="metaRow"><span class="tmeta">${date || ""}</span>${area ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(area)}</span>` : ""}</div>
+            <div class="tname">${escapeHtml(safeDealer)}</div>
+            <div class="tsub">PPL: <b>${formatMoney(ppl)}</b></div>
+          </div>
+          <div class="tright">
+            <div><b>${lbs}</b> lbs</div>
+            <div><b>${formatMoney(amt)}</b></div>
+          </div>
         </div>
       </div>
+    `;
     `;
   }).join("") : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
 
@@ -2152,12 +2158,12 @@ state.lastAction="nav:help"; saveState(); render(); };
   const renderAggList = (rows, emptyMsg) => {
     if(!rows.length) return `<div class="muted small">${emptyMsg}</div>`;
     return rows.map(r=>`
-      <div class="row" style="justify-content:space-between;gap:12px;align-items:flex-start">
+      <div class="trow">
         <div>
-          <b>${escapeHtml(r.name)}</b>
-          <div class="muted small">Trips: ${r.trips}</div>
+          <div class="tname">${escapeHtml(r.name)}</div>
+          <div class="tsub">Trips: ${r.trips}</div>
         </div>
-        <div class="muted small" style="text-align:right">
+        <div class="tright">
           <div>Lbs: <b>${to2(r.lbs)}</b></div>
           <div>Total: <b>${formatMoney(to2(r.amt))}</b></div>
           <div>Avg $/lb: <b>${formatMoney(to2(r.avg))}</b></div>
@@ -2167,12 +2173,15 @@ state.lastAction="nav:help"; saveState(); render(); };
     `).join("").replace(/<div class="sep"><\/div>\s*$/,"");
   };
 
-  const renderMonthList = () => {
+    const renderMonthList = () => {
     const names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     return monthRows.map(r=>`
-      <div class="row" style="justify-content:space-between;gap:12px">
-        <div><b>${names[r.month-1]}</b><div class="muted small">Trips: ${r.trips}</div></div>
-        <div class="muted small" style="text-align:right">
+      <div class="trow">
+        <div>
+          <div class="tname">${names[r.month-1]}</div>
+          <div class="tsub">Trips: ${r.trips}</div>
+        </div>
+        <div class="tright">
           <div>Lbs: <b>${to2(r.lbs)}</b></div>
           <div>Total: <b>${formatMoney(to2(r.amt))}</b></div>
           <div>Avg $/lb: <b>${formatMoney(to2(r.avg))}</b></div>
@@ -2182,7 +2191,7 @@ state.lastAction="nav:help"; saveState(); render(); };
     `).join("").replace(/<div class="sep"><\/div>\s*$/,"");
   };
 
-  const renderChartsSection = ()=>{
+    const renderChartsSection = ()=>{
     return `
       <div class="card">
         <b>Charts</b>

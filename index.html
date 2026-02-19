@@ -187,6 +187,190 @@ header{padding:14px 18px 12px}
 input, select, textarea{
   font-size:16px !important;
 }
+
+
+/* ===== C1 Dark Glass Pro Dashboard — STYLE LOCK (v1) ===== */
+:root{
+  --bg:#0b0f16;
+  --bg2:#070a10;
+  --glass:rgba(255,255,255,.045);
+  --glass2:rgba(255,255,255,.028);
+  --line:rgba(255,255,255,.10);
+  --border:rgba(255,255,255,.12);
+  --border2:rgba(255,255,255,.08);
+  --text:#e8eefc;
+  --muted:rgba(232,238,252,.70);
+  --accent:#2f6df6;
+  --good:#2ea043;
+  --bad:#ff4d4f;
+  --r-card:14px;
+  --r-btn:12px;
+  --r-pill:999px;
+  --pad:16px;
+  --cardpad:14px;
+  --shadow:0 18px 50px rgba(0,0,0,.55);
+}
+
+/* Background + frame */
+body{
+  background:
+    radial-gradient(1000px 520px at 50% 6%, rgba(47,109,246,.18) 0%, rgba(47,109,246,0) 56%),
+    radial-gradient(900px 520px at 12% 20%, rgba(140,170,255,.10) 0%, rgba(140,170,255,0) 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+  padding:calc(var(--pad) + env(safe-area-inset-top)) 12px calc(var(--pad) + env(safe-area-inset-bottom));
+}
+
+.phone{
+  border-radius:30px;
+  background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);
+  border:1px solid var(--border2);
+  box-shadow:var(--shadow);
+}
+
+header{padding:14px 18px 12px}
+.brandTitle{font-size:clamp(22px, 5.2vw, 30px);font-weight:850;letter-spacing:.3px}
+
+/* Cards */
+.card{
+  background:linear-gradient(180deg, var(--glass) 0%, var(--glass2) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--r-card);
+  padding:var(--cardpad);
+  margin-bottom:12px;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.card > b{
+  display:block;
+  font-size:17px;
+  font-weight:850;
+  letter-spacing:.2px;
+  margin-bottom:8px;
+}
+
+/* Separators */
+.sep{height:1px;background:var(--line);margin:10px 0;opacity:.85}
+
+/* Buttons */
+.btn{
+  border-radius:var(--r-btn);
+  font-weight:850;
+  letter-spacing:.1px;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--border);
+  min-height:48px;
+}
+.btn.primary{
+  background:linear-gradient(180deg, rgba(47,109,246,.95) 0%, rgba(31,111,235,.92) 100%);
+  border-color:rgba(47,109,246,.85);
+  box-shadow:0 10px 26px rgba(31,111,235,.18);
+}
+.btn.danger{
+  background:rgba(255,77,79,.14);
+  border-color:rgba(255,77,79,.40);
+}
+
+/* Chips / segmented */
+.filters{gap:10px}
+.chip{
+  border-radius:var(--r-pill);
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--border);
+  font-weight:850;
+  font-size:14px;
+  padding:10px 14px;
+}
+.chip.on{
+  background:rgba(47,109,246,.25);
+  border-color:rgba(120,160,255,.55);
+}
+
+/* Range pill */
+.pill{
+  border-radius:var(--r-pill);
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.04);
+}
+
+/* Report table rows (C1) */
+.trow{
+  display:grid;
+  grid-template-columns: 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:10px 0;
+}
+.tname{font-weight:850;font-size:16px;letter-spacing:.15px}
+.tsub{color:var(--muted);font-size:13px;margin-top:2px}
+.tright{
+  text-align:right;
+  color:var(--muted);
+  font-size:13px;
+  display:grid;
+  gap:2px;
+}
+.tright b{color:var(--text);font-weight:850}
+
+
+/* Trip rows (C1) */
+.triplist{display:flex;flex-direction:column}
+.triplist .trip{
+  padding:10px 2px;
+  border-radius:14px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.06);
+}
+.triplist .trip + .trip{margin-top:10px}
+.triprow:active{transform:scale(.99)}
+.metaRow{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.tmeta{color:var(--muted);font-size:13px}
+.dot{color:rgba(255,255,255,.25);font-size:12px}
+
+/* KPI bar -> compact grid */
+.pillbar{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap:10px;
+  margin-top:10px;
+}
+.pillbar .pill{
+  padding:10px 12px;
+  text-align:left;
+}
+
+/* Inputs + small buttons (C1) */
+.input,.select,.textarea{
+  background:rgba(255,255,255,.04) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+}
+.input:focus,.select:focus,.textarea:focus{
+  outline:none;
+  border-color:rgba(120,160,255,.55) !important;
+  box-shadow:0 0 0 3px rgba(47,109,246,.18);
+}
+.smallbtn{
+  border-radius:var(--r-pill);
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  padding:10px 12px;
+  font-weight:800;
+}
+.actions{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:10px;
+}
+.actions .btn{width:100%}
+
+/* Charts (C1) */
+.chart{
+  width:100%;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.12);
+}
+
+/* ===== end C1 ===== */
 </style>
 </head>
 <body>
@@ -217,3 +401,4 @@ input, select, textarea{
   <div id="toast"></div>
 </body>
 </html>
+
