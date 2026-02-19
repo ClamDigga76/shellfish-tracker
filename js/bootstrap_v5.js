@@ -1,3 +1,4 @@
+const SW_VERSION = "9";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -217,7 +218,7 @@ async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
 
   try {
-    const swUrl = "./sw.js?v=7";
+    const swUrl = `./sw.js?v=${SW_VERSION}`;
     const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
     try {
       await reg.update();
