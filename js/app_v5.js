@@ -995,7 +995,6 @@ function renderAllTrips(){
         </div>
       </div>
     `;
-    `;
   }).join("") : `<div class="muted small">No trips saved yet.</div>`;
 
   getApp().innerHTML = `
@@ -1112,7 +1111,6 @@ function renderHome(){
           </div>
         </div>
       </div>
-    `;
     `;
   }).join("") : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
 
