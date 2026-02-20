@@ -1,4 +1,4 @@
-const SW_VERSION = "12";
+const SW_VERSION = "13";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -200,11 +200,13 @@ window.__showModuleError = function (err) {
   console.error(err);
 };
 
-// Proactively surface broken deploys / missing files.
+// Proactively surface broken deploys / missing files, then load the app module here so we can
+// surface real import/parse errors (404, HTML-as-JS, syntax errors) instead of only the watchdog.
 (async () => {
   try {
     await __assertAssetExists("./js/utils_v5.js");
     await __assertAssetExists("./js/app_v5.js");
+    await import("./js/app_v5.js");
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);
