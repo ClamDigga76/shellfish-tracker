@@ -1,4 +1,4 @@
-const SW_VERSION = "13";
+const SW_VERSION = "14";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -206,7 +206,7 @@ window.__showModuleError = function (err) {
   try {
     await __assertAssetExists("./js/utils_v5.js");
     await __assertAssetExists("./js/app_v5.js");
-    await import("./js/app_v5.js");
+    await import(new URL("./app_v5.js", import.meta.url).href);
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);
