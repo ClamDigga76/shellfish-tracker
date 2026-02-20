@@ -1,4 +1,4 @@
-const SW_VERSION = "15";
+const SW_VERSION = "16";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -204,8 +204,8 @@ window.__showModuleError = function (err) {
 // surface real import/parse errors (404, HTML-as-JS, syntax errors) instead of only the watchdog.
 (async () => {
   try {
-    await __assertAssetExists("./js/utils_v5.js?v=${SW_VERSION}");
-    await __assertAssetExists("./js/app_v5.js?v=${SW_VERSION}");
+    await __assertAssetExists(`./js/utils_v5.js?v=${SW_VERSION}`);
+    await __assertAssetExists(`./js/app_v5.js?v=${SW_VERSION}`);
     await import(new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href);
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
