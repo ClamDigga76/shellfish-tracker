@@ -1,128 +1,124 @@
-// Simple offline cache for Shellfish Tracker (v5)
-const APP_VERSION = "v5";
+/* Shellfish Tracker Service Worker (v-param driven)
+   Goal: prevent mixed-cache deploys and the "Unexpected keyword 'class'" failure
+   caused when HTML is served in place of JS.
+*/
 const SW_V = new URL(self.location.href).searchParams.get("v") || "0";
 const CACHE_VERSION = `v${SW_V}`;
-const CACHE_NAME = `shellfish-tracker-${APP_VERSION}-${CACHE_VERSION}`;
-const CORE_ASSETS = [
+const CACHE_NAME = `shellfish-tracker-v5-${CACHE_VERSION}`;
+
+// Core assets. Keep this list short and stable.
+const CORE = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./js/app_v5.js",
-  "./js/utils_v5.js",
   "./js/bootstrap_v5.js",
-  "./icons/favicon-32.png",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-512-maskable.png",
-  "./icons/icon-180.png"
+  "./js/utils_v5.js",
+  "./js/app_v5.js",
 ];
 
-
-self.addEventListener("message", (event) => {
-  if (event?.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-});
+function isJS(url) {
+  return /\.js($|\?)/i.test(url);
+}
+function isHTML(url) {
+  return /(^\.\/($|index\.html$))|\/($|index\.html$)/i.test(url) || /\.html($|\?)/i.test(url);
+}
+function looksLikeJSResponse(resp) {
+  const ct = (resp.headers.get("content-type") || "").toLowerCase();
+  return ct.includes("javascript") || ct.includes("ecmascript");
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
 
-    // Guarded pre-cache: never store HTML in place of JS (common iOS/SW mixed-version failure mode).
-    for (const url of CORE_ASSETS) {
+    // Install with guards: never cache HTML as JS.
+    for (const url of CORE) {
       try {
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res || !res.ok) continue;
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) continue;
 
-        // If this is a JS asset, require a JS-like content-type.
-        const isJs = typeof url === "string" && url.includes("/js/") && url.endsWith(".js");
-        const ct = (res.headers.get("content-type") || "").toLowerCase();
-        if (isJs && !(ct.includes("javascript") || ct.includes("ecmascript"))) {
-          // Skip caching bad responses (usually index.html/404 HTML).
+        if (isJS(url) && !looksLikeJSResponse(r)) {
+          // Skip caching bad response; this prevents JS parse errors later.
           continue;
         }
-
-        await cache.put(url, res.clone());
+        await cache.put(url, r);
       } catch (_) {}
     }
-
     self.skipWaiting();
   })());
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
+    // Delete old caches
     const keys = await caches.keys();
-    await Promise.all(keys.map(k => (k === CACHE_NAME) ? null : caches.delete(k)));
-    self.clients.claim();
+    await Promise.all(keys.map((k) => (k.startsWith("shellfish-tracker-v5-") && k !== CACHE_NAME) ? caches.delete(k) : Promise.resolve()));
+
+    await self.clients.claim();
   })());
+});
+
+self.addEventListener("message", (event) => {
+  if (event?.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (!req || req.method !== "GET") return;
+  if (req.method !== "GET") return;
 
   const url = new URL(req.url);
+
+  // Only handle same-origin
   if (url.origin !== self.location.origin) return;
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(req);
 
-    const isJsReq = (url.pathname.includes("/js/") && url.pathname.endsWith(".js"));
-    const cachedCt = cached ? ((cached.headers.get("content-type") || "").toLowerCase()) : "";
-    const cachedLooksJs = cached ? (cachedCt.includes("javascript") || cachedCt.includes("ecmascript")) : false;
-
-    const fetchAndCache = async () => {
-      const fresh = await fetch(req);
-      if (fresh && fresh.ok) {
-        try { await cache.put(req, fresh.clone()); } catch (_) {}
-      }
-      return fresh;
-    };
-
-    
-// Network-first for JS modules to avoid mixed-version crashes on iOS Safari.
-if (isJsReq) {
-  try {
-    const reqNoCache = new Request(req, { cache: "no-store" });
-    const fresh = await fetch(reqNoCache);
-    if (fresh && fresh.ok) {
-      const ct = (fresh.headers.get("content-type") || "").toLowerCase();
-      const looksJs = ct.includes("javascript") || ct.includes("ecmascript");
-      if (looksJs) {
-        try { await cache.put(req, fresh.clone()); } catch (_) {}
-        return fresh;
-      }
-      // If we got HTML here, do NOT cache it.
-    }
-  } catch (_) {}
-  if (cached && cachedLooksJs) return cached;
-  // purge any bad cached entry
-  try { await cache.delete(req); } catch (_) {}
-  return Response.error();
-}
-
-// Prefer fresh HTML for navigations; fall back to cache when offline.
-    if (req.mode === "navigate") {
+    // HTML: network-first (so deploys update quickly), fallback to cache.
+    if (isHTML(url.pathname) || req.mode === "navigate") {
       try {
-        return await fetchAndCache();
-      } catch (_) {
-        return cached || (await cache.match("./index.html")) || Response.error();
-      }
+        const net = await fetch(req, { cache: "no-store" });
+        if (net && net.ok) {
+          await cache.put("./index.html", net.clone());
+          return net;
+        }
+      } catch (_) {}
+      const cached = await cache.match("./index.html");
+      return cached || fetch(req);
     }
 
-    // Stale-while-revalidate for other same-origin assets.
-    if (cached) {
-      event.waitUntil(fetchAndCache().catch(() => {}));
-      return cached;
+    // JS: network-first with strict guards to avoid caching HTML.
+    if (isJS(url.pathname)) {
+      try {
+        const net = await fetch(req, { cache: "no-store" });
+        if (net && net.ok && looksLikeJSResponse(net)) {
+          await cache.put(req, net.clone());
+          return net;
+        }
+      } catch (_) {}
+
+      const cached = await cache.match(req);
+      if (cached) {
+        // If cached JS is bad (HTML), purge and fail closed.
+        if (!looksLikeJSResponse(cached)) {
+          try { await cache.delete(req); } catch (_) {}
+          return fetch(req, { cache: "no-store" });
+        }
+        return cached;
+      }
+      return fetch(req, { cache: "no-store" });
     }
+
+    // Other static assets: cache-first, then network.
+    const cached = await cache.match(req);
+    if (cached) return cached;
 
     try {
-      return await fetchAndCache();
+      const net = await fetch(req);
+      if (net && net.ok) await cache.put(req, net.clone());
+      return net;
     } catch (_) {
       return cached || Response.error();
     }
   })());
 });
-

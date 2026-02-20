@@ -1,4 +1,4 @@
-const SW_VERSION = "11";
+const SW_VERSION = "12";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -10,6 +10,15 @@ const SW_VERSION = "11";
 async function __assertAssetExists(path) {
   const r = await fetch(path, { cache: "no-store" });
   if (!r.ok) throw new Error(`Missing required asset: ${path} (HTTP ${r.status})`);
+
+  // Guard: if a JS file is accidentally served HTML (common with bad SW caches),
+  // fail fast with a clear error instead of a cryptic parse error like: Unexpected keyword 'class'.
+  if (/\.js$/i.test(path)) {
+    const ct = (r.headers.get("content-type") || "").toLowerCase();
+    if (!(ct.includes("javascript") || ct.includes("ecmascript"))) {
+      throw new Error(`Bad content-type for ${path}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
+    }
+  }
 }
 
 function detectShellfishStateKey() {
