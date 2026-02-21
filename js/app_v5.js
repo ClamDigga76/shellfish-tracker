@@ -968,6 +968,12 @@ window.addEventListener("unhandledrejection", (e)=> showFatal(e?.reason || e));
 
 function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 
+// Draft persistence is just state persistence (draft lives under state.draft)
+function saveDraft(){
+  try{ saveState(); }catch(e){ /* ignore storage failures */ }
+}
+
+
 
 
 function renderAllTrips(){
