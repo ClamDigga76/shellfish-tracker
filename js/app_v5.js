@@ -1341,15 +1341,6 @@ if(!topDealers.length){
     <div class="card">
       <div class="form">
         
-<div class="field">
-  <div class="label fieldLabel">Clipboard</div>
-  <div class="row" style="gap:10px; align-items:center; flex-wrap:wrap;">
-    <button class="smallbtn" id="pasteClipboard" type="button">Paste</button>
-    <span class="muted small">Pastes clipboard text into the focused field.</span>
-  </div>
-</div>
-
-<div class="sep" style="margin:14px 0;"></div>
 <div class="manualHdr">Manual entry</div>
 
         <div class="manualModule">
@@ -1403,24 +1394,6 @@ if(!topDealers.length){
   const elArea = document.getElementById("t_area");
 // Persist draft as the user edits fields (fixes iOS select + prevents resets)
   const persistDraft = ()=>{ try{ saveDraft(); }catch{} };
-  const pasteBtn = document.getElementById("pasteClipboard");
-  if (pasteBtn) {
-    pasteBtn.onclick = async () => {
-      const clip = await readClipboardTextSafe();
-      if (!clip) {
-        alert("Clipboard is empty or unavailable. Tap and hold in a field and choose Paste.");
-        return;
-      }
-      const focused = document.activeElement;
-      if (focused && (focused.tagName === "INPUT" || focused.tagName === "TEXTAREA")) {
-        insertTextAtCursor(focused, clip);
-        persistDraft();
-        return;
-      }
-      alert("Tap a field first, then tap Paste.");
-    };
-  }
-
   [elDate, elDealer, elPounds, elAmount].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", persistDraft);
@@ -2786,25 +2759,49 @@ function renderHelp(){
         <b>Help</b>
         <span class="muted small"></span>
       </div>
-      <div class="hint">Quick help for entering trips and installing the app.</div>
+      <div class="hint">How to use Shellfish Tracker (no paste required).</div>
     </div>
 
     <div class="card">
-      <b>Manual Entry</b>
+      <b>Main sections</b>
       <div class="sep"></div>
-      <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.5">
-        <li>Copy text in any app.</li>
-        <li>Open <b>New Trip</b> and tap the field you want to fill.</li>
-        <li>Tap <b>Paste</b> to insert clipboard text into that field.</li>
-        <li>Finish the remaining fields and tap <b>Save</b>.</li>
+      <div class="muted small" style="line-height:1.6">
+        <ul style="margin:8px 0 0 18px">
+          <li><b>Home</b>: Your totals (filtered) + recent trips list.</li>
+          <li><b>New Trip</b>: Enter a harvest check (date, dealer, pounds, amount, area).</li>
+          <li><b>Reports</b>: Summaries and rollups for your selected time filter.</li>
+          <li><b>Settings</b>: Backup/restore, lists (areas/dealers), and app options.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <b>Entering a trip</b>
+      <div class="sep"></div>
+      <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.6">
+        <li>Tap <b>New Trip</b>.</li>
+        <li>Enter the <b>Harvest date</b> (MM/DD/YYYY).</li>
+        <li>Enter the <b>Dealer</b> (or tap a quick-pick chip if shown).</li>
+        <li>Enter <b>Pounds</b> and <b>Amount</b>.</li>
+        <li>Select an <b>Area</b> (or tap a quick-pick chip if shown).</li>
+        <li>Tap <b>Save Trip</b>.</li>
       </ol>
-      <div class="hint">No receipt parsing or OCR is used; paste inserts text only.</div>
+      <div class="hint">Tip: chips are “quick pick” shortcuts—tap to fill faster.</div>
+    </div>
+
+    <div class="card">
+      <b>Filters & totals</b>
+      <div class="sep"></div>
+      <div class="muted small" style="line-height:1.6">
+        Use <b>YTD / Month / Last 7 days</b> on Home to change what’s included in totals and the list.
+        Reports uses the same filter.
+      </div>
     </div>
 
     <div class="card">
       <b>Install / Offline</b>
       <div class="sep"></div>
-      <div class="muted small" style="line-height:1.5">
+      <div class="muted small" style="line-height:1.6">
         On iPhone/iPad: Safari → Share → <b>Add to Home Screen</b>.
         Installed PWAs can lag behind updates due to cached files. If something looks wrong, use <b>Reset cache</b> then reload.
       </div>
@@ -2815,6 +2812,7 @@ function renderHelp(){
 
   if (typeof bindNavHandlers === "function") bindNavHandlers(state);
 }
+
 
 function renderAbout(){
   getApp().innerHTML = `
