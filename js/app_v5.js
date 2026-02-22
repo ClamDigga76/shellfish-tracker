@@ -1152,10 +1152,10 @@ function renderHome(){
           ${chip("7D","Last 7 days")}
         </div>
       </div>
-      <div class="pillbar">
-        <span class="pill">Trips: <b>${trips.length}</b></span>
-        <span class="pill">Lbs: <b>${to2(totalLbs)}</b></span>
-        <span class="pill">Total: <b>${formatMoney(totalAmount)}</b></span>
+      <div class="pillbar stats3">
+        <span class="pill statPill"><div class="pillLabel">Trips</div><div class="pillValue">${trips.length}</div></span>
+        <span class="pill statPill"><div class="pillLabel">Pounds</div><div class="pillValue">${to2(totalLbs)}</div></span>
+        <span class="pill statPill"><div class="pillLabel">Total</div><div class="pillValue">${formatMoney(totalAmount)}</div></span>
       </div>
     </div>
 
@@ -2272,18 +2272,25 @@ const renderHLItem = (row)=>{
   const date = escapeHtml(row.date || "");
   const dealer = escapeHtml(row.dealer || "");
   const area = escapeHtml(row.area || "");
-  const lbs = Number(row.lbs)||0;
-  const amt = Number(row.amt)||0;
-  const ppl = (Number.isFinite(row.pplRaw) && row.pplRaw>0) ? row.pplRaw : ((lbs>0 && amt>0) ? (amt/lbs) : 0);
+  const lbsNum = Number(row.lbs)||0;
+  const amtNum = Number(row.amt)||0;
+  const ppl = (Number.isFinite(row.pplRaw) && row.pplRaw>0) ? row.pplRaw : ((lbsNum>0 && amtNum>0) ? (amtNum/lbsNum) : 0);
 
+  // Render using the same layout as regular trip cards for consistency
+  const safeDealer = dealer ? dealer : "(dealer)";
+  const safeArea = area ? area : "(area)";
   return `
-    <div class="hlItem">
-      <div class="hlDate">${date}</div>
-      <div class="hlSub">${area || ""}${dealer ? `${area ? " • " : ""}${dealer}` : ``}</div>
-      <div class="hlMetrics">
-        <div>Lbs: <b>${to2(lbs)}</b></div>
-        <div>Amount: <b>${formatMoney(to2(amt))}</b></div>
-        <div>$/lb: <b>${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
+    <div class="trip triprow hlTrip">
+      <div class="trow">
+        <div>
+          <div class="metaRow"><span class="tmeta">${date || ""}</span>${safeDealer ? ` <span class="dot">•</span> <span class="tmeta">${safeDealer}</span>` : ""}</div>
+          <div class="tname">${safeArea}</div>
+          <div class="tsub">$/Lb: <b>${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
+        </div>
+        <div class="tright">
+          <div><b>${to2(lbsNum)}</b> lbs</div>
+          <div><b>${formatMoney(to2(amtNum))}</b></div>
+        </div>
       </div>
     </div>
   `;
