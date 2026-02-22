@@ -990,9 +990,9 @@ function renderAllTrips(){
       <div class="trip triprow" data-id="${escapeHtml(String(t?.id||""))}" role="button" tabindex="0">
         <div class="trow">
           <div>
-            <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${area?` <span class="dot">•</span> <span class="tmeta">${area}</span>`:""}</div>
-            <div class="tname">${dealer || "(dealer)"}</div>
-            <div class="tsub">PPL: <b>${formatMoney(ppl)}</b></div>
+            <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${dealer?` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>`:""}</div>
+            <div class="tname">${escapeHtml(area || "(area)")}</div>
+            <div class="tsub">$/Lb: <b>${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
             <div><b>${to2(lbs)}</b> lbs</div>
@@ -1109,7 +1109,7 @@ function renderHome(){
           <div>
             <div class="metaRow"><span class="tmeta">${date || ""}</span>${area ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(area)}</span>` : ""}</div>
             <div class="tname">${escapeHtml(safeDealer)}</div>
-            <div class="tsub">PPL: <b>${formatMoney(ppl)}</b></div>
+            <div class="tsub">$/Lb: <b>${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
             <div><b>${lbs}</b> lbs</div>
