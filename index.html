@@ -155,8 +155,20 @@ header{padding:14px 18px 12px}
 .hlItem{padding:6px 0}
 .hlDate{font-size:26px;font-weight:900;letter-spacing:.2px}
 .hlSub{margin-top:2px;opacity:.72}
-.hlMetrics{margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;opacity:.9}
-.hlMetrics b{opacity:1}
+.hlMetrics{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:12px;
+  opacity:.9;
+}
+.hlMetrics > div{
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.hlMetrics b{opacity:1;font-variant-numeric:tabular-nums}
 .chartCard .chart{margin-top:10px}
 .pasteModule{
   padding:12px 12px;
@@ -381,7 +393,7 @@ header{padding:14px 18px 12px}
     <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=19"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=21"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
