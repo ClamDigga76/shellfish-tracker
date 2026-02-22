@@ -1136,7 +1136,7 @@ function renderHome(){
   <button class="btn" id="help">❓ Help</button>
 </div>
 
-      <div class="hint">Manual entry is recommended. Check paste is optional.</div>
+      
     </div>
 
     ${pwaStorageNoteHTML}
@@ -1376,7 +1376,7 @@ if(!topDealers.length){
         </div>
 
         <div class="actions">
-          <button class="btn primary" id="saveTrip">Save Trip</button>
+          <button class="btn primary" id="saveTrip" type="button">Save Trip</button>
           <button class="btn" id="navCancel">Cancel</button>
           <button class="btn danger" id="clearDraft">Clear</button>
         </div>
@@ -1392,6 +1392,58 @@ if(!topDealers.length){
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
   const elArea = document.getElementById("t_area");
+
+  // NEW TRIP: wire up buttons (Save / Clear) — v22
+  const btnSave = document.getElementById("saveTrip");
+  const onSaveTrip = ()=>{
+    try{
+      // snapshot current inputs into draft
+      state.draft = state.draft || {};
+      const mdy = String(elDate?.value||"").trim();
+      const iso = parseMDYToISO(mdy) || "";
+      state.draft.dateISO = iso || state.draft.dateISO || "";
+      state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
+      state.draft.pounds = parseNum(elPounds?.value);
+      state.draft.amount = parseMoney(elAmount?.value);
+      state.draft.area = String(elArea?.value||"").trim();
+
+      // basic guard: if nothing entered, do nothing (prevents "dead tap" feel)
+      const anyEntered = Boolean(mdy || state.draft.dealer || (state.draft.pounds>0) || (state.draft.amount>0) || state.draft.area);
+      if(!anyEntered){
+        showToast("Enter trip details first");
+        return;
+      }
+
+      // move to review step (nothing is saved to trips until Confirm)
+      state.reviewDraft = {
+        dateISO: state.draft.dateISO,
+        dateMDY: mdy,
+        dealer: state.draft.dealer,
+        pounds: state.draft.pounds,
+        amount: state.draft.amount,
+        area: state.draft.area
+      };
+      saveState();
+      pushView(state, "review");
+    }catch(err){
+      try{ showFatal(err, "saveTrip"); }catch{}
+    }
+  };
+  if(btnSave){
+    // iOS standalone can occasionally miss 'click'—bind both.
+    btnSave.onclick = onSaveTrip;
+    btnSave.addEventListener("touchend", (e)=>{ e.preventDefault(); onSaveTrip(); }, {passive:false});
+  }
+const btnClear = document.getElementById("clearDraft");
+  if(btnClear){
+    btnClear.onclick = ()=>{
+      if(confirm("Clear this draft?")){
+        delete state.draft;
+        saveState();
+        renderNewTrip();
+      }
+    };
+  }
 // Persist draft as the user edits fields (fixes iOS select + prevents resets)
   const persistDraft = ()=>{ try{ saveDraft(); }catch{} };
   [elDate, elDealer, elPounds, elAmount].forEach(el=>{
@@ -2209,7 +2261,7 @@ state.lastAction="nav:help"; saveState(); render(); };
           <div>${escapeHtml(headlineLabel)}: <b>${escapeHtml(String(headlineValue))}</b></div>
           ${showLbs ? `<div>Lbs: <b>${to2(row.lbs)}</b></div>` : ``}
           ${showAmt ? `<div>Amount: <b>${formatMoney(to2(row.amt))}</b></div>` : ``}
-          ${showPpl ? `<div>$ / lb: <b>${hasPrice ? formatMoney(to2(row.pplRaw)) : "—"}</b></div>` : ``}
+          ${showPpl ? `<div>$/lb: <b>${hasPrice ? formatMoney(to2(row.pplRaw)) : "—"}</b></div>` : ``}
         </div>
       </div>
     `;
@@ -2231,7 +2283,7 @@ const renderHLItem = (row)=>{
       <div class="hlMetrics">
         <div>Lbs: <b>${to2(lbs)}</b></div>
         <div>Amount: <b>${formatMoney(to2(amt))}</b></div>
-        <div>$ / lb: <b>${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
+        <div>$/lb: <b>${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
       </div>
     </div>
   `;
@@ -2269,11 +2321,11 @@ const renderTablesSection = ()=>{
   ${renderHLItem(minLbs)}
   <div class="sep"></div>
 
-  <div class="hlHdr">Highest $ amount</div>
+  <div class="hlHdr">Highest amount</div>
   ${renderHLItem(maxAmt)}
   <div class="sep"></div>
 
-  <div class="hlHdr">Lowest $ amount</div>
+  <div class="hlHdr">Lowest amount</div>
   ${renderHLItem(minAmt)}
   <div class="sep"></div>
 
