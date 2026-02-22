@@ -1308,12 +1308,7 @@ function renderNewTrip(){
     return `<option value="${escapeHtml(String(a||""))}" ${sel}>${label}</option>`;
   }).join("");
 
-const dealerOptions = [""].concat(Array.isArray(state.dealers)?state.dealers:[]).map(d=>{
-  const label = d ? d : "—";
-  const sel = (String(draft.dealer||"").trim().toLowerCase() === String(d||"").trim().toLowerCase()) ? "selected" : "";
-  const v = String(d||"").replaceAll('"',"&quot;");
-  return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
-}).join("");
+
 
 // Last 3 unique Areas (based on entry order; ignores filters)
 const topAreas = (getLastUniqueFromTrips("area", 3));
@@ -1328,6 +1323,24 @@ const topDealers = (getLastUniqueFromTrips("dealer", 3));
 if(!topDealers.length){
   topDealers.push(...(Array.isArray(state.dealers)?state.dealers:[]).slice(0,3));
 }
+
+const dealerListForSelect = [];
+const seenDealerKeys = new Set();
+for(const d of [...topDealers, ...(Array.isArray(state.dealers)?state.dealers:[])]){
+  const v = String(d||"").trim();
+  if(!v) continue;
+  const k = normalizeKey(v);
+  if(seenDealerKeys.has(k)) continue;
+  seenDealerKeys.add(k);
+  dealerListForSelect.push(v);
+}
+const dealerOptions = ["", ...dealerListForSelect].map(d=>{
+  const label = d ? d : "—";
+  const sel = (normalizeKey(String(draft.dealer||"")) === normalizeKey(String(d||""))) ? "selected" : "";
+  const v = String(d||"").replaceAll('"',"&quot;");
+  return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
+}).join("");
+
 ;getApp().innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
@@ -1352,9 +1365,10 @@ if(!topDealers.length){
 
         <div class="field">
           <div class="label fieldLabel">Dealer</div>
-          ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}<input class="input" id="t_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(draft.dealer||""))}" />
-          <div id="t_dealerSugg"></div>
-          <div id="t_dealerPrompt"></div>
+          ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
+          <select class="select" id="t_dealer">
+            ${dealerOptions}
+          </select>
         </div>
 
         <div class="field">
@@ -1456,73 +1470,7 @@ const btnClear = document.getElementById("clearDraft");
     elArea.addEventListener("change", persistDraft);
   }
 
-  
-  if(elDealer){
-    elDealer.addEventListener("input", ()=>{
-      // typing resets prompt; canonicalize on blur instead of mid-typing
-      dealerPromptArmed = "";
-      updateDealerPrompt();
-    });
-
-    elDealer.addEventListener("blur", ()=>{
-      const raw = String(elDealer.value||"").trim();
-      const canonical = findCanonicalFromList(raw, state.dealers);
-      if(canonical){
-        // Q10=A: replace typed with saved canonical + sync dropdown
-        elDealer.value = canonical;
-        dealerPromptArmed = "";
-        dealerPromptSuppressed = "";
-        updateDealerPrompt();
-        saveDraft();
-        return;
-      }
-      if(!raw){
-        dealerPromptArmed = "";
-        updateDealerPrompt();
-        saveDraft();
-        return;
-      }
-      // Q6=A: arm prompt on blur only (if not saved)
-      dealerPromptArmed = raw;
-      updateDealerPrompt();
-      saveDraft();
-      renderNewTrip();
-    });
-  }
-
-
-
-
-function updateDealerSuggestions(){
-  const wrap = document.getElementById("t_dealerSugg");
-  const el = document.getElementById("t_dealer");
-  if(!wrap || !el) return;
-  wrap.innerHTML = renderSuggestions(state.dealers, el.value, "data-dealer-sugg");
-}
-const topAreaWrap = document.getElementById("topAreas");
-const topDealerWrap = document.getElementById("topDealers");
-
-const dealerSuggWrap = document.getElementById("t_dealerSugg");
-if(dealerSuggWrap && elDealer){
-  dealerSuggWrap.addEventListener("click", (e)=>{
-    const btn = e.target.closest("button[data-dealer-sugg]");
-    if(!btn) return;
-    const d = btn.getAttribute("data-dealer-sugg") || "";
-    elDealer.value = d;
-    dealerPromptArmed = "";
-    dealerPromptSuppressed = "";
-    updateDealerPrompt();
-    saveDraft();
-    updateDealerSuggestions();
-  });
-}
-
-if(elDealer){
-  elDealer.addEventListener("input", ()=>{
-    updateDealerSuggestions();
-  });
-}
-if(topAreaWrap && elArea){
+  if(topAreaWrap && elArea){
   topAreaWrap.addEventListener("click", (e)=>{
     const btn = e.target.closest("button[data-area]");
     if(!btn) return;
