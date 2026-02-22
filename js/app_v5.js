@@ -1407,6 +1407,10 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
   const elAmount = document.getElementById("t_amount");
   const elArea = document.getElementById("t_area");
 
+  // Quick-pick chip containers
+  const topAreaWrap = document.getElementById("topAreas");
+  const topDealerWrap = document.getElementById("topDealers");
+
   // NEW TRIP: wire up buttons (Save / Clear) — v22
   const btnSave = document.getElementById("saveTrip");
   const onSaveTrip = ()=>{
