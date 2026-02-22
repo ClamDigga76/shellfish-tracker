@@ -76,7 +76,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-#credit{position:fixed;left:0;right:0;bottom:0;padding:8px 14px; padding-bottom:calc(8px + env(safe-area-inset-bottom));font-size:13px;color:rgba(232,238,252,.75);border-top:1px solid var(--line);background:rgba(10,14,22,.75);backdrop-filter:blur(10px)}
+#credit{position:fixed;left:0;right:0;bottom:0;padding:4px 12px;padding-bottom:calc(2px + env(safe-area-inset-bottom));font-size:12px;line-height:1.2;color:rgba(232,238,252,.75);border-top:1px solid var(--line);background:rgba(10,14,22,.75);backdrop-filter:blur(10px)}
 #credit a{color:rgba(232,238,252,.85);text-decoration:none}
 #credit a:active{text-decoration:underline}
 
@@ -153,8 +153,8 @@ header{padding:14px 18px 12px}
   opacity:.95;
 }
 .hlItem{padding:6px 0}
-.hlDate{font-size:26px;font-weight:900;letter-spacing:.2px}
-.hlSub{margin-top:2px;opacity:.72}
+.hlDate{font-size:22px;font-weight:900;letter-spacing:.2px}
+.hlSub{margin-top:2px;opacity:.72;font-size:14px}
 .hlMetrics{
   margin-top:10px;
   display:grid;
@@ -393,7 +393,7 @@ header{padding:14px 18px 12px}
     <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=23"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=24"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>

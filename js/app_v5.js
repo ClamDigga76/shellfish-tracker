@@ -1107,8 +1107,8 @@ function renderHome(){
       <div class="trip triprow" data-id="${t?.id||""}" role="button" tabindex="0">
         <div class="trow">
           <div>
-            <div class="metaRow"><span class="tmeta">${date || ""}</span>${area ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(area)}</span>` : ""}</div>
-            <div class="tname">${escapeHtml(safeDealer)}</div>
+            <div class="metaRow"><span class="tmeta">${date || ""}</span>${safeDealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(safeDealer)}</span>` : ""}</div>
+            <div class="tname">${escapeHtml(area || "(area)")}</div>
             <div class="tsub">$/Lb: <b>${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
@@ -2279,7 +2279,7 @@ const renderHLItem = (row)=>{
   return `
     <div class="hlItem">
       <div class="hlDate">${date}</div>
-      <div class="hlSub">${dealer}${area ? ` • ${area}` : ``}</div>
+      <div class="hlSub">${area || ""}${dealer ? `${area ? " • " : ""}${dealer}` : ``}</div>
       <div class="hlMetrics">
         <div>Lbs: <b>${to2(lbs)}</b></div>
         <div>Amount: <b>${formatMoney(to2(amt))}</b></div>
