@@ -3,7 +3,7 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=16";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=30";
 
 const APP_VERSION = "v5";
 const VERSION = APP_VERSION;
@@ -1205,24 +1205,6 @@ function renderHome(){
   }).join("") : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
 
   getApp().innerHTML = `
-    <div class="card">
-      
-
-<div class="row" style="margin-top:10px">
-  <button class="btn primary full" id="newTrip">＋ New Trip</button>
-</div>
-
-      <div class="grid2" style="margin-top:12px">
-  <button class="btn" id="reports">📊 Reports</button>
-  <button class="btn" id="settings">⚙️ Settings</button>
-</div>
-<div class="row" style="margin-top:10px">
-  <button class="btn" id="help">❓ Help</button>
-</div>
-
-      
-    </div>
-
     ${pwaStorageNoteHTML}
 
     ${backupReminderHTML}
@@ -1281,8 +1263,6 @@ function renderHome(){
     btn.addEventListener("click", ()=> setFilter(btn.getAttribute("data-f")));
   });
 
-    document.getElementById("reports").onclick = ()=>{ state.view="reports"; state.lastAction="nav:reports"; saveState(); render(); };
-
 const toggleToast = (e)=>{
   try{
     e?.preventDefault?.();
@@ -1307,14 +1287,6 @@ if(btnPaste){
 if(warn){
   warn.onclick = toggleToast;
 }
-document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAction="nav:help"; saveState(); render(); };
-
-  document.getElementById("settings").onclick = () => {
-    state.view = "settings";
-    state.lastAction="nav:settings";
-    saveState();
-    render();
-  };
 
 
   // PWA storage note buttons (may not exist if note not shown)
@@ -1368,13 +1340,6 @@ document.getElementById("help").onclick = ()=>{ state.view="help"; state.lastAct
       renderHome();
     };
   }
-
-  document.getElementById("newTrip").onclick = () => {
-    state.view = "new";
-    state.lastAction="nav:new";
-    saveState();
-    render();
-  };
 }
 
 function renderNewTrip(){
@@ -1426,15 +1391,6 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
 }).join("");
 
 ;getApp().innerHTML = `
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <button class="smallbtn" id="navBack">← Back</button>
-        <b>New Trip</b>
-        <span class="muted small">Manual entry</span>
-      </div>
-      <div class="hint">Enter the check info. Date should be harvest date (MM/DD/YYYY).</div>
-    </div>
-
     <div class="card">
       <div class="form">
         
@@ -2086,8 +2042,7 @@ function renderReports(){
 getApp().innerHTML = `
       <div class="card">
         <div class="row">
-          <button class="btn" id="home">← Home</button>
-          <button class="btn" id="export" disabled>🧾 Export CSV</button>
+<button class="btn" id="export" disabled>🧾 Export CSV</button>
         </div>
 
         <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
@@ -2109,9 +2064,6 @@ getApp().innerHTML = `
     const _el_allTrips = document.getElementById("allTrips");
   if(_el_allTrips) _el_allTrips.onclick = ()=>{ pushView(state, "all_trips"); };
 
-const _el_home = document.getElementById("home");
-  if(_el_home) _el_home.onclick = ()=>{ state.view="home";
-state.lastAction="nav:home"; saveState(); render(); };
   const _el_settings = document.getElementById("settings");
   if(_el_settings) _el_settings.onclick = ()=>{ state.view="settings";
 state.lastAction="nav:settings"; saveState(); render(); };
@@ -2386,8 +2338,7 @@ const renderTablesSection = ()=>{
   getApp().innerHTML = `
     <div class="card">
       <div class="row">
-        <button class="btn" id="home">← Home</button>
-        <button class="btn" id="export">🧾 Export CSV</button>
+<button class="btn" id="export">🧾 Export CSV</button>
       </div>
 
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
@@ -2647,15 +2598,6 @@ function renderSettings(){
   `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
 
   getApp().innerHTML = `
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <button class="smallbtn" id="navBack">← Back</button>
-        <b>Settings</b>
-        <span class="muted small"></span>
-      </div>
-      <div class="hint">Lists, backups, and help.</div>
-    </div>
-
     <div class="card">
       <b>Lists</b>
       <div class="sep"></div>
