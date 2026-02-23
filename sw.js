@@ -4,7 +4,7 @@
 */
 const SW_V = new URL(self.location.href).searchParams.get("v") || "0";
 const CACHE_VERSION = `v${SW_V}`;
-const CACHE_NAME = `shellfish-tracker-v35-${CACHE_VERSION}`;
+const CACHE_NAME = `shellfish-tracker-v36-${CACHE_VERSION}`;
 
 // Core assets. Keep this list short and stable.
 const CORE = [
