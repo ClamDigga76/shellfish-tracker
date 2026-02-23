@@ -1209,7 +1209,7 @@ function renderAllTrips(){
           <div>
             <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${dealer?` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>`:""}</div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b class="money">${formatMoney(ppl)}</b></div>
+            <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
             <div><b class="lbsBlue">${to2(lbs)}</b> lbs</div>
@@ -1418,7 +1418,7 @@ function renderHome(
           <div>
             <div class="metaRow"><span class="tmeta">${date || ""}</span>${safeDealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(safeDealer)}</span>` : ""}</div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b class="money">${formatMoney(ppl)}</b></div>
+            <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
             <div><b class="lbsBlue">${lbs}</b> lbs</div>
@@ -1875,7 +1875,7 @@ getApp().innerHTML = `
         </div>
 
         <div class="pillbar">
-          <span class="pill" id="pplPill">Price/Lb: <b class="money">${formatMoney(ppl)}</b></span>
+          <span class="pill" id="pplPill">Price/Lb: <b class="rate">${formatMoney(ppl)}</b></span>
         </div>
 
         ${d.raw ? `
@@ -1928,7 +1928,7 @@ getApp().innerHTML = `
     state.reviewDraft.dealer = dealer;
     if(pplPill){
       const v = computePPL(Number(p||0), Number(a||0));
-      pplPill.innerHTML = `Price/Lb: <b class="money">${formatMoney(v)}</b>`;
+      pplPill.innerHTML = `Price/Lb: <b class="rate">${formatMoney(v)}</b>`;
     }
     // Live warnings (missing fields + possible duplicate)
     try{
@@ -1964,7 +1964,7 @@ getApp().innerHTML = `
             <div class="card" style="border-color:rgba(255,184,77,.55);background:rgba(255,184,77,.10)">
               <b>Possible duplicate</b>
               <div class="muted small" style="margin-top:6px;line-height:1.35">
-                Similar trip found: <b>${escapeHtml(formatDateMDY(dup.dateISO||""))}</b> — ${escapeHtml(String(dup.dealer||""))} (${formatMoney(dup.amount||0)} / ${to2(Number(dup.pounds||0))} lbs)
+                Similar trip found: <b>${escapeHtml(formatDateMDY(dup.dateISO||""))}</b> — ${escapeHtml(String(dup.dealer||""))} (<span class="money">${formatMoney(dup.amount||0)}</span> / <span class="lbsBlue">${to2(Number(dup.pounds||0))}</span> lbs)
               </div>
             </div>
           `;
@@ -2427,11 +2427,11 @@ function renderReports(){
         <div class="trow">
           <div>
             <div class="tname">${escapeHtml(r.name)}</div>
-            <div class="tsub">${r.trips} trips • ${to2(r.lbs)} lbs</div>
+            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)}</span> lbs</div>
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="money">${formatMoney(r.avg)}</b></div>
+            <div>$/lb <b class="rate">${formatMoney(r.avg)}</b></div>
           </div>
         </div>
       `;
@@ -2444,11 +2444,11 @@ function renderReports(){
         <div class="trow">
           <div>
             <div class="tname">${escapeHtml(r.label)}</div>
-            <div class="tsub">${r.trips} trips • ${to2(r.lbs)} lbs</div>
+            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)}</span> lbs</div>
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="money">${formatMoney(r.avg)}</b></div>
+            <div>$/lb <b class="rate">${formatMoney(r.avg)}</b></div>
           </div>
         </div>
       `;
