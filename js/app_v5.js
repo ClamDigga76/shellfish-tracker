@@ -1105,6 +1105,14 @@ function ensureReportsFilter(){
   if(state.reportsFilter.to == null) state.reportsFilter.to = "";
 }
 
+function ensureHomeFilter(){
+  if(!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode:"YTD", from:"", to:"" };
+  if(!state.homeFilter.mode) state.homeFilter.mode = "YTD";
+  if(state.homeFilter.from == null) state.homeFilter.from = "";
+  if(state.homeFilter.to == null) state.homeFilter.to = "";
+}
+
+
 function isoToday(){
   const d = new Date();
   const pad = (n)=>String(n).padStart(2,"0");
@@ -1201,11 +1209,11 @@ function renderAllTrips(){
           <div>
             <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${dealer?` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>`:""}</div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b>${formatMoney(ppl)}</b></div>
+            <div class="tsub">$/Lb: <b class="money">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
-            <div><b>${to2(lbs)}</b> lbs</div>
-            <div><b>${formatMoney(amt)}</b></div>
+            <div><b class="lbsBlue">${to2(lbs)}</b> lbs</div>
+            <div><b class="money">${formatMoney(amt)}</b></div>
           </div>
         </div>
       </div>
@@ -1329,7 +1337,11 @@ function renderAllTrips(){
 function renderHome(
 ){
   const tripsAll = Array.isArray(state.trips) ? state.trips : [];
-  const trips = getFilteredTrips();
+  ensureHomeFilter();
+  const hf = state.homeFilter || { mode:"YTD", from:"", to:"" };
+  const hMode = String(hf.mode || "YTD").toUpperCase();
+  const hr = modeRange(hMode, hf.from, hf.to);
+  const trips = (hr.label === "ALL") ? tripsAll.slice() : (hr.startISO && hr.endISO ? filterByISOInclusive(tripsAll, hr.startISO, hr.endISO) : tripsAll.slice());
   const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
   const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
 
@@ -1389,8 +1401,8 @@ function renderHome(
     </div>
   ` : "";
 
-  const f = state.filter || "YTD";
-  const chip = (key,label) => `<button class="chip segBtn ${f===key?'on':''}" data-f="${key}" type="button">${label}</button>`;
+  const f = String((state.homeFilter && state.homeFilter.mode) || "YTD").toUpperCase();
+  const chip = (key,label) => `<button class="chip segBtn ${f===key?'on is-selected':''}" data-hf="${key}" type="button">${label}</button>`;
 
   const rows = trips.length ? trips.slice(0, HOME_TRIPS_LIMIT).map(t=>{
     const date = formatDateMDY(t?.dateISO);
@@ -1406,11 +1418,11 @@ function renderHome(
           <div>
             <div class="metaRow"><span class="tmeta">${date || ""}</span>${safeDealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(safeDealer)}</span>` : ""}</div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b>${formatMoney(ppl)}</b></div>
+            <div class="tsub">$/Lb: <b class="money">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
-            <div><b>${lbs}</b> lbs</div>
-            <div><b>${formatMoney(amt)}</b></div>
+            <div><b class="lbsBlue">${lbs}</b> lbs</div>
+            <div><b class="money">${formatMoney(amt)}</b></div>
           </div>
         </div>
       </div>
@@ -1423,20 +1435,29 @@ function renderHome(
     <div class="card dashCard">
       <div class="segWrap">
         ${chip("YTD","YTD")}
-        ${chip("Month","Month")}
-        ${chip("7D","Last 7 Days")}
+        ${chip("MONTH","Month")}
+        ${chip("7D","7 Days")}
+        ${chip("RANGE","Range")}
       </div>
+      ${f==="RANGE" ? `
+        <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
+          <input class="input" id="homeRangeFrom" inputmode="numeric" placeholder="From (MM/DD/YYYY)" value="${escapeHtml(hf.from||"")}" style="flex:1;min-width:160px" />
+          <input class="input" id="homeRangeTo" inputmode="numeric" placeholder="To (MM/DD/YYYY)" value="${escapeHtml(hf.to||"")}" style="flex:1;min-width:160px" />
+          <button class="btn" id="homeRangeApply">Apply</button>
+        </div>
+      ` : ``}
+
       <div class="kpiRow">
         <div class="kpiCard">
           <div class="kpiValue">${trips.length}</div>
           <div class="kpiLabel">Trips</div>
         </div>
         <div class="kpiCard">
-          <div class="kpiValue">${lbsStr}<span class="kpiUnit">lbs</span></div>
+          <div class="kpiValue"><span class="lbsBlue">${lbsStr}</span><span class="kpiUnit">lbs</span></div>
           <div class="kpiLabel">Harvested</div>
         </div>
         <div class="kpiCard">
-          <div class="kpiValue">${moneyRounded}</div>
+          <div class="kpiValue money">${moneyRounded}</div>
           <div class="kpiLabel">Total</div>
         </div>
       </div>
@@ -1479,10 +1500,27 @@ function renderHome(
     });
   });
 
-  // Filters
-  getApp().querySelectorAll("button.chip").forEach(btn=>{
-    btn.addEventListener("click", ()=> setFilter(btn.getAttribute("data-f")));
+  // Home Filters
+  getApp().querySelectorAll("button.chip[data-hf]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      ensureHomeFilter();
+      state.homeFilter.mode = String(btn.getAttribute("data-hf")||"YTD").toUpperCase();
+      saveState();
+      renderHome();
+    });
   });
+  const homeApply = document.getElementById("homeRangeApply");
+  if(homeApply){
+    homeApply.onclick = ()=>{
+      ensureHomeFilter();
+      const from = String(document.getElementById("homeRangeFrom")?.value||"").trim();
+      const to = String(document.getElementById("homeRangeTo")?.value||"").trim();
+      state.homeFilter.from = from;
+      state.homeFilter.to = to;
+      saveState();
+      renderHome();
+    };
+  }
 
 const toggleToast = (e)=>{
   try{
@@ -1837,7 +1875,7 @@ getApp().innerHTML = `
         </div>
 
         <div class="pillbar">
-          <span class="pill" id="pplPill">Price/Lb: <b>${formatMoney(ppl)}</b></span>
+          <span class="pill" id="pplPill">Price/Lb: <b class="money">${formatMoney(ppl)}</b></span>
         </div>
 
         ${d.raw ? `
@@ -1890,7 +1928,7 @@ getApp().innerHTML = `
     state.reviewDraft.dealer = dealer;
     if(pplPill){
       const v = computePPL(Number(p||0), Number(a||0));
-      pplPill.innerHTML = `Price/Lb: <b>${formatMoney(v)}</b>`;
+      pplPill.innerHTML = `Price/Lb: <b class="money">${formatMoney(v)}</b>`;
     }
     // Live warnings (missing fields + possible duplicate)
     try{
@@ -2392,8 +2430,8 @@ function renderReports(){
             <div class="tsub">${r.trips} trips • ${to2(r.lbs)} lbs</div>
           </div>
           <div class="tright">
-            <div><b>${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b>${formatMoney(r.avg)}</b></div>
+            <div><b class="money">${formatMoney(r.amt)}</b></div>
+            <div>$/lb <b class="money">${formatMoney(r.avg)}</b></div>
           </div>
         </div>
       `;
@@ -2409,8 +2447,8 @@ function renderReports(){
             <div class="tsub">${r.trips} trips • ${to2(r.lbs)} lbs</div>
           </div>
           <div class="tright">
-            <div><b>${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b>${formatMoney(r.avg)}</b></div>
+            <div><b class="money">${formatMoney(r.amt)}</b></div>
+            <div>$/lb <b class="money">${formatMoney(r.avg)}</b></div>
           </div>
         </div>
       `;
@@ -2444,8 +2482,8 @@ function renderReports(){
             <div class="tsub">$/Lb: <b>${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
           </div>
           <div class="tright">
-            <div><b>${to2(lbsNum)}</b> lbs</div>
-            <div><b>${formatMoney(to2(amtNum))}</b></div>
+            <div><b class="lbsBlue">${to2(lbsNum)}</b> lbs</div>
+            <div><b class="money">${formatMoney(to2(amtNum))}</b></div>
           </div>
         </div>
       </div>
@@ -2758,6 +2796,9 @@ function renderSettings(){
   ensureAreas();
   ensureDealers();
 
+  const s = state.settings || (state.settings = {});
+  const listMode = String(s.listMode || "areas").toLowerCase();
+
   const areaRows = state.areas.length ? state.areas.map((a, i)=>`
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
@@ -2779,23 +2820,28 @@ function renderSettings(){
       <b>Lists</b>
       <div class="sep"></div>
 
-      <div style="margin-top:10px">
-        <div class="muted small"><b>Areas</b></div>
-        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-          <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
-          <button class="btn primary" id="addArea">Add</button>
-        </div>
-        ${areaRows}
+      <div class="segWrap" style="margin-top:10px">
+        <button class="chip segBtn ${listMode==="areas"?"on is-selected":""}" data-listmode="areas" type="button">Areas</button>
+        <button class="chip segBtn ${listMode==="dealers"?"on is-selected":""}" data-listmode="dealers" type="button">Dealers</button>
       </div>
 
-      <div style="margin-top:18px">
-        <div class="muted small"><b>Dealers</b></div>
-        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-          <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
-          <button class="btn primary" id="addDealer">Add</button>
+      ${listMode==="dealers" ? `
+        <div style="margin-top:12px">
+          <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+            <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
+            <button class="btn primary" id="addDealer">Add</button>
+          </div>
+          ${dealerRows}
         </div>
-        ${dealerRows}
-      </div>
+      ` : `
+        <div style="margin-top:12px">
+          <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+            <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
+            <button class="btn primary" id="addArea">Add</button>
+          </div>
+          ${areaRows}
+        </div>
+      `}
     </div>
 
     <div class="card">
@@ -2849,6 +2895,17 @@ function renderSettings(){
 
   document.getElementById("openHelp").onclick = ()=>{ pushView(state, "help"); };
 
+  // List mode toggle
+  getApp().querySelectorAll("button.chip[data-listmode]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const m = String(btn.getAttribute("data-listmode")||"areas").toLowerCase();
+      state.settings = state.settings || {};
+      state.settings.listMode = (m === "dealers") ? "dealers" : "areas";
+      saveState();
+      renderSettings();
+    });
+  });
+
   // Backup / Restore (JSON)
   const backupFile = document.getElementById("backupFile");
   document.getElementById("downloadBackup").onclick = ()=>{
@@ -2892,8 +2949,9 @@ function renderSettings(){
     };
   }
 
-  document.getElementById("addArea").onclick = ()=>{
-    const v = String(document.getElementById("newArea").value||"").trim();
+  const addAreaBtn = document.getElementById("addArea");
+  if(addAreaBtn) addAreaBtn.onclick = ()=>{
+    const v = String(document.getElementById("newArea")?.value||"").trim();
     if(!v) return;
     state.areas = Array.isArray(state.areas) ? state.areas : [];
     state.areas.push(v);
@@ -2902,8 +2960,9 @@ function renderSettings(){
     renderSettings();
   };
 
-  document.getElementById("addDealer").onclick = ()=>{
-    const v = String(document.getElementById("newDealer").value||"").trim();
+  const addDealerBtn = document.getElementById("addDealer");
+  if(addDealerBtn) addDealerBtn.onclick = ()=>{
+    const v = String(document.getElementById("newDealer")?.value||"").trim();
     if(!v) return;
     state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
     state.dealers.push(v);
@@ -2964,6 +3023,7 @@ function renderSettings(){
     render();
   };
 }
+
 
 
 function renderHelp(){

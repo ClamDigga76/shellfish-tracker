@@ -15,7 +15,8 @@
 <meta name="apple-mobile-web-app-title" content="Shellfish Tracker">
 
 <style>
-:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:46px;--bottom-gutter:6px}
+:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;
+  --lbsBlue: var(--accent);--lbsBlue:var(--accent);--good:#2EA043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:46px;--bottom-gutter:6px}
 *{box-sizing:border-box}
 html,body{height:100%;background:var(--bg)}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
@@ -34,6 +35,9 @@ main{padding:14px 14px 18px}
 .btn.ghost{background:transparent}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .muted{color:var(--muted)}
+.money{color:var(--good);font-weight:700}
+.lbsBlue{color:var(--lbsBlue);font-weight:700}
+
 .small{font-size:12px}
 .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
 .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
@@ -232,7 +236,7 @@ input, select, textarea{
   --text:#e8eefc;
   --muted:rgba(232,238,252,.70);
   --accent:#2f6df6;
-  --good:#2ea043;
+  --good:#2EA043;
   --bad:#ff4d4f;
   --r-card:14px;
   --r-btn:12px;
@@ -558,7 +562,7 @@ header{padding:14px 18px 12px}
 <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=38"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=40"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
