@@ -3,12 +3,12 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=39";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=38";
 
 const APP_VERSION = "v5";
 const VERSION = APP_VERSION;
 window.__SHELLFISH_BUILD__ = APP_VERSION;
-const HOME_TRIPS_LIMIT = 5;
+const HOME_TRIPS_LIMIT = 15;
 const LAST_ERROR_KEY = "shellfish-last-error";
 const LAST_ERROR_AT_KEY = "shellfish-last-error-at";
 const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
@@ -20,55 +20,6 @@ function to2(n){
   const x = Number(n);
   return Number.isFinite(x) ? Math.round((x + Number.EPSILON) * 100) / 100 : x;
 }
-
-function formatLbs(n){
-  const v = to2(Number(n)||0);
-  if(!Number.isFinite(v)) return "0 lbs";
-  const s = (Math.abs(v % 1) < 1e-9) ? String(Math.trunc(v)) : String(v);
-  return s + " lbs";
-}
-
-function getMostRecentUnique(list, key, limit=2){
-  const out = [];
-  const seen = new Set();
-  const arr = Array.isArray(list) ? list.slice() : [];
-  arr.sort((a,b)=> String(b?.dateISO||"").localeCompare(String(a?.dateISO||"")));
-  for(const item of arr){
-    const raw = (typeof key === "function") ? key(item) : item?.[key];
-    const val = String(raw||"").trim();
-    if(!val) continue;
-    const k = val.toLowerCase();
-    if(seen.has(k)) continue;
-    seen.add(k);
-    out.push(val);
-    if(out.length>=limit) break;
-  }
-  return out;
-}
-
-function renderTripRowCompact(t){
-  const dealer = String(t?.dealer||"").trim() || "(Dealer)";
-  const area = String(t?.area||"").trim() || "(Area)";
-  const date = formatDateMDY(t?.dateISO||"");
-  const lbs = Number(t?.pounds)||0;
-  const amt = Number(t?.amount)||0;
-  return `
-    <div class="tripCompact">
-      <div class="left">
-        <div class="line1">
-          <span class="dealer">${escapeHtml(dealer)}</span>
-          <span class="date">${escapeHtml(date)}</span>
-        </div>
-        <div class="area">${escapeHtml(area)}</div>
-      </div>
-      <div class="rightStack">
-        <div class="lbs">${escapeHtml(formatLbs(lbs))}</div>
-        <div class="amt money">${escapeHtml(formatMoney(amt))}</div>
-      </div>
-    </div>
-  `;
-}
-
 
 // ---- Toasts ----
 
@@ -513,7 +464,6 @@ function loadState(){
     navStack: [],
     tripsFilter: { mode: "ALL", from: "", to: "" },
     reportsFilter: { mode: "YTD", from: "", to: "" },
-    homeFilter: { mode: "YTD", from: "", to: "" },
   });
 
   try {
@@ -536,7 +486,6 @@ function loadState(){
       navStack: Array.isArray(p?.navStack) ? p.navStack : [],
       tripsFilter: (p?.tripsFilter && typeof p.tripsFilter === "object") ? p.tripsFilter : { mode: "ALL", from: "", to: "" },
       reportsFilter: (p?.reportsFilter && typeof p.reportsFilter === "object") ? p.reportsFilter : { mode: "YTD", from: "", to: "" },
-      homeFilter: (p?.homeFilter && typeof p.homeFilter === "object") ? p.homeFilter : { mode: "YTD", from: "", to: "" },
     });
   } catch {
     return fallback;
@@ -1240,9 +1189,25 @@ function renderAllTrips(){
   const sorted = filtered.sort((a,b)=> String(b?.dateISO||"").localeCompare(String(a?.dateISO||"")));
 
   const rows = sorted.length ? sorted.map(t=>{
+    const date = formatDateMDY(t?.dateISO||"");
+    const dealer = escapeHtml(String(t?.dealer||""));
+    const area = escapeHtml(String(t?.area||""));
+    const lbs = Number(t?.pounds)||0;
+    const amt = Number(t?.amount)||0;
+    const ppl = (lbs>0 && amt>0) ? (amt/lbs) : 0;
     return `
       <div class="trip triprow" data-id="${escapeHtml(String(t?.id||""))}" role="button" tabindex="0">
-        ${renderTripRowCompact(t)}
+        <div class="trow">
+          <div>
+            <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${dealer?` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>`:""}</div>
+            <div class="tname">${escapeHtml(area || "(area)")}</div>
+            <div class="tsub">$/Lb: <b>${formatMoney(ppl)}</b></div>
+          </div>
+          <div class="tright">
+            <div><b>${to2(lbs)}</b> lbs</div>
+            <div><b>${formatMoney(amt)}</b></div>
+          </div>
+        </div>
       </div>
     `;
   }).join("") : `<div class="muted small">No trips in this filter yet.</div>`;
@@ -1361,30 +1326,21 @@ function renderAllTrips(){
   });
 }
 
-function renderHome(){
+function renderHome(
+){
   const tripsAll = Array.isArray(state.trips) ? state.trips : [];
-
-  // Home has its own filter (separate from Trips/Reports)
-  if(!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode:"YTD", from:"", to:"" };
-  if(!state.homeFilter.mode) state.homeFilter.mode = "YTD";
-  if(state.homeFilter.from == null) state.homeFilter.from = "";
-  if(state.homeFilter.to == null) state.homeFilter.to = "";
-
-  const hfMode = String(state.homeFilter.mode||"YTD").toUpperCase();
-  const mode = (hfMode === "ALL") ? "YTD" : hfMode;
-  const r = modeRange(mode, state.homeFilter.from, state.homeFilter.to);
-  const hasValidRange = (r.label !== "RANGE") || (r.startISO && r.endISO);
-  const trips = (r.label === "ALL") ? tripsAll.slice() : (hasValidRange ? filterByISOInclusive(tripsAll, r.startISO, r.endISO) : tripsAll.slice());
-
-  // Ensure newest first by date
-  trips.sort((a,b)=> String(b?.dateISO||"").localeCompare(String(a?.dateISO||"")));
-
+  const trips = getFilteredTrips();
   const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
   const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
 
   const lbsVal = to2(totalLbs);
   const lbsStr = (Number.isFinite(lbsVal) && Math.abs(lbsVal % 1) < 1e-9) ? String(Math.trunc(lbsVal)) : String(lbsVal);
-  const moneyStr = formatMoney(to2(totalAmount));
+  const moneyRounded = (()=>{
+    const v = Math.round(Number(totalAmount)||0);
+    try{ return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(v); }
+    catch{ return "$" + v.toLocaleString("en-US"); }
+  })();
+
 
   // Backup reminder (browser-only): encourages manual "Create Backup" periodically
   const s = state.settings || (state.settings = {});
@@ -1416,8 +1372,8 @@ function renderHome(){
   const shouldRemind = tripsAll.length > 0
     && now > snoozeUntil
     && (
-      (!lastAt && tripsAll.length >= 5) ||
-      (newCount > 0 && daysSince >= 7)
+      (!lastAt && tripsAll.length >= 5) ||           // never backed up, 5+ trips
+      (newCount > 0 && daysSince >= 7)               // new trips since last backup & a week passed
     );
 
   const backupReminderHTML = shouldRemind ? `
@@ -1433,39 +1389,33 @@ function renderHome(){
     </div>
   ` : "";
 
-  const chip = (key,label) => `<button class="chip segBtn ${mode===key?'on is-selected':''}" data-hf="${key}" type="button">${label}</button>`;
+  const f = state.filter || "YTD";
+  const chip = (key,label) => `<button class="chip segBtn ${f===key?'on':''}" data-f="${key}" type="button">${label}</button>`;
 
-  const rangeLabel = (mode === "RANGE")
-    ? (hasValidRange ? `${formatDateMDY(r.startISO)} → ${formatDateMDY(r.endISO)}` : "Set dates")
-    : r.label;
-
-  const rangeUI = (mode === "RANGE") ? `
-    <div class="sep" style="margin-top:12px"></div>
-    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
-      <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
-    </div>
-    <div class="grid2" style="margin-top:10px">
-      <div class="field">
-        <div class="label">From (MM/DD/YYYY)</div>
-        <input class="input" id="homeRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(state.homeFilter.from||"")}" />
-      </div>
-      <div class="field">
-        <div class="label">To (MM/DD/YYYY)</div>
-        <input class="input" id="homeRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(state.homeFilter.to||"")}" />
-      </div>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="homeRangeApply">Apply</button>
-    </div>
-  ` : "";
-
-  const rows = trips.length
-    ? trips.slice(0, HOME_TRIPS_LIMIT).map(t=>`
-        <div class="trip triprow" data-id="${t?.id||""}" role="button" tabindex="0">
-          ${renderTripRowCompact(t)}
+  const rows = trips.length ? trips.slice(0, HOME_TRIPS_LIMIT).map(t=>{
+    const date = formatDateMDY(t?.dateISO);
+    const dealer = (t?.dealer||"").toString();
+    const lbs = to2(Number(t?.pounds)||0);
+    const amt = to2(Number(t?.amount)||0);
+    const ppl = computePPL(lbs, amt);
+    const area = (t?.area||"").toString();
+    const safeDealer = dealer ? dealer : "(dealer)";
+    return `
+      <div class="trip triprow" data-id="${t?.id||""}" role="button" tabindex="0">
+        <div class="trow">
+          <div>
+            <div class="metaRow"><span class="tmeta">${date || ""}</span>${safeDealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(safeDealer)}</span>` : ""}</div>
+            <div class="tname">${escapeHtml(area || "(area)")}</div>
+            <div class="tsub">$/Lb: <b>${formatMoney(ppl)}</b></div>
+          </div>
+          <div class="tright">
+            <div><b>${lbs}</b> lbs</div>
+            <div><b>${formatMoney(amt)}</b></div>
+          </div>
         </div>
-      `).join("")
-    : `<div class="muted small">No trips in this range yet. Tap <b>＋</b> to log your first one.</div>`;
+      </div>
+    `;
+  }).join("") : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
 
   getApp().innerHTML = `
     ${renderPageHeader("home")}
@@ -1473,73 +1423,47 @@ function renderHome(){
     <div class="card dashCard">
       <div class="segWrap">
         ${chip("YTD","YTD")}
-        ${chip("MONTH","Month")}
-        ${chip("7D","7 Days")}
-        ${chip("RANGE","Range")}
+        ${chip("Month","Month")}
+        ${chip("7D","Last 7 Days")}
       </div>
-
-      ${rangeUI}
-
-      <div class="kpiRow" style="margin-top:12px">
-        <div class="kpiCard kpiTile glow-neutral">
+      <div class="kpiRow">
+        <div class="kpiCard">
           <div class="kpiValue">${trips.length}</div>
           <div class="kpiLabel">Trips</div>
         </div>
-        <div class="kpiCard kpiTile glow-blue">
-          <div class="kpiValue">${escapeHtml(lbsStr)}<span class="kpiUnit">lbs</span></div>
+        <div class="kpiCard">
+          <div class="kpiValue">${lbsStr}<span class="kpiUnit">lbs</span></div>
           <div class="kpiLabel">Harvested</div>
         </div>
-        <div class="kpiCard kpiTile glow-green">
-          <div class="kpiValue money">${escapeHtml(moneyStr)}</div>
+        <div class="kpiCard">
+          <div class="kpiValue">${moneyRounded}</div>
           <div class="kpiLabel">Total</div>
         </div>
       </div>
     </div>
 
     ${pwaStorageNoteHTML}
+
     ${backupReminderHTML}
+
     <div id="reviewWarnings"></div>
 
     <div class="card">
-      <b>Recent Trips</b>
+      <b>Trips</b>
       <div class="sep"></div>
       <div class="triplist">${rows}</div>
       ${trips.length > HOME_TRIPS_LIMIT ? `<div style="margin-top:10px"><button class="btn" id="viewAllTrips">View all trips</button></div>` : ``}
     </div>
   `;
 
+  // ensure top of view on iPhone
   getApp().scrollTop = 0;
 
   const vbtn = document.getElementById("viewAllTrips");
   if(vbtn){ vbtn.onclick = ()=>{ pushView(state, "all_trips"); }; }
 
-  // Chips
-  getApp().querySelectorAll("button.chip[data-hf]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const key = String(btn.getAttribute("data-hf")||"YTD").toUpperCase();
-      state.homeFilter.mode = key;
-      saveState();
-      renderHome();
-    });
-  });
 
-  // Apply range
-  const applyBtn = document.getElementById("homeRangeApply");
-  if(applyBtn){
-    applyBtn.onclick = ()=>{
-      const from = String(document.getElementById("homeRangeFrom")?.value || "").trim();
-      const to = String(document.getElementById("homeRangeTo")?.value || "").trim();
-      const sIso = parseMDYToISO(from);
-      const eIso = parseMDYToISO(to);
-      if(!sIso || !eIso){ showToast("Invalid range dates"); return; }
-      state.homeFilter.from = from;
-      state.homeFilter.to = to;
-      saveState();
-      renderHome();
-    };
-  }
-
-  // Open trip to edit
+// Open trip to edit
   getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
     const open = ()=>{
       const id = card.getAttribute("data-id");
@@ -1555,12 +1479,43 @@ function renderHome(){
     });
   });
 
-  // PWA storage note buttons
+  // Filters
+  getApp().querySelectorAll("button.chip").forEach(btn=>{
+    btn.addEventListener("click", ()=> setFilter(btn.getAttribute("data-f")));
+  });
+
+const toggleToast = (e)=>{
+  try{
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    const t = document.getElementById("toast");
+    if(t?.classList?.contains?.("show")){      t.classList.remove("show");
+      return;
+    }
+    showToast(tipMsg);
+  }catch{
+    showToast(tipMsg);
+  }
+};
+
+const btnPaste = document.getElementById("paste");
+const warn = document.getElementById("warn");
+
+if(btnPaste){
+  btnPaste.onclick = toggleToast;
+  btnPaste.onkeydown = (e)=>{ if(e.key==="Enter"||e.key===" ") toggleToast(e); };
+}
+if(warn){
+  warn.onclick = toggleToast;
+}
+
+
+  // PWA storage note buttons (may not exist if note not shown)
   const btnPwaDismiss = document.getElementById("pwaNoteDismiss");
   if(btnPwaDismiss){
     btnPwaDismiss.onclick = ()=>{
-      const s2 = state.settings || (state.settings = {});
-      s2.pwaStorageNoteDismissed = true;
+      const s = state.settings || (state.settings = {});
+      s.pwaStorageNoteDismissed = true;
       state.lastAction = "pwaNote:dismiss";
       saveState();
       render();
@@ -1573,10 +1528,11 @@ function renderHome(){
       state.lastAction = "nav:help";
       saveState();
       render();
+      // optional: could scroll to section via hash later
     };
   }
 
-  // Backup reminder buttons
+  // Backup reminder buttons (may not exist if reminder not shown)
   const btnBackupNow = document.getElementById("backupNow");
   if(btnBackupNow){
     btnBackupNow.onclick = ()=>{
@@ -1599,6 +1555,7 @@ function renderHome(){
   if(btnBackupLater){
     btnBackupLater.onclick = ()=>{
       state.settings = state.settings || {};
+      // Snooze for 24 hours
       state.settings.backupSnoozeUntil = Date.now() + (24*60*60*1000);
       saveState();
       renderHome();
@@ -1613,11 +1570,10 @@ function renderNewTrip(){
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
   const amountDisp = displayAmount(draft.amount);
-  const pplDraft = computePPL(Number(draft.pounds||0), Number(draft.amount||0));
 
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
-    const label = a ? a : "Select Area";
+    const label = a ? a : "—";
     const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
     return `<option value="${escapeHtml(String(a||""))}" ${sel}>${label}</option>`;
   }).join("");
@@ -1640,7 +1596,7 @@ for(const d of [...topDealers, ...(Array.isArray(state.dealers)?state.dealers:[]
   dealerListForSelect.push(v);
 }
 const dealerOptions = ["", ...dealerListForSelect].map(d=>{
-  const label = d ? d : "Select Dealer";
+  const label = d ? d : "—";
   const sel = (normalizeKey(String(draft.dealer||"")) === normalizeKey(String(d||""))) ? "selected" : "";
   const v = String(d||"").replaceAll('"',"&quot;");
   return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
@@ -1662,7 +1618,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         </div>
 
         <div class="field">
-          <div class="label fieldLabel">DEALERS</div>
+          <div class="label fieldLabel">DEALER</div>
           ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
           <select class="select" id="t_dealer">
             ${dealerOptions}
@@ -1677,7 +1633,6 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         <div class="field">
           <div class="label fieldLabel">AMOUNT</div>
           <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
-          ${(pplDraft>0) ? `<div class="hint">$/lb: <span class="money"><b>${escapeHtml(formatMoney(pplDraft))}</b></span></div>` : ``}
         </div>
 
         <div class="field">
@@ -2379,10 +2334,6 @@ function renderReports(){
     return;
   }
 
-  const repTotalTrips = trips.length;
-  const repTotalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
-  const repTotalAmt = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
-
   // Aggregations
   const byDealer = new Map();
   const byArea = new Map();
@@ -2431,40 +2382,40 @@ function renderReports(){
     return { month:m, label, ...x, avg };
   });
 
-const renderAggList = (rows, emptyMsg)=>{
-  if(!rows.length) return `<div class="muted small">${escapeHtml(emptyMsg||"No data")}</div>`;
-  return rows.map(r=>{
-    return `
-      <div class="trow">
-        <div style="min-width:0;flex:1">
-          <div class="tname">${escapeHtml(r.name)}</div>
-          <div class="tsub">${r.trips} trips</div>
+  const renderAggList = (rows, emptyMsg)=>{
+    if(!rows.length) return `<div class="muted small">${escapeHtml(emptyMsg||"No data")}</div>`;
+    return rows.map(r=>{
+      return `
+        <div class="trow">
+          <div>
+            <div class="tname">${escapeHtml(r.name)}</div>
+            <div class="tsub">${r.trips} trips • ${to2(r.lbs)} lbs</div>
+          </div>
+          <div class="tright">
+            <div><b>${formatMoney(r.amt)}</b></div>
+            <div>$/lb <b>${formatMoney(r.avg)}</b></div>
+          </div>
         </div>
-        <div class="rightStack">
-          <div class="lbs">${escapeHtml(formatLbs(r.lbs))}</div>
-          <div class="amt money">${escapeHtml(formatMoney(r.amt))}</div>
-        </div>
-      </div>
-    `;
-  }).join("");
-};
+      `;
+    }).join("");
+  };
 
-const renderMonthList = ()=>{
-  return monthRows.map(r=>{
-    return `
-      <div class="trow">
-        <div style="min-width:0;flex:1">
-          <div class="tname">${escapeHtml(r.label)}</div>
-          <div class="tsub">${r.trips} trips</div>
+  const renderMonthList = ()=>{
+    return monthRows.map(r=>{
+      return `
+        <div class="trow">
+          <div>
+            <div class="tname">${escapeHtml(r.label)}</div>
+            <div class="tsub">${r.trips} trips • ${to2(r.lbs)} lbs</div>
+          </div>
+          <div class="tright">
+            <div><b>${formatMoney(r.amt)}</b></div>
+            <div>$/lb <b>${formatMoney(r.avg)}</b></div>
+          </div>
         </div>
-        <div class="rightStack">
-          <div class="lbs">${escapeHtml(formatLbs(r.lbs))}</div>
-          <div class="amt money">${escapeHtml(formatMoney(r.amt))}</div>
-        </div>
-      </div>
-    `;
-  }).join("");
-};
+      `;
+    }).join("");
+  };
 
   // High/Low items
   const maxLbs = trips.reduce((best,t)=> (Number(t?.pounds)||0) > (Number(best?.pounds)||0) ? t : best, trips[0]);
@@ -2600,22 +2551,6 @@ const renderMonthList = ()=>{
           <button class="btn primary" id="repRangeApply">Apply</button>
         </div>
       ` : ""}
-
-
-      <div class="kpiRow" style="margin-top:12px">
-        <div class="kpiCard kpiTile glow-neutral">
-          <div class="kpiValue">${repTotalTrips}</div>
-          <div class="kpiLabel">Total Trips</div>
-        </div>
-        <div class="kpiCard kpiTile glow-blue">
-          <div class="kpiValue">${escapeHtml((Math.abs(to2(repTotalLbs)%1)<1e-9)?String(Math.trunc(to2(repTotalLbs))):String(to2(repTotalLbs)))}<span class="kpiUnit">lbs</span></div>
-          <div class="kpiLabel">Harvested</div>
-        </div>
-        <div class="kpiCard kpiTile glow-green">
-          <div class="kpiValue money">${escapeHtml(formatMoney(to2(repTotalAmt)))}</div>
-          <div class="kpiLabel">Earnings</div>
-        </div>
-      </div>
 
       <div class="filters" style="margin-top:10px">
         ${seg("charts","Charts")}
@@ -2823,10 +2758,6 @@ function renderSettings(){
   ensureAreas();
   ensureDealers();
 
-  state.settings = state.settings || {};
-  const seg = String(state.settings.listSegment || "areas").toLowerCase(); // "areas" | "dealers"
-  const activeSeg = (seg === "dealers") ? "dealers" : "areas";
-
   const areaRows = state.areas.length ? state.areas.map((a, i)=>`
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
@@ -2841,8 +2772,6 @@ function renderSettings(){
     </div>
   `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
 
-  const segBtn = (key,label)=>`<button class="chip ${activeSeg===key?'on is-selected':''}" data-seg="${key}" type="button">${label}</button>`;
-
   getApp().innerHTML = `
     ${renderPageHeader("settings")}
 
@@ -2850,30 +2779,23 @@ function renderSettings(){
       <b>Lists</b>
       <div class="sep"></div>
 
-      <div class="filters" style="margin-top:10px">
-        ${segBtn("areas","Areas")}
-        ${segBtn("dealers","Dealers")}
+      <div style="margin-top:10px">
+        <div class="muted small"><b>Areas</b></div>
+        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+          <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
+          <button class="btn primary" id="addArea">Add</button>
+        </div>
+        ${areaRows}
       </div>
 
-      ${activeSeg === "areas" ? `
-        <div style="margin-top:12px">
-          <div class="muted small"><b>Areas</b></div>
-          <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-            <input class="input" id="newArea" placeholder="Add new area (ex: 19/626)" style="flex:1;min-width:180px" />
-            <button class="btn primary" id="addArea">Add</button>
-          </div>
-          ${areaRows}
+      <div style="margin-top:18px">
+        <div class="muted small"><b>Dealers</b></div>
+        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+          <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
+          <button class="btn primary" id="addDealer">Add</button>
         </div>
-      ` : `
-        <div style="margin-top:12px">
-          <div class="muted small"><b>Dealers</b></div>
-          <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-            <input class="input" id="newDealer" placeholder="Add new dealer (ex: Machias Bay)" style="flex:1;min-width:180px" />
-            <button class="btn primary" id="addDealer">Add</button>
-          </div>
-          ${dealerRows}
-        </div>
-      `}
+        ${dealerRows}
+      </div>
     </div>
 
     <div class="card">
@@ -2890,7 +2812,7 @@ function renderSettings(){
     <div class="card">
       <b>Help</b>
       <div class="sep"></div>
-      <div class="muted small" style="margin-top:10px">How to log trips, manage lists, backups, and install.</div>
+      <div class="muted small" style="margin-top:10px">Short instructions for manual entry, clipboard paste, backups, and install.</div>
       <div class="row" style="margin-top:12px">
         <button class="btn" id="openHelp">Open Help</button>
       </div>
@@ -2922,20 +2844,10 @@ function renderSettings(){
 
   getApp().scrollTop = 0;
   updateBuildBadge();
+
   bindNavHandlers(state);
 
   document.getElementById("openHelp").onclick = ()=>{ pushView(state, "help"); };
-
-  // Segment switch
-  getApp().querySelectorAll("button.chip[data-seg]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const k = String(btn.getAttribute("data-seg")||"areas").toLowerCase();
-      state.settings = state.settings || {};
-      state.settings.listSegment = (k === "dealers") ? "dealers" : "areas";
-      saveState();
-      renderSettings();
-    };
-  });
 
   // Backup / Restore (JSON)
   const backupFile = document.getElementById("backupFile");
@@ -2980,35 +2892,24 @@ function renderSettings(){
     };
   }
 
-  // Add rows (only if visible)
-  const btnAddArea = document.getElementById("addArea");
-  if(btnAddArea){
-    btnAddArea.onclick = ()=>{
-      const v = String(document.getElementById("newArea")?.value||"").trim();
-      if(!v) return;
-      state.areas = Array.isArray(state.areas) ? state.areas : [];
-      state.areas.push(v);
-      ensureAreas();
-      saveState();
-      renderSettings();
-    };
-  }
-  const btnAddDealer = document.getElementById("addDealer");
-  if(btnAddDealer){
-    btnAddDealer.onclick = ()=>{
-      const v = String(document.getElementById("newDealer")?.value||"").trim();
-      if(!v) return;
-      state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
-      state.dealers.push(v);
-      ensureDealers();
-      saveState();
-      renderSettings();
-    };
-  }
+  document.getElementById("addArea").onclick = ()=>{
+    const v = String(document.getElementById("newArea").value||"").trim();
+    if(!v) return;
+    state.areas = Array.isArray(state.areas) ? state.areas : [];
+    state.areas.push(v);
+    ensureAreas();
+    saveState();
+    renderSettings();
+  };
 
-  const confirmDelete = (kind, label)=>{
-    const msg = `Delete this ${kind}?\n\n${label}\n\nTrips already logged keep their text. This only removes it from the list.`;
-    return confirm(msg);
+  document.getElementById("addDealer").onclick = ()=>{
+    const v = String(document.getElementById("newDealer").value||"").trim();
+    if(!v) return;
+    state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
+    state.dealers.push(v);
+    ensureDealers();
+    saveState();
+    renderSettings();
   };
 
   getApp().querySelectorAll("[data-del-area]").forEach(btn=>{
@@ -3016,7 +2917,7 @@ function renderSettings(){
       const idx = Number(btn.getAttribute("data-del-area"));
       if(!(idx >= 0)) return;
       const label = state.areas[idx];
-      if(!confirmDelete("area", label)) return;
+      if(!confirm(`Delete area "${label}"?`)) return;
       state.areas.splice(idx,1);
       saveState();
       renderSettings();
@@ -3028,7 +2929,7 @@ function renderSettings(){
       const i = parseInt(btn.getAttribute("data-del-dealer")||"-1", 10);
       if(!(i>=0)) return;
       const label = state.dealers[i];
-      if(!confirmDelete("dealer", label)) return;
+      if(!confirm(`Delete dealer "${label}"?`)) return;
       state.dealers.splice(i,1);
       ensureDealers();
       saveState();
@@ -3058,11 +2959,12 @@ function renderSettings(){
   document.getElementById("resetData").onclick = ()=>{
     const typed = prompt('Type DELETE to permanently erase ALL trips and lists on this device.');
     if(typed !== "DELETE") return;
-    state = { trips: [], areas: [], dealers: [], filter: "YTD", view: "home", settings: {}, homeFilter: { mode:"YTD", from:"", to:"" } };
+    state = { trips: [], areas: [], dealers: [], filter: "YTD", view: "home", settings: {} };
     saveState();
     render();
   };
 }
+
 
 function renderHelp(){
   getApp().innerHTML = `
@@ -3210,12 +3112,12 @@ function renderTopAreaChips(topAreas, currentArea, containerId){
   const items = Array.isArray(topAreas) ? topAreas.filter(Boolean).map(x=>String(x)) : [];
   if(!items.length){
     return `
-      <div class="recentLabel muted small"><b>Areas</b></div>
-      <div class="recentEmpty muted small">No areas yet</div>
+      <div class="recentLabel muted small"><b>Recent areas</b></div>
+      <div class="recentEmpty muted small">No recent areas yet</div>
     `;
   }
   return `
-    <div class="recentLabel muted small"><b>Areas</b></div>
+    <div class="recentLabel muted small"><b>Recent areas</b></div>
     <div class="areachips" id="${containerId}">
       ${items.map(a=>{
         const on = (String(currentArea||"").trim() === String(a||"").trim());
@@ -3229,12 +3131,12 @@ function renderTopDealerChips(topDealers, currentDealer, containerId){
   const items = Array.isArray(topDealers) ? topDealers.filter(Boolean).map(x=>String(x)) : [];
   if(!items.length){
     return `
-      <div class="recentLabel muted small"><b>Dealers</b></div>
-      <div class="recentEmpty muted small">No dealers yet</div>
+      <div class="recentLabel muted small"><b>Recent dealers</b></div>
+      <div class="recentEmpty muted small">No recent dealers yet</div>
     `;
   }
   return `
-    <div class="recentLabel muted small"><b>Dealers</b></div>
+    <div class="recentLabel muted small"><b>Recent dealers</b></div>
     <div class="areachips" id="${containerId}">
       ${items.map(d=>{
         const on = (String(currentDealer||"").trim().toLowerCase() === String(d||"").trim().toLowerCase());
