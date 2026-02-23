@@ -141,6 +141,7 @@ function copyTextToClipboard(txt){
 const TABS = [
   { key: "home", label: "Home", icon: "home" },
   { key: "all_trips", label: "Trips", icon: "trips" },
+  { key: "new", label: "New", icon: "plus", aria: "New Trip", isPlus: true },
   { key: "reports", label: "Reports", icon: "reports" },
   { key: "settings", label: "Settings", icon: "settings" },
 ];
@@ -165,6 +166,11 @@ function iconSvg(name){
       <path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M3 20h18"/>
     </svg>`;
   }
+  if(name === "plus"){
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 5v14"/><path d="M5 12h14"/>
+    </svg>`;
+  }
   if(name === "settings"){
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
@@ -176,7 +182,8 @@ function iconSvg(name){
 
 function getActiveTabKey(view){
   // Map sub-views back to a primary tab
-  if(view === "new" || view === "review" || view === "edit" || view === "help" || view === "about") return "home";
+  if(view === "new" || view === "review" || view === "edit") return "new";
+  if(view === "help" || view === "about") return "settings";
   return view || "home";
 }
 
@@ -191,7 +198,7 @@ function renderTabBar(activeView){
 
   const activeKey = getActiveTabKey(activeView);
   host.innerHTML = TABS.map(t => `
-    <button class="tabbtn ${t.key===activeKey ? "active" : ""}" type="button" data-tab="${escapeHtml(t.key)}" aria-label="${escapeHtml(t.label)}">
+    <button class="tabbtn ${t.isPlus ? "plus" : ""} ${t.key===activeKey ? "active" : ""}" type="button" data-tab="${escapeHtml(t.key)}" aria-label="${escapeHtml(t.aria || t.label)}">
       ${iconSvg(t.icon)}
       <span>${escapeHtml(t.label)}</span>
     </button>
