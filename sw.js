@@ -4,7 +4,7 @@
 */
 const SW_V = new URL(self.location.href).searchParams.get("v") || "0";
 const CACHE_VERSION = `v${SW_V}`;
-const CACHE_NAME = `shellfish-tracker-v31-${CACHE_VERSION}`;
+const CACHE_NAME = `shellfish-tracker-v32-${CACHE_VERSION}`;
 
 // Core assets. Keep this list short and stable.
 const CORE = [
@@ -52,7 +52,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     // Delete old caches
     const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k.startsWith("shellfish-tracker-v31-") && k !== CACHE_NAME) ? caches.delete(k) : Promise.resolve()));
+    await Promise.all(keys.map((k) => (k.startsWith("shellfish-tracker-v32-") && k !== CACHE_NAME) ? caches.delete(k) : Promise.resolve()));
 
     await self.clients.claim();
   })());

@@ -1247,7 +1247,7 @@ function renderHome(){
       <div class="triplist">${rows}</div>
       ${trips.length > HOME_TRIPS_LIMIT ? `<div style="margin-top:10px"><button class="btn" id="viewAllTrips">View all trips</button></div>` : ``}
     </div>
-  `;`;
+  `;
 
   // ensure top of view on iPhone
   getApp().scrollTop = 0;
