@@ -1225,12 +1225,12 @@ function renderHome(){
           <div class="kpiLabel">Trips</div>
         </div>
         <div class="kpiCard">
-          <div class="kpiValue">${lbsStr} <span class="kpiUnit">lbs</span></div>
+          <div class="kpiValue">${lbsStr}<span class="kpiUnit">lbs</span></div>
           <div class="kpiLabel">Harvested</div>
         </div>
         <div class="kpiCard">
           <div class="kpiValue">${moneyRounded}</div>
-          <div class="kpiLabel">Total Earnings</div>
+          <div class="kpiLabel">Total</div>
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="Shellfish Tracker">
 
 <style>
-:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:52px}
+:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:50px}
 *{box-sizing:border-box}
 html,body{height:100%;background:var(--bg)}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
@@ -74,7 +74,7 @@ main{padding:14px 14px 18px}
 
 /* Phase 2C-2.1: iPhone scroll + back button usability */
 .phone{display:flex;flex-direction:column}
-main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 14px)}
+main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 10px)}
 
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
@@ -82,7 +82,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;pa
 #toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));padding:2px 8px calc(2px + env(safe-area-inset-bottom));background:rgba(10,14,22,.78);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:flex-end}
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;height:var(--tabbar-h);padding:4px 8px calc(4px + env(safe-area-inset-bottom));background:rgba(10,14,22,.78);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center}
 .tabbtn{flex:1;min-width:0;appearance:none;border:0;background:transparent;color:rgba(232,238,252,.70);padding:6px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:12px;line-height:1}
 .tabbtn svg{width:22px;height:22px;display:block}
 .tabbtn.active{color:var(--accent)}
@@ -437,16 +437,16 @@ header{padding:14px 18px 12px}
   text-align:center;
 }
 .kpiValue{
-  font-size:34px;
+  font-size:clamp(20px, 7vw, 34px);
   font-weight:900;
   line-height:1.05;
   font-variant-numeric:tabular-nums;
   white-space:nowrap;
   overflow:hidden;
-  text-overflow:ellipsis;
+  text-overflow:clip;
 }
 .kpiUnit{
-  font-size:16px;
+  font-size:0.55em;
   font-weight:800;
   opacity:0.85;
   margin-left:2px;
@@ -457,11 +457,7 @@ header{padding:14px 18px 12px}
   font-weight:700;
   opacity:0.78;
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-@media (max-width:390px){
-  .kpiValue{ font-size:30px; }
+  overflow:visible;
 }
 
 </style>
@@ -474,7 +470,7 @@ header{padding:14px 18px 12px}
     <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=32"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=33"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
