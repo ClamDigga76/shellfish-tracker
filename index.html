@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="Shellfish Tracker">
 
 <style>
-:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:50px}
+:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:50px;--bottom-gutter:8px}
 *{box-sizing:border-box}
 html,body{height:100%;background:var(--bg)}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
@@ -74,15 +74,15 @@ main{padding:14px 14px 18px}
 
 /* Phase 2C-2.1: iPhone scroll + back button usability */
 .phone{display:flex;flex-direction:column}
-main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 10px)}
+main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter) + 10px)}
 
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
 /* Toast */
-#toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
+#toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter) + 12px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;height:var(--tabbar-h);padding:4px 8px calc(4px + env(safe-area-inset-bottom));background:rgba(10,14,22,.78);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center}
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;min-height:var(--tabbar-h);height:auto;padding:4px 8px calc(4px + env(safe-area-inset-bottom) + var(--bottom-gutter));background:rgba(10,14,22,.78);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center}
 .tabbtn{flex:1;min-width:0;appearance:none;border:0;background:transparent;color:rgba(232,238,252,.70);padding:6px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:12px;line-height:1}
 .tabbtn svg{width:22px;height:22px;display:block}
 .tabbtn.active{color:var(--accent)}
@@ -425,39 +425,48 @@ header{padding:14px 18px 12px}
 .kpiRow{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:10px;
+  gap:6px;
   margin-top:12px;
 }
 .kpiCard{
   min-width:0;
-  padding:14px 10px 12px;
+  padding:9px 6px 8px;
   border-radius:18px;
   background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.08);
   text-align:center;
 }
 .kpiValue{
-  font-size:clamp(20px, 7vw, 34px);
+  display:block;
+  max-width:100%;
+  font-size:clamp(14px, 5.6vw, 32px);
   font-weight:900;
   line-height:1.05;
+  letter-spacing:-0.2px;
   font-variant-numeric:tabular-nums;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:clip;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
 }
 .kpiUnit{
-  font-size:0.55em;
+  font-size:0.45em;
   font-weight:800;
   opacity:0.85;
-  margin-left:2px;
+  margin-left:4px;
 }
 .kpiLabel{
-  margin-top:8px;
-  font-size:14px;
+  margin-top:6px;
+  font-size:11px;
   font-weight:700;
   opacity:0.78;
+  line-height:1.1;
   white-space:nowrap;
   overflow:visible;
+}
+
+@media (max-width: 420px){
+  .kpiValue{ font-size:clamp(13px, 4.8vw, 28px); }
+  .kpiCard{ padding:9px 5px 8px; }
 }
 
 </style>
@@ -470,7 +479,7 @@ header{padding:14px 18px 12px}
     <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=33"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=35"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
