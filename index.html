@@ -494,6 +494,63 @@ header{padding:14px 18px 12px}
   line-height:1.1;
 }
 
+
+
+/* ===== Titles: centered + enlarged + divider (v38) ===== */
+.pageHeader{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin:10px 0 14px;
+  padding:0 12px;
+  position:relative;
+}
+.pageHeader::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:-6px;
+  width:70%;
+  height:1px;
+  background:rgba(255,255,255,0.14);
+}
+.phTitle{
+  margin:0;
+  font-size:clamp(18px,4.8vw,24px);
+  font-weight:800;
+  letter-spacing:0.2px;
+  text-align:center;
+}
+.phIcon svg{
+  width:18px;
+  height:18px;
+  opacity:0.9;
+}
+
+/* Card titles: style <b> at top of a card as a centered header */
+.card > b:first-child{
+  display:block;
+  text-align:center;
+  font-size:clamp(14px,3.8vw,18px);
+  font-weight:750;
+  margin:2px 0 10px;
+  position:relative;
+  padding-bottom:8px;
+}
+.card > b:first-child::after{
+  content:"";
+  display:block;
+  width:70%;
+  height:1px;
+  background:rgba(255,255,255,0.12);
+  margin:8px auto 0;
+}
+.card > b:first-child + .sep{
+  display:none;
+}
+
 </style>
 </head>
 <body>
@@ -501,7 +558,7 @@ header{padding:14px 18px 12px}
 <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=37"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=38"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
