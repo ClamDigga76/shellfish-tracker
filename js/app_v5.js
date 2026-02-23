@@ -3,7 +3,7 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=36";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=37";
 
 const APP_VERSION = "v5";
 const VERSION = APP_VERSION;
@@ -1580,19 +1580,10 @@ function renderNewTrip(){
 
 
 
-// Last 3 unique Areas (based on entry order; ignores filters)
-const topAreas = (getLastUniqueFromTrips("area", 3));
-if(!topAreas.length){
-  topAreas.push(...(Array.isArray(state.areas)?state.areas:[]).slice(0,3));
-}
-
-
-
-// Last 3 unique Dealers (based on entry order; ignores filters)
-const topDealers = (getLastUniqueFromTrips("dealer", 3));
-if(!topDealers.length){
-  topDealers.push(...(Array.isArray(state.dealers)?state.dealers:[]).slice(0,3));
-}
+// Recent (last 2) unique values from saved trips (ignores filters)
+// NOTE: Chips are always shown; if none exist yet we show a muted "No recent …" line.
+const topAreas = (getLastUniqueFromTrips("area", 2));
+const topDealers = (getLastUniqueFromTrips("dealer", 2));
 
 const dealerListForSelect = [];
 const seenDealerKeys = new Set();
@@ -1622,12 +1613,12 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         <div class="manualModule">
 
         <div class="field">
-          <div class="label fieldLabel">Harvest date</div>
+          <div class="label fieldLabel">HARVEST DATE</div>
           <input class="input" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
         </div>
 
         <div class="field">
-          <div class="label fieldLabel">Dealer</div>
+          <div class="label fieldLabel">DEALER</div>
           ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
           <select class="select" id="t_dealer">
             ${dealerOptions}
@@ -1635,17 +1626,17 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         </div>
 
         <div class="field">
-          <div class="label fieldLabel">Pounds</div>
+          <div class="label fieldLabel">POUNDS</div>
           <input class="input" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
         </div>
 
         <div class="field">
-          <div class="label fieldLabel">Amount</div>
+          <div class="label fieldLabel">AMOUNT</div>
           <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
         </div>
 
         <div class="field">
-          <div class="label fieldLabel">Area</div>
+          <div class="label fieldLabel">AREA</div>
           ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
 <select class="select" id="t_area">
             ${areaOptions}
@@ -3118,11 +3109,17 @@ function displayAmount(val){
 }
 
 function renderTopAreaChips(topAreas, currentArea, containerId){
-  if(!topAreas || !topAreas.length) return "";
+  const items = Array.isArray(topAreas) ? topAreas.filter(Boolean).map(x=>String(x)) : [];
+  if(!items.length){
+    return `
+      <div class="recentLabel muted small"><b>Recent areas</b></div>
+      <div class="recentEmpty muted small">No recent areas yet</div>
+    `;
+  }
   return `
-    <div class="muted small" style="margin-top:6px;margin-bottom:6px"><b>Top areas</b> <span class="muted small">(quick pick)</span></div>
+    <div class="recentLabel muted small"><b>Recent areas</b></div>
     <div class="areachips" id="${containerId}">
-      ${topAreas.map(a=>{
+      ${items.map(a=>{
         const on = (String(currentArea||"").trim() === String(a||"").trim());
         return `<button class="areachip${on ? " on" : ""}" type="button" data-area="${escapeHtml(a)}">${escapeHtml(a)}</button>`;
       }).join("")}
@@ -3131,11 +3128,17 @@ function renderTopAreaChips(topAreas, currentArea, containerId){
 }
 
 function renderTopDealerChips(topDealers, currentDealer, containerId){
-  if(!topDealers || !topDealers.length) return "";
+  const items = Array.isArray(topDealers) ? topDealers.filter(Boolean).map(x=>String(x)) : [];
+  if(!items.length){
+    return `
+      <div class="recentLabel muted small"><b>Recent dealers</b></div>
+      <div class="recentEmpty muted small">No recent dealers yet</div>
+    `;
+  }
   return `
-    <div class="muted small" style="margin-top:6px;margin-bottom:4px"><b>Top dealers</b> <span class="muted small">(quick pick)</span></div>
+    <div class="recentLabel muted small"><b>Recent dealers</b></div>
     <div class="areachips" id="${containerId}">
-      ${topDealers.map(d=>{
+      ${items.map(d=>{
         const on = (String(currentDealer||"").trim().toLowerCase() === String(d||"").trim().toLowerCase());
         return `<button class="areachip${on ? " on" : ""}" type="button" data-dealer="${escapeHtml(d)}">${escapeHtml(d)}</button>`;
       }).join("")}

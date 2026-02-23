@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="Shellfish Tracker">
 
 <style>
-:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:50px;--bottom-gutter:6px}
+:root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;--good:#2ea043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:46px;--bottom-gutter:6px}
 *{box-sizing:border-box}
 html,body{height:100%;background:var(--bg)}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
@@ -82,8 +82,8 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;pa
 #toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter) + 12px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;min-height:var(--tabbar-h);height:auto;padding:4px 8px calc(4px + env(safe-area-inset-bottom) + var(--bottom-gutter));background:rgba(10,14,22,.78);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center}
-.tabbtn{flex:1;min-width:0;appearance:none;border:0;background:transparent;color:rgba(232,238,252,.70);padding:6px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:12px;line-height:1}
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;height:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter));padding:0 8px calc(env(safe-area-inset-bottom) + var(--bottom-gutter));background:rgba(10,14,22,.78);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:flex-end}
+.tabbtn{flex:1;min-width:0;appearance:none;border:0;background:transparent;color:rgba(232,238,252,.70);padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:12px;line-height:1}
 .tabbtn svg{width:22px;height:22px;display:block}
 .tabbtn.active{color:var(--accent)}
 .tabbtn.active svg{stroke:var(--accent)}
@@ -93,6 +93,10 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;pa
 .tabbtn.plus svg{width:26px;height:26px;stroke:#fff}
 .tabbtn.plus span{display:none}
 .tabbtn.plus:active{transform:translateY(-12px)}
+
+/* New Trip: chips live between field title and dropdown/input */
+.recentLabel{margin-top:-2px;margin-bottom:2px}
+.recentEmpty{margin-top:-2px;margin-bottom:2px;opacity:.85}
 
 
 #credits{margin-top:14px;padding:10px 14px 12px;color:rgba(255,255,255,.65);font-size:13px;border-top:1px solid rgba(255,255,255,.08)}
@@ -497,7 +501,7 @@ header{padding:14px 18px 12px}
 <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=36"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=37"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
