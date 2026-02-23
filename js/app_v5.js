@@ -1128,6 +1128,14 @@ function renderHome(){
   const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
   const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
 
+  const lbsVal = to2(totalLbs);
+  const lbsStr = (Number.isFinite(lbsVal) && Math.abs(lbsVal % 1) < 1e-9) ? String(Math.trunc(lbsVal)) : String(lbsVal);
+  const moneyRounded = (()=>{
+    const v = Math.round(Number(totalAmount)||0);
+    try{ return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(v); }
+    catch{ return "$" + v.toLocaleString("en-US"); }
+  })();
+
 
   // Backup reminder (browser-only): encourages manual "Create Backup" periodically
   const s = state.settings || (state.settings = {});
@@ -1177,7 +1185,7 @@ function renderHome(){
   ` : "";
 
   const f = state.filter || "YTD";
-  const chip = (key,label) => `<button class="chip ${f===key?'on':''}" data-f="${key}">${label}</button>`;
+  const chip = (key,label) => `<button class="chip segBtn ${f===key?'on':''}" data-f="${key}" type="button">${label}</button>`;
 
   const rows = trips.length ? trips.slice(0, HOME_TRIPS_LIMIT).map(t=>{
     const date = formatDateMDY(t?.dateISO);
@@ -1205,25 +1213,31 @@ function renderHome(){
   }).join("") : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
 
   getApp().innerHTML = `
+    <div class="card dashCard">
+      <div class="segWrap">
+        ${chip("YTD","YTD")}
+        ${chip("Month","Month")}
+        ${chip("7D","Last 7 Days")}
+      </div>
+      <div class="kpiRow">
+        <div class="kpiCard">
+          <div class="kpiValue">${trips.length}</div>
+          <div class="kpiLabel">Trips</div>
+        </div>
+        <div class="kpiCard">
+          <div class="kpiValue">${lbsStr} <span class="kpiUnit">lbs</span></div>
+          <div class="kpiLabel">Harvested</div>
+        </div>
+        <div class="kpiCard">
+          <div class="kpiValue">${moneyRounded}</div>
+          <div class="kpiLabel">Total Earnings</div>
+        </div>
+      </div>
+    </div>
+
     ${pwaStorageNoteHTML}
 
     ${backupReminderHTML}
-
-    <div class="card">
-      <div class="row" style="align-items:center;justify-content:space-between">
-        <b>Totals (filtered)</b>
-        <div class="filters" style="margin-top:0">
-          ${chip("YTD","YTD")}
-          ${chip("Month","Month")}
-          ${chip("7D","Last 7 days")}
-        </div>
-      </div>
-      <div class="pillbar stats3">
-        <span class="pill statPill"><div class="pillLabel">Trips</div><div class="pillValue">${trips.length}</div></span>
-        <span class="pill statPill"><div class="pillLabel">Pounds</div><div class="pillValue">${to2(totalLbs)}</div></span>
-        <span class="pill statPill"><div class="pillLabel">Total</div><div class="pillValue">${formatMoney(totalAmount)}</div></span>
-      </div>
-    </div>
 
     <div id="reviewWarnings"></div>
 
@@ -1233,7 +1247,7 @@ function renderHome(){
       <div class="triplist">${rows}</div>
       ${trips.length > HOME_TRIPS_LIMIT ? `<div style="margin-top:10px"><button class="btn" id="viewAllTrips">View all trips</button></div>` : ``}
     </div>
-  `;
+  `;`;
 
   // ensure top of view on iPhone
   getApp().scrollTop = 0;
@@ -2892,6 +2906,12 @@ function renderAbout(){
 
 function render(){
   if(!state.view) state.view = "home";
+
+  // Home uses a full-screen dashboard header; hide the global header there.
+  try{
+    const hdr = document.querySelector(".phone > header");
+    if(hdr) hdr.style.display = (state.view === "home") ? "none" : "";
+  }catch{}
 
   // Render main view
   if(state.view === "settings") renderSettings();

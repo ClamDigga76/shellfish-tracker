@@ -398,6 +398,72 @@ header{padding:14px 18px 12px}
 }
 
 /* ===== end C1 ===== */
+
+
+/* Home dashboard header */
+.dashCard{ padding:14px 14px 12px; }
+.segWrap{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  padding:6px;
+  border-radius:16px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+}
+.segWrap .segBtn{
+  width:100%;
+  border-radius:12px;
+  padding:12px 10px;
+  font-weight:800;
+  letter-spacing:0.2px;
+}
+.segWrap .segBtn.on{
+  background:rgba(47,109,246,0.35);
+  border-color:rgba(47,109,246,0.55);
+}
+.kpiRow{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.kpiCard{
+  min-width:0;
+  padding:14px 10px 12px;
+  border-radius:18px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  text-align:center;
+}
+.kpiValue{
+  font-size:34px;
+  font-weight:900;
+  line-height:1.05;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.kpiUnit{
+  font-size:16px;
+  font-weight:800;
+  opacity:0.85;
+  margin-left:2px;
+}
+.kpiLabel{
+  margin-top:8px;
+  font-size:14px;
+  font-weight:700;
+  opacity:0.78;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+@media (max-width:390px){
+  .kpiValue{ font-size:30px; }
+}
+
 </style>
 </head>
 <body>
@@ -408,7 +474,7 @@ header{padding:14px 18px 12px}
     <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=30"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=31"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
