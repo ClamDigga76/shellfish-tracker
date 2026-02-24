@@ -3,7 +3,7 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=46";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=47";
 
 const APP_VERSION = "v5";
 const VERSION = APP_VERSION;
@@ -1252,190 +1252,90 @@ function renderAllTrips(){
     r.label;
 
   getApp().innerHTML = `
-    <div class="pageHeader simple">
-      <h2 class="phTitle">New Trip</h2>
+    ${renderPageHeader("all_trips")}
+
+    <div class="card">
+      <div class="filters" style="margin-top:0">
+        ${chip("ALL","All Trips")}
+        ${chip("YTD","YTD")}
+        ${chip("MONTH","Month")}
+        ${chip("7D","7 Days")}
+        ${chip("RANGE","Range")}
+      </div>
+
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
+        <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
+        <span class="pill"><b>${sorted.length}</b> shown</span>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="exportTrips">🧾 Export CSV</button>
+      </div>
+      <div class="hint">Export uses the current Trips filter.</div>
     </div>
 
-    <div class="card formCard">
-      <div class="form">
+    ${rangeUI}
 
-        <div class="field">
-          <div class="label fieldLabel">HARVEST DATE</div>
-          <div class="dateRow">
-            <span class="dateIcon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="3"></rect>
-                <path d="M16 2v4M8 2v4M3 10h18"></path>
-              </svg>
-            </span>
-            <input class="input datePill" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
-            <button class="todayBtn" id="dateToday" type="button">Today</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <div class="label fieldLabel">DEALERS</div>
-          ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
-          <div class="selectRowWrap">
-            <select class="select" id="t_dealer">
-              ${dealerOptions}
-            </select>
-            <span class="chev" aria-hidden="true">›</span>
-          </div>
-        </div>
-
-        <div class="grid2">
-          <div class="field">
-            <div class="label fieldLabel">POUNDS</div>
-            <input class="input lbsBlue" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
-          </div>
-
-          <div class="field">
-            <div class="label fieldLabel">AMOUNT</div>
-            <input class="input money" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
-          </div>
-        </div>
-
-        ${ (pplDisp && String(pplDisp).trim() !== "") ? `
-          <div class="muted small rateLine helperRate">$/lb: <span class="rate">${escapeHtml(pplDisp)}</span></div>
-        ` : ``}
-
-        <div class="field">
-          <div class="label fieldLabel">AREA</div>
-          ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
-          <div class="selectRowWrap">
-            <select class="select" id="t_area">
-              ${areaOptions}
-            </select>
-            <span class="chev" aria-hidden="true">›</span>
-          </div>
-        </div>
-
-        <div class="actions actionsNew">
-          <button class="btn primary" id="saveTrip" type="button">Save Trip</button>
-          <div class="btnRow2">
-            <button class="btn" id="navCancel" type="button">Cancel</button>
-            <button class="btn danger" id="clearDraft" type="button">Clear</button>
-          </div>
-        </div>
-
-      </div>
+    <div class="card">
+      ${rows}
     </div>
   `;
-  bindNavHandlers(state);(state);
 
-  const elDate = document.getElementById("t_date");
-  const elDealer = document.getElementById("t_dealer");
-  const elPounds = document.getElementById("t_pounds");
-  const elAmount = document.getElementById("t_amount");
-  const elArea = document.getElementById("t_area");
+  getApp().scrollTop = 0;
 
-  const btnToday = document.getElementById("dateToday");
-  if(btnToday){
-    btnToday.addEventListener("click", ()=>{
-      try{
-        const todayISO2 = new Date().toISOString().slice(0,10);
-        const mdy2 = formatDateMDY(todayISO2);
-        if(elDate) elDate.value = mdy2;
-        state.draft = state.draft || {};
-        state.draft.dateISO = todayISO2;
-        saveState();
-      }catch(_){}
-    });
-  }
+  // filter chips
+  getApp().querySelectorAll(".chip[data-tf]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const key = String(btn.getAttribute("data-tf")||"ALL");
+      state.tripsFilter.mode = key;
+      saveState();
+      renderAllTrips();
+    };
+  });
 
-
-  // Quick-pick chip containers
-  const topAreaWrap = document.getElementById("topAreas");
-  const topDealerWrap = document.getElementById("topDealers");
-
-  // NEW TRIP: wire up buttons (Save / Clear) — v22
-  const btnSave = document.getElementById("saveTrip");
-  const onSaveTrip = ()=>{
-    try{
-      // snapshot current inputs into draft
-      state.draft = state.draft || {};
-      const mdy = String(elDate?.value||"").trim();
-      const iso = parseMDYToISO(mdy) || "";
-      state.draft.dateISO = iso || state.draft.dateISO || "";
-      state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
-      state.draft.pounds = parseNum(elPounds?.value);
-      state.draft.amount = parseMoney(elAmount?.value);
-      state.draft.area = String(elArea?.value||"").trim();
-
-      // basic guard: if nothing entered, do nothing (prevents "dead tap" feel)
-      const anyEntered = Boolean(mdy || state.draft.dealer || (state.draft.pounds>0) || (state.draft.amount>0) || state.draft.area);
-      if(!anyEntered){
-        showToast("Enter trip details first");
+  // apply range
+  const applyBtn = document.getElementById("tripRangeApply");
+  if(applyBtn){
+    applyBtn.onclick = ()=>{
+      const from = String(document.getElementById("tripRangeFrom")?.value || "").trim();
+      const to = String(document.getElementById("tripRangeTo")?.value || "").trim();
+      const s = parseMDYToISO(from);
+      const e = parseMDYToISO(to);
+      if(!s || !e){
+        showToast("Invalid range dates");
         return;
       }
-
-      // move to review step (nothing is saved to trips until Confirm)
-      state.reviewDraft = {
-        dateISO: state.draft.dateISO,
-        dateMDY: mdy,
-        dealer: state.draft.dealer,
-        pounds: state.draft.pounds,
-        amount: state.draft.amount,
-        area: state.draft.area
-      };
+      state.tripsFilter.from = from;
+      state.tripsFilter.to = to;
       saveState();
-      pushView(state, "review");
-    }catch(err){
-      try{ showFatal(err, "saveTrip"); }catch{}
-    }
-  };
-  if(btnSave){
-    // iOS standalone can occasionally miss 'click'—bind both.
-    btnSave.onclick = onSaveTrip;
-    btnSave.addEventListener("touchend", (e)=>{ e.preventDefault(); onSaveTrip(); }, {passive:false});
-  }
-const btnClear = document.getElementById("clearDraft");
-  if(btnClear){
-    btnClear.onclick = ()=>{
-      if(confirm("Clear this draft?")){
-        delete state.draft;
-        saveState();
-        renderNewTrip();
-      }
+      renderAllTrips();
     };
   }
-// Persist draft as the user edits fields (fixes iOS select + prevents resets)
-  const persistDraft = ()=>{ try{ saveDraft(); }catch{} };
-  [elDate, elDealer, elPounds, elAmount].forEach(el=>{
-    if(!el) return;
-    el.addEventListener("input", persistDraft);
-    el.addEventListener("change", persistDraft);
-  });
-  if(elArea){
-    elArea.addEventListener("input", persistDraft);
-    elArea.addEventListener("change", persistDraft);
+
+  // export
+  const exportBtn = document.getElementById("exportTrips");
+  if(exportBtn){
+    exportBtn.onclick = ()=>{
+      const r2 = modeRange(mode, state.tripsFilter.from, state.tripsFilter.to);
+      const tripsToExport = (r2.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r2.startISO, r2.endISO);
+      exportTripsWithLabel(tripsToExport, r2.label, r2.startISO, r2.endISO);
+      showToast("CSV exported");
+    };
   }
 
-  if(topAreaWrap && elArea){
-  topAreaWrap.addEventListener("click", (e)=>{
-    const btn = e.target.closest("button[data-area]");
-    if(!btn) return;
-    const a = btn.getAttribute("data-area") || "";
-    elArea.value = a;
-    state.draft = state.draft || {};
-    state.draft.area = a;
-    saveDraft();
+  // Open trip to edit
+  getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
+    const open = ()=>{
+      state.view="edit";
+      state.editId = card.getAttribute("data-id") || "";
+      saveState();
+      render();
+    };
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); }
+    });
   });
-}
-
-
-if(topDealerWrap && elDealer){
-  topDealerWrap.addEventListener("click", (e)=>{
-    const btn = e.target.closest("button[data-dealer]");
-    if(!btn) return;
-    const d = btn.getAttribute("data-dealer") || "";
-    elDealer.value = d;
-    state.draft = state.draft || {};
-    state.draft.dealer = d;
-    saveDraft();
-  });
-}
 }
 
 function renderHome(
