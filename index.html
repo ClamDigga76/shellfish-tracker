@@ -40,6 +40,9 @@ main{padding:14px 14px 18px}
 .lbsBlue{color:var(--lbsBlue);font-weight:700}
 
 .small{font-size:12px}
+.helpText{font-size:13px}
+.phHelpBtn{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:rgba(232,238,252,.92);font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}
+.phHelpBtn:active{transform:translateY(-50%) scale(.98)}
 .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
 .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .pillbar.stats3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;flex-wrap:unset}
@@ -219,6 +222,34 @@ header{padding:14px 18px 12px}
   letter-spacing:.2px;
   opacity:.95;
 }
+/* v44 New Trip layout */
+.pageHeader.simple{justify-content:center;gap:0}
+.pageHeader.simple .phIcon{display:none}
+.pageHeader.simple .phTitle{text-align:center;margin:0 auto;font-size:22px;letter-spacing:.2px}
+
+.formCard{padding:16px 14px}
+.formCard .field{margin-bottom:14px}
+.overline,.fieldLabel{letter-spacing:.12em}
+.chipRow{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 10px}
+
+.selectRowWrap{position:relative}
+.selectRowWrap select{width:100%;appearance:none;-webkit-appearance:none;padding-right:44px}
+.selectRowWrap .chev{position:absolute;right:14px;top:50%;transform:translateY(-50%);opacity:.75;font-size:20px;pointer-events:none}
+
+.dateRow{display:flex;align-items:center;gap:10px}
+.dateRow .dateIcon{display:inline-flex;align-items:center;justify-content:center;opacity:.85}
+.dateRow .dateIcon svg{width:18px;height:18px}
+.dateRow .datePill{flex:1}
+.dateRow .todayBtn{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(232,238,252,.92);font-weight:700}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rateLine{margin-top:-6px;margin-bottom:8px}
+.rate{color:rgba(232,238,252,.82);font-weight:700}
+
+.actionsNew .btn.primary{width:100%}
+.actionsNew .btnRow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.actionsNew .btnRow2 .btn{width:100%}
+
 /* IOS input zoom guard */
 input, select, textarea{
   font-size:16px !important;
@@ -563,7 +594,7 @@ header{padding:14px 18px 12px}
 <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=41"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=45"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>

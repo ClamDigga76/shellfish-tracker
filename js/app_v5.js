@@ -3,7 +3,7 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=38";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=45";
 
 const APP_VERSION = "v5";
 const VERSION = APP_VERSION;
@@ -212,6 +212,7 @@ function renderPageHeader(viewKey){
     <div class="pageHeader">
       <span class="phIcon">${iconSvg(m.icon)}</span>
       <h2 class="phTitle">${escapeHtml(m.title)}</h2>
+      ${viewKey === "home" ? `<button class="phHelpBtn" id="homeHelp" type="button" aria-label="Help">?</button>` : ``}
     </div>
   `;
 }
@@ -419,6 +420,9 @@ function bindNavHandlers(state){
 
   const home = document.getElementById("navHome");
   if(home) home.onclick = () => pushView(state, "home", {resetStack:true});
+
+  const help = document.getElementById("homeHelp");
+  if(help) help.onclick = () => { state.view = "help"; state.lastAction = "nav:help"; saveState(); render(); };
 }
 
 async function readClipboardTextSafe() {
@@ -1212,7 +1216,7 @@ function renderAllTrips(){
             <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
-            <div><b class="lbsBlue">${to2(lbs)}</b> lbs</div>
+            <div class="lbsBlue"><b>${to2(lbs)}</b> lbs</div>
             <div><b class="money">${formatMoney(amt)}</b></div>
           </div>
         </div>
@@ -1248,456 +1252,98 @@ function renderAllTrips(){
     r.label;
 
   getApp().innerHTML = `
-    ${renderPageHeader("all_trips")}
-
-    <div class="card">
-      <div class="filters" style="margin-top:0">
-        ${chip("ALL","All Trips")}
-        ${chip("YTD","YTD")}
-        ${chip("MONTH","Month")}
-        ${chip("7D","7 Days")}
-        ${chip("RANGE","Range")}
-      </div>
-
-      <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
-        <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
-        <span class="pill"><b>${sorted.length}</b> shown</span>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="exportTrips">🧾 Export CSV</button>
-      </div>
-      <div class="hint">Export uses the current Trips filter.</div>
+    <div class="pageHeader simple">
+      <h2 class="phTitle">New Trip</h2>
     </div>
 
-    ${rangeUI}
-
-    <div class="card">
-      ${rows}
-    </div>
-  `;
-
-  getApp().scrollTop = 0;
-
-  // filter chips
-  getApp().querySelectorAll(".chip[data-tf]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const key = String(btn.getAttribute("data-tf")||"ALL");
-      state.tripsFilter.mode = key;
-      saveState();
-      renderAllTrips();
-    };
-  });
-
-  // apply range
-  const applyBtn = document.getElementById("tripRangeApply");
-  if(applyBtn){
-    applyBtn.onclick = ()=>{
-      const from = String(document.getElementById("tripRangeFrom")?.value || "").trim();
-      const to = String(document.getElementById("tripRangeTo")?.value || "").trim();
-      const s = parseMDYToISO(from);
-      const e = parseMDYToISO(to);
-      if(!s || !e){
-        showToast("Invalid range dates");
-        return;
-      }
-      state.tripsFilter.from = from;
-      state.tripsFilter.to = to;
-      saveState();
-      renderAllTrips();
-    };
-  }
-
-  // export
-  const exportBtn = document.getElementById("exportTrips");
-  if(exportBtn){
-    exportBtn.onclick = ()=>{
-      const r2 = modeRange(mode, state.tripsFilter.from, state.tripsFilter.to);
-      const tripsToExport = (r2.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r2.startISO, r2.endISO);
-      exportTripsWithLabel(tripsToExport, r2.label, r2.startISO, r2.endISO);
-      showToast("CSV exported");
-    };
-  }
-
-  // Open trip to edit
-  getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
-    const open = ()=>{
-      state.view="edit";
-      state.editId = card.getAttribute("data-id") || "";
-      saveState();
-      render();
-    };
-    card.addEventListener("click", open);
-    card.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); }
-    });
-  });
-}
-
-function renderHome(
-){
-  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
-  ensureHomeFilter();
-  const hf = state.homeFilter || { mode:"YTD", from:"", to:"" };
-  const hMode = String(hf.mode || "YTD").toUpperCase();
-  const hr = modeRange(hMode, hf.from, hf.to);
-  const trips = (hr.label === "ALL") ? tripsAll.slice() : (hr.startISO && hr.endISO ? filterByISOInclusive(tripsAll, hr.startISO, hr.endISO) : tripsAll.slice());
-  const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
-  const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
-
-  const lbsVal = to2(totalLbs);
-  const lbsStr = (Number.isFinite(lbsVal) && Math.abs(lbsVal % 1) < 1e-9) ? String(Math.trunc(lbsVal)) : String(lbsVal);
-  const moneyRounded = (()=>{
-    const v = Math.round(Number(totalAmount)||0);
-    try{ return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(v); }
-    catch{ return "$" + v.toLocaleString("en-US"); }
-  })();
-
-
-  // Backup reminder (browser-only): encourages manual "Create Backup" periodically
-  const s = state.settings || (state.settings = {});
-
-  // PWA storage note (iOS/Android): Safari vs installed app may keep separate on-device storage
-  const isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (window.navigator && window.navigator.standalone === true);
-  const pwaNoteDismissed = !!s.pwaStorageNoteDismissed;
-  const showPwaStorageNote = isStandalone && !pwaNoteDismissed;
-  const pwaStorageNoteHTML = showPwaStorageNote ? `
-    <div class="card">
-      <b>Using the installed app?</b>
-      <div class="muted small" style="margin-top:6px;line-height:1.45">
-        On iPhone/iPad (and sometimes Android), the installed Home Screen app can store data separately from Safari.
-        If you logged trips in Safari, create a backup there and restore it here.
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="pwaNoteHelp">How to move trips</button>
-        <button class="btn" id="pwaNoteDismiss">Got it</button>
-      </div>
-    </div>
-  ` : "";
-
-  const now = Date.now();
-  const lastAt = Number(s.lastBackupAt || 0);
-  const lastCount = Number(s.lastBackupTripCount || 0);
-  const snoozeUntil = Number(s.backupSnoozeUntil || 0);
-  const newCount = tripsAll.length - lastCount;
-  const daysSince = lastAt ? ((now - lastAt) / (1000*60*60*24)) : 999;
-  const shouldRemind = tripsAll.length > 0
-    && now > snoozeUntil
-    && (
-      (!lastAt && tripsAll.length >= 5) ||           // never backed up, 5+ trips
-      (newCount > 0 && daysSince >= 7)               // new trips since last backup & a week passed
-    );
-
-  const backupReminderHTML = shouldRemind ? `
-    <div class="card">
-      <b>Backup reminder</b>
-      <div class="muted small" style="margin-top:6px">
-        You have ${newCount > 0 ? newCount : tripsAll.length} trip${(newCount > 1 || (!lastAt && tripsAll.length !== 1)) ? "s" : ""} not included in your most recent backup.
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="backupNow">💾 Create Backup</button>
-        <button class="btn" id="backupLater">Not now</button>
-      </div>
-    </div>
-  ` : "";
-
-  const f = String((state.homeFilter && state.homeFilter.mode) || "YTD").toUpperCase();
-  const chip = (key,label) => `<button class="chip segBtn ${f===key?'on is-selected':''}" data-hf="${key}" type="button">${label}</button>`;
-
-  const rows = trips.length ? trips.slice(0, HOME_TRIPS_LIMIT).map(t=>{
-    const date = formatDateMDY(t?.dateISO);
-    const dealer = (t?.dealer||"").toString();
-    const lbs = to2(Number(t?.pounds)||0);
-    const amt = to2(Number(t?.amount)||0);
-    const ppl = computePPL(lbs, amt);
-    const area = (t?.area||"").toString();
-    const safeDealer = dealer ? dealer : "(dealer)";
-    return `
-      <div class="trip triprow" data-id="${t?.id||""}" role="button" tabindex="0">
-        <div class="trow">
-          <div>
-            <div class="metaRow"><span class="tmeta">${date || ""}</span>${safeDealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(safeDealer)}</span>` : ""}</div>
-            <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
-          </div>
-          <div class="tright">
-            <div><b class="lbsBlue">${lbs}</b> lbs</div>
-            <div><b class="money">${formatMoney(amt)}</b></div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("") : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
-
-  getApp().innerHTML = `
-    ${renderPageHeader("home")}
-
-    <div class="card dashCard">
-      <div class="segWrap">
-        ${chip("YTD","YTD")}
-        ${chip("MONTH","Month")}
-        ${chip("7D","7 Days")}
-        ${chip("RANGE","Range")}
-      </div>
-      ${f==="RANGE" ? `
-        <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
-          <input class="input" id="homeRangeFrom" inputmode="numeric" placeholder="From (MM/DD/YYYY)" value="${escapeHtml(hf.from||"")}" style="flex:1;min-width:160px" />
-          <input class="input" id="homeRangeTo" inputmode="numeric" placeholder="To (MM/DD/YYYY)" value="${escapeHtml(hf.to||"")}" style="flex:1;min-width:160px" />
-          <button class="btn" id="homeRangeApply">Apply</button>
-        </div>
-      ` : ``}
-
-      <div class="kpiRow">
-        <div class="kpiCard">
-          <div class="kpiValue">${trips.length}</div>
-          <div class="kpiLabel">Trips</div>
-        </div>
-        <div class="kpiCard">
-          <div class="kpiValue"><span class="lbsBlue">${lbsStr}</span><span class="kpiUnit">lbs</span></div>
-          <div class="kpiLabel">Harvested</div>
-        </div>
-        <div class="kpiCard">
-          <div class="kpiValue money">${moneyRounded}</div>
-          <div class="kpiLabel">Total</div>
-        </div>
-      </div>
-    </div>
-
-    ${pwaStorageNoteHTML}
-
-    ${backupReminderHTML}
-
-    <div id="reviewWarnings"></div>
-
-    <div class="card">
-      <b>Trips</b>
-      <div class="sep"></div>
-      <div class="triplist">${rows}</div>
-      ${trips.length > HOME_TRIPS_LIMIT ? `<div style="margin-top:10px"><button class="btn" id="viewAllTrips">View all trips</button></div>` : ``}
-    </div>
-  `;
-
-  // ensure top of view on iPhone
-  getApp().scrollTop = 0;
-
-  const vbtn = document.getElementById("viewAllTrips");
-  if(vbtn){ vbtn.onclick = ()=>{ pushView(state, "all_trips"); }; }
-
-
-// Open trip to edit
-  getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
-    const open = ()=>{
-      const id = card.getAttribute("data-id");
-      if(!id) return;
-      state.view = "edit";
-      state.editId = id;
-      saveState();
-      render();
-    };
-    card.addEventListener("click", open);
-    card.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); }
-    });
-  });
-
-  // Home Filters
-  getApp().querySelectorAll("button.chip[data-hf]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      ensureHomeFilter();
-      state.homeFilter.mode = String(btn.getAttribute("data-hf")||"YTD").toUpperCase();
-      saveState();
-      renderHome();
-    });
-  });
-  const homeApply = document.getElementById("homeRangeApply");
-  if(homeApply){
-    homeApply.onclick = ()=>{
-      ensureHomeFilter();
-      const from = String(document.getElementById("homeRangeFrom")?.value||"").trim();
-      const to = String(document.getElementById("homeRangeTo")?.value||"").trim();
-      state.homeFilter.from = from;
-      state.homeFilter.to = to;
-      saveState();
-      renderHome();
-    };
-  }
-
-const toggleToast = (e)=>{
-  try{
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
-    const t = document.getElementById("toast");
-    if(t?.classList?.contains?.("show")){      t.classList.remove("show");
-      return;
-    }
-    showToast(tipMsg);
-  }catch{
-    showToast(tipMsg);
-  }
-};
-
-const btnPaste = document.getElementById("paste");
-const warn = document.getElementById("warn");
-
-if(btnPaste){
-  btnPaste.onclick = toggleToast;
-  btnPaste.onkeydown = (e)=>{ if(e.key==="Enter"||e.key===" ") toggleToast(e); };
-}
-if(warn){
-  warn.onclick = toggleToast;
-}
-
-
-  // PWA storage note buttons (may not exist if note not shown)
-  const btnPwaDismiss = document.getElementById("pwaNoteDismiss");
-  if(btnPwaDismiss){
-    btnPwaDismiss.onclick = ()=>{
-      const s = state.settings || (state.settings = {});
-      s.pwaStorageNoteDismissed = true;
-      state.lastAction = "pwaNote:dismiss";
-      saveState();
-      render();
-    };
-  }
-  const btnPwaHelp = document.getElementById("pwaNoteHelp");
-  if(btnPwaHelp){
-    btnPwaHelp.onclick = ()=>{
-      state.view = "help";
-      state.lastAction = "nav:help";
-      saveState();
-      render();
-      // optional: could scroll to section via hash later
-    };
-  }
-
-  // Backup reminder buttons (may not exist if reminder not shown)
-  const btnBackupNow = document.getElementById("backupNow");
-  if(btnBackupNow){
-    btnBackupNow.onclick = ()=>{
-      try{
-        exportBackup();
-        state.settings = state.settings || {};
-        state.settings.lastBackupAt = Date.now();
-        state.settings.lastBackupTripCount = Array.isArray(state.trips) ? state.trips.length : 0;
-        state.settings.backupSnoozeUntil = 0;
-        saveState();
-        showToast("Backup created");
-      }catch(e){
-        showToast("Backup failed");
-      }finally{
-        renderHome();
-      }
-    };
-  }
-  const btnBackupLater = document.getElementById("backupLater");
-  if(btnBackupLater){
-    btnBackupLater.onclick = ()=>{
-      state.settings = state.settings || {};
-      // Snooze for 24 hours
-      state.settings.backupSnoozeUntil = Date.now() + (24*60*60*1000);
-      saveState();
-      renderHome();
-    };
-  }
-}
-
-function renderNewTrip(){
-  ensureAreas();
-  ensureDealers();
-  // Defaults
-  const todayISO = new Date().toISOString().slice(0,10);
-  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-  const amountDisp = displayAmount(draft.amount);
-
-
-  const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
-    const label = a ? a : "—";
-    const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
-    return `<option value="${escapeHtml(String(a||""))}" ${sel}>${label}</option>`;
-  }).join("");
-
-
-
-// Recent (last 2) unique values from saved trips (ignores filters)
-// NOTE: Chips are always shown; if none exist yet we show a muted "No recent …" line.
-const topAreas = (getLastUniqueFromTrips("area", 2));
-const topDealers = (getLastUniqueFromTrips("dealer", 2));
-
-const dealerListForSelect = [];
-const seenDealerKeys = new Set();
-for(const d of [...topDealers, ...(Array.isArray(state.dealers)?state.dealers:[])]){
-  const v = String(d||"").trim();
-  if(!v) continue;
-  const k = normalizeKey(v);
-  if(seenDealerKeys.has(k)) continue;
-  seenDealerKeys.add(k);
-  dealerListForSelect.push(v);
-}
-const dealerOptions = ["", ...dealerListForSelect].map(d=>{
-  const label = d ? d : "—";
-  const sel = (normalizeKey(String(draft.dealer||"")) === normalizeKey(String(d||""))) ? "selected" : "";
-  const v = String(d||"").replaceAll('"',"&quot;");
-  return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
-}).join("");
-
-;getApp().innerHTML = `
-    ${renderPageHeader("new")}
-
-    <div class="card">
+    <div class="card formCard">
       <div class="form">
-        
-<div class="manualHdr">Manual entry</div>
-
-        <div class="manualModule">
 
         <div class="field">
           <div class="label fieldLabel">HARVEST DATE</div>
-          <input class="input" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
+          <div class="dateRow">
+            <span class="dateIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="3"></rect>
+                <path d="M16 2v4M8 2v4M3 10h18"></path>
+              </svg>
+            </span>
+            <input class="input datePill" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
+            <button class="todayBtn" id="dateToday" type="button">Today</button>
+          </div>
         </div>
 
         <div class="field">
-          <div class="label fieldLabel">DEALER</div>
+          <div class="label fieldLabel">DEALERS</div>
           ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
-          <select class="select" id="t_dealer">
-            ${dealerOptions}
-          </select>
+          <div class="selectRowWrap">
+            <select class="select" id="t_dealer">
+              ${dealerOptions}
+            </select>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
         </div>
 
-        <div class="field">
-          <div class="label fieldLabel">POUNDS</div>
-          <input class="input" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
+        <div class="grid2">
+          <div class="field">
+            <div class="label fieldLabel">POUNDS</div>
+            <input class="input lbsBlue" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
+          </div>
+
+          <div class="field">
+            <div class="label fieldLabel">AMOUNT</div>
+            <input class="input money" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
+          </div>
         </div>
 
-        <div class="field">
-          <div class="label fieldLabel">AMOUNT</div>
-          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
-        </div>
+        ${ (pplDisp && String(pplDisp).trim() !== "") ? `
+          <div class="muted small rateLine helperRate">$/lb: <span class="rate">${escapeHtml(pplDisp)}</span></div>
+        ` : ``}
 
         <div class="field">
           <div class="label fieldLabel">AREA</div>
           ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
-<select class="select" id="t_area">
-            ${areaOptions}
-          </select>
+          <div class="selectRowWrap">
+            <select class="select" id="t_area">
+              ${areaOptions}
+            </select>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
         </div>
 
-        <div class="actions">
+        <div class="actions actionsNew">
           <button class="btn primary" id="saveTrip" type="button">Save Trip</button>
-          <button class="btn" id="navCancel">Cancel</button>
-          <button class="btn danger" id="clearDraft">Clear</button>
+          <div class="btnRow2">
+            <button class="btn" id="navCancel" type="button">Cancel</button>
+            <button class="btn danger" id="clearDraft" type="button">Clear</button>
+          </div>
         </div>
 
-        </div>
       </div>
     </div>
   `;
-  bindNavHandlers(state);
+  bindNavHandlers(state);(state);
 
   const elDate = document.getElementById("t_date");
   const elDealer = document.getElementById("t_dealer");
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
   const elArea = document.getElementById("t_area");
+
+  const btnToday = document.getElementById("dateToday");
+  if(btnToday){
+    btnToday.addEventListener("click", ()=>{
+      try{
+        const todayISO2 = new Date().toISOString().slice(0,10);
+        const mdy2 = formatDateMDY(todayISO2);
+        if(elDate) elDate.value = mdy2;
+        state.draft = state.draft || {};
+        state.draft.dateISO = todayISO2;
+        saveState();
+      }catch(_){}
+    });
+  }
+
 
   // Quick-pick chip containers
   const topAreaWrap = document.getElementById("topAreas");
@@ -1964,7 +1610,7 @@ getApp().innerHTML = `
             <div class="card" style="border-color:rgba(255,184,77,.55);background:rgba(255,184,77,.10)">
               <b>Possible duplicate</b>
               <div class="muted small" style="margin-top:6px;line-height:1.35">
-                Similar trip found: <b>${escapeHtml(formatDateMDY(dup.dateISO||""))}</b> — ${escapeHtml(String(dup.dealer||""))} (<span class="money">${formatMoney(dup.amount||0)}</span> / <span class="lbsBlue">${to2(Number(dup.pounds||0))}</span> lbs)
+                Similar trip found: <b>${escapeHtml(formatDateMDY(dup.dateISO||""))}</b> — ${escapeHtml(String(dup.dealer||""))} (<span class="money">${formatMoney(dup.amount||0)}</span> / <span class="lbsBlue">${to2(Number(dup.pounds||0))} lbs</span>)
               </div>
             </div>
           `;
@@ -2427,7 +2073,7 @@ function renderReports(){
         <div class="trow">
           <div>
             <div class="tname">${escapeHtml(r.name)}</div>
-            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)}</span> lbs</div>
+            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
@@ -2444,7 +2090,7 @@ function renderReports(){
         <div class="trow">
           <div>
             <div class="tname">${escapeHtml(r.label)}</div>
-            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)}</span> lbs</div>
+            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
@@ -2479,10 +2125,10 @@ function renderReports(){
           <div>
             <div class="metaRow"><span class="tmeta">${date}</span> <span class="dot">•</span> <span class="tmeta">${dealer}</span></div>
             <div class="tname">${area}</div>
-            <div class="tsub">$/Lb: <b>${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
+            <div class="tsub">$/Lb: <b class="rate">${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
           </div>
           <div class="tright">
-            <div><b class="lbsBlue">${to2(lbsNum)}</b> lbs</div>
+            <div class="lbsBlue"><b>${to2(lbsNum)}</b> lbs</div>
             <div><b class="money">${formatMoney(to2(amtNum))}</b></div>
           </div>
         </div>
@@ -3031,18 +2677,14 @@ function renderHelp(){
     ${renderPageHeader("help")}
 
     <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <button class="smallbtn" id="navBack" type="button">← Back</button>
-        <b>Help</b>
-        <span class="muted small"></span>
-      </div>
+      <b>Help</b>
       <div class="hint">How to use Shellfish Tracker (no paste required).</div>
     </div>
 
     <div class="card">
       <b>Main sections</b>
       <div class="sep"></div>
-      <div class="muted small" style="line-height:1.6">
+      <div class="muted helpText" style="line-height:1.6">
         <ul style="margin:8px 0 0 18px">
           <li><b>Home</b>: Your totals (filtered) + recent trips list.</li>
           <li><b>New Trip</b>: Enter a harvest check (date, dealer, pounds, amount, area).</li>
@@ -3055,7 +2697,7 @@ function renderHelp(){
     <div class="card">
       <b>Entering a trip</b>
       <div class="sep"></div>
-      <ol class="muted small" style="margin:8px 0 0 18px;line-height:1.6">
+      <ol class="muted helpText" style="margin:8px 0 0 18px;line-height:1.6">
         <li>Tap <b>New Trip</b>.</li>
         <li>Enter the <b>Harvest date</b> (MM/DD/YYYY).</li>
         <li>Enter the <b>Dealer</b> (or tap a quick-pick chip if shown).</li>
@@ -3069,7 +2711,7 @@ function renderHelp(){
     <div class="card">
       <b>Filters & totals</b>
       <div class="sep"></div>
-      <div class="muted small" style="line-height:1.6">
+      <div class="muted helpText" style="line-height:1.6">
         Use <b>YTD / Month / Last 7 days</b> on Home to change what’s included in totals and the list.
         Reports uses the same filter.
       </div>
@@ -3078,7 +2720,7 @@ function renderHelp(){
     <div class="card">
       <b>Install / Offline</b>
       <div class="sep"></div>
-      <div class="muted small" style="line-height:1.6">
+      <div class="muted helpText" style="line-height:1.6">
         On iPhone/iPad: Safari → Share → <b>Add to Home Screen</b>.
         Installed PWAs can lag behind updates due to cached files. If something looks wrong, use <b>Reset cache</b> then reload.
       </div>
@@ -3191,12 +2833,10 @@ function renderTopDealerChips(topDealers, currentDealer, containerId){
   const items = Array.isArray(topDealers) ? topDealers.filter(Boolean).map(x=>String(x)) : [];
   if(!items.length){
     return `
-      <div class="recentLabel muted small"><b>Recent dealers</b></div>
       <div class="recentEmpty muted small">No recent dealers yet</div>
     `;
   }
   return `
-    <div class="recentLabel muted small"><b>Recent dealers</b></div>
     <div class="areachips" id="${containerId}">
       ${items.map(d=>{
         const on = (String(currentDealer||"").trim().toLowerCase() === String(d||"").trim().toLowerCase());
