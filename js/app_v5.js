@@ -3,7 +3,7 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=47";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=48";
 
 const APP_VERSION = "v5";
 const VERSION = APP_VERSION;
@@ -1216,7 +1216,7 @@ function renderAllTrips(){
             <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
-            <div class="lbsBlue"><b>${to2(lbs)}</b> lbs</div>
+            <div class="lbsBlue"><b class="lbsBlue">${to2(lbs)}</b> lbs</div>
             <div><b class="money">${formatMoney(amt)}</b></div>
           </div>
         </div>
@@ -1425,7 +1425,7 @@ function renderHome(
             <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
-            <div class="lbsBlue"><b>${lbs}</b> lbs</div>
+            <div class="lbsBlue"><b class="lbsBlue">${lbs}</b> lbs</div>
             <div><b class="money">${formatMoney(amt)}</b></div>
           </div>
         </div>
@@ -2486,7 +2486,7 @@ function renderReports(){
             <div class="tsub">$/Lb: <b class="rate">${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
           </div>
           <div class="tright">
-            <div class="lbsBlue"><b>${to2(lbsNum)}</b> lbs</div>
+            <div class="lbsBlue"><b class="lbsBlue">${to2(lbsNum)}</b> lbs</div>
             <div><b class="money">${formatMoney(to2(amtNum))}</b></div>
           </div>
         </div>
