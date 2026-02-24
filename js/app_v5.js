@@ -3,7 +3,7 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=50";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=51";
 
 const APP_VERSION = "v5";
 const VERSION = APP_VERSION;
@@ -1224,7 +1224,7 @@ function renderAllTrips(){
             <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
-            <div class="lbsBlue"><b class="lbsBlue">${to2(lbs)}</b> lbs</div>
+            <div class="lbsBlue"><b class="lbsBlue">${to2(lbs)}</b> <span class="lbsBlue">lbs</span></div>
             <div><b class="money">${formatMoney(amt)}</b></div>
           </div>
         </div>
@@ -1263,7 +1263,7 @@ function renderAllTrips(){
     ${renderPageHeader("all_trips")}
 
     <div class="card">
-      <div class="filters" style="margin-top:0">
+      <div class="chipGrid cols-3" style="margin-top:0">
         ${chip("ALL","All Trips")}
         ${chip("YTD","YTD")}
         ${chip("MONTH","Month")}
@@ -1433,7 +1433,7 @@ function renderHome(
             <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
-            <div class="lbsBlue"><b class="lbsBlue">${lbs}</b> lbs</div>
+            <div class="lbsBlue"><b class="lbsBlue">${lbs}</b> <span class="lbsBlue">lbs</span></div>
             <div><b class="money">${formatMoney(amt)}</b></div>
           </div>
         </div>
@@ -2374,7 +2374,7 @@ function renderReports(){
           <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
         </div>
 
-        <div class="filters" style="margin-top:10px">
+        <div class="chipGrid cols-3" style="margin-top:10px">
           ${chip("YTD","YTD")}
           ${chip("MONTH","Month")}
           ${chip("7D","7 Days")}
@@ -2539,7 +2539,7 @@ function renderReports(){
             <div class="tsub">$/Lb: <b class="rate">${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
           </div>
           <div class="tright">
-            <div class="lbsBlue"><b class="lbsBlue">${to2(lbsNum)}</b> lbs</div>
+            <div class="lbsBlue"><b class="lbsBlue">${to2(lbsNum)}</b> <span class="lbsBlue">lbs</span></div>
             <div><b class="money">${formatMoney(to2(amtNum))}</b></div>
           </div>
         </div>
@@ -2623,7 +2623,7 @@ function renderReports(){
         <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
 
-      <div class="filters" style="margin-top:10px">
+      <div class="chipGrid cols-3" style="margin-top:10px">
         ${chip("YTD","YTD")}
         ${chip("MONTH","Month")}
         ${chip("7D","7 Days")}
@@ -2647,7 +2647,7 @@ function renderReports(){
         </div>
       ` : ""}
 
-      <div class="filters" style="margin-top:10px">
+      <div class="chipGrid cols-3" style="margin-top:10px">
         ${seg("charts","Charts")}
         ${seg("tables","Tables")}
       </div>
