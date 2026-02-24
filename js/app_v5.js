@@ -3,7 +3,7 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=45";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=46";
 
 const APP_VERSION = "v5";
 const VERSION = APP_VERSION;
@@ -1344,6 +1344,464 @@ function renderAllTrips(){
     });
   }
 
+
+  // Quick-pick chip containers
+  const topAreaWrap = document.getElementById("topAreas");
+  const topDealerWrap = document.getElementById("topDealers");
+
+  // NEW TRIP: wire up buttons (Save / Clear) — v22
+  const btnSave = document.getElementById("saveTrip");
+  const onSaveTrip = ()=>{
+    try{
+      // snapshot current inputs into draft
+      state.draft = state.draft || {};
+      const mdy = String(elDate?.value||"").trim();
+      const iso = parseMDYToISO(mdy) || "";
+      state.draft.dateISO = iso || state.draft.dateISO || "";
+      state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
+      state.draft.pounds = parseNum(elPounds?.value);
+      state.draft.amount = parseMoney(elAmount?.value);
+      state.draft.area = String(elArea?.value||"").trim();
+
+      // basic guard: if nothing entered, do nothing (prevents "dead tap" feel)
+      const anyEntered = Boolean(mdy || state.draft.dealer || (state.draft.pounds>0) || (state.draft.amount>0) || state.draft.area);
+      if(!anyEntered){
+        showToast("Enter trip details first");
+        return;
+      }
+
+      // move to review step (nothing is saved to trips until Confirm)
+      state.reviewDraft = {
+        dateISO: state.draft.dateISO,
+        dateMDY: mdy,
+        dealer: state.draft.dealer,
+        pounds: state.draft.pounds,
+        amount: state.draft.amount,
+        area: state.draft.area
+      };
+      saveState();
+      pushView(state, "review");
+    }catch(err){
+      try{ showFatal(err, "saveTrip"); }catch{}
+    }
+  };
+  if(btnSave){
+    // iOS standalone can occasionally miss 'click'—bind both.
+    btnSave.onclick = onSaveTrip;
+    btnSave.addEventListener("touchend", (e)=>{ e.preventDefault(); onSaveTrip(); }, {passive:false});
+  }
+const btnClear = document.getElementById("clearDraft");
+  if(btnClear){
+    btnClear.onclick = ()=>{
+      if(confirm("Clear this draft?")){
+        delete state.draft;
+        saveState();
+        renderNewTrip();
+      }
+    };
+  }
+// Persist draft as the user edits fields (fixes iOS select + prevents resets)
+  const persistDraft = ()=>{ try{ saveDraft(); }catch{} };
+  [elDate, elDealer, elPounds, elAmount].forEach(el=>{
+    if(!el) return;
+    el.addEventListener("input", persistDraft);
+    el.addEventListener("change", persistDraft);
+  });
+  if(elArea){
+    elArea.addEventListener("input", persistDraft);
+    elArea.addEventListener("change", persistDraft);
+  }
+
+  if(topAreaWrap && elArea){
+  topAreaWrap.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button[data-area]");
+    if(!btn) return;
+    const a = btn.getAttribute("data-area") || "";
+    elArea.value = a;
+    state.draft = state.draft || {};
+    state.draft.area = a;
+    saveDraft();
+  });
+}
+
+
+if(topDealerWrap && elDealer){
+  topDealerWrap.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button[data-dealer]");
+    if(!btn) return;
+    const d = btn.getAttribute("data-dealer") || "";
+    elDealer.value = d;
+    state.draft = state.draft || {};
+    state.draft.dealer = d;
+    saveDraft();
+  });
+}
+}
+
+function renderHome(
+){
+  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
+  ensureHomeFilter();
+  const hf = state.homeFilter || { mode:"YTD", from:"", to:"" };
+  const hMode = String(hf.mode || "YTD").toUpperCase();
+  const hr = modeRange(hMode, hf.from, hf.to);
+  const trips = (hr.label === "ALL") ? tripsAll.slice() : (hr.startISO && hr.endISO ? filterByISOInclusive(tripsAll, hr.startISO, hr.endISO) : tripsAll.slice());
+  const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
+  const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
+
+  const lbsVal = to2(totalLbs);
+  const lbsStr = (Number.isFinite(lbsVal) && Math.abs(lbsVal % 1) < 1e-9) ? String(Math.trunc(lbsVal)) : String(lbsVal);
+  const moneyRounded = (()=>{
+    const v = Math.round(Number(totalAmount)||0);
+    try{ return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(v); }
+    catch{ return "$" + v.toLocaleString("en-US"); }
+  })();
+
+
+  // Backup reminder (browser-only): encourages manual "Create Backup" periodically
+  const s = state.settings || (state.settings = {});
+
+  // PWA storage note (iOS/Android): Safari vs installed app may keep separate on-device storage
+  const isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (window.navigator && window.navigator.standalone === true);
+  const pwaNoteDismissed = !!s.pwaStorageNoteDismissed;
+  const showPwaStorageNote = isStandalone && !pwaNoteDismissed;
+  const pwaStorageNoteHTML = showPwaStorageNote ? `
+    <div class="card">
+      <b>Using the installed app?</b>
+      <div class="muted small" style="margin-top:6px;line-height:1.45">
+        On iPhone/iPad (and sometimes Android), the installed Home Screen app can store data separately from Safari.
+        If you logged trips in Safari, create a backup there and restore it here.
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="pwaNoteHelp">How to move trips</button>
+        <button class="btn" id="pwaNoteDismiss">Got it</button>
+      </div>
+    </div>
+  ` : "";
+
+  const now = Date.now();
+  const lastAt = Number(s.lastBackupAt || 0);
+  const lastCount = Number(s.lastBackupTripCount || 0);
+  const snoozeUntil = Number(s.backupSnoozeUntil || 0);
+  const newCount = tripsAll.length - lastCount;
+  const daysSince = lastAt ? ((now - lastAt) / (1000*60*60*24)) : 999;
+  const shouldRemind = tripsAll.length > 0
+    && now > snoozeUntil
+    && (
+      (!lastAt && tripsAll.length >= 5) ||           // never backed up, 5+ trips
+      (newCount > 0 && daysSince >= 7)               // new trips since last backup & a week passed
+    );
+
+  const backupReminderHTML = shouldRemind ? `
+    <div class="card">
+      <b>Backup reminder</b>
+      <div class="muted small" style="margin-top:6px">
+        You have ${newCount > 0 ? newCount : tripsAll.length} trip${(newCount > 1 || (!lastAt && tripsAll.length !== 1)) ? "s" : ""} not included in your most recent backup.
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="backupNow">💾 Create Backup</button>
+        <button class="btn" id="backupLater">Not now</button>
+      </div>
+    </div>
+  ` : "";
+
+  const f = String((state.homeFilter && state.homeFilter.mode) || "YTD").toUpperCase();
+  const chip = (key,label) => `<button class="chip segBtn ${f===key?'on is-selected':''}" data-hf="${key}" type="button">${label}</button>`;
+
+  const rows = trips.length ? trips.slice(0, HOME_TRIPS_LIMIT).map(t=>{
+    const date = formatDateMDY(t?.dateISO);
+    const dealer = (t?.dealer||"").toString();
+    const lbs = to2(Number(t?.pounds)||0);
+    const amt = to2(Number(t?.amount)||0);
+    const ppl = computePPL(lbs, amt);
+    const area = (t?.area||"").toString();
+    const safeDealer = dealer ? dealer : "(dealer)";
+    return `
+      <div class="trip triprow" data-id="${t?.id||""}" role="button" tabindex="0">
+        <div class="trow">
+          <div>
+            <div class="metaRow"><span class="tmeta">${date || ""}</span>${safeDealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(safeDealer)}</span>` : ""}</div>
+            <div class="tname">${escapeHtml(area || "(area)")}</div>
+            <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
+          </div>
+          <div class="tright">
+            <div class="lbsBlue"><b>${lbs}</b> lbs</div>
+            <div><b class="money">${formatMoney(amt)}</b></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("") : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
+
+  getApp().innerHTML = `
+    ${renderPageHeader("home")}
+
+    <div class="card dashCard">
+      <div class="segWrap">
+        ${chip("YTD","YTD")}
+        ${chip("MONTH","Month")}
+        ${chip("7D","7 Days")}
+        ${chip("RANGE","Range")}
+      </div>
+      ${f==="RANGE" ? `
+        <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
+          <input class="input" id="homeRangeFrom" inputmode="numeric" placeholder="From (MM/DD/YYYY)" value="${escapeHtml(hf.from||"")}" style="flex:1;min-width:160px" />
+          <input class="input" id="homeRangeTo" inputmode="numeric" placeholder="To (MM/DD/YYYY)" value="${escapeHtml(hf.to||"")}" style="flex:1;min-width:160px" />
+          <button class="btn" id="homeRangeApply">Apply</button>
+        </div>
+      ` : ``}
+
+      <div class="kpiRow">
+        <div class="kpiCard">
+          <div class="kpiValue">${trips.length}</div>
+          <div class="kpiLabel">Trips</div>
+        </div>
+        <div class="kpiCard">
+          <div class="kpiValue lbsBlue">${lbsStr} lbs</div>
+          <div class="kpiLabel">Harvested</div>
+        </div>
+        <div class="kpiCard">
+          <div class="kpiValue money">${moneyRounded}</div>
+          <div class="kpiLabel">Total</div>
+        </div>
+      </div>
+    </div>
+
+    ${pwaStorageNoteHTML}
+
+    ${backupReminderHTML}
+
+    <div id="reviewWarnings"></div>
+
+    <div class="card">
+      <b>Trips</b>
+      <div class="sep"></div>
+      <div class="triplist">${rows}</div>
+      ${trips.length > HOME_TRIPS_LIMIT ? `<div style="margin-top:10px"><button class="btn" id="viewAllTrips">View all trips</button></div>` : ``}
+    </div>
+  `;
+
+  // ensure top of view on iPhone
+  getApp().scrollTop = 0;
+
+  const vbtn = document.getElementById("viewAllTrips");
+  if(vbtn){ vbtn.onclick = ()=>{ pushView(state, "all_trips"); }; }
+
+
+// Open trip to edit
+  getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
+    const open = ()=>{
+      const id = card.getAttribute("data-id");
+      if(!id) return;
+      state.view = "edit";
+      state.editId = id;
+      saveState();
+      render();
+    };
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); }
+    });
+  });
+
+  // Home Filters
+  getApp().querySelectorAll("button.chip[data-hf]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      ensureHomeFilter();
+      state.homeFilter.mode = String(btn.getAttribute("data-hf")||"YTD").toUpperCase();
+      saveState();
+      renderHome();
+    });
+  });
+  const homeApply = document.getElementById("homeRangeApply");
+  if(homeApply){
+    homeApply.onclick = ()=>{
+      ensureHomeFilter();
+      const from = String(document.getElementById("homeRangeFrom")?.value||"").trim();
+      const to = String(document.getElementById("homeRangeTo")?.value||"").trim();
+      state.homeFilter.from = from;
+      state.homeFilter.to = to;
+      saveState();
+      renderHome();
+    };
+  }
+
+const toggleToast = (e)=>{
+  try{
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    const t = document.getElementById("toast");
+    if(t?.classList?.contains?.("show")){      t.classList.remove("show");
+      return;
+    }
+    showToast(tipMsg);
+  }catch{
+    showToast(tipMsg);
+  }
+};
+
+const btnPaste = document.getElementById("paste");
+const warn = document.getElementById("warn");
+
+if(btnPaste){
+  btnPaste.onclick = toggleToast;
+  btnPaste.onkeydown = (e)=>{ if(e.key==="Enter"||e.key===" ") toggleToast(e); };
+}
+if(warn){
+  warn.onclick = toggleToast;
+}
+
+
+  // PWA storage note buttons (may not exist if note not shown)
+  const btnPwaDismiss = document.getElementById("pwaNoteDismiss");
+  if(btnPwaDismiss){
+    btnPwaDismiss.onclick = ()=>{
+      const s = state.settings || (state.settings = {});
+      s.pwaStorageNoteDismissed = true;
+      state.lastAction = "pwaNote:dismiss";
+      saveState();
+      render();
+    };
+  }
+  const btnPwaHelp = document.getElementById("pwaNoteHelp");
+  if(btnPwaHelp){
+    btnPwaHelp.onclick = ()=>{
+      state.view = "help";
+      state.lastAction = "nav:help";
+      saveState();
+      render();
+      // optional: could scroll to section via hash later
+    };
+  }
+
+  // Backup reminder buttons (may not exist if reminder not shown)
+  const btnBackupNow = document.getElementById("backupNow");
+  if(btnBackupNow){
+    btnBackupNow.onclick = ()=>{
+      try{
+        exportBackup();
+        state.settings = state.settings || {};
+        state.settings.lastBackupAt = Date.now();
+        state.settings.lastBackupTripCount = Array.isArray(state.trips) ? state.trips.length : 0;
+        state.settings.backupSnoozeUntil = 0;
+        saveState();
+        showToast("Backup created");
+      }catch(e){
+        showToast("Backup failed");
+      }finally{
+        renderHome();
+      }
+    };
+  }
+  const btnBackupLater = document.getElementById("backupLater");
+  if(btnBackupLater){
+    btnBackupLater.onclick = ()=>{
+      state.settings = state.settings || {};
+      // Snooze for 24 hours
+      state.settings.backupSnoozeUntil = Date.now() + (24*60*60*1000);
+      saveState();
+      renderHome();
+    };
+  }
+}
+
+function renderNewTrip(){
+  ensureAreas();
+  ensureDealers();
+  // Defaults
+  const todayISO = new Date().toISOString().slice(0,10);
+  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
+  const amountDisp = displayAmount(draft.amount);
+
+
+  const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
+    const label = a ? a : "—";
+    const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
+    return `<option value="${escapeHtml(String(a||""))}" ${sel}>${label}</option>`;
+  }).join("");
+
+
+
+// Recent (last 2) unique values from saved trips (ignores filters)
+// NOTE: Chips are always shown; if none exist yet we show a muted "No recent …" line.
+const topAreas = (getLastUniqueFromTrips("area", 2));
+const topDealers = (getLastUniqueFromTrips("dealer", 2));
+
+const dealerListForSelect = [];
+const seenDealerKeys = new Set();
+for(const d of [...topDealers, ...(Array.isArray(state.dealers)?state.dealers:[])]){
+  const v = String(d||"").trim();
+  if(!v) continue;
+  const k = normalizeKey(v);
+  if(seenDealerKeys.has(k)) continue;
+  seenDealerKeys.add(k);
+  dealerListForSelect.push(v);
+}
+const dealerOptions = ["", ...dealerListForSelect].map(d=>{
+  const label = d ? d : "—";
+  const sel = (normalizeKey(String(draft.dealer||"")) === normalizeKey(String(d||""))) ? "selected" : "";
+  const v = String(d||"").replaceAll('"',"&quot;");
+  return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
+}).join("");
+
+;getApp().innerHTML = `
+    ${renderPageHeader("new")}
+
+    <div class="card">
+      <div class="form">
+        
+<div class="manualHdr">Manual entry</div>
+
+        <div class="manualModule">
+
+        <div class="field">
+          <div class="label fieldLabel">HARVEST DATE</div>
+          <input class="input" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
+        </div>
+
+        <div class="field">
+          <div class="label fieldLabel">DEALER</div>
+          ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
+          <select class="select" id="t_dealer">
+            ${dealerOptions}
+          </select>
+        </div>
+
+        <div class="field">
+          <div class="label fieldLabel">POUNDS</div>
+          <input class="input" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
+        </div>
+
+        <div class="field">
+          <div class="label fieldLabel">AMOUNT</div>
+          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
+        </div>
+
+        <div class="field">
+          <div class="label fieldLabel">AREA</div>
+          ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
+<select class="select" id="t_area">
+            ${areaOptions}
+          </select>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="saveTrip" type="button">Save Trip</button>
+          <button class="btn" id="navCancel">Cancel</button>
+          <button class="btn danger" id="clearDraft">Clear</button>
+        </div>
+
+        </div>
+      </div>
+    </div>
+  `;
+  bindNavHandlers(state);
+
+  const elDate = document.getElementById("t_date");
+  const elDealer = document.getElementById("t_dealer");
+  const elPounds = document.getElementById("t_pounds");
+  const elAmount = document.getElementById("t_amount");
+  const elArea = document.getElementById("t_area");
 
   // Quick-pick chip containers
   const topAreaWrap = document.getElementById("topAreas");
