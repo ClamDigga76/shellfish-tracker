@@ -171,6 +171,14 @@ function iconSvg(name){
       <path d="M12 5v14"/><path d="M5 12h14"/>
     </svg>`;
   }
+  if(name === "calendar"){
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 2v3"/><path d="M16 2v3"/>
+      <path d="M3 7h18"/>
+      <path d="M5 5h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/>
+      <path d="M7 11h4"/>
+    </svg>`;
+  }
   if(name === "settings"){
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
@@ -1647,52 +1655,64 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
 ;getApp().innerHTML = `
     ${renderPageHeader("new")}
 
-    <div class="card">
-      <div class="form">
-        
-<div class="manualHdr">Manual entry</div>
+    <div class="card formCard">
 
-        <div class="manualModule">
-
-        <div class="field">
-          <div class="label fieldLabel">HARVEST DATE</div>
-          <input class="input" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
-        </div>
-
-        <div class="field">
-          <div class="label fieldLabel">DEALER</div>
-          ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
-          <select class="select" id="t_dealer">
-            ${dealerOptions}
-          </select>
-        </div>
-
-        <div class="field">
-          <div class="label fieldLabel">POUNDS</div>
-          <input class="input" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
-        </div>
-
-        <div class="field">
-          <div class="label fieldLabel">AMOUNT</div>
-          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
-        </div>
-
-        <div class="field">
-          <div class="label fieldLabel">AREA</div>
-          ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
-<select class="select" id="t_area">
-            ${areaOptions}
-          </select>
-        </div>
-
-        <div class="actions">
-          <button class="btn primary" id="saveTrip" type="button">Save Trip</button>
-          <button class="btn" id="navCancel">Cancel</button>
-          <button class="btn danger" id="clearDraft">Clear</button>
-        </div>
-
+      <div class="field">
+        <div class="fieldLabel overline">HARVEST DATE</div>
+        <div class="dateRow">
+          <span class="dateIcon">${iconSvg("calendar")}</span>
+          <input class="input datePill" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
+          <button class="todayBtn" id="todayBtn" type="button">Today</button>
         </div>
       </div>
+
+      <div class="field">
+        <div class="fieldLabel overline">DEALERS</div>
+        ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
+        <div class="selectRowWrap">
+          <select class="input" id="t_dealer" aria-label="Select Dealer">
+            ${dealerOptions}
+          </select>
+          <span class="chev">›</span>
+        </div>
+        <div id="dealerPrompt"></div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <div class="fieldLabel overline">POUNDS</div>
+          <div class="inputWrap">
+            <input class="input inputWithSuffix" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" />
+            <span class="unitSuffix lbsBlue">lbs</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fieldLabel overline">AMOUNT</div>
+          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
+        </div>
+      </div>
+      <div class="rateLine muted small">$/lb: <b>${displayMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
+
+      <div class="field">
+        <div class="fieldLabel overline">AREA</div>
+        ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
+        <div class="selectRowWrap">
+          <select class="input" id="t_area" aria-label="Select Area">
+            ${areaOptions}
+          </select>
+          <span class="chev">›</span>
+        </div>
+        <div id="areaPrompt"></div>
+      </div>
+
+      <div class="actionsNew">
+        <button class="btn primary" id="saveTrip" type="button" disabled>Save Trip</button>
+        <div class="btnRow2">
+          <button class="btn" id="navCancel" type="button">Cancel</button>
+          <button class="btn danger" id="clearDraft" type="button">Clear</button>
+        </div>
+      </div>
+
     </div>
   `;
   bindNavHandlers(state);
@@ -1702,10 +1722,38 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
   const elArea = document.getElementById("t_area");
+  const elToday = document.getElementById("todayBtn");
 
   // Quick-pick chip containers
   const topAreaWrap = document.getElementById("topAreas");
   const topDealerWrap = document.getElementById("topDealers");
+
+  // Enable Save only when required fields are valid, and keep lbs/$ coloring consistent.
+  const updateSaveEnabled = ()=>{
+    const dealerOk = !!String(elDealer?.value||"").trim();
+    const areaOk = !!String(elArea?.value||"").trim();
+    const pounds = parseNum(elPounds?.value);
+    const amount = parseMoney(elAmount?.value);
+    const poundsOk = isFinite(pounds) && pounds > 0;
+    const amountOk = isFinite(amount) && amount > 0;
+
+    if(elPounds) elPounds.classList.toggle("lbsBlue", poundsOk);
+    if(elAmount) elAmount.classList.toggle("money", amountOk);
+
+    const btn = document.getElementById("saveTrip");
+    if(btn) btn.disabled = !(dealerOk && areaOk && poundsOk && amountOk);
+  };
+
+  if(elToday && elDate){
+    elToday.onclick = ()=>{
+      const today = isoToday();
+      elDate.value = formatDateMDY(today);
+      state.draft = state.draft || {};
+      state.draft.dateISO = today;
+      saveDraft();
+      updateSaveEnabled();
+    };
+  }
 
   // NEW TRIP: wire up buttons (Save / Clear) — v22
   const btnSave = document.getElementById("saveTrip");
@@ -1759,7 +1807,7 @@ const btnClear = document.getElementById("clearDraft");
     };
   }
 // Persist draft as the user edits fields (fixes iOS select + prevents resets)
-  const persistDraft = ()=>{ try{ saveDraft(); }catch{} };
+  const persistDraft = ()=>{ try{ saveDraft(); }catch{}; try{ updateSaveEnabled(); }catch{} };
   [elDate, elDealer, elPounds, elAmount].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", persistDraft);
@@ -1779,6 +1827,7 @@ const btnClear = document.getElementById("clearDraft");
     state.draft = state.draft || {};
     state.draft.area = a;
     saveDraft();
+    updateSaveEnabled();
   });
 }
 
@@ -1792,8 +1841,12 @@ if(topDealerWrap && elDealer){
     state.draft = state.draft || {};
     state.draft.dealer = d;
     saveDraft();
+    updateSaveEnabled();
   });
 }
+
+  // Initial state
+  updateSaveEnabled();
 }
 
 function renderReviewTrip(){
@@ -3171,13 +3224,9 @@ function displayAmount(val){
 function renderTopAreaChips(topAreas, currentArea, containerId){
   const items = Array.isArray(topAreas) ? topAreas.filter(Boolean).map(x=>String(x)) : [];
   if(!items.length){
-    return `
-      <div class="recentLabel muted small"><b>Recent areas</b></div>
-      <div class="recentEmpty muted small">No recent areas yet</div>
-    `;
+    return `<div class="recentEmpty muted small">No recent areas yet</div>`;
   }
   return `
-    <div class="recentLabel muted small"><b>Recent areas</b></div>
     <div class="areachips" id="${containerId}">
       ${items.map(a=>{
         const on = (String(currentArea||"").trim() === String(a||"").trim());

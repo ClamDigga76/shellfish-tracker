@@ -253,6 +253,12 @@ header{padding:14px 18px 12px}
 .actionsNew .btnRow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .actionsNew .btnRow2 .btn{width:100%}
 
+/* New Trip: suffix units + save disabled */
+.inputWrap{position:relative}
+.inputWrap .unitSuffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-weight:800;opacity:.95;pointer-events:none}
+.inputWithSuffix{padding-right:44px}
+.btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}
+
 /* IOS input zoom guard */
 input, select, textarea{
   font-size:16px !important;
@@ -598,7 +604,7 @@ header{padding:14px 18px 12px}
 <main id="app"></main>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=48"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=49"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
