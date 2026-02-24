@@ -3,7 +3,7 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=48";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=50";
 
 const APP_VERSION = "v5";
 const VERSION = APP_VERSION;
@@ -1691,7 +1691,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
           <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
         </div>
       </div>
-      <div class="rateLine muted small">$/lb: <b>${displayMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
+      <div class="rateLine muted small">$/lb: <b class="rate">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
 
       <div class="field">
         <div class="fieldLabel overline">AREA</div>
