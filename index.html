@@ -533,7 +533,7 @@ header{padding:14px 18px 12px}
   display:flex;
   align-items:center;
   gap:10px;
-  padding:14px 14px 8px;
+  padding:calc(14px + env(safe-area-inset-top)) 14px 8px;
 }
 .pageHeader .phIcon{
   width:20px;height:20px;flex:0 0 20px;
@@ -625,7 +625,7 @@ header{padding:14px 18px 12px}
     <footer class="app-footer">© 2026 Jeremy Wood. All rights reserved.</footer>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=53"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=54"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>

@@ -3,9 +3,9 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=53";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=54";
 
-const APP_VERSION = "v5.53";
+const APP_VERSION = "v5.54";
 const VERSION = APP_VERSION;
 window.__SHELLFISH_BUILD__ = APP_VERSION;
 const HOME_TRIPS_LIMIT = 15;
@@ -2928,6 +2928,7 @@ function renderSettings(){
       <div class="muted small" style="margin-top:10px">Created by <b>Jeremy Wood</b> — <a href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
       <div class="muted small" style="margin-top:8px">Version: <b>${VERSION}</b></div>
       <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
+      <div class="muted small" style="margin-top:8px">© 2026 Jeremy Wood. All rights reserved.</div>
       <div class="sep" style="margin-top:10px"></div>
       <div class="muted small" style="margin-top:10px"><b>Legal</b></div>
       <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
