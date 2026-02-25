@@ -1,4 +1,4 @@
-const SW_VERSION = "51";
+const SW_VERSION = "53";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -257,7 +257,13 @@ async function registerServiceWorker() {
           if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
         } catch (_) {}
         hideBanner();
-        location.reload();
+        // Reload once when the new SW takes control (avoids reload loops on iOS).
+        let reloaded = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (reloaded) return;
+          reloaded = true;
+          location.reload();
+        });
       };
     }
 

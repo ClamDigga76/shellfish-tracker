@@ -17,6 +17,14 @@
 <style>
 :root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;
   --lbsBlue: var(--accent);--lbsBlue:var(--accent);--good:#2EA043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:46px;--bottom-gutter:6px}
+
+:root{
+  --safeTop: env(safe-area-inset-top);
+  --safeBottom: env(safe-area-inset-bottom);
+}
+.safeBottom{ padding-bottom: max(10px, var(--safeBottom)); }
+.safeTop{ padding-top: max(10px, var(--safeTop)); }
+
 *{box-sizing:border-box}
 html,body{height:100%;background:var(--bg)}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
@@ -607,16 +615,19 @@ header{padding:14px 18px 12px}
 }
 .chipGrid .chip{ width:100%; justify-content:center; }
 
+
+.app-footer{font-size:11px;opacity:.6;text-align:center;padding:8px 0 16px;}
 </style>
 </head>
 <body>
   <div class="phone">
 <main id="app"></main>
+    <footer class="app-footer">© 2026 Jeremy Wood. All rights reserved.</footer>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=51"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=53"></script>
 
-  <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
+  <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
     <div class="muted small" style="margin-top:6px;line-height:1.35">
       A new version is ready. Reload to apply it.

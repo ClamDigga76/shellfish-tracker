@@ -4,13 +4,16 @@
 */
 const SW_V = new URL(self.location.href).searchParams.get("v") || "0";
 const CACHE_VERSION = `v${SW_V}`;
-const CACHE_NAME = `shellfish-tracker-v51-${CACHE_VERSION}`;
+const CACHE_NAME = `shellfish-tracker-${CACHE_VERSION}`;
 
 // Core assets. Keep this list short and stable.
 const CORE = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./legal/terms.html",
+  "./legal/privacy.html",
+  "./legal/license.html",
   `./js/bootstrap_v5.js?v=${SW_V}`,
   `./js/utils_v5.js?v=${SW_V}`,
   `./js/app_v5.js?v=${SW_V}`,
