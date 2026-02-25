@@ -1,4 +1,4 @@
-const SW_VERSION = "59";
+const SW_VERSION = "60";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -216,11 +216,13 @@ window.__showModuleError = function (err) {
       await import(appUrl);
     } catch (e) {
       // Safari/iOS can occasionally throw transient parse errors (e.g. "Unexpected EOF")
-      // if a resource is partially cached/streamed. One controlled retry fixes most cases.
+      // if a resource is partially cached/streamed. Retry with a cache-busting URL so we don't
+      // re-import the same truncated cached response.
       const msg = String(e && (e.message || e));
       if (/Unexpected\s+EOF/i.test(msg)) {
-        try { await __assertAssetExists(appUrl); } catch (_) {}
-        await import(appUrl);
+        const bustUrl = appUrl + (appUrl.includes("?") ? "&" : "?") + "r=" + Date.now();
+        try { await __assertAssetExists(bustUrl); } catch (_) {}
+        await import(bustUrl);
       } else {
         throw e;
       }
@@ -241,7 +243,7 @@ window.__BOOT_WATCHDOG__ = setTimeout(() => {
       "If it still fails on iPhone/iPad: Settings → Safari → Advanced → Website Data → remove this site, then reload.";
     window.__showModuleError(new Error(msg));
   } catch (_) {}
-}, 4000);
+}, 6500);
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
