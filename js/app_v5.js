@@ -3,9 +3,9 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=54";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=55";
 
-const APP_VERSION = "v5.54";
+const APP_VERSION = "v5.55";
 const VERSION = APP_VERSION;
 window.__SHELLFISH_BUILD__ = APP_VERSION;
 const HOME_TRIPS_LIMIT = 15;
@@ -1489,6 +1489,17 @@ function renderHome(
     </div>
   `;
 
+  // Home header Help ("?") button
+  const hh = document.getElementById("homeHelp");
+  if(hh){
+    hh.onclick = ()=>{
+      state.view = "help";
+      saveState();
+      render();
+    };
+  }
+
+
   // ensure top of view on iPhone
   getApp().scrollTop = 0;
 
@@ -1658,7 +1669,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
     <div class="card formCard">
 
       <div class="field">
-        <div class="fieldLabel overline">HARVEST DATE</div>
+        <div class="fieldLabel overline center">HARVEST DATE</div>
         <div class="dateRow">
           <span class="dateIcon">${iconSvg("calendar")}</span>
           <input class="input datePill" id="t_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
@@ -1667,7 +1678,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       </div>
 
       <div class="field">
-        <div class="fieldLabel overline">DEALERS</div>
+        <div class="fieldLabel overline center">DEALERS</div>
         ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
         <div class="selectRowWrap">
           <select class="input" id="t_dealer" aria-label="Select Dealer">
@@ -1694,7 +1705,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       <div class="rateLine muted small">$/lb: <b class="rate">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
 
       <div class="field">
-        <div class="fieldLabel overline">AREA</div>
+        <div class="fieldLabel overline center">AREA</div>
         ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
         <div class="selectRowWrap">
           <select class="input" id="t_area" aria-label="Select Area">
