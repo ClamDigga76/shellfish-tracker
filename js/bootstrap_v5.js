@@ -1,4 +1,4 @@
-const SW_VERSION = "61";
+const SW_VERSION = "57";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -8,72 +8,17 @@ const SW_VERSION = "61";
  * - Provide a recovery UI when the app module fails to parse/load or never starts
  */
 async function __assertAssetExists(path) {
-  // Resolve relative URLs against the document (works on both GitHub Pages and Netlify).
-  const url = new URL(path, window.location.href);
+  const r = await fetch(path, { cache: "no-store" });
+  if (!r.ok) throw new Error(`Missing required asset: ${path} (HTTP ${r.status})`);
 
-  const r = await fetch(url.href, { cache: "no-store" });
-  if (!r.ok) throw new Error(`Missing required asset: ${url.pathname} (HTTP ${r.status})`);
-
-  // Guard: if a JS file is accidentally served HTML (common with bad deploy rewrites or stale SW caches),
-  // fail fast with a clear error instead of a cryptic parse error like: Unexpected token '<'.
-  if (/\.js$/i.test(url.pathname)) {
+  // Guard: if a JS file is accidentally served HTML (common with bad SW caches),
+  // fail fast with a clear error instead of a cryptic parse error like: Unexpected keyword 'class'.
+  if (/\.js$/i.test(path)) {
     const ct = (r.headers.get("content-type") || "").toLowerCase();
-    const ctLooksJS = ct.includes("javascript") || ct.includes("ecmascript");
-
-    // Body sniff: catch "index.html returned for JS" even if headers are missing/wrong.
-    let firstChunk = "";
-    try {
-      firstChunk = (await r.clone().text()).slice(0, 80).toLowerCase();
-    } catch (_) {}
-    const looksHTML = firstChunk.includes("<!doctype") || firstChunk.includes("<html");
-
-    if (!ctLooksJS || looksHTML) {
-      const hint = looksHTML
-        ? "Server returned HTML for a .js file (likely a redirect/rewrite). Fix host rules for /js/*."
-        : "Bad or missing JavaScript content-type.";
-      throw new Error(`Bad JS response for ${url.pathname}. ${hint} (content-type: ${ct || "unknown"}).`);
+    if (!(ct.includes("javascript") || ct.includes("ecmascript"))) {
+      throw new Error(`Bad content-type for ${path}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
     }
   }
-}
-
-
-async function __hardRecoverOnce(reason) {
-  try {
-    const key = "__SHELLFISH_HARD_RECOVERED__";
-    if (sessionStorage.getItem(key)) return false;
-    sessionStorage.setItem(key, "1");
-  } catch (_) {}
-
-  try {
-    // Unregister SW and clear caches so we stop re-serving a truncated JS response.
-    if ("serviceWorker" in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map((r) => r.unregister().catch(() => {})));
-    }
-    if ("caches" in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k)));
-    }
-  } catch (_) {}
-
-  try {
-    const u = new URL(window.location.href);
-    u.searchParams.set("recover", "1");
-    u.searchParams.set("t", String(Date.now()));
-    // Keep hash for SPA state if any.
-    window.location.replace(u.toString());
-    return true;
-  } catch (_) {
-    try { window.location.reload(); } catch (_) {}
-    return true;
-  }
-}
-
-function __shouldSkipSWThisLoad() {
-  try {
-    const u = new URL(window.location.href);
-    return u.searchParams.get("recover") === "1";
-  } catch (_) { return false; }
 }
 
 function detectShellfishStateKey() {
@@ -261,44 +206,7 @@ window.__showModuleError = function (err) {
   try {
     await __assertAssetExists(`./js/utils_v5.js?v=${SW_VERSION}`);
     await __assertAssetExists(`./js/app_v5.js?v=${SW_VERSION}`);
-
-    const appUrl = new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href;
-
-    try {
-      await import(appUrl);
-    } catch (e) {
-      // Safari/iOS can occasionally throw transient parse errors (e.g. "Unexpected EOF")
-      // if a resource is partially cached/streamed. Retry with a cache-busting URL so we don't
-      // re-import the same truncated cached response.
-      const msg = String(e && (e.message || e));
-      
-if (/Unexpected\s+EOF/i.test(msg)) {
-        // iOS/Safari sometimes caches a truncated JS response. Retry a few times with fresh URLs.
-        let lastErr = e;
-        for (let attempt = 0; attempt < 3; attempt++) {
-          const bustUrl = appUrl + (appUrl.includes("?") ? "&" : "?") + "r=" + Date.now() + "-" + attempt;
-          try { await __assertAssetExists(bustUrl); } catch (_) {}
-          try {
-            await import(bustUrl);
-            lastErr = null;
-            break;
-          } catch (err2) {
-            lastErr = err2;
-            const msg2 = String(err2 && (err2.message || err2));
-            if (!/Unexpected\s+EOF/i.test(msg2)) throw err2;
-          }
-        }
-        if (lastErr) {
-          // One-shot self-heal: unregister SW + clear caches + reload once.
-          const did = await __hardRecoverOnce(lastErr);
-          if (!did) throw lastErr;
-          return;
-        }
-      } else {
-
-        throw e;
-      }
-    }
+    await import(new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href);
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);
@@ -315,7 +223,7 @@ window.__BOOT_WATCHDOG__ = setTimeout(() => {
       "If it still fails on iPhone/iPad: Settings → Safari → Advanced → Website Data → remove this site, then reload.";
     window.__showModuleError(new Error(msg));
   } catch (_) {}
-}, 6500);
+}, 4000);
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
@@ -385,7 +293,7 @@ async function registerServiceWorker() {
 }
 
 window.addEventListener("load", () => {
-  if (!__shouldSkipSWThisLoad()) registerServiceWorker().catch(() => {});
+  registerServiceWorker().catch(() => {});
 });
 
 window.addEventListener("error", (ev) => {

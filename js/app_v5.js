@@ -3,8 +3,8 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=61";
-const APP_VERSION = "v5.61";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=57";
+const APP_VERSION = "v5.57";
 const VERSION = APP_VERSION;
 
 // In-app update UI: shows an Update button only when a new Service Worker is ready.
@@ -188,88 +188,6 @@ function showToast(msg){
   }catch{}
 }
 
-// ---- Confirm Modal (standard) ----
-// Usage: const ok = await showConfirmModal({ title, message, yesText, noText, variant:"confirm"|"danger" });
-function ensureConfirmModal(){
-  let root = document.getElementById("confirmModalRoot");
-  if(root) return root;
-  root = document.createElement("div");
-  root.id = "confirmModalRoot";
-  root.className = "modalOverlay hidden";
-  root.innerHTML = `
-    <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="cmTitle" aria-describedby="cmMsg">
-      <div class="modalHeader">
-        <div id="cmTitle" class="modalTitle"></div>
-      </div>
-      <div id="cmMsg" class="modalMsg"></div>
-      <div class="modalActions">
-        <button type="button" class="btn" id="cmNo">No</button>
-        <button type="button" class="btn primary" id="cmYes">Yes</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(root);
-  return root;
-}
-function showConfirmModal(opts){
-  return new Promise((resolve)=>{
-    try{
-      const title = String(opts?.title || "Confirm");
-      const message = String(opts?.message || "");
-      const yesText = String(opts?.yesText || "Yes");
-      const noText = String(opts?.noText || "No");
-      const variant = String(opts?.variant || "confirm"); // confirm | danger
-
-      const root = ensureConfirmModal();
-      const card = root.querySelector(".modalCard");
-      const elTitle = root.querySelector("#cmTitle");
-      const elMsg = root.querySelector("#cmMsg");
-      const btnNo = root.querySelector("#cmNo");
-      const btnYes = root.querySelector("#cmYes");
-
-      elTitle.textContent = title;
-      elMsg.textContent = message;
-      btnNo.textContent = noText;
-      btnYes.textContent = yesText;
-
-      btnYes.classList.toggle("dangerPrimary", variant === "danger");
-      btnYes.classList.toggle("primary", variant !== "danger");
-
-      const cleanup = (val)=>{
-        try{
-          root.classList.add("hidden");
-          document.body.classList.remove("modalOpen");
-          btnNo.onclick = null; btnYes.onclick = null;
-          root.onclick = null;
-          window.removeEventListener("keydown", onKey);
-        }catch{}
-        resolve(val);
-      };
-      const onKey = (e)=>{
-        if(e.key === "Escape") cleanup(false);
-      };
-
-      btnNo.onclick = ()=> cleanup(false);
-      btnYes.onclick = ()=> cleanup(true);
-
-      // Clicking outside card = No (safe default)
-      root.onclick = (e)=>{
-        if(e.target === root) cleanup(false);
-      };
-
-      window.addEventListener("keydown", onKey);
-
-      root.classList.remove("hidden");
-      document.body.classList.add("modalOpen");
-
-      // focus No to reduce accidental destructive taps
-      setTimeout(()=>{ try{ btnNo.focus(); }catch{} }, 0);
-    }catch{
-      resolve(false);
-    }
-  });
-}
-
 function copyTextToClipboard(txt){
   return navigator.clipboard?.writeText(String(txt||""))
     .then(()=>true).catch(()=>false);
@@ -381,22 +299,12 @@ function renderTabBar(activeView){
     btn.onclick = () => {
       const next = btn.getAttribute("data-tab") || "home";
       // Guard: if leaving a draft workflow, confirm once.
-      const doNav = ()=>{
-        state.view = next;
-        saveState();
-        render();
-      };
       if((state.view === "new" || state.view === "review" || state.view === "edit") && hasUnsavedDraft()){
-        showConfirmModal({
-          title: "Leave this screen?",
-          message: "Your unsaved trip entry may be lost.",
-          yesText: "Leave",
-          noText: "Stay",
-          variant: "danger"
-        }).then((ok)=>{ if(ok) doNav(); });
-        return;
+        if(!confirm("Leave this screen? Your unsaved trip entry may be lost.")) return;
       }
-      doNav();
+      state.view = next;
+      saveState();
+      render();
     };
   });
 }
@@ -825,7 +733,7 @@ function importBackupFromFile(file){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onerror = ()=> reject(new Error("Failed to read file"));
-    reader.onload = async ()=>{
+    reader.onload = ()=>{
       try{
         const txt = String(reader.result || "");
         const raw = JSON.parse(txt);
@@ -847,26 +755,19 @@ function importBackupFromFile(file){
         const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
         const importedDealers = dealersIn.map(d=>String(d||"").trim()).filter(Boolean);
 
-        const replace = await showConfirmModal({
-          title: "Restore backup?",
-          message: "Choose how to restore this backup on this device.
-
-Replace = overwrite current trips/areas/dealers
-Merge = keep current and skip likely duplicates",
-          yesText: "Replace",
-          noText: "Merge",
-          variant: "confirm"
-        });
+        const replace = confirm(
+          "Restore backup?\n\n" +
+          "OK = Replace current trips/areas/dealers on this device\n" +
+          "Cancel = Merge (skip likely duplicates)"
+        );
 
         const hasExisting = (Array.isArray(state.trips) && state.trips.length) || (Array.isArray(state.areas) && state.areas.length) || (Array.isArray(state.dealers) && state.dealers.length);
         if(replace && hasExisting){
-          const makeSafety = await showConfirmModal({
-            title: "Create safety backup?",
-            message: "Before replacing, do you want to download a safety backup of your current data?",
-            yesText: "Download",
-            noText: "Skip",
-            variant: "confirm"
-          });
+          const makeSafety = confirm(
+            "Before replacing, create a safety backup of your current data?\n\n" +
+            "OK = Download safety backup\n" +
+            "Cancel = Continue without safety backup"
+          );
           if(makeSafety){
             const safetyPayload = buildBackupPayloadFromState(state);
             downloadBackupPayload(safetyPayload, "shellfish_safety_before_restore");
@@ -1055,7 +956,7 @@ function findDuplicateTrip(candidate, excludeId=""){
 }
 
 
-async function commitTripFromDraft({ mode, editId="", inputs }){
+function commitTripFromDraft({ mode, editId="", inputs }){
   const dateISO = parseMDYToISO(String(inputs?.date||""));
   const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
   const poundsNum = parseNum(inputs?.pounds);
@@ -1097,8 +998,7 @@ async function commitTripFromDraft({ mode, editId="", inputs }){
     const msg = isEdit
       ? `This edit matches another trip:\n\nDate: ${formatDateMDY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`
       : `This looks like a duplicate trip:\n\nDate: ${formatDateMDY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
-    const okDup = await showConfirmModal({title:"Possible Duplicate", message: msg, yesText: "Save Anyway", noText:"Cancel", variant:"confirm"});
-    if(!okDup) return false;
+    if(!confirm(msg)) return false;
   }
 
   const trip = {
@@ -1240,9 +1140,8 @@ function showFatal(err){
   if(btnResetCache) btnResetCache.onclick = ()=> safeAsync(()=> resetCache());
 
   const btnResetData = document.getElementById("fatalResetData");
-  if(btnResetData) btnResetData.onclick = async ()=> {
-    const okReset = await showConfirmModal({title:"Reset App Data?", message:"This clears all local app data (trips, areas, settings). Continue? This cannot be undone.", yesText:"Reset", noText:"Cancel", variant:"danger"});
-    if(okReset){
+  if(btnResetData) btnResetData.onclick = ()=> {
+    if(confirm("This clears all local app data (trips, areas, settings). Continue?")){
       safeAsync(()=> resetAppData());
     }
   };
@@ -2023,34 +1922,17 @@ if(elAmount){
         return;
       }
 
-      // quick confirm modal (no review screen)
-      const summary = [
-        `Date: ${mdy || formatDateMDY(state.draft.dateISO)}`,
-        `Dealer: ${state.draft.dealer || "—"}`,
-        `Area: ${state.draft.area || "—"}`,
-        `Pounds: ${to2(state.draft.pounds || 0)}`,
-        `Amount: ${formatMoney(state.draft.amount || 0)}`
-      ].join("
-");
-      showConfirmModal({
-        title: "Save Trip?",
-        message: summary,
-        yesText: "Yes, Save",
-        noText: "No",
-        variant: "confirm"
-      }).then(async (ok)=>{
-        if(!ok) return;
-        await commitTripFromDraft({
-          mode: "new",
-          inputs: {
-            date: mdy,
-            dealer: state.draft.dealer,
-            pounds: String(elPounds?.value||""),
-            amount: String(elAmount?.value||""),
-            area: state.draft.area
-          }
-        });
-      });
+      // move to review step (nothing is saved to trips until Confirm)
+      state.reviewDraft = {
+        dateISO: state.draft.dateISO,
+        dateMDY: mdy,
+        dealer: state.draft.dealer,
+        pounds: state.draft.pounds,
+        amount: state.draft.amount,
+        area: state.draft.area
+      };
+      saveState();
+      pushView(state, "review");
     }catch(err){
       try{ showFatal(err, "saveTrip"); }catch{}
     }
@@ -2063,11 +1945,11 @@ if(elAmount){
 const btnClear = document.getElementById("clearDraft");
   if(btnClear){
     btnClear.onclick = ()=>{
-      showConfirmModal({title:"Clear Trip?", message:"Clear this draft entry? This cannot be undone.", yesText:"Yes, Clear", noText:"No", variant:"danger"}).then((ok)=>{ if(!ok) return;
+      if(confirm("Clear this draft?")){
         delete state.draft;
         saveState();
         renderNewTrip();
-      });
+      }
     };
   }
 // Persist draft as the user edits fields (fixes iOS select + prevents resets)
@@ -2221,7 +2103,7 @@ getApp().innerHTML = `
   if(__navBack) __navBack.onclick = ()=> goBack(state);
   const __cancelReview = document.getElementById("cancelReview");
   if(__cancelReview) __cancelReview.onclick = ()=>{
-    showConfirmModal({title:"Discard Draft?", message:"Discard this review draft? This cannot be undone.", yesText:"Discard", noText:"Keep Editing", variant:"danger"}).then((ok)=>{ if(!ok) return;
+    if(confirm("Discard this review draft?")){
       delete state.reviewDraft;
       pushView(state, "new");
     }
@@ -2463,7 +2345,7 @@ if(elDealerLive){
     const elPounds = document.getElementById("r_pounds");
     const elAmount = document.getElementById("r_amount");
     const elArea = document.getElementById("r_area");
-    await commitTripFromDraft({
+    commitTripFromDraft({
       mode: "new",
       inputs: {
         date: elDate.value,
@@ -2583,8 +2465,8 @@ function renderEditTrip(){
 
   bindNavHandlers(state);
 
-  document.getElementById("saveEdit").onclick = async ()=>{
-    await commitTripFromDraft({
+  document.getElementById("saveEdit").onclick = ()=>{
+    commitTripFromDraft({
       mode: "edit",
       editId: id,
       inputs: {
@@ -2597,9 +2479,8 @@ function renderEditTrip(){
     });
   };
 
-  document.getElementById("deleteTrip").onclick = async ()=>{
-    const okDel = await showConfirmModal({title:"Delete Trip?", message:"Delete this trip? This cannot be undone.", yesText:"Delete", noText:"Cancel", variant:"danger"});
-    if(!okDel) return;
+  document.getElementById("deleteTrip").onclick = ()=>{
+    if(!confirm("Delete this trip?")) return;
     state.trips = trips.filter(x => String(x?.id||"") !== id);
     delete state.editId;
     saveState();
@@ -3318,11 +3199,10 @@ function renderSettings(){
       const idx = Number(btn.getAttribute("data-del-area"));
       if(!(idx >= 0)) return;
       const label = state.areas[idx];
-      showConfirmModal({title:"Delete Area?", message:`Delete area "${label}"? This cannot be undone.`, yesText:"Delete", noText:"Cancel", variant:"danger"}).then((ok)=>{ if(!ok) return;
+      if(!confirm(`Delete area "${label}"?`)) return;
       state.areas.splice(idx,1);
       saveState();
       renderSettings();
-    });
     });
   });
 
@@ -3331,12 +3211,11 @@ function renderSettings(){
       const i = parseInt(btn.getAttribute("data-del-dealer")||"-1", 10);
       if(!(i>=0)) return;
       const label = state.dealers[i];
-      showConfirmModal({title:"Delete Dealer?", message:`Delete dealer "${label}"? This cannot be undone.`, yesText:"Delete", noText:"Cancel", variant:"danger"}).then((ok)=>{ if(!ok) return;
+      if(!confirm(`Delete dealer "${label}"?`)) return;
       state.dealers.splice(i,1);
       ensureDealers();
       saveState();
       renderSettings();
-    });
     });
   });
 
