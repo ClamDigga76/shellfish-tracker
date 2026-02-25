@@ -184,11 +184,12 @@ header{padding:14px 18px 12px}
 .pasteMeta{opacity:.7;font-weight:800;white-space:nowrap}
 .expWarn{flex:0 0 auto;opacity:.75}
 .hlHdr{
-  font-size:18px;
+  font-size:16px;
   font-weight:850;
   letter-spacing:.2px;
-  margin-bottom:8px;
-  opacity:.95;
+  margin: 2px 0 8px;
+  opacity:.90;
+  text-align:center;
 }
 .hlItem{padding:6px 0}
 .hlDate{font-size:22px;font-weight:900;letter-spacing:.2px}
@@ -260,6 +261,16 @@ header{padding:14px 18px 12px}
 .rate{color:rgba(232,238,252,.82);font-weight:700}
 
 .actionsNew .btn.primary{width:100%}
+
+.trip-section{
+  padding: 10px 0;
+}
+.trip-section + .trip-section{
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.trip-section.trip-actions{
+  padding-top: 14px;
+}
 .actionsNew .btnRow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .actionsNew .btnRow2 .btn{width:100%}
 
@@ -627,7 +638,7 @@ header{padding:14px 18px 12px}
     <footer class="app-footer">© 2026 Jeremy Wood. All rights reserved.</footer>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=55"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=56"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>

@@ -195,3 +195,21 @@ export function toCSV(trips){
   return lines.join("\r\n");
 }
 
+
+
+// Return a NEW array of trips sorted newest-first.
+// Prefers dateISO (YYYY-MM-DD). Falls back to createdAt (ms) if present.
+export function getTripsNewestFirst(trips){
+  const arr = Array.isArray(trips) ? trips.slice() : [];
+  return arr.sort((a,b)=>{
+    const da = String(a?.dateISO || "");
+    const db = String(b?.dateISO || "");
+    if(db && da && db !== da) return db.localeCompare(da);
+    const ca = Number(a?.createdAt || 0);
+    const cb = Number(b?.createdAt || 0);
+    if(cb !== ca) return cb - ca;
+    const ia = String(a?.id || "");
+    const ib = String(b?.id || "");
+    return ib.localeCompare(ia);
+  });
+}

@@ -3,9 +3,8 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml } from "./utils_v5.js?v=55";
-
-const APP_VERSION = "v5.55";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=56";
+const APP_VERSION = "v5.56";
 const VERSION = APP_VERSION;
 window.__SHELLFISH_BUILD__ = APP_VERSION;
 const HOME_TRIPS_LIMIT = 15;
@@ -1206,7 +1205,7 @@ function renderAllTrips(){
   const r = modeRange(mode, tf.from, tf.to);
   const filtered = (r.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r.startISO, r.endISO);
 
-  const sorted = filtered.sort((a,b)=> String(b?.dateISO||"").localeCompare(String(a?.dateISO||"")));
+  const sorted = getTripsNewestFirst(filtered);
 
   const rows = sorted.length ? sorted.map(t=>{
     const date = formatDateMDY(t?.dateISO||"");
@@ -1416,7 +1415,8 @@ function renderHome(
   const f = String((state.homeFilter && state.homeFilter.mode) || "YTD").toUpperCase();
   const chip = (key,label) => `<button class="chip segBtn ${f===key?'on is-selected':''}" data-hf="${key}" type="button">${label}</button>`;
 
-  const rows = trips.length ? trips.slice(0, HOME_TRIPS_LIMIT).map(t=>{
+  const tripsSorted = getTripsNewestFirst(trips);
+  const rows = tripsSorted.length ? tripsSorted.slice(0, HOME_TRIPS_LIMIT).map(t=>{
     const date = formatDateMDY(t?.dateISO);
     const dealer = (t?.dealer||"").toString();
     const lbs = to2(Number(t?.pounds)||0);
@@ -1668,6 +1668,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
 
     <div class="card formCard">
 
+      <section class="trip-section">
       <div class="field">
         <div class="fieldLabel overline center">HARVEST DATE</div>
         <div class="dateRow">
@@ -1677,6 +1678,9 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         </div>
       </div>
 
+      </section>
+
+      <section class="trip-section">
       <div class="field">
         <div class="fieldLabel overline center">DEALERS</div>
         ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
@@ -1689,6 +1693,9 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         <div id="dealerPrompt"></div>
       </div>
 
+      </section>
+
+      <section class="trip-section">
       <div class="grid2">
         <div class="field">
           <div class="fieldLabel overline">POUNDS</div>
@@ -1704,6 +1711,9 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       </div>
       <div class="rateLine muted small">$/lb: <b class="rate">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
 
+      </section>
+
+      <section class="trip-section">
       <div class="field">
         <div class="fieldLabel overline center">AREA</div>
         ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
@@ -1716,6 +1726,9 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         <div id="areaPrompt"></div>
       </div>
 
+      </section>
+
+      <section class="trip-section trip-actions">
       <div class="actionsNew">
         <button class="btn primary" id="saveTrip" type="button" disabled>Save Trip</button>
         <div class="btnRow2">
@@ -1723,6 +1736,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
           <button class="btn danger" id="clearDraft" type="button">Clear</button>
         </div>
       </div>
+      </section>
 
     </div>
   `;
@@ -2597,19 +2611,19 @@ function renderReports(){
         <b>High / Low Summary</b>
         <div class="sep"></div>
 
-        <div class="hlHdr">Highest lbs</div>
+        <div class="hlHdr">Most Pounds</div>
         ${renderHLItem(maxLbs)}
         <div class="sep"></div>
 
-        <div class="hlHdr">Lowest lbs</div>
+        <div class="hlHdr">Least Pounds</div>
         ${renderHLItem(minLbs)}
         <div class="sep"></div>
 
-        <div class="hlHdr">Highest amount</div>
+        <div class="hlHdr">Highest Amount</div>
         ${renderHLItem(maxAmt)}
         <div class="sep"></div>
 
-        <div class="hlHdr">Lowest amount</div>
+        <div class="hlHdr">Lowest Amount</div>
         ${renderHLItem(minAmt)}
         <div class="sep"></div>
 
