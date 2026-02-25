@@ -1,0 +1,4 @@
+[build]
+  publish = "."
+
+# Routing is handled by _redirects. This file exists to make the publish root explicit.

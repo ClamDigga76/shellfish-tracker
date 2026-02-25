@@ -14,12 +14,24 @@ async function __assertAssetExists(path) {
   const r = await fetch(url.href, { cache: "no-store" });
   if (!r.ok) throw new Error(`Missing required asset: ${url.pathname} (HTTP ${r.status})`);
 
-  // Guard: if a JS file is accidentally served HTML (common with bad SW caches),
-  // fail fast with a clear error instead of a cryptic parse error like: Unexpected keyword 'class'.
+  // Guard: if a JS file is accidentally served HTML (common with bad deploy rewrites or stale SW caches),
+  // fail fast with a clear error instead of a cryptic parse error like: Unexpected token '<'.
   if (/\.js$/i.test(url.pathname)) {
     const ct = (r.headers.get("content-type") || "").toLowerCase();
-    if (!(ct.includes("javascript") || ct.includes("ecmascript"))) {
-      throw new Error(`Bad content-type for ${url.pathname}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
+    const ctLooksJS = ct.includes("javascript") || ct.includes("ecmascript");
+
+    // Body sniff: catch "index.html returned for JS" even if headers are missing/wrong.
+    let firstChunk = "";
+    try {
+      firstChunk = (await r.clone().text()).slice(0, 80).toLowerCase();
+    } catch (_) {}
+    const looksHTML = firstChunk.includes("<!doctype") || firstChunk.includes("<html");
+
+    if (!ctLooksJS || looksHTML) {
+      const hint = looksHTML
+        ? "Server returned HTML for a .js file (likely a redirect/rewrite). Fix host rules for /js/*."
+        : "Bad or missing JavaScript content-type.";
+      throw new Error(`Bad JS response for ${url.pathname}. ${hint} (content-type: ${ct || "unknown"}).`);
     }
   }
 }
