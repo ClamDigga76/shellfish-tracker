@@ -1,4 +1,4 @@
-const SW_VERSION = "56";
+const SW_VERSION = "57";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -236,12 +236,19 @@ async function registerServiceWorker() {
     } catch (_) {}
 
     const banner = document.getElementById("swUpdateBanner");
+    let __swUpdateReadyNotified = false;
     const btnApply = document.getElementById("swUpdateApply");
     const btnDismiss = document.getElementById("swUpdateDismiss");
 
     const showBanner = () => {
       if (!banner) return;
       banner.style.display = "block";
+      if (!__swUpdateReadyNotified) {
+        __swUpdateReadyNotified = true;
+        try {
+          window.dispatchEvent(new CustomEvent("sw-update-ready", { detail: { version: SW_VERSION } }));
+        } catch (_) {}
+      }
     };
 
     const hideBanner = () => {

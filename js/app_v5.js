@@ -3,9 +3,67 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=56";
-const APP_VERSION = "v5.56";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=57";
+const APP_VERSION = "v5.57";
 const VERSION = APP_VERSION;
+
+// In-app update UI: shows an Update button only when a new Service Worker is ready.
+let SW_UPDATE_READY = false;
+let SW_UPDATE_VERSION = "";
+window.addEventListener("sw-update-ready", (ev) => {
+  SW_UPDATE_READY = true;
+  SW_UPDATE_VERSION = String(ev?.detail?.version || "");
+  try {
+    if (state?.view === "settings") updateUpdateRow();
+  } catch (_) {}
+});
+
+async function swCheckNow(){
+  try{
+    const reg = await navigator.serviceWorker.getRegistration();
+    if(reg) await reg.update();
+  }catch(_){}
+}
+
+async function swApplyNow(){
+  try{
+    const reg = await navigator.serviceWorker.getRegistration();
+    if(reg?.waiting){
+      try{ reg.waiting.postMessage({ type: "SKIP_WAITING" }); }catch(_){}
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloaded) return;
+        reloaded = true;
+        location.reload();
+      });
+    }
+  }catch(_){}
+}
+
+function updateUpdateRow(){
+  const statusEl = document.getElementById("updateStatus");
+  const btnNow = document.getElementById("updateNow");
+  const btnCheck = document.getElementById("checkUpdate");
+  if(!statusEl || !btnNow) return;
+
+  if(SW_UPDATE_READY){
+    statusEl.textContent = "Update: Ready";
+    btnNow.style.display = "inline-block";
+  }else{
+    statusEl.textContent = "Update: Up to date";
+    btnNow.style.display = "none";
+  }
+
+  if(btnCheck && !btnCheck.__bound){
+    btnCheck.__bound = true;
+    btnCheck.onclick = async ()=>{ await swCheckNow(); showToast("Checking for updates…"); };
+  }
+  if(btnNow && !btnNow.__bound){
+    btnNow.__bound = true;
+    btnNow.onclick = async ()=>{ await swApplyNow(); };
+  }
+}
+
 window.__SHELLFISH_BUILD__ = APP_VERSION;
 const HOME_TRIPS_LIMIT = 15;
 const LAST_ERROR_KEY = "shellfish-last-error";
@@ -1630,7 +1688,7 @@ function renderNewTrip(){
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
   const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
-  const amountDisp = displayAmount(draft.amount);
+  const amountVal = String(draft.amount ?? "");
 
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
@@ -1700,13 +1758,16 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         <div class="field">
           <div class="fieldLabel overline">POUNDS</div>
           <div class="inputWrap">
-            <input class="input inputWithSuffix" id="t_pounds" inputmode="decimal" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" />
+            <input class="input inputWithSuffix" id="t_pounds" type="text" inputmode="decimal" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" />
             <span class="unitSuffix lbsBlue">lbs</span>
           </div>
         </div>
         <div class="field">
           <div class="fieldLabel overline">AMOUNT</div>
-          <input class="input" id="t_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDisp))}" />
+          <div class="inputWrap">
+            <span class="moneyPrefix moneyGreen">$</span>
+            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" placeholder="0.00" value="${escapeHtml(String(amountVal))}" />
+          </div>
         </div>
       </div>
       <div class="rateLine muted small">$/lb: <b class="rate">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
@@ -1746,6 +1807,37 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
   const elDealer = document.getElementById("t_dealer");
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
+
+// Numeric input UX (Pounds + Amount):
+// - first tap starts fresh (clears 0/placeholder-like values or selects all)
+// - sanitize to digits + one dot while typing
+// - normalize Amount to 2 decimals on blur
+const sanitizeDecimalInput = (raw)=>{
+  let s = String(raw || "").replace(/[^\d.]/g, "");
+  const dot = s.indexOf(".");
+  if(dot !== -1){
+    s = s.slice(0, dot + 1) + s.slice(dot + 1).replace(/\./g, "");
+  }
+  return s;
+};
+const primeNumericField = (el, zeroValues)=>{
+  try{
+    const v = String(el.value || "").trim();
+    if(!v || (zeroValues||[]).includes(v)){
+      el.value = "";
+    }else{
+      requestAnimationFrame(()=>{ try{ el.select(); }catch(_){} });
+    }
+  }catch(_){}
+};
+const normalizeAmountOnBlur = (el)=>{
+  try{
+    const s = String(el.value || "").trim();
+    if(!s){ el.value = "0.00"; return; }
+    const n = Number(s);
+    el.value = Number.isFinite(n) ? n.toFixed(2) : "0.00";
+  }catch(_){}
+};
   const elArea = document.getElementById("t_area");
   const elToday = document.getElementById("todayBtn");
 
@@ -1767,7 +1859,36 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
 
     const btn = document.getElementById("saveTrip");
     if(btn) btn.disabled = !(dealerOk && areaOk && poundsOk && amountOk);
-  };
+
+
+// Pounds field: start fresh on first tap, keep a clean decimal input.
+if(elPounds){
+  const prime = ()=>primeNumericField(elPounds, ["0","0.0","0.00"]);
+  elPounds.addEventListener("pointerdown", prime);
+  elPounds.addEventListener("focus", prime);
+  elPounds.addEventListener("input", ()=>{
+    const s = sanitizeDecimalInput(elPounds.value);
+    if(s !== elPounds.value) elPounds.value = s;
+  });
+  elPounds.addEventListener("blur", ()=>{
+    // Trim trailing dot if user leaves it like "12."
+    if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
+  });
+}
+
+// Amount field: start fresh on first tap, sanitize while typing, normalize to 2 decimals on blur.
+if(elAmount){
+  const prime = ()=>primeNumericField(elAmount, ["0","0.0","0.00"]);
+  elAmount.addEventListener("pointerdown", prime);
+  elAmount.addEventListener("focus", prime);
+  elAmount.addEventListener("input", ()=>{
+    const s = sanitizeDecimalInput(elAmount.value);
+    if(s !== elAmount.value) elAmount.value = s;
+  });
+  elAmount.addEventListener("blur", ()=>{
+    normalizeAmountOnBlur(elAmount);
+  });
+}  };
 
   if(elToday && elDate){
     elToday.onclick = ()=>{
@@ -2953,6 +3074,11 @@ function renderSettings(){
       <div class="muted small" style="margin-top:10px">Created by <b>Jeremy Wood</b> — <a href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
       <div class="muted small" style="margin-top:8px">Version: <b>${VERSION}</b></div>
       <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;align-items:center">
+        <div class="muted small" id="updateStatus">Update: Up to date</div>
+        <button class="btn" id="updateNow" style="display:none">Update Now</button>
+        <button class="btn" id="checkUpdate">Check now</button>
+      </div>
       <div class="muted small" style="margin-top:8px">© 2026 Jeremy Wood. All rights reserved.</div>
       <div class="sep" style="margin-top:10px"></div>
       <div class="muted small" style="margin-top:10px"><b>Legal</b></div>
@@ -2985,6 +3111,8 @@ function renderSettings(){
   bindNavHandlers(state);
 
   document.getElementById("openHelp").onclick = ()=>{ pushView(state, "help"); };
+
+  updateUpdateRow();
 
   document.getElementById("openTerms").onclick = ()=>{ window.location.href = "legal/terms.html"; };
   document.getElementById("openPrivacy").onclick = ()=>{ window.location.href = "legal/privacy.html"; };
