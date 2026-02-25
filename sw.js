@@ -30,6 +30,25 @@ function looksLikeJSResponse(resp) {
   return ct.includes("javascript") || ct.includes("ecmascript");
 }
 
+
+function minBytesFor(url) {
+  // Integrity guard against truncated JS responses (Safari "Unexpected EOF").
+  if (/app_v5\.js/i.test(url)) return 50000;
+  if (/bootstrap_v5\.js/i.test(url)) return 5000;
+  if (/utils_v5\.js/i.test(url)) return 2000;
+  return 0;
+}
+
+async function passesSizeGuard(url, resp) {
+  const min = minBytesFor(url);
+  if (!min) return true;
+  try {
+    const buf = await resp.clone().arrayBuffer();
+    return buf.byteLength >= min;
+  } catch (_) {
+    return false;
+  }
+}
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
@@ -42,6 +61,10 @@ self.addEventListener("install", (event) => {
 
         if (isJS(url) && !looksLikeJSResponse(r)) {
           // Skip caching bad response; this prevents JS parse errors later.
+          continue;
+        }
+        if (isJS(url) && !(await passesSizeGuard(url, r))) {
+          // Skip caching truncated JS.
           continue;
         }
         await cache.put(url, r);

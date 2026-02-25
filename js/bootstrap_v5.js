@@ -1,4 +1,4 @@
-const SW_VERSION = "60";
+const SW_VERSION = "61";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -22,6 +22,46 @@ async function __assertAssetExists(path) {
       throw new Error(`Bad content-type for ${url.pathname}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
     }
   }
+}
+
+
+async function __hardRecoverOnce(reason) {
+  try {
+    const key = "__SHELLFISH_HARD_RECOVERED__";
+    if (sessionStorage.getItem(key)) return false;
+    sessionStorage.setItem(key, "1");
+  } catch (_) {}
+
+  try {
+    // Unregister SW and clear caches so we stop re-serving a truncated JS response.
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister().catch(() => {})));
+    }
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch (_) {}
+
+  try {
+    const u = new URL(window.location.href);
+    u.searchParams.set("recover", "1");
+    u.searchParams.set("t", String(Date.now()));
+    // Keep hash for SPA state if any.
+    window.location.replace(u.toString());
+    return true;
+  } catch (_) {
+    try { window.location.reload(); } catch (_) {}
+    return true;
+  }
+}
+
+function __shouldSkipSWThisLoad() {
+  try {
+    const u = new URL(window.location.href);
+    return u.searchParams.get("recover") === "1";
+  } catch (_) { return false; }
 }
 
 function detectShellfishStateKey() {
@@ -219,11 +259,31 @@ window.__showModuleError = function (err) {
       // if a resource is partially cached/streamed. Retry with a cache-busting URL so we don't
       // re-import the same truncated cached response.
       const msg = String(e && (e.message || e));
-      if (/Unexpected\s+EOF/i.test(msg)) {
-        const bustUrl = appUrl + (appUrl.includes("?") ? "&" : "?") + "r=" + Date.now();
-        try { await __assertAssetExists(bustUrl); } catch (_) {}
-        await import(bustUrl);
+      
+if (/Unexpected\s+EOF/i.test(msg)) {
+        // iOS/Safari sometimes caches a truncated JS response. Retry a few times with fresh URLs.
+        let lastErr = e;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const bustUrl = appUrl + (appUrl.includes("?") ? "&" : "?") + "r=" + Date.now() + "-" + attempt;
+          try { await __assertAssetExists(bustUrl); } catch (_) {}
+          try {
+            await import(bustUrl);
+            lastErr = null;
+            break;
+          } catch (err2) {
+            lastErr = err2;
+            const msg2 = String(err2 && (err2.message || err2));
+            if (!/Unexpected\s+EOF/i.test(msg2)) throw err2;
+          }
+        }
+        if (lastErr) {
+          // One-shot self-heal: unregister SW + clear caches + reload once.
+          const did = await __hardRecoverOnce(lastErr);
+          if (!did) throw lastErr;
+          return;
+        }
       } else {
+
         throw e;
       }
     }
@@ -313,7 +373,7 @@ async function registerServiceWorker() {
 }
 
 window.addEventListener("load", () => {
-  registerServiceWorker().catch(() => {});
+  if (!__shouldSkipSWThisLoad()) registerServiceWorker().catch(() => {});
 });
 
 window.addEventListener("error", (ev) => {
