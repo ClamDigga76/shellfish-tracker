@@ -1,4 +1,4 @@
-const SW_VERSION = "58";
+const SW_VERSION = "59";
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -8,15 +8,18 @@ const SW_VERSION = "58";
  * - Provide a recovery UI when the app module fails to parse/load or never starts
  */
 async function __assertAssetExists(path) {
-  const r = await fetch(path, { cache: "no-store" });
-  if (!r.ok) throw new Error(`Missing required asset: ${path} (HTTP ${r.status})`);
+  // Resolve relative URLs against the document (works on both GitHub Pages and Netlify).
+  const url = new URL(path, window.location.href);
+
+  const r = await fetch(url.href, { cache: "no-store" });
+  if (!r.ok) throw new Error(`Missing required asset: ${url.pathname} (HTTP ${r.status})`);
 
   // Guard: if a JS file is accidentally served HTML (common with bad SW caches),
   // fail fast with a clear error instead of a cryptic parse error like: Unexpected keyword 'class'.
-  if (/\.js$/i.test(path)) {
+  if (/\.js$/i.test(url.pathname)) {
     const ct = (r.headers.get("content-type") || "").toLowerCase();
     if (!(ct.includes("javascript") || ct.includes("ecmascript"))) {
-      throw new Error(`Bad content-type for ${path}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
+      throw new Error(`Bad content-type for ${url.pathname}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
     }
   }
 }
@@ -206,7 +209,22 @@ window.__showModuleError = function (err) {
   try {
     await __assertAssetExists(`./js/utils_v5.js?v=${SW_VERSION}`);
     await __assertAssetExists(`./js/app_v5.js?v=${SW_VERSION}`);
-    await import(new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href);
+
+    const appUrl = new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href;
+
+    try {
+      await import(appUrl);
+    } catch (e) {
+      // Safari/iOS can occasionally throw transient parse errors (e.g. "Unexpected EOF")
+      // if a resource is partially cached/streamed. One controlled retry fixes most cases.
+      const msg = String(e && (e.message || e));
+      if (/Unexpected\s+EOF/i.test(msg)) {
+        try { await __assertAssetExists(appUrl); } catch (_) {}
+        await import(appUrl);
+      } else {
+        throw e;
+      }
+    }
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);
