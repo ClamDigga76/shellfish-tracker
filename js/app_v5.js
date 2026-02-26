@@ -1128,20 +1128,8 @@ function getFilterOptionsFromTrips(){
 }
 
 // Home + Reports badge (UI choice #2)
-function renderFilterBadge(){
-  const { label } = getFilteredTrips();
-  return `<button class="chip" id="filterBadge" title="Tap to edit filters in Trips">Filtered: ${escapeHtml(label)}</button>`;
-}
-function bindFilterBadgeToTrips(){
-  const el = document.getElementById("filterBadge");
-  if(!el) return;
-  el.addEventListener("click", ()=>{
-    state._scrollToFilters = true;
-    state.view = "all_trips";
-    saveState();
-    render();
-  });
-}
+function renderFilterBadge(){ return ""; }
+function bindFilterBadgeToTrips(){ /* v62: filter badge removed */ }
 
 // Trips filter bar (UI choice #2)
 function renderTripsFilterBar(){
@@ -1192,9 +1180,8 @@ function renderTripsFilterBar(){
           </select>
         </div>
 
-        <div style="min-width:160px;flex:2">
-          <div class="muted small">Search</div>
-          <input id="flt_text" class="input" value="${escapeHtml(f.text||"")}" placeholder="dealer, area, notes..." />
+        <div style="min-width:160px;flex:2;display:flex;align-items:flex-end">
+          <button class="btn" id="exportTrips" type="button" style="width:100%">Export CSV</button>
         </div>
 
         <div style="display:flex;gap:10px;">
@@ -1263,6 +1250,16 @@ function bindTripsFilterBar(){
     saveState();
     render();
   });
+  // v62: Export CSV button lives in filter bar
+  const exportBtn = document.getElementById("exportTrips");
+  if(exportBtn){
+    exportBtn.onclick = ()=>{
+      const { rows, range, label } = getFilteredTrips();
+      exportTripsWithLabel(rows, label, range.fromISO, range.toISO);
+      showToast("CSV exported");
+    };
+  }
+
 
   if(state._scrollToFilters){
     state._scrollToFilters = false;
@@ -1656,9 +1653,12 @@ function renderAllTrips(){
           <div>
             <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${dealer?` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>`:""}</div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tmeta">${lbs?`${escapeHtml(String(lbs))} lb`:""}${(lbs && amt)?` <span class="dot">•</span> ${escapeHtml(formatMoney(amt))}`:""}${(ppl>0)?` <span class="dot">•</span> ${escapeHtml(formatMoney(ppl))}/lb`:""}</div>
+            <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
           </div>
-          <div class="chev">›</div>
+          <div class="tright">
+            <div class="lbsBlue"><b class="lbsBlue">${to2(lbs)}</b> <span class="lbsBlue">lbs</span></div>
+            <div><b class="money">${formatMoney(amt)}</b></div>
+          </div>
         </div>
       </div>
     `;
@@ -1672,7 +1672,7 @@ function renderAllTrips(){
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
         <b>Trips</b>
-        <button class="btn" id="exportTrips">Export CSV</button>
+        
       </div>
       <div class="muted small" style="margin-top:8px">
         ${escapeHtml(String(stats.count))} trips • ${escapeHtml(fmtMoney(stats.totalAmount))} • ${escapeHtml(fmtLbs(stats.totalLbs))} • Avg ${escapeHtml(fmtPPL(stats.totalAmount, stats.totalLbs))}
@@ -1685,16 +1685,6 @@ function renderAllTrips(){
   `;
 
   bindTripsFilterBar();
-
-  const exportBtn = document.getElementById("exportTrips");
-  if(exportBtn){
-    exportBtn.onclick = ()=>{
-      const { rows: exportRows, range: r2 } = getFilteredTrips();
-      exportTripsWithLabel(exportRows, label, r2.fromISO, r2.toISO);
-      showToast("CSV exported");
-    };
-  }
-
   // Open trip to edit
   getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
     const open = ()=>{
@@ -1806,8 +1796,7 @@ function renderHome(
   getApp().innerHTML = `
     ${renderPageHeader("home")}
 
-    ${renderFilterBadge()}
-
+    
     <div class="card dashCard">
       <div class="segWrap">
         ${chip("YTD","YTD")}
@@ -1986,8 +1975,7 @@ if(warn){
       renderHome();
     };
   }
-  bindFilterBadgeToTrips();
-}
+  }
 
 function renderNewTrip(){
   ensureAreas();
@@ -2100,8 +2088,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       <div class="actionsNew">
         <button class="btn primary" id="saveTrip" type="button" disabled>Save Trip</button>
         <div class="btnRow2">
-          <button class="btn" id="navCancel" type="button">Cancel</button>
-          <button class="btn danger" id="clearDraft" type="button">Clear</button>
+                    <button class="btn danger" id="clearDraft" type="button">Clear</button>
         </div>
       </div>
       </section>
@@ -2964,8 +2951,7 @@ function renderReports(){
 
   getApp().innerHTML = `
     ${renderPageHeader("reports")}
-    ${renderFilterBadge()}
-
+    
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
         <b>Reports</b>
@@ -2981,8 +2967,6 @@ function renderReports(){
 
     ${!trips.length ? emptyCard : (mode === "charts" ? renderChartsSection() : renderTablesSection())}
   `;
-
-  bindFilterBadgeToTrips();
 
   // mode seg
   getApp().querySelectorAll(".chip[data-m]").forEach(btn=>{
