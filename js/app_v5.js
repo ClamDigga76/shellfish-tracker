@@ -3,8 +3,8 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=57";
-const APP_VERSION = "v5.57";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=60";
+const APP_VERSION = "v5.60";
 const VERSION = APP_VERSION;
 
 // In-app update UI: shows an Update button only when a new Service Worker is ready.
@@ -921,6 +921,356 @@ function ensureDealers(){
 }
 
 
+// ===========================
+// Patch 2B (v60): Unified Filters Engine (single source of truth)
+// Default: YTD. UI: filters live in Trips; Home/Reports show a badge.
+// Add-ons: C (Custom Range), E (Date normalization), F (Rounding rules)
+// ===========================
+function ensureUnifiedFilters(){
+  // Migrate legacy filters (homeFilter / tripsFilter / reportsFilter) into a single canonical filter object.
+  if(!state.filters || typeof state.filters !== "object") state.filters = {};
+  if(!state.filters.active || typeof state.filters.active !== "object"){
+    // Prefer legacy reports filter, then home, then trips.
+    const pick = state.reportsFilter || state.homeFilter || state.tripsFilter || { mode:"YTD", from:"", to:"" };
+    const legacyMode = String(pick?.mode || "YTD").toUpperCase();
+
+    let range = "ytd";
+    let fromISO = "";
+    let toISO = "";
+
+    if(legacyMode === "ALL") range = "all";
+    else if(legacyMode === "YTD") range = "ytd";
+    else if(legacyMode === "MONTH") range = "30d";
+    else if(legacyMode === "7D") range = "7d";
+    else if(legacyMode === "RANGE") {
+      range = "custom";
+      fromISO = parseMDYToISO(String(pick?.from||"")) || "";
+      toISO = parseMDYToISO(String(pick?.to||"")) || "";
+    }
+
+    state.filters.active = {
+      range,
+      fromISO,
+      toISO,
+      dealer: "all",
+      area: "all",
+      species: "all",
+      text: ""
+    };
+  }
+
+  const f = state.filters.active;
+
+  if(!f.range) f.range = "ytd"; // locked default
+  if(f.dealer == null) f.dealer = "all";
+  if(f.area == null) f.area = "all";
+  if(f.species == null) f.species = "all";
+  if(f.text == null) f.text = "";
+  if(f.fromISO == null) f.fromISO = "";
+  if(f.toISO == null) f.toISO = "";
+
+  // Guardrails for custom range
+  if(f.range === "custom"){
+    const now = isoToday();
+    const y = now.slice(0,4);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(f.fromISO||""))) f.fromISO = `${y}-01-01`;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(f.toISO||""))) f.toISO = now;
+    if(f.fromISO > f.toISO){
+      const tmp = f.fromISO; f.fromISO = f.toISO; f.toISO = tmp;
+    }
+  }
+}
+
+// Add-on E: normalize trip shape so filtering is reliable
+function normalizeTripRow(t){
+  if(!t) return null;
+
+  let dateISO = String(t?.dateISO || t?.date || t?.when || t?.tripDate || "").slice(0,10);
+
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateISO) && t?.createdAt){
+    const d = new Date(t.createdAt);
+    if(!isNaN(d)) dateISO = d.toISOString().slice(0,10);
+  }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateISO)){
+    // quarantine weird records out of normal ranges but keep app stable
+    dateISO = "1900-01-01";
+  }
+
+  const pounds = Number(t?.pounds ?? t?.lbs ?? 0);
+  const amount = Number(t?.amount ?? t?.total ?? 0);
+
+  return {
+    ...t,
+    dateISO,
+    pounds: Number.isFinite(pounds) ? pounds : 0,
+    amount: Number.isFinite(amount) ? amount : 0,
+    dealer: String(t?.dealer || "").trim(),
+    area: String(t?.area || "").trim(),
+    species: String(t?.species || "").trim(),
+    notes: String(t?.notes || "")
+  };
+}
+
+// Add-on C: resolve range (includes custom + guardrails)
+function resolveUnifiedRange(filter){
+  const now = isoToday();
+  const y = now.slice(0,4);
+
+  const backDays = (n)=>{
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0,10);
+  };
+
+  if(filter.range === "all") return { fromISO:"1900-01-01", toISO:now, label:"All time" };
+  if(filter.range === "ytd") return { fromISO:`${y}-01-01`, toISO:now, label:"YTD" };
+  if(filter.range === "12m"){
+    const d = new Date();
+    d.setFullYear(d.getFullYear()-1);
+    return { fromISO:d.toISOString().slice(0,10), toISO:now, label:"Last 12 months" };
+  }
+  if(filter.range === "90d") return { fromISO:backDays(90), toISO:now, label:"Last 90 days" };
+  if(filter.range === "30d") return { fromISO:backDays(30), toISO:now, label:"Last 30 days" };
+  if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"Last 7 days" };
+
+  // custom
+  let fromISO = String(filter.fromISO||"").slice(0,10);
+  let toISO = String(filter.toISO||"").slice(0,10);
+
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(fromISO)) fromISO = `${y}-01-01`;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(toISO)) toISO = now;
+
+  if(fromISO > toISO){
+    const tmp = fromISO; fromISO = toISO; toISO = tmp;
+  }
+  return { fromISO, toISO, label: `${fromISO} → ${toISO}` };
+}
+
+// Add-on F: formatting rules (single source of truth)
+function fmtMoney(n){
+  n = Number(n);
+  if(!Number.isFinite(n)) n = 0;
+  return formatMoney(n);
+}
+function fmtLbs(n){
+  n = Number(n);
+  if(!Number.isFinite(n)) n = 0;
+  return `${(Math.round((n + Number.EPSILON) * 10)/10).toFixed(1)} lb`;
+}
+function fmtPPL(amount, lbs){
+  amount = Number(amount); lbs = Number(lbs);
+  if(!Number.isFinite(amount) || !Number.isFinite(lbs) || lbs <= 0) return "$0.00/lb";
+  const ppl = amount / lbs;
+  return `${formatMoney(ppl)}/lb`;
+}
+
+function buildUnifiedFilterLabel(filter, rangeLabel){
+  const parts = [rangeLabel];
+  if(filter.dealer && filter.dealer !== "all") parts.push(`Dealer: ${filter.dealer}`);
+  if(filter.area && filter.area !== "all") parts.push(`Area: ${filter.area}`);
+  if(filter.species && filter.species !== "all") parts.push(`Species: ${filter.species}`);
+  if(filter.text && String(filter.text).trim()) parts.push(`Search: "${String(filter.text).trim()}"`);
+  return parts.join(" • ");
+}
+
+function applyUnifiedTripFilter(rawTrips, filter){
+  const trips = (rawTrips || []).map(normalizeTripRow).filter(Boolean);
+  const r = resolveUnifiedRange(filter);
+
+  let rows = trips.filter(t => t.dateISO >= r.fromISO && t.dateISO <= r.toISO);
+
+  if(filter.dealer && filter.dealer !== "all") rows = rows.filter(t => t.dealer === filter.dealer);
+  if(filter.area && filter.area !== "all") rows = rows.filter(t => t.area === filter.area);
+  if(filter.species && filter.species !== "all") rows = rows.filter(t => t.species === filter.species);
+
+  if(filter.text && String(filter.text).trim()){
+    const q = String(filter.text).trim().toLowerCase();
+    rows = rows.filter(t =>
+      (t.dealer||"").toLowerCase().includes(q) ||
+      (t.area||"").toLowerCase().includes(q) ||
+      (t.species||"").toLowerCase().includes(q) ||
+      (t.notes||"").toLowerCase().includes(q)
+    );
+  }
+
+  const totalLbs = rows.reduce((a,t)=> a + (Number(t.pounds)||0), 0);
+  const totalAmount = rows.reduce((a,t)=> a + (Number(t.amount)||0), 0);
+
+  return {
+    rows,
+    stats: {
+      count: rows.length,
+      totalLbs,
+      totalAmount,
+      avgPPL: (totalLbs > 0 ? (totalAmount/totalLbs) : 0)
+    },
+    range: { fromISO:r.fromISO, toISO:r.toISO },
+    label: buildUnifiedFilterLabel(filter, r.label)
+  };
+}
+
+function getFilteredTrips(){
+  ensureUnifiedFilters();
+  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
+  return applyUnifiedTripFilter(tripsAll, state.filters.active);
+}
+
+function uniqueSorted(arr){
+  return [...new Set((arr||[]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
+}
+function getFilterOptionsFromTrips(){
+  const trips = Array.isArray(state.trips) ? state.trips.map(normalizeTripRow).filter(Boolean) : [];
+  return {
+    dealers: uniqueSorted(trips.map(t=>t.dealer)),
+    areas: uniqueSorted(trips.map(t=>t.area)),
+    species: uniqueSorted(trips.map(t=>t.species)),
+  };
+}
+
+// Home + Reports badge (UI choice #2)
+function renderFilterBadge(){
+  const { label } = getFilteredTrips();
+  return `<button class="chip" id="filterBadge" title="Tap to edit filters in Trips">Filtered: ${escapeHtml(label)}</button>`;
+}
+function bindFilterBadgeToTrips(){
+  const el = document.getElementById("filterBadge");
+  if(!el) return;
+  el.addEventListener("click", ()=>{
+    state._scrollToFilters = true;
+    state.view = "all_trips";
+    saveState();
+    render();
+  });
+}
+
+// Trips filter bar (UI choice #2)
+function renderTripsFilterBar(){
+  ensureUnifiedFilters();
+  const f = state.filters.active;
+  const opt = getFilterOptionsFromTrips();
+
+  const rangeOptions = [
+    ["all","All"],
+    ["ytd","YTD"],
+    ["12m","Last 12m"],
+    ["90d","Last 90d"],
+    ["30d","Last 30d"],
+    ["custom","Custom"]
+  ];
+
+  return `
+    <div class="card">
+      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div style="min-width:140px;flex:1">
+          <div class="muted small">Range</div>
+          <select id="flt_range" class="select">
+            ${rangeOptions.map(([k,l])=>`<option value="${k}" ${f.range===k?"selected":""}>${l}</option>`).join("")}
+          </select>
+        </div>
+
+        <div style="min-width:140px;flex:1">
+          <div class="muted small">Dealer</div>
+          <select id="flt_dealer" class="select">
+            <option value="all" ${f.dealer==="all"?"selected":""}>All</option>
+            ${opt.dealers.map(d=>`<option value="${escapeHtml(d)}" ${f.dealer===d?"selected":""}>${escapeHtml(d)}</option>`).join("")}
+          </select>
+        </div>
+
+        <div style="min-width:140px;flex:1">
+          <div class="muted small">Area</div>
+          <select id="flt_area" class="select">
+            <option value="all" ${f.area==="all"?"selected":""}>All</option>
+            ${opt.areas.map(a=>`<option value="${escapeHtml(a)}" ${f.area===a?"selected":""}>${escapeHtml(a)}</option>`).join("")}
+          </select>
+        </div>
+
+        <div style="min-width:140px;flex:1">
+          <div class="muted small">Species</div>
+          <select id="flt_species" class="select">
+            <option value="all" ${f.species==="all"?"selected":""}>All</option>
+            ${opt.species.map(s=>`<option value="${escapeHtml(s)}" ${f.species===s?"selected":""}>${escapeHtml(s)}</option>`).join("")}
+          </select>
+        </div>
+
+        <div style="min-width:160px;flex:2">
+          <div class="muted small">Search</div>
+          <input id="flt_text" class="input" value="${escapeHtml(f.text||"")}" placeholder="dealer, area, notes..." />
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button class="btn" id="flt_reset">Reset</button>
+        </div>
+      </div>
+
+      <div id="flt_custom_wrap" style="margin-top:10px;display:${f.range==="custom"?"block":"none"}">
+        <div class="row" style="gap:10px;flex-wrap:wrap">
+          <div style="min-width:140px;flex:1">
+            <div class="muted small">From</div>
+            <input id="flt_from" type="date" class="input" value="${escapeHtml(String(f.fromISO||"").slice(0,10))}" />
+          </div>
+          <div style="min-width:140px;flex:1">
+            <div class="muted small">To</div>
+            <input id="flt_to" type="date" class="input" value="${escapeHtml(String(f.toISO||"").slice(0,10))}" />
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bindTripsFilterBar(){
+  ensureUnifiedFilters();
+  const f = state.filters.active;
+
+  const setAndRerender = ()=>{
+    saveState();
+    render();
+  };
+
+  const rangeEl = document.getElementById("flt_range");
+  rangeEl?.addEventListener("change", ()=>{
+    f.range = rangeEl.value;
+    if(f.range === "custom"){
+      const now = isoToday();
+      const y = now.slice(0,4);
+      if(!f.fromISO) f.fromISO = `${y}-01-01`;
+      if(!f.toISO) f.toISO = now;
+      if(f.fromISO > f.toISO){
+        const tmp = f.fromISO; f.fromISO = f.toISO; f.toISO = tmp;
+      }
+    }
+    setAndRerender();
+  });
+
+  document.getElementById("flt_dealer")?.addEventListener("change", (ev)=>{ f.dealer = ev.target.value; setAndRerender(); });
+  document.getElementById("flt_area")?.addEventListener("change", (ev)=>{ f.area = ev.target.value; setAndRerender(); });
+  document.getElementById("flt_species")?.addEventListener("change", (ev)=>{ f.species = ev.target.value; setAndRerender(); });
+
+  const textEl = document.getElementById("flt_text");
+  let textT;
+  textEl?.addEventListener("input", ()=>{
+    clearTimeout(textT);
+    textT = setTimeout(()=>{ f.text = textEl.value; setAndRerender(); }, 120);
+  });
+
+  const fromEl = document.getElementById("flt_from");
+  const toEl = document.getElementById("flt_to");
+  fromEl?.addEventListener("change", ()=>{ f.fromISO = fromEl.value; f.range="custom"; setAndRerender(); });
+  toEl?.addEventListener("change", ()=>{ f.toISO = toEl.value; f.range="custom"; setAndRerender(); });
+
+  document.getElementById("flt_reset")?.addEventListener("click", ()=>{
+    state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", species:"all", text:"" };
+    saveState();
+    render();
+  });
+
+  if(state._scrollToFilters){
+    state._scrollToFilters = false;
+    saveState();
+    requestAnimationFrame(()=>{ document.getElementById("flt_range")?.scrollIntoView({behavior:"smooth", block:"start"}); });
+  }
+}
+
 function getLastUniqueFromTrips(field, maxN){
   const out = [];
   const seen = new Set();
@@ -1064,8 +1414,10 @@ migrateLegacyStateIfNeeded();
 let state = loadState();
 ensureTripsFilter();
 ensureReportsFilter();
+ensureHomeFilter();
 ensureAreas();
 ensureDealers();
+ensureUnifiedFilters();
 function showFatal(err){
   if(window.__SHELLFISH_FATAL_SHOWN) return;
   window.__SHELLFISH_FATAL_SHOWN = true;
@@ -1284,18 +1636,14 @@ function exportTripsWithLabel(trips, label, startISO="", endISO=""){
 }
 
 function renderAllTrips(){
-  ensureTripsFilter();
+  ensureUnifiedFilters();
 
   const tripsAll = Array.isArray(state.trips) ? state.trips : [];
-  const tf = state.tripsFilter || { mode:"ALL", from:"", to:"" };
-  const mode = String(tf.mode || "ALL").toUpperCase();
+  const { rows, stats, range, label } = getFilteredTrips();
 
-  const r = modeRange(mode, tf.from, tf.to);
-  const filtered = (r.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r.startISO, r.endISO);
+  const sorted = getTripsNewestFirst(rows);
 
-  const sorted = getTripsNewestFirst(filtered);
-
-  const rows = sorted.length ? sorted.map(t=>{
+  const tripRows = sorted.length ? sorted.map(t=>{
     const date = formatDateMDY(t?.dateISO||"");
     const dealer = escapeHtml(String(t?.dealer||""));
     const area = escapeHtml(String(t?.area||""));
@@ -1308,112 +1656,41 @@ function renderAllTrips(){
           <div>
             <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${dealer?` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>`:""}</div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
+            <div class="tmeta">${lbs?`${escapeHtml(String(lbs))} lb`:""}${(lbs && amt)?` <span class="dot">•</span> ${escapeHtml(formatMoney(amt))}`:""}${(ppl>0)?` <span class="dot">•</span> ${escapeHtml(formatMoney(ppl))}/lb`:""}</div>
           </div>
-          <div class="tright">
-            <div class="lbsBlue"><b class="lbsBlue">${to2(lbs)}</b> <span class="lbsBlue">lbs</span></div>
-            <div><b class="money">${formatMoney(amt)}</b></div>
-          </div>
+          <div class="chev">›</div>
         </div>
       </div>
     `;
-  }).join("") : `<div class="muted small">No trips in this filter yet.</div>`;
-
-  const chip = (key,label) => `<button class="chip ${mode===key?'on':''}" data-tf="${key}">${label}</button>`;
-
-  const rangeUI = (mode === "RANGE") ? `
-    <div class="card">
-      <b>Custom range</b>
-      <div class="sep"></div>
-      <div class="grid2">
-        <div class="field">
-          <div class="label">From (MM/DD/YYYY)</div>
-          <input class="input" id="tripRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(tf.from||"")}" />
-        </div>
-        <div class="field">
-          <div class="label">To (MM/DD/YYYY)</div>
-          <input class="input" id="tripRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(tf.to||"")}" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn primary" id="tripRangeApply">Apply</button>
-      </div>
-    </div>
-  ` : "";
-
-  const rangeLabel = (mode === "ALL") ? "ALL" :
-    (mode === "RANGE" && r.startISO && r.endISO) ? `${formatDateMDY(r.startISO)} → ${formatDateMDY(r.endISO)}` :
-    (mode === "RANGE") ? "Set dates" :
-    r.label;
+  }).join("") : `<div class="recentEmpty muted small">No trips match this filter</div>`;
 
   getApp().innerHTML = `
     ${renderPageHeader("all_trips")}
 
+    ${renderTripsFilterBar()}
+
     <div class="card">
-      <div class="chipGrid cols-3" style="margin-top:0">
-        ${chip("ALL","All Trips")}
-        ${chip("YTD","YTD")}
-        ${chip("MONTH","Month")}
-        ${chip("7D","7 Days")}
-        ${chip("RANGE","Range")}
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+        <b>Trips</b>
+        <button class="btn" id="exportTrips">Export CSV</button>
       </div>
-
-      <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
-        <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
-        <span class="pill"><b>${sorted.length}</b> shown</span>
+      <div class="muted small" style="margin-top:8px">
+        ${escapeHtml(String(stats.count))} trips • ${escapeHtml(fmtMoney(stats.totalAmount))} • ${escapeHtml(fmtLbs(stats.totalLbs))} • Avg ${escapeHtml(fmtPPL(stats.totalAmount, stats.totalLbs))}
       </div>
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="exportTrips">🧾 Export CSV</button>
-      </div>
-      <div class="hint">Export uses the current Trips filter.</div>
     </div>
 
-    ${rangeUI}
-
-    <div class="card">
-      ${rows}
+    <div class="tripsList">
+      ${tripRows}
     </div>
   `;
 
-  getApp().scrollTop = 0;
+  bindTripsFilterBar();
 
-  // filter chips
-  getApp().querySelectorAll(".chip[data-tf]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const key = String(btn.getAttribute("data-tf")||"ALL");
-      state.tripsFilter.mode = key;
-      saveState();
-      renderAllTrips();
-    };
-  });
-
-  // apply range
-  const applyBtn = document.getElementById("tripRangeApply");
-  if(applyBtn){
-    applyBtn.onclick = ()=>{
-      const from = String(document.getElementById("tripRangeFrom")?.value || "").trim();
-      const to = String(document.getElementById("tripRangeTo")?.value || "").trim();
-      const s = parseMDYToISO(from);
-      const e = parseMDYToISO(to);
-      if(!s || !e){
-        showToast("Invalid range dates");
-        return;
-      }
-      state.tripsFilter.from = from;
-      state.tripsFilter.to = to;
-      saveState();
-      renderAllTrips();
-    };
-  }
-
-  // export
   const exportBtn = document.getElementById("exportTrips");
   if(exportBtn){
     exportBtn.onclick = ()=>{
-      const r2 = modeRange(mode, state.tripsFilter.from, state.tripsFilter.to);
-      const tripsToExport = (r2.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r2.startISO, r2.endISO);
-      exportTripsWithLabel(tripsToExport, r2.label, r2.startISO, r2.endISO);
+      const { rows: exportRows, range: r2 } = getFilteredTrips();
+      exportTripsWithLabel(exportRows, label, r2.fromISO, r2.toISO);
       showToast("CSV exported");
     };
   }
@@ -1436,13 +1713,10 @@ function renderAllTrips(){
 function renderHome(
 ){
   const tripsAll = Array.isArray(state.trips) ? state.trips : [];
-  ensureHomeFilter();
-  const hf = state.homeFilter || { mode:"YTD", from:"", to:"" };
-  const hMode = String(hf.mode || "YTD").toUpperCase();
-  const hr = modeRange(hMode, hf.from, hf.to);
-  const trips = (hr.label === "ALL") ? tripsAll.slice() : (hr.startISO && hr.endISO ? filterByISOInclusive(tripsAll, hr.startISO, hr.endISO) : tripsAll.slice());
-  const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
-  const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
+  ensureUnifiedFilters();
+  const { rows: trips, stats } = getFilteredTrips();
+  const totalAmount = stats.totalAmount;
+  const totalLbs = stats.totalLbs;
 
   const lbsVal = to2(totalLbs);
   const lbsStr = (Number.isFinite(lbsVal) && Math.abs(lbsVal % 1) < 1e-9) ? String(Math.trunc(lbsVal)) : String(lbsVal);
@@ -1531,6 +1805,8 @@ function renderHome(
 
   getApp().innerHTML = `
     ${renderPageHeader("home")}
+
+    ${renderFilterBadge()}
 
     <div class="card dashCard">
       <div class="segWrap">
@@ -1710,6 +1986,7 @@ if(warn){
       renderHome();
     };
   }
+  bindFilterBadgeToTrips();
 }
 
 function renderNewTrip(){
@@ -2540,120 +2817,40 @@ function renderEditTrip(){
 
 
 function renderReports(){
-  ensureReportsFilter();
+  ensureUnifiedFilters();
 
-  const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
-  const rf = state.reportsFilter || { mode:"YTD", from:"", to:"" };
-  const fMode = String(rf.mode || "YTD").toUpperCase();
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
+  const { rows: trips, stats } = getFilteredTrips();
 
-  const r = modeRange(fMode, rf.from, rf.to);
-  const hasValidRange = (r.label !== "RANGE") || (r.startISO && r.endISO);
-  const trips = (r.label === "ALL") ? tripsAll : (hasValidRange ? filterByISOInclusive(tripsAll, r.startISO, r.endISO) : tripsAll);
-
-  const chip = (key,label) => `<button class="chip ${fMode===key?'on':''}" data-rf="${key}">${label}</button>`;
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
 
-  const rangeLabel = (fMode === "RANGE")
-    ? (hasValidRange ? `${formatDateMDY(r.startISO)} → ${formatDateMDY(r.endISO)}` : "Set dates")
-    : r.label;
-
-  if(!trips.length){
-    getApp().innerHTML = `
-      ${renderPageHeader("reports")}
-
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-          <b>Reports</b>
-          <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
-        </div>
-
-        <div class="chipGrid cols-3" style="margin-top:10px">
-          ${chip("YTD","YTD")}
-          ${chip("MONTH","Month")}
-          ${chip("7D","7 Days")}
-          ${chip("RANGE","Range")}
-        </div>
-
-        ${fMode==="RANGE" ? `
-          <div class="sep"></div>
-          <div class="grid2">
-            <div class="field">
-              <div class="label">From (MM/DD/YYYY)</div>
-              <input class="input" id="repRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.from||"")}" />
-            </div>
-            <div class="field">
-              <div class="label">To (MM/DD/YYYY)</div>
-              <input class="input" id="repRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.to||"")}" />
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <button class="btn primary" id="repRangeApply">Apply</button>
-          </div>
-        ` : ""}
-
-        <div class="hint">${fMode==="RANGE" && !hasValidRange ? "Set a valid date range to see tables and charts." : "No trips in this range yet."}</div>
-      </div>
-    `;
-    getApp().scrollTop = 0;
-
-    // range chips
-    getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
-      btn.onclick = ()=>{
-        state.reportsFilter.mode = String(btn.getAttribute("data-rf")||"YTD");
-        saveState();
-        renderReports();
-      };
-    });
-
-    const applyBtn = document.getElementById("repRangeApply");
-    if(applyBtn){
-      applyBtn.onclick = ()=>{
-        const from = String(document.getElementById("repRangeFrom")?.value || "").trim();
-        const to = String(document.getElementById("repRangeTo")?.value || "").trim();
-        const s = parseMDYToISO(from);
-        const e = parseMDYToISO(to);
-        if(!s || !e){ showToast("Invalid range dates"); return; }
-        state.reportsFilter.from = from;
-        state.reportsFilter.to = to;
-        saveState();
-        renderReports();
-      };
-    }
-    return;
-  }
-
-  // Aggregations
+  // Aggregate
   const byDealer = new Map();
   const byArea = new Map();
-  const byMonth = new Map(); // 1-12
-  for(let m=1;m<=12;m++) byMonth.set(m, { trips:0, lbs:0, amt:0 });
+  const byMonth = new Map(); // month(1-12) => {amt,lbs}
 
-  trips.forEach(t=>{
-    const dealerRaw = (t?.dealer||"").toString();
-    const dealer = normalizeDealerDisplay(dealerRaw) || "(Unspecified)";
-    const dealerKey = dealer.toLowerCase();
-    const area = ((t?.area||"").toString().trim()) || "(Unspecified)";
-    const areaKey = area.toLowerCase();
-
-    const lbs = Number(t?.pounds)||0;
+  for(const t of trips){
     const amt = Number(t?.amount)||0;
+    const lbs = Number(t?.pounds)||0;
 
-    const d = byDealer.get(dealerKey) || { name: dealer, trips:0, lbs:0, amt:0 };
-    d.trips += 1; d.lbs += lbs; d.amt += amt;
-    byDealer.set(dealerKey, d);
+    const dealer = String(t?.dealer||"").trim() || "(unknown)";
+    const area = String(t?.area||"").trim() || "(area)";
 
-    const a = byArea.get(areaKey) || { name: area, trips:0, lbs:0, amt:0 };
-    a.trips += 1; a.lbs += lbs; a.amt += amt;
-    byArea.set(areaKey, a);
+    const dAgg = byDealer.get(dealer) || { name: dealer, amt:0, lbs:0, n:0 };
+    dAgg.amt += amt; dAgg.lbs += lbs; dAgg.n += 1;
+    byDealer.set(dealer, dAgg);
 
-    const iso = String(t?.dateISO||"");
-    const mm = parseInt(iso.slice(5,7), 10);
-    if(mm>=1 && mm<=12){
-      const mo = byMonth.get(mm);
-      mo.trips += 1; mo.lbs += lbs; mo.amt += amt;
+    const aAgg = byArea.get(area) || { name: area, amt:0, lbs:0, n:0 };
+    aAgg.amt += amt; aAgg.lbs += lbs; aAgg.n += 1;
+    byArea.set(area, aAgg);
+
+    const m = Number(String(t?.dateISO||"").slice(5,7)) || 0;
+    if(m>=1 && m<=12){
+      const mAgg = byMonth.get(m) || { amt:0, lbs:0 };
+      mAgg.amt += amt; mAgg.lbs += lbs;
+      byMonth.set(m, mAgg);
     }
-  });
+  }
 
   const dealerRows = Array.from(byDealer.values()).map(x=>{
     const avg = x.lbs>0 ? x.amt/x.lbs : 0;
@@ -2673,70 +2870,54 @@ function renderReports(){
 
   const renderAggList = (rows, emptyMsg)=>{
     if(!rows.length) return `<div class="muted small">${escapeHtml(emptyMsg||"No data")}</div>`;
-    return rows.map(r=>{
+    return rows.slice(0,10).map(r=>{
       return `
         <div class="trow">
           <div>
             <div class="tname">${escapeHtml(r.name)}</div>
-            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
+            <div class="tmeta">${escapeHtml(String(r.n))} trips <span class="dot">•</span> ${escapeHtml(fmtLbs(r.lbs))} <span class="dot">•</span> Avg ${escapeHtml(fmtPPL(r.amt, r.lbs))}</div>
           </div>
-          <div class="tright">
-            <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="rate">${formatMoney(r.avg)}</b></div>
-          </div>
+          <div class="tval">${escapeHtml(fmtMoney(r.amt))}</div>
         </div>
       `;
     }).join("");
   };
 
-  const renderMonthList = ()=>{
-    return monthRows.map(r=>{
-      return `
-        <div class="trow">
-          <div>
-            <div class="tname">${escapeHtml(r.label)}</div>
-            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
-          </div>
-          <div class="tright">
-            <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="rate">${formatMoney(r.avg)}</b></div>
-          </div>
-        </div>
-      `;
-    }).join("");
-  };
-
-  // High/Low items
-  const maxLbs = trips.reduce((best,t)=> (Number(t?.pounds)||0) > (Number(best?.pounds)||0) ? t : best, trips[0]);
-  const minLbs = trips.reduce((best,t)=> (Number(t?.pounds)||0) < (Number(best?.pounds)||0) ? t : best, trips[0]);
-  const maxAmt = trips.reduce((best,t)=> (Number(t?.amount)||0) > (Number(best?.amount)||0) ? t : best, trips[0]);
-  const minAmt = trips.reduce((best,t)=> (Number(t?.amount)||0) < (Number(best?.amount)||0) ? t : best, trips[0]);
-
-  const pplRows = trips.filter(t => (Number(t?.pounds)||0) > 0 && (Number(t?.amount)||0) > 0);
-  const maxPpl = pplRows.reduce((best,t)=> (Number(t?.amount)||0)/(Number(t?.pounds)||1) > (Number(best?.amount)||0)/(Number(best?.pounds)||1) ? t : best, pplRows[0]);
-  const minPpl = pplRows.reduce((best,t)=> (Number(t?.amount)||0)/(Number(t?.pounds)||1) < (Number(best?.amount)||0)/(Number(best?.pounds)||1) ? t : best, pplRows[0]);
-
-  const renderHLItem = (t)=>{
-    if(!t) return `<div class="muted small">—</div>`;
-    const date = escapeHtml(formatDateMDY(t?.dateISO||""));
-    const dealer = escapeHtml(String(t?.dealer||"")) || "(dealer)";
-    const area = escapeHtml(String(t?.area||"")) || "(area)";
-    const lbsNum = Number(t?.pounds)||0;
-    const amtNum = Number(t?.amount)||0;
-    const ppl = (lbsNum>0 && amtNum>0) ? (amtNum/lbsNum) : 0;
+  const renderTablesSection = ()=>{
     return `
-      <div class="trip triprow hlTrip">
-        <div class="trow">
-          <div>
-            <div class="metaRow"><span class="tmeta">${date}</span> <span class="dot">•</span> <span class="tmeta">${dealer}</span></div>
-            <div class="tname">${area}</div>
-            <div class="tsub">$/Lb: <b class="rate">${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
-          </div>
-          <div class="tright">
-            <div class="lbsBlue"><b class="lbsBlue">${to2(lbsNum)}</b> <span class="lbsBlue">lbs</span></div>
-            <div><b class="money">${formatMoney(to2(amtNum))}</b></div>
-          </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+          <b>Top Dealers</b>
+          <span class="pill">Top 10</span>
         </div>
+        <div class="sep"></div>
+        ${renderAggList(dealerRows, "No dealer data yet")}
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+          <b>Top Areas</b>
+          <span class="pill">Top 10</span>
+        </div>
+        <div class="sep"></div>
+        ${renderAggList(areaRows, "No area data yet")}
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+          <b>By Month</b>
+          <span class="pill">This filter</span>
+        </div>
+        <div class="sep"></div>
+        ${monthRows.length ? monthRows.map(r=>`
+          <div class="trow">
+            <div>
+              <div class="tname">${escapeHtml(r.label)}</div>
+              <div class="tmeta">${escapeHtml(fmtLbs(r.lbs))} <span class="dot">•</span> Avg ${escapeHtml(fmtPPL(r.amt, r.lbs))}</div>
+            </div>
+            <div class="tval">${escapeHtml(fmtMoney(r.amt))}</div>
+          </div>
+        `).join("") : `<div class="muted small">No month data yet</div>`}
       </div>
     `;
   };
@@ -2744,158 +2925,89 @@ function renderReports(){
   const renderChartsSection = ()=>{
     return `
       <div class="card">
-        <b>Avg $/lb by Month</b>
+        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+          <b>Charts</b>
+          <span class="pill">Filtered</span>
+        </div>
+        <div class="muted small" style="margin-top:8px">Charts reflect the active Trips filter.</div>
         <div class="sep"></div>
         <canvas class="chart" id="c_ppl" height="180"></canvas>
       </div>
       <div class="card">
-        <b>Dealer Amount (Top)</b>
+        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+          <b>By Dealer</b>
+          <span class="pill">Top</span>
+        </div>
         <div class="sep"></div>
         <canvas class="chart" id="c_dealer" height="200"></canvas>
       </div>
       <div class="card">
-        <b>Monthly Pounds</b>
+        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+          <b>By Month</b>
+          <span class="pill">Year</span>
+        </div>
         <div class="sep"></div>
         <canvas class="chart" id="c_lbs" height="180"></canvas>
       </div>
     `;
   };
 
-  const renderTablesSection = ()=>{
-    return `
-      <div class="card">
-        <b>Dealer Summary</b>
-        <div class="sep"></div>
-        ${renderAggList(dealerRows, "No trips in this range yet.")}
+  const emptyCard = `
+    <div class="card">
+      <b>No trips match this filter yet.</b>
+      <div class="muted small" style="margin-top:6px">Tap the filter badge to adjust your Trips filter.</div>
+      <div style="margin-top:10px">
+        <button class="btn" id="goTrips">Edit filters</button>
       </div>
-
-      <div class="card">
-        <b>Area Summary</b>
-        <div class="sep"></div>
-        ${renderAggList(areaRows, "No trips in this range yet.")}
-      </div>
-
-      <div class="card">
-        <b>Monthly Totals</b>
-        <div class="sep"></div>
-        ${renderMonthList()}
-      </div>
-
-      <div class="card">
-        <b>High / Low Summary</b>
-        <div class="sep"></div>
-
-        <div class="hlHdr">Most Pounds</div>
-        ${renderHLItem(maxLbs)}
-        <div class="sep"></div>
-
-        <div class="hlHdr">Least Pounds</div>
-        ${renderHLItem(minLbs)}
-        <div class="sep"></div>
-
-        <div class="hlHdr">Highest Amount</div>
-        ${renderHLItem(maxAmt)}
-        <div class="sep"></div>
-
-        <div class="hlHdr">Lowest Amount</div>
-        ${renderHLItem(minAmt)}
-        <div class="sep"></div>
-
-        ${pplRows.length ? `
-          <div class="hlHdr">Highest $/lb</div>
-          ${renderHLItem(maxPpl)}
-          <div class="sep"></div>
-
-          <div class="hlHdr">Lowest $/lb</div>
-          ${renderHLItem(minPpl)}
-        ` : `<div class="muted small">No trips with valid pounds + amount in this range.</div>`}
-      </div>
-    `;
-  };
+    </div>
+  `;
 
   getApp().innerHTML = `
     ${renderPageHeader("reports")}
+    ${renderFilterBadge()}
 
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
         <b>Reports</b>
-        <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
-      </div>
-
-      <div class="chipGrid cols-3" style="margin-top:10px">
-        ${chip("YTD","YTD")}
-        ${chip("MONTH","Month")}
-        ${chip("7D","7 Days")}
-        ${chip("RANGE","Range")}
-      </div>
-
-      ${fMode==="RANGE" ? `
-        <div class="sep"></div>
-        <div class="grid2">
-          <div class="field">
-            <div class="label">From (MM/DD/YYYY)</div>
-            <input class="input" id="repRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.from||"")}" />
-          </div>
-          <div class="field">
-            <div class="label">To (MM/DD/YYYY)</div>
-            <input class="input" id="repRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.to||"")}" />
-          </div>
+        <div class="row" style="gap:8px;margin-top:0">
+          ${seg("tables","Tables")}
+          ${seg("charts","Charts")}
         </div>
-        <div class="row" style="margin-top:10px">
-          <button class="btn primary" id="repRangeApply">Apply</button>
-        </div>
-      ` : ""}
-
-      <div class="chipGrid cols-3" style="margin-top:10px">
-        ${seg("charts","Charts")}
-        ${seg("tables","Tables")}
       </div>
-      <div class="hint"></div>
+      <div class="muted small" style="margin-top:8px">
+        ${escapeHtml(String(stats.count))} trips • ${escapeHtml(fmtMoney(stats.totalAmount))} • ${escapeHtml(fmtLbs(stats.totalLbs))} • Avg ${escapeHtml(fmtPPL(stats.totalAmount, stats.totalLbs))}
+      </div>
     </div>
 
-    ${mode === "charts" ? renderChartsSection() : renderTablesSection()}
+    ${!trips.length ? emptyCard : (mode === "charts" ? renderChartsSection() : renderTablesSection())}
   `;
 
-  getApp().scrollTop = 0;
+  bindFilterBadgeToTrips();
 
-  // range chips
-  getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
-    btn.onclick = ()=>{
-      state.reportsFilter.mode = String(btn.getAttribute("data-rf")||"YTD");
-      saveState();
-      renderReports();
-    };
-  });
-
-  // apply range
-  const applyBtn = document.getElementById("repRangeApply");
-  if(applyBtn){
-    applyBtn.onclick = ()=>{
-      const from = String(document.getElementById("repRangeFrom")?.value || "").trim();
-      const to = String(document.getElementById("repRangeTo")?.value || "").trim();
-      const s = parseMDYToISO(from);
-      const e = parseMDYToISO(to);
-      if(!s || !e){ showToast("Invalid range dates"); return; }
-      state.reportsFilter.from = from;
-      state.reportsFilter.to = to;
-      saveState();
-      renderReports();
-    };
-  }
-
-  // mode chips
+  // mode seg
   getApp().querySelectorAll(".chip[data-m]").forEach(btn=>{
     btn.onclick = ()=>{
-      const key = btn.getAttribute("data-m");
-      state.reportsMode = key;
+      state.reportsMode = String(btn.getAttribute("data-m")||"tables");
       saveState();
       renderReports();
     };
   });
 
-  if(mode === "charts"){
-    setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows); }, 0);
+  const goTrips = document.getElementById("goTrips");
+  if(goTrips){
+    goTrips.onclick = ()=>{
+      state._scrollToFilters = true;
+      state.view = "all_trips";
+      saveState();
+      render();
+    };
   }
+
+  if(trips.length && mode === "charts"){
+    requestAnimationFrame(()=> drawReportsCharts(monthRows, dealerRows));
+  }
+
+  getApp().scrollTop = 0;
 }
 
 function drawReportsCharts(monthRows, dealerRows){
