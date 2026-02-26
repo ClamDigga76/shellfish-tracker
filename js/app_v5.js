@@ -1024,6 +1024,8 @@ function resolveUnifiedRange(filter){
 
   if(filter.range === "all") return { fromISO:"1900-01-01", toISO:now, label:"All time" };
   if(filter.range === "ytd") return { fromISO:`${y}-01-01`, toISO:now, label:"YTD" };
+  if(filter.range === "mtd") return { fromISO:`${y}-${String(new Date().getMonth()+1).padStart(2,"0")}-01`, toISO:now, label:"Month" };
+  if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"7 Days" };
   if(filter.range === "12m"){
     const d = new Date();
     d.setFullYear(d.getFullYear()-1);
@@ -1876,26 +1878,83 @@ function renderHome(
     });
   });
 
-  // Home Filters
+  // Home Filters (drives unified filters)
   getApp().querySelectorAll("button.chip[data-hf]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
+      ensureUnifiedFilters();
       ensureHomeFilter();
-      state.homeFilter.mode = String(btn.getAttribute("data-hf")||"YTD").toUpperCase();
+  // Sync home range UI with unified filters
+  try{
+    const r = String(state.filters?.active?.range || "ytd").toLowerCase();
+    if(r === "ytd") state.homeFilter.mode = "YTD";
+    else if(r === "mtd") state.homeFilter.mode = "MONTH";
+    else if(r === "7d") state.homeFilter.mode = "7D";
+    else if(r === "custom") {
+      state.homeFilter.mode = "RANGE";
+      state.homeFilter.from = formatDateMDY(state.filters.active.fromISO || "");
+      state.homeFilter.to = formatDateMDY(state.filters.active.toISO || "");
+    } else if(r === "all") state.homeFilter.mode = "ALL";
+    else state.homeFilter.mode = "YTD";
+  }catch{}
+ // keep UI state in sync for the home screen
+
+      const key = String(btn.getAttribute("data-hf")||"YTD").toUpperCase();
+      if(key === "YTD") state.filters.active.range = "ytd";
+      else if(key === "MONTH") state.filters.active.range = "mtd";
+      else if(key === "7D") state.filters.active.range = "7d";
+      else if(key === "RANGE") state.filters.active.range = "custom";
+      else state.filters.active.range = "ytd";
+
+      // if switching into custom, seed values
+      if(state.filters.active.range === "custom"){
+        const now = isoToday();
+        const y = now.slice(0,4);
+        if(!state.filters.active.fromISO) state.filters.active.fromISO = `${y}-01-01`;
+        if(!state.filters.active.toISO) state.filters.active.toISO = now;
+        // keep home mdy fields aligned
+        state.homeFilter.mode = "RANGE";
+        state.homeFilter.from = formatDateMDY(state.filters.active.fromISO);
+        state.homeFilter.to = formatDateMDY(state.filters.active.toISO);
+      }else{
+        state.homeFilter.mode = key;
+      }
+
       saveState();
       renderHome();
     });
   });
+
   const homeApply = document.getElementById("homeRangeApply");
   if(homeApply){
     homeApply.onclick = ()=>{
+      ensureUnifiedFilters();
       ensureHomeFilter();
+
       const from = String(document.getElementById("homeRangeFrom")?.value||"").trim();
       const to = String(document.getElementById("homeRangeTo")?.value||"").trim();
+
+      // Keep the UI values
+      state.homeFilter.mode = "RANGE";
       state.homeFilter.from = from;
       state.homeFilter.to = to;
+
+      const sISO = parseMDYToISO(from);
+      const eISO = parseMDYToISO(to);
+      if(!sISO || !eISO){
+        showToast("Invalid range dates");
+        return;
+      }
+      state.filters.active.range = "custom";
+      state.filters.active.fromISO = sISO;
+      state.filters.active.toISO = eISO;
+
       saveState();
       renderHome();
     };
+
+  // MM/DD/YYYY slash mask
+  applyMDYMaskInput(document.getElementById("homeRangeFrom"));
+  applyMDYMaskInput(document.getElementById("homeRangeTo"));
   }
 
 const toggleToast = (e)=>{
@@ -2803,172 +2862,287 @@ function renderEditTrip(){
 
 
 
+
+function ensureReportsUI(){
+  if(!state.reportsUI || typeof state.reportsUI !== "object") state.reportsUI = { from:"", to:"" };
+  if(state.reportsUI.from == null) state.reportsUI.from = "";
+  if(state.reportsUI.to == null) state.reportsUI.to = "";
+}
+
+function unifiedRangeToReportsMode(range){
+  const r = String(range||"ytd").toLowerCase();
+  if(r === "ytd") return "YTD";
+  if(r === "mtd") return "MONTH";
+  if(r === "7d") return "7D";
+  if(r === "custom") return "RANGE";
+  if(r === "all") return "ALL";
+  return "YTD";
+}
+
 function renderReports(){
   ensureUnifiedFilters();
+  ensureReportsUI();
 
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
   const { rows: trips, stats } = getFilteredTrips();
 
-  const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
+  const fMode = unifiedRangeToReportsMode(state.filters?.active?.range);
 
-  // Aggregate
-  const byDealer = new Map();
-  const byArea = new Map();
-  const byMonth = new Map(); // month(1-12) => {amt,lbs}
-
-  for(const t of trips){
-    const amt = Number(t?.amount)||0;
-    const lbs = Number(t?.pounds)||0;
-
-    const dealer = String(t?.dealer||"").trim() || "(unknown)";
-    const area = String(t?.area||"").trim() || "(area)";
-
-    const dAgg = byDealer.get(dealer) || { name: dealer, amt:0, lbs:0, n:0 };
-    dAgg.amt += amt; dAgg.lbs += lbs; dAgg.n += 1;
-    byDealer.set(dealer, dAgg);
-
-    const aAgg = byArea.get(area) || { name: area, amt:0, lbs:0, n:0 };
-    aAgg.amt += amt; aAgg.lbs += lbs; aAgg.n += 1;
-    byArea.set(area, aAgg);
-
-    const m = Number(String(t?.dateISO||"").slice(5,7)) || 0;
-    if(m>=1 && m<=12){
-      const mAgg = byMonth.get(m) || { amt:0, lbs:0 };
-      mAgg.amt += amt; mAgg.lbs += lbs;
-      byMonth.set(m, mAgg);
-    }
+  // keep UI date fields synced for custom
+  if(fMode === "RANGE"){
+    state.reportsUI.from = formatDateMDY(state.filters.active.fromISO || "");
+    state.reportsUI.to = formatDateMDY(state.filters.active.toISO || "");
   }
 
-  const dealerRows = Array.from(byDealer.values()).map(x=>{
-    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-    return { ...x, avg };
-  }).sort((a,b)=> b.amt - a.amt);
+  const chip = (key,label) => `<button class="chip ${fMode===key?'on':''}" data-rf="${key}">${label}</button>`;
+  const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
 
-  const areaRows = Array.from(byArea.values()).map(x=>{
-    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-    return { ...x, avg };
-  }).sort((a,b)=> b.amt - a.amt);
+  const rangeLabel = (fMode === "RANGE")
+    ? ((state.filters.active.fromISO && state.filters.active.toISO)
+        ? `${formatDateMDY(state.filters.active.fromISO)} → ${formatDateMDY(state.filters.active.toISO)}`
+        : "Set dates")
+    : (fMode === "MONTH" ? "Month" : (fMode === "7D" ? "7 Days" : (fMode === "ALL" ? "All" : "YTD")));
 
-  const monthRows = Array.from(byMonth.entries()).map(([m,x])=>{
-    const label = new Date(2000, m-1, 1).toLocaleString(undefined,{month:"short"});
-    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-    return { month:m, label, ...x, avg };
+  // Empty state (keep v59 look)
+  if(!trips.length){
+    getApp().innerHTML = `
+      ${renderPageHeader("reports")}
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+          <b>Reports</b>
+          <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
+        </div>
+
+        <div class="chipGrid cols-3" style="margin-top:10px">
+          ${chip("YTD","YTD")}
+          ${chip("MONTH","Month")}
+          ${chip("7D","7 Days")}
+          ${chip("RANGE","Range")}
+        </div>
+
+        ${fMode==="RANGE" ? `
+          <div class="sep"></div>
+          <div class="grid2">
+            <div class="field">
+              <div class="label">From (MM/DD/YYYY)</div>
+              <input class="input" id="repRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(state.reportsUI.from||"")}" />
+            </div>
+            <div class="field">
+              <div class="label">To (MM/DD/YYYY)</div>
+              <input class="input" id="repRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(state.reportsUI.to||"")}" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary" id="repRangeApply">Apply</button>
+          </div>
+        ` : ""}
+
+        <div class="hint">${fMode==="RANGE" ? "Set a valid date range to see tables and charts." : "No trips in this range yet."}</div>
+      </div>
+    `;
+    getApp().scrollTop = 0;
+
+    // range chips (drive unified filters)
+    getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
+      btn.onclick = ()=>{
+        const k = String(btn.getAttribute("data-rf")||"YTD").toUpperCase();
+        if(k==="YTD") state.filters.active.range="ytd";
+        else if(k==="MONTH") state.filters.active.range="mtd";
+        else if(k==="7D") state.filters.active.range="7d";
+        else if(k==="RANGE") state.filters.active.range="custom";
+        else state.filters.active.range="ytd";
+
+        // seed custom if entering
+        if(state.filters.active.range==="custom" && (!state.filters.active.fromISO || !state.filters.active.toISO)){
+          const now = isoToday();
+          const y = now.slice(0,4);
+          state.filters.active.fromISO = `${y}-01-01`;
+          state.filters.active.toISO = now;
+        }
+        saveState();
+        renderReports();
+      };
+    });
+
+    applyMDYMaskInput(document.getElementById("repRangeFrom"));
+    applyMDYMaskInput(document.getElementById("repRangeTo"));
+
+    const applyBtn = document.getElementById("repRangeApply");
+    if(applyBtn){
+      applyBtn.onclick = ()=>{
+        const from = String(document.getElementById("repRangeFrom")?.value || "").trim();
+        const to = String(document.getElementById("repRangeTo")?.value || "").trim();
+        const sISO = parseMDYToISO(from);
+        const eISO = parseMDYToISO(to);
+        if(!sISO || !eISO){ showToast("Invalid range dates"); return; }
+
+        state.reportsUI.from = from;
+        state.reportsUI.to = to;
+
+        state.filters.active.range = "custom";
+        state.filters.active.fromISO = sISO;
+        state.filters.active.toISO = eISO;
+
+        saveState();
+        renderReports();
+      };
+    }
+    return;
+  }
+
+  // Aggregations (same as v59 look)
+  const byDealer = new Map();
+  const byArea = new Map();
+  const byMonth = new Map(); // 1-12
+  for(let m=1;m<=12;m++) byMonth.set(m, { trips:0, lbs:0, amt:0 });
+
+  trips.forEach(t=>{
+    const dealer = String(t.dealer||"Unknown");
+    const area = String(t.area||"");
+    const dt = String(t.dateISO||"");
+    const month = (dt && dt.length>=7) ? (Number(dt.slice(5,7))||0) : 0;
+
+    const lbs = Number(t.pounds)||0;
+    const amt = Number(t.amount)||0;
+
+    if(dealer){
+      const d = byDealer.get(dealer) || { trips:0, lbs:0, amt:0 };
+      d.trips += 1; d.lbs += lbs; d.amt += amt;
+      byDealer.set(dealer, d);
+    }
+    if(area){
+      const a = byArea.get(area) || { trips:0, lbs:0, amt:0 };
+      a.trips += 1; a.lbs += lbs; a.amt += amt;
+      byArea.set(area, a);
+    }
+    if(month>=1 && month<=12){
+      const mo = byMonth.get(month);
+      mo.trips += 1; mo.lbs += lbs; mo.amt += amt;
+    }
   });
 
-  const renderAggList = (rows, emptyMsg)=>{
-    if(!rows.length) return `<div class="muted small">${escapeHtml(emptyMsg||"No data")}</div>`;
-    return rows.slice(0,10).map(r=>{
-      return `
-        <div class="trow">
-          <div>
-            <div class="tname">${escapeHtml(r.name)}</div>
-            <div class="tmeta">${escapeHtml(String(r.n))} trips <span class="dot">•</span> ${escapeHtml(fmtLbs(r.lbs))} <span class="dot">•</span> Avg ${escapeHtml(fmtPPL(r.amt, r.lbs))}</div>
-          </div>
-          <div class="tval">${escapeHtml(fmtMoney(r.amt))}</div>
-        </div>
-      `;
-    }).join("");
-  };
+  const dealerRows = [...byDealer.entries()]
+    .map(([k,v])=>({ key:k, ...v, ppl: computePPL(v.amt, v.lbs) }))
+    .sort((a,b)=> b.amt - a.amt);
 
-  const renderTablesSection = ()=>{
-    return `
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-          <b>Top Dealers</b>
-          <span class="pill">Top 10</span>
-        </div>
-        <div class="sep"></div>
-        ${renderAggList(dealerRows, "No dealer data yet")}
-      </div>
+  const areaRows = [...byArea.entries()]
+    .map(([k,v])=>({ key:k, ...v, ppl: computePPL(v.amt, v.lbs) }))
+    .sort((a,b)=> b.amt - a.amt);
 
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-          <b>Top Areas</b>
-          <span class="pill">Top 10</span>
-        </div>
-        <div class="sep"></div>
-        ${renderAggList(areaRows, "No area data yet")}
-      </div>
-
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-          <b>By Month</b>
-          <span class="pill">This filter</span>
-        </div>
-        <div class="sep"></div>
-        ${monthRows.length ? monthRows.map(r=>`
-          <div class="trow">
-            <div>
-              <div class="tname">${escapeHtml(r.label)}</div>
-              <div class="tmeta">${escapeHtml(fmtLbs(r.lbs))} <span class="dot">•</span> Avg ${escapeHtml(fmtPPL(r.amt, r.lbs))}</div>
-            </div>
-            <div class="tval">${escapeHtml(fmtMoney(r.amt))}</div>
-          </div>
-        `).join("") : `<div class="muted small">No month data yet</div>`}
-      </div>
-    `;
-  };
-
-  const renderChartsSection = ()=>{
-    return `
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-          <b>Charts</b>
-          <span class="pill">Filtered</span>
-        </div>
-        <div class="muted small" style="margin-top:8px">Charts reflect the active Trips filter.</div>
-        <div class="sep"></div>
-        <canvas class="chart" id="c_ppl" height="180"></canvas>
-      </div>
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-          <b>By Dealer</b>
-          <span class="pill">Top</span>
-        </div>
-        <div class="sep"></div>
-        <canvas class="chart" id="c_dealer" height="200"></canvas>
-      </div>
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-          <b>By Month</b>
-          <span class="pill">Year</span>
-        </div>
-        <div class="sep"></div>
-        <canvas class="chart" id="c_lbs" height="180"></canvas>
-      </div>
-    `;
-  };
-
-  const emptyCard = `
-    <div class="card">
-      <b>No trips match this filter yet.</b>
-      <div class="muted small" style="margin-top:6px">Tap the filter badge to adjust your Trips filter.</div>
-      <div style="margin-top:10px">
-        <button class="btn" id="goTrips">Edit filters</button>
-      </div>
-    </div>
-  `;
+  const monthRows = [...byMonth.entries()]
+    .map(([m,v])=>({ m, ...v, ppl: computePPL(v.amt, v.lbs) }));
 
   getApp().innerHTML = `
     ${renderPageHeader("reports")}
-    
+
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
         <b>Reports</b>
-        <div class="row" style="gap:8px;margin-top:0">
-          ${seg("tables","Tables")}
-          ${seg("charts","Charts")}
-        </div>
+        <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
-      <div class="muted small" style="margin-top:8px">
-        ${escapeHtml(String(stats.count))} trips • ${escapeHtml(fmtMoney(stats.totalAmount))} • ${escapeHtml(fmtLbs(stats.totalLbs))} • Avg ${escapeHtml(fmtPPL(stats.totalAmount, stats.totalLbs))}
+
+      <div class="chipGrid cols-3" style="margin-top:10px">
+        ${chip("YTD","YTD")}
+        ${chip("MONTH","Month")}
+        ${chip("7D","7 Days")}
+        ${chip("RANGE","Range")}
+      </div>
+
+      ${fMode==="RANGE" ? `
+        <div class="sep"></div>
+        <div class="grid2">
+          <div class="field">
+            <div class="label">From (MM/DD/YYYY)</div>
+            <input class="input" id="repRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(state.reportsUI.from||"")}" />
+          </div>
+          <div class="field">
+            <div class="label">To (MM/DD/YYYY)</div>
+            <input class="input" id="repRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(state.reportsUI.to||"")}" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" id="repRangeApply">Apply</button>
+        </div>
+      ` : ""}
+
+      <div class="sep"></div>
+      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">
+        ${seg("tables","Tables")}
+        ${seg("charts","Charts")}
+        <div class="muted small" style="margin-left:auto">
+          ${trips.length} trips • ${formatMoney(stats.totalAmount)} • ${to2(stats.totalLbs)} lbs • ${formatMoney(computePPL(stats.totalAmount, stats.totalLbs))}/lb
+        </div>
       </div>
     </div>
 
-    ${!trips.length ? emptyCard : (mode === "charts" ? renderChartsSection() : renderTablesSection())}
+    ${mode==="tables" ? `
+      <div class="card">
+        <b>By Dealer</b>
+        <div class="sep"></div>
+        ${dealerRows.map(r=>`
+          <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+            <div style="min-width:45%">
+              <div><b>${escapeHtml(r.key)}</b></div>
+              <div class="muted small">${r.trips} trips • ${to2(r.lbs)} lbs</div>
+            </div>
+            <div style="text-align:right">
+              <div class="money"><b>${formatMoney(r.amt)}</b></div>
+              <div class="muted small">${formatMoney(r.ppl)}/lb</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="card">
+        <b>By Area</b>
+        <div class="sep"></div>
+        ${areaRows.length ? areaRows.map(r=>`
+          <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+            <div style="min-width:45%">
+              <div><b>${escapeHtml(r.key)}</b></div>
+              <div class="muted small">${r.trips} trips • ${to2(r.lbs)} lbs</div>
+            </div>
+            <div style="text-align:right">
+              <div class="money"><b>${formatMoney(r.amt)}</b></div>
+              <div class="muted small">${formatMoney(r.ppl)}/lb</div>
+            </div>
+          </div>
+        `).join("") : `<div class="muted small" style="margin-top:10px">No areas on these trips.</div>`}
+      </div>
+    ` : `
+      <div class="card">
+        <b>Charts</b>
+        <div class="hint">Charts use the same filtered dataset as Home and Trips.</div>
+      </div>
+      ${renderChartsSection()}
+    `}
   `;
 
-  // mode seg
+  getApp().scrollTop = 0;
+
+  // range chips
+  getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const k = String(btn.getAttribute("data-rf")||"YTD").toUpperCase();
+      if(k==="YTD") state.filters.active.range="ytd";
+      else if(k==="MONTH") state.filters.active.range="mtd";
+      else if(k==="7D") state.filters.active.range="7d";
+      else if(k==="RANGE") state.filters.active.range="custom";
+      else state.filters.active.range="ytd";
+
+      if(state.filters.active.range==="custom" && (!state.filters.active.fromISO || !state.filters.active.toISO)){
+        const now = isoToday();
+        const y = now.slice(0,4);
+        state.filters.active.fromISO = `${y}-01-01`;
+        state.filters.active.toISO = now;
+      }
+      saveState();
+      renderReports();
+    };
+  });
+
+  // mode toggles
   getApp().querySelectorAll(".chip[data-m]").forEach(btn=>{
     btn.onclick = ()=>{
       state.reportsMode = String(btn.getAttribute("data-m")||"tables");
@@ -2977,22 +3151,39 @@ function renderReports(){
     };
   });
 
-  const goTrips = document.getElementById("goTrips");
-  if(goTrips){
-    goTrips.onclick = ()=>{
-      state._scrollToFilters = true;
-      state.view = "all_trips";
+  // range apply
+  applyMDYMaskInput(document.getElementById("repRangeFrom"));
+  applyMDYMaskInput(document.getElementById("repRangeTo"));
+
+  const applyBtn = document.getElementById("repRangeApply");
+  if(applyBtn){
+    applyBtn.onclick = ()=>{
+      const from = String(document.getElementById("repRangeFrom")?.value || "").trim();
+      const to = String(document.getElementById("repRangeTo")?.value || "").trim();
+      const sISO = parseMDYToISO(from);
+      const eISO = parseMDYToISO(to);
+      if(!sISO || !eISO){ showToast("Invalid range dates"); return; }
+
+      state.reportsUI.from = from;
+      state.reportsUI.to = to;
+
+      state.filters.active.range = "custom";
+      state.filters.active.fromISO = sISO;
+      state.filters.active.toISO = eISO;
+
       saveState();
-      render();
+      renderReports();
     };
   }
 
-  if(trips.length && mode === "charts"){
-    requestAnimationFrame(()=> drawReportsCharts(monthRows, dealerRows));
+  // charts draw
+  if(mode === "charts"){
+    requestAnimationFrame(()=>{
+      try{ drawReportsCharts(trips); }catch(_){}
+    });
   }
-
-  getApp().scrollTop = 0;
 }
+
 
 function drawReportsCharts(monthRows, dealerRows){
   function setupCanvas(canvas){
@@ -3169,6 +3360,16 @@ function renderSettings(){
     ${renderPageHeader("settings")}
 
     <div class="card">
+      <b>Updates</b>
+      <div class="sep"></div>
+      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;align-items:center">
+        <div class="muted small" id="updateStatus">Update: Up to date</div>
+        <button class="btn" id="updateNow" style="display:none">Update Now</button>
+        <button class="btn" id="checkUpdate">Check now</button>
+      </div>
+    </div>
+
+    <div class="card">
       <b>Lists</b>
       <div class="sep"></div>
 
@@ -3220,14 +3421,10 @@ function renderSettings(){
     <div class="card">
       <b>About</b>
       <div class="sep"></div>
-      <div class="muted small" style="margin-top:10px">Created by <b>Jeremy Wood</b> — <a href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+      <div class="muted small" style="margin-top:10px">Created by <b>Jeremy Wood</b> — <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
       <div class="muted small" style="margin-top:8px">Version: <b>${VERSION}</b></div>
       <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
-      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;align-items:center">
-        <div class="muted small" id="updateStatus">Update: Up to date</div>
-        <button class="btn" id="updateNow" style="display:none">Update Now</button>
-        <button class="btn" id="checkUpdate">Check now</button>
-      </div>
+
       <div class="muted small" style="margin-top:8px">© 2026 Jeremy Wood. All rights reserved.</div>
       <div class="sep" style="margin-top:10px"></div>
       <div class="muted small" style="margin-top:10px"><b>Legal</b></div>
@@ -3397,6 +3594,30 @@ function renderSettings(){
 }
 
 
+
+
+function applyMDYMaskInput(el){
+  if(!el) return;
+  const fmt = (digits)=>{
+    const d = (digits||"").replace(/\D/g,"").slice(0,8);
+    const mm = d.slice(0,2);
+    const dd = d.slice(2,4);
+    const yy = d.slice(4,8);
+    if(d.length <= 2) return mm;
+    if(d.length <= 4) return mm + "/" + dd;
+    return mm + "/" + dd + "/" + yy;
+  };
+  // format initial
+  el.value = fmt(el.value);
+  el.addEventListener("input", ()=>{
+    const start = el.selectionStart || 0;
+    const before = el.value;
+    el.value = fmt(el.value);
+    // best-effort caret: move to end if slashes inserted
+    const delta = el.value.length - before.length;
+    try{ el.setSelectionRange(start + delta, start + delta); }catch{}
+  });
+}
 
 function renderHelp(){
   getApp().innerHTML = `
