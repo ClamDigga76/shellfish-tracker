@@ -1039,6 +1039,8 @@ ensureReportsFilter();
 ensureAreas();
 ensureDealers();
 function showFatal(err){
+  if(window.__SHELLFISH_FATAL_SHOWN) return;
+  window.__SHELLFISH_FATAL_SHOWN = true;
   // Persist last error so index.html can show a recovery UI even if modules fail next time.
   try{
     const msg = (err && (err.stack || err.message)) ? String(err.stack || err.message) : String(err || "Fatal error");
@@ -1859,36 +1861,40 @@ const normalizeAmountOnBlur = (el)=>{
 
     const btn = document.getElementById("saveTrip");
     if(btn) btn.disabled = !(dealerOk && areaOk && poundsOk && amountOk);
+  };
 
+  // Bind numeric field UX ONCE per render (never inside updateSaveEnabled)
+  if(elPounds && !elPounds.__boundNumeric){
+    elPounds.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elPounds, ["0","0.0","0.00"]);
+    elPounds.addEventListener("pointerdown", prime);
+    elPounds.addEventListener("focus", prime);
+    elPounds.addEventListener("input", ()=>{
+      const s = sanitizeDecimalInput(elPounds.value);
+      if(s !== elPounds.value) elPounds.value = s;
+      updateSaveEnabled();
+    });
+    elPounds.addEventListener("blur", ()=>{
+      if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
+      updateSaveEnabled();
+    });
+  }
 
-// Pounds field: start fresh on first tap, keep a clean decimal input.
-if(elPounds){
-  const prime = ()=>primeNumericField(elPounds, ["0","0.0","0.00"]);
-  elPounds.addEventListener("pointerdown", prime);
-  elPounds.addEventListener("focus", prime);
-  elPounds.addEventListener("input", ()=>{
-    const s = sanitizeDecimalInput(elPounds.value);
-    if(s !== elPounds.value) elPounds.value = s;
-  });
-  elPounds.addEventListener("blur", ()=>{
-    // Trim trailing dot if user leaves it like "12."
-    if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
-  });
-}
-
-// Amount field: start fresh on first tap, sanitize while typing, normalize to 2 decimals on blur.
-if(elAmount){
-  const prime = ()=>primeNumericField(elAmount, ["0","0.0","0.00"]);
-  elAmount.addEventListener("pointerdown", prime);
-  elAmount.addEventListener("focus", prime);
-  elAmount.addEventListener("input", ()=>{
-    const s = sanitizeDecimalInput(elAmount.value);
-    if(s !== elAmount.value) elAmount.value = s;
-  });
-  elAmount.addEventListener("blur", ()=>{
-    normalizeAmountOnBlur(elAmount);
-  });
-}  };
+  if(elAmount && !elAmount.__boundNumeric){
+    elAmount.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elAmount, ["0","0.0","0.00"]);
+    elAmount.addEventListener("pointerdown", prime);
+    elAmount.addEventListener("focus", prime);
+    elAmount.addEventListener("input", ()=>{
+      const s = sanitizeDecimalInput(elAmount.value);
+      if(s !== elAmount.value) elAmount.value = s;
+      updateSaveEnabled();
+    });
+    elAmount.addEventListener("blur", ()=>{
+      normalizeAmountOnBlur(elAmount);
+      updateSaveEnabled();
+    });
+  }
 
   if(elToday && elDate){
     elToday.onclick = ()=>{
@@ -2696,14 +2702,19 @@ function renderReports(){
   const renderChartsSection = ()=>{
     return `
       <div class="card">
-        <b>Monthly Amount</b>
+        <b>Avg $/lb by Month</b>
         <div class="sep"></div>
-        <canvas class="chart" id="c_month_amt" height="180"></canvas>
+        <canvas class="chart" id="c_ppl" height="180"></canvas>
       </div>
       <div class="card">
-        <b>Dealer Amount</b>
+        <b>Dealer Amount (Top)</b>
         <div class="sep"></div>
-        <canvas class="chart" id="c_dealer_amt" height="200"></canvas>
+        <canvas class="chart" id="c_dealer" height="200"></canvas>
+      </div>
+      <div class="card">
+        <b>Monthly Pounds</b>
+        <div class="sep"></div>
+        <canvas class="chart" id="c_lbs" height="180"></canvas>
       </div>
     `;
   };
