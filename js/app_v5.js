@@ -589,7 +589,7 @@ function loadState(){
   }
 }
 
-function getFilteredTrips(){
+function getFilteredTripsLegacy(){
   const trips = Array.isArray(state.trips) ? state.trips.slice() : [];
   // Ensure newest first by date (and fallback to createdAt/id)
   trips.sort((a,b)=>{
@@ -931,7 +931,7 @@ function ensureUnifiedFilters(){
   if(!state.filters || typeof state.filters !== "object") state.filters = {};
   if(!state.filters.active || typeof state.filters.active !== "object"){
     // Prefer legacy reports filter, then home, then trips.
-    const pick = state.reportsFilter || state.homeFilter || state.tripsFilter || { mode:"YTD", from:"", to:"" };
+    const pick = state.reportsFilter || state.homeFilter || state.tripsFilter || (state.filter ? { mode: String(state.filter).toUpperCase(), from:"", to:"" } : { mode:"YTD", from:"", to:"" });
     const legacyMode = String(pick?.mode || "YTD").toUpperCase();
 
     let range = "ytd";
