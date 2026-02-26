@@ -188,6 +188,35 @@ function showToast(msg){
   }catch{}
 }
 
+// v59: simple confirm modal (Yes/Cancel)
+function confirmSaveModal({ title="Save this trip?", body="" } = {}){
+  return new Promise((resolve)=>{
+    const el = document.createElement("div");
+    el.className = "modalOverlay";
+    el.innerHTML = `
+      <div class="modalCard card">
+        <b>${escapeHtml(title)}</b>
+        ${body ? `<div class="muted small" style="margin-top:8px;white-space:pre-wrap">${escapeHtml(body)}</div>` : ""}
+        <div class="row" style="margin-top:14px;gap:10px;justify-content:flex-end">
+          <button class="btn" id="m_cancel">Cancel</button>
+          <button class="btn primary" id="m_yes">Yes, Save</button>
+        </div>
+      </div>
+    `;
+
+    const cleanup = (v)=>{
+      try{ el.remove(); }catch{}
+      resolve(v);
+    };
+
+    el.addEventListener("click", (e)=>{ if(e.target === el) cleanup(false); });
+    document.body.appendChild(el);
+    el.querySelector("#m_cancel")?.addEventListener("click", ()=>cleanup(false));
+    el.querySelector("#m_yes")?.addEventListener("click", ()=>cleanup(true));
+  });
+}
+
+
 function copyTextToClipboard(txt){
   return navigator.clipboard?.writeText(String(txt||""))
     .then(()=>true).catch(()=>false);
@@ -247,7 +276,7 @@ function iconSvg(name){
 
 function getActiveTabKey(view){
   // Map sub-views back to a primary tab
-  if(view === "new" || view === "review" || view === "edit") return "new";
+  if(view === "new" || view === "edit") return "new";
   if(view === "help" || view === "about") return "settings";
   return view || "home";
 }
@@ -265,7 +294,6 @@ const VIEW_META = {
   reports:   { title: "Reports", icon: "reports" },
   settings:  { title: "Settings", icon: "settings" },
   new:       { title: "New Trip", icon: "plus" },
-  review:    { title: "Review", icon: "plus" },
   edit:      { title: "Edit Trip", icon: "trips" },
   help:      { title: "Help", icon: "settings" },
   about:     { title: "About", icon: "settings" },
@@ -299,7 +327,7 @@ function renderTabBar(activeView){
     btn.onclick = () => {
       const next = btn.getAttribute("data-tab") || "home";
       // Guard: if leaving a draft workflow, confirm once.
-      if((state.view === "new" || state.view === "review" || state.view === "edit") && hasUnsavedDraft()){
+      if((state.view === "new" || state.view === "edit") && hasUnsavedDraft()){
         if(!confirm("Leave this screen? Your unsaved trip entry may be lost.")) return;
       }
       state.view = next;
@@ -391,8 +419,8 @@ function setBootError(msg){
     bootPill.classList.add("err");
   }catch{}
 }
-window.addEventListener("error", e => setBootError(e?.message || e?.error || "Script error"));
-window.addEventListener("unhandledrejection", e => setBootError(e?.reason || "Unhandled rejection"));
+window.addEventListener("error", (e)=>{ if(window.__SHELLFISH_APP_STARTED) return; setBootError(e?.message || e?.error || "Script error"); });
+window.addEventListener("unhandledrejection", (e)=>{ if(window.__SHELLFISH_APP_STARTED) return; setBootError(e?.reason || "Unhandled rejection"); });
 
 const LS_KEY = "shellfish-state";
 const LEGACY_KEYS = ["shellfish-v1.5.0", "shellfish-v1.4.2"];
@@ -956,7 +984,7 @@ function findDuplicateTrip(candidate, excludeId=""){
 }
 
 
-function commitTripFromDraft({ mode, editId="", inputs }){
+function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   const dateISO = parseMDYToISO(String(inputs?.date||""));
   const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
   const poundsNum = parseNum(inputs?.pounds);
@@ -983,7 +1011,7 @@ function commitTripFromDraft({ mode, editId="", inputs }){
     existing = trips.find(t => String(t?.id||"") === id) || null;
     if(!existing){
       alert("Trip not found. Returning home.");
-      state.view = "home";
+      state.view = nextView;
       saveState();
       render();
       return false;
@@ -1025,7 +1053,7 @@ function commitTripFromDraft({ mode, editId="", inputs }){
     delete state.reviewDraft;
   }
 
-  state.view = "home";
+  state.view = nextView;
   saveState();
   render();
   return true;
@@ -1909,7 +1937,7 @@ const normalizeAmountOnBlur = (el)=>{
 
   // NEW TRIP: wire up buttons (Save / Clear) — v22
   const btnSave = document.getElementById("saveTrip");
-  const onSaveTrip = ()=>{
+  const onSaveTrip = async ()=>{
     try{
       // snapshot current inputs into draft
       state.draft = state.draft || {};
@@ -1928,17 +1956,31 @@ const normalizeAmountOnBlur = (el)=>{
         return;
       }
 
-      // move to review step (nothing is saved to trips until Confirm)
-      state.reviewDraft = {
-        dateISO: state.draft.dateISO,
-        dateMDY: mdy,
-        dealer: state.draft.dealer,
-        pounds: state.draft.pounds,
-        amount: state.draft.amount,
-        area: state.draft.area
-      };
-      saveState();
-      pushView(state, "review");
+
+// v59: confirm + save now (no review screen)
+const summary =
+  `Dealer: ${String(state.draft.dealer||"").trim() || "—"}
+` +
+  `Area: ${String(state.draft.area||"").trim() || "—"}
+` +
+  `Pounds: ${String(state.draft.pounds||"").trim() || "—"}
+` +
+  `Amount: ${String(state.draft.amount||"").trim() || "—"}`;
+const ok = await confirmSaveModal({ title: "Save this trip?", body: summary });
+if(!ok) return;
+
+commitTripFromDraft({
+  mode: "new",
+  inputs: {
+    date: mdy,
+    dealer: state.draft.dealer,
+    pounds: state.draft.pounds,
+    amount: state.draft.amount,
+    area: state.draft.area
+  },
+  nextView: "all_trips"
+});
+
     }catch(err){
       try{ showFatal(err, "saveTrip"); }catch{}
     }
@@ -2369,7 +2411,7 @@ function renderEditTrip(){
   const trips = Array.isArray(state.trips) ? state.trips : [];
   const t = trips.find(x => String(x?.id||"") === id);
   if(!t){
-    state.view = "home";
+    state.view = nextView;
     saveState();
     return renderHome();
   }
@@ -3367,7 +3409,7 @@ function render(){
   // Render main view
   if(state.view === "settings") renderSettings();
   else if(state.view === "new") renderNewTrip();
-  else if(state.view === "review") renderReviewTrip();
+  else if(state.view === "review") { state.view = "new"; saveState(); renderNewTrip(); }
   else if(state.view === "edit") renderEditTrip();
   else if(state.view === "reports") renderReports();
   else if(state.view === "help") renderHelp();

@@ -633,7 +633,20 @@ header{padding:14px 18px 12px}
 
 
 .app-footer{font-size:11px;opacity:.6;text-align:center;padding:8px 0 16px;}
+/* v59: modal confirm overlay */
+.modalOverlay{
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index:9999;
+}
+.modalCard{ width:min(420px, 100%); }
+
 </style>
+
 </head>
 <body>
   <div class="phone">
@@ -641,7 +654,7 @@ header{padding:14px 18px 12px}
     <footer class="app-footer">© 2026 Jeremy Wood. All rights reserved.</footer>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=58"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=59"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
