@@ -1,11 +1,10 @@
-/*__SHELLFISH_CORE_JS__ v71__*/
 // Shellfish Tracker — V2 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js";
-const APP_VERSION = (window.APP_BUILD || "v5");
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=60";
+const APP_VERSION = "v5.60";
 const VERSION = APP_VERSION;
 
 // In-app update UI: shows an Update button only when a new Service Worker is ready.
@@ -1633,21 +1632,7 @@ function showFatal(err){
 window.addEventListener("error", (e)=> showFatal(e?.error || e?.message || e));
 window.addEventListener("unhandledrejection", (e)=> showFatal(e?.reason || e));
 
-function safeSetItem(key, value){
-  try{
-    localStorage.setItem(key, value);
-    return true;
-  }catch(e){
-    // Quota exceeded / private mode / storage blocked
-    try{ console.warn("localStorage write failed", e); }catch(_){}
-    try{ showToast("Storage full — export CSV and clear old trips"); }catch(_){}
-    return false;
-  }
-}
-
-function saveState(){
-  safeSetItem(LS_KEY, JSON.stringify(state));
-}
+function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 
 // Draft persistence is just state persistence (draft lives under state.draft)
 function saveDraft(){
@@ -1659,115 +1644,13 @@ function saveDraft(){
 
 
 function ensureTripsFilter(){
-  // v65: Trips filter is dropdown-based and page-scoped.
-  // Shape:
-  //   { range:"ytd|all|12m|90d|30d|custom", fromISO:"YYYY-MM-DD", toISO:"YYYY-MM-DD", dealer:"all|<name>", area:"all|<name>" }
-  if(!state.tripsFilter || typeof state.tripsFilter !== "object"){
-    state.tripsFilter = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all" };
-    return;
-  }
-
-  // Migrate legacy shape { mode:"ALL|YTD|MONTH|7D|RANGE", from:"MM/DD/YYYY", to:"MM/DD/YYYY" }
-  if("mode" in state.tripsFilter){
-    const mode = String(state.tripsFilter.mode || "ALL").toUpperCase();
-    const range =
-      (mode === "YTD") ? "ytd" :
-      (mode === "RANGE") ? "custom" :
-      (mode === "7D") ? "30d" :
-      (mode === "MONTH") ? "30d" :
-      "all";
-    const fromISO = parseMDYToISO(state.tripsFilter.from || "") || "";
-    const toISO = parseMDYToISO(state.tripsFilter.to || "") || "";
-    state.tripsFilter = { range, fromISO, toISO, dealer:"all", area:"all" };
-  }
-
-  if(!state.tripsFilter.range) state.tripsFilter.range = "ytd";
-  if(state.tripsFilter.fromISO == null) state.tripsFilter.fromISO = "";
-  if(state.tripsFilter.toISO == null) state.tripsFilter.toISO = "";
-  if(!("dealer" in state.tripsFilter)) state.tripsFilter.dealer = "all";
-  if(!("area" in state.tripsFilter)) state.tripsFilter.area = "all";
-
-  // Guardrails: if custom is selected, ensure usable defaults.
-  if(state.tripsFilter.range === "custom"){
-    const now = isoToday();
-    const y = now.slice(0,4);
-    if(!state.tripsFilter.fromISO) state.tripsFilter.fromISO = `${y}-01-01`;
-    if(!state.tripsFilter.toISO) state.tripsFilter.toISO = now;
-    if(state.tripsFilter.fromISO > state.tripsFilter.toISO){
-      const tmp = state.tripsFilter.fromISO; state.tripsFilter.fromISO = state.tripsFilter.toISO; state.tripsFilter.toISO = tmp;
-    }
-  }
+  if(!state.tripsFilter || typeof state.tripsFilter !== "object") state.tripsFilter = { mode:"ALL", from:"", to:"" };
+  if(!state.tripsFilter.mode) state.tripsFilter.mode = "ALL";
+  if(state.tripsFilter.from == null) state.tripsFilter.from = "";
+  if(state.tripsFilter.to == null) state.tripsFilter.to = "";
 }
 
-function getTripsRangeWindow(tf){
-  const range = String(tf?.range || "ytd");
-  const todayISO = isoToday();
-  const now = new Date();
-  const pad = (n)=>String(n).padStart(2,"0");
-  const y = now.getFullYear();
-
-  if(range === "all"){
-    return { startISO:"", endISO:"", label:"ALL" };
-  }
-  if(range === "ytd"){
-    return { startISO:`${y}-01-01`, endISO:todayISO, label:"YTD" };
-  }
-  if(range === "12m" || range === "90d" || range === "30d"){
-    const d = new Date(now);
-    const days = (range==="12m") ? 364 : (range==="90d" ? 89 : 29);
-    d.setDate(d.getDate() - days);
-    const startISO = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    const label = (range==="12m") ? "12M" : (range==="90d" ? "90D" : "30D");
-    return { startISO, endISO:todayISO, label };
-  }
-  // custom
-  const s = String(tf?.fromISO || "").slice(0,10);
-  const e = String(tf?.toISO || "").slice(0,10);
-  if(s && e){
-    const a = s <= e ? {startISO:s,endISO:e} : {startISO:e,endISO:s};
-    return { ...a, label:"RANGE" };
-  }
-  return { startISO:"", endISO:"", label:"RANGE" };
-}
-
-function getTripsFilteredRows(){
-  ensureTripsFilter();
-  const tf = state.tripsFilter;
-  const tripsAll = Array.isArray(state.trips) ? state.trips.map(normalizeTripRow).filter(Boolean) : [];
-
-  const r = getTripsRangeWindow(tf);
-  let rows = (r.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r.startISO, r.endISO);
-
-  // Dealer / Area filters (Trips-only)
-  if(tf.dealer && tf.dealer !== "all"){
-    rows = rows.filter(t => String(t?.dealer||"") === String(tf.dealer));
-  }
-  if(tf.area && tf.area !== "all"){
-    rows = rows.filter(t => String(t?.area||"") === String(tf.area));
-  }
-
-  // Stable sort: newest first
-  rows.sort((a,b)=>{
-    const ad = String(a?.dateISO||"");
-    const bd = String(b?.dateISO||"");
-    if(ad !== bd) return bd.localeCompare(ad);
-    const ac = String(a?.createdAt||"");
-    const bc = String(b?.createdAt||"");
-    return bc.localeCompare(ac);
-  });
-
-  return { rows, range:r, tf };
-}
-
-function tripsActiveLabel(tf, rangeLabel){
-  const parts = [];
-  parts.push(rangeLabel || "YTD");
-  if(tf?.dealer && tf.dealer !== "all") parts.push(`Dealer: ${tf.dealer}`);
-  if(tf?.area && tf.area !== "all") parts.push(`Area: ${tf.area}`);
-  return parts.join(" • ");
-}
-
-function ensureReportsFilter(){(){
+function ensureReportsFilter(){
   if(!state.reportsFilter || typeof state.reportsFilter !== "object") state.reportsFilter = { mode:"YTD", from:"", to:"" };
   if(!state.reportsFilter.mode) state.reportsFilter.mode = "YTD";
   if(state.reportsFilter.from == null) state.reportsFilter.from = "";
@@ -1836,148 +1719,34 @@ function formatISOForFile(iso){
 }
 
 function tripsFilename(label, startISO="", endISO=""){
-  const base = "shellfish_trips";
-  const L = String(label||"").toUpperCase();
-  if(L === "ALL") return `${base}_ALL.csv`;
-  if(L === "YTD" || L === "12M" || L === "90D" || L === "30D"){
-    if(startISO && endISO) return `${base}_${L}_${formatISOForFile(startISO)}_to_${formatISOForFile(endISO)}.csv`;
-    return `${base}_${L}.csv`;
+  const base = "shellfish-trips";
+  if(label === "ALL") return `${base}_ALL.csv`;
+  if(label === "YTD" || label === "MONTH" || label === "7D"){
+    if(startISO && endISO) return `${base}_${label}_${formatISOForFile(startISO)}_to_${formatISOForFile(endISO)}.csv`;
+    return `${base}_${label}.csv`;
   }
-  if(L === "RANGE" && startISO && endISO){
+  if(label === "RANGE" && startISO && endISO){
     return `${base}_RANGE_${formatISOForFile(startISO)}_to_${formatISOForFile(endISO)}.csv`;
   }
   return `${base}.csv`;
 }
 
 function exportTripsWithLabel(trips, label, startISO="", endISO=""){
-  const rows = Array.isArray(trips) ? trips : [];
-  const csvEscape = (v)=>{
-    const s = String(v ?? "");
-    if(/[",
-
-]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
-    return s;
-  };
-  const header = ["Date","Dealer","Area","Pounds","Amount","$/Lb"].join(",");
-  const lines = [header];
-  for(const t of rows){
-    const date = formatDateMDY(String(t?.dateISO||""));
-    const dealer = String(t?.dealer||"");
-    const area = String(t?.area||"");
-    const lbs = Number(t?.pounds)||0;
-    const amt = Number(t?.amount)||0;
-    const ppl = (lbs>0 && amt>0) ? (amt/lbs) : 0;
-    lines.push([
-      csvEscape(date),
-      csvEscape(dealer),
-      csvEscape(area),
-      csvEscape(to2(lbs)),
-      csvEscape(to2(amt)),
-      csvEscape(to2(ppl))
-    ].join(","));
-  }
-  const csv = lines.join("
-");
-  const filename = tripsFilename(label, startISO, endISO);
-
-  // Prefer download, but fall back for Android/PWA if needed.
-  try{
-    downloadText(filename, csv);
-    return;
-  }catch(e){}
-
-  try{
-    const blob = new Blob([csv], {type:"text/csv"});
-    const file = new File([blob], filename, {type:"text/csv"});
-    // Share if available (Android/Chrome PWA)
-    if(navigator?.canShare && navigator.canShare({ files:[file] }) && navigator?.share){
-      navigator.share({ files:[file], title:"Trips CSV" });
-      return;
-    }
-  }catch(e){}
-
-  try{
-    // Last resort: open CSV in a new tab
-    const url = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-    window.open(url, "_blank");
-  }catch(e){}
+  const csv = toCSV(trips);
+  downloadText(tripsFilename(label, startISO, endISO), csv);
 }
 
 function renderAllTrips(){
   ensureTripsFilter();
 
-  const { rows:sorted, range:r, tf } = getTripsFilteredRows();
-  const opt = getFilterOptionsFromTrips();
+  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
+  const tf = state.tripsFilter || { mode:"ALL", from:"", to:"" };
+  const mode = String(tf.mode || "ALL").toUpperCase();
 
-  const rangeOptions = [
-    ["all","All"],
-    ["ytd","YTD"],
-    ["12m","Last 12m"],
-    ["90d","Last 90d"],
-    ["30d","Last 30d"],
-    ["custom","Custom"]
-  ];
+  const r = modeRange(mode, tf.from, tf.to);
+  const filtered = (r.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r.startISO, r.endISO);
 
-  const filtersCard = `
-    <div class="card">
-      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Range</div>
-          <select id="flt_range" class="select">
-            ${rangeOptions.map(([k,l])=>`<option value="${k}" ${tf.range===k?"selected":""}>${l}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Dealer</div>
-          <select id="flt_dealer" class="select">
-            <option value="all" ${tf.dealer==="all"?"selected":""}>All</option>
-            ${opt.dealers.map(d=>`<option value="${escapeHtml(d)}" ${tf.dealer===d?"selected":""}>${escapeHtml(d)}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Area</div>
-          <select id="flt_area" class="select">
-            <option value="all" ${tf.area==="all"?"selected":""}>All</option>
-            ${opt.areas.map(a=>`<option value="${escapeHtml(a)}" ${tf.area===a?"selected":""}>${escapeHtml(a)}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:160px;flex:1;opacity:.75">
-          <div class="muted small">Species (Coming soon)</div>
-          <select id="flt_species" class="select" disabled aria-disabled="true">
-            <option>Coming soon</option>
-          </select>
-        </div>
-
-        <div style="min-width:160px;flex:2;display:flex;align-items:flex-end">
-          <button class="btn" id="exportTrips" type="button" style="width:100%">Export CSV</button>
-        </div>
-
-        <div style="display:flex;gap:10px;">
-          <button class="btn" id="flt_reset" type="button">Reset</button>
-        </div>
-      </div>
-
-      <div id="flt_custom_wrap" style="margin-top:10px;display:${tf.range==="custom"?"block":"none"}">
-        <div class="row" style="gap:10px;flex-wrap:wrap">
-          <div style="min-width:140px;flex:1">
-            <div class="muted small">From</div>
-            <input id="flt_from" type="date" class="input" value="${escapeHtml(String(tf.fromISO||"").slice(0,10))}" />
-          </div>
-          <div style="min-width:140px;flex:1">
-            <div class="muted small">To</div>
-            <input id="flt_to" type="date" class="input" value="${escapeHtml(String(tf.toISO||"").slice(0,10))}" />
-          </div>
-        </div>
-      </div>
-
-      <div class="muted small" style="margin-top:10px">
-        Showing: <b>${escapeHtml(tripsActiveLabel(tf, r.label))}</b>
-      </div>
-    </div>
-  `;
+  const sorted = getTripsNewestFirst(filtered);
 
   const rows = sorted.length ? sorted.map(t=>{
     const date = formatDateMDY(t?.dateISO||"");
@@ -2003,85 +1772,118 @@ function renderAllTrips(){
     `;
   }).join("") : `<div class="muted small">No trips in this filter yet.</div>`;
 
-  root.innerHTML = `
-    <div class="page">
-      <div class="pageHdr">
-        <div>
-          <div class="h1">Trips</div>
-          <div class="muted small">Browse and export your trips.</div>
+  const chip = (key,label) => `<button class="chip ${mode===key?'on':''}" data-tf="${key}">${label}</button>`;
+
+  const rangeUI = (mode === "RANGE") ? `
+    <div class="card">
+      <b>Custom range</b>
+      <div class="sep"></div>
+      <div class="grid2">
+        <div class="field">
+          <div class="label">From (MM/DD/YYYY)</div>
+          <input class="input" id="tripRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(tf.from||"")}" />
         </div>
-        <div class="hdrBtns">
-          <button class="btn" id="newTripBtn">+ New Trip</button>
+        <div class="field">
+          <div class="label">To (MM/DD/YYYY)</div>
+          <input class="input" id="tripRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(tf.to||"")}" />
         </div>
       </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="tripRangeApply">Apply</button>
+      </div>
+    </div>
+  ` : "";
 
-      ${filtersCard}
+  const rangeLabel = (mode === "ALL") ? "ALL" :
+    (mode === "RANGE" && r.startISO && r.endISO) ? `${formatDateMDY(r.startISO)} → ${formatDateMDY(r.endISO)}` :
+    (mode === "RANGE") ? "Set dates" :
+    r.label;
 
-      <div style="height:10px"></div>
+  getApp().innerHTML = `
+    ${renderPageHeader("all_trips")}
 
+    <div class="card">
+      <div class="chipGrid cols-3" style="margin-top:0">
+        ${chip("ALL","All Trips")}
+        ${chip("YTD","YTD")}
+        ${chip("MONTH","Month")}
+        ${chip("7D","7 Days")}
+        ${chip("RANGE","Range")}
+      </div>
+
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
+        <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
+        <span class="pill"><b>${sorted.length}</b> shown</span>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="exportTrips">🧾 Export CSV</button>
+      </div>
+      <div class="hint">Export uses the current Trips filter.</div>
+    </div>
+
+    ${rangeUI}
+
+    <div class="card">
       ${rows}
     </div>
   `;
 
-  bindNavHandlers(state);
+  getApp().scrollTop = 0;
 
-  // New trip
-  document.getElementById("newTripBtn")?.addEventListener("click", ()=>{
-    state.view = "new";
-    saveState();
-    render();
-  });
-
-  // Open trip row
-  root.querySelectorAll(".triprow").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      const id = el.getAttribute("data-id") || "";
-      if(!id) return;
-      state.editId = id;
-      state.view = "edit";
+  // filter chips
+  getApp().querySelectorAll(".chip[data-tf]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const key = String(btn.getAttribute("data-tf")||"ALL");
+      state.tripsFilter.mode = key;
       saveState();
-      render();
-    });
+      renderAllTrips();
+    };
   });
 
-  const rerender = ()=>{ saveState(); renderAllTrips(); };
+  // apply range
+  const applyBtn = document.getElementById("tripRangeApply");
+  if(applyBtn){
+    applyBtn.onclick = ()=>{
+      const from = String(document.getElementById("tripRangeFrom")?.value || "").trim();
+      const to = String(document.getElementById("tripRangeTo")?.value || "").trim();
+      const s = parseMDYToISO(from);
+      const e = parseMDYToISO(to);
+      if(!s || !e){
+        showToast("Invalid range dates");
+        return;
+      }
+      state.tripsFilter.from = from;
+      state.tripsFilter.to = to;
+      saveState();
+      renderAllTrips();
+    };
+  }
 
-  const rangeEl = document.getElementById("flt_range");
-  rangeEl?.addEventListener("change", ()=>{
-    tf.range = rangeEl.value;
-    if(tf.range === "custom"){
-      const now = isoToday();
-      const y = now.slice(0,4);
-      if(!tf.fromISO) tf.fromISO = `${y}-01-01`;
-      if(!tf.toISO) tf.toISO = now;
-      if(tf.fromISO > tf.toISO){ const tmp = tf.fromISO; tf.fromISO = tf.toISO; tf.toISO = tmp; }
-    }
-    rerender();
-  });
-
-  document.getElementById("flt_dealer")?.addEventListener("change", (ev)=>{ tf.dealer = ev.target.value; rerender(); });
-  document.getElementById("flt_area")?.addEventListener("change", (ev)=>{ tf.area = ev.target.value; rerender(); });
-
-  const fromEl = document.getElementById("flt_from");
-  const toEl = document.getElementById("flt_to");
-  fromEl?.addEventListener("change", ()=>{ tf.fromISO = fromEl.value; tf.range="custom"; rerender(); });
-  toEl?.addEventListener("change", ()=>{ tf.toISO = toEl.value; tf.range="custom"; rerender(); });
-
-  document.getElementById("flt_reset")?.addEventListener("click", ()=>{
-    state.tripsFilter = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all" };
-    saveState();
-    renderAllTrips();
-  });
-
-  // Export CSV button (Trips-only export)
+  // export
   const exportBtn = document.getElementById("exportTrips");
   if(exportBtn){
     exportBtn.onclick = ()=>{
-      const { rows, range } = getTripsFilteredRows();
-      exportTripsWithLabel(rows, range.label, range.startISO, range.endISO);
+      const r2 = modeRange(mode, state.tripsFilter.from, state.tripsFilter.to);
+      const tripsToExport = (r2.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r2.startISO, r2.endISO);
+      exportTripsWithLabel(tripsToExport, r2.label, r2.startISO, r2.endISO);
       showToast("CSV exported");
     };
   }
+
+  // Open trip to edit
+  getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
+    const open = ()=>{
+      state.view="edit";
+      state.editId = card.getAttribute("data-id") || "";
+      saveState();
+      render();
+    };
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); }
+    });
+  });
 }
 
 function renderHome(
@@ -2538,14 +2340,7 @@ const normalizeAmountOnBlur = (el)=>{
     if(elAmount) elAmount.classList.toggle("money", amountOk);
 
     const btn = document.getElementById("saveTrip");
-    if(btn){
-      const enabled = (dealerOk && areaOk && poundsOk && amountOk);
-      btn.disabled = !enabled;
-      btn.setAttribute("aria-disabled", enabled ? "false" : "true");
-      // Prevent accidental taps while scrolling (iOS/Android)
-      btn.style.pointerEvents = enabled ? "auto" : "none";
-      btn.style.opacity = enabled ? "1" : "0.55";
-    }
+    if(btn) btn.disabled = !(dealerOk && areaOk && poundsOk && amountOk);
   };
 
   // Bind numeric field UX ONCE per render (never inside updateSaveEnabled)
@@ -2596,13 +2391,6 @@ const normalizeAmountOnBlur = (el)=>{
   const btnSave = document.getElementById("saveTrip");
   const onSaveTrip = async ()=>{
     try{
-      // Hard guard: if button is disabled, do nothing (prevents scroll-tap accidents).
-      if(btnSave?.disabled) return;
-      // Double-save latch (iOS/Android fast taps)
-      if(state._savingTrip) return;
-      state._savingTrip = true;
-      saveState();
-
       // snapshot current inputs into draft
       state.draft = state.draft || {};
       const mdy = String(elDate?.value||"").trim();
@@ -2617,7 +2405,6 @@ const normalizeAmountOnBlur = (el)=>{
       const anyEntered = Boolean(mdy || state.draft.dealer || (state.draft.pounds>0) || (state.draft.amount>0) || state.draft.area);
       if(!anyEntered){
         showToast("Enter trip details first");
-        state._savingTrip = false; saveState();
         return;
       }
 
@@ -2632,7 +2419,7 @@ const summary =
 ` +
   `Amount: ${String(state.draft.amount||"").trim() || "—"}`;
 const ok = await confirmSaveModal({ title: "Save this trip?", body: summary });
-if(!ok){ state._savingTrip = false; saveState(); return; }
+if(!ok) return;
 
 commitTripFromDraft({
   mode: "new",
@@ -2645,17 +2432,15 @@ commitTripFromDraft({
   },
   nextView: "all_trips"
 });
-      state._savingTrip = false; saveState();
 
     }catch(err){
       try{ showFatal(err, "saveTrip"); }catch{}
-      state._savingTrip = false; saveState();
     }
   };
   if(btnSave){
     // iOS standalone can occasionally miss 'click'—bind both.
     btnSave.onclick = onSaveTrip;
-    btnSave.addEventListener("touchend", (e)=>{ if(btnSave.disabled) return; e.preventDefault(); onSaveTrip(); }, {passive:false});
+    btnSave.addEventListener("touchend", (e)=>{ e.preventDefault(); onSaveTrip(); }, {passive:false});
   }
 const btnClear = document.getElementById("clearDraft");
   if(btnClear){

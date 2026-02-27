@@ -1,4 +1,3 @@
-/*__SHELLFISH_CORE_JS__ v71__*/
 // Shellfish Tracker — V4 ESM Branch
 // Phase 2A: Extracted pure utilities (no DOM, no state)
 
