@@ -1,3 +1,4 @@
+/*__SHELLFISH_CORE_JS__ v71__*/
 // Shellfish Tracker — V2 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 

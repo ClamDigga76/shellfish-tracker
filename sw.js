@@ -29,6 +29,29 @@ function looksLikeJSResponse(resp) {
   const ct = (resp.headers.get("content-type") || "").toLowerCase();
   return ct.includes("javascript") || ct.includes("ecmascript");
 }
+function looksLikeHTMLBytes(text) {
+  const t = String(text || "").trimStart().toLowerCase();
+  return t.startsWith("<!doctype") || t.startsWith("<html") || t.startsWith("<head") || t.startsWith("<body") || t.startsWith("<script") || t.startsWith("<");
+}
+
+async function guardedCachePut(cache, key, resp) {
+  // For core JS files, do a tiny body sniff + marker check to avoid caching HTML or empty/truncated responses.
+  try {
+    const url = (typeof key === "string") ? key : (key && key.url) ? key.url : "";
+    const isCore = /\/js\/(app_v5|utils_v5|bootstrap_v5)\.js/i.test(url);
+    if (isCore) {
+      const txt = await resp.clone().text();
+      const head = txt.slice(0, 200);
+      if (!txt) return false;
+      if (looksLikeHTMLBytes(head)) return false;
+      if (!head.includes("/*__SHELLFISH_CORE_JS__")) return false;
+    }
+    await cache.put(key, resp.clone());
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -44,7 +67,7 @@ self.addEventListener("install", (event) => {
           // Skip caching bad response; this prevents JS parse errors later.
           continue;
         }
-        await cache.put(url, r);
+        await guardedCachePut(cache, url, r);
       } catch (_) {}
     }
     self.skipWaiting();
@@ -104,9 +127,9 @@ if (isCoreJS(url.pathname) && !url.searchParams.get("v")) {
     // JS: network-first with strict guards to avoid caching HTML.
     if (isJS(url2.pathname)) {
       try {
-        const net = await fetch(req, { cache: "no-store" });
+        const net = await fetch(req2, { cache: "no-store" });
         if (net && net.ok && looksLikeJSResponse(net)) {
-          await cache.put(req2, net.clone());
+          await guardedCachePut(cache, req2, net);
           return net;
         }
       } catch (_) {}

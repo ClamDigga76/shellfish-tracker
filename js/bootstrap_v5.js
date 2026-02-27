@@ -1,3 +1,4 @@
+/*__SHELLFISH_CORE_JS__ v71__*/
 const SW_VERSION = "71";
 
 // Single source of truth for build/version
