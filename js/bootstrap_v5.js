@@ -1,4 +1,4 @@
-const SW_VERSION = "70";
+const SW_VERSION = "71";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -14,7 +14,8 @@ async function __assertAssetExists(path) {
   const r = await fetch(path, { cache: "no-store" });
   if (!r.ok) throw new Error(`Missing required asset: ${path} (HTTP ${r.status})`);
 
-  if (/\.js$/i.test(path)) {
+  const __u = new URL(path, location.href);
+  if (/\.js$/i.test(__u.pathname)) {
     const ct = (r.headers.get("content-type") || "").toLowerCase();
     if (!(ct.includes("javascript") || ct.includes("ecmascript"))) {
       throw new Error(`Bad content-type for ${path}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
@@ -213,9 +214,9 @@ window.__showModuleError = function (err) {
 // surface real import/parse errors (404, HTML-as-JS, syntax errors) instead of only the watchdog.
 (async () => {
   try {
-    await __assertAssetExists(`./js/utils_v5.js`);
-    await __assertAssetExists(`./js/app_v5.js`);
-    await import(new URL(`./app_v5.js`, import.meta.url).href);
+    await __assertAssetExists(`./js/utils_v5.js?v=${SW_VERSION}`);
+    await __assertAssetExists(`./js/app_v5.js?v=${SW_VERSION}`);
+    await import(new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href);
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);

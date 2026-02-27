@@ -15,8 +15,8 @@ const CORE = [
   "./legal/privacy.html",
   "./legal/license.html",
   `./js/bootstrap_v5.js?v=${SW_V}`,
-  "./js/utils_v5.js",
-  "./js/app_v5.js",
+  `./js/utils_v5.js?v=${SW_V}`,
+  `./js/app_v5.js?v=${SW_V}`,
 ];
 
 function isJS(url) {
@@ -72,6 +72,16 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
 
+// Normalize core module URLs: if the app requests unversioned core JS, rewrite to this build's v-param.
+// This prevents Safari/HTTP cache from re-serving stale bytes for ./js/app_v5.js or ./js/utils_v5.js.
+const isCoreJS = (p) => p.endsWith("/js/app_v5.js") || p.endsWith("/js/utils_v5.js") || p.endsWith("/js/bootstrap_v5.js");
+let req2 = req;
+let url2 = url;
+if (isCoreJS(url.pathname) && !url.searchParams.get("v")) {
+  url2 = new URL(req.url);
+  url2.searchParams.set("v", SW_V);
+  req2 = new Request(url2.toString(), req);
+}
   // Only handle same-origin
   if (url.origin !== self.location.origin) return;
 
@@ -81,7 +91,7 @@ self.addEventListener("fetch", (event) => {
     // HTML: network-first (so deploys update quickly), fallback to cache.
     if (isHTML(url.pathname) || req.mode === "navigate") {
       try {
-        const net = await fetch(req, { cache: "no-store" });
+        const net = await fetch(req2, { cache: "no-store" });
         if (net && net.ok) {
           await cache.put("./index.html", net.clone());
           return net;
@@ -92,25 +102,25 @@ self.addEventListener("fetch", (event) => {
     }
 
     // JS: network-first with strict guards to avoid caching HTML.
-    if (isJS(url.pathname)) {
+    if (isJS(url2.pathname)) {
       try {
         const net = await fetch(req, { cache: "no-store" });
         if (net && net.ok && looksLikeJSResponse(net)) {
-          await cache.put(req, net.clone());
+          await cache.put(req2, net.clone());
           return net;
         }
       } catch (_) {}
 
-      const cached = await cache.match(req);
+      const cached = await cache.match(req2);
       if (cached) {
         // If cached JS is bad (HTML), purge and fail closed.
         if (!looksLikeJSResponse(cached)) {
-          try { await cache.delete(req); } catch (_) {}
-          return fetch(req, { cache: "no-store" });
+          try { await cache.delete(req2); } catch (_) {}
+          return fetch(req2, { cache: "no-store" });
         }
         return cached;
       }
-      return fetch(req, { cache: "no-store" });
+      return fetch(req2, { cache: "no-store" });
     }
 
     // Other static assets: cache-first, then network.
