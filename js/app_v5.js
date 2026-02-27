@@ -3,8 +3,8 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=65";
-const APP_VERSION = "v5.65";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js";
+const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 
 // In-app update UI: shows an Update button only when a new Service Worker is ready.
@@ -1853,7 +1853,8 @@ function exportTripsWithLabel(trips, label, startISO="", endISO=""){
   const csvEscape = (v)=>{
     const s = String(v ?? "");
     if(/[",
-]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+
+]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
     return s;
   };
   const header = ["Date","Dealer","Area","Pounds","Amount","$/Lb"].join(",");
