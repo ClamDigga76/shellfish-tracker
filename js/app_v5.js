@@ -4,7 +4,7 @@
 window.__SHELLFISH_APP_STARTED = false;
 
 import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=60";
-const APP_VERSION = "v5.60";
+const APP_VERSION = "v5.68";
 const VERSION = APP_VERSION;
 
 // In-app update UI: shows an Update button only when a new Service Worker is ready.

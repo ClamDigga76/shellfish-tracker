@@ -1,4 +1,4 @@
-const SW_VERSION = "67";
+const SW_VERSION = "68";
 /**
  * Shellfish Tracker v5 bootstrap
  *
