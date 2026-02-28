@@ -1271,6 +1271,8 @@ function renderTripsFilterBar(){
           </select>
         </div>
 
+        <div style="flex-basis:100%;height:0"></div>
+
         <div style="min-width:140px;flex:1">
           <div class="muted small">Area</div>
           <select id="flt_area" class="select">
@@ -1286,6 +1288,8 @@ function renderTripsFilterBar(){
             ${opt.species.map(s=>`<option value="${escapeHtml(s)}" ${f.species===s?"selected":""}>${escapeHtml(s)}</option>`).join("")}
           </select>
         </div>
+
+        <div style="flex-basis:100%;height:0"></div>
 
         <div style="min-width:160px;flex:2;display:flex;align-items:flex-end">
           <button class="btn" id="exportTrips" type="button" style="width:100%">Export CSV</button>
@@ -1703,18 +1707,6 @@ function ensureTripsFilter(){
 }
 
 
-function computeTripsSummary(rows){
-  const arr = Array.isArray(rows) ? rows : [];
-  const trips = arr.length;
-  let lbs = 0;
-  let amt = 0;
-  for(const t of arr){
-    lbs += Number(t?.pounds || 0);
-    amt += Number(t?.amount || 0);
-  }
-  const ppl = (lbs > 0) ? (amt / lbs) : 0;
-  return { trips, lbs, amt, ppl };
-}
 
 function getTripsFilteredResult(){
   ensureTripsFilter();
@@ -1746,6 +1738,16 @@ function ensureHomeFilter(){
   if(!state.homeFilter.mode) state.homeFilter.mode = "YTD";
   if(state.homeFilter.from == null) state.homeFilter.from = "";
   if(state.homeFilter.to == null) state.homeFilter.to = "";
+}
+
+
+function mdyToISOValue(mdy){
+  return parseMDYToISO(String(mdy||\"\")) || \"\";
+}
+
+function isoValueToMDY(iso){
+  const v = String(iso||\"\").slice(0,10);
+  return v ? formatDateMDY(v) : \"\";
 }
 
 
@@ -1835,7 +1837,6 @@ function renderAllTrips(){
 
   const result = getTripsFilteredResult();
   const rows = getTripsNewestFirst(result.rows || []);
-  const sum = computeTripsSummary(rows);
 
   const rangeLabel =
     (tf.range === "custom" && tf.fromISO && tf.toISO)
@@ -1881,7 +1882,7 @@ function renderAllTrips(){
   getApp().innerHTML = `
     ${renderPageHeader("all_trips")}
 
-    <div class="card tripsSticky" id="tripsFilterCard">
+    <div class="card" id="tripsFilterCard">
       <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
         <div style="min-width:140px;flex:1">
           <div class="muted small">Range</div>
@@ -1906,7 +1907,7 @@ function renderAllTrips(){
           </select>
         </div>
 
-        <div style="min-width:180px;flex:1">
+        <div style="min-width:140px;flex:1">
           <div class="muted small">Species (Coming soon)</div>
           <select id="tf_species" class="select" disabled>
             <option selected>Coming soon</option>
@@ -1932,25 +1933,6 @@ function renderAllTrips(){
             <div class="muted small">To</div>
             <input id="tf_to" type="date" class="input" value="${escapeHtml(String(tf.toISO||"").slice(0,10))}" />
           </div>
-        </div>
-      </div>
-
-      <div class="tripsStatsGrid">
-        <div class="tripsStat">
-          <div class="k">Trips</div>
-          <div class="v">${escapeHtml(String(sum.trips))}</div>
-        </div>
-        <div class="tripsStat">
-          <div class="k">Lbs</div>
-          <div class="v lbsBlue">${escapeHtml(to2(sum.lbs))}</div>
-        </div>
-        <div class="tripsStat">
-          <div class="k">$</div>
-          <div class="v money">${escapeHtml(formatMoney(sum.amt))}</div>
-        </div>
-        <div class="tripsStat">
-          <div class="k">Avg $/lb</div>
-          <div class="v">${escapeHtml(formatMoney(sum.ppl))}</div>
         </div>
       </div>
 
@@ -2167,7 +2149,7 @@ function renderHome(
   getApp().innerHTML = `
     ${renderPageHeader("home")}
 
-    <div class="card dashCard">
+    <div class="card dashCard homeStickyTop">
       <div class="segWrap">
         ${chip("YTD","YTD")}
         ${chip("MONTH","Month")}
@@ -2176,8 +2158,8 @@ function renderHome(
       </div>
       ${f==="RANGE" ? `
         <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
-          <input class="input" id="homeRangeFrom" inputmode="numeric" placeholder="From (MM/DD/YYYY)" value="${escapeHtml(hf.from||"")}" style="flex:1;min-width:160px" />
-          <input class="input" id="homeRangeTo" inputmode="numeric" placeholder="To (MM/DD/YYYY)" value="${escapeHtml(hf.to||"")}" style="flex:1;min-width:160px" />
+          <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(mdyToISOValue(hf.from))}" style="flex:1;min-width:160px" />
+          <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(mdyToISOValue(hf.to))}" style="flex:1;min-width:160px" />
           <button class="btn" id="homeRangeApply">Apply</button>
         </div>
       ` : ``}
@@ -2261,8 +2243,16 @@ function renderHome(
       ensureHomeFilter();
       const from = String(document.getElementById("homeRangeFrom")?.value||"").trim();
       const to = String(document.getElementById("homeRangeTo")?.value||"").trim();
-      state.homeFilter.from = from;
-      state.homeFilter.to = to;
+      state.homeFilter.from = isoValueToMDY(from);
+      state.homeFilter.to = isoValueToMDY(to);
+
+      const a = mdyToISOValue(state.homeFilter.from);
+      const b = mdyToISOValue(state.homeFilter.to);
+      if(a && b && a > b){
+        const tmp = state.homeFilter.from;
+        state.homeFilter.from = state.homeFilter.to;
+        state.homeFilter.to = tmp;
+      }
       saveState();
       renderHome();
     };

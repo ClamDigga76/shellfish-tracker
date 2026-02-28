@@ -677,6 +677,10 @@ header{padding:14px 18px 12px}
   .tripsStatsGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+
+/* v67: sticky top card for Home only */
+.homeStickyTop{ position: sticky; top: calc(10px + env(safe-area-inset-top)); z-index: 50; }
+
 </style>
 
 </head>
@@ -686,7 +690,7 @@ header{padding:14px 18px 12px}
     <footer class="app-footer">© 2026 Jeremy Wood. All rights reserved.</footer>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=66"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=67"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
