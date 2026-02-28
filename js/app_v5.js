@@ -10,6 +10,7 @@ const VERSION = APP_VERSION;
 // In-app update UI: shows an Update button only when a new Service Worker is ready.
 let SW_UPDATE_READY = false;
 let SW_UPDATE_VERSION = "";
+let TRIP_SAVE_IN_PROGRESS = false;
 window.addEventListener("sw-update-ready", (ev) => {
   SW_UPDATE_READY = true;
   SW_UPDATE_VERSION = String(ev?.detail?.version || "");
@@ -424,6 +425,17 @@ window.addEventListener("unhandledrejection", (e)=>{ if(window.__SHELLFISH_APP_S
 
 const LS_KEY = "shellfish-state";
 const LEGACY_KEYS = ["shellfish-v1.5.0", "shellfish-v1.4.2"];
+
+function safeSetItem(key, value){
+  try{
+    localStorage.setItem(String(key), String(value));
+    return true;
+  }catch(e){
+    try{ console.warn("localStorage.setItem failed", e); }catch(_){}
+    try{ showToast("Storage full — export trips and delete older entries."); }catch(_){}
+    return false;
+  }
+}
 
 function parseSemverKey(key) {
   const m = /^shellfish-v(\d+)\.(\d+)\.(\d+)$/.exec(key || "");
@@ -1350,7 +1362,8 @@ function bindTripsFilterBar(){
   if(exportBtn){
     exportBtn.onclick = ()=>{
       const { rows, range, label } = getFilteredTrips();
-      exportTripsWithLabel(rows, label, range.fromISO, range.toISO);
+      const sorted = getTripsNewestFirst(rows);
+      exportTripsWithLabel(sorted, label, range.fromISO, range.toISO);
       showToast("CSV exported");
     };
   }
@@ -1427,6 +1440,9 @@ function findDuplicateTrip(candidate, excludeId=""){
 
 
 function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
+  if(TRIP_SAVE_IN_PROGRESS) return false;
+  TRIP_SAVE_IN_PROGRESS = true;
+  try{
   const dateISO = parseMDYToISO(String(inputs?.date||""));
   const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
   const poundsNum = parseNum(inputs?.pounds);
@@ -1507,7 +1523,10 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   state.view = nextView;
   saveState();
   render();
-  return true;
+  return true;  } finally {
+    TRIP_SAVE_IN_PROGRESS = false;
+  }
+
 }
 
 
@@ -1632,7 +1651,7 @@ function showFatal(err){
 window.addEventListener("error", (e)=> showFatal(e?.error || e?.message || e));
 window.addEventListener("unhandledrejection", (e)=> showFatal(e?.reason || e));
 
-function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function saveState(){ return safeSetItem(LS_KEY, JSON.stringify(state)); }
 
 // Draft persistence is just state persistence (draft lives under state.draft)
 function saveDraft(){
@@ -2390,6 +2409,8 @@ const normalizeAmountOnBlur = (el)=>{
   // NEW TRIP: wire up buttons (Save / Clear) — v22
   const btnSave = document.getElementById("saveTrip");
   const onSaveTrip = async ()=>{
+    if(btnSave && btnSave.disabled) return;
+    if(TRIP_SAVE_IN_PROGRESS) return;
     try{
       // snapshot current inputs into draft
       state.draft = state.draft || {};
@@ -2440,7 +2461,7 @@ commitTripFromDraft({
   if(btnSave){
     // iOS standalone can occasionally miss 'click'—bind both.
     btnSave.onclick = onSaveTrip;
-    btnSave.addEventListener("touchend", (e)=>{ e.preventDefault(); onSaveTrip(); }, {passive:false});
+    btnSave.addEventListener("touchend", (e)=>{ if(btnSave.disabled || TRIP_SAVE_IN_PROGRESS) return; e.preventDefault(); onSaveTrip(); }, {passive:false});
   }
 const btnClear = document.getElementById("clearDraft");
   if(btnClear){
