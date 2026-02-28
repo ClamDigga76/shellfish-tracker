@@ -4,7 +4,7 @@
 window.__SHELLFISH_APP_STARTED = false;
 
 import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js?v=60";
-const APP_VERSION = "v5.68";
+const APP_VERSION = "v5.60";
 const VERSION = APP_VERSION;
 
 // In-app update UI: shows an Update button only when a new Service Worker is ready.
@@ -1271,8 +1271,6 @@ function renderTripsFilterBar(){
           </select>
         </div>
 
-        <div style="flex-basis:100%;height:0"></div>
-
         <div style="min-width:140px;flex:1">
           <div class="muted small">Area</div>
           <select id="flt_area" class="select">
@@ -1288,8 +1286,6 @@ function renderTripsFilterBar(){
             ${opt.species.map(s=>`<option value="${escapeHtml(s)}" ${f.species===s?"selected":""}>${escapeHtml(s)}</option>`).join("")}
           </select>
         </div>
-
-        <div style="flex-basis:100%;height:0"></div>
 
         <div style="min-width:160px;flex:2;display:flex;align-items:flex-end">
           <button class="btn" id="exportTrips" type="button" style="width:100%">Export CSV</button>
@@ -1667,63 +1663,10 @@ function saveDraft(){
 
 
 function ensureTripsFilter(){
-  // v66 Trips-only filters (scoped to Trips screen)
-  if(!state.tripsFilter || typeof state.tripsFilter !== "object"){
-    state.tripsFilter = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all" };
-    return;
-  }
-
-  const tf = state.tripsFilter;
-
-  // Migrate legacy shape: { mode:"ALL|YTD|MONTH|7D|RANGE", from:"MM/DD/YYYY", to:"MM/DD/YYYY" }
-  if(tf.mode && !tf.range){
-    const m = String(tf.mode || "").toUpperCase();
-    let range = "ytd";
-    if(m === "YTD") range = "ytd";
-    else if(m === "MONTH") range = "30d";
-    else if(m === "7D") range = "30d";
-    else if(m === "90D") range = "90d";
-    else if(m === "12M") range = "12m";
-    else if(m === "RANGE") range = "custom";
-    else range = "ytd"; // legacy ALL -> default YTD
-
-    tf.range = range;
-
-    const s = parseMDYToISO(tf.from);
-    const e = parseMDYToISO(tf.to);
-    tf.fromISO = s || "";
-    tf.toISO = e || "";
-
-    delete tf.mode;
-    delete tf.from;
-    delete tf.to;
-  }
-
-  if(!tf.range) tf.range = "ytd";
-  if(tf.fromISO == null) tf.fromISO = "";
-  if(tf.toISO == null) tf.toISO = "";
-  if(tf.dealer == null) tf.dealer = "all";
-  if(tf.area == null) tf.area = "all";
-}
-
-
-
-function getTripsFilteredResult(){
-  ensureTripsFilter();
-  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
-  const tf = state.tripsFilter;
-
-  const filter = {
-    range: tf.range || "ytd",
-    fromISO: tf.fromISO || "",
-    toISO: tf.toISO || "",
-    dealer: tf.dealer || "all",
-    area: tf.area || "all",
-    species: "all",
-    text: ""
-  };
-
-  return applyUnifiedTripFilter(tripsAll, filter);
+  if(!state.tripsFilter || typeof state.tripsFilter !== "object") state.tripsFilter = { mode:"ALL", from:"", to:"" };
+  if(!state.tripsFilter.mode) state.tripsFilter.mode = "ALL";
+  if(state.tripsFilter.from == null) state.tripsFilter.from = "";
+  if(state.tripsFilter.to == null) state.tripsFilter.to = "";
 }
 
 function ensureReportsFilter(){
@@ -1738,16 +1681,6 @@ function ensureHomeFilter(){
   if(!state.homeFilter.mode) state.homeFilter.mode = "YTD";
   if(state.homeFilter.from == null) state.homeFilter.from = "";
   if(state.homeFilter.to == null) state.homeFilter.to = "";
-}
-
-
-function mdyToISOValue(mdy){
-  return parseMDYToISO(String(mdy||\"\")) || \"\";
-}
-
-function isoValueToMDY(iso){
-  const v = String(iso||\"\").slice(0,10);
-  return v ? formatDateMDY(v) : \"\";
 }
 
 
@@ -1824,44 +1757,28 @@ function exportTripsWithLabel(trips, label, startISO="", endISO=""){
 
 function renderAllTrips(){
   ensureTripsFilter();
-  const tf = state.tripsFilter;
 
-  const opt = getFilterOptionsFromTrips(); // expects { dealers:[], areas:[], species:[] }
-  const ranges = [
-    ["ytd","YTD"],
-    ["30d","Last 30D"],
-    ["90d","Last 90D"],
-    ["12m","Last 12M"],
-    ["custom","Custom"]
-  ];
+  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
+  const tf = state.tripsFilter || { mode:"ALL", from:"", to:"" };
+  const mode = String(tf.mode || "ALL").toUpperCase();
 
-  const result = getTripsFilteredResult();
-  const rows = getTripsNewestFirst(result.rows || []);
+  const r = modeRange(mode, tf.from, tf.to);
+  const filtered = (r.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r.startISO, r.endISO);
 
-  const rangeLabel =
-    (tf.range === "custom" && tf.fromISO && tf.toISO)
-      ? `${formatDateMDY(tf.fromISO)} → ${formatDateMDY(tf.toISO)}`
-      : (tf.range || "ytd").toUpperCase();
+  const sorted = getTripsNewestFirst(filtered);
 
-  const dealerLabel = (tf.dealer && tf.dealer !== "all") ? tf.dealer : "All";
-  const areaLabel = (tf.area && tf.area !== "all") ? tf.area : "All";
-
-  const listHTML = rows.length ? rows.map(t=>{
+  const rows = sorted.length ? sorted.map(t=>{
     const date = formatDateMDY(t?.dateISO||"");
-    const dealer = String(t?.dealer||"");
-    const area = String(t?.area||"");
+    const dealer = escapeHtml(String(t?.dealer||""));
+    const area = escapeHtml(String(t?.area||""));
     const lbs = Number(t?.pounds)||0;
     const amt = Number(t?.amount)||0;
-    const ppl = (lbs>0) ? (amt/lbs) : 0;
-
+    const ppl = (lbs>0 && amt>0) ? (amt/lbs) : 0;
     return `
       <div class="trip triprow" data-id="${escapeHtml(String(t?.id||""))}" role="button" tabindex="0">
         <div class="trow">
           <div>
-            <div class="metaRow">
-              <span class="tmeta">${escapeHtml(date)}</span>
-              ${dealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>` : ""}
-            </div>
+            <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${dealer?` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>`:""}</div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
             <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
           </div>
@@ -1872,163 +1789,108 @@ function renderAllTrips(){
         </div>
       </div>
     `;
-  }).join("") : `
-    <div class="muted small">No trips match these filters.</div>
-    <div style="margin-top:10px;display:flex;gap:10px;">
-      <button class="btn" id="tf_reset_empty" type="button">Reset</button>
+  }).join("") : `<div class="muted small">No trips in this filter yet.</div>`;
+
+  const chip = (key,label) => `<button class="chip ${mode===key?'on':''}" data-tf="${key}">${label}</button>`;
+
+  const rangeUI = (mode === "RANGE") ? `
+    <div class="card">
+      <b>Custom range</b>
+      <div class="sep"></div>
+      <div class="grid2">
+        <div class="field">
+          <div class="label">From (MM/DD/YYYY)</div>
+          <input class="input" id="tripRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(tf.from||"")}" />
+        </div>
+        <div class="field">
+          <div class="label">To (MM/DD/YYYY)</div>
+          <input class="input" id="tripRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(tf.to||"")}" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="tripRangeApply">Apply</button>
+      </div>
     </div>
-  `;
+  ` : "";
+
+  const rangeLabel = (mode === "ALL") ? "ALL" :
+    (mode === "RANGE" && r.startISO && r.endISO) ? `${formatDateMDY(r.startISO)} → ${formatDateMDY(r.endISO)}` :
+    (mode === "RANGE") ? "Set dates" :
+    r.label;
 
   getApp().innerHTML = `
     ${renderPageHeader("all_trips")}
 
-    <div class="card" id="tripsFilterCard">
-      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Range</div>
-          <select id="tf_range" class="select">
-            ${ranges.map(([k,l])=>`<option value="${k}" ${tf.range===k?"selected":""}>${l}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Dealer</div>
-          <select id="tf_dealer" class="select">
-            <option value="all" ${tf.dealer==="all"?"selected":""}>All</option>
-            ${(opt.dealers||[]).map(d=>`<option value="${escapeHtml(d)}" ${tf.dealer===d?"selected":""}>${escapeHtml(d)}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Area</div>
-          <select id="tf_area" class="select">
-            <option value="all" ${tf.area==="all"?"selected":""}>All</option>
-            ${(opt.areas||[]).map(a=>`<option value="${escapeHtml(a)}" ${tf.area===a?"selected":""}>${escapeHtml(a)}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Species (Coming soon)</div>
-          <select id="tf_species" class="select" disabled>
-            <option selected>Coming soon</option>
-          </select>
-        </div>
-
-        <div style="min-width:160px;flex:2;display:flex;align-items:flex-end">
-          <button class="btn" id="tf_export" type="button" style="width:100%">Export CSV</button>
-        </div>
-
-        <div style="display:flex;gap:10px;">
-          <button class="btn" id="tf_reset" type="button">Reset</button>
-        </div>
+    <div class="card">
+      <div class="chipGrid cols-3" style="margin-top:0">
+        ${chip("ALL","All Trips")}
+        ${chip("YTD","YTD")}
+        ${chip("MONTH","Month")}
+        ${chip("7D","7 Days")}
+        ${chip("RANGE","Range")}
       </div>
 
-      <div id="tf_custom_wrap" style="margin-top:10px;display:${tf.range==="custom"?"block":"none"}">
-        <div class="row" style="gap:10px;flex-wrap:wrap">
-          <div style="min-width:140px;flex:1">
-            <div class="muted small">From</div>
-            <input id="tf_from" type="date" class="input" value="${escapeHtml(String(tf.fromISO||"").slice(0,10))}" />
-          </div>
-          <div style="min-width:140px;flex:1">
-            <div class="muted small">To</div>
-            <input id="tf_to" type="date" class="input" value="${escapeHtml(String(tf.toISO||"").slice(0,10))}" />
-          </div>
-        </div>
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
+        <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
+        <span class="pill"><b>${sorted.length}</b> shown</span>
       </div>
 
-      <div class="hint" style="margin-top:10px">
-        Showing: <b>${escapeHtml(rangeLabel)}</b> • Dealer: <b>${escapeHtml(dealerLabel)}</b> • Area: <b>${escapeHtml(areaLabel)}</b>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="exportTrips">🧾 Export CSV</button>
       </div>
-      <div class="hint">Filters apply to Trips only.</div>
+      <div class="hint">Export uses the current Trips filter.</div>
     </div>
 
+    ${rangeUI}
+
     <div class="card">
-      ${listHTML}
+      ${rows}
     </div>
   `;
 
-  const rerender = ()=>{ saveState(); renderAllTrips(); };
+  getApp().scrollTop = 0;
 
-  const rangeEl = document.getElementById("tf_range");
-  rangeEl?.addEventListener("change", ()=>{
-    tf.range = rangeEl.value;
-    if(tf.range === "custom"){
-      const now = isoToday();
-      const y = now.slice(0,4);
-      if(!tf.fromISO) tf.fromISO = `${y}-01-01`;
-      if(!tf.toISO) tf.toISO = now;
-      if(tf.fromISO && tf.toISO && tf.fromISO > tf.toISO){
-        const tmp = tf.fromISO; tf.fromISO = tf.toISO; tf.toISO = tmp;
+  // filter chips
+  getApp().querySelectorAll(".chip[data-tf]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const key = String(btn.getAttribute("data-tf")||"ALL");
+      state.tripsFilter.mode = key;
+      saveState();
+      renderAllTrips();
+    };
+  });
+
+  // apply range
+  const applyBtn = document.getElementById("tripRangeApply");
+  if(applyBtn){
+    applyBtn.onclick = ()=>{
+      const from = String(document.getElementById("tripRangeFrom")?.value || "").trim();
+      const to = String(document.getElementById("tripRangeTo")?.value || "").trim();
+      const s = parseMDYToISO(from);
+      const e = parseMDYToISO(to);
+      if(!s || !e){
+        showToast("Invalid range dates");
+        return;
       }
-    }
-    rerender();
-  });
+      state.tripsFilter.from = from;
+      state.tripsFilter.to = to;
+      saveState();
+      renderAllTrips();
+    };
+  }
 
-  const dealerEl = document.getElementById("tf_dealer");
-  dealerEl?.addEventListener("change", (ev)=>{
-    tf.dealer = ev.target.value;
-    state._tripsScrollTop = true;
-    rerender();
-  });
+  // export
+  const exportBtn = document.getElementById("exportTrips");
+  if(exportBtn){
+    exportBtn.onclick = ()=>{
+      const r2 = modeRange(mode, state.tripsFilter.from, state.tripsFilter.to);
+      const tripsToExport = (r2.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r2.startISO, r2.endISO);
+      exportTripsWithLabel(tripsToExport, r2.label, r2.startISO, r2.endISO);
+      showToast("CSV exported");
+    };
+  }
 
-  const areaEl = document.getElementById("tf_area");
-  areaEl?.addEventListener("change", (ev)=>{
-    tf.area = ev.target.value;
-    rerender();
-  });
-
-  const fromEl = document.getElementById("tf_from");
-  const toEl = document.getElementById("tf_to");
-
-  fromEl?.addEventListener("change", ()=>{
-    tf.range = "custom";
-    tf.fromISO = fromEl.value || "";
-    if(!tf.toISO) tf.toISO = isoToday();
-    if(tf.fromISO && tf.toISO && tf.fromISO > tf.toISO){
-      const tmp = tf.fromISO; tf.fromISO = tf.toISO; tf.toISO = tmp;
-    }
-    rerender();
-  });
-
-  toEl?.addEventListener("change", ()=>{
-    tf.range = "custom";
-    tf.toISO = toEl.value || "";
-    if(!tf.fromISO){
-      const now = isoToday();
-      tf.fromISO = `${now.slice(0,4)}-01-01`;
-    }
-    if(tf.fromISO && tf.toISO && tf.fromISO > tf.toISO){
-      const tmp = tf.fromISO; tf.fromISO = tf.toISO; tf.toISO = tmp;
-    }
-    rerender();
-  });
-
-  const doReset = ()=>{
-    tf.range = "ytd";
-    tf.fromISO = "";
-    tf.toISO = "";
-    tf.dealer = "all";
-    tf.area = "all";
-    state._tripsScrollTop = true;
-    saveState();
-    renderAllTrips();
-  };
-  document.getElementById("tf_reset")?.addEventListener("click", doReset);
-  document.getElementById("tf_reset_empty")?.addEventListener("click", doReset);
-
-  document.getElementById("tf_export")?.addEventListener("click", ()=>{
-    const r = getTripsFilteredResult();
-    const sorted = getTripsNewestFirst(r.rows || []);
-    const from = (tf.range === "custom") ? (tf.fromISO || "") : (r.range?.fromISO || "");
-    const to = (tf.range === "custom") ? (tf.toISO || "") : (r.range?.toISO || "");
-    const label = (tf.range === "custom" && from && to)
-      ? `${formatDateMDY(from)}_to_${formatDateMDY(to)}`
-      : (tf.range || "ytd").toUpperCase();
-
-    exportTripsWithLabel(sorted, label, from, to);
-    showToast("CSV exported");
-  });
-
+  // Open trip to edit
   getApp().querySelectorAll(".trip[data-id]").forEach(card=>{
     const open = ()=>{
       state.view="edit";
@@ -2041,14 +1903,7 @@ function renderAllTrips(){
       if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); }
     });
   });
-
-  if(state._tripsScrollTop){
-    state._tripsScrollTop = false;
-    saveState();
-    requestAnimationFrame(()=>{ getApp().scrollTop = 0; });
-  }
 }
-
 
 function renderHome(
 ){
@@ -2149,7 +2004,7 @@ function renderHome(
   getApp().innerHTML = `
     ${renderPageHeader("home")}
 
-    <div class="card dashCard homeStickyTop">
+    <div class="card dashCard">
       <div class="segWrap">
         ${chip("YTD","YTD")}
         ${chip("MONTH","Month")}
@@ -2158,8 +2013,8 @@ function renderHome(
       </div>
       ${f==="RANGE" ? `
         <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
-          <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(mdyToISOValue(hf.from))}" style="flex:1;min-width:160px" />
-          <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(mdyToISOValue(hf.to))}" style="flex:1;min-width:160px" />
+          <input class="input" id="homeRangeFrom" inputmode="numeric" placeholder="From (MM/DD/YYYY)" value="${escapeHtml(hf.from||"")}" style="flex:1;min-width:160px" />
+          <input class="input" id="homeRangeTo" inputmode="numeric" placeholder="To (MM/DD/YYYY)" value="${escapeHtml(hf.to||"")}" style="flex:1;min-width:160px" />
           <button class="btn" id="homeRangeApply">Apply</button>
         </div>
       ` : ``}
@@ -2243,16 +2098,8 @@ function renderHome(
       ensureHomeFilter();
       const from = String(document.getElementById("homeRangeFrom")?.value||"").trim();
       const to = String(document.getElementById("homeRangeTo")?.value||"").trim();
-      state.homeFilter.from = isoValueToMDY(from);
-      state.homeFilter.to = isoValueToMDY(to);
-
-      const a = mdyToISOValue(state.homeFilter.from);
-      const b = mdyToISOValue(state.homeFilter.to);
-      if(a && b && a > b){
-        const tmp = state.homeFilter.from;
-        state.homeFilter.from = state.homeFilter.to;
-        state.homeFilter.to = tmp;
-      }
+      state.homeFilter.from = from;
+      state.homeFilter.to = to;
       saveState();
       renderHome();
     };
