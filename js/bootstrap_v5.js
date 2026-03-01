@@ -1,4 +1,4 @@
-const SW_VERSION = "75";
+const SW_VERSION = "76";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -213,8 +213,9 @@ window.__showModuleError = function (err) {
 // surface real import/parse errors (404, HTML-as-JS, syntax errors) instead of only the watchdog.
 (async () => {
   try {
-    await __assertAssetExists(`./js/utils_v5.js`);
-    await __assertAssetExists(`./js/app_v5.js`);
+    // Assert v-param'd assets so we don't accidentally validate one URL and import another.
+    await __assertAssetExists(`./utils_v5.js?v=${SW_VERSION}`);
+    await __assertAssetExists(`./app_v5.js?v=${SW_VERSION}`);
     await import(new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href);
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);

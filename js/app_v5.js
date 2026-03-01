@@ -2569,7 +2569,6 @@ const normalizeAmountOnBlur = (el)=>{
     el.value = Number.isFinite(n) ? n.toFixed(2) : "0.00";
   }catch(_){}
 };
-  const elArea = document.getElementById("t_area");
   const elToday = document.getElementById("todayBtn");
 
   // Quick-pick chip containers
