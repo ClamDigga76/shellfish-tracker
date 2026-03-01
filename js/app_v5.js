@@ -1901,6 +1901,7 @@ function exportTripsWithLabel(trips, label, startISO="", endISO=""){
 
 function renderAllTrips(){
   ensureTripsFilter();
+  const root = getApp();
 
   const { rows:sorted, range:r, tf } = getTripsFilteredRows();
   const opt = getFilterOptionsFromTrips();
