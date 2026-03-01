@@ -1766,7 +1766,7 @@ function tripsActiveLabel(tf, rangeLabel){
   return parts.join(" • ");
 }
 
-function ensureReportsFilter(){(){
+function ensureReportsFilter(){
   if(!state.reportsFilter || typeof state.reportsFilter !== "object") state.reportsFilter = { mode:"YTD", from:"", to:"" };
   if(!state.reportsFilter.mode) state.reportsFilter.mode = "YTD";
   if(state.reportsFilter.from == null) state.reportsFilter.from = "";
@@ -1852,9 +1852,7 @@ function exportTripsWithLabel(trips, label, startISO="", endISO=""){
   const rows = Array.isArray(trips) ? trips : [];
   const csvEscape = (v)=>{
     const s = String(v ?? "");
-    if(/[",
-
-]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+    if(/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"' ;
     return s;
   };
   const header = ["Date","Dealer","Area","Pounds","Amount","$/Lb"].join(",");
@@ -1875,8 +1873,7 @@ function exportTripsWithLabel(trips, label, startISO="", endISO=""){
       csvEscape(to2(ppl))
     ].join(","));
   }
-  const csv = lines.join("
-");
+  const csv = lines.join("\n");
   const filename = tripsFilename(label, startISO, endISO);
 
   // Prefer download, but fall back for Android/PWA if needed.

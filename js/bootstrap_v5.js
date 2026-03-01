@@ -1,4 +1,4 @@
-const SW_VERSION = "71";
+const SW_VERSION = "72";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
