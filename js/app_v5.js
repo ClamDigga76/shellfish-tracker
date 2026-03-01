@@ -1989,7 +1989,7 @@ function renderAllTrips(){
           <div>
             <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${dealer?` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>`:""}</div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
+            <div class="tsub">$/Lb: <b class="rate ppl">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
             <div class="lbsBlue"><b class="lbsBlue">${to2(lbs)}</b> <span class="lbsBlue">lbs</span></div>
@@ -2155,7 +2155,7 @@ function renderHome(
           <div>
             <div class="metaRow"><span class="tmeta">${date || ""}</span>${safeDealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(safeDealer)}</span>` : ""}</div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
+            <div class="tsub">$/Lb: <b class="rate ppl">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
             <div class="lbsBlue"><b class="lbsBlue">${lbs}</b> <span class="lbsBlue">lbs</span></div>
@@ -2440,7 +2440,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
           </div>
         </div>
       </div>
-      <div class="rateLine muted small">$/lb: <b class="rate" id="rateValue">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
+      <div class="rateLine muted small">$/lb: <b class="rate ppl" id="rateValue">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
 
       </section>
 
@@ -2493,55 +2493,103 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
     const a = Number(String(elAmount?.value||"").trim() || 0);
     elRate.textContent = formatMoney(computePPL(p, a));
   };
+  const openQuickAdd = (kind)=>{
+    const isDealer = (kind==="dealer");
+    const label = isDealer ? "Dealer" : "Area";
+    const placeholder = isDealer ? "New dealer name" : "New area (ex: 19/626)";
+    const errId = "modalQuickAddErr";
+    const inputId = "modalQuickAddInput";
+    const addId = "modalQuickAddDoAdd";
+    const cancelId = "modalQuickAddCancel";
 
-  const renderInlineAdder = (kind)=>{
-    const target = (kind==="dealer") ? elDealerPrompt : elAreaPrompt;
-    if(!target) return;
-    const idInput = (kind==="dealer") ? "newDealerInline" : "newAreaInline";
-    const idSave  = (kind==="dealer") ? "saveNewDealerInline" : "saveNewAreaInline";
-    const idCancel= (kind==="dealer") ? "cancelNewDealerInline" : "cancelNewAreaInline";
-    const ph = (kind==="dealer") ? "New dealer name" : "New area (ex: 19/626)";
-    target.innerHTML = `
-      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-        <input class="input" id="${idInput}" placeholder="${ph}" style="flex:1;min-width:180px" />
-        <button class="btn primary" id="${idSave}" type="button">Add</button>
-        <button class="btn" id="${idCancel}" type="button">Cancel</button>
-      </div>
-    `;
-    const elIn = document.getElementById(idInput);
-    elIn?.focus();
+    openModal({
+      title: `Add ${label}`,
+      html: `
+        <div class="field">
+          <input class="input" id="${inputId}" placeholder="${escapeHTML(placeholder)}" autocomplete="off" />
+          <div class="modalErr" id="${errId}" style="display:none"></div>
+        </div>
+        <div class="modalActions">
+          <button class="btn" id="${cancelId}" type="button">Cancel</button>
+          <button class="btn primary" id="${addId}" type="button">Add</button>
+        </div>
+      `,
+      onOpen: ()=>{
+        const elIn = document.getElementById(inputId);
+        const elErr = document.getElementById(errId);
+        const showErr = (msg)=>{
+          if(!elErr) return;
+          elErr.textContent = msg;
+          elErr.style.display = "block";
+        };
+        const clearErr = ()=>{
+          if(!elErr) return;
+          elErr.textContent = "";
+          elErr.style.display = "none";
+        };
 
-    document.getElementById(idCancel)?.addEventListener("click", ()=>{
-      target.innerHTML = "";
-    });
+        const commit = ()=>{
+          clearErr();
+          const raw = String(elIn?.value||"").trim();
+          if(!raw){
+            showErr("Enter a value first.");
+            elIn?.focus();
+            return;
+          }
+          if(raw.length > 40){
+            showErr("Keep it under 40 characters.");
+            elIn?.focus();
+            return;
+          }
 
-    document.getElementById(idSave)?.addEventListener("click", ()=>{
-      const raw = String(elIn?.value||"").trim();
-      if(!raw){
-        toast("Enter a value first.");
-        elIn?.focus();
-        return;
+          if(isDealer){
+            if(!Array.isArray(state.dealers)) state.dealers = [];
+            // case-insensitive de-dupe via normalizeKey
+            const key = normalizeKey(raw);
+            const exists = state.dealers.some(d => normalizeKey(String(d||"")) === key);
+            if(exists){
+              showErr("That dealer already exists.");
+              return;
+            }
+            state.dealers.push(raw);
+            ensureDealers();
+            state.draft = { ...(state.draft||draft), dealer: raw };
+          }else{
+            if(!Array.isArray(state.areas)) state.areas = [];
+            const key = normalizeKey(raw);
+            const exists = state.areas.some(a => normalizeKey(String(a||"")) === key);
+            if(exists){
+              showErr("That area already exists.");
+              return;
+            }
+            state.areas.push(raw);
+            ensureAreas();
+            state.draft = { ...(state.draft||draft), area: raw };
+          }
+
+          saveState();
+          closeModal();
+          render(); // refresh options + chips, and select the new value
+        };
+
+        document.getElementById(cancelId)?.addEventListener("click", ()=>{
+          closeModal();
+        });
+        document.getElementById(addId)?.addEventListener("click", commit);
+        elIn?.addEventListener("keydown", (e)=>{
+          if(e.key === "Enter"){
+            e.preventDefault();
+            commit();
+          }
+        });
+
+        setTimeout(()=>elIn?.focus(), 50);
       }
-
-      if(kind==="dealer"){
-        if(!Array.isArray(state.dealers)) state.dealers = [];
-        state.dealers.push(raw);
-        ensureDealers();
-        state.draft = { ...(state.draft||draft), dealer: raw };
-      }else{
-        if(!Array.isArray(state.areas)) state.areas = [];
-        state.areas.push(raw);
-        ensureAreas();
-        state.draft = { ...(state.draft||draft), area: raw };
-      }
-
-      saveState();
-      render(); // re-render so the select options + chips refresh, and the new value becomes selected
     });
   };
 
-  btnAddDealer?.addEventListener("click", ()=>renderInlineAdder("dealer"));
-  btnAddArea?.addEventListener("click", ()=>renderInlineAdder("area"));
+  btnAddDealer?.addEventListener("click", ()=>openQuickAdd("dealer"));
+  btnAddArea?.addEventListener("click", ()=>openQuickAdd("area"));
 
 // Numeric input UX (Pounds + Amount):
 // - first tap starts fresh (clears 0/placeholder-like values or selects all)
@@ -2857,7 +2905,7 @@ getApp().innerHTML = `
         </div>
 
         <div class="pillbar">
-          <span class="pill" id="pplPill">Price/Lb: <b class="rate">${formatMoney(ppl)}</b></span>
+          <span class="pill" id="pplPill">Price/Lb: <b class="rate ppl">${formatMoney(ppl)}</b></span>
         </div>
 
         ${d.raw ? `
@@ -2910,7 +2958,7 @@ getApp().innerHTML = `
     state.reviewDraft.dealer = dealer;
     if(pplPill){
       const v = computePPL(Number(p||0), Number(a||0));
-      pplPill.innerHTML = `Price/Lb: <b class="rate">${formatMoney(v)}</b>`;
+      pplPill.innerHTML = `Price/Lb: <b class="rate ppl">${formatMoney(v)}</b>`;
     }
     // Live warnings (missing fields + possible duplicate)
     try{
@@ -3418,7 +3466,7 @@ function renderReports(){
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="rate">${formatMoney(r.avg)}</b></div>
+            <div>$/lb <b class="rate ppl">${formatMoney(r.avg)}</b></div>
           </div>
         </div>
       `;
@@ -3435,7 +3483,7 @@ function renderReports(){
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="rate">${formatMoney(r.avg)}</b></div>
+            <div>$/lb <b class="rate ppl">${formatMoney(r.avg)}</b></div>
           </div>
         </div>
       `;
@@ -3466,7 +3514,7 @@ function renderReports(){
           <div>
             <div class="metaRow"><span class="tmeta">${date}</span> <span class="dot">•</span> <span class="tmeta">${dealer}</span></div>
             <div class="tname">${area}</div>
-            <div class="tsub">$/Lb: <b class="rate">${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
+            <div class="tsub">$/Lb: <b class="rate ppl">${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
           </div>
           <div class="tright">
             <div class="lbsBlue"><b class="lbsBlue">${to2(lbsNum)}</b> <span class="lbsBlue">lbs</span></div>

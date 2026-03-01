@@ -1,3 +1,14 @@
+
+// v81: tiny HTML escape (for modal titles/placeholders)
+function escapeHTML(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
+}
+
 // Shellfish Tracker — V4 ESM Branch
 // Phase 2A: Extracted pure utilities (no DOM, no state)
 
@@ -212,4 +223,58 @@ export function getTripsNewestFirst(trips){
     const ib = String(b?.id || "");
     return ib.localeCompare(ia);
   });
+}
+
+
+// ===========================
+// v81: Modal helpers (Quick Add, etc.)
+function openModal({ title, html, onOpen }){
+  const root = document.getElementById("modalRoot");
+  if(!root) return;
+
+  root.classList.remove("hidden");
+  root.setAttribute("aria-hidden","false");
+
+  root.innerHTML = `
+    <div class="modalSheet" role="dialog" aria-modal="true">
+      <div class="modalHdr">
+        <div class="modalTitle">${escapeHTML(String(title||""))}</div>
+        <button class="btn" id="modalCloseBtn" type="button" aria-label="Close">✕</button>
+      </div>
+      <div class="modalBody">${html||""}</div>
+    </div>
+  `;
+
+  const close = ()=>closeModal();
+
+  // close button
+  document.getElementById("modalCloseBtn")?.addEventListener("click", close);
+
+  // tap backdrop closes
+  root.addEventListener("click", (e)=>{
+    if(e.target === root) close();
+  }, { once: true });
+
+  // escape closes (desktop)
+  const escHandler = (e)=>{
+    if(e.key === "Escape"){
+      e.preventDefault();
+      close();
+    }
+  };
+  window.addEventListener("keydown", escHandler, { once: true });
+
+  // lock background scroll (simple)
+  document.body.style.overflow = "hidden";
+
+  try{ onOpen && onOpen(); }catch(_e){}
+}
+
+function closeModal(){
+  const root = document.getElementById("modalRoot");
+  if(!root) return;
+  root.classList.add("hidden");
+  root.setAttribute("aria-hidden","true");
+  root.innerHTML = "";
+  document.body.style.overflow = "";
 }

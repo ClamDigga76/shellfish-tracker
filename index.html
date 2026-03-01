@@ -16,7 +16,7 @@
 
 <style>
 :root{--bg:#0b0f16;--line:rgba(255,255,255,.10);--text:#e8eefc;--muted:#9fb0d0;--accent:#2f6df6;
-  --lbsBlue: var(--accent);--lbsBlue:var(--accent);--good:#2EA043;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:46px;--bottom-gutter:6px}
+  --lbsBlue: var(--accent);--lbsBlue:var(--accent);--good:#2EA043;--pplYellow:#ffd54a;--bad:#ff4d4f;--r:20px;--sh:0 18px 50px rgba(0,0,0,.55);--tabbar-h:46px;--bottom-gutter:6px}
 
 :root{
   --safeTop: env(safe-area-inset-top);
@@ -47,7 +47,7 @@ main{padding:14px 14px 18px}
 b.money{color:var(--good)!important}
 .lbsBlue{color:var(--lbsBlue)!important;font-weight:700}
 b.lbsBlue{color:var(--lbsBlue)!important}
-.rate{color:#ffd54a;font-weight:800}
+.rate,.ppl{color:var(--pplYellow);font-weight:800}
 .lbsBlue{color:var(--lbsBlue)!important;font-weight:700}
 
 .small{font-size:12px}
@@ -665,7 +665,54 @@ header{padding:14px 18px 12px}
   z-index: 40;
 }
 .tripActionRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-</style>
+
+/* v81: modal (quick add) */
+.modalRoot{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:16px;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  background:rgba(0,0,0,.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.modalRoot.hidden{ display:none; }
+.modalSheet{
+  width:min(560px, 100%);
+  background: rgba(20,23,28,.92);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  box-shadow: 0 18px 55px rgba(0,0,0,.55);
+  overflow:hidden;
+}
+.modalHdr{
+  padding:14px 16px 10px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.modalTitle{ font-weight:800; letter-spacing:.04em; text-transform:uppercase; font-size:12px; opacity:.9; }
+.modalBody{ padding:14px 16px 16px 16px; }
+.modalActions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  padding:0 16px 16px 16px;
+}
+.modalErr{
+  margin-top:10px;
+  font-size:12px;
+  opacity:.9;
+  color: var(--danger, #ff6b6b);
+}
+
+\1
 
 </head>
 <body>
@@ -674,7 +721,7 @@ header{padding:14px 18px 12px}
     <footer class="app-footer">© 2026 Jeremy Wood. All rights reserved.</footer>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=79"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=81"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
@@ -689,5 +736,6 @@ header{padding:14px 18px 12px}
 
 <div id="tabbar" aria-label="Primary navigation"></div>
   <div id="toast"></div>
+  <div id="modalRoot" class="modalRoot hidden" aria-hidden="true"></div>
 </body>
 </html>
