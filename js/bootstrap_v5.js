@@ -1,4 +1,4 @@
-const SW_VERSION = "76";
+const SW_VERSION = "77";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -214,9 +214,9 @@ window.__showModuleError = function (err) {
 (async () => {
   try {
     // Assert v-param'd assets so we don't accidentally validate one URL and import another.
-    await __assertAssetExists(`./utils_v5.js?v=${SW_VERSION}`);
-    await __assertAssetExists(`./app_v5.js?v=${SW_VERSION}`);
-    await import(new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href);
+    await __assertAssetExists(`./js/utils_v5.js?v=${SW_VERSION}`);
+    await __assertAssetExists(`./js/app_v5.js?v=${SW_VERSION}`);
+    await import(new URL(`./js/app_v5.js?v=${SW_VERSION}`, import.meta.url).href);
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);
