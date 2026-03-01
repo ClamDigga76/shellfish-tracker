@@ -1,5 +1,5 @@
-const SW_VERSION = "68";
-window.APP_BUILD = "68";
+const SW_VERSION = "69";
+window.APP_BUILD = "69";
 /**
  * Shellfish Tracker v5 bootstrap
  *

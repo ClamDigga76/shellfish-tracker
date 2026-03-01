@@ -1755,12 +1755,12 @@ function ensureHomeFilter(){
 
 
 function mdyToISOValue(mdy){
-  return parseMDYToISO(String(mdy||\"\")) || \"\";
+  return parseMDYToISO(String(mdy||"")) || "";
 }
 
 function isoValueToMDY(iso){
-  const v = String(iso||\"\").slice(0,10);
-  return v ? formatDateMDY(v) : \"\";
+  const v = String(iso||"").slice(0,10);
+  return v ? formatDateMDY(v) : "";
 }
 
 
