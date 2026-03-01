@@ -2409,12 +2409,14 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       <div class="field">
         <div class="fieldLabel overline center">DEALERS</div>
         ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
-        <div class="selectRowWrap">
-          <select class="input" id="t_dealer" aria-label="Select Dealer">
-            ${dealerOptions}
-          </select>
-          <span class="chev">›</span>
-          <button class="btn" id="addDealerInline" type="button" style="margin-left:8px;white-space:nowrap">+ Add</button>
+        <div class="selectWithBtn">
+          <div class="selectRowWrap">
+            <select class="input" id="t_dealer" aria-label="Select Dealer">
+              ${dealerOptions}
+            </select>
+            <span class="chev">›</span>
+          </div>
+          <button class="btn btnInlineAdd" id="addDealerInline" type="button">+ Add</button>
         </div>
         <div id="dealerPrompt"></div>
       </div>
@@ -2446,12 +2448,14 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       <div class="field">
         <div class="fieldLabel overline center">AREA</div>
         ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
-        <div class="selectRowWrap">
-          <select class="input" id="t_area" aria-label="Select Area">
-            ${areaOptions}
-          </select>
-          <span class="chev">›</span>
-          <button class="btn" id="addAreaInline" type="button" style="margin-left:8px;white-space:nowrap">+ Add</button>
+        <div class="selectWithBtn">
+          <div class="selectRowWrap">
+            <select class="input" id="t_area" aria-label="Select Area">
+              ${areaOptions}
+            </select>
+            <span class="chev">›</span>
+          </div>
+          <button class="btn btnInlineAdd" id="addAreaInline" type="button">+ Add</button>
         </div>
         <div id="areaPrompt"></div>
       </div>
