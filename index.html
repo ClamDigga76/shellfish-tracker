@@ -697,6 +697,13 @@ header{padding:14px 18px 12px}
   z-index: 50;
 }
 
+
+/* v70 Reports table grid */
+.tgrid{display:grid;grid-template-columns:1.2fr .6fr .8fr .8fr .9fr;gap:10px;padding:10px 12px;align-items:center}
+.tgrid.head{font-weight:800;opacity:.95;border-bottom:1px solid rgba(255,255,255,.10)}
+.tgrid.row{border-bottom:1px solid rgba(255,255,255,.08)}
+.tgrid.row:last-child{border-bottom:none}
+
 </style>
 
 </head>
@@ -706,7 +713,7 @@ header{padding:14px 18px 12px}
     <footer class="app-footer">© 2026 Jeremy Wood. All rights reserved.</footer>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=69"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=70"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>

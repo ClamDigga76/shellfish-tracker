@@ -201,6 +201,54 @@ function showToast(msg){
     toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, 2400);
   }catch{}
 }
+/* v70: lightweight modal for inline adds (Dealer/Area) */
+function showMiniModal({ title, label, placeholder, onSave }){
+  try{ document.getElementById("miniModal")?.remove(); }catch(_){}
+  const wrap = document.createElement("div");
+  wrap.id = "miniModal";
+  wrap.style.position = "fixed";
+  wrap.style.inset = "0";
+  wrap.style.background = "rgba(0,0,0,0.45)";
+  wrap.style.zIndex = "9999";
+  wrap.style.display = "flex";
+  wrap.style.alignItems = "center";
+  wrap.style.justifyContent = "center";
+  wrap.style.padding = "16px";
+
+  wrap.innerHTML = `
+    <div class="card" style="max-width:420px;width:100%">
+      <div style="font-weight:800;font-size:18px;margin-bottom:10px">${escapeHtml(title)}</div>
+      <div class="muted small">${escapeHtml(label)}</div>
+      <input id="miniModalInput" class="input" style="margin-top:6px" placeholder="${escapeHtml(placeholder||"")}" />
+      <div style="display:flex;gap:10px;margin-top:12px;justify-content:flex-end">
+        <button class="btn" id="miniModalCancel" type="button">Cancel</button>
+        <button class="btn primary" id="miniModalSave" type="button" disabled>Save</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+
+  const input = document.getElementById("miniModalInput");
+  const btnSave = document.getElementById("miniModalSave");
+  const close = ()=> { try{ wrap.remove(); }catch(_){} };
+
+  input?.focus();
+  input?.addEventListener("input", ()=>{
+    const v = String(input.value||"").trim();
+    btnSave.disabled = !v;
+  });
+
+  document.getElementById("miniModalCancel")?.addEventListener("click", close);
+  wrap.addEventListener("click", (e)=>{ if(e.target === wrap) close(); });
+
+  document.getElementById("miniModalSave")?.addEventListener("click", ()=>{
+    const v = String(input.value||"").trim();
+    if(!v) return;
+    close();
+    try{ onSave(v); }catch(_){}
+  });
+}
+
 
 // v59: simple confirm modal (Yes/Cancel)
 function confirmSaveModal({ title="Save this trip?", body="" } = {}){
@@ -1746,6 +1794,121 @@ function ensureReportsFilter(){
   if(state.reportsFilter.to == null) state.reportsFilter.to = "";
 }
 
+/* v70 Reports UI (dropdown-based; isolated from Trips/Home) */
+function ensureReportsUI(){
+  if(!state.reportsUI || typeof state.reportsUI !== "object"){
+    state.reportsUI = { range:"ytd", fromISO:"", toISO:"", view:"monthly", sort:"month_desc" };
+  }
+  const r = state.reportsUI;
+  if(!r.range) r.range = "ytd";
+  if(r.fromISO == null) r.fromISO = "";
+  if(r.toISO == null) r.toISO = "";
+  if(!r.view) r.view = "monthly";
+  if(!r.sort) r.sort = (r.view==="monthly") ? "month_desc" : "money_desc";
+}
+
+function resolveRangeISO(range, fromISO, toISO){
+  const today = isoToday();
+  if(range === "custom"){
+    let a = String(fromISO||"").slice(0,10);
+    let b = String(toISO||"").slice(0,10);
+    if(!a){ const y=today.slice(0,4); a = `${y}-01-01`; }
+    if(!b) b = today;
+    if(a > b){ const t=a; a=b; b=t; }
+    return { fromISO:a, toISO:b, label:`${a}..${b}` };
+  }
+  if(range === "ytd"){
+    const y = today.slice(0,4);
+    return { fromISO:`${y}-01-01`, toISO:today, label:"YTD" };
+  }
+  const daysBack = (range==="30d") ? 30 : (range==="90d") ? 90 : (range==="12m") ? 365 : 365;
+  const d = new Date();
+  d.setDate(d.getDate() - (daysBack-1));
+  const pad=(n)=>String(n).padStart(2,"0");
+  const start = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const label = (range==="30d") ? "30D" : (range==="90d") ? "90D" : "12M";
+  return { fromISO:start, toISO:today, label };
+}
+
+function addAggRow(map, key, trip){
+  const k = String(key||"").trim() || "(blank)";
+  if(!map.has(k)) map.set(k, { key:k, trips:0, lbs:0, amt:0 });
+  const r = map.get(k);
+  r.trips += 1;
+  r.lbs += Number(trip?.pounds || 0);
+  r.amt += Number(trip?.amount || 0);
+}
+
+function aggMonthly(trips){
+  const m = new Map();
+  for(const t of (trips||[])){
+    const iso = String(t?.dateISO||"").slice(0,10);
+    if(!iso) continue;
+    const ym = iso.slice(0,7);
+    addAggRow(m, ym, t);
+  }
+  return Array.from(m.values()).map(r=>({ ...r, ppl: r.lbs>0 ? (r.amt/r.lbs) : 0 }));
+}
+
+function aggByField(trips, field){
+  const m = new Map();
+  for(const t of (trips||[])){
+    addAggRow(m, String(t?.[field]||""), t);
+  }
+  return Array.from(m.values()).map(r=>({ ...r, ppl: r.lbs>0 ? (r.amt/r.lbs) : 0 }));
+}
+
+function sortAggRows(rows, sortKey){
+  const arr = rows.slice();
+  const byKey = (a,b)=> String(a.key).localeCompare(String(b.key));
+  const desc = (a,b)=> b-a;
+
+  switch(sortKey){
+    case "month_desc": return arr.sort((a,b)=> String(b.key).localeCompare(String(a.key)));
+    case "month_asc":  return arr.sort((a,b)=> String(a.key).localeCompare(String(b.key)));
+    case "money_desc": return arr.sort((a,b)=> desc(a.amt,b.amt) || byKey(a,b));
+    case "money_asc":  return arr.sort((a,b)=> (a.amt-b.amt) || byKey(a,b));
+    case "lbs_desc":   return arr.sort((a,b)=> desc(a.lbs,b.lbs) || byKey(a,b));
+    case "lbs_asc":    return arr.sort((a,b)=> (a.lbs-b.lbs) || byKey(a,b));
+    case "ppl_desc":   return arr.sort((a,b)=> desc(a.ppl,b.ppl) || byKey(a,b));
+    case "name_asc":   return arr.sort(byKey);
+    default: return arr;
+  }
+}
+
+function hiLoByMoney(rows){
+  if(!rows.length) return { hi:null, lo:null };
+  let hi = rows[0], lo = rows[0];
+  for(const r of rows){
+    if(r.amt > hi.amt) hi = r;
+    if(r.amt < lo.amt) lo = r;
+  }
+  return { hi, lo };
+}
+
+function renderAggTable(rows, firstColLabel){
+  const head = `
+    <div class="tgrid head">
+      <div>${escapeHtml(firstColLabel)}</div>
+      <div>Trips</div>
+      <div>Lbs</div>
+      <div>$</div>
+      <div>Avg $/lb</div>
+    </div>
+  `;
+  const body = rows.map(r=>`
+    <div class="tgrid row">
+      <div>${escapeHtml(String(r.key))}</div>
+      <div>${escapeHtml(String(r.trips))}</div>
+      <div class="lbsBlue">${escapeHtml(String(to2(r.lbs)))}</div>
+      <div class="money">${escapeHtml(formatMoney(r.amt))}</div>
+      <div>${escapeHtml(formatMoney(r.ppl))}</div>
+    </div>
+  `).join("");
+  return `<div class="card">${head}${body || `<div class="muted small">No data.</div>`}</div>`;
+}
+
+
 function ensureHomeFilter(){
   if(!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode:"YTD", from:"", to:"" };
   if(!state.homeFilter.mode) state.homeFilter.mode = "YTD";
@@ -1876,7 +2039,7 @@ function renderAllTrips(){
               ${dealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>` : ""}
             </div>
             <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b class="rate">${formatMoney(ppl)}</b></div>
+            <div class="tsub">$/Lb: <b class="rate" id="newtrip_ppl_value">${formatMoney(ppl)}</b></div>
           </div>
           <div class="tright">
             <div class="lbsBlue"><b class="lbsBlue">${to2(lbs)}</b> <span class="lbsBlue">lbs</span></div>
@@ -2069,6 +2232,22 @@ function renderHome(
   ensureHomeFilter();
   const hf = state.homeFilter || { mode:"YTD", from:"", to:"" };
   const hMode = String(hf.mode || "YTD").toUpperCase();
+// v70: Home RANGE should not look blank (keep same logic)
+if(hMode === "RANGE"){
+  const todayISO = isoToday();
+  const y = todayISO.slice(0,4);
+  if(!hf.from) hf.from = `01/01/${y}`;
+  if(!hf.to) hf.to = formatDateMDY(todayISO);
+  const a = parseMDYToISO(hf.from);
+  const b = parseMDYToISO(hf.to);
+  if(a && b && a > b){
+    const tmp = hf.from; hf.from = hf.to; hf.to = tmp;
+  }
+  // persist defaults so the UI shows them
+  state.homeFilter.from = hf.from;
+  state.homeFilter.to = hf.to;
+}
+
   const hr = modeRange(hMode, hf.from, hf.to);
   const trips = (hr.label === "ALL") ? tripsAll.slice() : (hr.startISO && hr.endISO ? filterByISOInclusive(tripsAll, hr.startISO, hr.endISO) : tripsAll.slice());
   const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
@@ -2410,11 +2589,14 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       <div class="field">
         <div class="fieldLabel overline center">DEALERS</div>
         ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
-        <div class="selectRowWrap">
+        <div class="row" style="gap:10px;align-items:center">
+          <div class="selectRowWrap" style="flex:1">
           <select class="input" id="t_dealer" aria-label="Select Dealer">
             ${dealerOptions}
           </select>
           <span class="chev">›</span>
+        </div>
+          <button class="btn" id="btnAddDealer" type="button">+ Add</button>
         </div>
         <div id="dealerPrompt"></div>
       </div>
@@ -2446,11 +2628,14 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       <div class="field">
         <div class="fieldLabel overline center">AREA</div>
         ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
-        <div class="selectRowWrap">
+        <div class="row" style="gap:10px;align-items:center">
+          <div class="selectRowWrap" style="flex:1">
           <select class="input" id="t_area" aria-label="Select Area">
             ${areaOptions}
           </select>
           <span class="chev">›</span>
+        </div>
+          <button class="btn" id="btnAddArea" type="button">+ Add</button>
         </div>
         <div id="areaPrompt"></div>
       </div>
@@ -2474,6 +2659,63 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
   const elDealer = document.getElementById("t_dealer");
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
+
+// v70: live $/lb as you type
+const elRate = document.getElementById("newtrip_ppl_value");
+const updateLivePPL = ()=>{
+  try{
+    const lbs = parseNum(elPounds?.value);
+    const amt = parseMoney(elAmount?.value);
+    const ppl = computePPL(Number(lbs||0), Number(amt||0));
+    if(elRate) elRate.textContent = formatMoney(ppl);
+  }catch(_){}
+};
+elPounds?.addEventListener("input", updateLivePPL);
+elAmount?.addEventListener("input", updateLivePPL);
+
+// v70: Add Dealer/Area inline (modal, stays on New Trip)
+document.getElementById("btnAddDealer")?.addEventListener("click", ()=>{
+  showMiniModal({
+    title: "Add Dealer",
+    label: "Dealer name",
+    placeholder: "e.g., Downeast Seafood",
+    onSave: (v)=>{
+      ensureDealers();
+      const name = String(v||"").trim();
+      if(!name) return;
+      const k = normalizeKey(name);
+      const exists = (state.dealers||[]).some(x=> normalizeKey(x) === k);
+      if(!exists) state.dealers.push(name);
+      ensureDealers();
+      state.draft = state.draft || {};
+      state.draft.dealer = name;
+      saveState();
+      renderNewTrip();
+    }
+  });
+});
+
+document.getElementById("btnAddArea")?.addEventListener("click", ()=>{
+  showMiniModal({
+    title: "Add Area",
+    label: "Area name",
+    placeholder: "e.g., Great Cove",
+    onSave: (v)=>{
+      ensureAreas();
+      const name = String(v||"").trim();
+      if(!name) return;
+      const k = normalizeKey(name);
+      const exists = (state.areas||[]).some(x=> normalizeKey(x) === k);
+      if(!exists) state.areas.push(name);
+      ensureAreas();
+      state.draft = state.draft || {};
+      state.draft.area = name;
+      saveState();
+      renderNewTrip();
+    }
+  });
+});
+
 
 // Numeric input UX (Pounds + Amount):
 // - first tap starts fresh (clears 0/placeholder-like values or selects all)
@@ -3184,363 +3426,194 @@ function renderEditTrip(){
 
 
 function renderReports(){
-  ensureReportsFilter();
+  ensureReportsUI();
+  const ru = state.reportsUI;
 
-  const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
-  const rf = state.reportsFilter || { mode:"YTD", from:"", to:"" };
-  const fMode = String(rf.mode || "YTD").toUpperCase();
-  const mode = state.reportsMode || "tables"; // "charts" | "tables"
+  const rangeOpts = [["ytd","YTD"],["30d","30D"],["90d","90D"],["12m","12M"],["custom","Custom"]];
+  const viewOpts  = [["monthly","Monthly"],["dealers","Dealers"],["areas","Areas"]];
 
-  const r = modeRange(fMode, rf.from, rf.to);
-  const hasValidRange = (r.label !== "RANGE") || (r.startISO && r.endISO);
-  const trips = (r.label === "ALL") ? tripsAll : (hasValidRange ? filterByISOInclusive(tripsAll, r.startISO, r.endISO) : tripsAll);
+  const sortOptsMonthly = [
+    ["month_desc","Month (Newest → Oldest)"],
+    ["month_asc","Month (Oldest → Newest)"],
+    ["money_desc","Total $ (High → Low)"],
+    ["lbs_desc","Total lbs (High → Low)"],
+    ["ppl_desc","Avg $/lb (High → Low)"],
+  ];
+  const sortOptsByName = [
+    ["money_desc","Total $ (High → Low)"],
+    ["lbs_desc","Total lbs (High → Low)"],
+    ["ppl_desc","Avg $/lb (High → Low)"],
+    ["name_asc","Name (A → Z)"],
+  ];
 
-  const chip = (key,label) => `<button class="chip ${fMode===key?'on':''}" data-rf="${key}">${label}</button>`;
-  const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
+  const sortOpts = (ru.view === "monthly") ? sortOptsMonthly : sortOptsByName;
+  if(ru.view==="monthly" && !sortOptsMonthly.some(x=>x[0]===ru.sort)) ru.sort = "month_desc";
+  if(ru.view!=="monthly" && !sortOptsByName.some(x=>x[0]===ru.sort)) ru.sort = "money_desc";
 
-  const rangeLabel = (fMode === "RANGE")
-    ? (hasValidRange ? `${formatDateMDY(r.startISO)} → ${formatDateMDY(r.endISO)}` : "Set dates")
-    : r.label;
-
-  if(!trips.length){
-    getApp().innerHTML = `
-      ${renderPageHeader("reports")}
-
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-          <b>Reports</b>
-          <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
-        </div>
-
-        <div class="chipGrid cols-3" style="margin-top:10px">
-          ${chip("YTD","YTD")}
-          ${chip("MONTH","Month")}
-          ${chip("7D","7 Days")}
-          ${chip("RANGE","Range")}
-        </div>
-
-        ${fMode==="RANGE" ? `
-          <div class="sep"></div>
-          <div class="grid2">
-            <div class="field">
-              <div class="label">From (MM/DD/YYYY)</div>
-              <input class="input" id="repRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.from||"")}" />
-            </div>
-            <div class="field">
-              <div class="label">To (MM/DD/YYYY)</div>
-              <input class="input" id="repRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.to||"")}" />
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <button class="btn primary" id="repRangeApply">Apply</button>
-          </div>
-        ` : ""}
-
-        <div class="hint">${fMode==="RANGE" && !hasValidRange ? "Set a valid date range to see tables and charts." : "No trips in this range yet."}</div>
-      </div>
-    `;
-    getApp().scrollTop = 0;
-
-    // range chips
-    getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
-      btn.onclick = ()=>{
-        state.reportsFilter.mode = String(btn.getAttribute("data-rf")||"YTD");
-        saveState();
-        renderReports();
-      };
-    });
-
-    const applyBtn = document.getElementById("repRangeApply");
-    if(applyBtn){
-      applyBtn.onclick = ()=>{
-        const from = String(document.getElementById("repRangeFrom")?.value || "").trim();
-        const to = String(document.getElementById("repRangeTo")?.value || "").trim();
-        const s = parseMDYToISO(from);
-        const e = parseMDYToISO(to);
-        if(!s || !e){ showToast("Invalid range dates"); return; }
-        state.reportsFilter.from = from;
-        state.reportsFilter.to = to;
-        saveState();
-        renderReports();
-      };
-    }
-    return;
+  const rr = resolveRangeISO(ru.range, ru.fromISO, ru.toISO);
+  if(ru.range === "custom"){
+    ru.fromISO = rr.fromISO;
+    ru.toISO = rr.toISO;
   }
 
-  // Aggregations
-  const byDealer = new Map();
-  const byArea = new Map();
-  const byMonth = new Map(); // 1-12
-  for(let m=1;m<=12;m++) byMonth.set(m, { trips:0, lbs:0, amt:0 });
+  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
+  const tripsInRange = filterByISOInclusive(tripsAll, rr.fromISO, rr.toISO);
 
-  trips.forEach(t=>{
-    const dealerRaw = (t?.dealer||"").toString();
-    const dealer = normalizeDealerDisplay(dealerRaw) || "(Unspecified)";
-    const dealerKey = dealer.toLowerCase();
-    const area = ((t?.area||"").toString().trim()) || "(Unspecified)";
-    const areaKey = area.toLowerCase();
+  let rows = [];
+  if(ru.view === "monthly") rows = aggMonthly(tripsInRange);
+  if(ru.view === "dealers") rows = aggByField(tripsInRange, "dealer");
+  if(ru.view === "areas")   rows = aggByField(tripsInRange, "area");
 
-    const lbs = Number(t?.pounds)||0;
-    const amt = Number(t?.amount)||0;
+  rows = sortAggRows(rows, ru.sort);
+  const hl = hiLoByMoney(rows);
 
-    const d = byDealer.get(dealerKey) || { name: dealer, trips:0, lbs:0, amt:0 };
-    d.trips += 1; d.lbs += lbs; d.amt += amt;
-    byDealer.set(dealerKey, d);
-
-    const a = byArea.get(areaKey) || { name: area, trips:0, lbs:0, amt:0 };
-    a.trips += 1; a.lbs += lbs; a.amt += amt;
-    byArea.set(areaKey, a);
-
-    const iso = String(t?.dateISO||"");
-    const mm = parseInt(iso.slice(5,7), 10);
-    if(mm>=1 && mm<=12){
-      const mo = byMonth.get(mm);
-      mo.trips += 1; mo.lbs += lbs; mo.amt += amt;
-    }
-  });
-
-  const dealerRows = Array.from(byDealer.values()).map(x=>{
-    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-    return { ...x, avg };
-  }).sort((a,b)=> b.amt - a.amt);
-
-  const areaRows = Array.from(byArea.values()).map(x=>{
-    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-    return { ...x, avg };
-  }).sort((a,b)=> b.amt - a.amt);
-
-  const monthRows = Array.from(byMonth.entries()).map(([m,x])=>{
-    const label = new Date(2000, m-1, 1).toLocaleString(undefined,{month:"short"});
-    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-    return { month:m, label, ...x, avg };
-  });
-
-  const renderAggList = (rows, emptyMsg)=>{
-    if(!rows.length) return `<div class="muted small">${escapeHtml(emptyMsg||"No data")}</div>`;
-    return rows.map(r=>{
-      return `
-        <div class="trow">
-          <div>
-            <div class="tname">${escapeHtml(r.name)}</div>
-            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
-          </div>
-          <div class="tright">
-            <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="rate">${formatMoney(r.avg)}</b></div>
-          </div>
+  const controlsHTML = `
+    <div class="card">
+      <div class="filterGrid2" style="align-items:end">
+        <div>
+          <div class="muted small">Range</div>
+          <select id="rep_range" class="select">
+            ${rangeOpts.map(([k,l])=>`<option value="${k}" ${ru.range===k?"selected":""}>${l}</option>`).join("")}
+          </select>
         </div>
-      `;
-    }).join("");
-  };
 
-  const renderMonthList = ()=>{
-    return monthRows.map(r=>{
-      return `
-        <div class="trow">
-          <div>
-            <div class="tname">${escapeHtml(r.label)}</div>
-            <div class="tsub">${r.trips} trips • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
-          </div>
-          <div class="tright">
-            <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="rate">${formatMoney(r.avg)}</b></div>
-          </div>
+        <div>
+          <div class="muted small">View</div>
+          <select id="rep_view" class="select">
+            ${viewOpts.map(([k,l])=>`<option value="${k}" ${ru.view===k?"selected":""}>${l}</option>`).join("")}
+          </select>
         </div>
-      `;
-    }).join("");
-  };
 
-  // High/Low items
-  const maxLbs = trips.reduce((best,t)=> (Number(t?.pounds)||0) > (Number(best?.pounds)||0) ? t : best, trips[0]);
-  const minLbs = trips.reduce((best,t)=> (Number(t?.pounds)||0) < (Number(best?.pounds)||0) ? t : best, trips[0]);
-  const maxAmt = trips.reduce((best,t)=> (Number(t?.amount)||0) > (Number(best?.amount)||0) ? t : best, trips[0]);
-  const minAmt = trips.reduce((best,t)=> (Number(t?.amount)||0) < (Number(best?.amount)||0) ? t : best, trips[0]);
+        <div class="span2">
+          <div class="muted small">Sort</div>
+          <select id="rep_sort" class="select">
+            ${sortOpts.map(([k,l])=>`<option value="${k}" ${ru.sort===k?"selected":""}>${l}</option>`).join("")}
+          </select>
+        </div>
 
-  const pplRows = trips.filter(t => (Number(t?.pounds)||0) > 0 && (Number(t?.amount)||0) > 0);
-  const maxPpl = pplRows.reduce((best,t)=> (Number(t?.amount)||0)/(Number(t?.pounds)||1) > (Number(best?.amount)||0)/(Number(best?.pounds)||1) ? t : best, pplRows[0]);
-  const minPpl = pplRows.reduce((best,t)=> (Number(t?.amount)||0)/(Number(t?.pounds)||1) < (Number(best?.amount)||0)/(Number(best?.pounds)||1) ? t : best, pplRows[0]);
+        <button class="btn" id="rep_export" type="button" style="width:100%">Export CSV</button>
+        <button class="btn" id="rep_reset" type="button">Reset</button>
+      </div>
 
-  const renderHLItem = (t)=>{
-    if(!t) return `<div class="muted small">—</div>`;
-    const date = escapeHtml(formatDateMDY(t?.dateISO||""));
-    const dealer = escapeHtml(String(t?.dealer||"")) || "(dealer)";
-    const area = escapeHtml(String(t?.area||"")) || "(area)";
-    const lbsNum = Number(t?.pounds)||0;
-    const amtNum = Number(t?.amount)||0;
-    const ppl = (lbsNum>0 && amtNum>0) ? (amtNum/lbsNum) : 0;
-    return `
-      <div class="trip triprow hlTrip">
-        <div class="trow">
+      <div id="rep_custom_wrap" style="margin-top:10px;display:${ru.range==="custom"?"block":"none"}">
+        <div class="filterGrid2">
           <div>
-            <div class="metaRow"><span class="tmeta">${date}</span> <span class="dot">•</span> <span class="tmeta">${dealer}</span></div>
-            <div class="tname">${area}</div>
-            <div class="tsub">$/Lb: <b class="rate">${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
+            <div class="muted small">From</div>
+            <input id="rep_from" type="date" class="input" value="${escapeHtml(String(ru.fromISO||"").slice(0,10))}">
           </div>
-          <div class="tright">
-            <div class="lbsBlue"><b class="lbsBlue">${to2(lbsNum)}</b> <span class="lbsBlue">lbs</span></div>
-            <div><b class="money">${formatMoney(to2(amtNum))}</b></div>
+          <div>
+            <div class="muted small">To</div>
+            <input id="rep_to" type="date" class="input" value="${escapeHtml(String(ru.toISO||"").slice(0,10))}">
           </div>
         </div>
       </div>
-    `;
-  };
 
-  const renderChartsSection = ()=>{
-    return `
-      <div class="card">
-        <b>Avg $/lb by Month</b>
-        <div class="sep"></div>
-        <canvas class="chart" id="c_ppl" height="180"></canvas>
+      <div class="muted small" style="margin-top:10px">
+        Showing: <b>${escapeHtml(ru.range.toUpperCase())}</b> • View: <b>${escapeHtml(ru.view)}</b>
       </div>
-      <div class="card">
-        <b>Dealer Amount (Top)</b>
-        <div class="sep"></div>
-        <canvas class="chart" id="c_dealer" height="200"></canvas>
-      </div>
-      <div class="card">
-        <b>Monthly Pounds</b>
-        <div class="sep"></div>
-        <canvas class="chart" id="c_lbs" height="180"></canvas>
-      </div>
-    `;
-  };
+    </div>
+  `;
 
-  const renderTablesSection = ()=>{
-    return `
-      <div class="card">
-        <b>Dealer Summary</b>
-        <div class="sep"></div>
-        ${renderAggList(dealerRows, "No trips in this range yet.")}
-      </div>
+  const hiLoHTML = `
+    <div class="card">
+      <div class="muted small">Highest (by Total $): <b>${hl.hi ? escapeHtml(hl.hi.key) : "—"}</b> (${hl.hi ? formatMoney(hl.hi.amt) : "—"})</div>
+      <div class="muted small" style="margin-top:6px">Lowest (by Total $): <b>${hl.lo ? escapeHtml(hl.lo.key) : "—"}</b> (${hl.lo ? formatMoney(hl.lo.amt) : "—"})</div>
+    </div>
+  `;
 
-      <div class="card">
-        <b>Area Summary</b>
-        <div class="sep"></div>
-        ${renderAggList(areaRows, "No trips in this range yet.")}
-      </div>
-
-      <div class="card">
-        <b>Monthly Totals</b>
-        <div class="sep"></div>
-        ${renderMonthList()}
-      </div>
-
-      <div class="card">
-        <b>High / Low Summary</b>
-        <div class="sep"></div>
-
-        <div class="hlHdr">Most Pounds</div>
-        ${renderHLItem(maxLbs)}
-        <div class="sep"></div>
-
-        <div class="hlHdr">Least Pounds</div>
-        ${renderHLItem(minLbs)}
-        <div class="sep"></div>
-
-        <div class="hlHdr">Highest Amount</div>
-        ${renderHLItem(maxAmt)}
-        <div class="sep"></div>
-
-        <div class="hlHdr">Lowest Amount</div>
-        ${renderHLItem(minAmt)}
-        <div class="sep"></div>
-
-        ${pplRows.length ? `
-          <div class="hlHdr">Highest $/lb</div>
-          ${renderHLItem(maxPpl)}
-          <div class="sep"></div>
-
-          <div class="hlHdr">Lowest $/lb</div>
-          ${renderHLItem(minPpl)}
-        ` : `<div class="muted small">No trips with valid pounds + amount in this range.</div>`}
-      </div>
-    `;
-  };
+  const firstCol = (ru.view==="monthly") ? "Month" : (ru.view==="dealers") ? "Dealer" : "Area";
+  const tableHTML = renderAggTable(rows, firstCol);
 
   getApp().innerHTML = `
     ${renderPageHeader("reports")}
-
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-        <b>Reports</b>
-        <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
-      </div>
-
-      <div class="chipGrid cols-3" style="margin-top:10px">
-        ${chip("YTD","YTD")}
-        ${chip("MONTH","Month")}
-        ${chip("7D","7 Days")}
-        ${chip("RANGE","Range")}
-      </div>
-
-      ${fMode==="RANGE" ? `
-        <div class="sep"></div>
-        <div class="grid2">
-          <div class="field">
-            <div class="label">From (MM/DD/YYYY)</div>
-            <input class="input" id="repRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.from||"")}" />
-          </div>
-          <div class="field">
-            <div class="label">To (MM/DD/YYYY)</div>
-            <input class="input" id="repRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.to||"")}" />
-          </div>
-        </div>
-        <div class="row" style="margin-top:10px">
-          <button class="btn primary" id="repRangeApply">Apply</button>
-        </div>
-      ` : ""}
-
-      <div class="chipGrid cols-3" style="margin-top:10px">
-        ${seg("charts","Charts")}
-        ${seg("tables","Tables")}
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    ${mode === "charts" ? renderChartsSection() : renderTablesSection()}
+    ${controlsHTML}
+    ${hiLoHTML}
+    ${tableHTML}
   `;
+  bindNavHandlers(state);
 
-  getApp().scrollTop = 0;
+  const $ = (id)=>document.getElementById(id);
 
-  // range chips
-  getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
-    btn.onclick = ()=>{
-      state.reportsFilter.mode = String(btn.getAttribute("data-rf")||"YTD");
-      saveState();
-      renderReports();
-    };
+  $("rep_range")?.addEventListener("change",(e)=>{
+    ensureReportsUI();
+    ru.range = e.target.value;
+    if(ru.range === "custom"){
+      const now = isoToday();
+      const y = now.slice(0,4);
+      if(!ru.fromISO) ru.fromISO = `${y}-01-01`;
+      if(!ru.toISO) ru.toISO = now;
+      if(ru.fromISO > ru.toISO){ const t=ru.fromISO; ru.fromISO=ru.toISO; ru.toISO=t; }
+    }
+    saveState();
+    renderReports();
   });
 
-  // apply range
-  const applyBtn = document.getElementById("repRangeApply");
-  if(applyBtn){
-    applyBtn.onclick = ()=>{
-      const from = String(document.getElementById("repRangeFrom")?.value || "").trim();
-      const to = String(document.getElementById("repRangeTo")?.value || "").trim();
-      const s = parseMDYToISO(from);
-      const e = parseMDYToISO(to);
-      if(!s || !e){ showToast("Invalid range dates"); return; }
-      state.reportsFilter.from = from;
-      state.reportsFilter.to = to;
-      saveState();
-      renderReports();
-    };
-  }
-
-  // mode chips
-  getApp().querySelectorAll(".chip[data-m]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const key = btn.getAttribute("data-m");
-      state.reportsMode = key;
-      saveState();
-      renderReports();
-    };
+  $("rep_view")?.addEventListener("change",(e)=>{
+    ensureReportsUI();
+    ru.view = e.target.value;
+    ru.sort = (ru.view==="monthly") ? "month_desc" : "money_desc";
+    saveState();
+    renderReports();
   });
 
-  if(mode === "charts"){
-    setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows); }, 0);
-  }
+  $("rep_sort")?.addEventListener("change",(e)=>{
+    ensureReportsUI();
+    ru.sort = e.target.value;
+    saveState();
+    renderReports();
+  });
+
+  $("rep_from")?.addEventListener("change",(e)=>{
+    ensureReportsUI();
+    ru.range = "custom";
+    ru.fromISO = String(e.target.value||"").slice(0,10);
+    saveState();
+    renderReports();
+  });
+
+  $("rep_to")?.addEventListener("change",(e)=>{
+    ensureReportsUI();
+    ru.range = "custom";
+    ru.toISO = String(e.target.value||"").slice(0,10);
+    saveState();
+    renderReports();
+  });
+
+  $("rep_reset")?.addEventListener("click",()=>{
+    ensureReportsUI();
+    ru.range="ytd"; ru.fromISO=""; ru.toISO="";
+    ru.view="monthly"; ru.sort="month_desc";
+    saveState();
+    renderReports();
+  });
+
+  $("rep_export")?.addEventListener("click",()=>{
+    ensureReportsUI();
+    const rr2 = resolveRangeISO(ru.range, ru.fromISO, ru.toISO);
+    const trips2 = filterByISOInclusive(tripsAll, rr2.fromISO, rr2.toISO);
+
+    let rows2 = [];
+    if(ru.view === "monthly") rows2 = aggMonthly(trips2);
+    if(ru.view === "dealers") rows2 = aggByField(trips2, "dealer");
+    if(ru.view === "areas")   rows2 = aggByField(trips2, "area");
+    rows2 = sortAggRows(rows2, ru.sort);
+
+    const col = (ru.view==="monthly") ? "Month" : (ru.view==="dealers") ? "Dealer" : "Area";
+    const out = rows2.map(r=>({
+      [col]: r.key,
+      Trips: r.trips,
+      Pounds: to2(r.lbs),
+      Amount: formatMoney(r.amt),
+      "Avg $/lb": formatMoney(r.ppl),
+    }));
+
+    const csv = toCSV(out);
+    const name = `reports_${ru.view}_${ru.range}_${rr2.fromISO}_to_${rr2.toISO}.csv`.replace(/[^\w\-\.]+/g,"_");
+    downloadText(name, csv, "text/csv");
+    showToast("Report CSV exported");
+  });
 }
+
 
 
 function drawReportsCharts(monthRows, dealerRows){
