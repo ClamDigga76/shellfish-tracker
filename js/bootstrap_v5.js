@@ -1,4 +1,4 @@
-const SW_VERSION = "73";
+const SW_VERSION = "75";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -215,7 +215,7 @@ window.__showModuleError = function (err) {
   try {
     await __assertAssetExists(`./js/utils_v5.js`);
     await __assertAssetExists(`./js/app_v5.js`);
-    await import(new URL(`./app_v5.js`, import.meta.url).href);
+    await import(new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href);
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);

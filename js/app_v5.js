@@ -2007,9 +2007,6 @@ function renderAllTrips(){
           <div class="h1">Trips</div>
           <div class="muted small">Browse and export your trips.</div>
         </div>
-        <div class="hdrBtns">
-          <button class="btn" id="newTripBtn">+ New Trip</button>
-        </div>
       </div>
 
       ${filtersCard}
@@ -2021,14 +2018,6 @@ function renderAllTrips(){
   `;
 
   bindNavHandlers(state);
-
-  // New trip
-  document.getElementById("newTripBtn")?.addEventListener("click", ()=>{
-    state.view = "new";
-    saveState();
-    render();
-  });
-
   // Open trip row
   root.querySelectorAll(".triprow").forEach(el=>{
     el.addEventListener("click", ()=>{
@@ -2425,6 +2414,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
             ${dealerOptions}
           </select>
           <span class="chev">›</span>
+          <button class="btn" id="addDealerInline" type="button" style="margin-left:8px;white-space:nowrap">+ Add</button>
         </div>
         <div id="dealerPrompt"></div>
       </div>
@@ -2448,7 +2438,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
           </div>
         </div>
       </div>
-      <div class="rateLine muted small">$/lb: <b class="rate">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
+      <div class="rateLine muted small">$/lb: <b class="rate" id="rateValue">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
 
       </section>
 
@@ -2461,6 +2451,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
             ${areaOptions}
           </select>
           <span class="chev">›</span>
+          <button class="btn" id="addAreaInline" type="button" style="margin-left:8px;white-space:nowrap">+ Add</button>
         </div>
         <div id="areaPrompt"></div>
       </div>
@@ -2484,6 +2475,69 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
   const elDealer = document.getElementById("t_dealer");
   const elPounds = document.getElementById("t_pounds");
   const elAmount = document.getElementById("t_amount");
+
+  const elArea = document.getElementById("t_area");
+  const elRate = document.getElementById("rateValue");
+  const elDealerPrompt = document.getElementById("dealerPrompt");
+  const elAreaPrompt = document.getElementById("areaPrompt");
+  const btnAddDealer = document.getElementById("addDealerInline");
+  const btnAddArea = document.getElementById("addAreaInline");
+
+  const updateRateLine = ()=>{
+    if(!elRate) return;
+    const p = Number(String(elPounds?.value||"").trim() || 0);
+    const a = Number(String(elAmount?.value||"").trim() || 0);
+    elRate.textContent = formatMoney(computePPL(p, a));
+  };
+
+  const renderInlineAdder = (kind)=>{
+    const target = (kind==="dealer") ? elDealerPrompt : elAreaPrompt;
+    if(!target) return;
+    const idInput = (kind==="dealer") ? "newDealerInline" : "newAreaInline";
+    const idSave  = (kind==="dealer") ? "saveNewDealerInline" : "saveNewAreaInline";
+    const idCancel= (kind==="dealer") ? "cancelNewDealerInline" : "cancelNewAreaInline";
+    const ph = (kind==="dealer") ? "New dealer name" : "New area (ex: 19/626)";
+    target.innerHTML = `
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input class="input" id="${idInput}" placeholder="${ph}" style="flex:1;min-width:180px" />
+        <button class="btn primary" id="${idSave}" type="button">Add</button>
+        <button class="btn" id="${idCancel}" type="button">Cancel</button>
+      </div>
+    `;
+    const elIn = document.getElementById(idInput);
+    elIn?.focus();
+
+    document.getElementById(idCancel)?.addEventListener("click", ()=>{
+      target.innerHTML = "";
+    });
+
+    document.getElementById(idSave)?.addEventListener("click", ()=>{
+      const raw = String(elIn?.value||"").trim();
+      if(!raw){
+        toast("Enter a value first.");
+        elIn?.focus();
+        return;
+      }
+
+      if(kind==="dealer"){
+        if(!Array.isArray(state.dealers)) state.dealers = [];
+        state.dealers.push(raw);
+        ensureDealers();
+        state.draft = { ...(state.draft||draft), dealer: raw };
+      }else{
+        if(!Array.isArray(state.areas)) state.areas = [];
+        state.areas.push(raw);
+        ensureAreas();
+        state.draft = { ...(state.draft||draft), area: raw };
+      }
+
+      saveState();
+      render(); // re-render so the select options + chips refresh, and the new value becomes selected
+    });
+  };
+
+  btnAddDealer?.addEventListener("click", ()=>renderInlineAdder("dealer"));
+  btnAddArea?.addEventListener("click", ()=>renderInlineAdder("area"));
 
 // Numeric input UX (Pounds + Amount):
 // - first tap starts fresh (clears 0/placeholder-like values or selects all)
@@ -2555,10 +2609,12 @@ const normalizeAmountOnBlur = (el)=>{
       const s = sanitizeDecimalInput(elPounds.value);
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
+      updateRateLine();
     });
     elPounds.addEventListener("blur", ()=>{
       if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
       updateSaveEnabled();
+      updateRateLine();
     });
   }
 
@@ -2571,10 +2627,12 @@ const normalizeAmountOnBlur = (el)=>{
       const s = sanitizeDecimalInput(elAmount.value);
       if(s !== elAmount.value) elAmount.value = s;
       updateSaveEnabled();
+      updateRateLine();
     });
     elAmount.addEventListener("blur", ()=>{
       normalizeAmountOnBlur(elAmount);
       updateSaveEnabled();
+      updateRateLine();
     });
   }
 
@@ -2586,6 +2644,7 @@ const normalizeAmountOnBlur = (el)=>{
       state.draft.dateISO = today;
       saveDraft();
       updateSaveEnabled();
+      updateRateLine();
     };
   }
 
@@ -2688,6 +2747,7 @@ const btnClear = document.getElementById("clearDraft");
     state.draft.area = a;
     saveDraft();
     updateSaveEnabled();
+      updateRateLine();
   });
 }
 
@@ -2702,11 +2762,13 @@ if(topDealerWrap && elDealer){
     state.draft.dealer = d;
     saveDraft();
     updateSaveEnabled();
+      updateRateLine();
   });
 }
 
   // Initial state
   updateSaveEnabled();
+      updateRateLine();
 }
 
 function renderReviewTrip(){
@@ -4013,6 +4075,16 @@ function renderHelp(){
       <div class="hint">How to use Shellfish Tracker (no paste required).</div>
     </div>
 
+
+    <div class="card">
+      <b>Build info</b>
+      <div class="sep"></div>
+      <div class="muted small" style="line-height:1.6">
+        <div>App: <b>${escapeHtml(String(VERSION))}</b> (schema ${escapeHtml(String(state.schemaVersion||state.schema||""))})</div>
+        <div>Standalone: <b>${window.matchMedia("(display-mode: standalone)").matches ? "yes" : "no"}</b></div>
+        <div>SW controller: <b>${navigator.serviceWorker && navigator.serviceWorker.controller ? "yes" : "no"}</b></div>
+      </div>
+    </div>
     <div class="card">
       <b>Main sections</b>
       <div class="sep"></div>

@@ -15,8 +15,8 @@ const CORE = [
   "./legal/privacy.html",
   "./legal/license.html",
   `./js/bootstrap_v5.js?v=${SW_V}`,
-  "./js/utils_v5.js",
-  "./js/app_v5.js",
+  "./js/utils_v5.js?v="+SW_V,
+  "./js/app_v5.js?v="+SW_V,
 ];
 
 function isJS(url) {
