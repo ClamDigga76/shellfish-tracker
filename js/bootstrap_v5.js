@@ -1,4 +1,4 @@
-const SW_VERSION = "77";
+const SW_VERSION = "78";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -14,7 +14,8 @@ async function __assertAssetExists(path) {
   const r = await fetch(path, { cache: "no-store" });
   if (!r.ok) throw new Error(`Missing required asset: ${path} (HTTP ${r.status})`);
 
-  if (/\.js$/i.test(path)) {
+  // Accept v-param'd JS URLs (e.g., app_v5.js?v=78)
+  if (/\.js($|\?)/i.test(path)) {
     const ct = (r.headers.get("content-type") || "").toLowerCase();
     if (!(ct.includes("javascript") || ct.includes("ecmascript"))) {
       throw new Error(`Bad content-type for ${path}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
@@ -213,10 +214,14 @@ window.__showModuleError = function (err) {
 // surface real import/parse errors (404, HTML-as-JS, syntax errors) instead of only the watchdog.
 (async () => {
   try {
-    // Assert v-param'd assets so we don't accidentally validate one URL and import another.
-    await __assertAssetExists(`./js/utils_v5.js?v=${SW_VERSION}`);
-    await __assertAssetExists(`./js/app_v5.js?v=${SW_VERSION}`);
-    await import(new URL(`./js/app_v5.js?v=${SW_VERSION}`, import.meta.url).href);
+    // Assert and import using absolute URLs derived from this module's location.
+    // (Avoids "./js/..." resolving to "/js/js/..." when bootstrap lives in /js/.)
+    const UTILS_URL = new URL(`./utils_v5.js?v=${SW_VERSION}`, import.meta.url).href;
+    const APP_URL = new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href;
+
+    await __assertAssetExists(UTILS_URL);
+    await __assertAssetExists(APP_URL);
+    await import(APP_URL);
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);
