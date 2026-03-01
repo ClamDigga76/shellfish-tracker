@@ -1,5 +1,7 @@
-const SW_VERSION = "70";
-window.APP_BUILD = "70";
+const SW_VERSION = "71";
+
+// Single source of truth for build/version
+window.APP_BUILD = `v5.${SW_VERSION}`;
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -12,12 +14,18 @@ async function __assertAssetExists(path) {
   const r = await fetch(path, { cache: "no-store" });
   if (!r.ok) throw new Error(`Missing required asset: ${path} (HTTP ${r.status})`);
 
-  // Guard: if a JS file is accidentally served HTML (common with bad SW caches),
-  // fail fast with a clear error instead of a cryptic parse error like: Unexpected keyword 'class'.
   if (/\.js$/i.test(path)) {
     const ct = (r.headers.get("content-type") || "").toLowerCase();
     if (!(ct.includes("javascript") || ct.includes("ecmascript"))) {
       throw new Error(`Bad content-type for ${path}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
+    }
+
+    // Body sniff: catch corrupted/garbled cached responses that still claim JS content-type.
+    // (Valid JS in this app typically starts with "const", "import", or a block comment.)
+    const txt = await r.clone().text();
+    const head = (txt || "").trimStart().slice(0, 64);
+    if (head.startsWith("<") || head.startsWith(")") || head.startsWith("]") || head.startsWith("}")) {
+      throw new Error(`Corrupted JS response for ${path} (starts with: ${head.slice(0, 12)}). Try Reset Cache.`);
     }
   }
 }
@@ -207,7 +215,7 @@ window.__showModuleError = function (err) {
   try {
     await __assertAssetExists(`./js/utils_v5.js`);
     await __assertAssetExists(`./js/app_v5.js`);
-    await await import(new URL(`./app_v5.js`, import.meta.url).href);
+    await import(new URL(`./app_v5.js`, import.meta.url).href);
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);

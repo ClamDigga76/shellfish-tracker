@@ -1,15 +1,3 @@
-
-// Version sanity tripwire: if this module is loaded with a ?v= param, it must match window.APP_BUILD.
-(() => {
-  try{
-    const v = new URL(import.meta.url).searchParams.get("v") || "";
-    const b = String(window.APP_BUILD || "");
-    if (v && b && v !== b) throw new Error(`Build mismatch: APP_BUILD=${b}, utils module v=${v}`);
-  }catch(e){
-    throw e;
-  }
-})();
-
 // Shellfish Tracker — V4 ESM Branch
 // Phase 2A: Extracted pure utilities (no DOM, no state)
 
