@@ -228,7 +228,7 @@ export function getTripsNewestFirst(trips){
 
 // ===========================
 // v81: Modal helpers (Quick Add, etc.)
-function openModal({ title, html, onOpen }){
+export function openModal({ title, html, onOpen }){
   const root = document.getElementById("modalRoot");
   if(!root) return;
 
@@ -270,7 +270,7 @@ function openModal({ title, html, onOpen }){
   try{ onOpen && onOpen(); }catch(_e){}
 }
 
-function closeModal(){
+export function closeModal(){
   const root = document.getElementById("modalRoot");
   if(!root) return;
   root.classList.add("hidden");

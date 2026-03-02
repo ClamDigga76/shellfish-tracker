@@ -3,7 +3,7 @@
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal } from "./utils_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 
@@ -2506,7 +2506,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       title: `Add ${label}`,
       html: `
         <div class="field">
-          <input class="input" id="${inputId}" placeholder="${escapeHTML(placeholder)}" autocomplete="off" />
+          <input class="input" id="${inputId}" placeholder="${escapeHtml(placeholder)}" autocomplete="off" />
           <div class="modalErr" id="${errId}" style="display:none"></div>
         </div>
         <div class="modalActions">
