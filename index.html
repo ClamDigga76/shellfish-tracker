@@ -99,8 +99,8 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter) + 10px)}
 
 /* New Trip: reduce bottom padding; action bar handles tabbar clearance via sticky offset */
-body[data-view="new"] main#app{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
-body[data-view="new"] .tripActionBar{bottom:calc(var(--tabbar-h) + 8px)}
+body[data-view="new"] main#app{padding-bottom:0}
+body[data-view="new"] .tripActionBar{bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 8px)}
 
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
@@ -652,7 +652,6 @@ header{padding:14px 18px 12px}
 .chipGrid .chip{ width:100%; justify-content:center; }
 
 
-.app-footer{font-size:11px;opacity:.6;text-align:center;padding:8px 0 16px;}
 /* v59: modal confirm overlay */
 .modalOverlay{
   position:fixed; inset:0;
@@ -732,10 +731,9 @@ header{padding:14px 18px 12px}
 <body>
   <div class="phone">
 <main id="app"></main>
-    <footer class="app-footer">© 2026 Jeremy Wood. All rights reserved.</footer>
-  </div>
+</div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=108"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=109"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
