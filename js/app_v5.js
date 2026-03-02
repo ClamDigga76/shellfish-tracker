@@ -3462,7 +3462,7 @@ function renderReports(){
         </div>
 
         <div class="row" style="justify-content:flex-end;margin-top:10px">
-          <button class="btn" id="repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
+          <button class="btn repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
         </div>
 
         ${advPanel}
@@ -3487,14 +3487,13 @@ function renderReports(){
       };
     });
 
-    const advToggle = document.getElementById("repAdvToggle");
-    if(advToggle){
-      advToggle.onclick = ()=>{
+    document.querySelectorAll(".repAdvToggle").forEach(btn=>{
+      btn.onclick = ()=>{
         state.reportsFilter.adv = !state.reportsFilter.adv;
         saveState();
         renderReports();
       };
-    }
+    });
 
     const advFrom = document.getElementById("repAdvFrom");
     const advTo = document.getElementById("repAdvTo");
@@ -3753,7 +3752,7 @@ function renderReports(){
         </div>
 
         <div class="row" style="justify-content:flex-end;margin-top:10px">
-          <button class="btn" id="repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
+          <button class="btn repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
         </div>
 
         ${advPanel}
