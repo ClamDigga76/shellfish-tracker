@@ -98,11 +98,9 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 .phone{display:flex;flex-direction:column}
 main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter) + 10px)}
 
-/* New Trip: avoid scrolling into blank space below the form.
-   Move tab-bar clearance into the form card so extra space stays attached to the card. */
-body[data-view="new"] main#app{padding-bottom:calc(env(safe-area-inset-bottom) + var(--bottom-gutter) + 10px)}
-body[data-view="new"] .formCard{padding-bottom:calc(16px + var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter))}
-
+/* New Trip: reduce bottom padding; action bar handles tabbar clearance via sticky offset */
+body[data-view="new"] main#app{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+body[data-view="new"] .tripActionBar{bottom:calc(var(--tabbar-h) + 8px)}
 
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
@@ -737,7 +735,7 @@ header{padding:14px 18px 12px}
     <footer class="app-footer">© 2026 Jeremy Wood. All rights reserved.</footer>
   </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=107"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=108"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
