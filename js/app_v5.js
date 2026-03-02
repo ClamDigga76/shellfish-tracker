@@ -3360,7 +3360,9 @@ function renderEditTrip(){
   const trips = Array.isArray(state.trips) ? state.trips : [];
   const t = trips.find(x => String(x?.id||"") === id);
   if(!t){
-    state.view = nextView;
+    // If the trip no longer exists (deleted, reset, or bad deep-link), fail safe.
+    state.editId = null;
+    state.view = "all_trips";
     saveState();
     return renderHome();
   }
