@@ -19,11 +19,149 @@ window.addEventListener("sw-update-ready", (ev) => {
 });
 
 async function swCheckNow(){
+  // "Check update" should actually refresh when a new build is available.
+  // Flow:
+  // 1) registration.update()
+  // 2) if waiting SW exists, ask it to skipWaiting
+  // 3) reload when controller changes
+  // 4) fallback: clear app caches and hard-reload with cache-bust
+  const statusEl = document.getElementById("updateStatus");
+  const btnCheck = document.getElementById("checkUpdate");
+  try{
+    if(statusEl) statusEl.textContent = "Update: Checking…";
+    if(btnCheck) btnCheck.disabled = true;
+
+    const reg = await navigator.serviceWorker.getRegistration();
+    if(!reg){
+      await hardRefreshNoSW();
+      return;
+    }
+
+    // Trigger SW update check
+    try{ await reg.update(); }catch(_){}
+
+    // Wait briefly for an installing/waiting worker to appear
+    const waiting = await waitForWaitingSW(2500);
+    if(waiting){
+      if(statusEl) statusEl.textContent = "Update: Applying…";
+      try{ waiting.postMessage({ type: "SKIP_WAITING" }); }catch(_){}
+      await waitForControllerChange(3000);
+      // If controllerchange didn't fire, still attempt a hard reload.
+      location.reload();
+      return;
+    }
+
+    if(statusEl) statusEl.textContent = "Update: Up to date";
+    showToast("Up to date");
+  }catch(_){
+    try{
+      if(statusEl) statusEl.textContent = "Update: Refreshing…";
+      await hardRefreshNoSW();
+    }catch(__){}
+  }finally{
+    if(btnCheck) btnCheck.disabled = false;
+    // refresh build info
+    try{ updateBuildInfo(); }catch(_){}
+  }
+}
+
+async function waitForWaitingSW(timeoutMs){
+  const t0 = Date.now();
+  while(Date.now() - t0 < timeoutMs){
+    try{
+      const reg = await navigator.serviceWorker.getRegistration();
+      if(reg?.waiting) return reg.waiting;
+      // If installing becomes installed, it usually moves to waiting
+      if(reg?.installing){
+        // give it a beat
+      }
+    }catch(_){}
+    await new Promise(r=>setTimeout(r, 150));
+  }
   try{
     const reg = await navigator.serviceWorker.getRegistration();
-    if(reg) await reg.update();
+    if(reg?.waiting) return reg.waiting;
   }catch(_){}
+  return null;
 }
+
+async function waitForControllerChange(timeoutMs){
+  return new Promise((resolve)=>{
+    let done=false;
+    const t=setTimeout(()=>{ if(done) return; done=true; resolve(false); }, timeoutMs);
+    try{
+      navigator.serviceWorker.addEventListener("controllerchange", ()=>{
+        if(done) return;
+        done=true;
+        clearTimeout(t);
+        resolve(true);
+      }, { once:true });
+    }catch(_){
+      clearTimeout(t);
+      resolve(false);
+    }
+  });
+}
+
+async function hardRefreshNoSW(){
+  // Clear known app caches then reload with a cache-busting param.
+  try{
+    if(window.caches && caches.keys){
+      const keys = await caches.keys();
+      await Promise.all(keys.filter(k=>String(k).startsWith("shellfish-tracker-")).map(k=>caches.delete(k)));
+    }
+  }catch(_){}
+  const base = location.origin + location.pathname;
+  location.replace(base + "?v=" + Date.now());
+}
+
+// Async version/build info for Settings > Updates
+async function updateBuildInfo(){
+  const el = document.getElementById("buildInfo");
+  if(!el) return;
+
+  const parts = [];
+  // App + schema
+  parts.push(`App: ${VERSION} (schema ${typeof SCHEMA_VERSION!=="undefined"?SCHEMA_VERSION:"?"})`);
+
+  // Display mode + SW controller
+  const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator.standalone === true);
+  parts.push(`Standalone: ${standalone ? "yes" : "no"}`);
+
+  let swLine = "SW: unsupported";
+  try{
+    if("serviceWorker" in navigator){
+      const reg = await navigator.serviceWorker.getRegistration();
+      const ctrl = !!navigator.serviceWorker.controller;
+      const url = reg?.active?.scriptURL || reg?.waiting?.scriptURL || reg?.installing?.scriptURL || "";
+      swLine = `SW: ${ctrl ? "controller" : "no-controller"}${url ? " | " + url.split("/").slice(-1)[0] : ""}`;
+    }
+  }catch(_){}
+  parts.push(swLine);
+
+  // Cache keys
+  try{
+    if(window.caches && caches.keys){
+      const keys = await caches.keys();
+      const ours = keys.filter(k=>String(k).startsWith("shellfish-tracker-"));
+      parts.push(`Caches: ${ours.length ? ours.join(", ") : "(none)"}`);
+    }
+  }catch(_){}
+
+  // Storage estimate (optional)
+  try{
+    if(navigator.storage && navigator.storage.estimate){
+      const est = await navigator.storage.estimate();
+      if(est && typeof est.usage==="number" && typeof est.quota==="number"){
+        const mb = (n)=>Math.round((n/1024/1024)*10)/10;
+        parts.push(`Storage: ${mb(est.usage)}MB / ${mb(est.quota)}MB`);
+      }
+    }
+  }catch(_){}
+
+  el.textContent = parts.join("\n");
+}
+
 
 async function swApplyNow(){
   try{
@@ -56,7 +194,7 @@ function updateUpdateRow(){
 
   if(btnCheck && !btnCheck.__bound){
     btnCheck.__bound = true;
-    btnCheck.onclick = async ()=>{ await swCheckNow(); showToast("Checking for updates…"); };
+    btnCheck.onclick = async ()=>{ await swCheckNow(); };
   }
   if(btnNow && !btnNow.__bound){
     btnNow.__bound = true;
@@ -4011,10 +4149,11 @@ function renderSettings(){
     <div class="card">
       <b>Updates</b>
       <div class="sep"></div>
+      <div class="muted small" id="buildInfo" style="white-space:pre-wrap"></div>
       <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;align-items:center">
         <div class="muted small" id="updateStatus">Update: Up to date</div>
         <button class="btn" id="updateNow" style="display:none">Update Now</button>
-        <button class="btn" id="checkUpdate">Check now</button>
+        <button class="btn" id="checkUpdate">Check update</button>
       </div>
     </div>
 
@@ -4108,6 +4247,7 @@ function renderSettings(){
   document.getElementById("openHelp").onclick = ()=>{ pushView(state, "help"); };
 
   updateUpdateRow();
+  try{ updateBuildInfo(); }catch(_){ }
 
   document.getElementById("openTerms").onclick = ()=>{ window.location.href = "legal/terms.html"; };
   document.getElementById("openPrivacy").onclick = ()=>{ window.location.href = "legal/privacy.html"; };
