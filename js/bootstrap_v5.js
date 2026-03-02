@@ -1,4 +1,4 @@
-const SW_VERSION = "83";
+const SW_VERSION = "84";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -11,12 +11,31 @@ window.APP_BUILD = `v5.${SW_VERSION}`;
  * - Provide a recovery UI when the app module fails to parse/load or never starts
  */
 async function __assertAssetExists(path) {
-  const r = await fetch(path, { cache: "no-store" });
+  // Record fetch diagnostics for Copy Debug.
+  try {
+    window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || { stage: "bootstrap:start", assetChecks: [] };
+  } catch (_) {}
+
+  let r;
+  try {
+    r = await fetch(path, { cache: "no-store" });
+  } catch (e) {
+    try {
+      window.__BOOT_DIAG__.assetChecks.push({ url: String(path), ok: false, status: 0, contentType: "", note: "fetch failed" });
+    } catch (_) {}
+    throw e;
+  }
+
+  const ct0 = (r.headers.get("content-type") || "").toLowerCase();
+  try {
+    window.__BOOT_DIAG__.assetChecks.push({ url: String(path), ok: !!r.ok, status: r.status, contentType: ct0 });
+  } catch (_) {}
+
   if (!r.ok) throw new Error(`Missing required asset: ${path} (HTTP ${r.status})`);
 
   // Accept v-param'd JS URLs (e.g., app_v5.js?v=78)
   if (/\.js($|\?)/i.test(path)) {
-    const ct = (r.headers.get("content-type") || "").toLowerCase();
+    const ct = ct0;
     if (!(ct.includes("javascript") || ct.includes("ecmascript"))) {
       throw new Error(`Bad content-type for ${path}: ${ct || "unknown"} (expected JavaScript). Try Reset Cache.`);
     }
@@ -64,10 +83,32 @@ window.__SHELLFISH_BUILD__ = window.__SHELLFISH_BUILD__ || BOOT_BUILD;
 window.__SHELLFISH_BOOT_AT = Date.now();
 window.__SHELLFISH_APP_STARTED = Boolean(window.__SHELLFISH_APP_STARTED);
 
+// Boot diagnostics (Copy Debug). Keep this small + structured; do NOT dump user data.
+window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {
+  stage: "bootstrap:init",
+  assetChecks: [],
+  lastBootError: null,
+};
+
+function __setBootStage(stage) {
+  try {
+    window.__BOOT_DIAG__.stage = stage;
+  } catch (_) {}
+}
+
 // Exposed so asset checks + global handlers can show a friendly recovery screen.
 window.__showModuleError = function (err) {
   try {
-    const app = document.getElementById("app");
+    __setBootStage("bootstrap:error");
+    try {
+      window.__BOOT_DIAG__.lastBootError = {
+        name: err?.name || "Error",
+        message: String(err?.message || err || "Unknown error"),
+        stackTop: String(err?.stack || "").split("\n").slice(0, 3).join("\n"),
+      };
+    } catch (_) {}
+
+    let app = document.getElementById("app");
     const pill = document.getElementById("bootPill");
 
     if (pill) pill.style.display = "none";
@@ -80,6 +121,11 @@ window.__showModuleError = function (err) {
     const diag = {
       at: new Date().toISOString(),
       build: window.__SHELLFISH_BUILD__ || "unknown",
+      boot: {
+        stage: window.__BOOT_DIAG__?.stage || null,
+        lastBootError: window.__BOOT_DIAG__?.lastBootError || null,
+        assetChecks: Array.isArray(window.__BOOT_DIAG__?.assetChecks) ? window.__BOOT_DIAG__.assetChecks : [],
+      },
       url: location.href,
       referrer: document.referrer || "",
       ua: navigator.userAgent,
@@ -100,6 +146,17 @@ window.__showModuleError = function (err) {
 
     (async () => {
       try {
+        // Optional: storage estimate can help diagnose iOS eviction / quota issues.
+        try {
+          if (navigator.storage?.estimate) {
+            const est = await navigator.storage.estimate();
+            diag.storageEstimate = {
+              usage: typeof est?.usage === "number" ? Math.round(est.usage) : null,
+              quota: typeof est?.quota === "number" ? Math.round(est.quota) : null,
+            };
+          }
+        } catch (_) {}
+
         if ("serviceWorker" in navigator) {
           const reg = await navigator.serviceWorker.getRegistration();
           if (reg) {
@@ -147,6 +204,18 @@ window.__showModuleError = function (err) {
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;");
+
+    if (!app) {
+      // Fail loud: if #app is missing (HTML damage), still render recovery UI into body.
+      const wrap = document.createElement("div");
+      wrap.id = "app";
+      wrap.style.maxWidth = "720px";
+      wrap.style.margin = "24px auto";
+      wrap.style.padding = "0 14px";
+      document.body.innerHTML = "";
+      document.body.appendChild(wrap);
+      app = wrap;
+    }
 
     if (app) {
       app.innerHTML = `
@@ -214,6 +283,7 @@ window.__showModuleError = function (err) {
 // surface real import/parse errors (404, HTML-as-JS, syntax errors) instead of only the watchdog.
 (async () => {
   try {
+    __setBootStage("assets:checking");
     // Assert and import using absolute URLs derived from this module's location.
     // (Avoids "./js/..." resolving to "/js/js/..." when bootstrap lives in /js/.)
     const UTILS_URL = new URL(`./utils_v5.js?v=${SW_VERSION}`, import.meta.url).href;
@@ -221,7 +291,9 @@ window.__showModuleError = function (err) {
 
     await __assertAssetExists(UTILS_URL);
     await __assertAssetExists(APP_URL);
+    __setBootStage("app:importing");
     await import(APP_URL);
+    __setBootStage("app:imported");
   } catch (e) {
     if (typeof window.__showModuleError === "function") window.__showModuleError(e);
     else console.error(e);
@@ -232,6 +304,7 @@ window.__showModuleError = function (err) {
 window.__BOOT_WATCHDOG__ = setTimeout(() => {
   try {
     if (window.__SHELLFISH_APP_STARTED) return;
+    __setBootStage("watchdog:timeout");
     const msg =
       "App did not start. This usually means the JS module failed to load (cached old files or a network error). " +
       "Tap Reset Cache then Reload.\n\n" +
@@ -244,8 +317,10 @@ async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
 
   try {
+    __setBootStage("sw:registering");
     const swUrl = `./sw.js?v=${SW_VERSION}`;
     const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
+    __setBootStage("sw:registered");
     try {
       await reg.update();
     } catch (_) {}
