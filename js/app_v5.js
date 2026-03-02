@@ -2420,20 +2420,15 @@ function renderAllTrips(){
   }).join("") : `<div class="muted small">No trips in this filter yet.</div>`;
 
   root.innerHTML = `
-    <div class="page">
-      <div class="pageHdr">
-        <div>
-          <div class="h1">Trips</div>
-          <div class="muted small">Browse and export your trips.</div>
-        </div>
-      </div>
+    ${renderPageHeader("all_trips")}
 
-      ${filtersCard}
+    <div class="muted small" style="margin:-6px 0 10px 0">Browse and export your trips.</div>
 
-      <div style="height:10px"></div>
+    ${filtersCard}
 
-      ${rows}
-    </div>
+    <div style="height:10px"></div>
+
+    ${rows}
   `;
 
   bindNavHandlers(state);
@@ -4509,6 +4504,7 @@ function __renderListMgmtPanel(mode){
         <button class="btn" id="restoreBackup" style="flex:1">📥 Restore Backup</button>
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" style="display:none" />
       </div>
+      <div class="muted small" style="margin-top:10px">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups.</div>
     </div>
 
     <div class="card">
@@ -4864,9 +4860,106 @@ function renderHelp(){
 
     <div class="card">
       <b>Help</b>
-      <div class="hint">How to use Bank the Catch (no paste required).</div>
+      <div class="hint">Quick field guide for Bank the Catch.</div>
     </div>
 
+    <div class="card">
+      <b>Quick links</b>
+      <div class="sep"></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="chip" type="button" data-helpjump="home">Home</button>
+        <button class="chip" type="button" data-helpjump="trips">Trips</button>
+        <button class="chip" type="button" data-helpjump="newtrip">New Trip</button>
+        <button class="chip" type="button" data-helpjump="reports">Reports</button>
+        <button class="chip" type="button" data-helpjump="settings">Settings</button>
+        <button class="chip" type="button" data-helpjump="backups">Backups</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <b id="help_jump_home">Home</b>
+      <div class="sep"></div>
+      <div class="muted helpText" style="line-height:1.65">
+        <ul style="margin:8px 0 0 18px">
+          <li><b>Totals</b> and the recent list follow your current filter (YTD / Month / Last 7 days).</li>
+          <li>Use Home when you just want a quick “how am I doing?” snapshot.</li>
+          <li>If you install the app, Home works offline too.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <b id="help_jump_trips">Trips</b>
+      <div class="sep"></div>
+      <div class="muted helpText" style="line-height:1.65">
+        <ul style="margin:8px 0 0 18px">
+          <li>Browse your trips. Tap a trip to view/edit (if available).</li>
+          <li>Duplicate warning may appear when saving a trip that looks similar—use “Save anyway” only when it’s truly a different trip.</li>
+          <li>Use <b>New Trip</b> to add a fresh harvest entry.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <b id="help_jump_newtrip">New Trip</b>
+      <div class="sep"></div>
+      <ol class="muted helpText" style="margin:8px 0 0 18px;line-height:1.65">
+        <li>Enter <b>Date</b>.</li>
+        <li>Pick or type a <b>Dealer</b>.</li>
+        <li>Enter <b>Pounds</b> and <b>Amount</b>.</li>
+        <li>Pick an <b>Area</b>.</li>
+        <li>Tap <b>Save Trip</b>.</li>
+      </ol>
+      <div class="hint">Tip: chips are quick-picks—tap to fill faster.</div>
+    </div>
+
+    <div class="card">
+      <b id="help_jump_reports">Reports</b>
+      <div class="sep"></div>
+      <div class="muted helpText" style="line-height:1.65">
+        <ul style="margin:8px 0 0 18px">
+          <li>Reports uses the same date filter idea as Home, plus optional advanced range controls.</li>
+          <li>Switch between <b>Charts</b> and <b>Tables</b> to see the same data different ways.</li>
+          <li>If something looks off, double-check your filter/range first.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <b id="help_jump_settings">Settings</b>
+      <div class="sep"></div>
+      <div class="muted helpText" style="line-height:1.65">
+        <ul style="margin:8px 0 0 18px">
+          <li><b>Updates</b>: check for updates and see build details.</li>
+          <li><b>List Management</b>: edit Areas and Dealers used by New Trip.</li>
+          <li><b>Data</b>: create/restore backup files (see Backups below).</li>
+          <li><b>Advanced</b>: Copy Details, Refresh App, Erase All Data.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <b id="help_jump_backups">Backups & Restore</b>
+      <div class="sep"></div>
+      <div class="muted helpText" style="line-height:1.65">
+        <ul style="margin:8px 0 0 18px">
+          <li><b>Create Backup</b> makes a file containing your trips and lists. Keep it somewhere safe.</li>
+          <li><b>Where to store it:</b> move the file into a cloud-synced folder so it’s included in your normal phone backups (iPhone: Files → iCloud Drive; Android: Files → Google Drive or Drive-synced folder).</li>
+          <li><b>Restore Backup</b> replaces trips/lists on this device with the file’s contents. Best practice: create a backup first.</li>
+          <li>If an update seems “stuck”, use <b>Refresh App</b> in Settings → Advanced (it clears cached files and reloads).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <b>Install / Offline</b>
+      <div class="sep"></div>
+      <div class="muted helpText" style="line-height:1.65">
+        <div><b>iPhone/iPad:</b> Safari → Share → <b>Add to Home Screen</b>.</div>
+        <div style="margin-top:6px"><b>Android:</b> Chrome menu → <b>Install app</b> (or Add to Home screen).</div>
+        <div style="margin-top:6px">Installed PWAs can lag behind updates due to cached files—use <b>Refresh App</b> if something looks wrong.</div>
+      </div>
+    </div>
 
     <div class="card">
       <b>Build info</b>
@@ -4877,54 +4970,20 @@ function renderHelp(){
         <div>SW controller: <b>${navigator.serviceWorker && navigator.serviceWorker.controller ? "yes" : "no"}</b></div>
       </div>
     </div>
-    <div class="card">
-      <b>Main sections</b>
-      <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.6">
-        <ul style="margin:8px 0 0 18px">
-          <li id="help_jump_home"><b>Home</b>: Your totals (filtered) + recent trips list.</li>
-          <li id="help_jump_trips"><b>Trips</b>: Browse/edit trips. Use New Trip to add a harvest.</li>
-          <li><b>New Trip</b>: Enter a harvest check (date, dealer, pounds, amount, area).</li>
-          <li id="help_jump_reports"><b>Reports</b>: Summaries and rollups for your selected time filter.</li>
-          <li id="help_jump_settings"><b>Settings</b>: Backup/restore, lists (areas/dealers), and app options.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <b>Entering a trip</b>
-      <div class="sep"></div>
-      <ol class="muted helpText" style="margin:8px 0 0 18px;line-height:1.6">
-        <li>Tap <b>New Trip</b>.</li>
-        <li>Enter the <b>Harvest date</b> (MM/DD/YYYY).</li>
-        <li>Enter the <b>Dealer</b> (or tap a quick-pick chip if shown).</li>
-        <li>Enter <b>Pounds</b> and <b>Amount</b>.</li>
-        <li>Select an <b>Area</b> (or tap a quick-pick chip if shown).</li>
-        <li>Tap <b>Save Trip</b>.</li>
-      </ol>
-      <div class="hint">Tip: chips are “quick pick” shortcuts—tap to fill faster.</div>
-    </div>
-
-    <div class="card">
-      <b>Filters & totals</b>
-      <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.6">
-        Use <b>YTD / Month / Last 7 days</b> on Home to change what’s included in totals and the list.
-        Reports uses the same filter.
-      </div>
-    </div>
-
-    <div class="card">
-      <b>Install / Offline</b>
-      <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.6">
-        <b>iPhone/iPad install:</b> Open in Safari → tap Share → <b>Add to Home Screen</b>.
-        Installed PWAs can lag behind updates due to cached files. If something looks wrong, use <b>Reset cache</b> then reload.
-      </div>
-    </div>
   `;
 
   getApp().scrollTop = 0;
+
+  // Quick links inside Help
+  try{
+    document.querySelectorAll('[data-helpjump]').forEach(btn=>{
+      btn.onclick = ()=>{
+        const k = String(btn.getAttribute('data-helpjump')||'').toLowerCase();
+        const el = document.getElementById(`help_jump_${k}`);
+        if(el && el.scrollIntoView) el.scrollIntoView({ block:"start", behavior:"smooth" });
+      };
+    });
+  }catch(_e){}
 
   // If a section Help button opened this screen, jump to that section
   try{
