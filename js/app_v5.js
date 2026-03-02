@@ -326,6 +326,124 @@ function showToast(msg){
   }catch{}
 }
 
+// ---- Install prompt (PWA growth) ----
+// Goal: gently nudge install AFTER first successful save, once per device.
+// Android: uses beforeinstallprompt if available.
+// iOS: shows Add to Home Screen guidance (no native prompt).
+const LS_INSTALL_PROMPTED = "btc-install_prompted_v1";
+let deferredInstallPrompt = null;
+
+function isStandaloneMode(){
+  try{
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator.standalone === true);
+  }catch(_){
+    return false;
+  }
+}
+function isIOS(){
+  try{
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }catch(_){
+    return false;
+  }
+}
+function hasPromptedInstall(){
+  try{ return localStorage.getItem(LS_INSTALL_PROMPTED) === "1"; }catch(_){ return false; }
+}
+function markPromptedInstall(){
+  try{ localStorage.setItem(LS_INSTALL_PROMPTED, "1"); }catch(_){ }
+}
+
+window.addEventListener("beforeinstallprompt", (e)=>{
+  try{
+    // Keep the event for later (we'll ask after first save).
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  }catch(_){}
+});
+
+window.addEventListener("appinstalled", ()=>{
+  markPromptedInstall();
+  try{ showToast("Installed ✓"); }catch(_){}
+});
+
+function installModal({ title, body, primaryText="Install", onPrimary }){
+  return new Promise((resolve)=>{
+    const el = document.createElement("div");
+    el.className = "modalOverlay";
+    el.innerHTML = `
+      <div class="modalCard card">
+        <b>${escapeHtml(title||"Install")}</b>
+        ${body ? `<div class="muted small" style="margin-top:8px;line-height:1.35;white-space:pre-wrap">${escapeHtml(body)}</div>` : ""}
+        <div class="row" style="margin-top:14px;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+          <button class="btn" id="im_cancel">Not now</button>
+          <button class="btn primary" id="im_yes">${escapeHtml(primaryText)}</button>
+        </div>
+      </div>
+    `;
+    const cleanup = (v)=>{
+      try{ el.remove(); }catch(_){}
+      resolve(v);
+    };
+    el.addEventListener("click", (e)=>{ if(e.target === el) cleanup(false); });
+    document.body.appendChild(el);
+
+    el.querySelector("#im_cancel")?.addEventListener("click", ()=>cleanup(false));
+    el.querySelector("#im_yes")?.addEventListener("click", async ()=>{
+      try{
+        if(onPrimary) await onPrimary();
+      }catch(_){}
+      cleanup(true);
+    });
+  });
+}
+
+async function maybeOfferInstallAfterFirstSave(){
+  try{
+    if(isStandaloneMode()) return;
+    if(hasPromptedInstall()) return;
+
+    // Show once, after first save. Mark immediately so we don't nag.
+    markPromptedInstall();
+
+    const title = "Install Bank the Catch?";
+    const benefits = "Installing keeps it on your Home Screen and works better offline at the shore.";
+
+    // Android / Chromium path
+    if(deferredInstallPrompt){
+      await installModal({
+        title,
+        body: benefits,
+        primaryText: "Install",
+        onPrimary: async ()=>{
+          try{
+            deferredInstallPrompt.prompt();
+            const choice = await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            if(choice && choice.outcome === "accepted"){
+              try{ showToast("Installing…"); }catch(_){}
+            }else{
+              try{ showToast("No worries — you can install later"); }catch(_){}
+            }
+          }catch(_){}
+        }
+      });
+      return;
+    }
+
+    // iOS guidance (Safari / Standalone install is Add to Home Screen)
+    if(isIOS()){
+      const iosBody = benefits + "\n\nOn iPhone/iPad:\n1) Tap Share (square + arrow)\n2) Choose “Add to Home Screen”\n3) Tap Add";
+      await installModal({
+        title,
+        body: iosBody,
+        primaryText: "Got it",
+        onPrimary: async ()=>{}
+      });
+    }
+  }catch(_){}
+}
+
 // v59: simple confirm modal (Yes/Cancel)
 function confirmSaveModal({ title="Save this trip?", body="" } = {}){
   return new Promise((resolve)=>{
@@ -505,7 +623,7 @@ function getDebugInfo(){
   const snooze = settings.backupSnoozeUntil ? new Date(settings.backupSnoozeUntil).toISOString() : "";
 
   return [
-    `Shellfish Tracker ${APP_VERSION} (schema ${SCHEMA_VERSION})`,
+    `Bank the Catch ${APP_VERSION} (schema ${SCHEMA_VERSION})`,
     `URL: ${location.href}`,
     `Origin: ${location.origin}`,
     `DisplayMode: ${dm}`,
@@ -840,7 +958,7 @@ function exportTrips(trips, label, startISO="", endISO=""){
 function buildBackupPayloadFromState(st, exportedAtISO){
   const safeState = (st && typeof st === "object") ? st : {};
   return {
-    app: "Shellfish Tracker",
+    app: "Bank the Catch",
     schema: SCHEMA_VERSION, // legacy
     schemaVersion: SCHEMA_VERSION,
     version: APP_VERSION, // legacy
@@ -1645,6 +1763,8 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   state.view = nextView;
   saveState();
   render();
+  // After first successful save, offer install (once per device).
+  if(!isEdit){ try{ setTimeout(()=>{ maybeOfferInstallAfterFirstSave(); }, 350); }catch(_){} }
   return true;
 }
 
@@ -4562,7 +4682,7 @@ function renderHelp(){
 
     <div class="card">
       <b>Help</b>
-      <div class="hint">How to use Shellfish Tracker (no paste required).</div>
+      <div class="hint">How to use Bank the Catch (no paste required).</div>
     </div>
 
 
@@ -4641,7 +4761,7 @@ function renderAbout(){
     </div>
 
     <div class="card">
-      <b>Shellfish Tracker</b>
+      <b>Bank the Catch</b>
       <div class="sep"></div>
       <div class="muted small">Version: <b>${VERSION}</b></div>
       <div class="muted small" style="margin-top:8px">All data stays on this device unless you export/backup.</div>
@@ -4662,7 +4782,7 @@ function renderAbout(){
 
   document.getElementById("feedback").onclick = ()=>{
     const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
-    const subj = encodeURIComponent("Shellfish Tracker Feedback ("+VERSION+")");
+    const subj = encodeURIComponent("Bank the Catch Feedback ("+VERSION+")");
     location.href = `mailto:?subject=${subj}&body=${body}`;
   };
 }
