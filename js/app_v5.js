@@ -4160,17 +4160,15 @@ function renderReports(){
           ${chip("ALL","All Time")}
         </div>
 
-        <div class="row" style="justify-content:flex-end;margin-top:10px">
+        <div class="row repCtlRow" style="justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
           <button class="btn repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
+          <div class="row" style="gap:8px;margin-top:0">
+            ${seg("charts","Charts")}
+            ${seg("tables","Tables")}
+          </div>
         </div>
 
         ${advPanel}
-
-      
-      <div class="chipGrid cols-3" style="margin-top:10px">
-        ${seg("charts","Charts")}
-        ${seg("tables","Tables")}
-      </div>
       <div class="hint"></div>
     </div>
 
