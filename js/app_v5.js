@@ -7,6 +7,9 @@ import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parse
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 
+// Backup meta (local-only; no user data duplication)
+const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
+
 // In-app update UI: shows an Update button only when a new Service Worker is ready.
 let SW_UPDATE_READY = false;
 let SW_UPDATE_VERSION = "";
@@ -973,16 +976,113 @@ function buildBackupPayloadFromState(st, exportedAtISO){
   };
 }
 
-function downloadBackupPayload(payload, prefix="shellfish_backup"){
+function __ymdLocal(){
+  const d = new Date();
+  const pad = (n)=> String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function __buildNum(){
+  const m = /v5\.(\d+)/.exec(String(VERSION||""));
+  return m ? m[1] : "0";
+}
+
+function __backupFilename(){
+  return `bank-the-catch_backup_${__ymdLocal()}_build${__buildNum()}.json`;
+}
+
+function __setLastBackupMeta(meta){
+  try{
+    localStorage.setItem(LS_LAST_BACKUP_META, JSON.stringify(meta));
+  }catch(_){ }
+}
+
+function __getLastBackupMeta(){
+  // Prefer localStorage meta; fall back to state.settings for older backups.
+  try{
+    const raw = localStorage.getItem(LS_LAST_BACKUP_META);
+    if(raw){
+      const obj = JSON.parse(raw);
+      if(obj && typeof obj === "object") return obj;
+    }
+  }catch(_){ }
+
+  try{
+    const s = state?.settings;
+    const at = Number(s?.lastBackupAt || 0);
+    const tc = Number(s?.lastBackupTripCount ?? (Array.isArray(state?.trips) ? state.trips.length : 0));
+    if(at > 0){
+      return { iso: new Date(at).toISOString(), tripCount: tc, build: __buildNum() };
+    }
+  }catch(_){ }
+
+  return null;
+}
+
+function __updateLastBackupLine(){
+  const el = document.getElementById("lastBackupLine");
+  if(!el) return;
+  const meta = __getLastBackupMeta();
+  if(!meta){
+    el.textContent = "Last backup: none yet";
+    return;
+  }
+  const d = new Date(String(meta.iso || ""));
+  const ok = !isNaN(d.getTime());
+  const dateStr = ok ? d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" }) : "unknown date";
+  const n = Number(meta.tripCount);
+  const tripsStr = Number.isFinite(n) ? `${n} trip${n===1?"":"s"}` : "unknown trips";
+  el.textContent = `Last backup: ${dateStr} — ${tripsStr}`;
+}
+
+function downloadBackupPayload(payload, prefixOrFilename="shellfish_backup"){
+  // Back-compat: if caller passes a full filename ending in .json, use it.
+  const s = String(prefixOrFilename||"shellfish_backup");
+  if(/\.json$/i.test(s)){
+    downloadText(s, JSON.stringify(payload, null, 2));
+    return;
+  }
   const y = new Date();
   const pad = (n)=> String(n).padStart(2,"0");
-  const fname = `${prefix}_${y.getFullYear()}-${pad(y.getMonth()+1)}-${pad(y.getDate())}_${pad(y.getHours())}${pad(y.getMinutes())}.json`;
+  const fname = `${s}_${y.getFullYear()}-${pad(y.getMonth()+1)}-${pad(y.getDate())}_${pad(y.getHours())}${pad(y.getMinutes())}.json`;
   downloadText(fname, JSON.stringify(payload, null, 2));
 }
 
-function exportBackup(){
-  const payload = buildBackupPayloadFromState(state);
-  downloadBackupPayload(payload, "shellfish_backup");
+async function exportBackup(){
+  const exportedAtISO = new Date().toISOString();
+  const payload = buildBackupPayloadFromState(state, exportedAtISO);
+  const tripCount = Array.isArray(payload?.data?.trips) ? payload.data.trips.length : (Array.isArray(state.trips) ? state.trips.length : 0);
+  const fname = __backupFilename();
+
+  // Track last backup (for reminder + Settings line)
+  try{
+    state.settings = state.settings || {};
+    state.settings.lastBackupAt = Date.now();
+    state.settings.lastBackupTripCount = tripCount;
+    saveState();
+  }catch(_){ }
+  __setLastBackupMeta({ iso: exportedAtISO, tripCount, build: __buildNum(), filename: fname });
+
+  // iOS Standalone-friendly: try Share Sheet first if available.
+  try{
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const file = new File([blob], fname, { type: "application/json" });
+    const canShareFiles = !!(navigator?.canShare && navigator.canShare({ files: [file] }));
+    if(canShareFiles && navigator?.share){
+      await navigator.share({ files: [file], title: "Bank the Catch backup" });
+      try{ __updateLastBackupLine(); }catch(_){ }
+      return { ok:true, method:"share", filename: fname, tripCount };
+    }
+  }catch(_){ }
+
+  // Fallback: standard download
+  try{
+    downloadBackupPayload(payload, fname);
+    try{ __updateLastBackupLine(); }catch(_){ }
+    return { ok:true, method:"download", filename: fname, tripCount };
+  }catch(e){
+    return { ok:false, error: e };
+  }
 }
 
 function normalizeBackupPayload(raw){
@@ -1066,7 +1166,7 @@ function normalizeTripForImport(t){
   };
 }
 
-function importBackupFromFile(file){
+function importBackupFromFile(file, opts={}){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onerror = ()=> reject(new Error("Failed to read file"));
@@ -1092,14 +1192,25 @@ function importBackupFromFile(file){
         const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
         const importedDealers = dealersIn.map(d=>String(d||"").trim()).filter(Boolean);
 
-        const replace = confirm(
-          "Restore backup?\n\n" +
-          "OK = Replace current trips/areas/dealers on this device\n" +
-          "Cancel = Merge (skip likely duplicates)"
-        );
+        const forceOverwrite = !!opts?.forceOverwrite;
+        let replace = false;
+        if(forceOverwrite){
+          const msg = String(opts?.confirmMessage || "This will overwrite trips/lists on this device. Continue?");
+          if(!confirm(msg)){
+            resolve({ canceled:true, mode:"canceled", tripsInFile: importedTrips.length, tripsAdded: 0, areasInFile: importedAreas.length, dealersInFile: importedDealers.length, warnings: normalizedResult.warnings || [] });
+            return;
+          }
+          replace = true;
+        }else{
+          replace = confirm(
+            "Restore backup?\n\n" +
+            "OK = Replace current trips/areas/dealers on this device\n" +
+            "Cancel = Merge (skip likely duplicates)"
+          );
+        }
 
         const hasExisting = (Array.isArray(state.trips) && state.trips.length) || (Array.isArray(state.areas) && state.areas.length) || (Array.isArray(state.dealers) && state.dealers.length);
-        if(replace && hasExisting){
+        if(replace && hasExisting && !forceOverwrite){
           const makeSafety = confirm(
             "Before replacing, create a safety backup of your current data?\n\n" +
             "OK = Download safety backup\n" +
@@ -2601,15 +2712,15 @@ if(warn){
   // Backup reminder buttons (may not exist if reminder not shown)
   const btnBackupNow = document.getElementById("backupNow");
   if(btnBackupNow){
-    btnBackupNow.onclick = ()=>{
+    btnBackupNow.onclick = async ()=>{
       try{
-        exportBackup();
+        const r = await exportBackup();
         state.settings = state.settings || {};
         state.settings.lastBackupAt = Date.now();
         state.settings.lastBackupTripCount = Array.isArray(state.trips) ? state.trips.length : 0;
         state.settings.backupSnoozeUntil = 0;
         saveState();
-        showToast("Backup created");
+        showToast(r?.method === "share" ? "Share opened" : "Backup created");
       }catch(e){
         showToast("Backup failed");
       }finally{
@@ -4368,6 +4479,7 @@ function __renderListMgmtPanel(mode){
       <b>Data</b>
       <div class="sep"></div>
       <div class="muted small" style="margin-top:10px">Create a backup file you can store in Files/Drive. Restore brings it back later.</div>
+      <div class="muted small" id="lastBackupLine" style="margin-top:10px"></div>
       <div class="hint" style="margin-top:10px"><b>Backup recommended</b> before major updates.</div>
       <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
         <button class="btn" id="downloadBackup">💾 Create Backup</button>
@@ -4428,6 +4540,53 @@ function __renderListMgmtPanel(mode){
 
   // List Management handlers (Areas/Dealers tabs + add/delete)
   try{ __bindListMgmtHandlers(); }catch(_){ }
+
+  // Backup/Restore handlers
+  try{
+    __updateLastBackupLine();
+    const btnDl = document.getElementById("downloadBackup");
+    const btnRs = document.getElementById("restoreBackup");
+    const inp = document.getElementById("backupFile");
+
+    if(btnDl){
+      btnDl.onclick = async ()=>{
+        try{
+          const r = await exportBackup();
+          if(r?.ok){
+            showToast(r.method === "share" ? "Share opened" : "Backup created");
+          }else{
+            showToast("Backup failed");
+          }
+        }catch(_){
+          showToast("Backup failed");
+        }
+      };
+    }
+
+    if(btnRs && inp){
+      btnRs.onclick = ()=>{
+        try{ inp.value = ""; }catch(_){ }
+        try{ inp.click(); }catch(_){ }
+      };
+      inp.onchange = async ()=>{
+        const file = inp.files && inp.files[0];
+        try{ inp.value = ""; }catch(_){ }
+        if(!file) return;
+        try{
+          const result = await importBackupFromFile(file, { forceOverwrite:true, confirmMessage: "This will overwrite trips/lists on this device. Continue?" });
+          if(result?.canceled){
+            showToast("Restore canceled");
+            return;
+          }
+          const n = Number(result?.tripsAdded);
+          showToast(Number.isFinite(n) ? `Restore complete (${n} trips)` : "Restore complete");
+          renderSettings();
+        }catch(e){
+          showToast("Restore failed");
+        }
+      };
+    }
+  }catch(_){ }
 
 
   document.getElementById("openTerms").onclick = ()=>{ window.location.href = "legal/terms.html"; };
