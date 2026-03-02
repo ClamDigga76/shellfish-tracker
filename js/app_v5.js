@@ -119,7 +119,7 @@ async function hardRefreshNoSW(){
 }
 
 // Async version/build info for Settings > Updates
-async async function updateBuildInfo(){
+async function updateBuildInfo(){
   const detailsEl = document.getElementById("buildInfoDetails");
   const versionEl = document.getElementById("updateVersionLine");
 
