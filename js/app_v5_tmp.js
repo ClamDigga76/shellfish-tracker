@@ -4314,7 +4314,6 @@ function __renderListMgmtPanel(mode){
 
   
 
-}
 function __getScroller(){
   return document.scrollingElement || document.documentElement || document.body;
 }
@@ -4592,4 +4591,5 @@ function bindAreaChips(containerId, onPick){
     const a = btn.getAttribute("data-area") || "";
     onPick(String(a));
   });
+}
 }
