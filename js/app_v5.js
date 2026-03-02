@@ -4158,8 +4158,6 @@ function drawReportsCharts(monthRows, dealerRows){
 
 
 function renderSettings(opts={}){
-  const __keepScroll = !!(opts && opts.keepScroll);
-  const __prevScroll = (getApp() && typeof getApp().scrollTop==="number") ? getApp().scrollTop : 0;
 
   ensureAreas();
   ensureDealers();
@@ -4180,6 +4178,42 @@ function renderSettings(opts={}){
       <button class="smallbtn danger" data-del-dealer="${i}">Delete</button>
     </div>
   `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
+
+
+function __renderListMgmtPanel(mode){
+  const m = String(mode||"areas").toLowerCase();
+  const areaRows2 = state.areas.length ? state.areas.map((a, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
+      <button class="smallbtn danger" data-del-area="${i}" type="button">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small" style="margin-top:10px">No areas yet. Add one below.</div>`;
+
+  const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
+      <button class="smallbtn danger" data-del-dealer="${i}" type="button">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
+
+  return (m==="dealers") ? `
+    <div style="margin-top:12px">
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
+        <button class="btn primary" id="addDealer" type="button">Add</button>
+      </div>
+      ${dealerRows2}
+    </div>
+  ` : `
+    <div style="margin-top:12px">
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
+        <button class="btn primary" id="addArea" type="button">Add</button>
+      </div>
+      ${areaRows2}
+    </div>
+  `;
+}
 
   getApp().innerHTML = `
     ${renderPageHeader("settings")}
@@ -4202,28 +4236,14 @@ function renderSettings(opts={}){
       <div class="segWrap" style="margin-top:10px">
         <button class="chip segBtn ${listMode==="areas"?"on is-selected":""}" data-listmode="areas" type="button">Areas</button>
         <button class="chip segBtn ${listMode==="dealers"?"on is-selected":""}" data-listmode="dealers" type="button">Dealers</button>
-        <button class="chip segBtn" type="button" disabled aria-disabled="true" title="Coming soon">Species</button>
+        <button class="chip segBtn" type="button" disabled aria-disabled="true" title="Coming soon" style="display:flex;flex-direction:column;align-items:center;line-height:1.05">
+          <div>Species</div>
+          <div class="muted tiny" style="margin-top:2px;opacity:.85">Coming soon</div>
+        </button>
       </div>
-      <div class="muted tiny" style="margin-top:6px;opacity:.8">Species: coming soon</div>
       <div class="muted small" style="margin-top:10px">Manage the dropdown lists used in New Trip and Edit Trip.</div>
 
-      ${listMode==="dealers" ? `
-        <div style="margin-top:12px">
-          <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-            <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
-            <button class="btn primary" id="addDealer">Add</button>
-          </div>
-          ${dealerRows}
-        </div>
-      ` : `
-        <div style="margin-top:12px">
-          <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-            <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
-            <button class="btn primary" id="addArea">Add</button>
-          </div>
-          ${areaRows}
-        </div>
-      `}
+      <div id="listMgmtPanel">${__renderListMgmtPanel(listMode)}</div>
     </div>
 
     <div class="card">
@@ -4279,8 +4299,6 @@ function renderSettings(opts={}){
       </div>
     </details>
   `;
-
-  getApp().scrollTop = 0;
   updateBuildBadge();
 
   bindNavHandlers(state);
@@ -4294,105 +4312,40 @@ function renderSettings(opts={}){
   document.getElementById("openPrivacy").onclick = ()=>{ window.location.href = "legal/privacy.html"; };
   document.getElementById("openLicense").onclick = ()=>{ window.location.href = "legal/license.html"; };
 
-  // List mode toggle
-  getApp().querySelectorAll("button.chip[data-listmode]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const m = String(btn.getAttribute("data-listmode")||"areas").toLowerCase();
-      state.settings = state.settings || {};
-      state.settings.listMode = (m === "dealers") ? "dealers" : "areas";
-      saveState();
-      renderSettings({keepScroll:true});
-    });
+  
+
+function __getScroller(){
+  return document.scrollingElement || document.documentElement || document.body;
+}
+
+function __refreshListMgmt(mode, preserveScroll){
+  const sc = __getScroller();
+  const prev = preserveScroll ? (sc ? sc.scrollTop : 0) : 0;
+  const m = String(mode||"areas").toLowerCase();
+  state.settings = state.settings || {};
+  state.settings.listMode = (m==="dealers") ? "dealers" : "areas";
+  saveState();
+
+  // update selected state on buttons
+  getApp().querySelectorAll("button.chip[data-listmode]").forEach(b=>{
+    const bm = String(b.getAttribute("data-listmode")||"").toLowerCase();
+    const on = (bm === state.settings.listMode);
+    b.classList.toggle("on", on);
+    b.classList.toggle("is-selected", on);
   });
-// Backup / Restore (JSON)
-  const backupFile = document.getElementById("backupFile");
-  document.getElementById("downloadBackup").onclick = ()=>{
-    try{
-      exportBackup();
-      state.settings = state.settings || {};
-      state.settings.lastBackupAt = Date.now();
-      state.settings.lastBackupTripCount = Array.isArray(state.trips) ? state.trips.length : 0;
-      state.settings.backupSnoozeUntil = 0;
-      saveState();
-      showToast("Backup created");
-    }catch(e){
-      console.error(e);
-      showToast("Backup failed");
-    }
-  };
-  document.getElementById("restoreBackup").onclick = ()=>{
-    if(backupFile) backupFile.click();
-  };
-  if(backupFile){
-    backupFile.onchange = async ()=>{
-      const file = backupFile.files && backupFile.files[0];
-      if(!file) return;
-      try{
-        const res = await importBackupFromFile(file);
-        const msg = res.mode === "replace"
-          ? `Restored backup (${res.tripsAdded} trips)`
-          : `Merged backup (+${res.tripsAdded} trips)`;
-        showToast(msg);
-        if(res.warnings && res.warnings.length){
-          const top = res.warnings.slice(0,3).join("\n");
-          alert(`Restore warnings:\n\n${top}${res.warnings.length>3 ? `\n\n(+${res.warnings.length-3} more)` : ""}`);
-        }
-        renderSettings();
-      }catch(e){
-        console.error(e);
-        showToast("Restore failed");
-      }finally{
-        backupFile.value = "";
-      }
-    };
+
+  const panel = document.getElementById("listMgmtPanel");
+  if(panel) panel.innerHTML = __renderListMgmtPanel(state.settings.listMode);
+  __bindListMgmtHandlers();
+
+  // avoid iOS focus auto-scroll flick
+  try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch(_){}
+  if(preserveScroll && sc){
+    requestAnimationFrame(()=>{ sc.scrollTop = prev; });
   }
+}
 
-  const addAreaBtn = document.getElementById("addArea");
-  if(addAreaBtn) addAreaBtn.onclick = ()=>{
-    const v = String(document.getElementById("newArea")?.value||"").trim();
-    if(!v) return;
-    state.areas = Array.isArray(state.areas) ? state.areas : [];
-    state.areas.push(v);
-    ensureAreas();
-    saveState();
-    renderSettings();
-  };
-
-  const addDealerBtn = document.getElementById("addDealer");
-  if(addDealerBtn) addDealerBtn.onclick = ()=>{
-    const v = String(document.getElementById("newDealer")?.value||"").trim();
-    if(!v) return;
-    state.dealers = Array.isArray(state.dealers) ? state.dealers : [];
-    state.dealers.push(v);
-    ensureDealers();
-    saveState();
-    renderSettings();
-  };
-
-  getApp().querySelectorAll("[data-del-area]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const idx = Number(btn.getAttribute("data-del-area"));
-      if(!(idx >= 0)) return;
-      const label = state.areas[idx];
-      if(!confirm(`Delete area "${label}"?`)) return;
-      state.areas.splice(idx,1);
-      saveState();
-      renderSettings();
-    });
-  });
-
-  getApp().querySelectorAll("[data-del-dealer]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const i = parseInt(btn.getAttribute("data-del-dealer")||"-1", 10);
-      if(!(i>=0)) return;
-      const label = state.dealers[i];
-      if(!confirm(`Delete dealer "${label}"?`)) return;
-      state.dealers.splice(i,1);
-      ensureDealers();
-      saveState();
-      renderSettings();
-    });
-  });
+function __bindListMgmtHandlers(){
 
   document.getElementById("copyDebug").onclick = async ()=>{
     const ok = await copyTextToClipboard(getDebugInfo());
