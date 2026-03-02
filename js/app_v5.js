@@ -4804,18 +4804,25 @@ function __bindListMgmtHandlers(){
   };
 
   document.getElementById("refreshApp").onclick = async ()=>{
-    try{
-      if("serviceWorker" in navigator){
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r=>r.unregister()));
-      }
-      if("caches" in window){
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k=>caches.delete(k)));
-      }
-    }catch(_){}
+  try{
+    // Force a truly fresh load. iOS Safari/PWA can keep old HTML around unless we change URL.
+    if("serviceWorker" in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    if("caches" in window){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+  }catch(_){}
+  try{
+    const u = new URL(location.href);
+    u.searchParams.set("v", String(Date.now()));
+    location.replace(u.toString());
+  }catch(_){
     location.reload();
-  };
+  }
+};
 
   document.getElementById("resetData").onclick = ()=>{
     const typed = prompt('Type DELETE to permanently erase ALL trips and lists on this device.');
@@ -4964,6 +4971,9 @@ function renderAbout(){
 }
 
 function render(){
+  // Expose current view to CSS (view-specific layout tweaks)
+  try{ document.body.dataset.view = String(state.view||""); }catch(_){ }
+
   if(!state.view) state.view = "home";
 
   // Render main view

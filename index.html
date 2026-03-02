@@ -99,9 +99,10 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter) + 10px)}
 
 /* New Trip: avoid scrolling into blank space below the form.
-   We move the "tabbar clearance" into the card so any extra area stays visually attached to the form. */
+   Move tab-bar clearance into the form card so extra space stays attached to the card. */
 body[data-view="new"] main#app{padding-bottom:calc(env(safe-area-inset-bottom) + var(--bottom-gutter) + 10px)}
 body[data-view="new"] .formCard{padding-bottom:calc(16px + var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter))}
+
 
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
