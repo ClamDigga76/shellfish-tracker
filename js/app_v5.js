@@ -2387,7 +2387,11 @@ function renderHome(
 
 
   // ensure top of view on iPhone
-  getApp().scrollTop = 0;
+  if(!__keepScroll){
+    getApp().scrollTop = 0;
+  } else {
+    requestAnimationFrame(()=>{ try{ getApp().scrollTop = __prevScroll; }catch(_e){} });
+  }
 
   const vbtn = document.getElementById("viewAllTrips");
   if(vbtn){ vbtn.onclick = ()=>{ pushView(state, "all_trips"); }; }
@@ -4153,7 +4157,10 @@ function drawReportsCharts(monthRows, dealerRows){
 }
 
 
-function renderSettings(){
+function renderSettings(opts={}){
+  const __keepScroll = !!(opts && opts.keepScroll);
+  const __prevScroll = (getApp() && typeof getApp().scrollTop==="number") ? getApp().scrollTop : 0;
+
   ensureAreas();
   ensureDealers();
 
@@ -4197,6 +4204,7 @@ function renderSettings(){
         <button class="chip segBtn ${listMode==="dealers"?"on is-selected":""}" data-listmode="dealers" type="button">Dealers</button>
         <button class="chip segBtn" type="button" disabled aria-disabled="true" title="Coming soon">Species</button>
       </div>
+      <div class="muted tiny" style="margin-top:6px;opacity:.8">Species: coming soon</div>
       <div class="muted small" style="margin-top:10px">Manage the dropdown lists used in New Trip and Edit Trip.</div>
 
       ${listMode==="dealers" ? `
@@ -4293,11 +4301,10 @@ function renderSettings(){
       state.settings = state.settings || {};
       state.settings.listMode = (m === "dealers") ? "dealers" : "areas";
       saveState();
-      renderSettings();
+      renderSettings({keepScroll:true});
     });
   });
-
-  // Backup / Restore (JSON)
+// Backup / Restore (JSON)
   const backupFile = document.getElementById("backupFile");
   document.getElementById("downloadBackup").onclick = ()=>{
     try{
