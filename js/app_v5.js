@@ -4341,7 +4341,25 @@ function __refreshListMgmt(mode, preserveScroll){
   });
 
   const panel = document.getElementById("listMgmtPanel");
-  if(panel) panel.innerHTML = __renderListMgmtPanel(state.settings.listMode);
+if(panel){
+  try{
+    panel.innerHTML = __renderListMgmtPanel(state.settings.listMode);
+  }catch(err){
+    // Defensive: if saved state is corrupted or a renderer throws, keep Settings usable.
+    try{ console.error("ListMgmt render failed", err); }catch(_){}
+      try{ state.settings = state.settings || {}; state.settings.listMgmtLastError = String(err?.message || err); saveState(); }catch(_){ }
+    try{ state.areas = Array.isArray(state.areas) ? state.areas : []; }catch(_){}
+    try{ state.dealers = Array.isArray(state.dealers) ? state.dealers : []; }catch(_){}
+    try{
+      panel.innerHTML =
+        '<div class="muted small" style="margin-top:10px">' +
+        '<b>List Management error</b><br/>' +
+        'Tap <b>Copy Details</b> and send the error so we can fix it.<br/>' +
+        '<span class="muted tiny">' + escapeHtml(err?.message || String(err)) + '</span>' +
+        '</div>';
+    }catch(_){}
+  }
+}
   __bindListMgmtHandlers();
 
   // avoid iOS focus auto-scroll flick
