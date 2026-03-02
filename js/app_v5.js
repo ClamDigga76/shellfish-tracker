@@ -2384,14 +2384,9 @@ function renderHome(
       render();
     };
   }
-
-
   // ensure top of view on iPhone
-  if(!__keepScroll){
-    getApp().scrollTop = 0;
-  } else {
-    requestAnimationFrame(()=>{ try{ getApp().scrollTop = __prevScroll; }catch(_e){} });
-  }
+  try{ const _app = getApp(); if(_app) _app.scrollTop = 0; }catch(_e){}
+
 
   const vbtn = document.getElementById("viewAllTrips");
   if(vbtn){ vbtn.onclick = ()=>{ pushView(state, "all_trips"); }; }
