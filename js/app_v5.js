@@ -4303,6 +4303,10 @@ function __renderListMgmtPanel(mode){
   updateUpdateRow();
   try{ updateBuildInfo(); }catch(_){ }
 
+  // List Management handlers (Areas/Dealers tabs + add/delete)
+  try{ __bindListMgmtHandlers(); }catch(_){ }
+
+
   document.getElementById("openTerms").onclick = ()=>{ window.location.href = "legal/terms.html"; };
   document.getElementById("openPrivacy").onclick = ()=>{ window.location.href = "legal/privacy.html"; };
   document.getElementById("openLicense").onclick = ()=>{ window.location.href = "legal/license.html"; };
