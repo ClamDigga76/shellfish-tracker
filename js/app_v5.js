@@ -2956,6 +2956,15 @@ getApp().innerHTML = `
     state.reviewDraft.area = area;
     state.reviewDraft.dateMDY = dateMDY;
     state.reviewDraft.dealer = dealer;
+
+    // Color consistency: lbs blue, $ green
+    try{
+      const poundsOk = Number.isFinite(p) && p > 0;
+      const amountOk = Number.isFinite(a) && a > 0;
+      if(elPoundsLive) elPoundsLive.classList.toggle("lbsBlue", poundsOk);
+      if(elAmountLive) elAmountLive.classList.toggle("money", amountOk);
+    }catch(_){ }
+
     if(pplPill){
       const v = computePPL(Number(p||0), Number(a||0));
       pplPill.innerHTML = `Price/Lb: <b class="rate ppl">${formatMoney(v)}</b>`;
@@ -3291,6 +3300,23 @@ function renderEditTrip(){
   bindAreaChips("topAreasE", (a)=>{ elArea.value = String(a||""); });
 
   bindNavHandlers(state);
+
+  // Color consistency: lbs blue, $ green
+  const updateEditColors = ()=>{
+    try{
+      const p = parseNum(elPounds ? elPounds.value : "");
+      const a = parseMoney(elAmount ? elAmount.value : "");
+      const poundsOk = Number.isFinite(p) && p > 0;
+      const amountOk = Number.isFinite(a) && a > 0;
+      if(elPounds) elPounds.classList.toggle("lbsBlue", poundsOk);
+      if(elAmount) elAmount.classList.toggle("money", amountOk);
+    }catch(_){ }
+  };
+  updateEditColors();
+  elPounds?.addEventListener("input", updateEditColors);
+  elPounds?.addEventListener("blur", updateEditColors);
+  elAmount?.addEventListener("input", updateEditColors);
+  elAmount?.addEventListener("blur", updateEditColors);
 
   document.getElementById("saveEdit").onclick = ()=>{
     commitTripFromDraft({
