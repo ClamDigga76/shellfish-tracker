@@ -1767,11 +1767,17 @@ function tripsActiveLabel(tf, rangeLabel){
 }
 
 function ensureReportsFilter(){
-  if(!state.reportsFilter || typeof state.reportsFilter !== "object") state.reportsFilter = { mode:"YTD", from:"", to:"" };
+  if(!state.reportsFilter || typeof state.reportsFilter !== "object"){
+    state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
+  }
   if(!state.reportsFilter.mode) state.reportsFilter.mode = "YTD";
   if(state.reportsFilter.from == null) state.reportsFilter.from = "";
   if(state.reportsFilter.to == null) state.reportsFilter.to = "";
+  if(state.reportsFilter.dealer == null) state.reportsFilter.dealer = "";
+  if(state.reportsFilter.area == null) state.reportsFilter.area = "";
+  if(state.reportsFilter.adv == null) state.reportsFilter.adv = false;
 }
+
 
 function ensureHomeFilter(){
   if(!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode:"YTD", from:"", to:"" };
@@ -1791,22 +1797,37 @@ function modeRange(mode, fromMDY="", toMDY=""){
   const todayISO = isoToday();
   const now = new Date();
   const pad = (n)=>String(n).padStart(2,"0");
+  const m = String(mode||"").toUpperCase();
 
-  if(mode === "YTD"){
+  // Back-compat: old keys
+  if(m === "MONTH") mode = "THIS_MONTH";
+  if(m === "7D") mode = "RANGE_7D";
+
+  const M = String(mode||"").toUpperCase();
+
+  if(M === "YTD"){
     const start = `${now.getFullYear()}-01-01`;
     return { startISO:start, endISO:todayISO, label:"YTD" };
   }
-  if(mode === "MONTH"){
+  if(M === "THIS_MONTH"){
     const start = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
-    return { startISO:start, endISO:todayISO, label:"MONTH" };
+    return { startISO:start, endISO:todayISO, label:"THIS_MONTH" };
   }
-  if(mode === "7D"){
+  if(M === "LAST_MONTH"){
+    const d = new Date(now.getFullYear(), now.getMonth(), 1);
+    d.setMonth(d.getMonth() - 1);
+    const start = `${d.getFullYear()}-${pad(d.getMonth()+1)}-01`;
+    const endD = new Date(d.getFullYear(), d.getMonth()+1, 0); // last day of last month
+    const end = `${endD.getFullYear()}-${pad(endD.getMonth()+1)}-${pad(endD.getDate())}`;
+    return { startISO:start, endISO:end, label:"LAST_MONTH" };
+  }
+  if(M === "RANGE_7D"){
     const d = new Date(now);
     d.setDate(now.getDate() - 6);
     const start = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
     return { startISO:start, endISO:todayISO, label:"7D" };
   }
-  if(mode === "RANGE"){
+  if(M === "RANGE"){
     const s = parseMDYToISO(fromMDY);
     const e = parseMDYToISO(toMDY);
     if(s && e){
@@ -1815,9 +1836,11 @@ function modeRange(mode, fromMDY="", toMDY=""){
     }
     return { startISO:"", endISO:"", label:"RANGE" };
   }
-  // ALL
+  // ALL / ALL_TIME
   return { startISO:"", endISO:"", label:"ALL" };
 }
+
+
 
 function filterByISOInclusive(trips, startISO, endISO){
   if(!startISO || !endISO) return trips.slice();
@@ -3353,20 +3376,73 @@ function renderReports(){
   ensureReportsFilter();
 
   const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
-  const rf = state.reportsFilter || { mode:"YTD", from:"", to:"" };
+  const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
   const fMode = String(rf.mode || "YTD").toUpperCase();
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
 
   const r = modeRange(fMode, rf.from, rf.to);
   const hasValidRange = (r.label !== "RANGE") || (r.startISO && r.endISO);
-  const trips = (r.label === "ALL") ? tripsAll : (hasValidRange ? filterByISOInclusive(tripsAll, r.startISO, r.endISO) : tripsAll);
+  let trips = (r.label === "ALL") ? tripsAll : (hasValidRange ? filterByISOInclusive(tripsAll, r.startISO, r.endISO) : tripsAll);
+
+  const dealerF = String(rf.dealer || "");
+  const areaF = String(rf.area || "");
+  if(dealerF) trips = trips.filter(t=>String(t?.dealer||"") === dealerF);
+  if(areaF) trips = trips.filter(t=>String(t?.area||"") === areaF);
 
   const chip = (key,label) => `<button class="chip ${fMode===key?'on':''}" data-rf="${key}">${label}</button>`;
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
 
+  const advOpen = !!rf.adv;
+
+  const dealerOpts = ['<option value="">Any Dealer</option>'].concat(
+    (Array.isArray(state.dealers)?state.dealers:[]).map(d=>{
+      const v = String(d||"");
+      return `<option value="${escapeHtml(v)}" ${v===String(rf.dealer||"")?'selected':''}>${escapeHtml(v)}</option>`;
+    })
+  ).join("");
+
+  const areaOpts = ['<option value="">Any Area</option>'].concat(
+    (Array.isArray(state.areas)?state.areas:[]).map(a=>{
+      const v = String(a||"");
+      return `<option value="${escapeHtml(v)}" ${v===String(rf.area||"")?'selected':''}>${escapeHtml(v)}</option>`;
+    })
+  ).join("");
+
+  const advPanel = advOpen ? `
+    <div class="sep"></div>
+    <div class="grid2">
+      <div class="field">
+        <div class="label">From (MM/DD/YYYY)</div>
+        <input class="input" id="repAdvFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.from||"")}">
+      </div>
+      <div class="field">
+        <div class="label">To (MM/DD/YYYY)</div>
+        <input class="input" id="repAdvTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.to||"")}">
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="field">
+        <div class="label">Dealer</div>
+        <select class="input" id="repAdvDealer">${dealerOpts}</select>
+      </div>
+      <div class="field">
+        <div class="label">Area</div>
+        <select class="input" id="repAdvArea">${areaOpts}</select>
+      </div>
+    </div>
+    <div class="row" style="justify-content:flex-end;gap:10px;margin-top:10px">
+      <button class="btn" id="repAdvReset" type="button">Reset</button>
+      <button class="btn primary" id="repAdvApply" type="button">Apply</button>
+    </div>
+  ` : "";
+
   const rangeLabel = (fMode === "RANGE")
     ? (hasValidRange ? `${formatDateMDY(r.startISO)} → ${formatDateMDY(r.endISO)}` : "Set dates")
-    : r.label;
+    : (fMode === "THIS_MONTH" ? "This Month"
+      : (fMode === "LAST_MONTH" ? "Last Month"
+        : (fMode === "ALL" ? "All Time"
+          : "YTD")));
+
 
   if(!trips.length){
     getApp().innerHTML = `
@@ -3378,58 +3454,95 @@ function renderReports(){
           <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
         </div>
 
-        <div class="chipGrid cols-3" style="margin-top:10px">
+        <div class="chipGrid cols-4" style="margin-top:10px">
           ${chip("YTD","YTD")}
-          ${chip("MONTH","Month")}
-          ${chip("7D","7 Days")}
-          ${chip("RANGE","Range")}
+          ${chip("THIS_MONTH","This Month")}
+          ${chip("LAST_MONTH","Last Month")}
+          ${chip("ALL","All Time")}
         </div>
 
-        ${fMode==="RANGE" ? `
-          <div class="sep"></div>
-          <div class="grid2">
-            <div class="field">
-              <div class="label">From (MM/DD/YYYY)</div>
-              <input class="input" id="repRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.from||"")}" />
-            </div>
-            <div class="field">
-              <div class="label">To (MM/DD/YYYY)</div>
-              <input class="input" id="repRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.to||"")}" />
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <button class="btn primary" id="repRangeApply">Apply</button>
-          </div>
-        ` : ""}
+        <div class="row" style="justify-content:flex-end;margin-top:10px">
+          <button class="btn" id="repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
+        </div>
 
+        ${advPanel}
+
+        
         <div class="hint">${fMode==="RANGE" && !hasValidRange ? "Set a valid date range to see tables and charts." : "No trips in this range yet."}</div>
       </div>
     `;
     getApp().scrollTop = 0;
 
-    // range chips
+    // quick range buttons
     getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
       btn.onclick = ()=>{
-        state.reportsFilter.mode = String(btn.getAttribute("data-rf")||"YTD");
+        const key = String(btn.getAttribute("data-rf")||"YTD").toUpperCase();
+        state.reportsFilter.mode = key;
+        if(key !== "RANGE"){
+          state.reportsFilter.from = "";
+          state.reportsFilter.to = "";
+        }
         saveState();
         renderReports();
       };
     });
 
-    const applyBtn = document.getElementById("repRangeApply");
-    if(applyBtn){
-      applyBtn.onclick = ()=>{
-        const from = String(document.getElementById("repRangeFrom")?.value || "").trim();
-        const to = String(document.getElementById("repRangeTo")?.value || "").trim();
-        const s = parseMDYToISO(from);
-        const e = parseMDYToISO(to);
-        if(!s || !e){ showToast("Invalid range dates"); return; }
-        state.reportsFilter.from = from;
-        state.reportsFilter.to = to;
+    const advToggle = document.getElementById("repAdvToggle");
+    if(advToggle){
+      advToggle.onclick = ()=>{
+        state.reportsFilter.adv = !state.reportsFilter.adv;
         saveState();
         renderReports();
       };
     }
+
+    const advFrom = document.getElementById("repAdvFrom");
+    const advTo = document.getElementById("repAdvTo");
+    applyMDYMaskInput(advFrom);
+    applyMDYMaskInput(advTo);
+
+    const advApply = document.getElementById("repAdvApply");
+    if(advApply){
+      advApply.onclick = ()=>{
+        let from = String(advFrom?.value || "").trim();
+        let to = String(advTo?.value || "").trim();
+        const dealer = String(document.getElementById("repAdvDealer")?.value || "");
+        const area = String(document.getElementById("repAdvArea")?.value || "");
+
+        state.reportsFilter.dealer = dealer;
+        state.reportsFilter.area = area;
+
+        if(from && !to) to = from;
+        if(!from && to) from = to;
+
+        state.reportsFilter.from = from;
+        state.reportsFilter.to = to;
+
+        if(from || to){
+          const sISO = parseMDYToISO(from);
+          const eISO = parseMDYToISO(to);
+          if(!sISO || !eISO){ showToast("Invalid dates"); return; }
+          state.reportsFilter.mode = "RANGE";
+        }
+
+        saveState();
+        renderReports();
+      };
+    }
+
+    const advReset = document.getElementById("repAdvReset");
+    if(advReset){
+      advReset.onclick = ()=>{
+        state.reportsFilter.mode = "YTD";
+        state.reportsFilter.from = "";
+        state.reportsFilter.to = "";
+        state.reportsFilter.dealer = "";
+        state.reportsFilter.area = "";
+        saveState();
+        renderReports();
+      };
+    }
+
     return;
   }
 
@@ -3632,30 +3745,20 @@ function renderReports(){
         <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
 
-      <div class="chipGrid cols-3" style="margin-top:10px">
-        ${chip("YTD","YTD")}
-        ${chip("MONTH","Month")}
-        ${chip("7D","7 Days")}
-        ${chip("RANGE","Range")}
-      </div>
-
-      ${fMode==="RANGE" ? `
-        <div class="sep"></div>
-        <div class="grid2">
-          <div class="field">
-            <div class="label">From (MM/DD/YYYY)</div>
-            <input class="input" id="repRangeFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.from||"")}" />
-          </div>
-          <div class="field">
-            <div class="label">To (MM/DD/YYYY)</div>
-            <input class="input" id="repRangeTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.to||"")}" />
-          </div>
+      <div class="chipGrid cols-4" style="margin-top:10px">
+          ${chip("YTD","YTD")}
+          ${chip("THIS_MONTH","This Month")}
+          ${chip("LAST_MONTH","Last Month")}
+          ${chip("ALL","All Time")}
         </div>
-        <div class="row" style="margin-top:10px">
-          <button class="btn primary" id="repRangeApply">Apply</button>
-        </div>
-      ` : ""}
 
+        <div class="row" style="justify-content:flex-end;margin-top:10px">
+          <button class="btn" id="repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
+        </div>
+
+        ${advPanel}
+
+      
       <div class="chipGrid cols-3" style="margin-top:10px">
         ${seg("charts","Charts")}
         ${seg("tables","Tables")}
@@ -3676,22 +3779,6 @@ function renderReports(){
       renderReports();
     };
   });
-
-  // apply range
-  const applyBtn = document.getElementById("repRangeApply");
-  if(applyBtn){
-    applyBtn.onclick = ()=>{
-      const from = String(document.getElementById("repRangeFrom")?.value || "").trim();
-      const to = String(document.getElementById("repRangeTo")?.value || "").trim();
-      const s = parseMDYToISO(from);
-      const e = parseMDYToISO(to);
-      if(!s || !e){ showToast("Invalid range dates"); return; }
-      state.reportsFilter.from = from;
-      state.reportsFilter.to = to;
-      saveState();
-      renderReports();
-    };
-  }
 
   // mode chips
   getApp().querySelectorAll(".chip[data-m]").forEach(btn=>{
