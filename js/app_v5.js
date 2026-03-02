@@ -4189,13 +4189,15 @@ function renderSettings(){
     </div>
 
     <div class="card">
-      <b>Lists</b>
+      <b>List Management</b>
       <div class="sep"></div>
 
       <div class="segWrap" style="margin-top:10px">
         <button class="chip segBtn ${listMode==="areas"?"on is-selected":""}" data-listmode="areas" type="button">Areas</button>
         <button class="chip segBtn ${listMode==="dealers"?"on is-selected":""}" data-listmode="dealers" type="button">Dealers</button>
+        <button class="chip segBtn" type="button" disabled aria-disabled="true" title="Coming soon">Species</button>
       </div>
+      <div class="muted small" style="margin-top:10px">Manage the dropdown lists used in New Trip and Edit Trip.</div>
 
       ${listMode==="dealers" ? `
         <div style="margin-top:12px">
