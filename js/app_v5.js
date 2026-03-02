@@ -570,13 +570,30 @@ const VIEW_META = {
 
 function renderPageHeader(viewKey){
   const m = VIEW_META[viewKey] || { title: String(viewKey||""), icon: "home" };
+  // Show header Help button on main sections only
+  const helpKey = (viewKey === "all_trips") ? "trips" : viewKey;
+  const showHelp = (helpKey === "home" || helpKey === "trips" || helpKey === "reports" || helpKey === "settings");
   return `
     <div class="pageHeader">
       <span class="phIcon">${iconSvg(m.icon)}</span>
       <h2 class="phTitle">${escapeHtml(m.title)}</h2>
-      ${viewKey === "home" ? `<button class="phHelpBtn" id="homeHelp" type="button" aria-label="Help">?</button>` : ``}
+      ${showHelp ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">?</button>` : ``}
     </div>
   `;
+}
+
+function bindHeaderHelpButtons(){
+  try{
+    document.querySelectorAll('.phHelpBtn[data-help]').forEach(btn=>{
+      btn.onclick = ()=>{
+        const k = String(btn.getAttribute('data-help')||'').toLowerCase();
+        state.helpJump = k || "";
+        state.view = "help";
+        saveState();
+        render();
+      };
+    });
+  }catch(_e){}
 }
 
 function renderTabBar(activeView){
@@ -2616,15 +2633,6 @@ function renderHome(
     </div>
   `;
 
-  // Home header Help ("?") button
-  const hh = document.getElementById("homeHelp");
-  if(hh){
-    hh.onclick = ()=>{
-      state.view = "help";
-      saveState();
-      render();
-    };
-  }
   // ensure top of view on iPhone
   try{ const _app = getApp(); if(_app) _app.scrollTop = 0; }catch(_e){}
 
@@ -4874,10 +4882,11 @@ function renderHelp(){
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.6">
         <ul style="margin:8px 0 0 18px">
-          <li><b>Home</b>: Your totals (filtered) + recent trips list.</li>
+          <li id="help_jump_home"><b>Home</b>: Your totals (filtered) + recent trips list.</li>
+          <li id="help_jump_trips"><b>Trips</b>: Browse/edit trips. Use New Trip to add a harvest.</li>
           <li><b>New Trip</b>: Enter a harvest check (date, dealer, pounds, amount, area).</li>
-          <li><b>Reports</b>: Summaries and rollups for your selected time filter.</li>
-          <li><b>Settings</b>: Backup/restore, lists (areas/dealers), and app options.</li>
+          <li id="help_jump_reports"><b>Reports</b>: Summaries and rollups for your selected time filter.</li>
+          <li id="help_jump_settings"><b>Settings</b>: Backup/restore, lists (areas/dealers), and app options.</li>
         </ul>
       </div>
     </div>
@@ -4916,6 +4925,17 @@ function renderHelp(){
   `;
 
   getApp().scrollTop = 0;
+
+  // If a section Help button opened this screen, jump to that section
+  try{
+    const k = String(state.helpJump||"").toLowerCase();
+    if(k){
+      const el = document.getElementById(`help_jump_${k}`);
+      if(el && el.scrollIntoView){
+        el.scrollIntoView({ block: "start", behavior: "instant" });
+      }
+    }
+  }catch(_e){}
 
   if (typeof bindNavHandlers === "function") bindNavHandlers(state);
 }
@@ -4980,6 +5000,9 @@ function render(){
 
   // Render persistent tab bar
   renderTabBar(state.view);
+
+  // Header Help buttons (Home/Trips/Reports/Settings)
+  bindHeaderHelpButtons();
 }
 
 try{
