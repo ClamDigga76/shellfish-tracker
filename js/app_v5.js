@@ -4177,6 +4177,9 @@ function renderSettings(opts={}){
 
 function __renderListMgmtPanel(mode){
   const m = String(mode||"areas").toLowerCase();
+  // Normalize list arrays (defensive)
+  if(!Array.isArray(state.areas)) state.areas = [];
+  if(!Array.isArray(state.dealers)) state.dealers = [];
   const areaRows2 = state.areas.length ? state.areas.map((a, i)=>`
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
@@ -4323,6 +4326,9 @@ function __refreshListMgmt(mode, preserveScroll){
   const prev = preserveScroll ? (sc ? sc.scrollTop : 0) : 0;
   const m = String(mode||"areas").toLowerCase();
   state.settings = state.settings || {};
+  // Normalize list arrays to avoid crashes if state was corrupted
+  if(!Array.isArray(state.areas)) state.areas = [];
+  if(!Array.isArray(state.dealers)) state.dealers = [];
   state.settings.listMode = (m==="dealers") ? "dealers" : "areas";
   saveState();
 
