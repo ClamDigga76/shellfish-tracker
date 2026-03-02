@@ -4317,6 +4317,46 @@ function __renderListMgmtPanel(mode){
   
 
 }
+
+// v102: List Management panel renderer must be available at module scope (used by __refreshListMgmt)
+function __renderListMgmtPanel(mode){
+  const m = String(mode||"areas").toLowerCase();
+  // Normalize list arrays (defensive)
+  if(!Array.isArray(state.areas)) state.areas = [];
+  if(!Array.isArray(state.dealers)) state.dealers = [];
+  const areaRows2 = state.areas.length ? state.areas.map((a, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
+      <button class="smallbtn danger" data-del-area="${i}" type="button">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small" style="margin-top:10px">No areas yet. Add one below.</div>`;
+
+  const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
+      <button class="smallbtn danger" data-del-dealer="${i}" type="button">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
+
+  return (m==="dealers") ? `
+    <div style="margin-top:12px">
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
+        <button class="btn primary" id="addDealer" type="button">Add</button>
+      </div>
+      ${dealerRows2}
+    </div>
+  ` : `
+    <div style="margin-top:12px">
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
+        <button class="btn primary" id="addArea" type="button">Add</button>
+      </div>
+      ${areaRows2}
+    </div>
+  `;
+}
+
 function __getScroller(){
   return document.scrollingElement || document.documentElement || document.body;
 }
