@@ -4348,6 +4348,97 @@ function __refreshListMgmt(mode, preserveScroll){
 
 function __bindListMgmtHandlers(){
 
+  // List Management: tab switching + add/delete handlers
+  try{
+    const root = getApp();
+    if(root){
+      root.querySelectorAll('button.chip[data-listmode]').forEach(btn=>{
+        btn.onclick = (e)=>{
+          try{ e.preventDefault(); }catch(_){}
+          const mode = btn.getAttribute("data-listmode") || "areas";
+          __refreshListMgmt(mode, true);
+        };
+      });
+    }
+
+    const bindPanel = ()=>{
+      const mode = String(state?.settings?.listMode || "areas").toLowerCase();
+
+      const elNewArea = document.getElementById("newArea");
+      const elNewDealer = document.getElementById("newDealer");
+      const btnAddArea = document.getElementById("addArea");
+      const btnAddDealer = document.getElementById("addDealer");
+
+      if(btnAddArea){
+        btnAddArea.onclick = ()=>{
+          const raw = String(elNewArea?.value || "").trim();
+          if(!raw){ showToast("Enter an area first"); elNewArea?.focus(); return; }
+          if(raw.length > 40){ showToast("Keep it under 40 chars"); elNewArea?.focus(); return; }
+          ensureAreas();
+          const key = normalizeKey(raw);
+          const exists = state.areas.some(a => normalizeKey(String(a||"")) === key);
+          if(exists){ showToast("That area already exists"); return; }
+          state.areas.push(raw);
+          ensureAreas();
+          saveState();
+          __refreshListMgmt("areas", true);
+        };
+      }
+
+      if(btnAddDealer){
+        btnAddDealer.onclick = ()=>{
+          const raw = String(elNewDealer?.value || "").trim();
+          if(!raw){ showToast("Enter a dealer first"); elNewDealer?.focus(); return; }
+          if(raw.length > 40){ showToast("Keep it under 40 chars"); elNewDealer?.focus(); return; }
+          ensureDealers();
+          const key = normalizeKey(raw);
+          const exists = state.dealers.some(d => normalizeKey(String(d||"")) === key);
+          if(exists){ showToast("That dealer already exists"); return; }
+          state.dealers.push(raw);
+          ensureDealers();
+          saveState();
+          __refreshListMgmt("dealers", true);
+        };
+      }
+
+      // Delete buttons
+      (getApp()?.querySelectorAll("button[data-del-area]") || []).forEach(btn=>{
+        btn.onclick = ()=>{
+          const i = Number(btn.getAttribute("data-del-area"));
+          if(!Number.isFinite(i) || i<0) return;
+          const name = String(state.areas?.[i] || "");
+          if(!confirm(`Delete area "${name}"?`)) return;
+          state.areas.splice(i, 1);
+          ensureAreas();
+          saveState();
+          __refreshListMgmt("areas", true);
+        };
+      });
+      (getApp()?.querySelectorAll("button[data-del-dealer]") || []).forEach(btn=>{
+        btn.onclick = ()=>{
+          const i = Number(btn.getAttribute("data-del-dealer"));
+          if(!Number.isFinite(i) || i<0) return;
+          const name = String(state.dealers?.[i] || "");
+          if(!confirm(`Delete dealer "${name}"?`)) return;
+          state.dealers.splice(i, 1);
+          ensureDealers();
+          saveState();
+          __refreshListMgmt("dealers", true);
+        };
+      });
+
+      // Enter key support for Add inputs
+      if(elNewArea){
+        elNewArea.onkeydown = (e)=>{ if(e.key==="Enter"){ e.preventDefault(); btnAddArea?.click(); } };
+      }
+      if(elNewDealer){
+        elNewDealer.onkeydown = (e)=>{ if(e.key==="Enter"){ e.preventDefault(); btnAddDealer?.click(); } };
+      }
+    };
+
+    bindPanel();
+  }catch(_){}
+
   document.getElementById("copyDebug").onclick = async ()=>{
     const ok = await copyTextToClipboard(getDebugInfo());
     showToast(ok ? "Details copied" : "Copy failed");
