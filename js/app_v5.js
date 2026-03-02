@@ -3789,6 +3789,45 @@ function renderReports(){
     };
   });
 
+  // advanced toggle
+  getApp().querySelectorAll(".repAdvToggle").forEach(btn=>{
+    btn.onclick = ()=>{
+      state.reportsFilter.adv = !state.reportsFilter.adv;
+      saveState();
+      renderReports();
+    };
+  });
+
+  // advanced apply/reset (only present when panel open)
+  const advApply = getApp().querySelector("#repAdvApply");
+  if(advApply){
+    advApply.onclick = ()=>{
+      const from = String(getApp().querySelector("#repAdvFrom")?.value||"").trim();
+      const to   = String(getApp().querySelector("#repAdvTo")?.value||"").trim();
+      const dealer = String(getApp().querySelector("#repAdvDealer")?.value||"");
+      const area   = String(getApp().querySelector("#repAdvArea")?.value||"");
+      state.reportsFilter.from = from;
+      state.reportsFilter.to = to;
+      state.reportsFilter.dealer = dealer;
+      state.reportsFilter.area = area;
+      if(from || to){
+        state.reportsFilter.mode = "RANGE";
+      }
+      saveState();
+      renderReports();
+    };
+  }
+
+  const advReset = getApp().querySelector("#repAdvReset");
+  if(advReset){
+    advReset.onclick = ()=>{
+      state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
+      saveState();
+      renderReports();
+    };
+  }
+
+
   if(mode === "charts"){
     setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows); }, 0);
   }
