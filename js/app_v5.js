@@ -28,10 +28,10 @@ async function swCheckNow(){
   // 2) if waiting SW exists, ask it to skipWaiting
   // 3) reload when controller changes
   // 4) fallback: clear app caches and hard-reload with cache-bust
-  const statusEl = document.getElementById("updateStatus");
-  const btnCheck = document.getElementById("checkUpdate");
+  const statusEl = document.getElementById("updateBigStatus");
+  const btnCheck = document.getElementById("updatePrimary");
   try{
-    if(statusEl) statusEl.textContent = "Update: Checking…";
+    if(statusEl) statusEl.textContent = "Checking for updates…";
     if(btnCheck) btnCheck.disabled = true;
 
     const reg = await navigator.serviceWorker.getRegistration();
@@ -46,7 +46,7 @@ async function swCheckNow(){
     // Wait briefly for an installing/waiting worker to appear
     const waiting = await waitForWaitingSW(2500);
     if(waiting){
-      if(statusEl) statusEl.textContent = "Update: Applying…";
+      if(statusEl) statusEl.textContent = "Applying update…";
       try{ waiting.postMessage({ type: "SKIP_WAITING" }); }catch(_){}
       await waitForControllerChange(3000);
       // If controllerchange didn't fire, still attempt a hard reload.
@@ -54,11 +54,11 @@ async function swCheckNow(){
       return;
     }
 
-    if(statusEl) statusEl.textContent = "Update: Up to date";
+    if(statusEl) statusEl.textContent = "Up to date";
     showToast("Up to date");
   }catch(_){
     try{
-      if(statusEl) statusEl.textContent = "Update: Refreshing…";
+      if(statusEl) statusEl.textContent = "Refreshing…";
       await hardRefreshNoSW();
     }catch(__){}
   }finally{
@@ -119,9 +119,21 @@ async function hardRefreshNoSW(){
 }
 
 // Async version/build info for Settings > Updates
-async function updateBuildInfo(){
-  const el = document.getElementById("buildInfo");
-  if(!el) return;
+async async function updateBuildInfo(){
+  const detailsEl = document.getElementById("buildInfoDetails");
+  const versionEl = document.getElementById("updateVersionLine");
+
+  // Visible, non-techy line (always shown)
+  try{
+    if(versionEl){
+      const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator.standalone === true);
+      versionEl.textContent = `Version: ${VERSION}${standalone ? " • Standalone: yes" : ""}`;
+    }
+  }catch(_){
+    try{ if(versionEl) versionEl.textContent = `Version: ${VERSION}`; }catch(__){}
+  }
+
+  if(!detailsEl) return;
 
   const parts = [];
   // App + schema
@@ -162,8 +174,9 @@ async function updateBuildInfo(){
     }
   }catch(_){}
 
-  el.textContent = parts.join("\n");
+  detailsEl.textContent = parts.join("\n");
 }
+
 
 
 async function swApplyNow(){
@@ -182,28 +195,25 @@ async function swApplyNow(){
 }
 
 function updateUpdateRow(){
-  const statusEl = document.getElementById("updateStatus");
-  const btnNow = document.getElementById("updateNow");
-  const btnCheck = document.getElementById("checkUpdate");
-  if(!statusEl || !btnNow) return;
+  const statusEl = document.getElementById("updateBigStatus");
+  const btnPrimary = document.getElementById("updatePrimary");
+  const inlineMsg = document.getElementById("updateInlineMsg");
+  if(!statusEl || !btnPrimary) return;
+
+  // Hide any transient inline message unless someone explicitly sets it.
+  if(inlineMsg) inlineMsg.style.display = "none";
 
   if(SW_UPDATE_READY){
-    statusEl.textContent = "Update: Ready";
-    btnNow.style.display = "inline-block";
+    statusEl.textContent = "Update available";
+    btnPrimary.textContent = "Update now";
+    btnPrimary.onclick = async ()=>{ await swApplyNow(); };
   }else{
-    statusEl.textContent = "Update: Up to date";
-    btnNow.style.display = "none";
-  }
-
-  if(btnCheck && !btnCheck.__bound){
-    btnCheck.__bound = true;
-    btnCheck.onclick = async ()=>{ await swCheckNow(); };
-  }
-  if(btnNow && !btnNow.__bound){
-    btnNow.__bound = true;
-    btnNow.onclick = async ()=>{ await swApplyNow(); };
+    statusEl.textContent = "Up to date";
+    btnPrimary.textContent = "Check for updates";
+    btnPrimary.onclick = async ()=>{ await swCheckNow(); };
   }
 }
+
 
 window.__SHELLFISH_BUILD__ = APP_VERSION;
 const HOME_TRIPS_LIMIT = 15;
@@ -4450,12 +4460,19 @@ function __renderListMgmtPanel(mode){
     <div class="card">
       <b>Updates</b>
       <div class="sep"></div>
-      <div class="muted small" id="buildInfo" style="white-space:pre-wrap"></div>
-      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;align-items:center">
-        <div class="muted small" id="updateStatus">Update: Up to date</div>
-        <button class="btn" id="updateNow" style="display:none">Update Now</button>
-        <button class="btn" id="checkUpdate">Check update</button>
+
+      <div id="updateBigStatus" style="font-size:18px;font-weight:800">Up to date</div>
+      <div class="muted small" id="updateVersionLine" style="margin-top:6px"></div>
+
+      <div class="row" style="margin-top:12px;gap:10px;align-items:center">
+        <button class="btn" id="updatePrimary">Check for updates</button>
+        <div class="muted small" id="updateInlineMsg" style="display:none"></div>
       </div>
+
+      <details style="margin-top:10px">
+        <summary class="muted small">Details</summary>
+        <div class="muted small" id="buildInfoDetails" style="white-space:pre-wrap;margin-top:8px"></div>
+      </details>
     </div>
 
     <div class="card">
@@ -4481,9 +4498,9 @@ function __renderListMgmtPanel(mode){
       <div class="muted small" style="margin-top:10px">Create a backup file you can store in Files/Drive. Restore brings it back later.</div>
       <div class="muted small" id="lastBackupLine" style="margin-top:10px"></div>
       <div class="hint" style="margin-top:10px"><b>Backup recommended</b> before major updates.</div>
-      <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
-        <button class="btn" id="downloadBackup">💾 Create Backup</button>
-        <button class="btn" id="restoreBackup">📥 Restore Backup</button>
+      <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:nowrap">
+        <button class="btn" id="downloadBackup" style="flex:1">💾 Create Backup</button>
+        <button class="btn" id="restoreBackup" style="flex:1">📥 Restore Backup</button>
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" style="display:none" />
       </div>
     </div>
