@@ -2589,7 +2589,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         <div class="field">
           <div class="fieldLabel overline">POUNDS</div>
           <div class="inputWrap">
-            <input class="input inputWithSuffix" id="t_pounds" type="text" inputmode="decimal" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" />
+            <input class="input inputWithSuffix" id="t_pounds" type="text" inputmode="decimal" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}"  pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
             <span class="unitSuffix lbsBlue">lbs</span>
           </div>
         </div>
@@ -2597,7 +2597,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
           <div class="fieldLabel overline">AMOUNT</div>
           <div class="inputWrap">
             <span class="moneyPrefix moneyGreen">$</span>
-            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" placeholder="0.00" value="${escapeHtml(String(amountVal))}" />
+            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" placeholder="0.00" value="${escapeHtml(String(amountVal))}"  pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
           </div>
         </div>
       </div>
@@ -3424,12 +3424,12 @@ function renderEditTrip(){
 
         <div class="field">
           <div class="label">Pounds</div>
-          <input class="input" id="e_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}" />
+          <input class="input" id="e_pounds" inputmode="decimal" placeholder="0.0" value="${String(draft.pounds??"")}"  pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
         </div>
 
         <div class="field">
           <div class="label">Amount</div>
-          <input class="input" id="e_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}" />
+          <input class="input" id="e_amount" inputmode="decimal" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}"  pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
         </div>
 
         <div class="field">
@@ -3474,10 +3474,39 @@ function renderEditTrip(){
     }catch(_){ }
   };
   updateEditColors();
-  elPounds?.addEventListener("input", updateEditColors);
-  elPounds?.addEventListener("blur", updateEditColors);
-  elAmount?.addEventListener("input", updateEditColors);
-  elAmount?.addEventListener("blur", updateEditColors);
+
+  // Big-number keypad + better formatting (match New Trip)
+  if(elPounds && !elPounds.__boundNumeric){
+    elPounds.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elPounds, ["0","0.","0.0"]);
+    elPounds.addEventListener("pointerdown", prime);
+    elPounds.addEventListener("focus", prime);
+    elPounds.addEventListener("input", ()=>{
+      const s = sanitizeDecimalInput(elPounds.value);
+      if(s !== elPounds.value) elPounds.value = s;
+      updateEditColors();
+    });
+    elPounds.addEventListener("blur", ()=>{
+      if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
+      updateEditColors();
+    });
+  }
+
+  if(elAmount && !elAmount.__boundNumeric){
+    elAmount.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elAmount, ["0","0.","0.0","0.00"]);
+    elAmount.addEventListener("pointerdown", prime);
+    elAmount.addEventListener("focus", prime);
+    elAmount.addEventListener("input", ()=>{
+      const s = sanitizeDecimalInput(elAmount.value);
+      if(s !== elAmount.value) elAmount.value = s;
+      updateEditColors();
+    });
+    elAmount.addEventListener("blur", ()=>{
+      normalizeAmountOnBlur(elAmount);
+      updateEditColors();
+    });
+  }
 
   document.getElementById("saveEdit").onclick = ()=>{
     commitTripFromDraft({
