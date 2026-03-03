@@ -1018,9 +1018,9 @@ function renderTripCatchCard(t, opts = {}){
     <${tag} class="trip triprow catchCard ${escapeHtml(extraClass)}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
       <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start">
         <div>
-          <div class="catchHead" style="font-size:14px">${escapeHtml(dateText)}</div>
+          <div class="catchHead" style="font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(dateText)}</div>
           <div class="catchMain" style="font-size:18px;color:#fff">${escapeHtml(area)}</div>
-          <div class="catchHead" style="margin-top:2px;font-size:14px">${escapeHtml(dealer)}</div>
+          <div class="catchHead" style="margin-top:2px;font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(dealer)}</div>
         </div>
         <div class="catchFoot" style="margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap">
           <span class="catchMetric lbsBlue" style="font-size:14px;padding:6px 10px"><b class="lbsBlue">${lbs}</b> lbs</span>
@@ -4112,9 +4112,9 @@ function renderReports(){
     }
     return `
       <div class="hlStatCard">
-        <div class="hlHdr">${escapeHtml(label)}</div>
-        <div class="hlValue ${metricClass}">${escapeHtml(metricText)}</div>
-        <div class="hlCtx">${escapeHtml(date)} • ${escapeHtml(dealer)}</div>
+        <div class="hlHdr" style="text-align:center">${escapeHtml(label)}</div>
+        <div class="hlValue ${metricClass}" style="text-align:center">${escapeHtml(metricText)}</div>
+        <div class="hlCtx muted small" style="text-align:center">${escapeHtml(date)} • ${escapeHtml(dealer)}</div>
         <div style="margin-top:8px">
           ${renderTripCatchCard(t, {
             extraClass: "hlTrip",
