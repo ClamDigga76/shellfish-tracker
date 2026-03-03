@@ -30,100 +30,40 @@ window.addEventListener("sw-update-ready", (ev) => {
 });
 
 async function swCheckNow(){
-  // "Check update" should actually refresh when a new build is available.
-  // Flow:
-  // 1) registration.update()
-  // 2) if waiting SW exists, ask it to skipWaiting
-  // 3) reload when controller changes
-  // 4) fallback: clear app caches and hard-reload with cache-bust
+  // Settings top-row CTA should mirror "Refresh App" behavior.
+  // Keep status messaging, but always force-refresh app assets.
   const statusEl = document.getElementById("updateBigStatus");
   const btnCheck = document.getElementById("updatePrimary");
   try{
-    if(statusEl) statusEl.textContent = "Checking for updates…";
+    if(statusEl) statusEl.textContent = SW_UPDATE_READY ? "Applying update…" : "Checking for updates…";
     if(btnCheck) btnCheck.disabled = true;
-
-    const reg = await navigator.serviceWorker.getRegistration();
-    if(!reg){
-      await hardRefreshNoSW();
-      return;
-    }
-
-    // Trigger SW update check
-    try{ await reg.update(); }catch(_){}
-
-    // Wait briefly for an installing/waiting worker to appear
-    const waiting = await waitForWaitingSW(2500);
-    if(waiting){
-      if(statusEl) statusEl.textContent = "Applying update…";
-      try{ waiting.postMessage({ type: "SKIP_WAITING" }); }catch(_){}
-      await waitForControllerChange(3000);
-      // If controllerchange didn't fire, still attempt a hard reload.
-      location.reload();
-      return;
-    }
-
-    if(statusEl) statusEl.textContent = "Up to date";
-    showToast("Up to date");
+    if(statusEl) statusEl.textContent = "Refreshing…";
+    await forceRefreshApp();
   }catch(_){
     try{
       if(statusEl) statusEl.textContent = "Refreshing…";
-      await hardRefreshNoSW();
+      await forceRefreshApp();
     }catch(__){}
   }finally{
     if(btnCheck) btnCheck.disabled = false;
     // refresh build info
-    try{ updateBuildInfo(); }catch(_){}
+    try{ updateBuildInfo(); }catch(_){ }
   }
 }
 
-async function waitForWaitingSW(timeoutMs){
-  const t0 = Date.now();
-  while(Date.now() - t0 < timeoutMs){
-    try{
-      const reg = await navigator.serviceWorker.getRegistration();
-      if(reg?.waiting) return reg.waiting;
-      // If installing becomes installed, it usually moves to waiting
-      if(reg?.installing){
-        // give it a beat
-      }
-    }catch(_){}
-    await new Promise(r=>setTimeout(r, 150));
-  }
+async function forceRefreshApp(){
+  // Clear SW + caches and reload.
   try{
-    const reg = await navigator.serviceWorker.getRegistration();
-    if(reg?.waiting) return reg.waiting;
-  }catch(_){}
-  return null;
-}
-
-async function waitForControllerChange(timeoutMs){
-  return new Promise((resolve)=>{
-    let done=false;
-    const t=setTimeout(()=>{ if(done) return; done=true; resolve(false); }, timeoutMs);
-    try{
-      navigator.serviceWorker.addEventListener("controllerchange", ()=>{
-        if(done) return;
-        done=true;
-        clearTimeout(t);
-        resolve(true);
-      }, { once:true });
-    }catch(_){
-      clearTimeout(t);
-      resolve(false);
+    if("serviceWorker" in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
     }
-  });
-}
-
-async function hardRefreshNoSW(){
-  // Clear known app caches then reload with a cache-busting param.
-  try{
     if(window.caches && caches.keys){
       const keys = await caches.keys();
-      await Promise.all(keys.filter(k=>String(k).startsWith("shellfish-tracker-")).map(k=>caches.delete(k)));
+      await Promise.all(keys.map(k=>caches.delete(k)));
     }
-  }catch(_){}
-  const base = location.origin + location.pathname;
-  location.replace(base + "?v=" + Date.now());
+  }catch(_){ }
+  location.reload();
 }
 
 // Async version/build info for Settings > Updates
@@ -187,21 +127,6 @@ async function updateBuildInfo(){
 
 
 
-async function swApplyNow(){
-  try{
-    const reg = await navigator.serviceWorker.getRegistration();
-    if(reg?.waiting){
-      try{ reg.waiting.postMessage({ type: "SKIP_WAITING" }); }catch(_){}
-      let reloaded = false;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (reloaded) return;
-        reloaded = true;
-        location.reload();
-      });
-    }
-  }catch(_){}
-}
-
 function updateUpdateRow(){
   const statusEl = document.getElementById("updateBigStatus");
   const btnPrimary = document.getElementById("updatePrimary");
@@ -214,7 +139,7 @@ function updateUpdateRow(){
   if(SW_UPDATE_READY){
     statusEl.textContent = "Update available";
     btnPrimary.textContent = "Update now";
-    btnPrimary.onclick = async ()=>{ await swApplyNow(); };
+    btnPrimary.onclick = async ()=>{ await swCheckNow(); };
   }else{
     statusEl.textContent = "Up to date";
     btnPrimary.textContent = "Check for updates";
@@ -4612,22 +4537,33 @@ function __renderListMgmtPanel(mode){
   getApp().innerHTML = `
     ${renderPageHeader("settings")}
 
-    <div class="card">
-      <b>Updates</b>
-      <div class="sep"></div>
+    <div class="row" style="gap:10px;align-items:stretch;flex-wrap:nowrap">
+      <div class="card" style="flex:1;min-width:0;padding:10px">
+        <b style="font-size:.95rem">Updates</b>
+        <div class="sep" style="margin:8px 0"></div>
 
-      <div id="updateBigStatus" style="font-size:18px;font-weight:800">Up to date</div>
-      <div class="muted small" id="updateVersionLine" style="margin-top:6px"></div>
+        <div id="updateBigStatus" style="font-size:15px;font-weight:800;line-height:1.2">Up to date</div>
+        <div class="muted" id="updateVersionLine" style="margin-top:4px;font-size:11px;line-height:1.25"></div>
 
-      <div class="row" style="margin-top:12px;gap:10px;align-items:center">
-        <button class="btn" id="updatePrimary">Check for updates</button>
-        <div class="muted small" id="updateInlineMsg" style="display:none"></div>
+        <div class="row" style="margin-top:8px;gap:8px;align-items:center;min-width:0">
+          <button class="btn" id="updatePrimary" style="font-size:12px;padding:7px 10px;min-width:0;white-space:nowrap">Check for updates</button>
+          <div class="muted" id="updateInlineMsg" style="display:none;font-size:11px"></div>
+        </div>
+
+        <details style="margin-top:8px">
+          <summary class="muted" style="font-size:11px">Details</summary>
+          <div class="muted" id="buildInfoDetails" style="white-space:pre-wrap;margin-top:6px;font-size:11px;line-height:1.25"></div>
+        </details>
       </div>
 
-      <details style="margin-top:10px">
-        <summary class="muted small">Details</summary>
-        <div class="muted small" id="buildInfoDetails" style="white-space:pre-wrap;margin-top:8px"></div>
-      </details>
+      <div class="card" style="flex:1;min-width:0;padding:10px">
+        <b style="font-size:.95rem">Help</b>
+        <div class="sep" style="margin:8px 0"></div>
+        <div class="muted" style="margin-top:4px;font-size:11px;line-height:1.25">Short instructions for manual entry, clipboard paste, backups, and install.</div>
+        <div class="row" style="margin-top:8px;min-width:0">
+          <button class="btn" id="openHelp" style="font-size:12px;padding:7px 10px;min-width:0;white-space:nowrap">Open Help</button>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -4659,15 +4595,6 @@ function __renderListMgmtPanel(mode){
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" style="display:none" />
       </div>
       <div class="muted small" style="margin-top:10px">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups.</div>
-    </div>
-
-    <div class="card">
-      <b>Help</b>
-      <div class="sep"></div>
-      <div class="muted small" style="margin-top:10px">Short instructions for manual entry, clipboard paste, backups, and install.</div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn" id="openHelp">Open Help</button>
-      </div>
     </div>
 
     <div class="card">
@@ -4960,17 +4887,7 @@ function __bindListMgmtHandlers(){
   };
 
   document.getElementById("refreshApp").onclick = async ()=>{
-    try{
-      if("serviceWorker" in navigator){
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r=>r.unregister()));
-      }
-      if("caches" in window){
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k=>caches.delete(k)));
-      }
-    }catch(_){}
-    location.reload();
+    await forceRefreshApp();
   };
 
   document.getElementById("resetData").onclick = ()=>{
