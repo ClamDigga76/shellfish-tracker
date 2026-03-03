@@ -2197,6 +2197,25 @@ function isoToday(){
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
 
+function supportsNativeDateInput(){
+  const el = document.createElement("input");
+  el.setAttribute("type", "date");
+  return el.type === "date";
+}
+
+function parseReportDateToISO(value){
+  const raw = String(value || "").trim();
+  if(!raw) return "";
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  return parseMDYToISO(raw) || "";
+}
+
+function formatReportDateValue(value, useNative){
+  const iso = parseReportDateToISO(value);
+  if(!iso) return String(value || "");
+  return useNative ? iso : formatDateMDY(iso);
+}
+
 function modeRange(mode, fromMDY="", toMDY=""){
   const todayISO = isoToday();
   const now = new Date();
@@ -2232,8 +2251,8 @@ function modeRange(mode, fromMDY="", toMDY=""){
     return { startISO:start, endISO:todayISO, label:"7D" };
   }
   if(M === "RANGE"){
-    const s = parseMDYToISO(fromMDY);
-    const e = parseMDYToISO(toMDY);
+    const s = parseReportDateToISO(fromMDY);
+    const e = parseReportDateToISO(toMDY);
     if(s && e){
       const a = s <= e ? {startISO:s,endISO:e} : {startISO:e,endISO:s};
       return { ...a, label:"RANGE" };
@@ -3815,6 +3834,12 @@ function renderReports(){
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
 
   const advOpen = !!rf.adv;
+  const useNativeDate = supportsNativeDateInput();
+  const advDateType = useNativeDate ? "date" : "text";
+  const advDateInputMode = useNativeDate ? "" : "inputmode=\"numeric\"";
+  const advDatePlaceholder = useNativeDate ? "" : "placeholder=\"MM/DD/YYYY\"";
+  const advFromValue = formatReportDateValue(rf.from, useNativeDate);
+  const advToValue = formatReportDateValue(rf.to, useNativeDate);
 
   const dealerOpts = ['<option value="">Any Dealer</option>'].concat(
     (Array.isArray(state.dealers)?state.dealers:[]).map(d=>{
@@ -3834,12 +3859,12 @@ function renderReports(){
     <div class="sep"></div>
     <div class="grid2">
       <div class="field">
-        <div class="label">From (MM/DD/YYYY)</div>
-        <input class="input" id="repAdvFrom" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.from||"")}">
+        <div class="label">From</div>
+        <input class="input" id="repAdvFrom" type="${advDateType}" ${advDateInputMode} ${advDatePlaceholder} value="${escapeHtml(advFromValue)}">
       </div>
       <div class="field">
-        <div class="label">To (MM/DD/YYYY)</div>
-        <input class="input" id="repAdvTo" inputmode="numeric" placeholder="MM/DD/YYYY" value="${escapeHtml(rf.to||"")}">
+        <div class="label">To</div>
+        <input class="input" id="repAdvTo" type="${advDateType}" ${advDateInputMode} ${advDatePlaceholder} value="${escapeHtml(advToValue)}">
       </div>
     </div>
     <div class="grid2" style="margin-top:10px">
@@ -3919,8 +3944,10 @@ function renderReports(){
 
     const advFrom = document.getElementById("repAdvFrom");
     const advTo = document.getElementById("repAdvTo");
-    applyMDYMaskInput(advFrom);
-    applyMDYMaskInput(advTo);
+    if(!useNativeDate){
+      applyMDYMaskInput(advFrom);
+      applyMDYMaskInput(advTo);
+    }
 
     const advApply = document.getElementById("repAdvApply");
     if(advApply){
@@ -3936,15 +3963,20 @@ function renderReports(){
         if(from && !to) to = from;
         if(!from && to) from = to;
 
-        state.reportsFilter.from = from;
-        state.reportsFilter.to = to;
-
         if(from || to){
-          const sISO = parseMDYToISO(from);
-          const eISO = parseMDYToISO(to);
+          const sISO = parseReportDateToISO(from);
+          const eISO = parseReportDateToISO(to);
           if(!sISO || !eISO){ showToast("Invalid dates"); return; }
           state.reportsFilter.mode = "RANGE";
         }
+
+        if(useNativeDate){
+          from = parseReportDateToISO(from);
+          to = parseReportDateToISO(to);
+        }
+
+        state.reportsFilter.from = from;
+        state.reportsFilter.to = to;
 
         saveState();
         renderReports();
@@ -4226,11 +4258,17 @@ function renderReports(){
       const to   = String(getApp().querySelector("#repAdvTo")?.value||"").trim();
       const dealer = String(getApp().querySelector("#repAdvDealer")?.value||"");
       const area   = String(getApp().querySelector("#repAdvArea")?.value||"");
-      state.reportsFilter.from = from;
-      state.reportsFilter.to = to;
+      const fromISO = parseReportDateToISO(from);
+      const toISO = parseReportDateToISO(to);
+      if((from && !fromISO) || (to && !toISO)){
+        showToast("Invalid dates");
+        return;
+      }
+      state.reportsFilter.from = useNativeDate ? fromISO : from;
+      state.reportsFilter.to = useNativeDate ? toISO : to;
       state.reportsFilter.dealer = dealer;
       state.reportsFilter.area = area;
-      if(from || to){
+      if((useNativeDate ? fromISO : from) || (useNativeDate ? toISO : to)){
         state.reportsFilter.mode = "RANGE";
       }
       saveState();
