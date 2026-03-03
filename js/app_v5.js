@@ -4122,17 +4122,22 @@ function renderReports(){
       <div class="card">
         <b>Avg $/lb by Month</b>
         <div class="sep"></div>
-        <canvas class="chart" id="c_ppl" height="180"></canvas>
+        <canvas class="chart" id="c_ppl" height="220"></canvas>
       </div>
       <div class="card">
         <b>Dealer Amount (Top)</b>
         <div class="sep"></div>
-        <canvas class="chart" id="c_dealer" height="200"></canvas>
+        <canvas class="chart" id="c_dealer" height="230"></canvas>
       </div>
       <div class="card">
         <b>Monthly Pounds</b>
         <div class="sep"></div>
-        <canvas class="chart" id="c_lbs" height="180"></canvas>
+        <canvas class="chart" id="c_lbs" height="220"></canvas>
+      </div>
+      <div class="card">
+        <b>Trips over time</b>
+        <div class="sep"></div>
+        <canvas class="chart" id="c_trips" height="220"></canvas>
       </div>
     `;
   };
@@ -4287,18 +4292,18 @@ function renderReports(){
 
 
   if(mode === "charts"){
-    setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows); }, 0);
+    setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows, trips); }, 0);
   }
 }
 
 
-function drawReportsCharts(monthRows, dealerRows){
+function drawReportsCharts(monthRows, dealerRows, trips){
   function setupCanvas(canvas){
     if(!canvas) return null;
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    const w = Math.max(280, rect.width || canvas.parentElement?.clientWidth || 320);
-    const h = canvas.height || 180;
+    const w = Math.max(300, rect.width || canvas.parentElement?.clientWidth || 320);
+    const h = canvas.height || 220;
     canvas.width = Math.floor(w * dpr);
     canvas.height = Math.floor(h * dpr);
     canvas.style.width = w + "px";
@@ -4314,14 +4319,96 @@ function drawReportsCharts(monthRows, dealerRows){
     ctx.fillRect(0,0,w,h);
   }
 
-  function drawAxes(ctx, w, h, pad){
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  const css = getComputedStyle(document.documentElement);
+  const color = (name, fallback)=> (css.getPropertyValue(name) || "").trim() || fallback;
+  const palette = {
+    money: color("--money", "rgba(76,191,117,0.9)"),
+    ppl: color("--ppl", "rgba(255,196,77,0.92)"),
+    lbs: color("--lbs", "rgba(77,155,255,0.9)"),
+    trips: color("--accent", "rgba(180,161,255,0.78)"),
+    grid: "rgba(255,255,255,0.10)",
+    label: "rgba(255,255,255,0.74)",
+    subtle: "rgba(255,255,255,0.54)",
+    plotBg: "rgba(255,255,255,0.04)",
+    card: "rgba(255,255,255,0.08)"
+  };
+
+  function chartFrame(w,h){
+    const compact = w < 365;
+    return {
+      compact,
+      left: compact ? 48 : 58,
+      right: compact ? 16 : 20,
+      top: compact ? 20 : 22,
+      bottom: compact ? 44 : 48,
+      tickFont: compact ? "10px system-ui, -apple-system, Segoe UI, Arial" : "11px system-ui, -apple-system, Segoe UI, Arial",
+      detailFont: compact ? "11px system-ui, -apple-system, Segoe UI, Arial" : "12px system-ui, -apple-system, Segoe UI, Arial"
+    };
+  }
+
+  function drawAxes(ctx, w, h, frame, maxV=1){
+    const x0 = frame.left;
+    const y0 = h - frame.bottom;
+    const yTop = frame.top;
+    const xRight = w - frame.right;
+
+    ctx.fillStyle = palette.plotBg;
+    ctx.fillRect(x0, yTop, xRight - x0, y0 - yTop);
+
+    ctx.strokeStyle = palette.grid;
     ctx.lineWidth = 1;
+
+    const gridLines = 4;
+    ctx.fillStyle = palette.subtle;
+    ctx.font = frame.tickFont;
+    for(let i=0;i<=gridLines;i++){
+      const ratio = i / gridLines;
+      const y = y0 - ((y0 - yTop) * ratio);
+      ctx.beginPath();
+      ctx.moveTo(x0, y);
+      ctx.lineTo(xRight, y);
+      ctx.stroke();
+      if(i===0 || i===gridLines || i===2){
+        const tickVal = Math.round(maxV * ratio);
+        ctx.fillText(String(tickVal), 8, y + 3);
+      }
+    }
+
     ctx.beginPath();
-    ctx.moveTo(pad, pad);
-    ctx.lineTo(pad, h - pad);
-    ctx.lineTo(w - pad, h - pad);
+    ctx.moveTo(x0, yTop);
+    ctx.lineTo(x0, y0);
+    ctx.lineTo(xRight, y0);
     ctx.stroke();
+    return { x0, y0, yTop, xRight, plotW: xRight - x0, plotH: y0 - yTop };
+  }
+
+  function drawInfoChip(ctx, text, w, frame){
+    if(!text) return;
+    ctx.font = frame.detailFont;
+    const padX = 8;
+    const h = 20;
+    const tw = Math.ceil(ctx.measureText(text).width) + (padX * 2);
+    const x = w - frame.right - tw;
+    const y = frame.top + 4;
+    ctx.fillStyle = palette.card;
+    ctx.fillRect(x, y, tw, h);
+    ctx.fillStyle = palette.label;
+    ctx.fillText(text, x + padX, y + 14);
+  }
+
+  function drawBottomTicks(ctx, labels, geom, y, frame){
+    if(!labels.length) return;
+    const step = Math.max(1, Math.ceil(labels.length / (frame.compact ? 4 : 6)));
+    ctx.fillStyle = palette.label;
+    ctx.font = frame.tickFont;
+    labels.forEach((lab,i)=>{
+      if(i % step !== 0 && i !== labels.length - 1) return;
+      const x = labels.length === 1
+        ? (geom.x0 + geom.plotW / 2)
+        : geom.x0 + ((geom.plotW * i) / (labels.length - 1));
+      const width = ctx.measureText(lab).width;
+      ctx.fillText(lab, Math.max(4, x - (width/2)), y);
+    });
   }
 
   function formatShortMoney(v){
@@ -4329,45 +4416,61 @@ function drawReportsCharts(monthRows, dealerRows){
     return "$" + (Math.round(n*100)/100).toFixed(2);
   }
 
+  function makeTripsTimeline(rows){
+    const byKey = new Map();
+    rows.forEach((t)=>{
+      const iso = String(t?.dateISO || "");
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+      const key = iso.slice(0,7);
+      byKey.set(key, (byKey.get(key) || 0) + 1);
+    });
+    return Array.from(byKey.entries())
+      .sort((a,b)=> a[0].localeCompare(b[0]))
+      .map(([key, count])=>{
+        const year = Number(key.slice(0,4));
+        const month = Number(key.slice(5,7));
+        const dt = new Date(year, month - 1, 1);
+        return {
+          key,
+          count,
+          shortLabel: `${dt.toLocaleString(undefined, { month:"short" })} ${String(year).slice(-2)}`
+        };
+      });
+  }
+
   // Line: Avg $/lb by month
   {
     const c = setupCanvas(document.getElementById("c_ppl"));
     if(c){
       const {ctx,w,h} = c;
-      const pad = 22;
+      const frame = chartFrame(w,h);
       clear(ctx,w,h);
-      drawAxes(ctx,w,h,pad);
 
       const vals = monthRows.map(r=> Number(r.avg)||0);
       const maxV = Math.max(1e-6, ...vals);
       const minV = Math.min(...vals);
       const span = (maxV - minV) || maxV || 1;
+      const geom = drawAxes(ctx,w,h,frame,maxV);
 
-      const plotW = w - pad*2;
-      const plotH = h - pad*2;
-
-      ctx.strokeStyle = "rgba(43,135,255,0.9)";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = palette.ppl;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       vals.forEach((v,i)=>{
-        const x = pad + (i/(vals.length-1 || 1))*plotW;
-        const y = (h - pad) - ((v - minV)/span)*plotH;
+        const x = geom.x0 + (i/(vals.length-1 || 1))*geom.plotW;
+        const y = geom.y0 - ((v - minV)/span)*geom.plotH;
         if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       });
       ctx.stroke();
 
-      ctx.fillStyle = "rgba(43,135,255,0.9)";
+      ctx.fillStyle = palette.ppl;
       vals.forEach((v,i)=>{
-        const x = pad + (i/(vals.length-1 || 1))*plotW;
-        const y = (h - pad) - ((v - minV)/span)*plotH;
-        ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
+        const x = geom.x0 + (i/(vals.length-1 || 1))*geom.plotW;
+        const y = geom.y0 - ((v - minV)/span)*geom.plotH;
+        ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
       });
 
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = "11px system-ui, -apple-system, Segoe UI, Arial";
-      ctx.fillText("Jan", pad, h-6);
-      ctx.fillText("Dec", w-pad-22, h-6);
-      ctx.fillText(formatShortMoney(maxV), pad+4, pad+10);
+      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-16, frame);
+      drawInfoChip(ctx, `High ${formatShortMoney(maxV)}`, w, frame);
     }
   }
 
@@ -4376,36 +4479,36 @@ function drawReportsCharts(monthRows, dealerRows){
     const c = setupCanvas(document.getElementById("c_dealer"));
     if(c){
       const {ctx,w,h} = c;
-      const pad = 22;
+      const frame = chartFrame(w,h);
       clear(ctx,w,h);
-      drawAxes(ctx,w,h,pad);
 
       const top = dealerRows.slice(0,8);
       const vals = top.map(r=> Number(r.amt)||0);
       const maxV = Math.max(1e-6, ...vals);
-
-      const plotW = w - pad*2;
-      const plotH = h - pad*2;
-      const barW = plotW / (top.length || 1);
+      const geom = drawAxes(ctx,w,h,frame,maxV);
+      const barW = geom.plotW / (top.length || 1);
 
       top.forEach((r,i)=>{
         const v = Number(r.amt)||0;
-        const bh = (v/maxV)*plotH;
-        const x = pad + i*barW + 4;
-        const y = (h - pad) - bh;
-        ctx.fillStyle = "rgba(43,135,255,0.7)";
-        ctx.fillRect(x, y, Math.max(6, barW-8), bh);
+        const bh = (v/maxV)*geom.plotH;
+        const x = geom.x0 + i*barW + 4;
+        const y = geom.y0 - bh;
+        ctx.fillStyle = palette.money;
+        ctx.fillRect(x, y, Math.max(8, barW-8), bh);
       });
 
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = "10px system-ui, -apple-system, Segoe UI, Arial";
+      ctx.fillStyle = palette.label;
+      ctx.font = frame.tickFont;
+      const labelStep = Math.max(1, Math.ceil(top.length / (frame.compact ? 3 : 5)));
       top.forEach((r,i)=>{
-        const lab = (r.name||"").slice(0,6);
-        const x = pad + i*barW + 4;
-        ctx.fillText(lab, x, h-6);
+        if(i % labelStep !== 0 && i !== top.length - 1) return;
+        const lab = (r.name||"").slice(0,7);
+        const x = geom.x0 + i*barW + (Math.max(8, barW-8)/2) + 4;
+        const tw = ctx.measureText(lab).width;
+        ctx.fillText(lab, x - tw/2, h-16);
       });
 
-      ctx.fillText(formatShortMoney(maxV), pad+4, pad+10);
+      drawInfoChip(ctx, `Top ${formatShortMoney(maxV)}`, w, frame);
     }
   }
 
@@ -4414,29 +4517,52 @@ function drawReportsCharts(monthRows, dealerRows){
     const c = setupCanvas(document.getElementById("c_lbs"));
     if(c){
       const {ctx,w,h} = c;
-      const pad = 22;
+      const frame = chartFrame(w,h);
       clear(ctx,w,h);
-      drawAxes(ctx,w,h,pad);
 
       const vals = monthRows.map(r=> Number(r.lbs)||0);
       const maxV = Math.max(1e-6, ...vals);
-      const plotW = w - pad*2;
-      const plotH = h - pad*2;
-      const barW = plotW / (vals.length || 1);
+      const geom = drawAxes(ctx,w,h,frame,maxV);
+      const barW = geom.plotW / (vals.length || 1);
 
       vals.forEach((v,i)=>{
-        const bh = (v/maxV)*plotH;
-        const x = pad + i*barW + 1;
-        const y = (h - pad) - bh;
-        ctx.fillStyle = "rgba(43,135,255,0.7)";
-        ctx.fillRect(x, y, Math.max(2, barW-2), bh);
+        const bh = (v/maxV)*geom.plotH;
+        const x = geom.x0 + i*barW + 2;
+        const y = geom.y0 - bh;
+        ctx.fillStyle = palette.lbs;
+        ctx.fillRect(x, y, Math.max(4, barW-4), bh);
       });
 
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = "11px system-ui, -apple-system, Segoe UI, Arial";
-      ctx.fillText("Jan", pad, h-6);
-      ctx.fillText("Dec", w-pad-22, h-6);
-      ctx.fillText(String(Math.round(maxV)), pad+4, pad+10);
+      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-16, frame);
+      drawInfoChip(ctx, `Peak ${Math.round(maxV)} lbs`, w, frame);
+    }
+  }
+
+  // Bar: Trips over time (by month in range)
+  {
+    const c = setupCanvas(document.getElementById("c_trips"));
+    if(c){
+      const {ctx,w,h} = c;
+      const frame = chartFrame(w,h);
+      clear(ctx,w,h);
+
+      const timeline = makeTripsTimeline(trips);
+      const vals = timeline.map(r=> Number(r.count)||0);
+      const maxV = Math.max(1, ...vals);
+      const totalTrips = vals.reduce((sum,v)=>sum+v,0);
+      const geom = drawAxes(ctx,w,h,frame,maxV);
+      const barW = geom.plotW / (vals.length || 1);
+
+      vals.forEach((v,i)=>{
+        const bh = (v/maxV)*geom.plotH;
+        const x = geom.x0 + i*barW + 2;
+        const y = geom.y0 - bh;
+        ctx.fillStyle = palette.trips;
+        ctx.fillRect(x, y, Math.max(4, barW-4), bh);
+      });
+
+      drawBottomTicks(ctx, timeline.map(r=>r.shortLabel), geom, h-16, frame);
+      drawInfoChip(ctx, `Total ${totalTrips} trips`, w, frame);
     }
   }
 }
