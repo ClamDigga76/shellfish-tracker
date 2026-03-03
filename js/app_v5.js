@@ -5013,14 +5013,9 @@ function renderHelp(){
     ${renderPageHeader("help")}
 
     <div class="card">
-      <b>Help</b>
-      <div class="hint">Quick field guide for Bank the Catch.</div>
-    </div>
-
-    <div class="card">
-      <b>Quick links</b>
+      <b style="font-size:1.05rem">Quick Help Links</b>
       <div class="sep"></div>
-      <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">
         <button class="chip" type="button" data-helpjump="home">Home</button>
         <button class="chip" type="button" data-helpjump="trips">Trips</button>
         <button class="chip" type="button" data-helpjump="newtrip">New Trip</button>
@@ -5030,10 +5025,21 @@ function renderHelp(){
       </div>
     </div>
 
+
     <div class="card">
-      <b id="help_jump_home">Home</b>
+      <b style="font-size:1.05rem">Install / Offline</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.65">
+      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
+        <div><b>iPhone/iPad:</b> Safari → Share → <b>Add to Home Screen</b>.</div>
+        <div style="margin-top:6px"><b>Android:</b> Chrome menu → <b>Install app</b> (or Add to Home screen).</div>
+        <div style="margin-top:6px">Installed PWAs can lag behind updates due to cached files—use <b>Refresh App</b> if something looks wrong.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <b id="help_jump_home" style="font-size:1.05rem">Home</b>
+      <div class="sep"></div>
+      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
         <ul style="margin:8px 0 0 18px">
           <li><b>Totals</b> and the recent list follow your current filter (YTD / Month / Last 7 days).</li>
           <li>Use Home when you just want a quick “how am I doing?” snapshot.</li>
@@ -5043,9 +5049,9 @@ function renderHelp(){
     </div>
 
     <div class="card">
-      <b id="help_jump_trips">Trips</b>
+      <b id="help_jump_trips" style="font-size:1.05rem">Trips</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.65">
+      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
         <ul style="margin:8px 0 0 18px">
           <li>Browse your trips. Tap a trip to view/edit (if available).</li>
           <li>Duplicate warning may appear when saving a trip that looks similar—use “Save anyway” only when it’s truly a different trip.</li>
@@ -5055,9 +5061,9 @@ function renderHelp(){
     </div>
 
     <div class="card">
-      <b id="help_jump_newtrip">New Trip</b>
+      <b id="help_jump_newtrip" style="font-size:1.05rem">New Trip</b>
       <div class="sep"></div>
-      <ol class="muted helpText" style="margin:8px 0 0 18px;line-height:1.65">
+      <ol class="muted helpText" style="margin:8px 0 0 18px;line-height:1.62;font-size:.97rem">
         <li>Enter <b>Date</b>.</li>
         <li>Pick or type a <b>Dealer</b>.</li>
         <li>Enter <b>Pounds</b> and <b>Amount</b>.</li>
@@ -5068,9 +5074,9 @@ function renderHelp(){
     </div>
 
     <div class="card">
-      <b id="help_jump_reports">Reports</b>
+      <b id="help_jump_reports" style="font-size:1.05rem">Reports</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.65">
+      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
         <ul style="margin:8px 0 0 18px">
           <li>Reports uses the same date filter idea as Home, plus optional advanced range controls.</li>
           <li>Switch between <b>Charts</b> and <b>Tables</b> to see the same data different ways.</li>
@@ -5080,9 +5086,9 @@ function renderHelp(){
     </div>
 
     <div class="card">
-      <b id="help_jump_settings">Settings</b>
+      <b id="help_jump_settings" style="font-size:1.05rem">Settings</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.65">
+      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
         <ul style="margin:8px 0 0 18px">
           <li><b>Updates</b>: check for updates and see build details.</li>
           <li><b>List Management</b>: edit Areas and Dealers used by New Trip.</li>
@@ -5093,25 +5099,15 @@ function renderHelp(){
     </div>
 
     <div class="card">
-      <b id="help_jump_backups">Backups & Restore</b>
+      <b id="help_jump_backups" style="font-size:1.05rem">Backups & Restore</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.65">
+      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
         <ul style="margin:8px 0 0 18px">
           <li><b>Create Backup</b> makes a file containing your trips and lists. Keep it somewhere safe.</li>
           <li><b>Where to store it:</b> move the file into a cloud-synced folder so it’s included in your normal phone backups (iPhone: Files → iCloud Drive; Android: Files → Google Drive or Drive-synced folder).</li>
           <li><b>Restore Backup</b> replaces trips/lists on this device with the file’s contents. Best practice: create a backup first.</li>
           <li>If an update seems “stuck”, use <b>Refresh App</b> in Settings → Advanced (it clears cached files and reloads).</li>
         </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <b>Install / Offline</b>
-      <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.65">
-        <div><b>iPhone/iPad:</b> Safari → Share → <b>Add to Home Screen</b>.</div>
-        <div style="margin-top:6px"><b>Android:</b> Chrome menu → <b>Install app</b> (or Add to Home screen).</div>
-        <div style="margin-top:6px">Installed PWAs can lag behind updates due to cached files—use <b>Refresh App</b> if something looks wrong.</div>
       </div>
     </div>
 
