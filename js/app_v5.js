@@ -2914,6 +2914,10 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
 
     openModal({
       title: `Add ${label}`,
+      backdropClose: false,
+      escClose: false,
+      showCloseButton: false,
+      position: "center",
       html: `
         <div class="field">
           <input class="input" id="${inputId}" placeholder="${escapeHtml(placeholder)}" autocomplete="off" />
