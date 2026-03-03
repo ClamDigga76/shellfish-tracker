@@ -191,30 +191,33 @@ header{padding:14px 18px 12px}
 .pasteMeta{opacity:.7;font-weight:800;white-space:nowrap}
 .expWarn{flex:0 0 auto;opacity:.75}
 .hlHdr{
-  font-size:16px;
-  font-weight:850;
+  font-size:13px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:var(--muted);
+  margin:0;
+}
+.hlStatCard{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background:rgba(255,255,255,.03);
+  padding:12px;
+}
+.hlValue{
+  margin-top:6px;
+  font-size:30px;
+  font-weight:900;
   letter-spacing:.2px;
-  margin: 2px 0 8px;
-  opacity:.90;
-  text-align:center;
+  line-height:1.05;
+  font-variant-numeric:tabular-nums;
 }
-.hlItem{padding:6px 0}
-.hlDate{font-size:22px;font-weight:900;letter-spacing:.2px}
-.hlSub{margin-top:2px;opacity:.72;font-size:14px}
-.hlMetrics{
-  margin-top:10px;
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0, 1fr));
-  gap:12px;
-  opacity:.9;
+.hlCtx{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:12px;
 }
-.hlMetrics > div{
-  min-width:0;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.hlMetrics b{opacity:1;font-variant-numeric:tabular-nums}
+.hlTrip{margin-bottom:0}
 .chartCard .chart{margin-top:10px}
 .pasteModule{
   padding:12px 12px;
@@ -439,6 +442,43 @@ header{padding:14px 18px 12px}
 .metaRow{display:flex;gap:8px;align-items:center;margin-bottom:4px}
 .tmeta{color:var(--muted);font-size:13px}
 .dot{color:rgba(255,255,255,.25);font-size:12px}
+.catchCard{
+  width:100%;
+  text-align:left;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+}
+.catchCard .catchHead{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.35;
+}
+.catchCard .catchMain{
+  margin-top:4px;
+  font-weight:850;
+  font-size:16px;
+  letter-spacing:.1px;
+}
+.catchCard .catchFoot{
+  margin-top:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.catchCard .catchMetric{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.20);
+  padding:5px 8px;
+  font-size:12px;
+  line-height:1;
+  white-space:nowrap;
+}
+.catchCard .catchMetric b{font-variant-numeric:tabular-nums}
 
 /* KPI bar -> compact grid */
 .pillbar{
@@ -733,7 +773,7 @@ header{padding:14px 18px 12px}
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=115"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=117"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>

@@ -993,6 +993,40 @@ function exportTrips(trips, label, startISO="", endISO=""){
   exportTripsWithLabel(trips, String(label||"ALL").toUpperCase(), startISO, endISO);
 }
 
+function renderTripCatchCard(t, opts = {}){
+  const {
+    interactive = false,
+    extraClass = "",
+    valueOverride = "",
+    metaOverride = ""
+  } = opts;
+  const date = formatDateMDY(t?.dateISO || "");
+  const dealerRaw = String(t?.dealer || "").trim();
+  const dealer = dealerRaw || "(dealer)";
+  const area = String(t?.area || "").trim() || "(area)";
+  const lbs = to2(Number(t?.pounds) || 0);
+  const amt = to2(Number(t?.amount) || 0);
+  const ppl = computePPL(lbs, amt);
+  const tag = interactive ? "button" : "div";
+  const role = interactive ? "button" : "group";
+  const tab = interactive ? "0" : "-1";
+  const idAttr = interactive ? ` data-id="${escapeHtml(String(t?.id || ""))}"` : "";
+  const valueText = valueOverride || `${formatMoney(ppl)}/lb`;
+  const metaText = metaOverride || `${date || ""}${date ? " • " : ""}${dealer}`;
+
+  return `
+    <${tag} class="trip triprow catchCard ${escapeHtml(extraClass)}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
+      <div class="catchHead">${escapeHtml(metaText)}</div>
+      <div class="catchMain">${escapeHtml(area)}</div>
+      <div class="catchFoot">
+        <span class="catchMetric lbsBlue"><b class="lbsBlue">${lbs}</b> lbs</span>
+        <span class="catchMetric money"><b class="money">${formatMoney(amt)}</b></span>
+        <span class="catchMetric"><b class="rate ppl">${escapeHtml(valueText)}</b></span>
+      </div>
+    </${tag}>
+  `;
+}
+
 function buildBackupPayloadFromState(st, exportedAtISO){
   const safeState = (st && typeof st === "object") ? st : {};
   return {
@@ -2422,29 +2456,9 @@ function renderAllTrips(){
     </div>
   `;
 
-  const rows = sorted.length ? sorted.map(t=>{
-    const date = formatDateMDY(t?.dateISO||"");
-    const dealer = escapeHtml(String(t?.dealer||""));
-    const area = escapeHtml(String(t?.area||""));
-    const lbs = Number(t?.pounds)||0;
-    const amt = Number(t?.amount)||0;
-    const ppl = (lbs>0 && amt>0) ? (amt/lbs) : 0;
-    return `
-      <div class="trip triprow" data-id="${escapeHtml(String(t?.id||""))}" role="button" tabindex="0">
-        <div class="trow">
-          <div>
-            <div class="metaRow"><span class="tmeta">${escapeHtml(date)}</span>${dealer?` <span class="dot">•</span> <span class="tmeta">${escapeHtml(dealer)}</span>`:""}</div>
-            <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b class="rate ppl">${formatMoney(ppl)}</b></div>
-          </div>
-          <div class="tright">
-            <div class="lbsBlue"><b class="lbsBlue">${to2(lbs)}</b> <span class="lbsBlue">lbs</span></div>
-            <div><b class="money">${formatMoney(amt)}</b></div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("") : `<div class="muted small">No trips in this filter yet.</div>`;
+  const rows = sorted.length
+    ? sorted.map(t=> renderTripCatchCard(t, { interactive:true })).join("")
+    : `<div class="muted small">No trips in this filter yet.</div>`;
 
   root.innerHTML = `
     ${renderPageHeader("all_trips")}
@@ -2580,30 +2594,9 @@ function renderHome(
   const chip = (key,label) => `<button class="chip segBtn ${f===key?'on is-selected':''}" data-hf="${key}" type="button">${label}</button>`;
 
   const tripsSorted = getTripsNewestFirst(trips);
-  const rows = tripsSorted.length ? tripsSorted.slice(0, HOME_TRIPS_LIMIT).map(t=>{
-    const date = formatDateMDY(t?.dateISO);
-    const dealer = (t?.dealer||"").toString();
-    const lbs = to2(Number(t?.pounds)||0);
-    const amt = to2(Number(t?.amount)||0);
-    const ppl = computePPL(lbs, amt);
-    const area = (t?.area||"").toString();
-    const safeDealer = dealer ? dealer : "(dealer)";
-    return `
-      <div class="trip triprow" data-id="${t?.id||""}" role="button" tabindex="0">
-        <div class="trow">
-          <div>
-            <div class="metaRow"><span class="tmeta">${date || ""}</span>${safeDealer ? ` <span class="dot">•</span> <span class="tmeta">${escapeHtml(safeDealer)}</span>` : ""}</div>
-            <div class="tname">${escapeHtml(area || "(area)")}</div>
-            <div class="tsub">$/Lb: <b class="rate ppl">${formatMoney(ppl)}</b></div>
-          </div>
-          <div class="tright">
-            <div class="lbsBlue"><b class="lbsBlue">${lbs}</b> <span class="lbsBlue">lbs</span></div>
-            <div><b class="money">${formatMoney(amt)}</b></div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("") : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
+  const rows = tripsSorted.length
+    ? tripsSorted.slice(0, HOME_TRIPS_LIMIT).map(t=> renderTripCatchCard(t, { interactive:true })).join("")
+    : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
 
   getApp().innerHTML = `
     ${renderPageHeader("home")}
@@ -4092,26 +4085,37 @@ function renderReports(){
   const maxPpl = pplRows.reduce((best,t)=> (Number(t?.amount)||0)/(Number(t?.pounds)||1) > (Number(best?.amount)||0)/(Number(best?.pounds)||1) ? t : best, pplRows[0]);
   const minPpl = pplRows.reduce((best,t)=> (Number(t?.amount)||0)/(Number(t?.pounds)||1) < (Number(best?.amount)||0)/(Number(best?.pounds)||1) ? t : best, pplRows[0]);
 
-  const renderHLItem = (t)=>{
+  const renderHLItem = (label, t, metric)=>{
     if(!t) return `<div class="muted small">—</div>`;
-    const date = escapeHtml(formatDateMDY(t?.dateISO||""));
-    const dealer = escapeHtml(String(t?.dealer||"")) || "(dealer)";
-    const area = escapeHtml(String(t?.area||"")) || "(area)";
+    const date = formatDateMDY(t?.dateISO||"");
+    const dealer = String(t?.dealer||"").trim() || "(dealer)";
+    const area = String(t?.area||"").trim() || "(area)";
     const lbsNum = Number(t?.pounds)||0;
     const amtNum = Number(t?.amount)||0;
     const ppl = (lbsNum>0 && amtNum>0) ? (amtNum/lbsNum) : 0;
+    let metricText = "—";
+    let metricClass = "";
+    if(metric === "lbs"){
+      metricText = `${to2(lbsNum)} lbs`;
+      metricClass = "lbsBlue";
+    }else if(metric === "amount"){
+      metricText = formatMoney(to2(amtNum));
+      metricClass = "money";
+    }else if(metric === "ppl"){
+      metricText = ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—";
+      metricClass = "rate ppl";
+    }
     return `
-      <div class="trip triprow hlTrip">
-        <div class="trow">
-          <div>
-            <div class="metaRow"><span class="tmeta">${date}</span> <span class="dot">•</span> <span class="tmeta">${dealer}</span></div>
-            <div class="tname">${area}</div>
-            <div class="tsub">$/Lb: <b class="rate ppl">${ppl>0 ? formatMoney(to2(ppl)) : "—"}</b></div>
-          </div>
-          <div class="tright">
-            <div class="lbsBlue"><b class="lbsBlue">${to2(lbsNum)}</b> <span class="lbsBlue">lbs</span></div>
-            <div><b class="money">${formatMoney(to2(amtNum))}</b></div>
-          </div>
+      <div class="hlStatCard">
+        <div class="hlHdr">${escapeHtml(label)}</div>
+        <div class="hlValue ${metricClass}">${escapeHtml(metricText)}</div>
+        <div class="hlCtx">${escapeHtml(date)} • ${escapeHtml(dealer)}</div>
+        <div style="margin-top:8px">
+          ${renderTripCatchCard(t, {
+            extraClass: "hlTrip",
+            valueOverride: ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—",
+            metaOverride: `${date} • ${dealer}`
+          })}
         </div>
       </div>
     `;
@@ -4166,29 +4170,23 @@ function renderReports(){
         <b>High / Low Summary</b>
         <div class="sep"></div>
 
-        <div class="hlHdr">Most Pounds</div>
-        ${renderHLItem(maxLbs)}
+        ${renderHLItem("Most Pounds", maxLbs, "lbs")}
         <div class="sep"></div>
 
-        <div class="hlHdr">Least Pounds</div>
-        ${renderHLItem(minLbs)}
+        ${renderHLItem("Least Pounds", minLbs, "lbs")}
         <div class="sep"></div>
 
-        <div class="hlHdr">Highest Amount</div>
-        ${renderHLItem(maxAmt)}
+        ${renderHLItem("Highest Amount", maxAmt, "amount")}
         <div class="sep"></div>
 
-        <div class="hlHdr">Lowest Amount</div>
-        ${renderHLItem(minAmt)}
+        ${renderHLItem("Lowest Amount", minAmt, "amount")}
         <div class="sep"></div>
 
         ${pplRows.length ? `
-          <div class="hlHdr">Highest $/lb</div>
-          ${renderHLItem(maxPpl)}
+          ${renderHLItem("Highest $/lb", maxPpl, "ppl")}
           <div class="sep"></div>
 
-          <div class="hlHdr">Lowest $/lb</div>
-          ${renderHLItem(minPpl)}
+          ${renderHLItem("Lowest $/lb", minPpl, "ppl")}
         ` : `<div class="muted small">No trips with valid pounds + amount in this range.</div>`}
       </div>
     `;
