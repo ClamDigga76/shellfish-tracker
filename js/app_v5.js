@@ -1,6 +1,14 @@
 // Shellfish Tracker — V2 ESM (Phase 2C-UI)
 // Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
 
+const moduleV = new URL(import.meta.url).searchParams.get("v") || "";
+const bootV = String(window.APP_VERSION || "");
+if (moduleV && bootV && moduleV !== bootV) {
+  const mismatchError = new Error(`Version mismatch: bootstrap=${bootV}, app=${moduleV}. Please refresh to update.`);
+  if (window.__showModuleError) window.__showModuleError(mismatchError);
+  throw mismatchError;
+}
+
 window.__SHELLFISH_APP_STARTED = false;
 
 import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal } from "./utils_v5.js";
