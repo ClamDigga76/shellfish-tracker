@@ -4045,27 +4045,63 @@ function renderReports(){
     `;
   };
 
+  function buildTripsTimeline(rows){
+    const byKey = new Map();
+    rows.forEach((t)=>{
+      const iso = String(t?.dateISO || "");
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+      const key = iso.slice(0,7);
+      byKey.set(key, (byKey.get(key) || 0) + 1);
+    });
+    return Array.from(byKey.entries())
+      .sort((a,b)=> a[0].localeCompare(b[0]))
+      .map(([key, count])=>{
+        const year = Number(key.slice(0,4));
+        const month = Number(key.slice(5,7));
+        const dt = new Date(year, month - 1, 1);
+        return {
+          key,
+          count,
+          label: dt.toLocaleString(undefined, { month:"short" }),
+          shortLabel: `${dt.toLocaleString(undefined, { month:"short" })} ${String(year).slice(-2)}`
+        };
+      });
+  }
+
   const renderChartsSection = ()=>{
+    const latestMonth = monthRows[monthRows.length - 1] || null;
+    const pplPeak = monthRows.reduce((best,r)=> (Number(r?.avg)||0) > (Number(best?.avg)||0) ? r : best, monthRows[0] || null);
+    const dealerPeak = dealerRows[0] || null;
+    const lbsPeak = monthRows.reduce((best,r)=> (Number(r?.lbs)||0) > (Number(best?.lbs)||0) ? r : best, monthRows[0] || null);
+    const tripsTimeline = buildTripsTimeline(trips);
+    const tripsLatest = tripsTimeline[tripsTimeline.length - 1] || null;
+    const tripsPeak = tripsTimeline.reduce((best,r)=> (Number(r?.count)||0) > (Number(best?.count)||0) ? r : best, tripsTimeline[0] || null);
+    const tripsTotal = tripsTimeline.reduce((sum,r)=> sum + (Number(r?.count)||0), 0);
+
     return `
       <div class="card">
         <b>Avg $/lb by Month</b>
+        <div class="muted tiny" style="margin-top:6px;line-height:1.35">Latest: <b>${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</b> • Peak: <b>${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</b></div>
         <div class="sep"></div>
-        <canvas class="chart" id="c_ppl" height="180"></canvas>
+        <canvas class="chart" id="c_ppl" height="210"></canvas>
       </div>
       <div class="card">
         <b>Dealer Amount (Top)</b>
+        <div class="muted tiny" style="margin-top:6px;line-height:1.35">Top: <b>${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}</b> • ${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</div>
         <div class="sep"></div>
-        <canvas class="chart" id="c_dealer" height="200"></canvas>
+        <canvas class="chart" id="c_dealer" height="220"></canvas>
       </div>
       <div class="card">
         <b>Monthly Pounds</b>
+        <div class="muted tiny" style="margin-top:6px;line-height:1.35">Latest: <b>${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</b> • Peak: <b>${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</b></div>
         <div class="sep"></div>
-        <canvas class="chart" id="c_lbs" height="180"></canvas>
+        <canvas class="chart" id="c_lbs" height="210"></canvas>
       </div>
       <div class="card">
         <b>Trips over time</b>
+        <div class="muted tiny" style="margin-top:6px;line-height:1.35">Latest: <b>${tripsLatest ? tripsLatest.count : "—"}</b> • Peak: <b>${tripsPeak ? tripsPeak.count : "—"}</b> • Total: <b>${tripsTotal}</b></div>
         <div class="sep"></div>
-        <canvas class="chart" id="c_trips" height="180"></canvas>
+        <canvas class="chart" id="c_trips" height="210"></canvas>
       </div>
     `;
   };
@@ -4257,11 +4293,11 @@ function drawReportsCharts(monthRows, dealerRows, trips){
     const compact = w < 360;
     return {
       compact,
-      left: compact ? 44 : 50,
-      right: compact ? 14 : 18,
-      top: compact ? 16 : 18,
-      bottom: compact ? 34 : 38,
-      tickFont: compact ? "10px system-ui, -apple-system, Segoe UI, Arial" : "11px system-ui, -apple-system, Segoe UI, Arial"
+      left: compact ? 36 : 44,
+      right: compact ? 8 : 12,
+      top: compact ? 10 : 12,
+      bottom: compact ? 26 : 30,
+      tickFont: compact ? "9px system-ui, -apple-system, Segoe UI, Arial" : "10px system-ui, -apple-system, Segoe UI, Arial"
     };
   }
 
@@ -4298,14 +4334,39 @@ function drawReportsCharts(monthRows, dealerRows, trips){
   }
 
   function drawBottomTicks(ctx, labels, geom, y, frame){
-    const step = Math.max(1, Math.ceil(labels.length / (frame.compact ? 5 : 7)));
+    const maxTicks = frame.compact ? 4 : 6;
+    const step = Math.max(1, Math.ceil(labels.length / maxTicks));
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
+    let lastRight = -Infinity;
     labels.forEach((lab,i)=>{
       if(i % step !== 0 && i !== labels.length - 1) return;
       const x = geom.x0 + ((geom.plotW * i) / (Math.max(1, labels.length - 1)));
-      ctx.fillText(lab, Math.max(4, x - 10), y);
+      const text = String(lab || "");
+      const m = ctx.measureText(text);
+      let tx = x - (m.width / 2);
+      tx = Math.max(2, Math.min(geom.xRight - m.width, tx));
+      if(tx <= lastRight + 4) return;
+      ctx.fillText(text, tx, y);
+      lastRight = tx + m.width;
     });
+  }
+
+  function fitLabel(ctx, text, maxW){
+    const src = String(text || "");
+    if(!src) return "";
+    if(ctx.measureText(src).width <= maxW) return src;
+    const parts = src.split(/\s+/).filter(Boolean);
+    if(parts.length > 1){
+      const initials = parts.map(p=>p[0]).join("").slice(0,4);
+      if(initials && ctx.measureText(initials).width <= maxW) return initials;
+    }
+    if(maxW < 12) return "";
+    let out = src;
+    while(out.length > 2 && ctx.measureText(out + "…").width > maxW){
+      out = out.slice(0,-1);
+    }
+    return out.length < src.length ? (out + "…") : out;
   }
 
 
@@ -4402,12 +4463,14 @@ function drawReportsCharts(monthRows, dealerRows, trips){
 
       ctx.fillStyle = palette.label;
       ctx.font = frame.tickFont;
-      const labelStep = Math.max(1, Math.ceil(top.length / (frame.compact ? 4 : 6)));
+      const labelStep = Math.max(1, Math.ceil(top.length / (frame.compact ? 3 : 5)));
       top.forEach((r,i)=>{
         if(i % labelStep !== 0 && i !== top.length - 1) return;
-        const lab = (r.name||"").slice(0,6);
-        const x = geom.x0 + i*barW + 4;
-        ctx.fillText(lab, x, h-10);
+        const maxLabelW = Math.max(10, barW - 4);
+        const lab = fitLabel(ctx, r.name || "", maxLabelW);
+        const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
+        const x = Math.max(2, tx);
+        ctx.fillText(lab, x, h-8);
       });
 
       drawYLabel(ctx, formatShortMoney(maxV), frame);
