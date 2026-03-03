@@ -4325,7 +4325,7 @@ function drawReportsCharts(monthRows, dealerRows, trips){
     money: color("--money", "rgba(76,191,117,0.9)"),
     ppl: color("--ppl", "rgba(255,196,77,0.92)"),
     lbs: color("--lbs", "rgba(77,155,255,0.9)"),
-    trips: color("--accent", "rgba(180,161,255,0.78)"),
+    trips: color("--accent", "rgba(180,161,255,0.55)"),
     grid: "rgba(255,255,255,0.10)",
     label: "rgba(255,255,255,0.74)",
     subtle: "rgba(255,255,255,0.54)",
