@@ -265,18 +265,40 @@ export function getTripsNewestFirst(trips){
 
 // ===========================
 // v81: Modal helpers (Quick Add, etc.)
-export function openModal({ title, html, onOpen }){
+export function openModal({
+  title,
+  html,
+  onOpen,
+  backdropClose = true,
+  escClose = true,
+  showCloseButton = true,
+  position = "sheet"
+}){
   const root = document.getElementById("modalRoot");
   if(!root) return;
 
+  const isCenter = position === "center";
   root.classList.remove("hidden");
   root.setAttribute("aria-hidden","false");
 
+  const closeBtnHtml = showCloseButton
+    ? `<button class="btn" id="modalCloseBtn" type="button" aria-label="Close">✕</button>`
+    : "";
+
+  const sheetStyle = isCenter
+    ? "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 32px);max-width:400px;border-radius:16px;box-shadow:0 16px 44px rgba(0,0,0,.48);"
+    : "";
+
+  if(isCenter){
+    root.style.alignItems = "center";
+    root.style.paddingBottom = "16px";
+  }
+
   root.innerHTML = `
-    <div class="modalSheet" role="dialog" aria-modal="true">
+    <div class="modalSheet" style="${sheetStyle}" role="dialog" aria-modal="true">
       <div class="modalHdr">
         <div class="modalTitle">${escapeHTML(String(title||""))}</div>
-        <button class="btn" id="modalCloseBtn" type="button" aria-label="Close">✕</button>
+        ${closeBtnHtml}
       </div>
       <div class="modalBody">${html||""}</div>
     </div>
@@ -285,21 +307,27 @@ export function openModal({ title, html, onOpen }){
   const close = ()=>closeModal();
 
   // close button
-  document.getElementById("modalCloseBtn")?.addEventListener("click", close);
+  if(showCloseButton){
+    document.getElementById("modalCloseBtn")?.addEventListener("click", close);
+  }
 
-  // tap backdrop closes
-  root.addEventListener("click", (e)=>{
-    if(e.target === root) close();
-  }, { once: true });
+  if(backdropClose){
+    // tap backdrop closes
+    root.addEventListener("click", (e)=>{
+      if(e.target === root) close();
+    }, { once: true });
+  }
 
-  // escape closes (desktop)
-  const escHandler = (e)=>{
-    if(e.key === "Escape"){
-      e.preventDefault();
-      close();
-    }
-  };
-  window.addEventListener("keydown", escHandler, { once: true });
+  if(escClose){
+    // escape closes (desktop)
+    const escHandler = (e)=>{
+      if(e.key === "Escape"){
+        e.preventDefault();
+        close();
+      }
+    };
+    window.addEventListener("keydown", escHandler, { once: true });
+  }
 
   // lock background scroll (simple)
   document.body.style.overflow = "hidden";
@@ -311,6 +339,8 @@ export function closeModal(){
   const root = document.getElementById("modalRoot");
   if(!root) return;
   root.classList.add("hidden");
+  root.style.alignItems = "";
+  root.style.paddingBottom = "";
   root.setAttribute("aria-hidden","true");
   root.innerHTML = "";
   document.body.style.overflow = "";
