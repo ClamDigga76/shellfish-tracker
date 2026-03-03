@@ -4092,9 +4092,6 @@ function renderReports(){
 
   const renderHLItem = (label, t, metric)=>{
     if(!t) return `<div class="muted small">—</div>`;
-    const date = formatDateMDY(t?.dateISO||"");
-    const dealer = String(t?.dealer||"").trim() || "(dealer)";
-    const area = String(t?.area||"").trim() || "(area)";
     const lbsNum = Number(t?.pounds)||0;
     const amtNum = Number(t?.amount)||0;
     const ppl = (lbsNum>0 && amtNum>0) ? (amtNum/lbsNum) : 0;
@@ -4114,12 +4111,9 @@ function renderReports(){
       <div class="hlStatCard">
         <div class="hlHdr" style="text-align:center">${escapeHtml(label)}</div>
         <div class="hlValue ${metricClass}" style="text-align:center">${escapeHtml(metricText)}</div>
-        <div class="hlCtx muted small" style="text-align:center">${escapeHtml(date)} • ${escapeHtml(dealer)}</div>
         <div style="margin-top:8px">
           ${renderTripCatchCard(t, {
-            extraClass: "hlTrip",
-            valueOverride: ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—",
-            metaOverride: `${date} • ${dealer}`
+            valueOverride: ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—"
           })}
         </div>
       </div>
