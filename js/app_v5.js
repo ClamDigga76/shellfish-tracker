@@ -1012,16 +1012,21 @@ function renderTripCatchCard(t, opts = {}){
   const tab = interactive ? "0" : "-1";
   const idAttr = interactive ? ` data-id="${escapeHtml(String(t?.id || ""))}"` : "";
   const valueText = valueOverride || `${formatMoney(ppl)}/lb`;
-  const metaText = metaOverride || `${date || ""}${date ? " • " : ""}${dealer}`;
+  const dateText = metaOverride || date || "";
 
   return `
     <${tag} class="trip triprow catchCard ${escapeHtml(extraClass)}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
-      <div class="catchHead">${escapeHtml(metaText)}</div>
-      <div class="catchMain">${escapeHtml(area)}</div>
-      <div class="catchFoot">
-        <span class="catchMetric lbsBlue"><b class="lbsBlue">${lbs}</b> lbs</span>
-        <span class="catchMetric money"><b class="money">${formatMoney(amt)}</b></span>
-        <span class="catchMetric"><b class="rate ppl">${escapeHtml(valueText)}</b></span>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start">
+        <div>
+          <div class="catchHead" style="font-size:13px">${escapeHtml(dateText)}</div>
+          <div class="catchMain">${escapeHtml(area)}</div>
+          <div class="catchHead" style="margin-top:2px">${escapeHtml(dealer)}</div>
+        </div>
+        <div class="catchFoot" style="margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap">
+          <span class="catchMetric lbsBlue" style="font-size:14px;padding:6px 10px"><b class="lbsBlue">${lbs}</b> lbs</span>
+          <span class="catchMetric money" style="font-size:14px;padding:6px 10px"><b class="money">${formatMoney(amt)}</b></span>
+          <span class="catchMetric" style="font-size:14px;padding:6px 10px"><b class="rate ppl">${escapeHtml(valueText)}</b></span>
+        </div>
       </div>
     </${tag}>
   `;
