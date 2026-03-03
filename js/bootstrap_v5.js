@@ -1,7 +1,8 @@
-const SW_VERSION = "115";
+const SW_VERSION = "116";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
+window.APP_VERSION = SW_VERSION;
 /**
  * Shellfish Tracker v5 bootstrap
  *
