@@ -4346,7 +4346,7 @@ function drawReportsCharts(monthRows, dealerRows, trips){
     };
   }
 
-  function drawAxes(ctx, w, h, frame, maxV=1){
+  function drawAxes(ctx, w, h, frame, maxV=1, formatTick=(v)=>String(Math.round(v))){
     const x0 = frame.left;
     const y0 = h - frame.bottom;
     const yTop = frame.top;
@@ -4368,9 +4368,12 @@ function drawReportsCharts(monthRows, dealerRows, trips){
       ctx.moveTo(x0, y);
       ctx.lineTo(xRight, y);
       ctx.stroke();
+
       if(i===0 || i===gridLines || i===2){
-        const tickVal = Math.round(maxV * ratio);
-        ctx.fillText(String(tickVal), 8, y + 3);
+        const tickVal = maxV * ratio;
+        const text = formatTick(tickVal);
+        const tw = ctx.measureText(text).width;
+        ctx.fillText(text, Math.max(4, x0 - tw - 8), y + 3);
       }
     }
 
@@ -4416,6 +4419,23 @@ function drawReportsCharts(monthRows, dealerRows, trips){
     return "$" + (Math.round(n*100)/100).toFixed(2);
   }
 
+  function formatPPL(v){
+    return "$" + (Number(v)||0).toFixed(2);
+  }
+
+  function formatCompactMoney(v){
+    const n = Number(v)||0;
+    if(n >= 1000) return "$" + (n/1000).toFixed(1) + "k";
+    return "$" + Math.round(n);
+  }
+
+  function formatCompactLbs(v){
+    const n = Number(v)||0;
+    if(n >= 1000) return (n/1000).toFixed(1) + "k";
+    return String(Math.round(n));
+  }
+
+
   function makeTripsTimeline(rows){
     const byKey = new Map();
     rows.forEach((t)=>{
@@ -4450,7 +4470,7 @@ function drawReportsCharts(monthRows, dealerRows, trips){
       const maxV = Math.max(1e-6, ...vals);
       const minV = Math.min(...vals);
       const span = (maxV - minV) || maxV || 1;
-      const geom = drawAxes(ctx,w,h,frame,maxV);
+      const geom = drawAxes(ctx,w,h,frame,maxV, formatPPL);
 
       ctx.strokeStyle = palette.ppl;
       ctx.lineWidth = 2.5;
@@ -4470,7 +4490,7 @@ function drawReportsCharts(monthRows, dealerRows, trips){
       });
 
       drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-16, frame);
-      drawInfoChip(ctx, `High ${formatShortMoney(maxV)}`, w, frame);
+      drawInfoChip(ctx, `High ${formatPPL(maxV)}/lb`, w, frame);
     }
   }
 
@@ -4485,7 +4505,7 @@ function drawReportsCharts(monthRows, dealerRows, trips){
       const top = dealerRows.slice(0,8);
       const vals = top.map(r=> Number(r.amt)||0);
       const maxV = Math.max(1e-6, ...vals);
-      const geom = drawAxes(ctx,w,h,frame,maxV);
+      const geom = drawAxes(ctx,w,h,frame,maxV, formatCompactMoney);
       const barW = geom.plotW / (top.length || 1);
 
       top.forEach((r,i)=>{
@@ -4508,7 +4528,7 @@ function drawReportsCharts(monthRows, dealerRows, trips){
         ctx.fillText(lab, x - tw/2, h-16);
       });
 
-      drawInfoChip(ctx, `Top ${formatShortMoney(maxV)}`, w, frame);
+      drawInfoChip(ctx, `Top dealer ${formatCompactMoney(maxV)}`, w, frame);
     }
   }
 
@@ -4522,7 +4542,7 @@ function drawReportsCharts(monthRows, dealerRows, trips){
 
       const vals = monthRows.map(r=> Number(r.lbs)||0);
       const maxV = Math.max(1e-6, ...vals);
-      const geom = drawAxes(ctx,w,h,frame,maxV);
+      const geom = drawAxes(ctx,w,h,frame,maxV, formatCompactLbs);
       const barW = geom.plotW / (vals.length || 1);
 
       vals.forEach((v,i)=>{
@@ -4534,7 +4554,7 @@ function drawReportsCharts(monthRows, dealerRows, trips){
       });
 
       drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-16, frame);
-      drawInfoChip(ctx, `Peak ${Math.round(maxV)} lbs`, w, frame);
+      drawInfoChip(ctx, `Peak month ${formatCompactLbs(maxV)} lbs`, w, frame);
     }
   }
 
@@ -4550,7 +4570,7 @@ function drawReportsCharts(monthRows, dealerRows, trips){
       const vals = timeline.map(r=> Number(r.count)||0);
       const maxV = Math.max(1, ...vals);
       const totalTrips = vals.reduce((sum,v)=>sum+v,0);
-      const geom = drawAxes(ctx,w,h,frame,maxV);
+      const geom = drawAxes(ctx,w,h,frame,maxV, (v)=>String(Math.round(v)));
       const barW = geom.plotW / (vals.length || 1);
 
       vals.forEach((v,i)=>{
