@@ -70,18 +70,55 @@ export function parseMDYToISO(mdy){
 }
 
 export function parseNum(s){
-  const raw = String(s || "");
-  let out = "";
+  const raw = String(s || "").trim();
+  let cleaned = "";
   for(let i=0;i<raw.length;i++){
     const ch = raw[i];
-    if((ch >= "0" && ch <= "9") || ch === "." || ch === "-") out += ch;
+    if((ch >= "0" && ch <= "9") || ch === "." || ch === "," || ch === "-") cleaned += ch;
   }
-  const v = parseFloat(out);
+
+  if(!cleaned) return 0;
+
+  let out = cleaned;
+  const dotIdx = cleaned.indexOf(".");
+  if(dotIdx >= 0){
+    // Dot-decimal stays primary. Commas before dot are grouping separators;
+    // comma after dot is treated as a break, not another decimal marker.
+    const left = cleaned.slice(0, dotIdx).replaceAll(",", "");
+    const rightRaw = cleaned.slice(dotIdx + 1);
+    const commaAfterDot = rightRaw.indexOf(",");
+    const right = (commaAfterDot >= 0 ? rightRaw.slice(0, commaAfterDot) : rightRaw)
+      .replaceAll(",", "");
+    out = left + "." + right;
+  }else if(cleaned.includes(",")){
+    const commaCount = (cleaned.match(/,/g) || []).length;
+    if(commaCount === 1){
+      const parts = cleaned.split(",");
+      const frac = parts[1] || "";
+      // Accept simple comma decimals like "12,5" / "12,50".
+      if(frac.length > 0 && frac.length <= 2) out = parts[0] + "." + frac;
+      else out = cleaned.replaceAll(",", "");
+    }else{
+      out = cleaned.replaceAll(",", "");
+    }
+  }
+
+  let normalized = "";
+  for(let i=0;i<out.length;i++){
+    const ch = out[i];
+    if(ch === "-"){
+      if(normalized.length === 0) normalized += ch;
+      continue;
+    }
+    normalized += ch;
+  }
+
+  const v = parseFloat(normalized);
   return Number.isFinite(v) ? v : 0;
 }
 
 export function parseMoney(s){
-  const raw = String(s || "").replace(/[$,]/g, "").trim();
+  const raw = String(s || "").replace(/\$/g, "").trim();
   if(!raw) return 0;
 
   // NOTE (Outside-first Live Text mode): do NOT apply cents-inference to digits-only values.
