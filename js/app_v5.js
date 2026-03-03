@@ -174,51 +174,7 @@ function getDisplayMode(){
   }
 }
 
-async function collectDiagnostics(){
-  const diag = {
-    appVersion: VERSION,
-    schemaVersion: (typeof SCHEMA_VERSION !== "undefined" ? SCHEMA_VERSION : null),
-    displayMode: getDisplayMode(),
-    userAgent: navigator.userAgent,
-    language: navigator.language,
-    timezone: (Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown"),
-    storage: {
-      trips: Array.isArray(state?.trips) ? state.trips.length : null,
-      areas: Array.isArray(state?.areas) ? state.areas.length : null,
-    },
-    backup: {
-      lastBackupAt: state?.settings?.lastBackupAt || null,
-    },
-    serviceWorker: {
-      supported: ("serviceWorker" in navigator),
-      controller: (navigator.serviceWorker && navigator.serviceWorker.controller) ? true : false,
-    },
-  };
 
-  try{
-    if(navigator.serviceWorker){
-      const reg = await navigator.serviceWorker.getRegistration();
-      if(reg){
-        diag.serviceWorker.scope = reg.scope || null;
-        diag.serviceWorker.installing = !!reg.installing;
-        diag.serviceWorker.waiting = !!reg.waiting;
-        diag.serviceWorker.active = !!reg.active;
-      }
-    }
-  }catch{}
-
-  try{
-    if(window.caches && caches.keys){
-      diag.caches = await caches.keys();
-    }
-  }catch{}
-
-  try{
-    diag.lastError = {    };
-  }catch{}
-
-  return diag;
-}
 
 
 async function updateBuildBadge(){
@@ -320,8 +276,8 @@ function installModal({ title, body, primaryText="Install", onPrimary }){
     el.innerHTML = `
       <div class="modalCard card">
         <b>${escapeHtml(title||"Install")}</b>
-        ${body ? `<div class="muted small" style="margin-top:8px;line-height:1.35;white-space:pre-wrap">${escapeHtml(body)}</div>` : ""}
-        <div class="row" style="margin-top:14px;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+        ${body ? `<div class="muted small mt8 lh135 preWrap">${escapeHtml(body)}</div>` : ""}
+        <div class="row mt14 gap10 jcEnd wrap">
           <button class="btn" id="im_cancel">Not now</button>
           <button class="btn primary" id="im_yes">${escapeHtml(primaryText)}</button>
         </div>
@@ -398,8 +354,8 @@ function confirmSaveModal({ title="Save this trip?", body="" } = {}){
     el.innerHTML = `
       <div class="modalCard card">
         <b>${escapeHtml(title)}</b>
-        ${body ? `<div class="muted small" style="margin-top:8px;white-space:pre-wrap">${escapeHtml(body)}</div>` : ""}
-        <div class="row" style="margin-top:14px;gap:10px;justify-content:flex-end">
+        ${body ? `<div class="muted small mt8 preWrap">${escapeHtml(body)}</div>` : ""}
+        <div class="row mt14 gap10 jcEnd">
           <button class="btn" id="m_cancel">Cancel</button>
           <button class="btn primary" id="m_yes">Yes, Save</button>
         </div>
@@ -796,35 +752,6 @@ function bindNavHandlers(state){
   if(help) help.onclick = () => { state.view = "help"; state.lastAction = "nav:help"; saveState(); render(); };
 }
 
-async function readClipboardTextSafe() {
-  try {
-    if (!navigator.clipboard || !navigator.clipboard.readText) return "";
-    return await navigator.clipboard.readText();
-  } catch {
-    return "";
-  }
-}
-
-function insertTextAtCursor(el, text) {
-  const t = String(text ?? "");
-  if (!t) return;
-  const node = el;
-  if (!node || !(node instanceof HTMLElement)) return;
-  const isText = node.tagName === "TEXTAREA" || (node.tagName === "INPUT" && (node.type === "text" || node.type === "search" || node.type === "tel" || node.type === "url" || node.type === "email" || node.type === "password" || node.type === "number"));
-  if (!isText) return;
-
-  const start = typeof node.selectionStart === "number" ? node.selectionStart : node.value.length;
-  const end = typeof node.selectionEnd === "number" ? node.selectionEnd : node.value.length;
-  const before = node.value.slice(0, start);
-  const after = node.value.slice(end);
-  node.value = before + t + after;
-
-  const pos = start + t.length;
-  try {
-    node.setSelectionRange(pos, pos);
-  } catch {}
-  node.dispatchEvent(new Event("input", { bubbles: true }));
-}
 
 
 
@@ -867,58 +794,9 @@ function loadState(){
   }
 }
 
-function getFilteredTripsLegacy(){
-  const trips = Array.isArray(state.trips) ? state.trips.slice() : [];
-  // Ensure newest first by date (and fallback to createdAt/id)
-  trips.sort((a,b)=>{
-    const da = String(a?.dateISO||"");
-    const db = String(b?.dateISO||"");
-    if(da !== db) return db.localeCompare(da);
-    return String(b?.id||"").localeCompare(String(a?.id||""));
-  });
 
-  const f = state.filter || "YTD";
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const last7 = new Date(now);
-  last7.setDate(now.getDate() - 6);
 
-  const toDate = (iso)=>{
-    // iso expected YYYY-MM-DD
-    const s = String(iso||"");
-    if(s.length===10 && s[4]==="-" && s[7]==="-"){
-      const y = Number(s.slice(0,4)), m = Number(s.slice(5,7))-1, d = Number(s.slice(8,10));
-      return new Date(y,m,d);
-    }
-    // allow MDY as fallback
-    const iso2 = parseMDYToISO(s);
-    if(iso2) return toDate(iso2);
-    return null;
-  };
 
-  const within = (dt)=>{
-    if(!dt) return true; // if unknown date, keep it visible
-    if(f==="YTD") return dt >= startOfYear;
-    if(f==="Month") return dt >= startOfMonth;
-    if(f==="7D") return dt >= last7;
-    return true;
-  };
-
-  return trips.filter(t=> within(toDate(t?.dateISO)));
-}
-
-function mdyLabelFromISO(iso){
-  const s = String(iso||"");
-  return (s.length===10) ? s.replaceAll("-","") : "unknown";
-}
-function filenameFor(label, startISO="", endISO=""){
-  const base = "shellfish_trips";
-  if(label === "ALL") return base + "_ALL.csv";
-  if(label === "YTD" || label === "Month" || label === "7D") return base + "_" + label + ".csv";
-  if(startISO && endISO) return base + "_" + mdyLabelFromISO(startISO) + "_to_" + mdyLabelFromISO(endISO) + ".csv";
-  return base + ".csv";
-}
 function exportTrips(trips, label, startISO="", endISO=""){
   // legacy wrapper (v36): keep behavior consistent with Trips screen
   exportTripsWithLabel(trips, String(label||"ALL").toUpperCase(), startISO, endISO);
@@ -1295,23 +1173,6 @@ function importBackupFromFile(file, opts={}){
   });
 }
 
-function filterByRange(trips, startISO, endISO){
-  const s = String(startISO||"");
-  const e = String(endISO||"");
-  if(!(s.length===10 && e.length===10)) return trips;
-  return trips.filter(t=>{
-    const d = String(t?.dateISO||"");
-    if(d.length!==10) return true;
-    return d >= s && d <= e;
-  });
-}
-
-
-function setFilter(f){
-  state.filter = f;
-  saveState();
-  render();
-}
 
 function ensureAreas(){
   if(!Array.isArray(state.areas)) state.areas = [];
@@ -1514,22 +1375,7 @@ function resolveUnifiedRange(filter){
 }
 
 // Add-on F: formatting rules (single source of truth)
-function fmtMoney(n){
-  n = Number(n);
-  if(!Number.isFinite(n)) n = 0;
-  return formatMoney(n);
-}
-function fmtLbs(n){
-  n = Number(n);
-  if(!Number.isFinite(n)) n = 0;
-  return `${(Math.round((n + Number.EPSILON) * 10)/10).toFixed(1)} lb`;
-}
-function fmtPPL(amount, lbs){
-  amount = Number(amount); lbs = Number(lbs);
-  if(!Number.isFinite(amount) || !Number.isFinite(lbs) || lbs <= 0) return "$0.00/lb";
-  const ppl = amount / lbs;
-  return `${formatMoney(ppl)}/lb`;
-}
+
 
 function buildUnifiedFilterLabel(filter, rangeLabel){
   const parts = [rangeLabel];
@@ -1595,145 +1441,7 @@ function getFilterOptionsFromTrips(){
 }
 
 // Home + Reports badge (UI choice #2)
-function renderFilterBadge(){ return ""; }
-function bindFilterBadgeToTrips(){ /* v62: filter badge removed */ }
 
-// Trips filter bar (UI choice #2)
-function renderTripsFilterBar(){
-  ensureUnifiedFilters();
-  const f = state.filters.active;
-  const opt = getFilterOptionsFromTrips();
-
-  const rangeOptions = [
-    ["all","All"],
-    ["ytd","YTD"],
-    ["12m","Last 12m"],
-    ["90d","Last 90d"],
-    ["30d","Last 30d"],
-    ["custom","Custom"]
-  ];
-
-  return `
-    <div class="card">
-      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Range</div>
-          <select id="flt_range" class="select">
-            ${rangeOptions.map(([k,l])=>`<option value="${k}" ${f.range===k?"selected":""}>${l}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Dealer</div>
-          <select id="flt_dealer" class="select">
-            <option value="all" ${f.dealer==="all"?"selected":""}>All</option>
-            ${opt.dealers.map(d=>`<option value="${escapeHtml(d)}" ${f.dealer===d?"selected":""}>${escapeHtml(d)}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Area</div>
-          <select id="flt_area" class="select">
-            <option value="all" ${f.area==="all"?"selected":""}>All</option>
-            ${opt.areas.map(a=>`<option value="${escapeHtml(a)}" ${f.area===a?"selected":""}>${escapeHtml(a)}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:140px;flex:1">
-          <div class="muted small">Species</div>
-          <select id="flt_species" class="select">
-            <option value="all" ${f.species==="all"?"selected":""}>All</option>
-            ${opt.species.map(s=>`<option value="${escapeHtml(s)}" ${f.species===s?"selected":""}>${escapeHtml(s)}</option>`).join("")}
-          </select>
-        </div>
-
-        <div style="min-width:160px;flex:2;display:flex;align-items:flex-end">
-          <button class="btn" id="exportTrips" type="button" style="width:100%">Export CSV</button>
-        </div>
-
-        <div style="display:flex;gap:10px;">
-          <button class="btn" id="flt_reset">Reset</button>
-        </div>
-      </div>
-
-      <div id="flt_custom_wrap" style="margin-top:10px;display:${f.range==="custom"?"block":"none"}">
-        <div class="row" style="gap:10px;flex-wrap:wrap">
-          <div style="min-width:140px;flex:1">
-            <div class="muted small">From</div>
-            <input id="flt_from" type="date" class="input" value="${escapeHtml(String(f.fromISO||"").slice(0,10))}" />
-          </div>
-          <div style="min-width:140px;flex:1">
-            <div class="muted small">To</div>
-            <input id="flt_to" type="date" class="input" value="${escapeHtml(String(f.toISO||"").slice(0,10))}" />
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function bindTripsFilterBar(){
-  ensureUnifiedFilters();
-  const f = state.filters.active;
-
-  const setAndRerender = ()=>{
-    saveState();
-    render();
-  };
-
-  const rangeEl = document.getElementById("flt_range");
-  rangeEl?.addEventListener("change", ()=>{
-    f.range = rangeEl.value;
-    if(f.range === "custom"){
-      const now = isoToday();
-      const y = now.slice(0,4);
-      if(!f.fromISO) f.fromISO = `${y}-01-01`;
-      if(!f.toISO) f.toISO = now;
-      if(f.fromISO > f.toISO){
-        const tmp = f.fromISO; f.fromISO = f.toISO; f.toISO = tmp;
-      }
-    }
-    setAndRerender();
-  });
-
-  document.getElementById("flt_dealer")?.addEventListener("change", (ev)=>{ f.dealer = ev.target.value; setAndRerender(); });
-  document.getElementById("flt_area")?.addEventListener("change", (ev)=>{ f.area = ev.target.value; setAndRerender(); });
-  document.getElementById("flt_species")?.addEventListener("change", (ev)=>{ f.species = ev.target.value; setAndRerender(); });
-
-  const textEl = document.getElementById("flt_text");
-  let textT;
-  textEl?.addEventListener("input", ()=>{
-    clearTimeout(textT);
-    textT = setTimeout(()=>{ f.text = textEl.value; setAndRerender(); }, 120);
-  });
-
-  const fromEl = document.getElementById("flt_from");
-  const toEl = document.getElementById("flt_to");
-  fromEl?.addEventListener("change", ()=>{ f.fromISO = fromEl.value; f.range="custom"; setAndRerender(); });
-  toEl?.addEventListener("change", ()=>{ f.toISO = toEl.value; f.range="custom"; setAndRerender(); });
-
-  document.getElementById("flt_reset")?.addEventListener("click", ()=>{
-    state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", species:"all", text:"" };
-    saveState();
-    render();
-  });
-  // v62: Export CSV button lives in filter bar
-  const exportBtn = document.getElementById("exportTrips");
-  if(exportBtn){
-    exportBtn.onclick = ()=>{
-      const { rows, range, label } = getFilteredTrips();
-      exportTripsWithLabel(rows, label, range.fromISO, range.toISO);
-      showToast("CSV exported");
-    };
-  }
-
-
-  if(state._scrollToFilters){
-    state._scrollToFilters = false;
-    saveState();
-    requestAnimationFrame(()=>{ document.getElementById("flt_range")?.scrollIntoView({behavior:"smooth", block:"start"}); });
-  }
-}
 
 function getLastUniqueFromTrips(field, maxN){
   const out = [];
@@ -1938,7 +1646,7 @@ function showFatal(err){
       <div class="sep"></div>
       <div class="muted small" style="white-space:pre-wrap">${escapeHtml(errText)}</div>
 
-      <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
+      <div class="row mt12 gap10 wrap">
         <button class="btn" id="fatalCopy">Copy debug</button>
         <button class="btn good" id="fatalReload">Reload</button>
         <button class="btn" id="fatalResetCache">Reset cache</button>
@@ -2386,7 +2094,7 @@ function renderAllTrips(){
         </div>
       </div>
 
-      <div class="muted small" style="margin-top:10px">
+      <div class="muted small mt10">
         Showing: <b>${escapeHtml(tripsActiveLabel(tf, r.label))}</b>
       </div>
     </div>
@@ -2493,7 +2201,7 @@ function renderHome(
         On iPhone/iPad (and sometimes Android), the installed Home Screen app can store data separately from Safari.
         If you logged trips in Safari, create a backup there and restore it here.
       </div>
-      <div class="row" style="margin-top:10px">
+      <div class="row mt10">
         <button class="btn" id="pwaNoteHelp">How to move trips</button>
         <button class="btn" id="pwaNoteDismiss">Got it</button>
       </div>
@@ -2519,7 +2227,7 @@ function renderHome(
       <div class="muted small" style="margin-top:6px">
         You have ${newCount > 0 ? newCount : tripsAll.length} trip${(newCount > 1 || (!lastAt && tripsAll.length !== 1)) ? "s" : ""} not included in your most recent backup.
       </div>
-      <div class="row" style="margin-top:10px">
+      <div class="row mt10">
         <button class="btn" id="backupNow">💾 Create Backup</button>
         <button class="btn" id="backupLater">Not now</button>
       </div>
@@ -2545,7 +2253,7 @@ function renderHome(
         ${chip("RANGE","Range")}
       </div>
       ${f==="RANGE" ? `
-        <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
+        <div class="row mt10 gap10 wrap">
           <input class="input" id="homeRangeFrom" inputmode="numeric" placeholder="From (MM/DD/YYYY)" value="${escapeHtml(hf.from||"")}" style="flex:1;min-width:160px" />
           <input class="input" id="homeRangeTo" inputmode="numeric" placeholder="To (MM/DD/YYYY)" value="${escapeHtml(hf.to||"")}" style="flex:1;min-width:160px" />
           <button class="btn" id="homeRangeApply">Apply</button>
@@ -4555,14 +4263,14 @@ function renderSettings(opts={}){
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
       <button class="smallbtn danger" data-del-area="${i}">Delete</button>
     </div>
-  `).join("") : `<div class="muted small" style="margin-top:10px">No areas yet. Add one below.</div>`;
+  `).join("") : `<div class="muted small mt10">No areas yet. Add one below.</div>`;
 
   const dealerRows = state.dealers.length ? state.dealers.map((d, i)=>`
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
       <button class="smallbtn danger" data-del-dealer="${i}">Delete</button>
     </div>
-  `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
+  `).join("") : `<div class="muted small mt10">No dealers yet. Add one below.</div>`;
 
 
 function __renderListMgmtPanel(mode){
@@ -4575,14 +4283,14 @@ function __renderListMgmtPanel(mode){
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
       <button class="smallbtn danger" data-del-area="${i}" type="button">Delete</button>
     </div>
-  `).join("") : `<div class="muted small" style="margin-top:10px">No areas yet. Add one below.</div>`;
+  `).join("") : `<div class="muted small mt10">No areas yet. Add one below.</div>`;
 
   const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
       <button class="smallbtn danger" data-del-dealer="${i}" type="button">Delete</button>
     </div>
-  `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
+  `).join("") : `<div class="muted small mt10">No dealers yet. Add one below.</div>`;
 
   return (m==="dealers") ? `
     <div style="margin-top:12px">
@@ -4647,7 +4355,7 @@ function __renderListMgmtPanel(mode){
           <div class="muted tiny" style="margin-top:2px;opacity:.85">Coming soon</div>
         </button>
       </div>
-      <div class="muted small" style="margin-top:10px">Manage the dropdown lists used in New Trip and Edit Trip.</div>
+      <div class="muted small mt10">Manage the dropdown lists used in New Trip and Edit Trip.</div>
 
       <div id="listMgmtPanel">${__renderListMgmtPanel(listMode)}</div>
     </div>
@@ -4655,28 +4363,28 @@ function __renderListMgmtPanel(mode){
     <div class="card">
       <b>Data</b>
       <div class="sep"></div>
-      <div class="muted small" style="margin-top:10px">Create a backup file you can store in Files/Drive. Restore brings it back later.</div>
+      <div class="muted small mt10">Create a backup file you can store in Files/Drive. Restore brings it back later.</div>
       <div class="muted small" id="lastBackupLine" style="margin-top:10px"></div>
-      <div class="hint" style="margin-top:10px"><b>Backup recommended</b> before major updates.</div>
+      <div class="hint mt10"><b>Backup recommended</b> before major updates.</div>
       <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:nowrap">
         <button class="btn" id="downloadBackup" style="flex:1">💾 Create Backup</button>
         <button class="btn" id="restoreBackup" style="flex:1">📥 Restore Backup</button>
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" style="display:none" />
       </div>
-      <div class="muted small" style="margin-top:10px">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups.</div>
+      <div class="muted small mt10">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups.</div>
     </div>
 
     <div class="card">
       <b>About</b>
       <div class="sep"></div>
-      <div class="muted small" style="margin-top:10px">Created by <b>Jeremy Wood</b> — <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+      <div class="muted small mt10">Created by <b>Jeremy Wood</b> — <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
       <div class="muted small" style="margin-top:8px">Version: <b>${VERSION}</b></div>
       <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
 
       <div class="muted small" style="margin-top:8px">© 2026 Jeremy Wood. All rights reserved.</div>
       <div class="sep" style="margin-top:10px"></div>
-      <div class="muted small" style="margin-top:10px"><b>Legal</b></div>
-      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
+      <div class="muted small mt10"><b>Legal</b></div>
+      <div class="row mt10 gap10 wrap">
         <button class="btn" id="openTerms">Terms</button>
         <button class="btn" id="openPrivacy">Privacy</button>
         <button class="btn" id="openLicense">License</button>
@@ -4687,13 +4395,13 @@ function __renderListMgmtPanel(mode){
       <summary style="cursor:pointer;"><b>Advanced</b></summary>
       <div class="sep" style="margin-top:10px"></div>
 
-      <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
+      <div class="row mt12 gap10 wrap">
         <button class="btn" id="copyDebug">Copy Details</button>
         <button class="btn" id="refreshApp">Refresh App</button>
       </div>
 
-      <div class="muted small" style="margin-top:10px">Erase removes all trips and lists on this device. Use a backup first.</div>
-      <div class="row" style="margin-top:12px">
+      <div class="muted small mt10">Erase removes all trips and lists on this device. Use a backup first.</div>
+      <div class="row mt12">
         <button class="btn danger" id="resetData">Erase All Data</button>
       </div>
     </details>
@@ -4777,14 +4485,14 @@ function __renderListMgmtPanel(mode){
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
       <button class="smallbtn danger" data-del-area="${i}" type="button">Delete</button>
     </div>
-  `).join("") : `<div class="muted small" style="margin-top:10px">No areas yet. Add one below.</div>`;
+  `).join("") : `<div class="muted small mt10">No areas yet. Add one below.</div>`;
 
   const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
     <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
       <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
       <button class="smallbtn danger" data-del-dealer="${i}" type="button">Delete</button>
     </div>
-  `).join("") : `<div class="muted small" style="margin-top:10px">No dealers yet. Add one below.</div>`;
+  `).join("") : `<div class="muted small mt10">No dealers yet. Add one below.</div>`;
 
   return (m==="dealers") ? `
     <div style="margin-top:12px">
@@ -4840,7 +4548,7 @@ if(panel){
     try{ state.dealers = Array.isArray(state.dealers) ? state.dealers : []; }catch(_){}
     try{
       panel.innerHTML =
-        '<div class="muted small" style="margin-top:10px">' +
+        '<div class="muted small mt10">' +
         '<b>List Management error</b><br/>' +
         'Tap <b>Copy Details</b> and send the error so we can fix it.<br/>' +
         '<span class="muted tiny">' + escapeHtml(err?.message || String(err)) + '</span>' +
@@ -5154,7 +4862,7 @@ function renderAbout(){
       <div class="sep"></div>
       <div class="muted small">Version: <b>${VERSION}</b></div>
       <div class="muted small" style="margin-top:8px">All data stays on this device unless you export/backup.</div>
-      <div class="row" style="margin-top:12px">
+      <div class="row mt12">
         <button class="btn" id="copyDebug">Copy Debug Info</button>
         <button class="btn" id="feedback">Send Feedback</button>
       </div>
