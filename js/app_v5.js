@@ -2422,8 +2422,6 @@ function renderAllTrips(){
   root.innerHTML = `
     ${renderPageHeader("all_trips")}
 
-    <div class="muted small" style="margin:-6px 0 10px 0">Browse and export your trips.</div>
-
     ${filtersCard}
 
     <div style="height:10px"></div>
