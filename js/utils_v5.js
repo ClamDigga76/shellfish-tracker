@@ -279,15 +279,23 @@ export function openModal({
 
   const isCenter = position === "center";
   root.classList.remove("hidden");
-  root.classList.toggle("modalRoot--center", isCenter);
   root.setAttribute("aria-hidden","false");
 
   const closeBtnHtml = showCloseButton
     ? `<button class="btn" id="modalCloseBtn" type="button" aria-label="Close">✕</button>`
     : "";
 
+  const sheetStyle = isCenter
+    ? "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 32px);max-width:400px;border-radius:16px;box-shadow:0 16px 44px rgba(0,0,0,.48);"
+    : "";
+
+  if(isCenter){
+    root.style.alignItems = "center";
+    root.style.paddingBottom = "16px";
+  }
+
   root.innerHTML = `
-    <div class="modalSheet ${isCenter ? "modalSheet--center" : ""}" role="dialog" aria-modal="true">
+    <div class="modalSheet" style="${sheetStyle}" role="dialog" aria-modal="true">
       <div class="modalHdr">
         <div class="modalTitle">${escapeHTML(String(title||""))}</div>
         ${closeBtnHtml}
@@ -331,7 +339,8 @@ export function closeModal(){
   const root = document.getElementById("modalRoot");
   if(!root) return;
   root.classList.add("hidden");
-  root.classList.remove("modalRoot--center");
+  root.style.alignItems = "";
+  root.style.paddingBottom = "";
   root.setAttribute("aria-hidden","true");
   root.innerHTML = "";
   document.body.style.overflow = "";
