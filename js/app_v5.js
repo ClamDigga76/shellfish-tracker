@@ -489,7 +489,7 @@ function hasUnsavedDraft(){
 }
 
 
-// ---- Page Header (Option B: icon + title, shown on every page) ----
+// ---- Page Header (Option N1: brand title + compact subtitle) ----
 const VIEW_META = {
   home:      { title: "Home", icon: "home" },
   all_trips: { title: "Trips", icon: "trips" },
@@ -506,10 +506,16 @@ function renderPageHeader(viewKey){
   // Show header Help button on main sections only
   const helpKey = (viewKey === "all_trips") ? "trips" : viewKey;
   const showHelp = (helpKey === "home" || helpKey === "trips" || helpKey === "reports" || helpKey === "settings");
+  const titleMaxWidth = showHelp ? "calc(100% - 44px)" : "100%";
   return `
     <div class="pageHeader">
-      <span class="phIcon">${iconSvg(m.icon)}</span>
-      <h2 class="phTitle">${escapeHtml(m.title)}</h2>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;max-width:${titleMaxWidth};width:100%">
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;max-width:100%">
+          <span class="phIcon" style="width:17px;height:17px;flex:0 0 17px;opacity:.92;filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))">${iconSvg(m.icon)}</span>
+          <h2 class="phTitle" style="font-size:clamp(18px,4.6vw,22px);line-height:1.05;letter-spacing:.35px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Georgia, 'Times New Roman', Times, serif;color:#0A6B6B">Bank the Catch</h2>
+        </div>
+        <div style="margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.45px;opacity:.95;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14)">${escapeHtml(m.title)}</div>
+      </div>
       ${showHelp ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">?</button>` : ``}
     </div>
   `;
@@ -5144,7 +5150,7 @@ function renderAbout(){
     </div>
 
     <div class="card">
-      <b>Bank the Catch</b>
+      <b>App details</b>
       <div class="sep"></div>
       <div class="muted small">Version: <b>${VERSION}</b></div>
       <div class="muted small" style="margin-top:8px">All data stays on this device unless you export/backup.</div>
