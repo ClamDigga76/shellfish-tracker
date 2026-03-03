@@ -1018,9 +1018,9 @@ function renderTripCatchCard(t, opts = {}){
     <${tag} class="trip triprow catchCard ${escapeHtml(extraClass)}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
       <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start">
         <div>
-          <div class="catchHead" style="font-size:13px">${escapeHtml(dateText)}</div>
-          <div class="catchMain">${escapeHtml(area)}</div>
-          <div class="catchHead" style="margin-top:2px">${escapeHtml(dealer)}</div>
+          <div class="catchHead" style="font-size:14px">${escapeHtml(dateText)}</div>
+          <div class="catchMain" style="font-size:18px;color:#fff">${escapeHtml(area)}</div>
+          <div class="catchHead" style="margin-top:2px;font-size:14px">${escapeHtml(dealer)}</div>
         </div>
         <div class="catchFoot" style="margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap">
           <span class="catchMetric lbsBlue" style="font-size:14px;padding:6px 10px"><b class="lbsBlue">${lbs}</b> lbs</span>
