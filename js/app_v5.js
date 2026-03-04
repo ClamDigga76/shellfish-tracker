@@ -11,7 +11,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateMDY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal } from "./utils_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 
@@ -809,7 +809,7 @@ function renderTripCatchCard(t, opts = {}){
     valueOverride = "",
     metaOverride = ""
   } = opts;
-  const date = formatDateMDY(t?.dateISO || "");
+  const date = formatDateDisplay(t?.dateISO || "");
   const dealerRaw = String(t?.dealer || "").trim();
   const dealer = dealerRaw || "(dealer)";
   const area = String(t?.area || "").trim() || "(area)";
@@ -1546,8 +1546,8 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   const dup = findDuplicateTrip(candidate, isEdit ? id : "");
   if(dup){
     const msg = isEdit
-      ? `This edit matches another trip:\n\nDate: ${formatDateMDY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`
-      : `This looks like a duplicate trip:\n\nDate: ${formatDateMDY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
+      ? `This edit matches another trip:\n\nDate: ${formatDateDisplay(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`
+      : `This looks like a duplicate trip:\n\nDate: ${formatDateDisplay(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
     if(!confirm(msg)) return false;
   }
 
@@ -1875,12 +1875,6 @@ function isoToday(){
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
 
-function supportsNativeDateInput(){
-  const el = document.createElement("input");
-  el.setAttribute("type", "date");
-  return el.type === "date";
-}
-
 function parseReportDateToISO(value){
   const raw = String(value || "").trim();
   if(!raw) return "";
@@ -1888,10 +1882,40 @@ function parseReportDateToISO(value){
   return parseMDYToISO(raw) || "";
 }
 
-function formatReportDateValue(value, useNative){
+function formatReportDateValue(value){
   const iso = parseReportDateToISO(value);
   if(!iso) return String(value || "");
-  return useNative ? iso : formatDateMDY(iso);
+  return iso;
+}
+
+function bindDatePill(inputId, placeholder="Select date"){
+  const el = document.getElementById(inputId);
+  if(!el || String(el.type||"").toLowerCase() !== "date") return;
+  let wrap = el.parentElement;
+  if(!wrap || !wrap.classList.contains("datePillWrap")){
+    wrap = document.createElement("div");
+    wrap.className = "datePillWrap";
+    el.parentNode.insertBefore(wrap, el);
+    wrap.appendChild(el);
+  }
+  let ph = wrap.querySelector(".datePillPlaceholder");
+  if(!ph){
+    ph = document.createElement("span");
+    ph.className = "datePillPlaceholder";
+    ph.setAttribute("aria-hidden", "true");
+    ph.textContent = placeholder;
+    wrap.appendChild(ph);
+  }
+  const sync = ()=>{
+    wrap.classList.toggle("is-empty", !String(el.value||"").trim());
+  };
+  if(!el.__datePillBound){
+    el.__datePillBound = true;
+    el.addEventListener("input", sync);
+    el.addEventListener("change", sync);
+    el.addEventListener("blur", sync);
+  }
+  sync();
 }
 
 function modeRange(mode, fromMDY="", toMDY=""){
@@ -1982,7 +2006,7 @@ function exportTripsWithLabel(trips, label, startISO="", endISO=""){
   const header = ["Date","Dealer","Area","Pounds","Amount","$/Lb"].join(",");
   const lines = [header];
   for(const t of rows){
-    const date = formatDateMDY(String(t?.dateISO||""));
+    const date = formatDateDisplay(String(t?.dateISO||""));
     const dealer = String(t?.dealer||"");
     const area = String(t?.area||"");
     const lbs = Number(t?.pounds)||0;
@@ -2149,6 +2173,8 @@ function renderAllTrips(){
   const toEl = document.getElementById("flt_to");
   fromEl?.addEventListener("change", ()=>{ tf.fromISO = fromEl.value; tf.range="custom"; rerender(); });
   toEl?.addEventListener("change", ()=>{ tf.toISO = toEl.value; tf.range="custom"; rerender(); });
+  bindDatePill("flt_from");
+  bindDatePill("flt_to");
 
   document.getElementById("flt_reset")?.addEventListener("click", ()=>{
     state.tripsFilter = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all" };
@@ -2254,8 +2280,8 @@ function renderHome(
       </div>
       ${f==="RANGE" ? `
         <div class="row mt10 gap10 wrap">
-          <input class="input" id="homeRangeFrom" inputmode="numeric" placeholder="From (MM/DD/YYYY)" value="${escapeHtml(hf.from||"")}" style="flex:1;min-width:160px" />
-          <input class="input" id="homeRangeTo" inputmode="numeric" placeholder="To (MM/DD/YYYY)" value="${escapeHtml(hf.to||"")}" style="flex:1;min-width:160px" />
+          <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(formatReportDateValue(hf.from))}" style="flex:1;min-width:160px" />
+          <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(formatReportDateValue(hf.to))}" style="flex:1;min-width:160px" />
           <button class="btn" id="homeRangeApply">Apply</button>
         </div>
       ` : ``}
@@ -2327,14 +2353,16 @@ function renderHome(
   if(homeApply){
     homeApply.onclick = ()=>{
       ensureHomeFilter();
-      const from = String(document.getElementById("homeRangeFrom")?.value||"").trim();
-      const to = String(document.getElementById("homeRangeTo")?.value||"").trim();
+      const from = parseReportDateToISO(document.getElementById("homeRangeFrom")?.value || "");
+      const to = parseReportDateToISO(document.getElementById("homeRangeTo")?.value || "");
       state.homeFilter.from = from;
       state.homeFilter.to = to;
       saveState();
       renderHome();
     };
   }
+  bindDatePill("homeRangeFrom");
+  bindDatePill("homeRangeTo");
 
 const toggleToast = (e)=>{
   try{
@@ -2548,6 +2576,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
 
   const elArea = document.getElementById("t_area");
   const elRate = document.getElementById("rateValue");
+  bindDatePill("t_date");
   const elDealerPrompt = document.getElementById("dealerPrompt");
   const elAreaPrompt = document.getElementById("areaPrompt");
   const btnAddDealer = document.getElementById("addDealerInline");
@@ -2785,7 +2814,7 @@ const normalizeAmountOnBlur = (el)=>{
       const rawDate = String(elDate?.value||"").trim();
 // v71: t_date is type="date" (YYYY-MM-DD). Accept both ISO and legacy MM/DD/YYYY.
 const iso = rawDate.includes("-") ? rawDate.slice(0,10) : (parseMDYToISO(rawDate) || "");
-const mdy = rawDate.includes("-") ? formatDateMDY(iso) : rawDate;
+const mdy = rawDate.includes("-") ? formatDateDisplay(iso) : rawDate;
 state.draft.dateISO = iso || state.draft.dateISO || "";
 state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
       state.draft.pounds = parseNum(elPounds?.value);
@@ -2946,7 +2975,7 @@ getApp().innerHTML = `
       <div class="form">
         <div class="field">
           <div class="label">Harvest date</div>
-          <input class="input" id="r_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(d.dateISO||"")}" />
+          <input class="input" id="r_date" type="date" value="${escapeHtml(String(d.dateISO||"").slice(0,10))}" />
         </div>
 
         <div class="field">
@@ -3043,7 +3072,7 @@ getApp().innerHTML = `
     try{
       const warnEl = document.getElementById("reviewWarnings");
       if(warnEl){
-        const dateISO = parseMDYToISO(document.getElementById("r_date")?.value || "");
+        const dateISO = parseReportDateToISO(document.getElementById("r_date")?.value || "");
         const dealer = normalizeDealerDisplay(String(document.getElementById("r_dealer")?.value || "").trim());
         const pounds = p;
         const amount = a;
@@ -3073,7 +3102,7 @@ getApp().innerHTML = `
             <div class="card" style="border-color:rgba(255,184,77,.55);background:rgba(255,184,77,.10)">
               <b>Possible duplicate</b>
               <div class="muted small" style="margin-top:6px;line-height:1.35">
-                Similar trip found: <b>${escapeHtml(formatDateMDY(dup.dateISO||""))}</b> — ${escapeHtml(String(dup.dealer||""))} (<span class="money">${formatMoney(dup.amount||0)}</span> / <span class="lbsBlue">${to2(Number(dup.pounds||0))} lbs</span>)
+                Similar trip found: <b>${escapeHtml(formatDateDisplay(dup.dateISO||""))}</b> — ${escapeHtml(String(dup.dealer||""))} (<span class="money">${formatMoney(dup.amount||0)}</span> / <span class="lbsBlue">${to2(Number(dup.pounds||0))} lbs</span>)
               </div>
             </div>
           `;
@@ -3188,6 +3217,8 @@ getApp().innerHTML = `
       updateReviewDealerPrompt();
     });
   }
+
+  bindDatePill("r_date");
   
   
 function updateReviewDealerSuggestions(){
@@ -3325,7 +3356,7 @@ function renderEditTrip(){
       <div class="form">
         <div class="field">
           <div class="label">Harvest date</div>
-          <input class="input" id="e_date" inputmode="numeric" placeholder="MM/DD/YYYY" value="${formatDateMDY(draft.dateISO||"")}" />
+          <input class="input" id="e_date" type="date" value="${escapeHtml(String(draft.dateISO||"").slice(0,10))}" />
         </div>
 
         <div class="field">
@@ -3370,6 +3401,7 @@ function renderEditTrip(){
   const elArea = document.getElementById("e_area");
 
   bindAreaChips("topAreasE", (a)=>{ elArea.value = String(a||""); });
+  bindDatePill("e_date");
 
   bindNavHandlers(state);
 
@@ -3471,12 +3503,8 @@ function renderReports(){
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
 
   const advOpen = !!rf.adv;
-  const useNativeDate = supportsNativeDateInput();
-  const advDateType = useNativeDate ? "date" : "text";
-  const advDateInputMode = useNativeDate ? "" : "inputmode=\"numeric\"";
-  const advDatePlaceholder = useNativeDate ? "" : "placeholder=\"MM/DD/YYYY\"";
-  const advFromValue = formatReportDateValue(rf.from, useNativeDate);
-  const advToValue = formatReportDateValue(rf.to, useNativeDate);
+  const advFromValue = formatReportDateValue(rf.from);
+  const advToValue = formatReportDateValue(rf.to);
 
   const dealerOpts = ['<option value="">Any Dealer</option>'].concat(
     (Array.isArray(state.dealers)?state.dealers:[]).map(d=>{
@@ -3497,11 +3525,11 @@ function renderReports(){
     <div class="grid2">
       <div class="field">
         <div class="label">From</div>
-        <input class="input" id="repAdvFrom" type="${advDateType}" ${advDateInputMode} ${advDatePlaceholder} value="${escapeHtml(advFromValue)}">
+        <input class="input" id="repAdvFrom" type="date" value="${escapeHtml(advFromValue)}">
       </div>
       <div class="field">
         <div class="label">To</div>
-        <input class="input" id="repAdvTo" type="${advDateType}" ${advDateInputMode} ${advDatePlaceholder} value="${escapeHtml(advToValue)}">
+        <input class="input" id="repAdvTo" type="date" value="${escapeHtml(advToValue)}">
       </div>
     </div>
     <div class="grid2" style="margin-top:10px">
@@ -3521,7 +3549,7 @@ function renderReports(){
   ` : "";
 
   const rangeLabel = (fMode === "RANGE")
-    ? (hasValidRange ? `${formatDateMDY(r.startISO)} → ${formatDateMDY(r.endISO)}` : "Set dates")
+    ? (hasValidRange ? `${formatDateDisplay(r.startISO)} → ${formatDateDisplay(r.endISO)}` : "Set dates")
     : (fMode === "THIS_MONTH" ? "This Month"
       : (fMode === "LAST_MONTH" ? "Last Month"
         : (fMode === "ALL" ? "All Time"
@@ -3581,10 +3609,8 @@ function renderReports(){
 
     const advFrom = document.getElementById("repAdvFrom");
     const advTo = document.getElementById("repAdvTo");
-    if(!useNativeDate){
-      applyMDYMaskInput(advFrom);
-      applyMDYMaskInput(advTo);
-    }
+    bindDatePill("repAdvFrom");
+    bindDatePill("repAdvTo");
 
     const advApply = document.getElementById("repAdvApply");
     if(advApply){
@@ -3607,10 +3633,8 @@ function renderReports(){
           state.reportsFilter.mode = "RANGE";
         }
 
-        if(useNativeDate){
-          from = parseReportDateToISO(from);
-          to = parseReportDateToISO(to);
-        }
+        from = parseReportDateToISO(from);
+        to = parseReportDateToISO(to);
 
         state.reportsFilter.from = from;
         state.reportsFilter.to = to;
@@ -3928,6 +3952,8 @@ function renderReports(){
   });
 
   // advanced apply/reset (only present when panel open)
+  bindDatePill("repAdvFrom");
+  bindDatePill("repAdvTo");
   const advApply = getApp().querySelector("#repAdvApply");
   if(advApply){
     advApply.onclick = ()=>{
@@ -3941,11 +3967,11 @@ function renderReports(){
         showToast("Invalid dates");
         return;
       }
-      state.reportsFilter.from = useNativeDate ? fromISO : from;
-      state.reportsFilter.to = useNativeDate ? toISO : to;
+      state.reportsFilter.from = fromISO;
+      state.reportsFilter.to = toISO;
       state.reportsFilter.dealer = dealer;
       state.reportsFilter.area = area;
-      if((useNativeDate ? fromISO : from) || (useNativeDate ? toISO : to)){
+      if(fromISO || toISO){
         state.reportsFilter.mode = "RANGE";
       }
       saveState();
@@ -4678,29 +4704,6 @@ function __bindListMgmtHandlers(){
 
 
 
-
-function applyMDYMaskInput(el){
-  if(!el) return;
-  const fmt = (digits)=>{
-    const d = (digits||"").replace(/\D/g,"").slice(0,8);
-    const mm = d.slice(0,2);
-    const dd = d.slice(2,4);
-    const yy = d.slice(4,8);
-    if(d.length <= 2) return mm;
-    if(d.length <= 4) return mm + "/" + dd;
-    return mm + "/" + dd + "/" + yy;
-  };
-  // format initial
-  el.value = fmt(el.value);
-  el.addEventListener("input", ()=>{
-    const start = el.selectionStart || 0;
-    const before = el.value;
-    el.value = fmt(el.value);
-    // best-effort caret: move to end if slashes inserted
-    const delta = el.value.length - before.length;
-    try{ el.setSelectionRange(start + delta, start + delta); }catch{}
-  });
-}
 
 function renderHelp(){
   getApp().innerHTML = `

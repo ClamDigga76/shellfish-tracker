@@ -282,6 +282,11 @@ header{padding:14px 18px 12px}
 .dateRow .datePill{flex:1}
 .dateRow .todayBtn{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(232,238,252,.92);font-weight:700}
 
+.datePillWrap{position:relative;display:block;flex:1;min-width:0}
+.datePillWrap > input[type="date"]{position:relative;z-index:2;background:transparent}
+.datePillWrap .datePillPlaceholder{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);z-index:1;pointer-events:none;color:rgba(232,238,252,.58);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.datePillWrap:not(.is-empty) .datePillPlaceholder{display:none}
+
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .rateLine{margin-top:-6px;margin-bottom:8px}
 .rate{color:rgba(232,238,252,.82);font-weight:700}
