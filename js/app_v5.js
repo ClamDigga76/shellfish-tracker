@@ -2525,10 +2525,11 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
     ${renderPageHeader("new")}
 
     <div class="card formCard">
+      <form id="newTripForm">
 
       <section class="trip-section">
       <div class="field">
-        <div class="fieldLabel overline center">HARVEST DATE</div>
+        <label class="fieldLabel overline center" for="t_date">HARVEST DATE</label>
         <div class="dateRow">
           <span class="dateIcon">${iconSvg("calendar")}</span>
           <input class="input datePill" id="t_date" type="date" value="${escapeHtml(String(draft.dateISO||isoToday()).slice(0,10))}" />
@@ -2540,11 +2541,11 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
 
       <section class="trip-section">
       <div class="field">
-        <div class="fieldLabel overline center">DEALERS</div>
+        <label class="fieldLabel overline center" for="t_dealer">DEALERS</label>
         ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
         <div class="selectWithBtn">
           <div class="selectRowWrap">
-            <select class="input" id="t_dealer" aria-label="Select Dealer">
+            <select class="input" id="t_dealer">
               ${dealerOptions}
             </select>
             <span class="chev">›</span>
@@ -2559,14 +2560,14 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       <section class="trip-section">
       <div class="grid2">
         <div class="field">
-          <div class="fieldLabel overline">POUNDS</div>
+          <label class="fieldLabel overline" for="t_pounds">POUNDS</label>
           <div class="inputWrap">
             <input class="input inputWithSuffix" id="t_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
             <span class="unitSuffix lbsBlue">lbs</span>
           </div>
         </div>
         <div class="field">
-          <div class="fieldLabel overline">AMOUNT</div>
+          <label class="fieldLabel overline" for="t_amount">AMOUNT</label>
           <div class="inputWrap">
             <span class="moneyPrefix moneyGreen">$</span>
             <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" enterkeyhint="done" placeholder="0.00" value="${escapeHtml(String(amountVal))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
@@ -2579,11 +2580,11 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
 
       <section class="trip-section">
       <div class="field">
-        <div class="fieldLabel overline center">AREA</div>
+        <label class="fieldLabel overline center" for="t_area">AREA</label>
         ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
         <div class="selectWithBtn">
           <div class="selectRowWrap">
-            <select class="input" id="t_area" aria-label="Select Area">
+            <select class="input" id="t_area">
               ${areaOptions}
             </select>
             <span class="chev">›</span>
@@ -2598,11 +2599,13 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       <section class="trip-section trip-actions">
       <div class="tripActionBar">
   <div class="tripActionRow">
-    <button class="btn primary" id="saveTrip" type="button" disabled>Save Trip</button>
+    <button class="btn primary" id="saveTrip" type="submit" disabled>Save Trip</button>
     <button class="btn danger" id="clearDraft" type="button">Clear</button>
   </div>
 </div>
 </section>
+
+      </form>
 
     </div>
   `;
@@ -2644,6 +2647,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       position: "center",
       html: `
         <div class="field">
+          <label class="srOnly" for="${inputId}">${escapeHtml(label)} name</label>
           <input class="input" id="${inputId}" placeholder="${escapeHtml(placeholder)}" autocomplete="off" />
           <div class="modalErr" id="${errId}" style="display:none"></div>
         </div>
@@ -2899,9 +2903,15 @@ commitTripFromDraft({
       state._savingTrip = false; saveState();
     }
   };
+  const newTripForm = document.getElementById("newTripForm");
+  if(newTripForm){
+    newTripForm.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      onSaveTrip();
+    });
+  }
   if(btnSave){
     // iOS standalone can occasionally miss 'click'—bind both.
-    btnSave.onclick = onSaveTrip;
     btnSave.addEventListener("touchend", (e)=>{ if(btnSave.disabled) return; e.preventDefault(); onSaveTrip(); }, {passive:false});
   }
 const btnClear = document.getElementById("clearDraft");
@@ -3011,31 +3021,31 @@ getApp().innerHTML = `
     </div>
 
     <div class="card">
-      <div class="form">
+      <form class="form" id="reviewTripForm">
         <div class="field">
-          <div class="label">Harvest date</div>
+          <label class="label" for="r_date">Harvest date</label>
           <input class="input" id="r_date" type="date" value="${escapeHtml(String(d.dateISO||"").slice(0,10))}" />
         </div>
 
         <div class="field">
-          <div class="label">Dealer</div>
+          <label class="label" for="r_dealer">Dealer</label>
           ${renderTopDealerChips(topDealersR, d.dealer, "topDealersR")}<input class="input" id="r_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(d.dealer||""))}" />
           <div id="r_dealerSugg"></div>
           <div id="r_dealerPrompt"></div>
         </div>
 
         <div class="field">
-          <div class="label">Pounds</div>
+          <label class="label" for="r_pounds">Pounds</label>
           <input class="input" id="r_pounds" type="text" inputmode="decimal" enterkeyhint="next" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" value="${escapeHtml(String(d.pounds??""))}" />
         </div>
 
         <div class="field">
-          <div class="label">Amount</div>
+          <label class="label" for="r_amount">Amount</label>
           <input class="input" id="r_amount" type="text" inputmode="decimal" enterkeyhint="done" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" value="${escapeHtml(String(amountDispR))}" />
         </div>
 
         <div class="field">
-          <div class="label">Area</div>
+          <label class="label" for="r_area">Area</label>
           ${renderTopAreaChips(topAreasR, d.area, "topAreasR")}
           <select class="select" id="r_area">
             ${areaOptionsR}
@@ -3052,10 +3062,10 @@ getApp().innerHTML = `
         ` : ``}
 
         <div class="actions">
-          <button class="btn good" id="confirmSave">Confirm & Save Trip</button>
-          <button class="btn ghost" id="cancelReview">Cancel</button>
+          <button class="btn good" id="confirmSave" type="submit">Confirm & Save Trip</button>
+          <button class="btn ghost" id="cancelReview" type="button">Cancel</button>
         </div>
-      </div>
+      </form>
     </div>
   `;
 
@@ -3314,8 +3324,9 @@ if(elDealerLive){
 
   // Ensure pill reflects whatever is currently in the inputs.
   updateReviewDerived();
-  const __confirmSave = document.getElementById("confirmSave");
-  if(__confirmSave) __confirmSave.onclick = ()=>{
+  const reviewTripForm = document.getElementById("reviewTripForm");
+  if(reviewTripForm) reviewTripForm.addEventListener("submit", (e)=>{
+    e.preventDefault();
     const elDate = document.getElementById("r_date");
     const elDealer = document.getElementById("r_dealer");
     const elPounds = document.getElementById("r_pounds");
@@ -3331,7 +3342,7 @@ if(elDealerLive){
         area: elArea.value
       }
     });
-  };
+  });
 }
 
 function renderEditTrip(){
@@ -3392,29 +3403,29 @@ function renderEditTrip(){
     </div>
 
     <div class="card">
-      <div class="form">
+      <form class="form" id="editTripForm">
         <div class="field">
-          <div class="label">Harvest date</div>
+          <label class="label" for="e_date">Harvest date</label>
           <input class="input" id="e_date" type="date" value="${escapeHtml(String(draft.dateISO||"").slice(0,10))}" />
         </div>
 
         <div class="field">
-          <div class="label">Dealer</div>
+          <label class="label" for="e_dealer">Dealer</label>
           <input class="input" id="e_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(draft.dealer||""))}" />
         </div>
 
         <div class="field">
-          <div class="label">Pounds</div>
+          <label class="label" for="e_pounds">Pounds</label>
           <input class="input" id="e_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${String(draft.pounds??"")}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
         </div>
 
         <div class="field">
-          <div class="label">Amount</div>
+          <label class="label" for="e_amount">Amount</label>
           <input class="input" id="e_amount" type="text" inputmode="decimal" enterkeyhint="done" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
         </div>
 
         <div class="field">
-          <div class="label">Area</div>
+          <label class="label" for="e_area">Area</label>
           ${renderTopAreaChips(topAreasE, draft.area, "topAreasE")}
           <select class="select" id="e_area">
             ${areaOptions}
@@ -3422,11 +3433,11 @@ function renderEditTrip(){
         </div>
 
         <div class="actions">
-          <button class="btn primary" id="saveEdit">Save Changes</button>
-          <button class="btn" id="navCancel">Cancel</button>
-          <button class="btn danger" id="deleteTrip">Delete</button>
+          <button class="btn primary" id="saveEdit" type="submit">Save Changes</button>
+          <button class="btn" id="navCancel" type="button">Cancel</button>
+          <button class="btn danger" id="deleteTrip" type="button">Delete</button>
         </div>
-      </div>
+      </form>
     </div>
   `;
 
@@ -3490,7 +3501,9 @@ function renderEditTrip(){
     });
   }
 
-  document.getElementById("saveEdit").onclick = ()=>{
+  const editTripForm = document.getElementById("editTripForm");
+  if(editTripForm) editTripForm.addEventListener("submit", (e)=>{
+    e.preventDefault();
     commitTripFromDraft({
       mode: "edit",
       editId: id,
@@ -3502,7 +3515,7 @@ function renderEditTrip(){
         area: elArea.value
       }
     });
-  };
+  });
 
   document.getElementById("deleteTrip").onclick = ()=>{
     if(!confirm("Delete this trip?")) return;
