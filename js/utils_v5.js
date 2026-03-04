@@ -32,11 +32,14 @@ export function pad2(n){
   return String(n).padStart(2, "0");
 }
 
-export function formatDateMDY(iso){
+export function formatDateDisplay(iso){
   const p = String(iso || "").split("-");
   if(p.length !== 3) return iso || "";
-  return p[1] + "/" + p[2] + "/" + p[0];
+  return p[2] + "/" + p[1] + "/" + p[0];
 }
+
+// Back-compat alias (older call sites still reference this name).
+export const formatDateMDY = formatDateDisplay;
 
 export function parseMDYToISO(mdy){
   const s = String(mdy || "").trim();
