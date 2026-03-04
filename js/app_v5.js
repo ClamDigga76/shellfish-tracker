@@ -11,7 +11,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 
@@ -271,24 +271,43 @@ window.addEventListener("appinstalled", ()=>{
 
 function installModal({ title, body, primaryText="Install", onPrimary }){
   return new Promise((resolve)=>{
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const el = document.createElement("div");
     el.className = "modalOverlay";
     el.innerHTML = `
-      <div class="modalCard card">
+      <div class="modalCard card" role="dialog" aria-modal="true">
         <b>${escapeHtml(title||"Install")}</b>
         ${body ? `<div class="muted small mt8 lh135 preWrap">${escapeHtml(body)}</div>` : ""}
         <div class="row mt14 gap10 jcEnd wrap">
-          <button class="btn" id="im_cancel">Not now</button>
-          <button class="btn primary" id="im_yes">${escapeHtml(primaryText)}</button>
+          <button class="btn" id="im_cancel" type="button">Not now</button>
+          <button class="btn primary" id="im_yes" type="button">${escapeHtml(primaryText)}</button>
         </div>
       </div>
     `;
+
     const cleanup = (v)=>{
+      el.removeEventListener("pointerdown", onBackdrop);
+      el.removeEventListener("click", onBackdrop);
+      unlockBodyScroll(el);
       try{ el.remove(); }catch(_){}
+      if(opener && document.contains(opener)){
+        try{ opener.focus({ preventScroll: true }); }catch(_){ }
+      }
       resolve(v);
     };
-    el.addEventListener("click", (e)=>{ if(e.target === el) cleanup(false); });
+
+    const onBackdrop = (e)=>{
+      if(e.target !== el) return;
+      e.preventDefault();
+      e.stopPropagation();
+      cleanup(false);
+    };
+
+    el.addEventListener("pointerdown", onBackdrop);
+    el.addEventListener("click", onBackdrop);
     document.body.appendChild(el);
+    lockBodyScroll(el);
+    focusFirstFocusable(el.querySelector(".modalCard"));
 
     el.querySelector("#im_cancel")?.addEventListener("click", ()=>cleanup(false));
     el.querySelector("#im_yes")?.addEventListener("click", async ()=>{
@@ -349,26 +368,44 @@ async function maybeOfferInstallAfterFirstSave(){
 // v59: simple confirm modal (Yes/Cancel)
 function confirmSaveModal({ title="Save this trip?", body="" } = {}){
   return new Promise((resolve)=>{
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const el = document.createElement("div");
     el.className = "modalOverlay";
     el.innerHTML = `
-      <div class="modalCard card">
+      <div class="modalCard card" role="dialog" aria-modal="true">
         <b>${escapeHtml(title)}</b>
         ${body ? `<div class="muted small mt8 preWrap">${escapeHtml(body)}</div>` : ""}
         <div class="row mt14 gap10 jcEnd">
-          <button class="btn" id="m_cancel">Cancel</button>
-          <button class="btn primary" id="m_yes">Yes, Save</button>
+          <button class="btn" id="m_cancel" type="button">Cancel</button>
+          <button class="btn primary" id="m_yes" type="button">Yes, Save</button>
         </div>
       </div>
     `;
 
     const cleanup = (v)=>{
+      el.removeEventListener("pointerdown", onBackdrop);
+      el.removeEventListener("click", onBackdrop);
+      unlockBodyScroll(el);
       try{ el.remove(); }catch{}
+      if(opener && document.contains(opener)){
+        try{ opener.focus({ preventScroll: true }); }catch(_){ }
+      }
       resolve(v);
     };
 
-    el.addEventListener("click", (e)=>{ if(e.target === el) cleanup(false); });
+    const onBackdrop = (e)=>{
+      if(e.target !== el) return;
+      e.preventDefault();
+      e.stopPropagation();
+      cleanup(false);
+    };
+
+    el.addEventListener("pointerdown", onBackdrop);
+    el.addEventListener("click", onBackdrop);
     document.body.appendChild(el);
+    lockBodyScroll(el);
+    focusFirstFocusable(el.querySelector(".modalCard"));
+
     el.querySelector("#m_cancel")?.addEventListener("click", ()=>cleanup(false));
     el.querySelector("#m_yes")?.addEventListener("click", ()=>cleanup(true));
   });

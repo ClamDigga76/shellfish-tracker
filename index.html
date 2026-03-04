@@ -720,6 +720,12 @@ header{padding:14px 18px 12px}
 .chipGrid .chip{ width:100%; justify-content:center; }
 
 
+
+body.scrollLock{
+  overflow:hidden;
+  overscroll-behavior:none;
+}
+
 /* v59: modal confirm overlay */
 .modalOverlay{
   position:fixed; inset:0;
@@ -729,6 +735,7 @@ header{padding:14px 18px 12px}
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   z-index:9999;
+  pointer-events:auto;
 }
 .modalCard{ width:min(420px, 100%); }
 
@@ -761,6 +768,7 @@ header{padding:14px 18px 12px}
   background:rgba(0,0,0,.45);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  pointer-events:auto;
 }
 .modalRoot.hidden{ display:none; }
 .modalSheet{
