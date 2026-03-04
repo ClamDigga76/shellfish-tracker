@@ -2525,6 +2525,20 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
   return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
 }).concat(`<option value="${dealerAddSentinel}">+ Add new Dealer</option>`).join("");
 
+const buildChipOwnedOptions = (kind)=>{
+  const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
+  const nice = kind === "dealer" ? "Dealer" : "Area";
+  const choices = getQuickChipChoices(kind);
+  return [""].concat(choices).map((v)=>{
+    const value = String(v || "").trim();
+    const label = value || "Select";
+    return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+  }).concat(`<option value="${addSentinel}">+ Add new ${nice}</option>`).join("");
+};
+
+const dealerChipOwnedOptions = buildChipOwnedOptions("dealer");
+const areaChipOwnedOptions = buildChipOwnedOptions("area");
+
 ;getApp().innerHTML = `
     ${renderPageHeader("new")}
 
@@ -2608,6 +2622,13 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
   </div>
 </div>
 </section>
+
+      <select id="chipOwnedDealerPicker" aria-hidden="true" tabindex="-1" style="position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none">
+        ${dealerChipOwnedOptions}
+      </select>
+      <select id="chipOwnedAreaPicker" aria-hidden="true" tabindex="-1" style="position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none">
+        ${areaChipOwnedOptions}
+      </select>
 
       </form>
 
@@ -2962,9 +2983,11 @@ const btnClear = document.getElementById("clearDraft");
     elArea.addEventListener("change", persistDraft);
   }
 
-  let chipCustomizeKind = "";
+  const chipOwnedDealerPicker = document.getElementById("chipOwnedDealerPicker");
+  const chipOwnedAreaPicker = document.getElementById("chipOwnedAreaPicker");
+  let chipPickerState = { kind: "", slot: -1 };
+
   const handleSelectAddNew = (kind, selectEl)=>{
-    if(chipCustomizeKind && chipCustomizeKind === kind) return false;
     const sentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
     const current = String(selectEl?.value || "");
     if(current !== sentinel) return false;
@@ -2982,12 +3005,83 @@ const btnClear = document.getElementById("clearDraft");
     return true;
   };
 
+  const refreshChipOwnedPicker = (kind, selectEl, preferredValue)=>{
+    if(!selectEl) return;
+    const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
+    const nice = kind === "dealer" ? "Dealer" : "Area";
+    const optionsHtml = [""].concat(getQuickChipChoices(kind)).map((v)=>{
+      const value = String(v || "").trim();
+      const label = value || "Select";
+      return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+    }).concat(`<option value="${addSentinel}">+ Add new ${nice}</option>`).join("");
+    selectEl.innerHTML = optionsHtml;
+
+    const next = String(preferredValue || "").trim();
+    if(next && !Array.from(selectEl.options || []).some(o=>String(o?.value || "") === next)){
+      const opt = document.createElement("option");
+      opt.value = next;
+      opt.textContent = next;
+      selectEl.insertBefore(opt, selectEl.querySelector(`option[value="${addSentinel}"]`) || null);
+    }
+    selectEl.value = next;
+  };
+
+  const openChipOwnedPicker = ({ kind, chipIndex, chipValue })=>{
+    const slot = Number(chipIndex);
+    if(slot < 0) return;
+    const selectEl = kind === "dealer" ? chipOwnedDealerPicker : chipOwnedAreaPicker;
+    if(!selectEl) return;
+    chipPickerState = { kind, slot };
+    refreshChipOwnedPicker(kind, selectEl, String(chipValue || "").trim());
+
+    try{
+      if(typeof selectEl.showPicker === "function") selectEl.showPicker();
+      else{
+        selectEl.focus({ preventScroll: true });
+        selectEl.click();
+      }
+    }catch(_){
+      try{ selectEl.focus({ preventScroll: true }); selectEl.click(); }catch(__){}
+    }
+  };
+
+  const onChipOwnedPickerChange = (kind)=>{
+    const selectEl = kind === "dealer" ? chipOwnedDealerPicker : chipOwnedAreaPicker;
+    if(!selectEl) return;
+    if(chipPickerState.kind !== kind || chipPickerState.slot < 0) return;
+
+    const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
+    const picked = String(selectEl.value || "").trim();
+    const slot = chipPickerState.slot;
+    chipPickerState = { kind: "", slot: -1 };
+
+    if(picked === addSentinel){
+      openQuickAdd(kind, {
+        onAdded: (addedValue)=>{
+          const value = String(addedValue || "").trim();
+          if(!value) return;
+          refreshChipOwnedPicker(kind, selectEl, value);
+          setQuickChipMapping(kind, slot, value);
+          renderNewTrip();
+        }
+      });
+      return;
+    }
+
+    if(!picked) return;
+    setQuickChipMapping(kind, slot, picked);
+    renderNewTrip();
+  };
+
   elDealer?.addEventListener("change", ()=>{
     handleSelectAddNew("dealer", elDealer);
   });
   elArea?.addEventListener("change", ()=>{
     handleSelectAddNew("area", elArea);
   });
+
+  chipOwnedDealerPicker?.addEventListener("change", ()=>onChipOwnedPickerChange("dealer"));
+  chipOwnedAreaPicker?.addEventListener("change", ()=>onChipOwnedPickerChange("area"));
 
   if(topAreaWrap && elArea){
   topAreaWrap.addEventListener("click", (e)=>{
@@ -3020,91 +3114,19 @@ if(topDealerWrap && elDealer){
   });
 }
 
-  const openChipPickerForCustomize = ({ kind, chipIndex, chipValue, selectEl })=>{
-    if(!selectEl || chipIndex < 0) return;
-    const sentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
-    const originalSelectValue = String(selectEl.value || "");
-    const nextChipValue = String(chipValue || "").trim();
-    if(!nextChipValue) return;
-    chipCustomizeKind = kind;
-
-    if(!Array.from(selectEl.options || []).some(o=>String(o?.value||"") === nextChipValue)){
-      const opt = document.createElement("option");
-      opt.value = nextChipValue;
-      opt.textContent = nextChipValue;
-      selectEl.insertBefore(opt, selectEl.querySelector(`option[value="${sentinel}"]`) || null);
-    }
-    selectEl.value = nextChipValue;
-
-    const onPickerChange = ()=>{
-      const picked = String(selectEl.value || "").trim();
-      chipCustomizeKind = "";
-      selectEl.removeEventListener("change", onPickerChange);
-
-      if(picked === sentinel){
-        selectEl.value = originalSelectValue;
-        state.draft = state.draft || {};
-        if(kind === "dealer") state.draft.dealer = originalSelectValue;
-        else state.draft.area = originalSelectValue;
-        saveDraft();
-        updateSaveEnabled();
-        updateRateLine();
-        openQuickAdd(kind, {
-          onAdded: (addedValue)=>{
-            const value = String(addedValue || "").trim();
-            if(!value) return;
-            setQuickChipMapping(kind, chipIndex, value);
-            renderNewTrip();
-          }
-        });
-        return;
-      }
-
-      if(picked){
-        setQuickChipMapping(kind, chipIndex, picked);
-      }
-      selectEl.value = originalSelectValue;
-      state.draft = state.draft || {};
-      if(kind === "dealer") state.draft.dealer = originalSelectValue;
-      else state.draft.area = originalSelectValue;
-      saveDraft();
-      updateSaveEnabled();
-      updateRateLine();
-      renderNewTrip();
-    };
-
-    selectEl.addEventListener("change", onPickerChange, { once: true });
-    setTimeout(()=>{
-      if(chipCustomizeKind === kind) chipCustomizeKind = "";
-    }, 4000);
-    try{
-      if(typeof selectEl.showPicker === "function") selectEl.showPicker();
-      else{
-        selectEl.focus({ preventScroll: true });
-        selectEl.click();
-      }
-    }catch(_){
-      try{ selectEl.focus({ preventScroll: true }); selectEl.click(); }catch(__){}
-    }
-  };
-
   bindQuickChipLongPress(topAreaWrap, "button[data-area]", (btn)=>{
-    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
-    openChipPickerForCustomize({
+    openChipOwnedPicker({
       kind: "area",
-      chipIndex,
-      chipValue: String(btn?.getAttribute("data-area") || ""),
-      selectEl: elArea
+      chipIndex: Number(btn?.getAttribute("data-chip-index") || -1),
+      chipValue: String(btn?.getAttribute("data-area") || "")
     });
   });
 
   bindQuickChipLongPress(topDealerWrap, "button[data-dealer]", (btn)=>{
-    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
-    openChipPickerForCustomize({
+    openChipOwnedPicker({
       kind: "dealer",
-      chipIndex,
-      chipValue: String(btn?.getAttribute("data-dealer") || ""),
-      selectEl: elDealer
+      chipIndex: Number(btn?.getAttribute("data-chip-index") || -1),
+      chipValue: String(btn?.getAttribute("data-dealer") || "")
     });
   });
 
