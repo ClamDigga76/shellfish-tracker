@@ -2525,10 +2525,15 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
   return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
 }).concat(`<option value="${dealerAddSentinel}">+ Add new Dealer</option>`).join("");
 
+const getBarSelectChoices = (kind)=>{
+  if(kind === "dealer") return [...dealerListForSelect];
+  return Array.isArray(state.areas) ? [...state.areas] : [];
+};
+
 const buildChipOwnedOptions = (kind)=>{
   const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
   const nice = kind === "dealer" ? "Dealer" : "Area";
-  const choices = getQuickChipChoices(kind);
+  const choices = getBarSelectChoices(kind);
   return [""].concat(choices).map((v)=>{
     const value = String(v || "").trim();
     const label = value || "Select";
@@ -3009,7 +3014,7 @@ const btnClear = document.getElementById("clearDraft");
     if(!selectEl) return;
     const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
     const nice = kind === "dealer" ? "Dealer" : "Area";
-    const optionsHtml = [""].concat(getQuickChipChoices(kind)).map((v)=>{
+    const optionsHtml = [""].concat(getBarSelectChoices(kind)).map((v)=>{
       const value = String(v || "").trim();
       const label = value || "Select";
       return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
