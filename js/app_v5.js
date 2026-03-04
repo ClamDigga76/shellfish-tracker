@@ -2561,7 +2561,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         <div class="field">
           <div class="fieldLabel overline">POUNDS</div>
           <div class="inputWrap">
-            <input class="input inputWithSuffix" id="t_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}"  pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+            <input class="input inputWithSuffix" id="t_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
             <span class="unitSuffix lbsBlue">lbs</span>
           </div>
         </div>
@@ -2569,7 +2569,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
           <div class="fieldLabel overline">AMOUNT</div>
           <div class="inputWrap">
             <span class="moneyPrefix moneyGreen">$</span>
-            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" enterkeyhint="done" placeholder="0.00" value="${escapeHtml(String(amountVal))}"  pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" enterkeyhint="done" placeholder="0.00" value="${escapeHtml(String(amountVal))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
           </div>
         </div>
       </div>
@@ -3026,12 +3026,12 @@ getApp().innerHTML = `
 
         <div class="field">
           <div class="label">Pounds</div>
-          <input class="input" id="r_pounds" inputmode="decimal" value="${escapeHtml(String(d.pounds??""))}" />
+          <input class="input" id="r_pounds" type="text" inputmode="decimal" enterkeyhint="next" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" value="${escapeHtml(String(d.pounds??""))}" />
         </div>
 
         <div class="field">
           <div class="label">Amount</div>
-          <input class="input" id="r_amount" inputmode="decimal" value="${escapeHtml(String(amountDispR))}" />
+          <input class="input" id="r_amount" type="text" inputmode="decimal" enterkeyhint="done" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" value="${escapeHtml(String(amountDispR))}" />
         </div>
 
         <div class="field">
@@ -3405,12 +3405,12 @@ function renderEditTrip(){
 
         <div class="field">
           <div class="label">Pounds</div>
-          <input class="input" id="e_pounds" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${String(draft.pounds??"")}"  pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+          <input class="input" id="e_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${String(draft.pounds??"")}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
         </div>
 
         <div class="field">
           <div class="label">Amount</div>
-          <input class="input" id="e_amount" inputmode="decimal" enterkeyhint="done" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}"  pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+          <input class="input" id="e_amount" type="text" inputmode="decimal" enterkeyhint="done" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
         </div>
 
         <div class="field">
