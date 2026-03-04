@@ -2280,8 +2280,10 @@ function renderHome(
       </div>
       ${f==="RANGE" ? `
         <div class="row mt10 gap10 wrap dateRangeRow">
-          <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(formatReportDateValue(hf.from))}" style="flex:1;min-width:160px" />
-          <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(formatReportDateValue(hf.to))}" style="flex:1;min-width:160px" />
+          <div class="homeRangeInputs">
+            <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(parseReportDateToISO(hf.from))}" />
+            <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(parseReportDateToISO(hf.to))}" />
+          </div>
           <button class="btn" id="homeRangeApply">Apply</button>
         </div>
       ` : ``}
