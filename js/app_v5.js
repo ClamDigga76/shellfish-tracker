@@ -11,7 +11,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, attachLongPress } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;
@@ -5437,10 +5437,84 @@ function bindAreaChips(containerId, onPick){
 
 function bindQuickChipLongPress(containerEl, selector, onLongPress){
   if(!containerEl || !selector || typeof onLongPress !== "function") return;
-  containerEl.querySelectorAll(selector).forEach((btn)=>{
-    attachLongPress(btn, ()=>onLongPress(btn), {
-      thresholdMs: QUICK_CHIP_LONG_PRESS_MS,
-      moveThresholdPx: QUICK_CHIP_MOVE_CANCEL_PX,
-    });
-  });
+  if(containerEl.__quickChipLongPressBound) return;
+  containerEl.__quickChipLongPressBound = true;
+
+  let timer = null;
+  let pointerId = null;
+  let startX = 0;
+  let startY = 0;
+  let activeBtn = null;
+  let longPressFired = false;
+  let suppressNextClickFor = null;
+
+  const clearPending = ()=>{
+    if(timer){
+      clearTimeout(timer);
+      timer = null;
+    }
+    pointerId = null;
+    activeBtn = null;
+  };
+
+  const findChipBtn = (target)=>{
+    if(!target || !target.closest) return null;
+    const btn = target.closest(selector);
+    return btn && containerEl.contains(btn) ? btn : null;
+  };
+
+  containerEl.addEventListener("pointerdown", (e)=>{
+    const btn = findChipBtn(e.target);
+    if(!btn) return;
+    if(e.pointerType === "mouse" && e.button !== 0) return;
+
+    clearPending();
+    longPressFired = false;
+    pointerId = e.pointerId;
+    startX = Number(e.clientX || 0);
+    startY = Number(e.clientY || 0);
+    activeBtn = btn;
+
+    timer = setTimeout(()=>{
+      timer = null;
+      if(!activeBtn) return;
+      longPressFired = true;
+      suppressNextClickFor = activeBtn;
+      e.preventDefault();
+      onLongPress(activeBtn);
+    }, QUICK_CHIP_LONG_PRESS_MS);
+  }, { passive: false });
+
+  containerEl.addEventListener("pointermove", (e)=>{
+    if(pointerId == null || e.pointerId !== pointerId) return;
+    const dx = Number(e.clientX || 0) - startX;
+    const dy = Number(e.clientY || 0) - startY;
+    if((dx*dx + dy*dy) > (QUICK_CHIP_MOVE_CANCEL_PX * QUICK_CHIP_MOVE_CANCEL_PX)){
+      clearPending();
+    }
+  }, { passive: true });
+
+  const clearOnPointerEnd = (e)=>{
+    if(pointerId == null || e.pointerId !== pointerId) return;
+    const shouldSuppressTap = longPressFired;
+    clearPending();
+    if(shouldSuppressTap){
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+    }
+    longPressFired = false;
+  };
+
+  containerEl.addEventListener("pointerup", clearOnPointerEnd);
+  containerEl.addEventListener("pointercancel", clearOnPointerEnd);
+
+  containerEl.addEventListener("click", (e)=>{
+    const btn = findChipBtn(e.target);
+    if(!btn || btn !== suppressNextClickFor) return;
+    suppressNextClickFor = null;
+    e.preventDefault();
+    e.stopPropagation();
+    if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+  }, true);
 }
