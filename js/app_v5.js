@@ -11,9 +11,11 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, attachLongPress } from "./utils_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
+const QUICK_CHIP_LONG_PRESS_MS = 500;
+const QUICK_CHIP_MOVE_CANCEL_PX = 10;
 
 // Backup meta (local-only; no user data duplication)
 const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
@@ -2979,6 +2981,38 @@ if(topDealerWrap && elDealer){
   });
 }
 
+  bindQuickChipLongPress(topAreaWrap, "button[data-area]", (btn)=>{
+    const a = String(btn?.getAttribute("data-area") || "");
+    openQuickChipChangeModal({
+      label: "Area",
+      value: a,
+      onApply: (next)=>{
+        elArea.value = next;
+        state.draft = state.draft || {};
+        state.draft.area = next;
+        saveDraft();
+        updateSaveEnabled();
+        updateRateLine();
+      }
+    });
+  });
+
+  bindQuickChipLongPress(topDealerWrap, "button[data-dealer]", (btn)=>{
+    const d = String(btn?.getAttribute("data-dealer") || "");
+    openQuickChipChangeModal({
+      label: "Dealer",
+      value: d,
+      onApply: (next)=>{
+        elDealer.value = next;
+        state.draft = state.draft || {};
+        state.draft.dealer = next;
+        saveDraft();
+        updateSaveEnabled();
+        updateRateLine();
+      }
+    });
+  });
+
   // Initial state
   updateSaveEnabled();
       updateRateLine();
@@ -3336,6 +3370,30 @@ if(elDealerLive){
     });
   }
 
+  bindQuickChipLongPress(topAreaWrapR, "button[data-area]", (btn)=>{
+    const a = String(btn?.getAttribute("data-area") || "");
+    openQuickChipChangeModal({
+      label: "Area",
+      value: a,
+      onApply: (next)=>{
+        elAreaLive.value = next;
+        updateReviewDerived();
+      }
+    });
+  });
+
+  bindQuickChipLongPress(topDealerWrapR, "button[data-dealer]", (btn)=>{
+    const d = String(btn?.getAttribute("data-dealer") || "");
+    openQuickChipChangeModal({
+      label: "Dealer",
+      value: d,
+      onApply: (next)=>{
+        elDealerLive.value = next;
+        updateReviewDerived();
+      }
+    });
+  });
+
   // Ensure pill reflects whatever is currently in the inputs.
   updateReviewDerived();
   const reviewTripForm = document.getElementById("reviewTripForm");
@@ -3479,6 +3537,14 @@ function renderEditTrip(){
   const elArea = document.getElementById("e_area");
 
   bindAreaChips("topAreasE", (a)=>{ elArea.value = String(a||""); });
+  bindQuickChipLongPress(document.getElementById("topAreasE"), "button[data-area]", (btn)=>{
+    const a = String(btn?.getAttribute("data-area") || "");
+    openQuickChipChangeModal({
+      label: "Area",
+      value: a,
+      onApply: (next)=>{ elArea.value = next; }
+    });
+  });
   bindDatePill("e_date");
 
   bindNavHandlers(state);
@@ -5065,5 +5131,68 @@ function bindAreaChips(containerId, onPick){
     if(!btn) return;
     const a = btn.getAttribute("data-area") || "";
     onPick(String(a));
+  });
+}
+
+function bindQuickChipLongPress(containerEl, selector, onLongPress){
+  if(!containerEl || !selector || typeof onLongPress !== "function") return;
+  containerEl.querySelectorAll(selector).forEach((btn)=>{
+    attachLongPress(btn, ()=>onLongPress(btn), {
+      thresholdMs: QUICK_CHIP_LONG_PRESS_MS,
+      moveThresholdPx: QUICK_CHIP_MOVE_CANCEL_PX,
+    });
+  });
+}
+
+function openQuickChipChangeModal({ label, value, onApply }){
+  const title = `Change ${String(label || "Value")}`;
+  const inputId = "quickChipChangeInput";
+  const saveId = "quickChipChangeSave";
+  const cancelId = "quickChipChangeCancel";
+  const errId = "quickChipChangeErr";
+  openModal({
+    title,
+    backdropClose: false,
+    escClose: false,
+    showCloseButton: false,
+    position: "center",
+    html: `
+      <div class="field">
+        <label class="srOnly" for="${inputId}">${escapeHtml(String(label || "Value"))}</label>
+        <input class="input" id="${inputId}" value="${escapeHtml(String(value || ""))}" maxlength="40" enterkeyhint="done" />
+        <div class="modalErr" id="${errId}" style="display:none"></div>
+      </div>
+      <div class="modalActions">
+        <button class="btn" id="${cancelId}" type="button">Cancel</button>
+        <button class="btn primary" id="${saveId}" type="button">Apply</button>
+      </div>
+    `,
+    onOpen: ()=>{
+      const elIn = document.getElementById(inputId);
+      const elErr = document.getElementById(errId);
+      const showErr = (msg)=>{
+        if(!elErr) return;
+        elErr.textContent = msg;
+        elErr.style.display = "block";
+      };
+      const commit = ()=>{
+        const next = String(elIn?.value || "").trim();
+        if(!next){
+          showErr(`Enter a ${String(label || "value").toLowerCase()} first.`);
+          elIn?.focus();
+          return;
+        }
+        if(typeof onApply === "function") onApply(next);
+        closeModal();
+      };
+      document.getElementById(cancelId)?.addEventListener("click", ()=>closeModal());
+      document.getElementById(saveId)?.addEventListener("click", commit);
+      elIn?.addEventListener("keydown", (e)=>{
+        if(e.key !== "Enter") return;
+        e.preventDefault();
+        commit();
+      });
+      setTimeout(()=>elIn?.focus(), 50);
+    }
   });
 }

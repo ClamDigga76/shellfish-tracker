@@ -431,3 +431,81 @@ export function closeModal(){
   }
   activeModalState = null;
 }
+
+export function attachLongPress(el, onLongPress, opts = {}){
+  if(!el || typeof onLongPress !== "function") return ()=>{};
+
+  const thresholdMs = Number(opts.thresholdMs);
+  const moveThresholdPx = Number(opts.moveThresholdPx);
+  const delay = Number.isFinite(thresholdMs) ? Math.max(1, thresholdMs) : 500;
+  const moveLimit = Number.isFinite(moveThresholdPx) ? Math.max(1, moveThresholdPx) : 10;
+
+  let timer = null;
+  let startX = 0;
+  let startY = 0;
+  let startPointerId = null;
+  let fired = false;
+  let suppressNextClick = false;
+
+  const clearPress = ()=>{
+    if(timer){
+      clearTimeout(timer);
+      timer = null;
+    }
+    startPointerId = null;
+  };
+
+  const onPointerDown = (e)=>{
+    if(e.pointerType === "mouse" && e.button !== 0) return;
+    clearPress();
+    fired = false;
+    startPointerId = e.pointerId;
+    startX = Number(e.clientX || 0);
+    startY = Number(e.clientY || 0);
+    timer = setTimeout(()=>{
+      timer = null;
+      fired = true;
+      suppressNextClick = true;
+      try{ onLongPress(e); }catch(_){ }
+    }, delay);
+  };
+
+  const onPointerMove = (e)=>{
+    if(startPointerId == null || e.pointerId !== startPointerId) return;
+    const dx = Number(e.clientX || 0) - startX;
+    const dy = Number(e.clientY || 0) - startY;
+    if((dx*dx + dy*dy) > (moveLimit*moveLimit)) clearPress();
+  };
+
+  const onPointerEnd = (e)=>{
+    if(startPointerId == null || e.pointerId !== startPointerId) return;
+    clearPress();
+    if(fired){
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const onClickCapture = (e)=>{
+    if(!suppressNextClick) return;
+    suppressNextClick = false;
+    e.preventDefault();
+    e.stopPropagation();
+    if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+  };
+
+  el.addEventListener("pointerdown", onPointerDown, { passive: true });
+  el.addEventListener("pointermove", onPointerMove, { passive: true });
+  el.addEventListener("pointerup", onPointerEnd);
+  el.addEventListener("pointercancel", onPointerEnd);
+  el.addEventListener("click", onClickCapture, true);
+
+  return ()=>{
+    clearPress();
+    el.removeEventListener("pointerdown", onPointerDown, { passive: true });
+    el.removeEventListener("pointermove", onPointerMove, { passive: true });
+    el.removeEventListener("pointerup", onPointerEnd);
+    el.removeEventListener("pointercancel", onPointerEnd);
+    el.removeEventListener("click", onClickCapture, true);
+  };
+}
