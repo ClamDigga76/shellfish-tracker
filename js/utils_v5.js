@@ -265,9 +265,60 @@ export function getTripsNewestFirst(trips){
   });
 }
 
+let overlayLockCount = 0;
+const overlayAllowTouchRoots = new Set();
+let touchMoveBlockerAttached = false;
+
+const touchMoveBlocker = (e)=>{
+  if(!overlayAllowTouchRoots.size) return;
+  const target = e.target;
+  for(const root of overlayAllowTouchRoots){
+    if(root && (target === root || root.contains(target))) return;
+  }
+  e.preventDefault();
+};
+
+function setTouchMoveBlocker(attached){
+  if(attached === touchMoveBlockerAttached) return;
+  touchMoveBlockerAttached = attached;
+  if(attached){
+    document.addEventListener("touchmove", touchMoveBlocker, { passive: false, capture: true });
+  }else{
+    document.removeEventListener("touchmove", touchMoveBlocker, { capture: true });
+  }
+}
+
+export function lockBodyScroll(allowTouchRoot){
+  overlayLockCount += 1;
+  if(allowTouchRoot) overlayAllowTouchRoots.add(allowTouchRoot);
+  document.body.classList.add("scrollLock");
+  setTouchMoveBlocker(true);
+}
+
+export function unlockBodyScroll(allowTouchRoot){
+  if(allowTouchRoot) overlayAllowTouchRoots.delete(allowTouchRoot);
+  overlayLockCount = Math.max(0, overlayLockCount - 1);
+  if(overlayLockCount === 0){
+    document.body.classList.remove("scrollLock");
+    setTouchMoveBlocker(false);
+  }
+}
+
+export function focusFirstFocusable(container){
+  if(!container) return null;
+  const target = container.querySelector("[autofocus], input:not([type='hidden']):not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex='-1'])");
+  if(target && typeof target.focus === "function"){
+    target.focus({ preventScroll: true });
+    return target;
+  }
+  return null;
+}
+
 
 // ===========================
 // v81: Modal helpers (Quick Add, etc.)
+let activeModalState = null;
+
 export function openModal({
   title,
   html,
@@ -279,6 +330,10 @@ export function openModal({
 }){
   const root = document.getElementById("modalRoot");
   if(!root) return;
+
+  closeModal();
+
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
   const isCenter = position === "center";
   root.classList.remove("hidden");
@@ -307,7 +362,15 @@ export function openModal({
     </div>
   `;
 
+  const sheet = root.querySelector(".modalSheet");
   const close = ()=>closeModal();
+
+  const closeFromBackdrop = (e)=>{
+    if(e.target !== root) return;
+    e.preventDefault();
+    e.stopPropagation();
+    close();
+  };
 
   // close button
   if(showCloseButton){
@@ -315,25 +378,30 @@ export function openModal({
   }
 
   if(backdropClose){
-    // tap backdrop closes
-    root.addEventListener("click", (e)=>{
-      if(e.target === root) close();
-    }, { once: true });
+    root.addEventListener("pointerdown", closeFromBackdrop);
+    root.addEventListener("click", closeFromBackdrop);
   }
 
+  const escHandler = (e)=>{
+    if(e.key === "Escape"){
+      e.preventDefault();
+      close();
+    }
+  };
   if(escClose){
-    // escape closes (desktop)
-    const escHandler = (e)=>{
-      if(e.key === "Escape"){
-        e.preventDefault();
-        close();
-      }
-    };
-    window.addEventListener("keydown", escHandler, { once: true });
+    window.addEventListener("keydown", escHandler);
   }
 
-  // lock background scroll (simple)
-  document.body.style.overflow = "hidden";
+  lockBodyScroll(root);
+
+  activeModalState = {
+    root,
+    opener,
+    escHandler: escClose ? escHandler : null,
+    backdropHandler: backdropClose ? closeFromBackdrop : null
+  };
+
+  focusFirstFocusable(sheet);
 
   try{ onOpen && onOpen(); }catch(_e){}
 }
@@ -341,10 +409,25 @@ export function openModal({
 export function closeModal(){
   const root = document.getElementById("modalRoot");
   if(!root) return;
+  const state = activeModalState;
+
+  if(state?.backdropHandler){
+    root.removeEventListener("pointerdown", state.backdropHandler);
+    root.removeEventListener("click", state.backdropHandler);
+  }
+  if(state?.escHandler){
+    window.removeEventListener("keydown", state.escHandler);
+  }
+
   root.classList.add("hidden");
   root.style.alignItems = "";
   root.style.paddingBottom = "";
   root.setAttribute("aria-hidden","true");
   root.innerHTML = "";
-  document.body.style.overflow = "";
+  unlockBodyScroll(root);
+
+  if(state?.opener && document.contains(state.opener)){
+    try{ state.opener.focus({ preventScroll: true }); }catch(_){ }
+  }
+  activeModalState = null;
 }
