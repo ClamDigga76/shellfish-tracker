@@ -2532,7 +2532,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         <label class="fieldLabel overline center" for="t_date">HARVEST DATE</label>
         <div class="dateRow">
           <span class="dateIcon">${iconSvg("calendar")}</span>
-          <input class="input datePill" id="t_date" type="date" value="${escapeHtml(String(draft.dateISO||isoToday()).slice(0,10))}" />
+          <input class="input datePill" id="t_date" type="date" enterkeyhint="next" value="${escapeHtml(String(draft.dateISO||isoToday()).slice(0,10))}" />
           <button class="todayBtn" id="todayBtn" type="button">Today</button>
         </div>
       </div>
@@ -2545,7 +2545,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
         <div class="selectWithBtn">
           <div class="selectRowWrap">
-            <select class="input" id="t_dealer">
+            <select class="input" id="t_dealer" autocomplete="organization" enterkeyhint="next">
               ${dealerOptions}
             </select>
             <span class="chev">›</span>
@@ -2570,7 +2570,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
           <label class="fieldLabel overline" for="t_amount">AMOUNT</label>
           <div class="inputWrap">
             <span class="moneyPrefix moneyGreen">$</span>
-            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" enterkeyhint="done" placeholder="0.00" value="${escapeHtml(String(amountVal))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountVal))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
           </div>
         </div>
       </div>
@@ -2584,7 +2584,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
         ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
         <div class="selectWithBtn">
           <div class="selectRowWrap">
-            <select class="input" id="t_area">
+            <select class="input" id="t_area" enterkeyhint="done">
               ${areaOptions}
             </select>
             <span class="chev">›</span>
@@ -2648,7 +2648,7 @@ const dealerOptions = ["", ...dealerListForSelect].map(d=>{
       html: `
         <div class="field">
           <label class="srOnly" for="${inputId}">${escapeHtml(label)} name</label>
-          <input class="input" id="${inputId}" placeholder="${escapeHtml(placeholder)}" autocomplete="off" />
+          <input class="input" id="${inputId}" placeholder="${escapeHtml(placeholder)}" autocomplete="${isDealer ? "organization" : "off"}" enterkeyhint="done" />
           <div class="modalErr" id="${errId}" style="display:none"></div>
         </div>
         <div class="modalActions">
@@ -2910,6 +2910,20 @@ commitTripFromDraft({
       onSaveTrip();
     });
   }
+  if(elAmount && elArea){
+    elAmount.addEventListener("keydown", (e)=>{
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      elArea.focus();
+    });
+  }
+  if(elArea){
+    elArea.addEventListener("keydown", (e)=>{
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      onSaveTrip();
+    });
+  }
   if(btnSave){
     // iOS standalone can occasionally miss 'click'—bind both.
     btnSave.addEventListener("touchend", (e)=>{ if(btnSave.disabled) return; e.preventDefault(); onSaveTrip(); }, {passive:false});
@@ -3024,12 +3038,12 @@ getApp().innerHTML = `
       <form class="form" id="reviewTripForm">
         <div class="field">
           <label class="label" for="r_date">Harvest date</label>
-          <input class="input" id="r_date" type="date" value="${escapeHtml(String(d.dateISO||"").slice(0,10))}" />
+          <input class="input" id="r_date" type="date" enterkeyhint="next" value="${escapeHtml(String(d.dateISO||"").slice(0,10))}" />
         </div>
 
         <div class="field">
           <label class="label" for="r_dealer">Dealer</label>
-          ${renderTopDealerChips(topDealersR, d.dealer, "topDealersR")}<input class="input" id="r_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(d.dealer||""))}" />
+          ${renderTopDealerChips(topDealersR, d.dealer, "topDealersR")}<input class="input" id="r_dealer" placeholder="Machias Bay Seafood" autocomplete="organization" enterkeyhint="next" value="${escapeHtml(String(d.dealer||""))}" />
           <div id="r_dealerSugg"></div>
           <div id="r_dealerPrompt"></div>
         </div>
@@ -3041,13 +3055,13 @@ getApp().innerHTML = `
 
         <div class="field">
           <label class="label" for="r_amount">Amount</label>
-          <input class="input" id="r_amount" type="text" inputmode="decimal" enterkeyhint="done" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" value="${escapeHtml(String(amountDispR))}" />
+          <input class="input" id="r_amount" type="text" inputmode="decimal" enterkeyhint="next" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" value="${escapeHtml(String(amountDispR))}" />
         </div>
 
         <div class="field">
           <label class="label" for="r_area">Area</label>
           ${renderTopAreaChips(topAreasR, d.area, "topAreasR")}
-          <select class="select" id="r_area">
+          <select class="select" id="r_area" enterkeyhint="done">
             ${areaOptionsR}
           </select>
         </div>
@@ -3343,6 +3357,20 @@ if(elDealerLive){
       }
     });
   });
+  if(elAmountLive && elAreaLive){
+    elAmountLive.addEventListener("keydown", (e)=>{
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      elAreaLive.focus();
+    });
+  }
+  if(elAreaLive && reviewTripForm){
+    elAreaLive.addEventListener("keydown", (e)=>{
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      reviewTripForm.requestSubmit();
+    });
+  }
 }
 
 function renderEditTrip(){
@@ -3406,12 +3434,12 @@ function renderEditTrip(){
       <form class="form" id="editTripForm">
         <div class="field">
           <label class="label" for="e_date">Harvest date</label>
-          <input class="input" id="e_date" type="date" value="${escapeHtml(String(draft.dateISO||"").slice(0,10))}" />
+          <input class="input" id="e_date" type="date" enterkeyhint="next" value="${escapeHtml(String(draft.dateISO||"").slice(0,10))}" />
         </div>
 
         <div class="field">
           <label class="label" for="e_dealer">Dealer</label>
-          <input class="input" id="e_dealer" placeholder="Machias Bay Seafood" value="${escapeHtml(String(draft.dealer||""))}" />
+          <input class="input" id="e_dealer" placeholder="Machias Bay Seafood" autocomplete="organization" enterkeyhint="next" value="${escapeHtml(String(draft.dealer||""))}" />
         </div>
 
         <div class="field">
@@ -3421,13 +3449,13 @@ function renderEditTrip(){
 
         <div class="field">
           <label class="label" for="e_amount">Amount</label>
-          <input class="input" id="e_amount" type="text" inputmode="decimal" enterkeyhint="done" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+          <input class="input" id="e_amount" type="text" inputmode="decimal" enterkeyhint="next" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
         </div>
 
         <div class="field">
           <label class="label" for="e_area">Area</label>
           ${renderTopAreaChips(topAreasE, draft.area, "topAreasE")}
-          <select class="select" id="e_area">
+          <select class="select" id="e_area" enterkeyhint="done">
             ${areaOptions}
           </select>
         </div>
@@ -3516,6 +3544,20 @@ function renderEditTrip(){
       }
     });
   });
+  if(elAmount && elArea){
+    elAmount.addEventListener("keydown", (e)=>{
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      elArea.focus();
+    });
+  }
+  if(elArea && editTripForm){
+    elArea.addEventListener("keydown", (e)=>{
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      editTripForm.requestSubmit();
+    });
+  }
 
   document.getElementById("deleteTrip").onclick = ()=>{
     if(!confirm("Delete this trip?")) return;
@@ -4373,7 +4415,7 @@ function __renderListMgmtPanel(mode){
   return (m==="dealers") ? `
     <div style="margin-top:12px">
       <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-        <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
+        <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" autocomplete="organization" enterkeyhint="done" style="flex:1;min-width:180px" />
         <button class="btn primary" id="addDealer" type="button">Add</button>
       </div>
       ${dealerRows2}
@@ -4381,7 +4423,7 @@ function __renderListMgmtPanel(mode){
   ` : `
     <div style="margin-top:12px">
       <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-        <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
+        <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" autocomplete="off" enterkeyhint="done" style="flex:1;min-width:180px" />
         <button class="btn primary" id="addArea" type="button">Add</button>
       </div>
       ${areaRows2}
@@ -4575,7 +4617,7 @@ function __renderListMgmtPanel(mode){
   return (m==="dealers") ? `
     <div style="margin-top:12px">
       <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-        <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" style="flex:1;min-width:180px" />
+        <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" autocomplete="organization" enterkeyhint="done" style="flex:1;min-width:180px" />
         <button class="btn primary" id="addDealer" type="button">Add</button>
       </div>
       ${dealerRows2}
@@ -4583,7 +4625,7 @@ function __renderListMgmtPanel(mode){
   ` : `
     <div style="margin-top:12px">
       <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-        <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" style="flex:1;min-width:180px" />
+        <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" autocomplete="off" enterkeyhint="done" style="flex:1;min-width:180px" />
         <button class="btn primary" id="addArea" type="button">Add</button>
       </div>
       ${areaRows2}
