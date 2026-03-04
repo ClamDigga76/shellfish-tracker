@@ -2503,8 +2503,8 @@ function renderNewTrip(){
 
 // Recent (last 2) unique values from saved trips (ignores filters)
 // NOTE: Chips are always shown; if none exist yet we show a muted "No recent …" line.
-const topAreas = (getLastUniqueFromTrips("area", 2));
-const topDealers = (getLastUniqueFromTrips("dealer", 2));
+const topAreas = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
+const topDealers = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
 
 const dealerListForSelect = [];
 const seenDealerKeys = new Set();
@@ -2982,34 +2982,24 @@ if(topDealerWrap && elDealer){
 }
 
   bindQuickChipLongPress(topAreaWrap, "button[data-area]", (btn)=>{
-    const a = String(btn?.getAttribute("data-area") || "");
-    openQuickChipChangeModal({
-      label: "Area",
-      value: a,
-      onApply: (next)=>{
-        elArea.value = next;
-        state.draft = state.draft || {};
-        state.draft.area = next;
-        saveDraft();
-        updateSaveEnabled();
-        updateRateLine();
-      }
+    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
+    if(chipIndex < 0) return;
+    openQuickChipCustomizeModal({
+      kind: "area",
+      chipIndex,
+      currentValue: String(btn?.getAttribute("data-area") || ""),
+      onSaved: ()=>renderNewTrip()
     });
   });
 
   bindQuickChipLongPress(topDealerWrap, "button[data-dealer]", (btn)=>{
-    const d = String(btn?.getAttribute("data-dealer") || "");
-    openQuickChipChangeModal({
-      label: "Dealer",
-      value: d,
-      onApply: (next)=>{
-        elDealer.value = next;
-        state.draft = state.draft || {};
-        state.draft.dealer = next;
-        saveDraft();
-        updateSaveEnabled();
-        updateRateLine();
-      }
+    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
+    if(chipIndex < 0) return;
+    openQuickChipCustomizeModal({
+      kind: "dealer",
+      chipIndex,
+      currentValue: String(btn?.getAttribute("data-dealer") || ""),
+      onSaved: ()=>renderNewTrip()
     });
   });
 
@@ -3045,17 +3035,11 @@ function renderReviewTrip(){
     return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
   }).join("");
 
-  const topAreasR = (getLastUniqueFromTrips("area", 3));
-  if(!topAreasR.length){
-    topAreasR.push(...(Array.isArray(state.areas)?state.areas:[]).slice(0,3));
-  }
+  const topAreasR = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 3), 3);
 
 // Top 3 most-used Dealers (from saved trips) for quick selection
   // Last 3 unique Dealers (based on entry order; ignores filters)
-  const topDealersR = (getLastUniqueFromTrips("dealer", 3));
-  if(!topDealersR.length){
-    topDealersR.push(...(Array.isArray(state.dealers)?state.dealers:[]).slice(0,3));
-  }
+  const topDealersR = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 3), 3);
 getApp().innerHTML = `
     ${renderPageHeader("review")}
 
@@ -3371,26 +3355,24 @@ if(elDealerLive){
   }
 
   bindQuickChipLongPress(topAreaWrapR, "button[data-area]", (btn)=>{
-    const a = String(btn?.getAttribute("data-area") || "");
-    openQuickChipChangeModal({
-      label: "Area",
-      value: a,
-      onApply: (next)=>{
-        elAreaLive.value = next;
-        updateReviewDerived();
-      }
+    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
+    if(chipIndex < 0) return;
+    openQuickChipCustomizeModal({
+      kind: "area",
+      chipIndex,
+      currentValue: String(btn?.getAttribute("data-area") || ""),
+      onSaved: ()=>renderReviewTrip()
     });
   });
 
   bindQuickChipLongPress(topDealerWrapR, "button[data-dealer]", (btn)=>{
-    const d = String(btn?.getAttribute("data-dealer") || "");
-    openQuickChipChangeModal({
-      label: "Dealer",
-      value: d,
-      onApply: (next)=>{
-        elDealerLive.value = next;
-        updateReviewDerived();
-      }
+    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
+    if(chipIndex < 0) return;
+    openQuickChipCustomizeModal({
+      kind: "dealer",
+      chipIndex,
+      currentValue: String(btn?.getAttribute("data-dealer") || ""),
+      onSaved: ()=>renderReviewTrip()
     });
   });
 
@@ -3462,7 +3444,7 @@ function renderEditTrip(){
   }).join("");
 
   // Top 3 most-used Areas (from saved trips) for quick selection
-  const topAreasE = (()=>{
+  const topAreasE = resolveQuickChipItems("area", (()=>{
     const counts = new Map();
     for(const x of trips){
       const a = String(x.area||"").trim();
@@ -3473,7 +3455,7 @@ function renderEditTrip(){
       .sort((x,y)=> (y[1]-x[1]) || x[0].localeCompare(y[0]))
       .slice(0,3)
       .map(([a])=>a);
-  })();
+  })(), 3);
 
 
   getApp().innerHTML = `
@@ -3538,11 +3520,13 @@ function renderEditTrip(){
 
   bindAreaChips("topAreasE", (a)=>{ elArea.value = String(a||""); });
   bindQuickChipLongPress(document.getElementById("topAreasE"), "button[data-area]", (btn)=>{
-    const a = String(btn?.getAttribute("data-area") || "");
-    openQuickChipChangeModal({
-      label: "Area",
-      value: a,
-      onApply: (next)=>{ elArea.value = next; }
+    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
+    if(chipIndex < 0) return;
+    openQuickChipCustomizeModal({
+      kind: "area",
+      chipIndex,
+      currentValue: String(btn?.getAttribute("data-area") || ""),
+      onSaved: ()=>renderEditTrip()
     });
   });
   bindDatePill("e_date");
@@ -5097,9 +5081,9 @@ function renderTopAreaChips(topAreas, currentArea, containerId){
   }
   return `
     <div class="areachips" id="${containerId}">
-      ${items.map(a=>{
+      ${items.map((a, idx)=>{
         const on = (String(currentArea||"").trim() === String(a||"").trim());
-        return `<button class="areachip${on ? " on" : ""}" type="button" data-area="${escapeHtml(a)}">${escapeHtml(a)}</button>`;
+        return `<button class="areachip${on ? " on" : ""}" type="button" data-area="${escapeHtml(a)}" data-chip-index="${idx}">${escapeHtml(a)}</button>`;
       }).join("")}
     </div>
   `;
@@ -5114,12 +5098,112 @@ function renderTopDealerChips(topDealers, currentDealer, containerId){
   }
   return `
     <div class="areachips" id="${containerId}">
-      ${items.map(d=>{
+      ${items.map((d, idx)=>{
         const on = (String(currentDealer||"").trim().toLowerCase() === String(d||"").trim().toLowerCase());
-        return `<button class="areachip${on ? " on" : ""}" type="button" data-dealer="${escapeHtml(d)}">${escapeHtml(d)}</button>`;
+        return `<button class="areachip${on ? " on" : ""}" type="button" data-dealer="${escapeHtml(d)}" data-chip-index="${idx}">${escapeHtml(d)}</button>`;
       }).join("")}
     </div>
   `;
+}
+
+function getQuickChipSettings(){
+  const settings = state.settings || (state.settings = {});
+  const map = (settings.quickChipMap && typeof settings.quickChipMap === "object") ? settings.quickChipMap : (settings.quickChipMap = {});
+  return map;
+}
+
+function getQuickChipChoices(kind){
+  const fromTrips = getLastUniqueFromTrips(kind, 30);
+  const fromState = (kind === "dealer") ? (Array.isArray(state.dealers) ? state.dealers : []) : (Array.isArray(state.areas) ? state.areas : []);
+  const seen = new Set();
+  const out = [];
+  for(const raw of [...fromTrips, ...fromState]){
+    const v = String(raw || "").trim();
+    if(!v) continue;
+    const key = (kind === "dealer") ? normalizeKey(v) : v;
+    if(seen.has(key)) continue;
+    seen.add(key);
+    out.push(v);
+  }
+  return out;
+}
+
+function resolveQuickChipItems(kind, sourceItems, limit){
+  const max = Number.isFinite(Number(limit)) ? Math.max(0, Number(limit)) : 0;
+  const choices = getQuickChipChoices(kind);
+  const choiceSet = new Set(choices.map(v=> (kind === "dealer") ? normalizeKey(v) : v));
+  const cleanSource = (Array.isArray(sourceItems) ? sourceItems : [])
+    .map(v=>String(v||"").trim())
+    .filter(Boolean)
+    .slice(0, max || undefined);
+
+  const map = getQuickChipSettings();
+  const overrides = Array.isArray(map[kind]) ? map[kind] : [];
+  const len = max || cleanSource.length;
+  const out = [];
+  for(let i=0;i<len;i++){
+    const preferred = String(overrides[i] || "").trim();
+    const fallback = String(cleanSource[i] || "").trim();
+    const candidate = preferred || fallback;
+    if(!candidate) continue;
+    const candidateKey = (kind === "dealer") ? normalizeKey(candidate) : candidate;
+    if(!choiceSet.has(candidateKey)) continue;
+    if(!out.some(v=>((kind === "dealer") ? normalizeKey(v) : v) === candidateKey)) out.push(candidate);
+  }
+  return out;
+}
+
+function openQuickChipCustomizeModal({ kind, chipIndex, currentValue, onSaved }){
+  const nice = (kind === "dealer") ? "Dealer" : "Area";
+  const choices = getQuickChipChoices(kind);
+  if(!choices.length){
+    showToast(`No ${nice.toLowerCase()}s available yet`);
+    return;
+  }
+  const title = `Customize ${nice} chip`;
+  const selectId = `quickChipSelect_${kind}_${Date.now()}`;
+  const cancelId = `quickChipCancel_${kind}_${Date.now()}`;
+  const saveId = `quickChipSave_${kind}_${Date.now()}`;
+  const currentNorm = (kind === "dealer") ? normalizeKey(currentValue) : String(currentValue || "").trim();
+  const options = choices.map(v=>{
+    const key = (kind === "dealer") ? normalizeKey(v) : v;
+    const sel = key === currentNorm ? "selected" : "";
+    return `<option value="${escapeHtml(v)}" ${sel}>${escapeHtml(v)}</option>`;
+  }).join("");
+
+  openModal({
+    title,
+    backdropClose: false,
+    escClose: true,
+    showCloseButton: false,
+    position: "center",
+    html: `
+      <div class="field">
+        <label class="srOnly" for="${selectId}">${nice}</label>
+        <select class="input" id="${selectId}">${options}</select>
+      </div>
+      <div class="modalActions">
+        <button class="btn" id="${cancelId}" type="button">Cancel</button>
+        <button class="btn primary" id="${saveId}" type="button">Save</button>
+      </div>
+    `,
+    onOpen: ()=>{
+      const elSelect = document.getElementById(selectId);
+      document.getElementById(cancelId)?.addEventListener("click", ()=>closeModal());
+      document.getElementById(saveId)?.addEventListener("click", ()=>{
+        const next = String(elSelect?.value || "").trim();
+        if(!next) return;
+        const map = getQuickChipSettings();
+        const arr = Array.isArray(map[kind]) ? [...map[kind]] : [];
+        arr[chipIndex] = next;
+        map[kind] = arr;
+        saveState();
+        closeModal();
+        if(typeof onSaved === "function") onSaved(next);
+      });
+      setTimeout(()=>elSelect?.focus(), 50);
+    }
+  });
 }
 
 
@@ -5141,58 +5225,5 @@ function bindQuickChipLongPress(containerEl, selector, onLongPress){
       thresholdMs: QUICK_CHIP_LONG_PRESS_MS,
       moveThresholdPx: QUICK_CHIP_MOVE_CANCEL_PX,
     });
-  });
-}
-
-function openQuickChipChangeModal({ label, value, onApply }){
-  const title = `Change ${String(label || "Value")}`;
-  const inputId = "quickChipChangeInput";
-  const saveId = "quickChipChangeSave";
-  const cancelId = "quickChipChangeCancel";
-  const errId = "quickChipChangeErr";
-  openModal({
-    title,
-    backdropClose: false,
-    escClose: false,
-    showCloseButton: false,
-    position: "center",
-    html: `
-      <div class="field">
-        <label class="srOnly" for="${inputId}">${escapeHtml(String(label || "Value"))}</label>
-        <input class="input" id="${inputId}" value="${escapeHtml(String(value || ""))}" maxlength="40" enterkeyhint="done" />
-        <div class="modalErr" id="${errId}" style="display:none"></div>
-      </div>
-      <div class="modalActions">
-        <button class="btn" id="${cancelId}" type="button">Cancel</button>
-        <button class="btn primary" id="${saveId}" type="button">Apply</button>
-      </div>
-    `,
-    onOpen: ()=>{
-      const elIn = document.getElementById(inputId);
-      const elErr = document.getElementById(errId);
-      const showErr = (msg)=>{
-        if(!elErr) return;
-        elErr.textContent = msg;
-        elErr.style.display = "block";
-      };
-      const commit = ()=>{
-        const next = String(elIn?.value || "").trim();
-        if(!next){
-          showErr(`Enter a ${String(label || "value").toLowerCase()} first.`);
-          elIn?.focus();
-          return;
-        }
-        if(typeof onApply === "function") onApply(next);
-        closeModal();
-      };
-      document.getElementById(cancelId)?.addEventListener("click", ()=>closeModal());
-      document.getElementById(saveId)?.addEventListener("click", commit);
-      elIn?.addEventListener("keydown", (e)=>{
-        if(e.key !== "Enter") return;
-        e.preventDefault();
-        commit();
-      });
-      setTimeout(()=>elIn?.focus(), 50);
-    }
   });
 }
