@@ -276,16 +276,24 @@ header{padding:14px 18px 12px}
 .btnInlineAdd{white-space:nowrap}
 
 
-.dateRow{display:flex;align-items:center;gap:10px}
+.dateRow{display:flex;align-items:center;gap:10px;overflow:visible}
 .dateRow .dateIcon{display:inline-flex;align-items:center;justify-content:center;opacity:.85}
 .dateRow .dateIcon svg{width:18px;height:18px}
-.dateRow .datePill{flex:1}
+.dateRow .datePill{flex:1;min-width:0}
 .dateRow .todayBtn{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(232,238,252,.92);font-weight:700}
 
-.datePillWrap{position:relative;display:block;flex:1;min-width:0}
-.datePillWrap > input[type="date"]{position:relative;z-index:2;background:transparent}
-.datePillWrap .datePillPlaceholder{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);z-index:1;pointer-events:none;color:rgba(232,238,252,.58);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.datePillWrap{position:relative;display:block;flex:1;min-width:0;overflow:visible;box-sizing:border-box}
+.datePillWrap > input[type="date"]{position:relative;z-index:2;background:transparent;width:100%;min-width:0 !important;min-height:48px;line-height:1.2;padding:12px 14px;box-sizing:border-box}
+.datePillWrap .datePillPlaceholder{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);z-index:3;pointer-events:none;color:rgba(232,238,252,.58);font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .datePillWrap:not(.is-empty) .datePillPlaceholder{display:none}
+.datePillWrap.is-empty > input[type="date"]{color:transparent;-webkit-text-fill-color:transparent}
+.datePillWrap.is-empty > input[type="date"]::-webkit-datetime-edit{color:transparent}
+.datePillWrap.is-empty > input[type="date"]::-webkit-calendar-picker-indicator{opacity:.95}
+
+/* date range rows (Home + Reports advanced): avoid middle seam overlap and clipping */
+.row .datePillWrap{min-width:0}
+.row .datePillWrap + .datePillWrap{margin-left:2px}
+.grid2 .field{min-width:0;overflow:visible}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .rateLine{margin-top:-6px;margin-bottom:8px}
