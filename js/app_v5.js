@@ -520,7 +520,7 @@ const VIEW_META = {
   reports:   { title: "Reports", icon: "reports" },
   settings:  { title: "Settings", icon: "settings" },
   new:       { title: "New Trip", icon: "plus" },
-  edit:      { title: "Edit Trip", icon: "trips" },
+  edit:      { title: "Editing Trip", icon: "trips" },
   help:      { title: "Help", icon: "settings" },
   about:     { title: "About", icon: "settings" },
 };
@@ -3547,6 +3547,13 @@ function renderEditTrip(){
 
     <div class="card formCard">
       <form id="editTripForm">
+        <section class="trip-section trip-edit-indicator" aria-label="Edit mode indicator">
+          <div class="editModePill" role="status" aria-live="polite">
+            <span class="editModePillIcon" aria-hidden="true">✎</span>
+            <span>Editing</span>
+          </div>
+        </section>
+
         <section class="trip-section">
           <div class="field">
             <label class="fieldLabel overline center" for="e_date">HARVEST DATE</label>
