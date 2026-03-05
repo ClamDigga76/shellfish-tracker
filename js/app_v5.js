@@ -11,7 +11,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, attachLongPress } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;
@@ -3136,7 +3136,7 @@ if(topDealerWrap && elDealer){
   });
 }
 
-  bindQuickChipLongPress(topAreaWrap, "button[data-area]", (btn)=>{
+  bindQuickChipLongPress(topAreaWrap, (btn)=>{
     openChipOwnedPicker({
       kind: "area",
       chipIndex: Number(btn?.getAttribute("data-chip-index") || -1),
@@ -3144,7 +3144,7 @@ if(topDealerWrap && elDealer){
     });
   });
 
-  bindQuickChipLongPress(topDealerWrap, "button[data-dealer]", (btn)=>{
+  bindQuickChipLongPress(topDealerWrap, (btn)=>{
     openChipOwnedPicker({
       kind: "dealer",
       chipIndex: Number(btn?.getAttribute("data-chip-index") || -1),
@@ -3519,7 +3519,7 @@ if(elDealerLive){
     });
   }
 
-  bindQuickChipLongPress(topAreaWrapR, "button[data-area]", (btn)=>{
+  bindQuickChipLongPress(topAreaWrapR, (btn)=>{
     const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
     if(chipIndex < 0) return;
     openQuickChipCustomizeModal({
@@ -3530,7 +3530,7 @@ if(elDealerLive){
     });
   });
 
-  bindQuickChipLongPress(topDealerWrapR, "button[data-dealer]", (btn)=>{
+  bindQuickChipLongPress(topDealerWrapR, (btn)=>{
     const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
     if(chipIndex < 0) return;
     openQuickChipCustomizeModal({
@@ -3688,7 +3688,7 @@ function renderEditTrip(){
     if(!nextArea) return;
     elArea.value = nextArea;
   });
-  bindQuickChipLongPress(document.getElementById("topAreasE"), "button[data-area]", (btn)=>{
+  bindQuickChipLongPress(document.getElementById("topAreasE"), (btn)=>{
     const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
     if(chipIndex < 0) return;
     openQuickChipCustomizeModal({
@@ -5254,7 +5254,7 @@ function renderTopAreaChips(topAreas, currentArea, containerId){
         const val = String(a||"").trim();
         const on = !!val && (String(currentArea||"").trim() === val);
         const label = val || "Select";
-        return `<button class="areachip${on ? " on" : ""}" type="button" data-area="${escapeHtml(val)}" data-chip-index="${idx}">${escapeHtml(label)}</button>`;
+        return `<button class="areachip chip-selector${on ? " on" : ""}" type="button" data-area="${escapeHtml(val)}" data-chip-index="${idx}">${escapeHtml(label)}</button>`;
       }).join("")}
     </div>
   `;
@@ -5273,7 +5273,7 @@ function renderTopDealerChips(topDealers, currentDealer, containerId){
         const val = String(d||"").trim();
         const on = !!val && (String(currentDealer||"").trim().toLowerCase() === val.toLowerCase());
         const label = val || "Select";
-        return `<button class="areachip${on ? " on" : ""}" type="button" data-dealer="${escapeHtml(val)}" data-chip-index="${idx}">${escapeHtml(label)}</button>`;
+        return `<button class="areachip chip-selector${on ? " on" : ""}" type="button" data-dealer="${escapeHtml(val)}" data-chip-index="${idx}">${escapeHtml(label)}</button>`;
       }).join("")}
     </div>
   `;
@@ -5496,30 +5496,78 @@ function bindAreaChips(containerId, onPick){
   });
 }
 
-function bindQuickChipLongPress(containerEl, selector, onLongPressRelease){
-  if(!containerEl || !selector || typeof onLongPressRelease !== "function") return;
+function bindQuickChipLongPress(containerEl, onLongPressRelease){
+  if(!containerEl || typeof onLongPressRelease !== "function") return;
   if(containerEl.__quickChipLongPressBound) return;
   containerEl.__quickChipLongPressBound = true;
 
-  const cleanupFns = [];
-  containerEl.querySelectorAll(selector).forEach((btn)=>{
-    if(btn.__quickChipLongPressAttached) return;
-    btn.__quickChipLongPressAttached = true;
-    const detach = attachLongPress(btn, {
-      ms: QUICK_CHIP_LONG_PRESS_MS,
-      movePx: QUICK_CHIP_MOVE_CANCEL_PX,
-      onLongPressTrigger: (ev)=>{
-        btn.__suppressNextClick = true;
-        ev.preventDefault();
-        ev.stopPropagation();
-        if(typeof ev.stopImmediatePropagation === "function") ev.stopImmediatePropagation();
-        onLongPressRelease(btn, ev);
-      }
-    });
-    cleanupFns.push(detach);
+  let pointerId = null;
+  let timerId = null;
+  let downX = 0;
+  let downY = 0;
+  let longPressArmed = false;
+  let activeChip = null;
+
+  const clearTimer = ()=>{
+    if(timerId){
+      clearTimeout(timerId);
+      timerId = null;
+    }
+  };
+
+  const cancelActive = ()=>{
+    clearTimer();
+    pointerId = null;
+    longPressArmed = false;
+    activeChip = null;
+  };
+
+  containerEl.addEventListener("pointerdown", (e)=>{
+    const chip = e.target?.closest?.(".chip-selector");
+    if(!chip || !containerEl.contains(chip)) return;
+    if(typeof e.button === "number" && e.button !== 0) return;
+
+    cancelActive();
+    pointerId = e.pointerId;
+    activeChip = chip;
+    downX = Number(e.clientX || 0);
+    downY = Number(e.clientY || 0);
+    timerId = setTimeout(()=>{
+      longPressArmed = true;
+    }, QUICK_CHIP_LONG_PRESS_MS);
   });
 
-  containerEl.__quickChipLongPressCleanup = ()=>cleanupFns.forEach((fn)=>{
-    try{ fn(); }catch(_){ }
+  containerEl.addEventListener("pointermove", (e)=>{
+    if(pointerId == null || e.pointerId !== pointerId || !activeChip) return;
+    const dx = Math.abs(Number(e.clientX || 0) - downX);
+    const dy = Math.abs(Number(e.clientY || 0) - downY);
+    if(Math.max(dx, dy) > QUICK_CHIP_MOVE_CANCEL_PX){
+      cancelActive();
+    }
+  });
+
+  containerEl.addEventListener("pointerup", (e)=>{
+    if(pointerId == null || e.pointerId !== pointerId) return;
+    const chip = activeChip;
+    const shouldTrigger = !!(chip && longPressArmed);
+    cancelActive();
+    if(!shouldTrigger) return;
+
+    chip.__suppressNextClick = true;
+    e.preventDefault();
+    e.stopPropagation();
+    if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+    onLongPressRelease(chip, e);
+  });
+
+  containerEl.addEventListener("pointercancel", (e)=>{
+    if(pointerId == null || e.pointerId !== pointerId) return;
+    cancelActive();
+  });
+
+  containerEl.addEventListener("contextmenu", (e)=>{
+    const chip = e.target?.closest?.(".chip-selector");
+    if(!chip || !containerEl.contains(chip)) return;
+    e.preventDefault();
   });
 }
