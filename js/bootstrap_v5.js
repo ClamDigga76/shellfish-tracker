@@ -1,4 +1,4 @@
-const SW_VERSION = "151";
+const SW_VERSION = "150";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -394,4 +394,3 @@ window.addEventListener("error", (ev) => {
 window.addEventListener("unhandledrejection", (ev) => {
   if (window.__showModuleError) window.__showModuleError(ev?.reason || ev);
 });
-
