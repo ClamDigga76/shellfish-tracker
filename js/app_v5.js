@@ -2985,78 +2985,6 @@ const btnClear = document.getElementById("clearDraft");
     return true;
   };
 
-  const openTempSelectPicker = ({ kind, currentValue, onPick, includeAddNew })=>{
-    const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
-    const nice = kind === "dealer" ? "Dealer" : "Area";
-    const nextValue = String(currentValue || "").trim();
-    const selectEl = document.createElement("select");
-    selectEl.setAttribute("aria-hidden", "true");
-    selectEl.tabIndex = -1;
-    selectEl.style.position = "fixed";
-    selectEl.style.top = "0";
-    selectEl.style.left = "0";
-    selectEl.style.width = "1px";
-    selectEl.style.height = "1px";
-    selectEl.style.opacity = "0";
-
-    const values = [""].concat(getBarSelectChoices(kind));
-    values.forEach((v)=>{
-      const value = String(v || "").trim();
-      const opt = document.createElement("option");
-      opt.value = value;
-      opt.textContent = value || "Select";
-      selectEl.appendChild(opt);
-    });
-
-    if(nextValue && !values.some(v=>String(v || "").trim() === nextValue)){
-      const customOpt = document.createElement("option");
-      customOpt.value = nextValue;
-      customOpt.textContent = nextValue;
-      selectEl.appendChild(customOpt);
-    }
-
-    if(includeAddNew){
-      const addOpt = document.createElement("option");
-      addOpt.value = addSentinel;
-      addOpt.textContent = `+ Add new ${nice}`;
-      selectEl.appendChild(addOpt);
-    }
-
-    selectEl.value = nextValue;
-    document.body.appendChild(selectEl);
-
-    let done = false;
-    const cleanup = ()=>{
-      if(done) return;
-      done = true;
-      selectEl.removeEventListener("change", onChange);
-      selectEl.removeEventListener("blur", onBlur);
-      selectEl.removeEventListener("cancel", onCancel);
-      try{ selectEl.remove(); }catch(_){ }
-    };
-    const onBlur = ()=>cleanup();
-    const onCancel = ()=>cleanup();
-    const onChange = ()=>{
-      const picked = String(selectEl.value || "").trim();
-      if(typeof onPick === "function") onPick(picked);
-      cleanup();
-    };
-
-    selectEl.addEventListener("change", onChange, { once: true });
-    selectEl.addEventListener("blur", onBlur, { once: true });
-    selectEl.addEventListener("cancel", onCancel, { once: true });
-
-    try{
-      if(typeof selectEl.showPicker === "function") selectEl.showPicker();
-      else{
-        selectEl.focus({ preventScroll: true });
-        selectEl.click();
-      }
-    }catch(_){
-      try{ selectEl.focus({ preventScroll: true }); selectEl.click(); }catch(__){ cleanup(); }
-    }
-  };
-
   elDealer?.addEventListener("change", ()=>{
     handleSelectAddNew("dealer", elDealer);
   });
@@ -3112,54 +3040,24 @@ if(topDealerWrap && elDealer){
   bindQuickChipLongPress(topAreaWrap, (btn)=>{
     const slot = Number(btn?.getAttribute("data-chip-index") || -1);
     if(slot < 0) return;
-    const chipValue = String(btn?.getAttribute("data-area") || "").trim();
-    openTempSelectPicker({
+    openQuickChipCustomizeModal({
       kind: "area",
-      currentValue: chipValue,
-      includeAddNew: true,
-      onPick: (selectedValue)=>{
-        if(selectedValue === areaAddSentinel){
-          openQuickAdd("area", {
-            onAdded: (addedValue)=>{
-              const value = String(addedValue || "").trim();
-              if(!value) return;
-              setQuickChipMapping("area", slot, value);
-              renderNewTrip();
-            }
-          });
-          return;
-        }
-        if(!selectedValue) return;
-        setQuickChipMapping("area", slot, selectedValue);
-        renderNewTrip();
-      }
+      chipIndex: slot,
+      currentValue: String(btn?.getAttribute("data-area") || ""),
+      choices: getBarSelectChoices("area"),
+      onSaved: ()=>renderNewTrip()
     });
   });
 
   bindQuickChipLongPress(topDealerWrap, (btn)=>{
     const slot = Number(btn?.getAttribute("data-chip-index") || -1);
     if(slot < 0) return;
-    const chipValue = String(btn?.getAttribute("data-dealer") || "").trim();
-    openTempSelectPicker({
+    openQuickChipCustomizeModal({
       kind: "dealer",
-      currentValue: chipValue,
-      includeAddNew: true,
-      onPick: (selectedValue)=>{
-        if(selectedValue === dealerAddSentinel){
-          openQuickAdd("dealer", {
-            onAdded: (addedValue)=>{
-              const value = String(addedValue || "").trim();
-              if(!value) return;
-              setQuickChipMapping("dealer", slot, value);
-              renderNewTrip();
-            }
-          });
-          return;
-        }
-        if(!selectedValue) return;
-        setQuickChipMapping("dealer", slot, selectedValue);
-        renderNewTrip();
-      }
+      chipIndex: slot,
+      currentValue: String(btn?.getAttribute("data-dealer") || ""),
+      choices: getBarSelectChoices("dealer"),
+      onSaved: ()=>renderNewTrip()
     });
   });
 
@@ -5379,24 +5277,33 @@ function resolveQuickChipItems(kind, sourceItems, limit){
   return out;
 }
 
-function openQuickChipCustomizeModal({ kind, chipIndex, currentValue, onSaved }){
+function openQuickChipCustomizeModal({ kind, chipIndex, currentValue, onSaved, choices: providedChoices }){
   const nice = (kind === "dealer") ? "Dealer" : "Area";
-  const addSentinel = `__add_new_${kind}__`;
-  const choices = getQuickChipChoices(kind);
-  const title = `Customize ${nice} chip`;
+  const title = `Set ${nice} chip`;
+  const rawChoices = Array.isArray(providedChoices) ? providedChoices : getQuickChipChoices(kind);
+  const choices = [];
+  const seen = new Set();
+  for(const raw of rawChoices){
+    const v = String(raw || "").trim();
+    if(!v) continue;
+    const key = (kind === "dealer") ? normalizeKey(v) : v;
+    if(seen.has(key)) continue;
+    seen.add(key);
+    choices.push(v);
+  }
+
   const uid = `${kind}_${Date.now()}`;
   const selectId = `quickChipSelect_${uid}`;
-  const addWrapId = `quickChipAddWrap_${uid}`;
-  const addInputId = `quickChipAddInput_${uid}`;
-  const addBtnId = `quickChipAddBtn_${uid}`;
   const cancelId = `quickChipCancel_${uid}`;
   const saveId = `quickChipSave_${uid}`;
-  const currentNorm = (kind === "dealer") ? normalizeKey(currentValue) : String(currentValue || "").trim();
-  const options = choices.map(v=>{
+  const currentTrimmed = String(currentValue || "").trim();
+  const currentNorm = (kind === "dealer") ? normalizeKey(currentTrimmed) : currentTrimmed;
+  const hasCurrent = choices.some(v=>((kind === "dealer") ? normalizeKey(v) : v) === currentNorm);
+  const options = [`<option value="">Select</option>`].concat(choices.map(v=>{
     const key = (kind === "dealer") ? normalizeKey(v) : v;
-    const sel = key === currentNorm ? "selected" : "";
+    const sel = (hasCurrent && key === currentNorm) ? "selected" : "";
     return `<option value="${escapeHtml(v)}" ${sel}>${escapeHtml(v)}</option>`;
-  }).concat(`<option value="${addSentinel}">+ Add new ${nice}</option>`).join("");
+  })).join("");
 
   openModal({
     title,
@@ -5409,79 +5316,33 @@ function openQuickChipCustomizeModal({ kind, chipIndex, currentValue, onSaved })
         <label class="srOnly" for="${selectId}">${nice}</label>
         <select class="input" id="${selectId}">${options}</select>
       </div>
-      <div class="field" id="${addWrapId}" style="display:none">
-        <label class="srOnly" for="${addInputId}">New ${nice}</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input class="input" id="${addInputId}" placeholder="New ${nice}" autocomplete="off" enterkeyhint="done" />
-          <button class="btn" id="${addBtnId}" type="button">Add</button>
-        </div>
-      </div>
       <div class="modalActions">
         <button class="btn" id="${cancelId}" type="button">Cancel</button>
-        <button class="btn primary" id="${saveId}" type="button">Save</button>
+        <button class="btn primary" id="${saveId}" type="button" disabled>Save</button>
       </div>
     `,
     onOpen: ()=>{
       const elSelect = document.getElementById(selectId);
-      const addWrap = document.getElementById(addWrapId);
-      const addInput = document.getElementById(addInputId);
-      const addBtn = document.getElementById(addBtnId);
-      const refreshAddUi = ()=>{
-        const showing = String(elSelect?.value || "") === addSentinel;
-        if(addWrap) addWrap.style.display = showing ? "" : "none";
-        if(showing) setTimeout(()=>addInput?.focus(), 0);
-      };
-      const persistNewItem = ()=>{
-        const raw = String(addInput?.value || "").trim();
-        if(!raw) return;
-        if(kind === "dealer"){
-          const canonical = normalizeDealerDisplay(raw);
-          if(!canonical) return;
-          if(!Array.isArray(state.dealers)) state.dealers = [];
-          if(!state.dealers.some(v=>normalizeKey(v) === normalizeKey(canonical))) state.dealers.push(canonical);
-          ensureDealers();
-          saveState();
-          const nextChoices = getQuickChipChoices(kind);
-          const selected = nextChoices.find(v=>normalizeKey(v) === normalizeKey(canonical)) || canonical;
-          elSelect.insertAdjacentHTML("afterbegin", `<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
-          elSelect.value = selected;
-          if(addInput) addInput.value = "";
-          refreshAddUi();
-          return;
-        }
-        if(!Array.isArray(state.areas)) state.areas = [];
-        if(!state.areas.some(v=>normalizeKey(v) === normalizeKey(raw))) state.areas.push(raw);
-        ensureAreas();
-        saveState();
-        const nextChoices = getQuickChipChoices(kind);
-        const selected = nextChoices.find(v=>normalizeKey(v) === normalizeKey(raw)) || raw;
-        elSelect.insertAdjacentHTML("afterbegin", `<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
-        elSelect.value = selected;
-        if(addInput) addInput.value = "";
-        refreshAddUi();
+      const saveBtn = document.getElementById(saveId);
+
+      if(elSelect) elSelect.value = hasCurrent ? currentTrimmed : "";
+
+      const refreshSaveState = ()=>{
+        if(!saveBtn || !elSelect) return;
+        saveBtn.disabled = !String(elSelect.value || "").trim();
       };
 
-      elSelect?.addEventListener("change", refreshAddUi);
-      addBtn?.addEventListener("click", persistNewItem);
-      addInput?.addEventListener("keydown", (e)=>{
-        if(e.key !== "Enter") return;
-        e.preventDefault();
-        persistNewItem();
-      });
+      elSelect?.addEventListener("change", refreshSaveState);
       document.getElementById(cancelId)?.addEventListener("click", ()=>closeModal());
       document.getElementById(saveId)?.addEventListener("click", ()=>{
         const next = String(elSelect?.value || "").trim();
-        if(!next || next === addSentinel) return;
-        const quickChips = getQuickChipSettings();
-        const key = getPinnedQuickChipKey(kind);
-        const arr = Array.isArray(quickChips[key]) ? [...quickChips[key]] : [];
-        arr[chipIndex] = next;
-        quickChips[key] = arr;
-        saveState();
+        if(!next) return;
+        setQuickChipMapping(kind, chipIndex, next);
         closeModal();
         if(typeof onSaved === "function") onSaved(next);
       });
-      refreshAddUi();
+
+      refreshSaveState();
       setTimeout(()=>elSelect?.focus(), 50);
     }
   });
