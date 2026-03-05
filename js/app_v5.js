@@ -5440,8 +5440,8 @@ function bindAreaChips(containerId, onPick){
   });
 }
 
-function bindQuickChipLongPress(containerEl, selector, onLongPress){
-  if(!containerEl || !selector || typeof onLongPress !== "function") return;
+function bindQuickChipLongPress(containerEl, selector, onLongPressRelease){
+  if(!containerEl || !selector || typeof onLongPressRelease !== "function") return;
   if(containerEl.__quickChipLongPressBound) return;
   containerEl.__quickChipLongPressBound = true;
 
@@ -5450,7 +5450,7 @@ function bindQuickChipLongPress(containerEl, selector, onLongPress){
   let startX = 0;
   let startY = 0;
   let activeBtn = null;
-  let longPressFired = false;
+  let longPressArmed = false;
   let suppressNextClickFor = null;
 
   const clearPending = ()=>{
@@ -5474,7 +5474,7 @@ function bindQuickChipLongPress(containerEl, selector, onLongPress){
     if(e.pointerType === "mouse" && e.button !== 0) return;
 
     clearPending();
-    longPressFired = false;
+    longPressArmed = false;
     pointerId = e.pointerId;
     startX = Number(e.clientX || 0);
     startY = Number(e.clientY || 0);
@@ -5483,10 +5483,7 @@ function bindQuickChipLongPress(containerEl, selector, onLongPress){
     timer = setTimeout(()=>{
       timer = null;
       if(!activeBtn) return;
-      longPressFired = true;
-      suppressNextClickFor = activeBtn;
-      e.preventDefault();
-      onLongPress(activeBtn);
+      longPressArmed = true;
     }, QUICK_CHIP_LONG_PRESS_MS);
   }, { passive: false });
 
@@ -5499,20 +5496,28 @@ function bindQuickChipLongPress(containerEl, selector, onLongPress){
     }
   }, { passive: true });
 
-  const clearOnPointerEnd = (e)=>{
+  const clearOnPointerUp = (e)=>{
     if(pointerId == null || e.pointerId !== pointerId) return;
-    const shouldSuppressTap = longPressFired;
+    const armedBtn = longPressArmed ? activeBtn : null;
     clearPending();
-    if(shouldSuppressTap){
+    if(armedBtn){
+      suppressNextClickFor = armedBtn;
       e.preventDefault();
       e.stopPropagation();
       if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+      onLongPressRelease(armedBtn, e);
     }
-    longPressFired = false;
+    longPressArmed = false;
   };
 
-  containerEl.addEventListener("pointerup", clearOnPointerEnd);
-  containerEl.addEventListener("pointercancel", clearOnPointerEnd);
+  const clearOnPointerCancel = (e)=>{
+    if(pointerId == null || e.pointerId !== pointerId) return;
+    clearPending();
+    longPressArmed = false;
+  };
+
+  containerEl.addEventListener("pointerup", clearOnPointerUp);
+  containerEl.addEventListener("pointercancel", clearOnPointerCancel);
 
   containerEl.addEventListener("click", (e)=>{
     const btn = findChipBtn(e.target);
