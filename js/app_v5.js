@@ -1696,7 +1696,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   state.view = nextView;
   saveState();
   render();
-  showToast("Saved", "polite");
+  announce("Saved", "polite");
   // After first successful save, offer install (once per device).
   if(!isEdit){ try{ setTimeout(()=>{ maybeOfferInstallAfterFirstSave(); }, 350); }catch(_){} }
   return true;
