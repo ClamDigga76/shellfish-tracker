@@ -249,6 +249,7 @@ async function updateBuildBadge(){
 
 let toastTimer = null;
 let announceTimer = null;
+let announceSeq = 0;
 
 function announce(msg, mode = "polite"){
   try{
@@ -256,11 +257,15 @@ function announce(msg, mode = "polite"){
     if(!liveEl) return;
     const liveMode = mode === "assertive" ? "assertive" : "polite";
     const text = String(msg || "").trim();
+    const seq = ++announceSeq;
     liveEl.setAttribute("aria-live", liveMode);
     liveEl.textContent = "";
     clearTimeout(announceTimer);
     if(!text) return;
-    announceTimer = setTimeout(()=>{ liveEl.textContent = text; }, 30);
+    announceTimer = setTimeout(()=>{
+      if(seq !== announceSeq) return;
+      liveEl.textContent = text;
+    }, 40);
   }catch{}
 }
 
