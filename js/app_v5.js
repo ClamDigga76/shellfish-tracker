@@ -5281,8 +5281,39 @@ function renderTopDealerChips(topDealers, currentDealer, containerId){
 
 function getQuickChipSettings(){
   const settings = state.settings || (state.settings = {});
-  const map = (settings.quickChipMap && typeof settings.quickChipMap === "object") ? settings.quickChipMap : (settings.quickChipMap = {});
-  return map;
+  const quickChips = (settings.quickChips && typeof settings.quickChips === "object") ? settings.quickChips : (settings.quickChips = {});
+  return quickChips;
+}
+
+function getPinnedQuickChipKey(kind){
+  return kind === "dealer" ? "dealerPinned" : "areaPinned";
+}
+
+function getPinnedQuickChipValues(kind, { seedItems = [], limit = 0 } = {}){
+  const max = Number.isFinite(Number(limit)) ? Math.max(0, Number(limit)) : 0;
+  const settings = getQuickChipSettings();
+  const key = getPinnedQuickChipKey(kind);
+  const existing = settings[key];
+  if(Array.isArray(existing)) return existing;
+
+  // One-time seed from the old recents-driven source.
+  const seedFromTrips = getLastUniqueFromTrips(kind, Math.max(3, max || 0));
+  const fromSource = Array.isArray(seedItems) ? seedItems : [];
+  const seeded = [];
+  const seen = new Set();
+  for(const raw of [...fromSource, ...seedFromTrips]){
+    const value = String(raw || "").trim();
+    if(!value) continue;
+    const dedupeKey = kind === "dealer" ? normalizeKey(value) : value;
+    if(seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+    seeded.push(value);
+    if(max > 0 && seeded.length >= max) break;
+  }
+
+  settings[key] = seeded;
+  saveState();
+  return settings[key];
 }
 
 function setQuickChipMapping(kind, chipIndex, nextValue){
@@ -5290,10 +5321,11 @@ function setQuickChipMapping(kind, chipIndex, nextValue){
   if(idx < 0) return;
   const value = String(nextValue || "").trim();
   if(!value) return;
-  const map = getQuickChipSettings();
-  const arr = Array.isArray(map[kind]) ? [...map[kind]] : [];
+  const quickChips = getQuickChipSettings();
+  const key = getPinnedQuickChipKey(kind);
+  const arr = Array.isArray(quickChips[key]) ? [...quickChips[key]] : [];
   arr[idx] = value;
-  map[kind] = arr;
+  quickChips[key] = arr;
   saveState();
 }
 
@@ -5316,37 +5348,22 @@ function getQuickChipChoices(kind){
 function resolveQuickChipItems(kind, sourceItems, limit){
   const max = Number.isFinite(Number(limit)) ? Math.max(0, Number(limit)) : 0;
   const choices = getQuickChipChoices(kind);
-  const choiceSet = new Set(choices.map(v=> (kind === "dealer") ? normalizeKey(v) : v));
-  const cleanSource = (Array.isArray(sourceItems) ? sourceItems : [])
-    .map(v=>String(v||"").trim())
-    .filter(Boolean)
-    .slice(0, max || undefined);
-
-  const map = getQuickChipSettings();
-  const overrides = Array.isArray(map[kind]) ? map[kind] : [];
-  const len = max || cleanSource.length;
+  const pinned = getPinnedQuickChipValues(kind, { seedItems: sourceItems, limit: max });
+  const len = max || pinned.length;
   const out = [];
   for(let i=0;i<len;i++){
-    const preferred = String(overrides[i] || "").trim();
-    const fallback = String(cleanSource[i] || "").trim();
-    const candidate = preferred || fallback;
+    const candidate = String(pinned[i] || "").trim();
     if(!candidate){
       out.push("");
       continue;
     }
     const candidateKey = (kind === "dealer") ? normalizeKey(candidate) : candidate;
-    if(!choiceSet.has(candidateKey)){
+    const canonical = choices.find(v=>((kind === "dealer") ? normalizeKey(v) : v) === candidateKey) || "";
+    if(!canonical){
       out.push("");
       continue;
     }
-    if(out.some(v=>{
-      if(!v) return false;
-      return ((kind === "dealer") ? normalizeKey(v) : v) === candidateKey;
-    })){
-      out.push("");
-      continue;
-    }
-    out.push(candidate);
+    out.push(canonical);
   }
   return out;
 }
@@ -5444,10 +5461,11 @@ function openQuickChipCustomizeModal({ kind, chipIndex, currentValue, onSaved })
       document.getElementById(saveId)?.addEventListener("click", ()=>{
         const next = String(elSelect?.value || "").trim();
         if(!next || next === addSentinel) return;
-        const map = getQuickChipSettings();
-        const arr = Array.isArray(map[kind]) ? [...map[kind]] : [];
+        const quickChips = getQuickChipSettings();
+        const key = getPinnedQuickChipKey(kind);
+        const arr = Array.isArray(quickChips[key]) ? [...quickChips[key]] : [];
         arr[chipIndex] = next;
-        map[kind] = arr;
+        quickChips[key] = arr;
         saveState();
         closeModal();
         if(typeof onSaved === "function") onSaved(next);
