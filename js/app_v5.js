@@ -164,6 +164,35 @@ function to2(n){
   return Number.isFinite(x) ? Math.round((x + Number.EPSILON) * 100) / 100 : x;
 }
 
+function sanitizeDecimalInput(raw){
+  let s = String(raw || "").replace(/[^\d.]/g, "");
+  const dot = s.indexOf(".");
+  if(dot !== -1){
+    s = s.slice(0, dot + 1) + s.slice(dot + 1).replace(/\./g, "");
+  }
+  return s;
+}
+
+function primeNumericField(el, zeroValues){
+  try{
+    const v = String(el.value || "").trim();
+    if(!v || (zeroValues || []).includes(v)){
+      el.value = "";
+    }else{
+      requestAnimationFrame(()=>{ try{ el.select(); }catch(_){} });
+    }
+  }catch(_){ }
+}
+
+function normalizeAmountOnBlur(el){
+  try{
+    const s = String(el.value || "").trim();
+    if(!s){ el.value = "0.00"; return; }
+    const n = Number(s);
+    el.value = Number.isFinite(n) ? n.toFixed(2) : "0.00";
+  }catch(_){ }
+}
+
 // ---- Toasts ----
 
 function getDisplayMode(){
@@ -2750,36 +2779,6 @@ const getBarSelectChoices = (kind)=>{
   btnAddDealer?.addEventListener("click", ()=>openQuickAdd("dealer"));
   btnAddArea?.addEventListener("click", ()=>openQuickAdd("area"));
 
-// Numeric input UX (Pounds + Amount):
-// - first tap starts fresh (clears 0/placeholder-like values or selects all)
-// - sanitize to digits + one dot while typing
-// - normalize Amount to 2 decimals on blur
-const sanitizeDecimalInput = (raw)=>{
-  let s = String(raw || "").replace(/[^\d.]/g, "");
-  const dot = s.indexOf(".");
-  if(dot !== -1){
-    s = s.slice(0, dot + 1) + s.slice(dot + 1).replace(/\./g, "");
-  }
-  return s;
-};
-const primeNumericField = (el, zeroValues)=>{
-  try{
-    const v = String(el.value || "").trim();
-    if(!v || (zeroValues||[]).includes(v)){
-      el.value = "";
-    }else{
-      requestAnimationFrame(()=>{ try{ el.select(); }catch(_){} });
-    }
-  }catch(_){}
-};
-const normalizeAmountOnBlur = (el)=>{
-  try{
-    const s = String(el.value || "").trim();
-    if(!s){ el.value = "0.00"; return; }
-    const n = Number(s);
-    el.value = Number.isFinite(n) ? n.toFixed(2) : "0.00";
-  }catch(_){}
-};
   const elToday = document.getElementById("todayBtn");
 
   // Quick-pick chip containers
@@ -3488,6 +3487,8 @@ if(elDealerLive){
 }
 
 function renderEditTrip(){
+  ensureAreas();
+  ensureDealers();
   const id = String(state.editId || "");
   const trips = Array.isArray(state.trips) ? state.trips : [];
   const t = trips.find(x => String(x?.id||"") === id);
@@ -3509,76 +3510,115 @@ function renderEditTrip(){
     area: t.area || ""
   };
 
+  const dealerAddSentinel = "__add_new_dealer__";
+  const areaAddSentinel = "__add_new_area__";
   const amountDispE = displayAmount(t.amount);
+
+  const topAreasE = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
+  const topDealersE = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
+
+  const dealerListForSelect = [];
+  const seenDealerKeys = new Set();
+  for(const d of [...topDealersE, ...(Array.isArray(state.dealers) ? state.dealers : [])]){
+    const v = String(d || "").trim();
+    if(!v) continue;
+    const key = normalizeKey(v);
+    if(seenDealerKeys.has(key)) continue;
+    seenDealerKeys.add(key);
+    dealerListForSelect.push(v);
+  }
+
+  const dealerOptions = ["", ...dealerListForSelect].map(dv=>{
+    const label = dv ? dv : "—";
+    const sel = (normalizeKey(String(draft.dealer || "")) === normalizeKey(String(dv || ""))) ? "selected" : "";
+    const v = String(dv || "").replaceAll('"', "&quot;");
+    return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
+  }).concat(`<option value="${dealerAddSentinel}">+ Add new Dealer</option>`).join("");
 
   const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
     const label = a ? a : "—";
     const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
     return `<option value="${escapeHtml(String(a||""))}" ${sel}>${label}</option>`;
-  }).join("");
-
-  // Top 3 most-used Areas (from saved trips) for quick selection
-  const topAreasE = resolveQuickChipItems("area", (()=>{
-    const counts = new Map();
-    for(const x of trips){
-      const a = String(x.area||"").trim();
-      if(!a) continue;
-      counts.set(a, (counts.get(a)||0) + 1);
-    }
-    return Array.from(counts.entries())
-      .sort((x,y)=> (y[1]-x[1]) || x[0].localeCompare(y[0]))
-      .slice(0,3)
-      .map(([a])=>a);
-  })(), 3);
+  }).concat(`<option value="${areaAddSentinel}">+ Add new Area</option>`).join("");
 
 
   getApp().innerHTML = `
     ${renderPageHeader("edit")}
 
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <button class="smallbtn" id="navBack">← Back</button>
-        <b>Edit Trip</b>
-        <span class="muted small"></span>
-      </div>
-      <div class="hint">Tap Save Changes when finished. Delete removes the trip from your phone.</div>
-    </div>
+    <div class="card formCard">
+      <form id="editTripForm">
+        <section class="trip-section">
+          <div class="field">
+            <label class="fieldLabel overline center" for="e_date">HARVEST DATE</label>
+            <div class="dateRow">
+              <span class="dateIcon">${iconSvg("calendar")}</span>
+              <input class="input datePill" id="e_date" type="date" enterkeyhint="next" value="${escapeHtml(String(draft.dateISO||"").slice(0,10))}" />
+              <button class="todayBtn" id="todayBtnEdit" type="button">Today</button>
+            </div>
+          </div>
+        </section>
 
-    <div class="card">
-      <form class="form" id="editTripForm">
-        <div class="field">
-          <label class="label" for="e_date">Harvest date</label>
-          <input class="input" id="e_date" type="date" enterkeyhint="next" value="${escapeHtml(String(draft.dateISO||"").slice(0,10))}" />
-        </div>
+        <section class="trip-section">
+          <div class="field">
+            <label class="fieldLabel overline center" for="e_dealer">DEALERS</label>
+            ${renderTopDealerChips(topDealersE, draft.dealer, "topDealersE")}
+            <div class="selectWithBtn">
+              <div class="selectRowWrap">
+                <select class="input" id="e_dealer" autocomplete="organization" enterkeyhint="next">
+                  ${dealerOptions}
+                </select>
+                <span class="chev">›</span>
+              </div>
+              <button class="btn btnInlineAdd" id="addDealerInlineEdit" type="button">+ Add</button>
+            </div>
+          </div>
+        </section>
 
-        <div class="field">
-          <label class="label" for="e_dealer">Dealer</label>
-          <input class="input" id="e_dealer" placeholder="Machias Bay Seafood" autocomplete="organization" enterkeyhint="next" value="${escapeHtml(String(draft.dealer||""))}" />
-        </div>
+        <section class="trip-section">
+          <div class="grid2">
+            <div class="field">
+              <label class="fieldLabel overline" for="e_pounds">POUNDS</label>
+              <div class="inputWrap">
+                <input class="input inputWithSuffix" id="e_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+                <span class="unitSuffix lbsBlue">lbs</span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="fieldLabel overline" for="e_amount">AMOUNT</label>
+              <div class="inputWrap">
+                <span class="moneyPrefix moneyGreen">$</span>
+                <input class="input inputWithPrefix" id="e_amount" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountDispE))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+              </div>
+            </div>
+          </div>
+          <div class="rateLine muted small">$/lb: <b class="rate ppl" id="rateValueEdit">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
+        </section>
 
-        <div class="field">
-          <label class="label" for="e_pounds">Pounds</label>
-          <input class="input" id="e_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${String(draft.pounds??"")}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
-        </div>
+        <section class="trip-section">
+          <div class="field">
+            <label class="fieldLabel overline center" for="e_area">AREA</label>
+            ${renderTopAreaChips(topAreasE, draft.area, "topAreasE")}
+            <div class="selectWithBtn">
+              <div class="selectRowWrap">
+                <select class="input" id="e_area" enterkeyhint="done">
+                  ${areaOptions}
+                </select>
+                <span class="chev">›</span>
+              </div>
+              <button class="btn btnInlineAdd" id="addAreaInlineEdit" type="button">+ Add</button>
+            </div>
+          </div>
+        </section>
 
-        <div class="field">
-          <label class="label" for="e_amount">Amount</label>
-          <input class="input" id="e_amount" type="text" inputmode="decimal" enterkeyhint="next" placeholder="$0.00" value="${escapeHtml(String(amountDispE))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
-        </div>
-
-        <div class="field">
-          <label class="label" for="e_area">Area</label>
-          ${renderTopAreaChips(topAreasE, draft.area, "topAreasE")}
-          <select class="select" id="e_area" enterkeyhint="done">
-            ${areaOptions}
-          </select>
-        </div>
-
-        <div class="actions">
-          <button class="btn primary" id="saveEdit" type="submit">Save Changes</button>
-          <button class="btn" id="navCancel" type="button">Cancel</button>
-          <button class="btn danger" id="deleteTrip" type="button">Delete</button>
-        </div>
+        <section class="trip-section trip-actions">
+          <div class="tripActionBar">
+            <div class="tripActionRow">
+              <button class="btn primary" id="saveEdit" type="submit">Save Changes</button>
+              <button class="btn" id="navCancel" type="button">Cancel</button>
+              <button class="btn danger" id="deleteTrip" type="button">Delete</button>
+            </div>
+          </div>
+        </section>
       </form>
     </div>
   `;
@@ -3591,13 +3631,169 @@ function renderEditTrip(){
   const elPounds = document.getElementById("e_pounds");
   const elAmount = document.getElementById("e_amount");
   const elArea = document.getElementById("e_area");
+  const elRate = document.getElementById("rateValueEdit");
+  const elToday = document.getElementById("todayBtnEdit");
+  const btnAddDealer = document.getElementById("addDealerInlineEdit");
+  const btnAddArea = document.getElementById("addAreaInlineEdit");
+  const topDealerWrapE = document.getElementById("topDealersE");
+  const topAreaWrapE = document.getElementById("topAreasE");
+
+  const updateRateLine = ()=>{
+    if(!elRate) return;
+    const p = Number(String(elPounds?.value || "").trim() || 0);
+    const a = Number(String(elAmount?.value || "").trim() || 0);
+    elRate.textContent = formatMoney(computePPL(p, a));
+  };
+
+  const openQuickAdd = (kind, opts = {})=>{
+    const isDealer = (kind === "dealer");
+    const label = isDealer ? "Dealer" : "Area";
+    const placeholder = isDealer ? "New dealer name" : "New area (ex: 19/626)";
+    const errId = "modalQuickAddErr";
+    const inputId = "modalQuickAddInput";
+    const addId = "modalQuickAddDoAdd";
+    const cancelId = "modalQuickAddCancel";
+    const onAdded = (typeof opts.onAdded === "function") ? opts.onAdded : null;
+
+    openModal({
+      title: `Add ${label}`,
+      backdropClose: false,
+      escClose: false,
+      showCloseButton: false,
+      position: "center",
+      html: `
+        <div class="field">
+          <label class="srOnly" for="${inputId}">${escapeHtml(label)} name</label>
+          <input class="input" id="${inputId}" placeholder="${escapeHtml(placeholder)}" autocomplete="${isDealer ? "organization" : "off"}" enterkeyhint="done" maxlength="40" />
+          <div class="modalErr" id="${errId}" style="display:none"></div>
+        </div>
+        <div class="modalActions">
+          <button class="btn" id="${cancelId}" type="button">Cancel</button>
+          <button class="btn primary" id="${addId}" type="button">Add</button>
+        </div>
+      `,
+      onOpen: ()=>{
+        const elIn = document.getElementById(inputId);
+        const elErr = document.getElementById(errId);
+        const showErr = (msg)=>{
+          if(!elErr) return;
+          elErr.textContent = msg;
+          elErr.style.display = "block";
+        };
+        const clearErr = ()=>{
+          if(!elErr) return;
+          elErr.textContent = "";
+          elErr.style.display = "none";
+        };
+
+        const commit = ()=>{
+          clearErr();
+          const raw = String(elIn?.value || "").trim();
+          if(!raw){
+            showErr("Enter a value first.");
+            elIn?.focus();
+            return;
+          }
+          if(raw.length > 40){
+            showErr("Keep it under 40 characters.");
+            elIn?.focus();
+            return;
+          }
+
+          let addedValue = raw;
+          if(isDealer){
+            if(!Array.isArray(state.dealers)) state.dealers = [];
+            const key = normalizeKey(raw);
+            const exists = state.dealers.some(d => normalizeKey(String(d || "")) === key);
+            if(exists){ showErr("That dealer already exists."); return; }
+            state.dealers.push(raw);
+            ensureDealers();
+            addedValue = state.dealers.find(d => normalizeKey(String(d || "")) === key) || raw;
+          }else{
+            if(!Array.isArray(state.areas)) state.areas = [];
+            const key = normalizeKey(raw);
+            const exists = state.areas.some(a => normalizeKey(String(a || "")) === key);
+            if(exists){ showErr("That area already exists."); return; }
+            state.areas.push(raw);
+            ensureAreas();
+            addedValue = state.areas.find(a => normalizeKey(String(a || "")) === key) || raw;
+          }
+
+          saveState();
+          closeModal();
+          if(onAdded) onAdded(addedValue);
+        };
+
+        document.getElementById(cancelId)?.addEventListener("click", ()=>closeModal());
+        document.getElementById(addId)?.addEventListener("click", commit);
+        elIn?.addEventListener("keydown", (e)=>{
+          if(e.key !== "Enter") return;
+          e.preventDefault();
+          commit();
+        });
+
+        setTimeout(()=>elIn?.focus(), 50);
+      }
+    });
+  };
+
+  btnAddDealer?.addEventListener("click", ()=>openQuickAdd("dealer", { onAdded: (val)=>{ elDealer.value = val; updateSaveEnabled(); } }));
+  btnAddArea?.addEventListener("click", ()=>openQuickAdd("area", { onAdded: (val)=>{ elArea.value = val; updateSaveEnabled(); } }));
 
   bindAreaChips("topAreasE", (a)=>{
     const nextArea = String(a||"").trim();
     if(!nextArea) return;
     elArea.value = nextArea;
+    updateSaveEnabled();
   });
-  bindQuickChipLongPress(document.getElementById("topAreasE"), (btn)=>{
+  if(topDealerWrapE && elDealer){
+    topDealerWrapE.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button[data-dealer]");
+      if(!btn) return;
+      if(btn.__suppressNextClick){
+        btn.__suppressNextClick = false;
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+        return;
+      }
+      const nextDealer = String(btn.getAttribute("data-dealer") || "").trim();
+      if(!nextDealer) return;
+      elDealer.value = nextDealer;
+      updateSaveEnabled();
+    });
+  }
+
+  const handleSelectAddNew = (kind, selectEl)=>{
+    const sentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
+    if(String(selectEl?.value || "") !== sentinel) return;
+    openQuickAdd(kind, {
+      onAdded: (addedValue)=>{
+        if(!selectEl) return;
+        selectEl.value = String(addedValue || "").trim();
+        updateSaveEnabled();
+      }
+    });
+  };
+  elDealer?.addEventListener("change", ()=>handleSelectAddNew("dealer", elDealer));
+  elArea?.addEventListener("change", ()=>handleSelectAddNew("area", elArea));
+
+  if(elToday && elDate){
+    elToday.onclick = ()=>{ elDate.value = isoToday(); };
+  }
+
+  bindQuickChipLongPress(topDealerWrapE, (btn)=>{
+    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
+    if(chipIndex < 0) return;
+    openQuickChipCustomizeModal({
+      kind: "dealer",
+      chipIndex,
+      currentValue: String(btn?.getAttribute("data-dealer") || ""),
+      choices: [...dealerListForSelect],
+      onSaved: ()=>renderEditTrip()
+    });
+  });
+  bindQuickChipLongPress(topAreaWrapE, (btn)=>{
     const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
     if(chipIndex < 0) return;
     openQuickChipCustomizeModal({
@@ -3612,17 +3808,28 @@ function renderEditTrip(){
   bindNavHandlers(state);
 
   // Color consistency: lbs blue, $ green
-  const updateEditColors = ()=>{
+  const updateSaveEnabled = ()=>{
     try{
       const p = parseNum(elPounds ? elPounds.value : "");
       const a = parseMoney(elAmount ? elAmount.value : "");
+      const dealerOk = !!String(elDealer?.value || "").trim() && String(elDealer?.value || "") !== dealerAddSentinel;
+      const areaOk = !!String(elArea?.value || "").trim() && String(elArea?.value || "") !== areaAddSentinel;
       const poundsOk = Number.isFinite(p) && p > 0;
       const amountOk = Number.isFinite(a) && a > 0;
       if(elPounds) elPounds.classList.toggle("lbsBlue", poundsOk);
       if(elAmount) elAmount.classList.toggle("money", amountOk);
+      const btn = document.getElementById("saveEdit");
+      if(btn){
+        const enabled = dealerOk && areaOk && poundsOk && amountOk;
+        btn.disabled = !enabled;
+        btn.setAttribute("aria-disabled", enabled ? "false" : "true");
+        btn.style.pointerEvents = enabled ? "auto" : "none";
+        btn.style.opacity = enabled ? "1" : "0.55";
+      }
     }catch(_){ }
   };
-  updateEditColors();
+  updateSaveEnabled();
+  updateRateLine();
 
   // Big-number keypad + better formatting (match New Trip)
   if(elPounds && !elPounds.__boundNumeric){
@@ -3633,11 +3840,13 @@ function renderEditTrip(){
     elPounds.addEventListener("input", ()=>{
       const s = sanitizeDecimalInput(elPounds.value);
       if(s !== elPounds.value) elPounds.value = s;
-      updateEditColors();
+      updateSaveEnabled();
+      updateRateLine();
     });
     elPounds.addEventListener("blur", ()=>{
       if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
-      updateEditColors();
+      updateSaveEnabled();
+      updateRateLine();
     });
   }
 
@@ -3649,13 +3858,21 @@ function renderEditTrip(){
     elAmount.addEventListener("input", ()=>{
       const s = sanitizeDecimalInput(elAmount.value);
       if(s !== elAmount.value) elAmount.value = s;
-      updateEditColors();
+      updateSaveEnabled();
+      updateRateLine();
     });
     elAmount.addEventListener("blur", ()=>{
       normalizeAmountOnBlur(elAmount);
-      updateEditColors();
+      updateSaveEnabled();
+      updateRateLine();
     });
   }
+
+  [elDate, elDealer, elPounds, elAmount, elArea].forEach(el=>{
+    if(!el) return;
+    el.addEventListener("input", ()=>{ updateSaveEnabled(); updateRateLine(); });
+    el.addEventListener("change", ()=>{ updateSaveEnabled(); updateRateLine(); });
+  });
 
   const editTripForm = document.getElementById("editTripForm");
   if(editTripForm) editTripForm.addEventListener("submit", (e)=>{
