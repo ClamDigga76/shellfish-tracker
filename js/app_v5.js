@@ -1137,346 +1137,131 @@ function normalizeTripForImport(t){
   };
 }
 
-function readFileAsText(file){
+function importBackupFromFile(file, opts={}){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onerror = ()=> reject(new Error("Failed to read file"));
-    reader.onload = ()=> resolve(String(reader.result || ""));
+    reader.onload = ()=>{
+      try{
+        const txt = String(reader.result || "");
+        const raw = JSON.parse(txt);
+
+        const normalizedResult = normalizeBackupPayload(raw);
+        if(!normalizedResult.ok){
+          const msg = normalizedResult.errors.join("\n");
+          reject(new Error(msg));
+          return;
+        }
+
+        const normalized = normalizedResult.normalized;
+        const tripsIn = normalized.data.trips;
+        const areasIn = normalized.data.areas;
+        const dealersIn = normalized.data.dealers;
+        const settingsIn = normalized.data.settings;
+
+        const importedTrips = tripsIn.map(normalizeTripForImport).filter(t=>t.dateISO || t.dealer || t.amount || t.pounds);
+        const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
+        const importedDealers = dealersIn.map(d=>String(d||"").trim()).filter(Boolean);
+
+        const forceOverwrite = !!opts?.forceOverwrite;
+        let replace = false;
+        if(forceOverwrite){
+          const msg = String(opts?.confirmMessage || "This will overwrite trips/lists on this device. Continue?");
+          if(!confirm(msg)){
+            resolve({ canceled:true, mode:"canceled", tripsInFile: importedTrips.length, tripsAdded: 0, areasInFile: importedAreas.length, dealersInFile: importedDealers.length, warnings: normalizedResult.warnings || [] });
+            return;
+          }
+          replace = true;
+        }else{
+          replace = confirm(
+            "Restore backup?\n\n" +
+            "OK = Replace current trips/areas/dealers on this device\n" +
+            "Cancel = Merge (skip likely duplicates)"
+          );
+        }
+
+        const hasExisting = (Array.isArray(state.trips) && state.trips.length) || (Array.isArray(state.areas) && state.areas.length) || (Array.isArray(state.dealers) && state.dealers.length);
+        if(replace && hasExisting && !forceOverwrite){
+          const makeSafety = confirm(
+            "Before replacing, create a safety backup of your current data?\n\n" +
+            "OK = Download safety backup\n" +
+            "Cancel = Continue without safety backup"
+          );
+          if(makeSafety){
+            const safetyPayload = buildBackupPayloadFromState(state);
+            downloadBackupPayload(safetyPayload, "shellfish_safety_before_restore");
+          }
+        }
+
+        const nextTrips = replace ? [] : (Array.isArray(state.trips) ? [...state.trips] : []);
+        const seen = new Set(nextTrips.map(t=> normalizeKey(`${t?.dateISO||""}|${t?.dealer||""}|${t?.area||""}|${to2(Number(t?.pounds)||0)}|${to2(Number(t?.amount)||0)}`)));
+
+        let added = 0;
+        for(const t of importedTrips){
+          const key = normalizeKey(`${t.dateISO}|${t.dealer}|${t.area}|${to2(t.pounds)}|${to2(t.amount)}`);
+          if(!replace){
+            const isDupKey = seen.has(key);
+            const isLikelyDup = nextTrips.some(x => likelyDuplicate(x, t));
+            if(isDupKey || isLikelyDup) continue;
+          }
+          if(nextTrips.some(x=>x.id === t.id)) t.id = uid("t");
+          nextTrips.push(t);
+          seen.add(key);
+          added++;
+        }
+
+        const nextAreas = replace ? [] : (Array.isArray(state.areas) ? [...state.areas] : []);
+        for(const a of importedAreas){
+          if(!nextAreas.includes(a)) nextAreas.push(a);
+        }
+
+        const nextDealers = replace ? [] : (Array.isArray(state.dealers) ? [...state.dealers] : []);
+        for(const d of importedDealers){
+          if(!nextDealers.includes(d)) nextDealers.push(d);
+        }
+
+        state.trips = nextTrips;
+        state.areas = nextAreas;
+        state.dealers = nextDealers;
+
+        // Settings restore rules:
+        // - Replace: use imported settings (if any)
+        // - Merge: keep existing settings; only fill missing keys from imported
+        const existingSettings = (state.settings && typeof state.settings === "object") ? state.settings : {};
+        if(replace){
+          state.settings = (settingsIn && typeof settingsIn === "object") ? settingsIn : {};
+        }else{
+          const merged = { ...existingSettings };
+          if(settingsIn && typeof settingsIn === "object"){
+            for(const k of Object.keys(settingsIn)){
+              if(merged[k] === undefined) merged[k] = settingsIn[k];
+            }
+          }
+          state.settings = merged;
+        }
+
+        // Normalize areas/dealers after import
+        ensureAreas();
+        ensureDealers();
+
+        saveState();
+        resolve({
+          mode: replace ? "replace" : "merge",
+          tripsInFile: importedTrips.length,
+          tripsAdded: replace ? importedTrips.length : added,
+          areasInFile: importedAreas.length,
+          dealersInFile: importedDealers.length,
+          warnings: normalizedResult.warnings || []
+        });
+      }catch(e){
+        reject(e);
+      }
+    };
     reader.readAsText(file);
   });
 }
 
-async function parseBackupFile(file){
-  const text = await readFileAsText(file);
-  let raw;
-  try{
-    raw = JSON.parse(text);
-  }catch(e){
-    throw new Error(`Backup file is not valid JSON: ${String(e?.message || e || "Unknown parse error")}`);
-  }
 
-  const normalizedResult = normalizeBackupPayload(raw);
-  if(!normalizedResult.ok){
-    const msg = normalizedResult.errors.join("\n") || "Backup validation failed";
-    throw new Error(msg);
-  }
-
-  const normalized = normalizedResult.normalized;
-  const root = (raw && typeof raw === "object") ? raw : {};
-  const rawData = (root.data && typeof root.data === "object") ? root.data : root;
-  const counts = {
-    trips: Array.isArray(normalized?.data?.trips) ? normalized.data.trips.length : 0,
-    areas: Array.isArray(normalized?.data?.areas) ? normalized.data.areas.length : 0,
-    dealers: Array.isArray(normalized?.data?.dealers) ? normalized.data.dealers.length : 0,
-    catches: Array.isArray(rawData?.catches) ? rawData.catches.length : null,
-    receipts: Array.isArray(rawData?.receipts) ? rawData.receipts.length : null
-  };
-
-  const metaVersion = String(root.appVersion ?? root.version ?? root.build ?? "").trim();
-  const exportedAt = String(root.exportedAt || "").trim();
-
-  return {
-    file,
-    raw: root,
-    normalized,
-    warnings: normalizedResult.warnings || [],
-    preview: {
-      filename: String(file?.name || "backup.json"),
-      counts,
-      exportedAt,
-      version: metaVersion || "unknown"
-    }
-  };
-}
-
-function applyBackupImport(parsed, opts={}){
-  const mode = String(opts?.mode || "merge").toLowerCase() === "replace" ? "replace" : "merge";
-  const replace = mode === "replace";
-  const includeSettings = !!opts?.includeSettings;
-  const normalized = parsed?.normalized;
-  if(!normalized || !normalized.data) throw new Error("Restore payload is missing normalized data");
-
-  const tripsIn = normalized.data.trips;
-  const areasIn = normalized.data.areas;
-  const dealersIn = normalized.data.dealers;
-  const settingsIn = normalized.data.settings;
-
-  const importedTrips = tripsIn.map(normalizeTripForImport).filter(t=>t.dateISO || t.dealer || t.amount || t.pounds);
-  const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
-  const importedDealers = dealersIn.map(d=>String(d||"").trim()).filter(Boolean);
-
-  const nextTrips = replace ? [] : (Array.isArray(state.trips) ? [...state.trips] : []);
-  const seen = new Set(nextTrips.map(t=> normalizeKey(`${t?.dateISO||""}|${t?.dealer||""}|${t?.area||""}|${to2(Number(t?.pounds)||0)}|${to2(Number(t?.amount)||0)}`)));
-
-  let added = 0;
-  for(const t of importedTrips){
-    const key = normalizeKey(`${t.dateISO}|${t.dealer}|${t.area}|${to2(t.pounds)}|${to2(t.amount)}`);
-    if(!replace){
-      const isDupKey = seen.has(key);
-      const isLikelyDup = nextTrips.some(x => likelyDuplicate(x, t));
-      if(isDupKey || isLikelyDup) continue;
-    }
-    if(nextTrips.some(x=>x.id === t.id)) t.id = uid("t");
-    nextTrips.push(t);
-    seen.add(key);
-    added++;
-  }
-
-  const nextAreas = replace ? [] : (Array.isArray(state.areas) ? [...state.areas] : []);
-  for(const a of importedAreas){
-    if(!nextAreas.includes(a)) nextAreas.push(a);
-  }
-
-  const nextDealers = replace ? [] : (Array.isArray(state.dealers) ? [...state.dealers] : []);
-  for(const d of importedDealers){
-    if(!nextDealers.includes(d)) nextDealers.push(d);
-  }
-
-  state.trips = nextTrips;
-  state.areas = nextAreas;
-  state.dealers = nextDealers;
-
-  if(includeSettings){
-    const existingSettings = (state.settings && typeof state.settings === "object") ? state.settings : {};
-    if(replace){
-      state.settings = (settingsIn && typeof settingsIn === "object") ? settingsIn : {};
-    }else{
-      const merged = { ...existingSettings };
-      if(settingsIn && typeof settingsIn === "object"){
-        for(const k of Object.keys(settingsIn)){
-          if(merged[k] === undefined) merged[k] = settingsIn[k];
-        }
-      }
-      state.settings = merged;
-    }
-  }
-
-  ensureAreas();
-  ensureDealers();
-  saveState();
-
-  return {
-    mode,
-    tripsInFile: importedTrips.length,
-    tripsAdded: replace ? importedTrips.length : added,
-    areasInFile: importedAreas.length,
-    dealersInFile: importedDealers.length,
-    warnings: parsed?.warnings || [],
-    includeSettings
-  };
-}
-
-function importBackupFromFile(file, opts={}){
-  return new Promise(async (resolve, reject)=>{
-    try{
-      const parsed = await parseBackupFile(file);
-      const forceOverwrite = !!opts?.forceOverwrite;
-      let mode = "merge";
-      if(forceOverwrite){
-        const msg = String(opts?.confirmMessage || "This will overwrite trips/lists on this device. Continue?");
-        if(!confirm(msg)){
-          resolve({ canceled:true, mode:"canceled", tripsInFile: parsed.preview.counts.trips, tripsAdded: 0, areasInFile: parsed.preview.counts.areas, dealersInFile: parsed.preview.counts.dealers, warnings: parsed.warnings || [] });
-          return;
-        }
-        mode = "replace";
-      }else{
-        const replace = confirm(
-          "Restore backup?\n\n" +
-          "OK = Replace current trips/areas/dealers on this device\n" +
-          "Cancel = Merge (skip likely duplicates)"
-        );
-        mode = replace ? "replace" : "merge";
-      }
-
-      const includeSettings = (opts?.includeSettings !== undefined) ? !!opts.includeSettings : true;
-      const result = applyBackupImport(parsed, { mode, includeSettings });
-      resolve(result);
-    }catch(e){
-      reject(e);
-    }
-  });
-}
-function __fmtRestoreMetaDate(raw){
-  const s = String(raw || "").trim();
-  if(!s) return "unknown";
-  const d = new Date(s);
-  if(isNaN(d.getTime())) return s;
-  return d.toLocaleString();
-}
-
-function showRestoreErrorDialog(friendlyMessage, reason){
-  const friendly = String(friendlyMessage || "Restore failed").trim() || "Restore failed";
-  const detail = String(reason || "Unknown error").trim() || "Unknown error";
-  const closeId = `restoreErrClose_${Date.now()}`;
-  openModal({
-    title: "Restore failed",
-    backdropClose: true,
-    escClose: true,
-    showCloseButton: true,
-    position: "center",
-    html: `
-      <div class="muted small" style="line-height:1.35">${escapeHtml(friendly)}</div>
-      <details style="margin-top:10px">
-        <summary class="muted small" style="cursor:pointer">Show details</summary>
-        <div class="muted tiny preWrap" style="margin-top:8px;white-space:pre-wrap;line-height:1.25">${escapeHtml(detail)}</div>
-      </details>
-      <div class="modalActions" style="margin-top:12px">
-        <button class="btn primary" id="${closeId}" type="button">Close</button>
-      </div>
-    `,
-    onOpen: ()=>{
-      document.getElementById(closeId)?.addEventListener("click", ()=>closeModal());
-    }
-  });
-  announce(`Error: ${friendly}`, "assertive");
-}
-
-function promptSafetyBackupBeforeReplace(){
-  return new Promise((resolve)=>{
-    const createId = `restoreSafetyCreate_${Date.now()}`;
-    const skipId = `restoreSafetySkip_${Date.now()}`;
-    const cancelId = `restoreSafetyCancel_${Date.now()}`;
-    const errId = `restoreSafetyErr_${Date.now()}`;
-
-    const finish = (value)=>{
-      closeModal();
-      resolve(value);
-    };
-
-    openModal({
-      title: "Create Safety Backup of current data first?",
-      backdropClose: false,
-      escClose: false,
-      showCloseButton: false,
-      position: "center",
-      html: `
-        <div class="muted small" style="line-height:1.35">Before Replace, create a safety backup of your current data?</div>
-        <div class="muted tiny" id="${errId}" style="margin-top:10px;display:none"></div>
-        <div class="modalActions" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
-          <button class="btn primary" id="${createId}" type="button">Create Backup</button>
-          <button class="btn" id="${skipId}" type="button">Skip</button>
-          <button class="btn" id="${cancelId}" type="button">Cancel</button>
-        </div>
-      `,
-      onOpen: ()=>{
-        const btnCreate = document.getElementById(createId);
-        const btnSkip = document.getElementById(skipId);
-        const btnCancel = document.getElementById(cancelId);
-        const errEl = document.getElementById(errId);
-        const setBusy = (busy)=>{
-          if(btnCreate) btnCreate.disabled = busy;
-          if(btnSkip) btnSkip.disabled = busy;
-          if(btnCancel) btnCancel.disabled = busy;
-        };
-
-        btnCancel?.addEventListener("click", ()=>finish("cancel"));
-        btnSkip?.addEventListener("click", ()=>finish("skip"));
-        btnCreate?.addEventListener("click", async ()=>{
-          setBusy(true);
-          if(errEl){ errEl.style.display = "none"; errEl.textContent = ""; }
-          try{
-            const r = await exportBackup();
-            if(!r?.ok) throw (r?.error || new Error("Backup failed"));
-            showToast(r.method === "share" ? "Share opened" : "Backup created");
-            finish("created");
-          }catch(e){
-            const msg = String(e?.message || e || "Backup failed");
-            if(errEl){
-              errEl.style.display = "block";
-              errEl.textContent = msg;
-            }
-            announce(`Error: ${msg}`, "assertive");
-            setBusy(false);
-          }
-        });
-      }
-    });
-  });
-}
-
-function openRestoreWizard(parsed){
-  return new Promise((resolve)=>{
-    const modeMergeId = `restoreModeMerge_${Date.now()}`;
-    const modeReplaceId = `restoreModeReplace_${Date.now()}`;
-    const includeSettingsId = `restoreIncludeSettings_${Date.now()}`;
-    const cancelId = `restoreWizardCancel_${Date.now()}`;
-    const continueId = `restoreWizardContinue_${Date.now()}`;
-
-    const counts = parsed?.preview?.counts || {};
-    const warnings = Array.isArray(parsed?.warnings) ? parsed.warnings : [];
-    const warningHtml = warnings.length
-      ? `<ul style="margin:8px 0 0 18px">${warnings.map(w=>`<li class="muted small">${escapeHtml(String(w||""))}</li>`).join("")}</ul>`
-      : `<div class="muted small" style="margin-top:8px">No warnings</div>`;
-
-    const optionalRows = [
-      (counts.catches === null ? "" : `<div class="muted small">Catches: <b>${Number(counts.catches) || 0}</b></div>`),
-      (counts.receipts === null ? "" : `<div class="muted small">Receipts: <b>${Number(counts.receipts) || 0}</b></div>`)
-    ].join("");
-
-    openModal({
-      title: "Restore preview",
-      backdropClose: true,
-      escClose: true,
-      showCloseButton: true,
-      position: "sheet",
-      html: `
-        <div class="muted small">File: <b>${escapeHtml(String(parsed?.preview?.filename || "unknown"))}</b></div>
-        <div style="margin-top:10px">
-          <div class="muted small">Trips: <b>${Number(counts.trips) || 0}</b></div>
-          <div class="muted small">Areas: <b>${Number(counts.areas) || 0}</b></div>
-          <div class="muted small">Dealers: <b>${Number(counts.dealers) || 0}</b></div>
-          ${optionalRows}
-        </div>
-        <div style="margin-top:10px">
-          <div class="muted small">Exported: <b>${escapeHtml(__fmtRestoreMetaDate(parsed?.preview?.exportedAt))}</b></div>
-          <div class="muted small">Build/Version: <b>${escapeHtml(String(parsed?.preview?.version || "unknown"))}</b></div>
-        </div>
-        <div style="margin-top:10px">
-          <div class="muted small"><b>Warnings</b></div>
-          ${warningHtml}
-        </div>
-        <div style="margin-top:12px">
-          <div class="muted small"><b>Mode</b></div>
-          <label class="muted small" style="display:block;margin-top:6px"><input type="radio" name="restoreMode" id="${modeMergeId}" value="merge" checked /> Merge (default)</label>
-          <label class="muted small" style="display:block;margin-top:6px"><input type="radio" name="restoreMode" id="${modeReplaceId}" value="replace" /> Replace</label>
-        </div>
-        <label class="muted small" style="display:block;margin-top:10px">
-          <input type="checkbox" id="${includeSettingsId}" /> Restore settings too
-        </label>
-        <div class="modalActions" style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn" id="${cancelId}" type="button">Cancel</button>
-          <button class="btn primary" id="${continueId}" type="button">Continue</button>
-        </div>
-      `,
-      onOpen: ()=>{
-        document.getElementById(cancelId)?.addEventListener("click", ()=>{
-          closeModal();
-          resolve({ canceled:true });
-        });
-
-        document.getElementById(continueId)?.addEventListener("click", ()=>{
-          const replace = !!document.getElementById(modeReplaceId)?.checked;
-          const includeSettings = !!document.getElementById(includeSettingsId)?.checked;
-          closeModal();
-          resolve({ canceled:false, mode: replace ? "replace" : "merge", includeSettings });
-        });
-      }
-    });
-  });
-}
-
-async function runRestoreWizard(file){
-  const parsed = await parseBackupFile(file);
-  const choice = await openRestoreWizard(parsed);
-  if(choice?.canceled) return { canceled:true, reason:"wizard-canceled" };
-
-  if(choice.mode === "replace"){
-    const safety = await promptSafetyBackupBeforeReplace();
-    if(safety === "cancel") return { canceled:true, reason:"safety-canceled" };
-  }
-
-  return applyBackupImport(parsed, { mode: choice.mode, includeSettings: choice.includeSettings });
-}
 function ensureAreas(){
   if(!Array.isArray(state.areas)) state.areas = [];
   // normalize + de-dupe (case-insensitive)
@@ -4907,6 +4692,60 @@ function renderSettings(opts={}){
 
   const s = state.settings || (state.settings = {});
   const listMode = String(s.listMode || "areas").toLowerCase();
+
+  const areaRows = state.areas.length ? state.areas.map((a, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
+      <button class="smallbtn danger" data-del-area="${i}">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small mt10">No areas yet. Add one below.</div>`;
+
+  const dealerRows = state.dealers.length ? state.dealers.map((d, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
+      <button class="smallbtn danger" data-del-dealer="${i}">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small mt10">No dealers yet. Add one below.</div>`;
+
+
+function __renderListMgmtPanel(mode){
+  const m = String(mode||"areas").toLowerCase();
+  // Normalize list arrays (defensive)
+  if(!Array.isArray(state.areas)) state.areas = [];
+  if(!Array.isArray(state.dealers)) state.dealers = [];
+  const areaRows2 = state.areas.length ? state.areas.map((a, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
+      <button class="smallbtn danger" data-del-area="${i}" type="button">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small mt10">No areas yet. Add one below.</div>`;
+
+  const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
+      <button class="smallbtn danger" data-del-dealer="${i}" type="button">Delete</button>
+    </div>
+  `).join("") : `<div class="muted small mt10">No dealers yet. Add one below.</div>`;
+
+  return (m==="dealers") ? `
+    <div style="margin-top:12px">
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" autocomplete="organization" enterkeyhint="done" style="flex:1;min-width:180px" />
+        <button class="btn primary" id="addDealer" type="button">Add</button>
+      </div>
+      ${dealerRows2}
+    </div>
+  ` : `
+    <div style="margin-top:12px">
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" autocomplete="off" enterkeyhint="done" style="flex:1;min-width:180px" />
+        <button class="btn primary" id="addArea" type="button">Add</button>
+      </div>
+      ${areaRows2}
+    </div>
+  `;
+}
+
   getApp().innerHTML = `
     ${renderPageHeader("settings")}
 
@@ -5046,7 +4885,7 @@ function renderSettings(opts={}){
         try{ inp.value = ""; }catch(_){ }
         if(!file) return;
         try{
-          const result = await runRestoreWizard(file);
+          const result = await importBackupFromFile(file, { forceOverwrite:true, confirmMessage: "This will overwrite trips/lists on this device. Continue?" });
           if(result?.canceled){
             showToast("Restore canceled");
             return;
@@ -5055,9 +4894,7 @@ function renderSettings(opts={}){
           showToast(Number.isFinite(n) ? `Restore complete (${n} trips)` : "Restore complete");
           renderSettings();
         }catch(e){
-          const reason = String(e?.message || e || "Unknown error");
           showToast("Restore failed");
-          showRestoreErrorDialog("Could not restore this backup.", reason);
         }
       };
     }
@@ -5819,12 +5656,4 @@ function bindQuickChipLongPress(containerEl, onLongPressRelease){
     e.preventDefault();
   });
 }
-
-
-
-
-
-
-
-
 
