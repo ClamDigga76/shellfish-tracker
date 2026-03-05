@@ -32,10 +32,32 @@ export function pad2(n){
   return String(n).padStart(2, "0");
 }
 
+export function formatDateDMY(input){
+  if(input == null || input === "") return "";
+
+  // Pure date input (YYYY-MM-DD): preserve exact calendar day via UTC.
+  if(typeof input === "string"){
+    const s = input.trim();
+    if(!s) return "";
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if(m){
+      const y = Number(m[1]);
+      const mo = Number(m[2]);
+      const d = Number(m[3]);
+      if(!(y >= 1 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return "";
+      const dt = new Date(Date.UTC(y, mo - 1, d));
+      if(dt.getUTCFullYear() !== y || (dt.getUTCMonth() + 1) !== mo || dt.getUTCDate() !== d) return "";
+      return `${pad2(dt.getUTCDate())}/${pad2(dt.getUTCMonth() + 1)}/${dt.getUTCFullYear()}`;
+    }
+  }
+
+  const dt = (input instanceof Date) ? input : new Date(input);
+  if(Number.isNaN(dt.getTime())) return "";
+  return `${pad2(dt.getDate())}/${pad2(dt.getMonth() + 1)}/${dt.getFullYear()}`;
+}
+
 export function formatDateDisplay(iso){
-  const p = String(iso || "").split("-");
-  if(p.length !== 3) return iso || "";
-  return p[2] + "/" + p[1] + "/" + p[0];
+  return formatDateDMY(iso);
 }
 
 // Back-compat alias (older call sites still reference this name).
