@@ -3545,9 +3545,10 @@ function renderEditTrip(){
   getApp().innerHTML = `
     ${renderPageHeader("edit")}
 
-    <div class="card formCard">
+    <div class="card formCard edit-mode">
       <form id="editTripForm">
         <section class="trip-section trip-edit-indicator" aria-label="Edit mode indicator">
+          <h1 class="edit-trip-title">EDIT TRIP</h1>
           <div class="editModePill" role="status" aria-live="polite">
             <span class="editModePillIcon" aria-hidden="true">✎</span>
             <span>Editing</span>
