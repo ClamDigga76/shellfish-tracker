@@ -2530,20 +2530,6 @@ const getBarSelectChoices = (kind)=>{
   return Array.isArray(state.areas) ? [...state.areas] : [];
 };
 
-const buildChipOwnedOptions = (kind)=>{
-  const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
-  const nice = kind === "dealer" ? "Dealer" : "Area";
-  const choices = getBarSelectChoices(kind);
-  return [""].concat(choices).map((v)=>{
-    const value = String(v || "").trim();
-    const label = value || "Select";
-    return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
-  }).concat(`<option value="${addSentinel}">+ Add new ${nice}</option>`).join("");
-};
-
-const dealerChipOwnedOptions = buildChipOwnedOptions("dealer");
-const areaChipOwnedOptions = buildChipOwnedOptions("area");
-
 ;getApp().innerHTML = `
     ${renderPageHeader("new")}
 
@@ -2627,13 +2613,6 @@ const areaChipOwnedOptions = buildChipOwnedOptions("area");
   </div>
 </div>
 </section>
-
-      <select id="chipOwnedDealerPicker" aria-hidden="true" tabindex="-1" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none">
-        ${dealerChipOwnedOptions}
-      </select>
-      <select id="chipOwnedAreaPicker" aria-hidden="true" tabindex="-1" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none">
-        ${areaChipOwnedOptions}
-      </select>
 
       </form>
 
@@ -2988,11 +2967,6 @@ const btnClear = document.getElementById("clearDraft");
     elArea.addEventListener("change", persistDraft);
   }
 
-  const chipOwnedDealerPicker = document.getElementById("chipOwnedDealerPicker");
-  const chipOwnedAreaPicker = document.getElementById("chipOwnedAreaPicker");
-  let activeChipType = "";
-  let activeChipIndex = -1;
-
   const handleSelectAddNew = (kind, selectEl)=>{
     const sentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
     const current = String(selectEl?.value || "");
@@ -3011,35 +2985,66 @@ const btnClear = document.getElementById("clearDraft");
     return true;
   };
 
-  const refreshChipOwnedPicker = (kind, selectEl, preferredValue)=>{
-    if(!selectEl) return;
+  const openTempSelectPicker = ({ kind, currentValue, onPick, includeAddNew })=>{
     const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
     const nice = kind === "dealer" ? "Dealer" : "Area";
-    const optionsHtml = [""].concat(getBarSelectChoices(kind)).map((v)=>{
+    const nextValue = String(currentValue || "").trim();
+    const selectEl = document.createElement("select");
+    selectEl.setAttribute("aria-hidden", "true");
+    selectEl.tabIndex = -1;
+    selectEl.style.position = "fixed";
+    selectEl.style.top = "0";
+    selectEl.style.left = "0";
+    selectEl.style.width = "1px";
+    selectEl.style.height = "1px";
+    selectEl.style.opacity = "0";
+
+    const values = [""].concat(getBarSelectChoices(kind));
+    values.forEach((v)=>{
       const value = String(v || "").trim();
-      const label = value || "Select";
-      return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
-    }).concat(`<option value="${addSentinel}">+ Add new ${nice}</option>`).join("");
-    selectEl.innerHTML = optionsHtml;
-
-    const next = String(preferredValue || "").trim();
-    if(next && !Array.from(selectEl.options || []).some(o=>String(o?.value || "") === next)){
       const opt = document.createElement("option");
-      opt.value = next;
-      opt.textContent = next;
-      selectEl.insertBefore(opt, selectEl.querySelector(`option[value="${addSentinel}"]`) || null);
-    }
-    selectEl.value = next;
-  };
+      opt.value = value;
+      opt.textContent = value || "Select";
+      selectEl.appendChild(opt);
+    });
 
-  const openChipOwnedPicker = ({ kind, chipIndex, chipValue })=>{
-    const slot = Number(chipIndex);
-    if(slot < 0) return;
-    const selectEl = kind === "dealer" ? chipOwnedDealerPicker : chipOwnedAreaPicker;
-    if(!selectEl) return;
-    activeChipType = kind;
-    activeChipIndex = slot;
-    refreshChipOwnedPicker(kind, selectEl, String(chipValue || "").trim());
+    if(nextValue && !values.some(v=>String(v || "").trim() === nextValue)){
+      const customOpt = document.createElement("option");
+      customOpt.value = nextValue;
+      customOpt.textContent = nextValue;
+      selectEl.appendChild(customOpt);
+    }
+
+    if(includeAddNew){
+      const addOpt = document.createElement("option");
+      addOpt.value = addSentinel;
+      addOpt.textContent = `+ Add new ${nice}`;
+      selectEl.appendChild(addOpt);
+    }
+
+    selectEl.value = nextValue;
+    document.body.appendChild(selectEl);
+
+    let done = false;
+    const cleanup = ()=>{
+      if(done) return;
+      done = true;
+      selectEl.removeEventListener("change", onChange);
+      selectEl.removeEventListener("blur", onBlur);
+      selectEl.removeEventListener("cancel", onCancel);
+      try{ selectEl.remove(); }catch(_){ }
+    };
+    const onBlur = ()=>cleanup();
+    const onCancel = ()=>cleanup();
+    const onChange = ()=>{
+      const picked = String(selectEl.value || "").trim();
+      if(typeof onPick === "function") onPick(picked);
+      cleanup();
+    };
+
+    selectEl.addEventListener("change", onChange, { once: true });
+    selectEl.addEventListener("blur", onBlur, { once: true });
+    selectEl.addEventListener("cancel", onCancel, { once: true });
 
     try{
       if(typeof selectEl.showPicker === "function") selectEl.showPicker();
@@ -3048,37 +3053,8 @@ const btnClear = document.getElementById("clearDraft");
         selectEl.click();
       }
     }catch(_){
-      try{ selectEl.focus({ preventScroll: true }); selectEl.click(); }catch(__){}
+      try{ selectEl.focus({ preventScroll: true }); selectEl.click(); }catch(__){ cleanup(); }
     }
-  };
-
-  const onChipOwnedPickerChange = (kind)=>{
-    const selectEl = kind === "dealer" ? chipOwnedDealerPicker : chipOwnedAreaPicker;
-    if(!selectEl) return;
-    if(activeChipType !== kind || activeChipIndex < 0) return;
-
-    const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
-    const picked = String(selectEl.value || "").trim();
-    const slot = activeChipIndex;
-    activeChipType = "";
-    activeChipIndex = -1;
-
-    if(picked === addSentinel){
-      openQuickAdd(kind, {
-        onAdded: (addedValue)=>{
-          const value = String(addedValue || "").trim();
-          if(!value) return;
-          refreshChipOwnedPicker(kind, selectEl, value);
-          setQuickChipMapping(kind, slot, value);
-          renderNewTrip();
-        }
-      });
-      return;
-    }
-
-    if(!picked) return;
-    setQuickChipMapping(kind, slot, picked);
-    renderNewTrip();
   };
 
   elDealer?.addEventListener("change", ()=>{
@@ -3087,9 +3063,6 @@ const btnClear = document.getElementById("clearDraft");
   elArea?.addEventListener("change", ()=>{
     handleSelectAddNew("area", elArea);
   });
-
-  chipOwnedDealerPicker?.addEventListener("change", ()=>onChipOwnedPickerChange("dealer"));
-  chipOwnedAreaPicker?.addEventListener("change", ()=>onChipOwnedPickerChange("area"));
 
 if(topAreaWrap && elArea){
   topAreaWrap.addEventListener("click", (e)=>{
@@ -3137,18 +3110,56 @@ if(topDealerWrap && elDealer){
 }
 
   bindQuickChipLongPress(topAreaWrap, (btn)=>{
-    openChipOwnedPicker({
+    const slot = Number(btn?.getAttribute("data-chip-index") || -1);
+    if(slot < 0) return;
+    const chipValue = String(btn?.getAttribute("data-area") || "").trim();
+    openTempSelectPicker({
       kind: "area",
-      chipIndex: Number(btn?.getAttribute("data-chip-index") || -1),
-      chipValue: String(btn?.getAttribute("data-area") || "")
+      currentValue: chipValue,
+      includeAddNew: true,
+      onPick: (selectedValue)=>{
+        if(selectedValue === areaAddSentinel){
+          openQuickAdd("area", {
+            onAdded: (addedValue)=>{
+              const value = String(addedValue || "").trim();
+              if(!value) return;
+              setQuickChipMapping("area", slot, value);
+              renderNewTrip();
+            }
+          });
+          return;
+        }
+        if(!selectedValue) return;
+        setQuickChipMapping("area", slot, selectedValue);
+        renderNewTrip();
+      }
     });
   });
 
   bindQuickChipLongPress(topDealerWrap, (btn)=>{
-    openChipOwnedPicker({
+    const slot = Number(btn?.getAttribute("data-chip-index") || -1);
+    if(slot < 0) return;
+    const chipValue = String(btn?.getAttribute("data-dealer") || "").trim();
+    openTempSelectPicker({
       kind: "dealer",
-      chipIndex: Number(btn?.getAttribute("data-chip-index") || -1),
-      chipValue: String(btn?.getAttribute("data-dealer") || "")
+      currentValue: chipValue,
+      includeAddNew: true,
+      onPick: (selectedValue)=>{
+        if(selectedValue === dealerAddSentinel){
+          openQuickAdd("dealer", {
+            onAdded: (addedValue)=>{
+              const value = String(addedValue || "").trim();
+              if(!value) return;
+              setQuickChipMapping("dealer", slot, value);
+              renderNewTrip();
+            }
+          });
+          return;
+        }
+        if(!selectedValue) return;
+        setQuickChipMapping("dealer", slot, selectedValue);
+        renderNewTrip();
+      }
     });
   });
 
