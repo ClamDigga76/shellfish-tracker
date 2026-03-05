@@ -2524,35 +2524,14 @@ function renderNewTrip(){
   const amountVal = String(draft.amount ?? "");
 
 
-  const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
-    const label = a ? a : "—";
-    const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
-    return `<option value="${escapeHtml(String(a||""))}" ${sel}>${label}</option>`;
-  }).concat(`<option value="${areaAddSentinel}">+ Add new Area</option>`).join("");
+  // Recent (last 2) unique values from saved trips (ignores filters)
+  // NOTE: Chips are always shown; if none exist yet we show a muted "No recent …" line.
+  const topAreas = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
+  const topDealers = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
 
-
-
-// Recent (last 2) unique values from saved trips (ignores filters)
-// NOTE: Chips are always shown; if none exist yet we show a muted "No recent …" line.
-const topAreas = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
-const topDealers = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
-
-const dealerListForSelect = [];
-const seenDealerKeys = new Set();
-for(const d of [...topDealers, ...(Array.isArray(state.dealers)?state.dealers:[])]){
-  const v = String(d||"").trim();
-  if(!v) continue;
-  const k = normalizeKey(v);
-  if(seenDealerKeys.has(k)) continue;
-  seenDealerKeys.add(k);
-  dealerListForSelect.push(v);
-}
-const dealerOptions = ["", ...dealerListForSelect].map(d=>{
-  const label = d ? d : "—";
-  const sel = (normalizeKey(String(draft.dealer||"")) === normalizeKey(String(d||""))) ? "selected" : "";
-  const v = String(d||"").replaceAll('"',"&quot;");
-  return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
-}).concat(`<option value="${dealerAddSentinel}">+ Add new Dealer</option>`).join("");
+  const dealerListForSelect = getDealerSelectList(topDealers);
+  const dealerOptions = buildDealerOptionsHtml(draft.dealer, dealerListForSelect, dealerAddSentinel);
+  const areaOptions = buildAreaOptionsHtml(draft.area, areaAddSentinel);
 
 const getBarSelectChoices = (kind)=>{
   if(kind === "dealer") return [...dealerListForSelect];
@@ -3392,37 +3371,15 @@ if(elDealerLive){
   });
 }
   if(topAreaWrapR && elAreaLive){
-    topAreaWrapR.addEventListener("click", (e)=>{
-      const btn = e.target.closest("button[data-area]");
-      if(!btn) return;
-      if(btn.__suppressNextClick){
-        btn.__suppressNextClick = false;
-        e.preventDefault();
-        e.stopPropagation();
-        if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
-        return;
-      }
-      const a = String(btn.getAttribute("data-area") || "").trim();
-      if(!a) return;
-      elAreaLive.value = a;
+    bindQuickChips("topAreasR", "area", (area)=>{
+      elAreaLive.value = area;
       updateReviewDerived();
     });
   }
 
   if(topDealerWrapR && elDealerLive){
-    topDealerWrapR.addEventListener("click", (e)=>{
-      const btn = e.target.closest("button[data-dealer]");
-      if(!btn) return;
-      if(btn.__suppressNextClick){
-        btn.__suppressNextClick = false;
-        e.preventDefault();
-        e.stopPropagation();
-        if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
-        return;
-      }
-      const d = String(btn.getAttribute("data-dealer") || "").trim();
-      if(!d) return;
-      elDealerLive.value = d;
+    bindQuickChips("topDealersR", "dealer", (dealer)=>{
+      elDealerLive.value = dealer;
       updateReviewDerived();
     });
   }
@@ -3517,29 +3474,9 @@ function renderEditTrip(){
   const topAreasE = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
   const topDealersE = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
 
-  const dealerListForSelect = [];
-  const seenDealerKeys = new Set();
-  for(const d of [...topDealersE, ...(Array.isArray(state.dealers) ? state.dealers : [])]){
-    const v = String(d || "").trim();
-    if(!v) continue;
-    const key = normalizeKey(v);
-    if(seenDealerKeys.has(key)) continue;
-    seenDealerKeys.add(key);
-    dealerListForSelect.push(v);
-  }
-
-  const dealerOptions = ["", ...dealerListForSelect].map(dv=>{
-    const label = dv ? dv : "—";
-    const sel = (normalizeKey(String(draft.dealer || "")) === normalizeKey(String(dv || ""))) ? "selected" : "";
-    const v = String(dv || "").replaceAll('"', "&quot;");
-    return `<option value="${v}" ${sel}>${escapeHtml(label)}</option>`;
-  }).concat(`<option value="${dealerAddSentinel}">+ Add new Dealer</option>`).join("");
-
-  const areaOptions = ["", ...(Array.isArray(state.areas)?state.areas:[])].map(a=>{
-    const label = a ? a : "—";
-    const sel = (String(draft.area||"") === String(a||"")) ? "selected" : "";
-    return `<option value="${escapeHtml(String(a||""))}" ${sel}>${label}</option>`;
-  }).concat(`<option value="${areaAddSentinel}">+ Add new Area</option>`).join("");
+  const dealerListForSelect = getDealerSelectList(topDealersE);
+  const dealerOptions = buildDealerOptionsHtml(draft.dealer, dealerListForSelect, dealerAddSentinel);
+  const areaOptions = buildAreaOptionsHtml(draft.area, areaAddSentinel);
 
 
   getApp().innerHTML = `
@@ -5377,40 +5314,62 @@ function displayAmount(val){
   return display2(val);
 }
 
-function renderTopAreaChips(topAreas, currentArea, containerId){
-  const items = Array.isArray(topAreas) ? topAreas.map(x=>String(x||"")) : [];
-  if(!items.length){
-    return `<div class="recentEmpty muted small">No recent areas yet</div>`;
+function buildAreaOptionsHtml(selectedArea, addSentinel){
+  return ["", ...(Array.isArray(state.areas) ? state.areas : [])].map((area)=>{
+    const label = area ? area : "—";
+    const sel = (String(selectedArea || "") === String(area || "")) ? "selected" : "";
+    return `<option value="${escapeHtml(String(area || ""))}" ${sel}>${label}</option>`;
+  }).concat(`<option value="${addSentinel}">+ Add new Area</option>`).join("");
+}
+
+function getDealerSelectList(topDealers){
+  const out = [];
+  const seenDealerKeys = new Set();
+  for(const dealer of [...(Array.isArray(topDealers) ? topDealers : []), ...(Array.isArray(state.dealers) ? state.dealers : [])]){
+    const val = String(dealer || "").trim();
+    if(!val) continue;
+    const key = normalizeKey(val);
+    if(seenDealerKeys.has(key)) continue;
+    seenDealerKeys.add(key);
+    out.push(val);
   }
+  return out;
+}
+
+function buildDealerOptionsHtml(selectedDealer, dealerList, addSentinel){
+  return ["", ...(Array.isArray(dealerList) ? dealerList : [])].map((dealer)=>{
+    const label = dealer ? dealer : "—";
+    const sel = (normalizeKey(String(selectedDealer || "")) === normalizeKey(String(dealer || ""))) ? "selected" : "";
+    const value = String(dealer || "").replaceAll('"', "&quot;");
+    return `<option value="${value}" ${sel}>${escapeHtml(label)}</option>`;
+  }).concat(`<option value="${addSentinel}">+ Add new Dealer</option>`).join("");
+}
+
+function renderTopChips({ items, currentValue, containerId, kind, emptyLabel }){
+  const list = Array.isArray(items) ? items.map(x=>String(x || "")) : [];
+  if(!list.length) return `<div class="recentEmpty muted small">${emptyLabel}</div>`;
+  const dataAttr = kind === "dealer" ? "dealer" : "area";
+  const current = String(currentValue || "").trim();
   return `
     <div class="areachips" id="${containerId}">
-      ${items.map((a, idx)=>{
-        const val = String(a||"").trim();
-        const on = !!val && (String(currentArea||"").trim() === val);
+      ${list.map((item, idx)=>{
+        const val = String(item || "").trim();
+        const on = !!val && (kind === "dealer"
+          ? current.toLowerCase() === val.toLowerCase()
+          : current === val);
         const label = val || "Select";
-        return `<button class="areachip chip-selector${on ? " on" : ""}" type="button" data-area="${escapeHtml(val)}" data-chip-index="${idx}">${escapeHtml(label)}</button>`;
+        return `<button class="areachip chip-selector${on ? " on" : ""}" type="button" data-${dataAttr}="${escapeHtml(val)}" data-chip-index="${idx}">${escapeHtml(label)}</button>`;
       }).join("")}
     </div>
   `;
 }
 
+function renderTopAreaChips(topAreas, currentArea, containerId){
+  return renderTopChips({ items: topAreas, currentValue: currentArea, containerId, kind: "area", emptyLabel: "No recent areas yet" });
+}
+
 function renderTopDealerChips(topDealers, currentDealer, containerId){
-  const items = Array.isArray(topDealers) ? topDealers.map(x=>String(x||"")) : [];
-  if(!items.length){
-    return `
-      <div class="recentEmpty muted small">No recent dealers yet</div>
-    `;
-  }
-  return `
-    <div class="areachips" id="${containerId}">
-      ${items.map((d, idx)=>{
-        const val = String(d||"").trim();
-        const on = !!val && (String(currentDealer||"").trim().toLowerCase() === val.toLowerCase());
-        const label = val || "Select";
-        return `<button class="areachip chip-selector${on ? " on" : ""}" type="button" data-dealer="${escapeHtml(val)}" data-chip-index="${idx}">${escapeHtml(label)}</button>`;
-      }).join("")}
-    </div>
-  `;
+  return renderTopChips({ items: topDealers, currentValue: currentDealer, containerId, kind: "dealer", emptyLabel: "No recent dealers yet" });
 }
 
 function getQuickChipSettings(){
@@ -5574,11 +5533,11 @@ function openQuickChipCustomizeModal({ kind, chipIndex, currentValue, onSaved, c
 }
 
 
-function bindAreaChips(containerId, onPick){
+function bindQuickChips(containerId, dataAttr, onPick){
   const el = document.getElementById(containerId);
   if(!el) return;
   el.addEventListener("click", (e)=>{
-    const btn = e.target && e.target.closest && e.target.closest("button[data-area]");
+    const btn = e.target && e.target.closest && e.target.closest(`button[data-${dataAttr}]`);
     if(!btn) return;
     if(btn.__suppressNextClick){
       btn.__suppressNextClick = false;
@@ -5587,10 +5546,14 @@ function bindAreaChips(containerId, onPick){
       if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
       return;
     }
-    const a = String(btn.getAttribute("data-area") || "").trim();
-    if(!a) return;
-    onPick(a);
+    const value = String(btn.getAttribute(`data-${dataAttr}`) || "").trim();
+    if(!value) return;
+    onPick(value);
   });
+}
+
+function bindAreaChips(containerId, onPick){
+  bindQuickChips(containerId, "area", onPick);
 }
 
 function bindQuickChipLongPress(containerEl, onLongPressRelease){
