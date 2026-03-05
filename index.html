@@ -43,7 +43,7 @@ main{padding:14px 14px 18px}
 .btn.ghost{background:transparent}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .muted{color:var(--muted)}
-.srOnly{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.srOnly,.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 /* Semantic value colors */
 .money{color:var(--good)!important;font-weight:700}
 b.money{color:var(--good)!important}
@@ -561,10 +561,18 @@ header{padding:14px 18px 12px}
   background:rgba(255,255,255,.04) !important;
   border:1px solid rgba(255,255,255,.10) !important;
 }
-.input:focus,.select:focus,.textarea:focus{
+.input:focus-visible,.select:focus-visible,.textarea:focus-visible{
   outline:none;
   border-color:rgba(120,160,255,.55) !important;
   box-shadow:0 0 0 3px rgba(47,109,246,.18);
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible{
+  outline:3px solid #ffd54a;
+  outline-offset:3px;
 }
 .smallbtn{
   border-radius:var(--r-pill);
@@ -861,5 +869,6 @@ body.scrollLock{
 <div id="tabbar" aria-label="Primary navigation"></div>
   <div id="toast"></div>
   <div id="modalRoot" class="modalRoot hidden" aria-hidden="true"></div>
+  <div id="ariaLive" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>

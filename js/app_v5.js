@@ -248,17 +248,52 @@ async function updateBuildBadge(){
 }
 
 let toastTimer = null;
-function showToast(msg){
+let announceTimer = null;
+
+function announce(msg, mode = "polite"){
+  try{
+    const liveEl = document.getElementById("ariaLive");
+    if(!liveEl) return;
+    const liveMode = mode === "assertive" ? "assertive" : "polite";
+    const text = String(msg || "").trim();
+    liveEl.setAttribute("aria-live", liveMode);
+    liveEl.textContent = "";
+    clearTimeout(announceTimer);
+    if(!text) return;
+    announceTimer = setTimeout(()=>{ liveEl.textContent = text; }, 30);
+  }catch{}
+}
+
+function inferToastAnnounceMode(msg){
+  const text = String(msg || "").toLowerCase();
+  if(!text) return "polite";
+  if(
+    text.includes("error") ||
+    text.includes("failed") ||
+    text.includes("invalid") ||
+    text.includes("missing/invalid") ||
+    text.includes("enter trip details first") ||
+    text.includes("enter an area first") ||
+    text.includes("enter a dealer first") ||
+    text.includes("under 40 chars") ||
+    text.includes("already exists") ||
+    text.includes("storage full")
+  ) return "assertive";
+  return "polite";
+}
+
+function showToast(msg, mode){
   try{
     const el = document.getElementById("toast");
     if(!el) return;
-    el.textContent = String(msg||"");
+    const text = String(msg||"");
+    el.textContent = text;
     el.classList.add("show");
+    announce(text, mode || inferToastAnnounceMode(text));
     clearTimeout(toastTimer);
     toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, 2400);
   }catch{}
 }
-
 // ---- Install prompt (PWA growth) ----
 // Goal: gently nudge install AFTER first successful save, once per device.
 // Android: uses beforeinstallprompt if available.
@@ -1587,7 +1622,9 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   if(!(poundsNum > 0)) errs.push("Pounds");
   if(!(amountNum > 0)) errs.push("Amount");
   if(errs.length){
-    alert("Missing/invalid: " + errs.join(", "));
+    const msg = "Missing/invalid: " + errs.join(", ");
+    announce("Error: " + msg, "assertive");
+    alert(msg);
     return false;
   }
 
@@ -1600,7 +1637,9 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
     id = String(editId||"");
     existing = trips.find(t => String(t?.id||"") === id) || null;
     if(!existing){
-      alert("Trip not found. Returning home.");
+      const msg = "Trip not found. Returning home.";
+      announce("Error: " + msg, "assertive");
+      alert(msg);
       state.view = nextView;
       saveState();
       render();
@@ -1633,7 +1672,9 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   const tripNorm = normalizeTrip(trip);
   const vErrs = validateTrip(tripNorm);
   if(vErrs.length){
-    alert("Missing/invalid: " + vErrs.join(", "));
+    const msg = "Missing/invalid: " + vErrs.join(", ");
+    announce("Error: " + msg, "assertive");
+    alert(msg);
     return false;
   }
 
@@ -1655,6 +1696,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   state.view = nextView;
   saveState();
   render();
+  showToast("Saved", "polite");
   // After first successful save, offer install (once per device).
   if(!isEdit){ try{ setTimeout(()=>{ maybeOfferInstallAfterFirstSave(); }, 350); }catch(_){} }
   return true;
