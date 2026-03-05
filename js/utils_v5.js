@@ -432,80 +432,82 @@ export function closeModal(){
   activeModalState = null;
 }
 
-export function attachLongPress(el, onLongPress, opts = {}){
-  if(!el || typeof onLongPress !== "function") return ()=>{};
+export function attachLongPress(el, { ms = 500, movePx = 10, onLongPressArmed, onLongPressTrigger } = {}){
+  if(!el) return ()=>{};
 
-  const thresholdMs = Number(opts.thresholdMs);
-  const moveThresholdPx = Number(opts.moveThresholdPx);
-  const delay = Number.isFinite(thresholdMs) ? Math.max(1, thresholdMs) : 500;
-  const moveLimit = Number.isFinite(moveThresholdPx) ? Math.max(1, moveThresholdPx) : 10;
+  const delay = Number.isFinite(Number(ms)) ? Math.max(1, Number(ms)) : 500;
+  const moveLimit = Number.isFinite(Number(movePx)) ? Math.max(1, Number(movePx)) : 10;
 
   let timer = null;
+  let pointerId = null;
   let startX = 0;
   let startY = 0;
-  let startPointerId = null;
-  let fired = false;
-  let suppressNextClick = false;
+  let armed = false;
 
-  const clearPress = ()=>{
+  const clearTimer = ()=>{
     if(timer){
       clearTimeout(timer);
       timer = null;
     }
-    startPointerId = null;
+  };
+
+  const resetPress = ()=>{
+    clearTimer();
+    pointerId = null;
+    armed = false;
   };
 
   const onPointerDown = (e)=>{
     if(e.pointerType === "mouse" && e.button !== 0) return;
-    clearPress();
-    fired = false;
-    startPointerId = e.pointerId;
+
+    resetPress();
+    pointerId = e.pointerId;
     startX = Number(e.clientX || 0);
     startY = Number(e.clientY || 0);
+
     timer = setTimeout(()=>{
       timer = null;
-      fired = true;
-      suppressNextClick = true;
-      try{ onLongPress(e); }catch(_){ }
+      if(pointerId == null) return;
+      armed = true;
+      if(typeof onLongPressArmed === "function"){
+        try{ onLongPressArmed(e); }catch(_){ }
+      }
     }, delay);
   };
 
   const onPointerMove = (e)=>{
-    if(startPointerId == null || e.pointerId !== startPointerId) return;
+    if(pointerId == null || e.pointerId !== pointerId) return;
     const dx = Number(e.clientX || 0) - startX;
     const dy = Number(e.clientY || 0) - startY;
-    if((dx*dx + dy*dy) > (moveLimit*moveLimit)) clearPress();
-  };
-
-  const onPointerEnd = (e)=>{
-    if(startPointerId == null || e.pointerId !== startPointerId) return;
-    clearPress();
-    if(fired){
-      e.preventDefault();
-      e.stopPropagation();
+    if((dx*dx + dy*dy) > (moveLimit * moveLimit)){
+      resetPress();
     }
   };
 
-  const onClickCapture = (e)=>{
-    if(!suppressNextClick) return;
-    suppressNextClick = false;
-    e.preventDefault();
-    e.stopPropagation();
-    if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+  const onPointerUp = (e)=>{
+    if(pointerId == null || e.pointerId !== pointerId) return;
+    const shouldTrigger = armed;
+    resetPress();
+    if(shouldTrigger && typeof onLongPressTrigger === "function"){
+      try{ onLongPressTrigger(e); }catch(_){ }
+    }
+  };
+
+  const onPointerCancel = (e)=>{
+    if(pointerId == null || e.pointerId !== pointerId) return;
+    resetPress();
   };
 
   el.addEventListener("pointerdown", onPointerDown, { passive: true });
   el.addEventListener("pointermove", onPointerMove, { passive: true });
-  el.addEventListener("pointerup", onPointerEnd);
-  el.addEventListener("pointercancel", onPointerEnd);
-  el.addEventListener("click", onClickCapture, true);
+  el.addEventListener("pointerup", onPointerUp);
+  el.addEventListener("pointercancel", onPointerCancel);
 
   return ()=>{
-    clearPress();
-    el.removeEventListener("pointerdown", onPointerDown, { passive: true });
-    el.removeEventListener("pointermove", onPointerMove, { passive: true });
-    el.removeEventListener("pointerup", onPointerEnd);
-    el.removeEventListener("pointercancel", onPointerEnd);
-    el.removeEventListener("click", onClickCapture, true);
+    resetPress();
+    el.removeEventListener("pointerdown", onPointerDown);
+    el.removeEventListener("pointermove", onPointerMove);
+    el.removeEventListener("pointerup", onPointerUp);
+    el.removeEventListener("pointercancel", onPointerCancel);
   };
 }
