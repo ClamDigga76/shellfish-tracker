@@ -901,8 +901,8 @@ function renderTripCatchCard(t, opts = {}){
         </div>
         <div class="catchFoot" style="margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap">
           <span class="catchMetric lbsBlue" style="font-size:14px;padding:6px 10px"><b class="lbsBlue">${lbs}</b> lbs</span>
-          <span class="catchMetric money" style="font-size:14px;padding:6px 10px"><b class="money">${formatMoney(amt)}</b></span>
           <span class="catchMetric" style="font-size:14px;padding:6px 10px"><b class="rate ppl">${escapeHtml(valueText)}</b></span>
+          <span class="catchMetric money" style="font-size:14px;padding:6px 10px"><b class="money">${formatMoney(amt)}</b></span>
         </div>
       </div>
     </${tag}>
