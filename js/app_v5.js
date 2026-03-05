@@ -2628,10 +2628,10 @@ const areaChipOwnedOptions = buildChipOwnedOptions("area");
 </div>
 </section>
 
-      <select id="chipOwnedDealerPicker" aria-hidden="true" tabindex="-1" style="position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none">
+      <select id="chipOwnedDealerPicker" aria-hidden="true" tabindex="-1" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none">
         ${dealerChipOwnedOptions}
       </select>
-      <select id="chipOwnedAreaPicker" aria-hidden="true" tabindex="-1" style="position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none">
+      <select id="chipOwnedAreaPicker" aria-hidden="true" tabindex="-1" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none">
         ${areaChipOwnedOptions}
       </select>
 
