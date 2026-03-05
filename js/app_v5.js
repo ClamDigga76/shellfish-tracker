@@ -248,11 +248,31 @@ async function updateBuildBadge(){
 }
 
 let toastTimer = null;
+let ariaLiveTimer = null;
+function announce(msg, mode = "polite"){
+  try{
+    const el = document.getElementById("ariaLive");
+    if(!el) return;
+    const nextMode = (mode === "assertive") ? "assertive" : "polite";
+    const text = String(msg || "").trim();
+    el.setAttribute("aria-live", nextMode);
+    el.textContent = "";
+    clearTimeout(ariaLiveTimer);
+    ariaLiveTimer = setTimeout(()=>{ el.textContent = text; }, 30);
+  }catch{}
+}
 function showToast(msg){
   try{
     const el = document.getElementById("toast");
     if(!el) return;
-    el.textContent = String(msg||"");
+    const text = String(msg||"");
+    el.textContent = text;
+    const trimmed = text.trim();
+    if(/^Saved$/i.test(trimmed)){
+      announce("Saved", "polite");
+    }else if(/(error|failed|invalid|missing)/i.test(trimmed)){
+      announce(/^Error:/i.test(trimmed) ? trimmed : `Error: ${trimmed}`, "assertive");
+    }
     el.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, 2400);
@@ -1587,6 +1607,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   if(!(poundsNum > 0)) errs.push("Pounds");
   if(!(amountNum > 0)) errs.push("Amount");
   if(errs.length){
+    announce(`Error: Missing/invalid: ${errs.join(", ")}`, "assertive");
     alert("Missing/invalid: " + errs.join(", "));
     return false;
   }
@@ -1600,6 +1621,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
     id = String(editId||"");
     existing = trips.find(t => String(t?.id||"") === id) || null;
     if(!existing){
+      announce("Error: Trip not found. Returning home.", "assertive");
       alert("Trip not found. Returning home.");
       state.view = nextView;
       saveState();
@@ -1633,6 +1655,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   const tripNorm = normalizeTrip(trip);
   const vErrs = validateTrip(tripNorm);
   if(vErrs.length){
+    announce(`Error: Missing/invalid: ${vErrs.join(", ")}`, "assertive");
     alert("Missing/invalid: " + vErrs.join(", "));
     return false;
   }
@@ -1655,6 +1678,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   state.view = nextView;
   saveState();
   render();
+  showToast("Saved");
   // After first successful save, offer install (once per device).
   if(!isEdit){ try{ setTimeout(()=>{ maybeOfferInstallAfterFirstSave(); }, 350); }catch(_){} }
   return true;
@@ -2862,6 +2886,7 @@ state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
       // basic guard: if nothing entered, do nothing (prevents "dead tap" feel)
       const anyEntered = Boolean(mdy || state.draft.dealer || (state.draft.pounds>0) || (state.draft.amount>0) || state.draft.area);
       if(!anyEntered){
+        announce("Error: Enter trip details first", "assertive");
         showToast("Enter trip details first");
         state._savingTrip = false; saveState();
         return;
@@ -5631,3 +5656,4 @@ function bindQuickChipLongPress(containerEl, onLongPressRelease){
     e.preventDefault();
   });
 }
+
