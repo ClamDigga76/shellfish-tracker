@@ -11,7 +11,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, attachLongPress } from "./utils_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;
@@ -2990,7 +2990,8 @@ const btnClear = document.getElementById("clearDraft");
 
   const chipOwnedDealerPicker = document.getElementById("chipOwnedDealerPicker");
   const chipOwnedAreaPicker = document.getElementById("chipOwnedAreaPicker");
-  let chipPickerState = { kind: "", slot: -1 };
+  let activeChipType = "";
+  let activeChipIndex = -1;
 
   const handleSelectAddNew = (kind, selectEl)=>{
     const sentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
@@ -3036,7 +3037,8 @@ const btnClear = document.getElementById("clearDraft");
     if(slot < 0) return;
     const selectEl = kind === "dealer" ? chipOwnedDealerPicker : chipOwnedAreaPicker;
     if(!selectEl) return;
-    chipPickerState = { kind, slot };
+    activeChipType = kind;
+    activeChipIndex = slot;
     refreshChipOwnedPicker(kind, selectEl, String(chipValue || "").trim());
 
     try{
@@ -3053,12 +3055,13 @@ const btnClear = document.getElementById("clearDraft");
   const onChipOwnedPickerChange = (kind)=>{
     const selectEl = kind === "dealer" ? chipOwnedDealerPicker : chipOwnedAreaPicker;
     if(!selectEl) return;
-    if(chipPickerState.kind !== kind || chipPickerState.slot < 0) return;
+    if(activeChipType !== kind || activeChipIndex < 0) return;
 
     const addSentinel = kind === "dealer" ? dealerAddSentinel : areaAddSentinel;
     const picked = String(selectEl.value || "").trim();
-    const slot = chipPickerState.slot;
-    chipPickerState = { kind: "", slot: -1 };
+    const slot = activeChipIndex;
+    activeChipType = "";
+    activeChipIndex = -1;
 
     if(picked === addSentinel){
       openQuickAdd(kind, {
@@ -3088,10 +3091,17 @@ const btnClear = document.getElementById("clearDraft");
   chipOwnedDealerPicker?.addEventListener("change", ()=>onChipOwnedPickerChange("dealer"));
   chipOwnedAreaPicker?.addEventListener("change", ()=>onChipOwnedPickerChange("area"));
 
-  if(topAreaWrap && elArea){
+if(topAreaWrap && elArea){
   topAreaWrap.addEventListener("click", (e)=>{
     const btn = e.target.closest("button[data-area]");
     if(!btn) return;
+    if(btn.__suppressNextClick){
+      btn.__suppressNextClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+      return;
+    }
     const a = String(btn.getAttribute("data-area") || "").trim();
     if(!a) return;
     elArea.value = a;
@@ -3108,6 +3118,13 @@ if(topDealerWrap && elDealer){
   topDealerWrap.addEventListener("click", (e)=>{
     const btn = e.target.closest("button[data-dealer]");
     if(!btn) return;
+    if(btn.__suppressNextClick){
+      btn.__suppressNextClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+      return;
+    }
     const d = String(btn.getAttribute("data-dealer") || "").trim();
     if(!d) return;
     elDealer.value = d;
@@ -3470,6 +3487,13 @@ if(elDealerLive){
     topAreaWrapR.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-area]");
       if(!btn) return;
+      if(btn.__suppressNextClick){
+        btn.__suppressNextClick = false;
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+        return;
+      }
       const a = String(btn.getAttribute("data-area") || "").trim();
       if(!a) return;
       elAreaLive.value = a;
@@ -3481,6 +3505,13 @@ if(elDealerLive){
     topDealerWrapR.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-dealer]");
       if(!btn) return;
+      if(btn.__suppressNextClick){
+        btn.__suppressNextClick = false;
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+        return;
+      }
       const d = String(btn.getAttribute("data-dealer") || "").trim();
       if(!d) return;
       elDealerLive.value = d;
@@ -5434,6 +5465,13 @@ function bindAreaChips(containerId, onPick){
   el.addEventListener("click", (e)=>{
     const btn = e.target && e.target.closest && e.target.closest("button[data-area]");
     if(!btn) return;
+    if(btn.__suppressNextClick){
+      btn.__suppressNextClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+      return;
+    }
     const a = String(btn.getAttribute("data-area") || "").trim();
     if(!a) return;
     onPick(a);
@@ -5445,86 +5483,25 @@ function bindQuickChipLongPress(containerEl, selector, onLongPressRelease){
   if(containerEl.__quickChipLongPressBound) return;
   containerEl.__quickChipLongPressBound = true;
 
-  let timer = null;
-  let pointerId = null;
-  let startX = 0;
-  let startY = 0;
-  let activeBtn = null;
-  let longPressArmed = false;
-  let suppressNextClickFor = null;
+  const cleanupFns = [];
+  containerEl.querySelectorAll(selector).forEach((btn)=>{
+    if(btn.__quickChipLongPressAttached) return;
+    btn.__quickChipLongPressAttached = true;
+    const detach = attachLongPress(btn, {
+      ms: QUICK_CHIP_LONG_PRESS_MS,
+      movePx: QUICK_CHIP_MOVE_CANCEL_PX,
+      onLongPressTrigger: (ev)=>{
+        btn.__suppressNextClick = true;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if(typeof ev.stopImmediatePropagation === "function") ev.stopImmediatePropagation();
+        onLongPressRelease(btn, ev);
+      }
+    });
+    cleanupFns.push(detach);
+  });
 
-  const clearPending = ()=>{
-    if(timer){
-      clearTimeout(timer);
-      timer = null;
-    }
-    pointerId = null;
-    activeBtn = null;
-  };
-
-  const findChipBtn = (target)=>{
-    if(!target || !target.closest) return null;
-    const btn = target.closest(selector);
-    return btn && containerEl.contains(btn) ? btn : null;
-  };
-
-  containerEl.addEventListener("pointerdown", (e)=>{
-    const btn = findChipBtn(e.target);
-    if(!btn) return;
-    if(e.pointerType === "mouse" && e.button !== 0) return;
-
-    clearPending();
-    longPressArmed = false;
-    pointerId = e.pointerId;
-    startX = Number(e.clientX || 0);
-    startY = Number(e.clientY || 0);
-    activeBtn = btn;
-
-    timer = setTimeout(()=>{
-      timer = null;
-      if(!activeBtn) return;
-      longPressArmed = true;
-    }, QUICK_CHIP_LONG_PRESS_MS);
-  }, { passive: false });
-
-  containerEl.addEventListener("pointermove", (e)=>{
-    if(pointerId == null || e.pointerId !== pointerId) return;
-    const dx = Number(e.clientX || 0) - startX;
-    const dy = Number(e.clientY || 0) - startY;
-    if((dx*dx + dy*dy) > (QUICK_CHIP_MOVE_CANCEL_PX * QUICK_CHIP_MOVE_CANCEL_PX)){
-      clearPending();
-    }
-  }, { passive: true });
-
-  const clearOnPointerUp = (e)=>{
-    if(pointerId == null || e.pointerId !== pointerId) return;
-    const armedBtn = longPressArmed ? activeBtn : null;
-    clearPending();
-    if(armedBtn){
-      suppressNextClickFor = armedBtn;
-      e.preventDefault();
-      e.stopPropagation();
-      if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
-      onLongPressRelease(armedBtn, e);
-    }
-    longPressArmed = false;
-  };
-
-  const clearOnPointerCancel = (e)=>{
-    if(pointerId == null || e.pointerId !== pointerId) return;
-    clearPending();
-    longPressArmed = false;
-  };
-
-  containerEl.addEventListener("pointerup", clearOnPointerUp);
-  containerEl.addEventListener("pointercancel", clearOnPointerCancel);
-
-  containerEl.addEventListener("click", (e)=>{
-    const btn = findChipBtn(e.target);
-    if(!btn || btn !== suppressNextClickFor) return;
-    suppressNextClickFor = null;
-    e.preventDefault();
-    e.stopPropagation();
-    if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
-  }, true);
+  containerEl.__quickChipLongPressCleanup = ()=>cleanupFns.forEach((fn)=>{
+    try{ fn(); }catch(_){ }
+  });
 }
