@@ -1,12 +1,12 @@
 
 // v81: tiny HTML escape (for modal titles/placeholders)
-function escapeHTML(s){
+export function escapeHtml(s){
   return String(s)
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
-    .replaceAll("'","&#39;");
+    .replaceAll("'","&#039;");
 }
 
 // Shellfish Tracker — V4 ESM Branch
@@ -202,15 +202,6 @@ export function likelyDuplicate(a, b){
          Math.abs((a.amount || 0) - (b.amount || 0)) <= 2;
 }
 
-export function escapeHtml(s){
-  return String(s ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 export function downloadText(filename, text){
   const lower = String(filename || "").toLowerCase();
   const isCsv = lower.endsWith(".csv");
@@ -377,7 +368,7 @@ export function openModal({
   root.innerHTML = `
     <div class="modalSheet" style="${sheetStyle}" role="dialog" aria-modal="true">
       <div class="modalHdr">
-        <div class="modalTitle">${escapeHTML(String(title||""))}</div>
+        <div class="modalTitle">${escapeHtml(String(title||""))}</div>
         ${closeBtnHtml}
       </div>
       <div class="modalBody">${html||""}</div>
