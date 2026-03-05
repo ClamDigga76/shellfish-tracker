@@ -11,7 +11,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDisplay, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;
@@ -877,7 +877,7 @@ function renderTripCatchCard(t, opts = {}){
     valueOverride = "",
     metaOverride = ""
   } = opts;
-  const date = formatDateDisplay(t?.dateISO || "");
+  const date = formatDateDMY(t?.dateISO || "");
   const dealerRaw = String(t?.dealer || "").trim();
   const dealer = dealerRaw || "(dealer)";
   const area = String(t?.area || "").trim() || "(area)";
@@ -980,7 +980,7 @@ function __updateLastBackupLine(){
   }
   const d = new Date(String(meta.iso || ""));
   const ok = !isNaN(d.getTime());
-  const dateStr = ok ? d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" }) : "unknown date";
+  const dateStr = ok ? (formatDateDMY(d) || "unknown date") : "unknown date";
   const n = Number(meta.tripCount);
   const tripsStr = Number.isFinite(n) ? `${n} trip${n===1?"":"s"}` : "unknown trips";
   el.textContent = `Last backup: ${dateStr} — ${tripsStr}`;
@@ -1614,8 +1614,8 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   const dup = findDuplicateTrip(candidate, isEdit ? id : "");
   if(dup){
     const msg = isEdit
-      ? `This edit matches another trip:\n\nDate: ${formatDateDisplay(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`
-      : `This looks like a duplicate trip:\n\nDate: ${formatDateDisplay(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
+      ? `This edit matches another trip:\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`
+      : `This looks like a duplicate trip:\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
     if(!confirm(msg)) return false;
   }
 
@@ -2074,7 +2074,7 @@ function exportTripsWithLabel(trips, label, startISO="", endISO=""){
   const header = ["Date","Dealer","Area","Pounds","Amount","$/Lb"].join(",");
   const lines = [header];
   for(const t of rows){
-    const date = formatDateDisplay(String(t?.dateISO||""));
+    const date = formatDateDMY(String(t?.dateISO||""));
     const dealer = String(t?.dealer||"");
     const area = String(t?.area||"");
     const lbs = Number(t?.pounds)||0;
@@ -2873,7 +2873,7 @@ const getBarSelectChoices = (kind)=>{
       const rawDate = String(elDate?.value||"").trim();
 // v71: t_date is type="date" (YYYY-MM-DD). Accept both ISO and legacy MM/DD/YYYY.
 const iso = rawDate.includes("-") ? rawDate.slice(0,10) : (parseMDYToISO(rawDate) || "");
-const mdy = rawDate.includes("-") ? formatDateDisplay(iso) : rawDate;
+const mdy = rawDate.includes("-") ? formatDateDMY(iso) : rawDate;
 state.draft.dateISO = iso || state.draft.dateISO || "";
 state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
       state.draft.pounds = parseNum(elPounds?.value);
@@ -3240,7 +3240,7 @@ getApp().innerHTML = `
             <div class="card" style="border-color:rgba(255,184,77,.55);background:rgba(255,184,77,.10)">
               <b>Possible duplicate</b>
               <div class="muted small" style="margin-top:6px;line-height:1.35">
-                Similar trip found: <b>${escapeHtml(formatDateDisplay(dup.dateISO||""))}</b> — ${escapeHtml(String(dup.dealer||""))} (<span class="money">${formatMoney(dup.amount||0)}</span> / <span class="lbsBlue">${to2(Number(dup.pounds||0))} lbs</span>)
+                Similar trip found: <b>${escapeHtml(formatDateDMY(dup.dateISO||""))}</b> — ${escapeHtml(String(dup.dealer||""))} (<span class="money">${formatMoney(dup.amount||0)}</span> / <span class="lbsBlue">${to2(Number(dup.pounds||0))} lbs</span>)
               </div>
             </div>
           `;
@@ -3988,7 +3988,7 @@ function renderReports(){
   ` : "";
 
   const rangeLabel = (fMode === "RANGE")
-    ? (hasValidRange ? `${formatDateDisplay(r.startISO)} → ${formatDateDisplay(r.endISO)}` : "Set dates")
+    ? (hasValidRange ? `${formatDateDMY(r.startISO)} → ${formatDateDMY(r.endISO)}` : "Set dates")
     : (fMode === "THIS_MONTH" ? "This Month"
       : (fMode === "LAST_MONTH" ? "Last Month"
         : (fMode === "ALL" ? "All Time"
