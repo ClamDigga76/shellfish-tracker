@@ -11,7 +11,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDMY as formatDateLegacyDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
 import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
@@ -210,6 +210,29 @@ const LEGACY_LAST_ERROR_AT_KEY = "SHELLFISH_LAST_ERROR_AT";
 function to2(n){
   const x = Number(n);
   return Number.isFinite(x) ? Math.round((x + Number.EPSILON) * 100) / 100 : x;
+}
+
+function formatDateDMY(input){
+  if(input == null || input === "") return "";
+
+  if(typeof input === "string"){
+    const s = input.trim();
+    if(!s) return "";
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if(m){
+      const y = Number(m[1]);
+      const mo = Number(m[2]);
+      const d = Number(m[3]);
+      if(!(y >= 1 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return "";
+      const dt = new Date(Date.UTC(y, mo - 1, d));
+      if(dt.getUTCFullYear() !== y || (dt.getUTCMonth() + 1) !== mo || dt.getUTCDate() !== d) return "";
+      return `${String(dt.getUTCMonth() + 1).padStart(2, "0")}/${String(dt.getUTCDate()).padStart(2, "0")}/${dt.getUTCFullYear()}`;
+    }
+  }
+
+  const dt = (input instanceof Date) ? input : new Date(input);
+  if(Number.isNaN(dt.getTime())) return formatDateLegacyDMY(input);
+  return `${String(dt.getMonth() + 1).padStart(2, "0")}/${String(dt.getDate()).padStart(2, "0")}/${dt.getFullYear()}`;
 }
 
 function sanitizeDecimalInput(raw){
