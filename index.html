@@ -54,9 +54,10 @@
   --sh:0 18px 50px rgba(0,0,0,.55);
   --shadow:0 18px 50px rgba(0,0,0,.55);
   --tabbar-h:46px;
-  --bottom-gutter:6px;
   --safeTop:env(safe-area-inset-top);
   --safeBottom:env(safe-area-inset-bottom);
+  --tabbar-safe:max(0px, var(--safeBottom));
+  --tabbar-total-h:calc(var(--tabbar-h) + var(--tabbar-safe));
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
@@ -102,7 +103,7 @@ textarea:focus-visible{
   outline-offset:2px;
 }
 html,body{height:100%;background:var(--bg)}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px 16px;display:flex;justify-content:center}
 .phone{width:430px;max-width:100vw;border-radius:30px;background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);border:1px solid rgba(255,255,255,.10);box-shadow:var(--sh);overflow:hidden}
 header h1{margin:0;font-size:18px;letter-spacing:.2px}
 header p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
@@ -182,20 +183,21 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 
 /* Phase 2C-2.1: iPhone scroll + back button usability */
 .phone{display:flex;flex-direction:column}
-main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter) + 10px)}
+main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-total-h) + 10px)}
 
 /* New Trip: reduce bottom padding; action bar handles tabbar clearance via sticky offset */
 body[data-view="new"] main#app{padding-bottom:0}
-body[data-view="new"] .tripActionBar{bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 8px)}
-body[data-view="new"] .tripActionBar{padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+body[data-view="new"] .tripActionBar{bottom:calc(var(--tabbar-total-h) + 8px)}
+body[data-view="new"] .tripActionBar{padding:8px}
 
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
 /* Toast */
-#toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter) + 12px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
+#toast{position:fixed;left:50%;bottom:calc(var(--tabbar-total-h) + 12px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;height:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--bottom-gutter));padding:0 8px calc(env(safe-area-inset-bottom) + var(--bottom-gutter));background:rgba(10,14,22,.78);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:flex-end}
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;height:var(--tabbar-total-h);padding:0 8px var(--tabbar-safe);background:linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);backdrop-filter:blur(10px);display:flex;justify-content:space-around;align-items:flex-end}
+#tabbar::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--line);opacity:.75}
 .tabbtn{flex:1;min-width:0;appearance:none;border:0;background:transparent;color:rgba(232,238,252,.70);padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:12px;line-height:1}
 .tabbtn svg{width:22px;height:22px;display:block}
 .tabbtn.active{color:var(--accent)}
@@ -452,7 +454,7 @@ body{
     radial-gradient(1000px 520px at 50% 6%, rgba(47,109,246,.18) 0%, rgba(47,109,246,0) 56%),
     radial-gradient(900px 520px at 12% 20%, rgba(140,170,255,.10) 0%, rgba(140,170,255,0) 60%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
-  padding:calc(var(--pad) + env(safe-area-inset-top)) 12px calc(var(--pad) + env(safe-area-inset-bottom));
+  padding:calc(var(--pad) + env(safe-area-inset-top)) 12px var(--pad);
 }
 
 .phone{
@@ -927,9 +929,9 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=160"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=161"></script>
 
-  <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
+  <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
     <div class="muted small" style="margin-top:6px;line-height:1.35">
       A new version is ready. Reload to apply it.
