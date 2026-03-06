@@ -143,6 +143,7 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;pa
 /* New Trip: reduce bottom padding; action bar handles tabbar clearance via sticky offset */
 body[data-view="new"] main#app{padding-bottom:0}
 body[data-view="new"] .tripActionBar{bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 8px)}
+body[data-view="new"] .tripActionBar{padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
 
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
@@ -293,10 +294,10 @@ header{padding:14px 18px 12px}
 .pageHeader.simple .phIcon{display:none}
 .pageHeader.simple .phTitle{text-align:center;margin:0 auto;font-size:22px;letter-spacing:.2px}
 
-.formCard{padding:16px 14px}
-.formCard .field{margin-bottom:14px}
+body[data-view="new"] .formCard{padding:14px 12px}
+#newTripForm .field{margin-bottom:10px}
 .overline,.fieldLabel{letter-spacing:.12em}
-.chipRow{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 10px}
+.chipRow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px}
 
 .selectRowWrap{position:relative}
 .selectRowWrap select{width:100%;appearance:none;-webkit-appearance:none;padding-right:44px}
@@ -304,7 +305,7 @@ header{padding:14px 18px 12px}
 
 
 
-.dateRow{display:flex;align-items:center;gap:10px;overflow:visible}
+.dateRow{display:flex;align-items:center;gap:8px;overflow:visible}
 .dateRow .dateIcon{display:inline-flex;align-items:center;justify-content:center;opacity:.85}
 .dateRow .dateIcon svg{width:18px;height:18px}
 .dateRow .datePill{flex:1;min-width:0}
@@ -327,21 +328,21 @@ header{padding:14px 18px 12px}
 .homeRangeInputs > .datePillWrap{flex:1;min-width:0}
 .grid2 .field{min-width:0;overflow:visible}
 
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.rateLine{margin-top:-6px;margin-bottom:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#newTripForm .rateLine{margin-top:-4px;margin-bottom:4px}
 .rate{color:rgba(232,238,252,.82);font-weight:700}
 .rate.ppl{color:var(--pplYellow)!important;font-weight:800}
 
 
 .actionsNew .btn.primary{width:100%}
 
-.trip-section{
+#newTripForm .trip-section{
   padding: 10px 0;
 }
-.trip-section + .trip-section{
+#newTripForm .trip-section + .trip-section{
   border-top: 1px solid rgba(255,255,255,0.08);
 }
-.trip-section.trip-actions{
+#newTripForm .trip-section.trip-actions{
   padding-top: 14px;
 }
 .edit-mode{
