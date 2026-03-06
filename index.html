@@ -17,6 +17,20 @@
 
 <style>
 :root{
+  color-scheme:dark;
+  --color-bg:#0b0f16;
+  --color-bg-alt:#070a10;
+  --color-surface:rgba(255,255,255,.045);
+  --color-surface-alt:rgba(255,255,255,.028);
+  --color-line:rgba(255,255,255,.10);
+  --color-border:rgba(255,255,255,.12);
+  --color-border-strong:rgba(255,255,255,.16);
+  --color-text:#e8eefc;
+  --color-muted:rgba(232,238,252,.76);
+  --color-primary:#2f6df6;
+  --color-primary-press:#1f6feb;
+  --color-header-bg:rgba(47,109,246,.18);
+  --color-header-text:#5d92ff;
   --bg:#0b0f16;
   --bg2:#070a10;
   --glass:rgba(255,255,255,.045);
@@ -43,6 +57,36 @@
   --bottom-gutter:6px;
   --safeTop:env(safe-area-inset-top);
   --safeBottom:env(safe-area-inset-bottom);
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --color-bg:#e8edf8;
+  --color-bg-alt:#dce4f4;
+  --color-surface:rgba(255,255,255,.84);
+  --color-surface-alt:rgba(255,255,255,.66);
+  --color-line:rgba(37,53,92,.16);
+  --color-border:rgba(37,53,92,.20);
+  --color-border-strong:rgba(37,53,92,.30);
+  --color-text:#1c2740;
+  --color-muted:rgba(28,39,64,.74);
+  --color-primary:#2f6df6;
+  --color-primary-press:#1f6feb;
+  --color-header-bg:rgba(47,109,246,.12);
+  --color-header-text:#2257d8;
+}
+:root{
+  --bg:var(--color-bg);
+  --bg2:var(--color-bg-alt);
+  --glass:var(--color-surface);
+  --glass2:var(--color-surface-alt);
+  --line:var(--color-line);
+  --border:var(--color-border);
+  --text:var(--color-text);
+  --muted:var(--color-muted);
+  --accent:var(--color-primary);
 }
 .safeBottom{ padding-bottom: max(10px, var(--safeBottom)); }
 .safeTop{ padding-top: max(10px, var(--safeTop)); }
@@ -458,7 +502,9 @@ header{padding:14px 18px 12px}
 }
 .btn.primary{
   background:linear-gradient(180deg, rgba(47,109,246,.95) 0%, rgba(31,111,235,.92) 100%);
+  background:linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-press) 100%);
   border-color:rgba(47,109,246,.85);
+  border-color:var(--color-primary);
   box-shadow:0 10px 26px rgba(31,111,235,.18);
 }
 .btn.danger{
@@ -743,8 +789,13 @@ header{padding:14px 18px 12px}
   font-weight:850 !important;
   letter-spacing:0.1px !important;
   text-align:center;
-  color:var(--text) !important;
+  color:var(--color-header-text) !important;
   font-family:inherit !important;
+}
+
+.pageHeader > div > div:last-child{
+  background:var(--color-header-bg) !important;
+  border:1px solid var(--color-border-strong) !important;
 }
 .phIcon svg{
   width:18px;
@@ -876,7 +927,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=159"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=160"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
