@@ -12,6 +12,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 window.__SHELLFISH_APP_STARTED = false;
 
 import { uid, toCSV, downloadText, formatMoney, formatDateDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
+import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;
@@ -23,6 +24,8 @@ const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
 // In-app update UI: shows an Update button only when a new Service Worker is ready.
 let SW_UPDATE_READY = false;
 let SW_UPDATE_VERSION = "";
+let themeMediaQuery = null;
+let onThemeMediaChange = null;
 window.addEventListener("sw-update-ready", (ev) => {
   SW_UPDATE_READY = true;
   SW_UPDATE_VERSION = String(ev?.detail?.version || "");
@@ -147,6 +150,51 @@ function updateUpdateRow(){
     btnPrimary.textContent = "Check for updates";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
   }
+}
+
+function getThemeMode(){
+  const s = state?.settings || {};
+  return normalizeThemeMode(s.themeMode);
+}
+
+function updateThemeMeta(resolvedTheme){
+  try{
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute("content", resolvedTheme === THEME_MODE_DARK ? "#0b0f16" : "#dce4f4");
+  }catch(_){ }
+}
+
+function applyThemeMode(){
+  const mode = getThemeMode();
+  const prefersDark = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const resolvedTheme = resolveTheme(mode, prefersDark);
+  try{ document.documentElement.dataset.theme = resolvedTheme; }catch(_){ }
+  updateThemeMeta(resolvedTheme);
+}
+
+function bindThemeMedia(){
+  if(!window.matchMedia) return;
+  themeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  if(onThemeMediaChange) return;
+  onThemeMediaChange = ()=>{
+    if(getThemeMode() === THEME_MODE_SYSTEM){
+      applyThemeMode();
+    }
+  };
+  if(themeMediaQuery.addEventListener) themeMediaQuery.addEventListener("change", onThemeMediaChange);
+  else if(themeMediaQuery.addListener) themeMediaQuery.addListener(onThemeMediaChange);
+}
+
+function bindThemeControls(){
+  const input = document.getElementById("themeMode");
+  if(!input) return;
+  input.value = getThemeMode();
+  input.onchange = ()=>{
+    state.settings = state.settings || {};
+    state.settings.themeMode = normalizeThemeMode(input.value);
+    saveState();
+    applyThemeMode();
+  };
 }
 
 
@@ -795,6 +843,9 @@ function migrateStateIfNeeded(st){
     if(!st.tripsFilter || typeof st.tripsFilter !== "object"){
       st.tripsFilter = { mode:"ALL", from:"", to:"" };
     }
+
+    st.settings = (st.settings && typeof st.settings === "object") ? st.settings : {};
+    st.settings.themeMode = normalizeThemeMode(st.settings.themeMode || THEME_MODE_SYSTEM);
 
     // bump schema
     if(v < 1) st.schemaVersion = 1;
@@ -1938,6 +1989,8 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
 
 migrateLegacyStateIfNeeded();
 let state = migrateStateIfNeeded(loadState());
+bindThemeMedia();
+applyThemeMode();
 ensureTripsFilter();
 ensureReportsFilter();
 ensureHomeFilter();
@@ -5008,6 +5061,23 @@ function __renderListMgmtPanel(mode){
     </div>
 
     <div class="card">
+      <b>Appearance</b>
+      <div class="sep"></div>
+      <div class="muted small mt10">Choose how the app theme is applied.</div>
+      <div class="field mt10">
+        <label class="label" for="themeMode">Theme</label>
+        <div class="selectRowWrap">
+          <select id="themeMode" class="select" aria-label="Theme">
+            <option value="${THEME_MODE_SYSTEM}">System (default)</option>
+            <option value="${THEME_MODE_LIGHT}">Light</option>
+            <option value="${THEME_MODE_DARK}">Dark</option>
+          </select>
+          <span class="chev" aria-hidden="true">▾</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <b>Backup & Restore</b>
       <div class="sep"></div>
       <div class="muted small mt10">Create a backup file you can store in Files/Drive. Restore brings it back later.</div>
@@ -5071,6 +5141,7 @@ function __renderListMgmtPanel(mode){
     </details>
   `;
   updateBuildBadge();
+  bindThemeControls();
 
   bindNavHandlers(state);
 
