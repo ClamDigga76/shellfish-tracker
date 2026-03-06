@@ -2612,6 +2612,48 @@ function renderAllTrips(){
   }
 }
 
+let __homeKpiFitBound = false;
+let __homeKpiFitRaf = 0;
+
+function fitHomeKpiValues(){
+  const root = getApp();
+  if(!root) return;
+  const values = root.querySelectorAll(".kpiCard .kpiValueFit");
+  values.forEach((el)=>{
+    el.style.removeProperty("font-size");
+    el.style.removeProperty("--kpi-fit-scale");
+
+    const wrap = el.parentElement;
+    if(!wrap) return;
+
+    const available = Math.max(0, Math.floor(wrap.clientWidth));
+    if(!available) return;
+
+    for(let i = 0; i < 4; i++) {
+      const content = Math.ceil(el.scrollWidth);
+      if(content <= available) break;
+
+      const currentSize = Number.parseFloat(getComputedStyle(el).fontSize) || 0;
+      if(!(currentSize > 0)) break;
+
+      const nextSize = Math.max(10, currentSize * ((available - 2) / content));
+      if(nextSize >= currentSize - 0.1) break;
+      el.style.fontSize = `${nextSize.toFixed(2)}px`;
+    }
+  });
+
+  if(__homeKpiFitBound) return;
+  __homeKpiFitBound = true;
+  const rerun = ()=>{
+    if(__homeKpiFitRaf) cancelAnimationFrame(__homeKpiFitRaf);
+    __homeKpiFitRaf = requestAnimationFrame(()=> fitHomeKpiValues());
+  };
+  window.addEventListener("resize", rerun, { passive:true });
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", rerun, { passive:true });
+  }
+}
+
 function renderHome(
 ){
   const tripsAll = Array.isArray(state.trips) ? state.trips : [];
@@ -2694,19 +2736,19 @@ function renderHome(
     <div class="card dashCard">
       <div class="kpiRow">
         <div class="kpiCard">
-          <div class="kpiValue">${trips.length}</div>
+          <div class="kpiValue"><span class="kpiValueFit">${trips.length}</span></div>
           <div class="kpiLabel">Trips</div>
         </div>
         <div class="kpiCard">
-          <div class="kpiValue lbsBlue">${lbsStr} lbs</div>
+          <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
           <div class="kpiLabel">Pounds</div>
         </div>
         <div class="kpiCard">
-          <div class="kpiValue money">${moneyRounded}</div>
+          <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
           <div class="kpiLabel">Amount</div>
         </div>
         <div class="kpiCard">
-          <div class="kpiValue rate ppl">${avgPpl === null ? "—" : formatMoney(avgPpl)}</div>
+          <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
           <div class="kpiLabel">Avg $/lb</div>
         </div>
       </div>
@@ -2791,6 +2833,7 @@ function renderHome(
   }
   bindDatePill("homeRangeFrom");
   bindDatePill("homeRangeTo");
+  fitHomeKpiValues();
 
 const toggleToast = (e)=>{
   try{
