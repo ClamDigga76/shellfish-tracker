@@ -723,7 +723,6 @@ header{padding:14px 18px 12px}
   overflow:hidden;
 }
 .kpiValueFit{
-  --kpi-fit-scale:1;
   display:inline-flex;
   align-items:baseline;
   justify-content:center;
@@ -735,8 +734,6 @@ header{padding:14px 18px 12px}
   letter-spacing:-0.24px;
   font-variant-numeric:tabular-nums;
   white-space:nowrap !important;
-  transform:scale(var(--kpi-fit-scale));
-  transform-origin:center center;
 }
 .kpiUnit{
   font-size:0.45em;
@@ -954,7 +951,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=176"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=177"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>

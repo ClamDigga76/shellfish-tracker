@@ -2620,26 +2620,25 @@ function fitHomeKpiValues(){
   if(!root) return;
   const values = root.querySelectorAll(".kpiCard .kpiValueFit");
   values.forEach((el)=>{
-    el.style.setProperty("--kpi-fit-scale", "1");
+    el.style.removeProperty("font-size");
+    el.style.removeProperty("--kpi-fit-scale");
+
     const wrap = el.parentElement;
     if(!wrap) return;
 
     const available = Math.max(0, Math.floor(wrap.clientWidth));
     if(!available) return;
 
-    const content = Math.ceil(el.scrollWidth);
-    if(content <= available) return;
+    for(let i = 0; i < 4; i++) {
+      const content = Math.ceil(el.scrollWidth);
+      if(content <= available) break;
 
-    let ratio = Math.min(1, (available - 2) / content);
-    ratio = Math.max(0.25, ratio);
-    el.style.setProperty("--kpi-fit-scale", ratio.toFixed(3));
+      const currentSize = Number.parseFloat(getComputedStyle(el).fontSize) || 0;
+      if(!(currentSize > 0)) break;
 
-    const fitWidth = el.getBoundingClientRect().width;
-    const wrapWidth = wrap.getBoundingClientRect().width;
-    if(fitWidth > wrapWidth + 0.5){
-      const adjust = wrapWidth / fitWidth;
-      ratio = Math.max(0.25, Math.min(1, ratio * adjust));
-      el.style.setProperty("--kpi-fit-scale", ratio.toFixed(3));
+      const nextSize = Math.max(10, currentSize * ((available - 2) / content));
+      if(nextSize >= currentSize - 0.1) break;
+      el.style.fontSize = `${nextSize.toFixed(2)}px`;
     }
   });
 
