@@ -608,8 +608,10 @@ function renderTabBar(activeView){
 
 
 function getDebugInfo(){
+  const appName = "Bank the Catch";
   const trips = Array.isArray(state?.trips) ? state.trips.length : 0;
   const areas = Array.isArray(state?.areas) ? state.areas.length : 0;
+  const view = state?.view ? String(state.view) : "";
   const last = state?.lastAction ? String(state.lastAction) : "";
   const settings = state?.settings || {};
 
@@ -617,6 +619,11 @@ function getDebugInfo(){
   const dm = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ? "standalone" : "browser";
   const swCtrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? "controlled" : "none";
   const swScript = (navigator.serviceWorker && navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL) ? navigator.serviceWorker.controller.scriptURL : "";
+  const installMode = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+    ? "standalone"
+    : (window.navigator && window.navigator.standalone === true ? "ios-standalone" : "browser-tab");
+  const bootStage = window.__BOOT_DIAG__?.stage ? String(window.__BOOT_DIAG__.stage) : "";
+  const appStarted = window.__SHELLFISH_APP_STARTED ? "true" : "false";
 
   let lsChars = 0;
   try{
@@ -636,15 +643,20 @@ function getDebugInfo(){
   const snooze = settings.backupSnoozeUntil ? new Date(settings.backupSnoozeUntil).toISOString() : "";
 
   return [
-    `Bank the Catch ${APP_VERSION} (schema ${SCHEMA_VERSION})`,
-    `URL: ${location.href}`,
-    `Origin: ${location.origin}`,
+    `${appName} ${APP_VERSION} (schema ${SCHEMA_VERSION})`,
+    `Build: ${VERSION}`,
+    view ? `View: ${view}` : "",
+    location.hash ? `Route: ${location.hash}` : "",
     `DisplayMode: ${dm}`,
+    `InstallMode: ${installMode}`,
     `StandaloneFlag: ${isStandalone ? "true" : "false"}`,
+    `AppStarted: ${appStarted}`,
+    bootStage ? `BootStage: ${bootStage}` : "",
     `ServiceWorker: ${swCtrl}`,
     swScript ? `SWScript: ${swScript}` : "",
     `LocalStorageChars: ${lsChars}`,
     `UserAgent: ${navigator.userAgent}`,
+    navigator.platform ? `Platform: ${navigator.platform}` : "",
     `Trips: ${trips}`,
     `Areas: ${areas}`,
     last ? `LastAction: ${last}` : "",
@@ -5010,6 +5022,20 @@ function __renderListMgmtPanel(mode){
     </div>
 
     <div class="card">
+      <b>Backup & Restore</b>
+      <div class="sep"></div>
+      <div class="muted small mt10">Create a backup file you can store in Files/Drive. Restore brings it back later.</div>
+      <div class="muted small" id="lastBackupLine" style="margin-top:10px"></div>
+      <div class="hint mt10"><b>Backup recommended</b> before major updates.</div>
+      <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:nowrap">
+        <button class="btn primary" id="downloadBackup" style="flex:1">💾 Create Backup</button>
+        <button class="btn" id="restoreBackup" style="flex:1">📥 Restore Backup</button>
+        <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" style="display:none" />
+      </div>
+      <div class="muted small mt10">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups.</div>
+    </div>
+
+    <div class="card">
       <b>List Management</b>
       <div class="sep"></div>
 
@@ -5024,20 +5050,6 @@ function __renderListMgmtPanel(mode){
       <div class="muted small mt10">Manage the dropdown lists used in New Trip and Edit Trip.</div>
 
       <div id="listMgmtPanel">${__renderListMgmtPanel(listMode)}</div>
-    </div>
-
-    <div class="card">
-      <b>Data</b>
-      <div class="sep"></div>
-      <div class="muted small mt10">Create a backup file you can store in Files/Drive. Restore brings it back later.</div>
-      <div class="muted small" id="lastBackupLine" style="margin-top:10px"></div>
-      <div class="hint mt10"><b>Backup recommended</b> before major updates.</div>
-      <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:nowrap">
-        <button class="btn" id="downloadBackup" style="flex:1">💾 Create Backup</button>
-        <button class="btn" id="restoreBackup" style="flex:1">📥 Restore Backup</button>
-        <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" style="display:none" />
-      </div>
-      <div class="muted small mt10">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups.</div>
     </div>
 
     <div class="card">
@@ -5062,7 +5074,7 @@ function __renderListMgmtPanel(mode){
       <div class="sep" style="margin-top:10px"></div>
 
       <div class="row mt12 gap10 wrap">
-        <button class="btn" id="copyDebug">Copy Details</button>
+        <button class="btn" id="copyDebug">Copy Debug</button>
         <button class="btn" id="refreshApp">Refresh App</button>
       </div>
 
@@ -5238,7 +5250,7 @@ if(panel){
       panel.innerHTML =
         '<div class="muted small mt10">' +
         '<b>List Management error</b><br/>' +
-        'Tap <b>Copy Details</b> and send the error so we can fix it.<br/>' +
+        'Tap <b>Copy Debug</b> and send the error so we can fix it.<br/>' +
         '<span class="muted tiny">' + escapeHtml(err?.message || String(err)) + '</span>' +
         '</div>';
     }catch(_){}
@@ -5348,7 +5360,7 @@ function __bindListMgmtHandlers(){
 
   document.getElementById("copyDebug").onclick = async ()=>{
     const ok = await copyTextToClipboard(getDebugInfo());
-    showToast(ok ? "Details copied" : "Copy failed");
+    showToast(ok ? "Debug copied" : "Copy failed");
   };
 
   document.getElementById("refreshApp").onclick = async ()=>{
@@ -5452,7 +5464,7 @@ function renderHelp(){
           <li><b>Updates</b>: check for updates and see build details.</li>
           <li><b>List Management</b>: edit Areas and Dealers used by New Trip.</li>
           <li><b>Data</b>: create/restore backup files (see Backups below).</li>
-          <li><b>Advanced</b>: Copy Details, Refresh App, Erase All Data.</li>
+          <li><b>Advanced</b>: Copy Debug, Refresh App, Erase All Data.</li>
         </ul>
       </div>
     </div>
@@ -5909,4 +5921,3 @@ function bindQuickChipLongPress(containerEl, onLongPressRelease){
     e.preventDefault();
   });
 }
-
