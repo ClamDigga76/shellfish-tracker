@@ -708,8 +708,8 @@ header{padding:14px 18px 12px}
 }
 .kpiCard{
   min-width:0;
-  min-height:84px;
-  padding:10px 10px 8px;
+  min-height:clamp(78px, 21vw, 86px);
+  padding:clamp(8px, 2.5vw, 10px) clamp(8px, 2.8vw, 10px) clamp(7px, 2.2vw, 8px);
   border-radius:18px;
   background:var(--glass);
   border:1px solid var(--border);
@@ -723,14 +723,14 @@ header{padding:14px 18px 12px}
   justify-content:center;
   gap:.1em;
   max-width:100%;
-  font-size:clamp(18px, 6.6vw, 35px);
+  font-size:clamp(17px, calc(13px + 5.9vw), 34px);
   font-weight:900;
-  line-height:1;
+  line-height:0.98;
   letter-spacing:-0.24px;
   font-variant-numeric:tabular-nums;
   white-space:nowrap !important;
-  overflow:visible !important;
-  text-overflow:clip !important;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .kpiUnit{
   font-size:0.45em;
@@ -739,23 +739,26 @@ header{padding:14px 18px 12px}
   margin-left:0;
 }
 .kpiLabel{
-  margin-top:4px;
-  font-size:12px;
+  margin-top:clamp(3px, 1vw, 4px);
+  font-size:clamp(11px, 2.6vw, 12px);
   font-weight:800;
   opacity:0.84;
-  line-height:1.05;
+  line-height:1.02;
   letter-spacing:.01em;
   white-space:normal;
   overflow:visible;
 }
 
 @media (max-width: 420px){
-  .kpiValue{ font-size:clamp(17px, 5.4vw, 31px); }
-  .kpiCard{ min-height:80px; padding:9px 8px 8px; }
+  .kpiValue{ font-size:clamp(16px, calc(12px + 5.5vw), 30px); }
+  .kpiCard{ min-height:clamp(74px, 24vw, 82px); }
 }
 
 @media (max-width: 360px){
   .kpiRow{ gap:6px; }
+  .kpiCard{ padding:8px 7px 7px; }
+  .kpiValue{ font-size:clamp(15px, calc(11px + 5.3vw), 27px); letter-spacing:-0.2px; }
+  .kpiLabel{ font-size:11px; line-height:1; }
 }
 
 
@@ -945,7 +948,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=172"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=173"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
