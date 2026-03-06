@@ -563,9 +563,8 @@ function renderPageHeader(viewKey){
   return `
     <div class="pageHeader">
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;max-width:${titleMaxWidth};width:100%">
-        <div style="display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;max-width:100%">
-          <span class="phIcon" style="width:17px;height:17px;flex:0 0 17px;opacity:.92;filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))">${iconSvg(m.icon)}</span>
-          <h2 class="phTitle" style="font-size:clamp(18px,4.6vw,22px);line-height:1.05;letter-spacing:.35px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Georgia, 'Times New Roman', Times, serif;color:#0A6B6B">Bank the Catch</h2>
+        <div style="display:flex;align-items:center;justify-content:center;min-width:0;max-width:100%">
+          <h2 class="phTitle" style="line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bank the Catch</h2>
         </div>
         <div style="margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.45px;opacity:.95;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14)">${escapeHtml(m.title)}</div>
       </div>
