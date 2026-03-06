@@ -85,6 +85,7 @@
   --glass2:var(--color-surface-alt);
   --line:var(--color-line);
   --border:var(--color-border);
+  --border2:var(--color-border);
   --text:var(--color-text);
   --muted:var(--color-muted);
   --accent:var(--color-primary);
@@ -104,7 +105,7 @@ textarea:focus-visible{
 }
 html,body{height:100%;background:var(--bg)}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:radial-gradient(1200px 600px at 50% 8%, rgba(47,109,246,.25) 0%, rgba(47,109,246,0) 55%),var(--bg);padding:16px 12px 16px;display:flex;justify-content:center}
-.phone{width:430px;max-width:100vw;border-radius:30px;background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);border:1px solid rgba(255,255,255,.10);box-shadow:var(--sh);overflow:hidden}
+.phone{width:430px;max-width:100vw;border-radius:30px;background:linear-gradient(180deg, var(--glass) 0%, var(--glass2) 100%);border:1px solid var(--border2);box-shadow:var(--sh);overflow:hidden}
 header h1{margin:0;font-size:18px;letter-spacing:.2px}
 header p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
 .boot{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--muted);vertical-align:middle}
@@ -115,7 +116,7 @@ main{padding:14px 14px 18px}
 .btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .btn.primary{background:linear-gradient(180deg, rgba(47,109,246,.92) 0%, rgba(31,111,235,.92) 100%);border-color:rgba(47,109,246,.9);box-shadow:0 10px 26px rgba(31,111,235,.20)}
 .btn.good{background:rgba(46,160,67,.22);border-color:rgba(46,160,67,.55)}
-.btn.danger{background:rgba(255,77,79,.14);border-color:rgba(255,77,79,.45);color:#ffd7e1}
+.btn.danger{background:rgba(255,77,79,.14);border-color:rgba(255,77,79,.45);color:var(--text)}
 .btn.ghost{background:transparent}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .muted{color:var(--muted)}
@@ -152,21 +153,21 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 .pillValue{font-size:16px;font-weight:800;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 @media (max-width:380px){.pillValue{font-size:15px}}
 
-.pill{background:rgba(11,18,32,.85);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:999px;font-size:12px}
+.pill{background:var(--glass2);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:999px;font-size:12px}
 /* Phase 2C-1 additions */
 .filters{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.chip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#eaf0ff;padding:10px 12px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer}
+.chip{border:1px solid var(--border);background:var(--glass);color:var(--text);padding:10px 12px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer}
 .chip.on{background:rgba(80,130,255,.35);border-color:rgba(120,160,255,.55)}
 .chip,.areachip,.chip-selector{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
 /* Area quick-pick chips (smaller than filter chips) */
 .areachips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.areachip{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#eaf0ff;padding:8px 10px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer}
+.areachip{border:1px solid var(--border);background:var(--glass);color:var(--text);padding:8px 10px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer}
 .areachip:active{transform:scale(.99)}
 .triplist{display:flex;flex-direction:column;gap:12px}
 .trip{padding:12px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08)}
 .trip-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-.trip-date{font-weight:800;color:#dbe6ff}
+.trip-date{font-weight:800;color:var(--text)}
 .trip-dealer{font-weight:800}
 .trip-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 
@@ -178,7 +179,7 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 .textarea{min-height:110px;resize:vertical;font-weight:600}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
 .btn.danger{background:rgba(255,80,80,.18);border:1px solid rgba(255,80,80,.30)}
-.smallbtn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#eaf0ff;font-weight:800;cursor:pointer}
+.smallbtn{padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--glass2);color:var(--text);font-weight:800;cursor:pointer}
 
 
 /* Phase 2C-2.1: iPhone scroll + back button usability */
@@ -214,7 +215,7 @@ body[data-view="new"] .tripActionBar{padding:8px}
 .recentEmpty{margin-top:-2px;margin-bottom:2px;opacity:.85}
 
 
-#credits{margin-top:14px;padding:10px 14px 12px;color:rgba(255,255,255,.65);font-size:13px;border-top:1px solid rgba(255,255,255,.08)}
+#credits{margin-top:14px;padding:10px 14px 12px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
 #credits a{color:inherit;text-decoration:none}
 
 header{padding:18px 22px 14px}
@@ -223,7 +224,7 @@ header{padding:18px 22px 14px}
 .chipLink{
   padding:10px 14px;
   border-radius:999px;
-  border:1px solid rgba(255,255,255,.14);
+  border:1px solid var(--border);
   background:var(--glass2);
   color:inherit;
   font-weight:800;
@@ -234,7 +235,7 @@ header{padding:18px 22px 14px}
 .chipLink:active{transform:scale(.99)}
 .expTag{font-size:12px;opacity:.7;font-weight:700}
 .expWarn{opacity:.75;cursor:pointer;user-select:none}
-.expTip{padding:8px 10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.03)}
+.expTip{padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:var(--glass2)}
 
 
 .brandTitle{
@@ -269,7 +270,7 @@ header{padding:14px 18px 12px}
   gap:12px;
   padding:12px 14px;
   border-radius:16px;
-  border:1px solid rgba(255,255,255,.14);
+  border:1px solid var(--border);
   background:var(--glass2);
   user-select:none;
 }
@@ -290,7 +291,7 @@ header{padding:14px 18px 12px}
 .hlStatCard{
   border:1px solid var(--border);
   border-radius:16px;
-  background:rgba(255,255,255,.03);
+  background:var(--glass2);
   padding:12px;
 }
 .hlValue{
@@ -311,8 +312,8 @@ header{padding:14px 18px 12px}
 .pasteModule{
   padding:12px 12px;
   border-radius:16px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(0,0,0,.18);
+  border:1px solid var(--border);
+  background:var(--glass2);
 }
 .manualHdr{
   font-size:18px;
@@ -325,7 +326,7 @@ header{padding:14px 18px 12px}
   padding:12px 12px;
   border-radius:16px;
   border:1px solid var(--border);
-  background:rgba(255,255,255,.03);
+  background:var(--glass2);
 }
 .fieldLabel{
   font-size:16px;
@@ -386,7 +387,7 @@ body[data-view="new"] .formCard{padding:14px 12px}
   padding: 10px 0;
 }
 #newTripForm .trip-section + .trip-section{
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid var(--line);
 }
 #newTripForm .trip-section.trip-actions{
   padding-top: 14px;
@@ -660,8 +661,8 @@ header{padding:14px 18px 12px}
 /* Home dashboard header */
 .dashCard{
   padding:14px;
-  border-color:rgba(255,255,255,.18);
-  background:linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 100%);
+  border-color:var(--border);
+  background:linear-gradient(180deg, var(--glass) 0%, var(--glass2) 100%);
   box-shadow:0 10px 24px rgba(0,0,0,.24);
   cursor:pointer;
   transition:transform .12s ease, box-shadow .12s ease;
@@ -676,8 +677,8 @@ header{padding:14px 18px 12px}
   gap:8px;
   padding:6px;
   border-radius:16px;
-  background:rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.08);
+  background:var(--glass);
+  border:1px solid var(--border);
 }
 .segWrap .segBtn{
   width:100%;
@@ -704,8 +705,8 @@ header{padding:14px 18px 12px}
   min-width:0;
   padding:9px 6px 8px;
   border-radius:18px;
-  background:rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.08);
+  background:var(--glass);
+  border:1px solid var(--border);
   text-align:center;
 }
 .kpiValue.lbsBlue{color:var(--lbsBlue)!important}
@@ -929,7 +930,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=164"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=165"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
