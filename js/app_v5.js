@@ -2691,22 +2691,6 @@ function renderHome(
     ${renderPageHeader("home")}
 
     <div class="card dashCard">
-      <div class="segWrap">
-        ${chip("YTD","YTD")}
-        ${chip("MONTH","Month")}
-        ${chip("7D","7 Days")}
-        ${chip("RANGE","Range")}
-      </div>
-      ${f==="RANGE" ? `
-        <div class="row mt10 gap10 wrap dateRangeRow">
-          <div class="homeRangeInputs">
-            <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(parseReportDateToISO(hf.from))}" />
-            <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(parseReportDateToISO(hf.to))}" />
-          </div>
-          <button class="btn" id="homeRangeApply">Apply</button>
-        </div>
-      ` : ``}
-
       <div class="kpiRow">
         <div class="kpiCard">
           <div class="kpiValue">${trips.length}</div>
@@ -2720,6 +2704,24 @@ function renderHome(
           <div class="kpiValue money">${moneyRounded}</div>
           <div class="kpiLabel">Total</div>
         </div>
+      </div>
+
+      <div class="homeFilterStack">
+        <div class="segWrap">
+          ${chip("YTD","YTD")}
+          ${chip("MONTH","Month")}
+          ${chip("7D","7 Days")}
+          ${chip("RANGE","Range")}
+        </div>
+        ${f==="RANGE" ? `
+          <div class="row gap10 wrap dateRangeRow">
+            <div class="homeRangeInputs">
+              <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(parseReportDateToISO(hf.from))}" />
+              <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(parseReportDateToISO(hf.to))}" />
+            </div>
+            <button class="btn" id="homeRangeApply">Apply</button>
+          </div>
+        ` : ``}
       </div>
     </div>
 
