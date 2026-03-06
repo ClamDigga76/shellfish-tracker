@@ -2622,6 +2622,7 @@ function renderHome(
   const trips = (hr.label === "ALL") ? tripsAll.slice() : (hr.startISO && hr.endISO ? filterByISOInclusive(tripsAll, hr.startISO, hr.endISO) : tripsAll.slice());
   const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
   const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
+  const avgPpl = totalLbs > 0 ? computePPL(totalLbs, totalAmount) : null;
 
   const lbsVal = to2(totalLbs);
   const lbsStr = (Number.isFinite(lbsVal) && Math.abs(lbsVal % 1) < 1e-9) ? String(Math.trunc(lbsVal)) : String(lbsVal);
@@ -2698,11 +2699,15 @@ function renderHome(
         </div>
         <div class="kpiCard">
           <div class="kpiValue lbsBlue">${lbsStr} lbs</div>
-          <div class="kpiLabel">Harvested</div>
+          <div class="kpiLabel">Pounds</div>
         </div>
         <div class="kpiCard">
           <div class="kpiValue money">${moneyRounded}</div>
-          <div class="kpiLabel">Total</div>
+          <div class="kpiLabel">Amount</div>
+        </div>
+        <div class="kpiCard">
+          <div class="kpiValue rate ppl">${avgPpl === null ? "—" : formatMoney(avgPpl)}</div>
+          <div class="kpiLabel">Avg $/lb</div>
         </div>
       </div>
 
