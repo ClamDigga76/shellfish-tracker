@@ -2734,25 +2734,6 @@ function renderHome(
     ${renderPageHeader("home")}
 
     <div class="card dashCard">
-      <div class="kpiRow">
-        <div class="kpiCard">
-          <div class="kpiValue"><span class="kpiValueFit">${trips.length}</span></div>
-          <div class="kpiLabel">Trips</div>
-        </div>
-        <div class="kpiCard">
-          <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
-          <div class="kpiLabel">Pounds</div>
-        </div>
-        <div class="kpiCard">
-          <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
-          <div class="kpiLabel">Amount</div>
-        </div>
-        <div class="kpiCard">
-          <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
-          <div class="kpiLabel">Avg $/lb</div>
-        </div>
-      </div>
-
       <div class="homeFilterStack">
         <div class="segWrap">
           ${chip("YTD","YTD")}
@@ -2769,6 +2750,25 @@ function renderHome(
             <button class="btn" id="homeRangeApply">Apply</button>
           </div>
         ` : ``}
+      </div>
+
+      <div class="kpiRow">
+        <div class="kpiCard">
+          <div class="kpiLabel">Trips</div>
+          <div class="kpiValue"><span class="kpiValueFit">${trips.length}</span></div>
+        </div>
+        <div class="kpiCard">
+          <div class="kpiLabel">Pounds</div>
+          <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
+        </div>
+        <div class="kpiCard">
+          <div class="kpiLabel">Amount</div>
+          <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
+        </div>
+        <div class="kpiCard">
+          <div class="kpiLabel">Avg $/lb</div>
+          <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
+        </div>
       </div>
     </div>
 
