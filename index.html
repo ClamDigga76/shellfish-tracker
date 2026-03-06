@@ -676,6 +676,7 @@ header{padding:14px 18px 12px}
   display:grid;
   gap:10px;
   margin-top:10px;
+  margin-bottom:12px;
 }
 .segWrap{
   display:grid;
@@ -704,7 +705,7 @@ header{padding:14px 18px 12px}
 .kpiRow{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:7px;
+  gap:8px;
 }
 .kpiCard{
   min-width:0;
@@ -766,7 +767,7 @@ header{padding:14px 18px 12px}
 }
 
 @media (max-width: 360px){
-  .kpiRow{ gap:6px; }
+  .kpiRow{ gap:7px; }
   .kpiCard{ padding:8px 6px 7px; }
   .kpiValueFit{ font-size:clamp(15px, calc(10.8px + 5.1vw), 26px); letter-spacing:-0.2px; }
   .kpiLabel{ font-size:11.5px; line-height:1.04; }
@@ -959,7 +960,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=179"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=180"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
