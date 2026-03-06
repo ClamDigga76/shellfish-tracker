@@ -419,15 +419,20 @@ body{
 }
 
 header{padding:14px 18px 12px}
-.brandTitle{font-size:clamp(22px, 5.2vw, 30px);font-weight:850;letter-spacing:.3px}
+.brandTitle{
+  font-size:clamp(26px, 6vw, 34px);
+  font-weight:860;
+  letter-spacing:.15px;
+}
 
 /* Cards */
 .card{
   background:linear-gradient(180deg, var(--glass) 0%, var(--glass2) 100%);
   border:1px solid var(--border);
-  border-radius:var(--r-card);
-  padding:var(--cardpad);
+  border-radius:16px;
+  padding:14px;
   margin-bottom:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,.18);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
 }
@@ -605,7 +610,18 @@ header{padding:14px 18px 12px}
 
 
 /* Home dashboard header */
-.dashCard{ padding:14px 14px 12px; }
+.dashCard{
+  padding:14px;
+  border-color:rgba(255,255,255,.18);
+  background:linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 100%);
+  box-shadow:0 10px 24px rgba(0,0,0,.24);
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.dashCard:active{
+  transform:translateY(1px) scale(.995);
+  box-shadow:0 8px 18px rgba(0,0,0,.2);
+}
 .segWrap{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -706,7 +722,7 @@ header{padding:14px 18px 12px}
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:10px;
+  gap:0;
   margin:10px 0 14px;
   padding:0 12px;
   position:relative;
@@ -723,10 +739,12 @@ header{padding:14px 18px 12px}
 }
 .phTitle{
   margin:0;
-  font-size:clamp(18px,4.8vw,24px);
-  font-weight:800;
-  letter-spacing:0.2px;
+  font-size:clamp(22px,5.2vw,28px) !important;
+  font-weight:850 !important;
+  letter-spacing:0.1px !important;
   text-align:center;
+  color:var(--text) !important;
+  font-family:inherit !important;
 }
 .phIcon svg{
   width:18px;
@@ -858,7 +876,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=157"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=159"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
