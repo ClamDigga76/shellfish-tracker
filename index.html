@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="format-detection" content="telephone=no" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none';">
   <title>Bank the Catch</title>
 
@@ -47,6 +48,7 @@
 .safeTop{ padding-top: max(10px, var(--safeTop)); }
 
 *{box-sizing:border-box}
+html{-webkit-tap-highlight-color:transparent}
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -389,6 +391,11 @@ header{padding:14px 18px 12px}
 .moneyPrefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-weight:800;opacity:.95;pointer-events:none}
 .moneyGreen{color:var(--good)!important}
 .btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}
+
+button,.btn,.tabbtn,.chip,.smallbtn,.chipLink,.pasteBanner,.todayBtn{touch-action:manipulation}
+.tabbtn span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.pillValue,.hlValue,.trip-date,.trip-dealer,#toast{-webkit-user-select:text;user-select:text}
 
 /* IOS input zoom guard */
 input, select, textarea{
@@ -853,7 +860,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=154"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=155"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;display:none">
     <b>Update available</b>
@@ -872,4 +879,3 @@ body.scrollLock{
   <div id="modalRoot" class="modalRoot hidden" aria-hidden="true"></div>
 </body>
 </html>
-

@@ -468,6 +468,15 @@ function copyTextToClipboard(txt){
     .then(()=>true).catch(()=>false);
 }
 
+async function copyTextWithFeedback(txt, successMsg = "Copied"){
+  const ok = await copyTextToClipboard(txt);
+  showToast(ok ? successMsg : "Copy failed");
+  if(ok){
+    try{ navigator.vibrate?.(10); }catch(_){ }
+  }
+  return ok;
+}
+
 
 // ---- Bottom Tab Bar (Home / Trips / Reports / Settings) ----
 const TABS = [
@@ -2031,7 +2040,7 @@ function showFatal(err){
   };
 
   const btnCopy = document.getElementById("fatalCopy");
-  if(btnCopy) btnCopy.onclick = ()=> navigator.clipboard?.writeText(dump).catch(()=>{});
+  if(btnCopy) btnCopy.onclick = ()=> { void copyTextWithFeedback(dump, "Debug copied"); };
 
   const btnReload = document.getElementById("fatalReload");
   if(btnReload) btnReload.onclick = ()=> location.reload();
@@ -5359,8 +5368,7 @@ function __bindListMgmtHandlers(){
   }catch(_){}
 
   document.getElementById("copyDebug").onclick = async ()=>{
-    const ok = await copyTextToClipboard(getDebugInfo());
-    showToast(ok ? "Debug copied" : "Copy failed");
+    await copyTextWithFeedback(getDebugInfo(), "Debug copied");
   };
 
   document.getElementById("refreshApp").onclick = async ()=>{
@@ -5550,8 +5558,7 @@ function renderAbout(){
   document.getElementById("backSettings").onclick = ()=>{ state.view="settings"; state.lastAction="nav:settings"; saveState(); render(); };
 
   document.getElementById("copyDebug").onclick = async ()=>{
-    const ok = await copyTextToClipboard(getDebugInfo());
-    showToast(ok ? "Debug info copied" : "Copy failed");
+    await copyTextWithFeedback(getDebugInfo(), "Debug info copied");
   };
 
   document.getElementById("feedback").onclick = ()=>{
