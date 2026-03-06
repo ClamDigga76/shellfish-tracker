@@ -718,6 +718,12 @@ header{padding:14px 18px 12px}
 }
 .kpiValue.lbsBlue{color:var(--lbsBlue)!important}
 .kpiValue{
+  width:100%;
+  max-width:100%;
+  overflow:hidden;
+}
+.kpiValueFit{
+  --kpi-fit-scale:1;
   display:inline-flex;
   align-items:baseline;
   justify-content:center;
@@ -729,8 +735,8 @@ header{padding:14px 18px 12px}
   letter-spacing:-0.24px;
   font-variant-numeric:tabular-nums;
   white-space:nowrap !important;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  transform:scale(var(--kpi-fit-scale));
+  transform-origin:center center;
 }
 .kpiUnit{
   font-size:0.45em;
@@ -750,14 +756,14 @@ header{padding:14px 18px 12px}
 }
 
 @media (max-width: 420px){
-  .kpiValue{ font-size:clamp(16px, calc(12px + 5.5vw), 30px); }
+  .kpiValueFit{ font-size:clamp(16px, calc(12px + 5.5vw), 30px); }
   .kpiCard{ min-height:clamp(74px, 24vw, 82px); }
 }
 
 @media (max-width: 360px){
   .kpiRow{ gap:6px; }
   .kpiCard{ padding:8px 7px 7px; }
-  .kpiValue{ font-size:clamp(15px, calc(11px + 5.3vw), 27px); letter-spacing:-0.2px; }
+  .kpiValueFit{ font-size:clamp(15px, calc(11px + 5.3vw), 27px); letter-spacing:-0.2px; }
   .kpiLabel{ font-size:11px; line-height:1; }
 }
 
@@ -948,7 +954,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=173"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=176"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
