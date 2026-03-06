@@ -1010,7 +1010,7 @@ function renderTripCatchCard(t, opts = {}){
       <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start">
         <div>
           <div class="catchHead" style="font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(dateText)}</div>
-          <div class="catchMain" style="font-size:18px;color:#fff">${escapeHtml(area)}</div>
+          <div class="catchMain" style="font-size:18px">${escapeHtml(area)}</div>
           <div class="catchHead" style="margin-top:2px;font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(dealer)}</div>
         </div>
         <div class="catchFoot" style="margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap">
