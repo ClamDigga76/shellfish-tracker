@@ -2836,14 +2836,11 @@ const getBarSelectChoices = (kind)=>{
       <div class="field">
         <label class="fieldLabel overline center" for="t_dealer">DEALERS</label>
         ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
-        <div class="selectWithBtn">
-          <div class="selectRowWrap">
-            <select class="input" id="t_dealer" autocomplete="organization" enterkeyhint="next">
-              ${dealerOptions}
-            </select>
-            <span class="chev">›</span>
-          </div>
-          <button class="btn btnInlineAdd" id="addDealerInline" type="button">+ Add</button>
+        <div class="selectRowWrap">
+          <select class="input" id="t_dealer" autocomplete="organization" enterkeyhint="next">
+            ${dealerOptions}
+          </select>
+          <span class="chev">›</span>
         </div>
         <div id="dealerPrompt"></div>
       </div>
@@ -2875,14 +2872,11 @@ const getBarSelectChoices = (kind)=>{
       <div class="field">
         <label class="fieldLabel overline center" for="t_area">AREA</label>
         ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
-        <div class="selectWithBtn">
-          <div class="selectRowWrap">
-            <select class="input" id="t_area" enterkeyhint="done">
-              ${areaOptions}
-            </select>
-            <span class="chev">›</span>
-          </div>
-          <button class="btn btnInlineAdd" id="addAreaInline" type="button">+ Add</button>
+        <div class="selectRowWrap">
+          <select class="input" id="t_area" enterkeyhint="done">
+            ${areaOptions}
+          </select>
+          <span class="chev">›</span>
         </div>
         <div id="areaPrompt"></div>
       </div>
@@ -2914,8 +2908,6 @@ const getBarSelectChoices = (kind)=>{
   bindDatePill("t_date");
   const elDealerPrompt = document.getElementById("dealerPrompt");
   const elAreaPrompt = document.getElementById("areaPrompt");
-  const btnAddDealer = document.getElementById("addDealerInline");
-  const btnAddArea = document.getElementById("addAreaInline");
 
   const updateRateLine = ()=>{
     if(!elRate) return;
@@ -3030,9 +3022,6 @@ const getBarSelectChoices = (kind)=>{
     });
   };
 
-
-  btnAddDealer?.addEventListener("click", ()=>openQuickAdd("dealer"));
-  btnAddArea?.addEventListener("click", ()=>openQuickAdd("area"));
 
   const elToday = document.getElementById("todayBtn");
 
@@ -3784,14 +3773,11 @@ function renderEditTrip(){
           <div class="field">
             <label class="fieldLabel overline center" for="e_dealer">DEALERS</label>
             ${renderTopDealerChips(topDealersE, draft.dealer, "topDealersE")}
-            <div class="selectWithBtn">
-              <div class="selectRowWrap">
-                <select class="input" id="e_dealer" autocomplete="organization" enterkeyhint="next">
-                  ${dealerOptions}
-                </select>
-                <span class="chev">›</span>
-              </div>
-              <button class="btn btnInlineAdd" id="addDealerInlineEdit" type="button">+ Add</button>
+            <div class="selectRowWrap">
+              <select class="input" id="e_dealer" autocomplete="organization" enterkeyhint="next">
+                ${dealerOptions}
+              </select>
+              <span class="chev">›</span>
             </div>
           </div>
         </section>
@@ -3820,14 +3806,11 @@ function renderEditTrip(){
           <div class="field">
             <label class="fieldLabel overline center" for="e_area">AREA</label>
             ${renderTopAreaChips(topAreasE, draft.area, "topAreasE")}
-            <div class="selectWithBtn">
-              <div class="selectRowWrap">
-                <select class="input" id="e_area" enterkeyhint="done">
-                  ${areaOptions}
-                </select>
-                <span class="chev">›</span>
-              </div>
-              <button class="btn btnInlineAdd" id="addAreaInlineEdit" type="button">+ Add</button>
+            <div class="selectRowWrap">
+              <select class="input" id="e_area" enterkeyhint="done">
+                ${areaOptions}
+              </select>
+              <span class="chev">›</span>
             </div>
           </div>
         </section>
@@ -3855,8 +3838,6 @@ function renderEditTrip(){
   const elArea = document.getElementById("e_area");
   const elRate = document.getElementById("rateValueEdit");
   const elToday = document.getElementById("todayBtnEdit");
-  const btnAddDealer = document.getElementById("addDealerInlineEdit");
-  const btnAddArea = document.getElementById("addAreaInlineEdit");
   const topDealerWrapE = document.getElementById("topDealersE");
   const topAreaWrapE = document.getElementById("topAreasE");
 
@@ -3958,9 +3939,6 @@ function renderEditTrip(){
       }
     });
   };
-
-  btnAddDealer?.addEventListener("click", ()=>openQuickAdd("dealer", { onAdded: (val)=>{ elDealer.value = val; updateSaveEnabled(); } }));
-  btnAddArea?.addEventListener("click", ()=>openQuickAdd("area", { onAdded: (val)=>{ elArea.value = val; updateSaveEnabled(); } }));
 
   bindAreaChips("topAreasE", (a)=>{
     const nextArea = String(a||"").trim();
