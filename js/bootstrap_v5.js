@@ -1,4 +1,4 @@
-const SW_VERSION = "187";
+const SW_VERSION = "188";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -33,6 +33,28 @@ async function __assertAssetExists(path) {
   } catch (_) {}
 
   if (!r.ok) throw new Error(`Missing required asset: ${path} (HTTP ${r.status})`);
+
+  let requestedUrl;
+  let responseUrl;
+  try {
+    requestedUrl = new URL(String(path), location.href);
+    responseUrl = new URL(String(r.url || path), location.href);
+  } catch (_) {}
+
+  if (r.redirected) {
+    throw new Error(`Unexpected redirect for required asset: ${path}. Try Reset Cache.`);
+  }
+
+  if (requestedUrl && responseUrl) {
+    if (requestedUrl.pathname !== responseUrl.pathname) {
+      throw new Error(`Wrong required asset returned for ${path}. Try Reset Cache.`);
+    }
+    const reqV = requestedUrl.searchParams.get("v");
+    const resV = responseUrl.searchParams.get("v");
+    if (reqV && resV !== reqV) {
+      throw new Error(`Stale required asset response for ${path} (expected v=${reqV}). Try Reset Cache.`);
+    }
+  }
 
   // Accept v-param'd JS URLs (e.g., app_v5.js?v=78)
   if (/\.js($|\?)/i.test(path)) {
