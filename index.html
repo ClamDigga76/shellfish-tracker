@@ -960,7 +960,29 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=184"></script>
+  <script type="module">
+    const FALLBACK_VERSION = "66";
+    async function loadBootstrap(){
+      let version = FALLBACK_VERSION;
+      try{
+        const resp = await fetch("./version.json", { cache: "no-store" });
+        if (!resp.ok) throw new Error(`version.json HTTP ${resp.status}`);
+        const data = await resp.json();
+        const fetchedVersion = String(data?.version || "").trim();
+        if (!/^\d+$/.test(fetchedVersion)) throw new Error("Invalid version.json version");
+        version = fetchedVersion;
+      }catch(err){
+        console.warn("Failed to load version.json; using fallback version", err);
+      }
+
+      const script = document.createElement("script");
+      script.type = "module";
+      script.src = `./js/bootstrap_v5.js?v=${encodeURIComponent(version)}`;
+      document.body.appendChild(script);
+    }
+
+    loadBootstrap();
+  </script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
