@@ -5256,7 +5256,8 @@ function __renderListMgmtPanel(mode){
           const n = Number(result?.tripsAdded);
           const modeLabel = (result?.mode === "replace") ? "Replace" : "Merge";
           showToast(Number.isFinite(n) ? `Restore complete (${n} trips, ${modeLabel})` : `Restore complete (${modeLabel})`);
-          renderSettings();
+          applyThemeMode();
+          render();
         }catch(e){
           showToast("Restore failed");
           await openRestoreErrorModal(e);
