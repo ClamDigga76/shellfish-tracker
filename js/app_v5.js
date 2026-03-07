@@ -3029,7 +3029,7 @@ const getBarSelectChoices = (kind)=>{
       html: `
         <div class="field">
           <label class="srOnly" for="${inputId}">${escapeHtml(label)} name</label>
-          <input class="input" id="${inputId}" placeholder="${escapeHtml(placeholder)}" autocomplete="${isDealer ? "organization" : "off"}" enterkeyhint="done" />
+          <input class="input" id="${inputId}" placeholder="${escapeHtml(placeholder)}" autocomplete="${isDealer ? "organization" : "off"}" enterkeyhint="done" maxlength="40" />
           <div class="modalErr" id="${errId}" style="display:none"></div>
         </div>
         <div class="modalActions">
