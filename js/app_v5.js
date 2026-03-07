@@ -41,7 +41,7 @@ async function swCheckNow(){
   const statusEl = document.getElementById("updateBigStatus");
   const btnCheck = document.getElementById("updatePrimary");
   try{
-    if(statusEl) statusEl.textContent = SW_UPDATE_READY ? "Applying update…" : "Checking for updates…";
+    if(statusEl) statusEl.textContent = SW_UPDATE_READY ? "Applying update…" : "Refreshing app…";
     if(btnCheck) btnCheck.disabled = true;
     if(statusEl) statusEl.textContent = "Refreshing…";
     await forceRefreshApp();
@@ -144,11 +144,11 @@ function updateUpdateRow(){
 
   if(SW_UPDATE_READY){
     statusEl.textContent = "Update available";
-    btnPrimary.textContent = "Update now";
+    btnPrimary.textContent = "Refresh to update";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
   }else{
     statusEl.textContent = "Up to date";
-    btnPrimary.textContent = "Check for updates";
+    btnPrimary.textContent = "Refresh app";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
   }
 }
@@ -5078,7 +5078,7 @@ function __renderListMgmtPanel(mode){
         <div class="muted" id="updateVersionLine" style="margin-top:4px;font-size:11px;line-height:1.25"></div>
 
         <div class="row" style="margin-top:8px;gap:8px;align-items:center;min-width:0">
-          <button class="btn" id="updatePrimary" style="font-size:12px;padding:7px 10px;min-width:0;white-space:nowrap">Check for updates</button>
+          <button class="btn" id="updatePrimary" style="font-size:12px;padding:7px 10px;min-width:0;white-space:nowrap">Refresh app</button>
           <div class="muted" id="updateInlineMsg" style="display:none;font-size:11px"></div>
         </div>
 
