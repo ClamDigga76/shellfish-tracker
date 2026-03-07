@@ -1,4 +1,4 @@
-const SW_VERSION = "186";
+const SW_VERSION = "187";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -24,7 +24,7 @@ async function __assertAssetExists(path) {
     try {
       window.__BOOT_DIAG__.assetChecks.push({ url: String(path), ok: false, status: 0, contentType: "", note: "fetch failed" });
     } catch (_) {}
-    throw e;
+    throw new Error(`Failed to fetch required asset: ${path} (${e?.message || "network error"})`);
   }
 
   const ct0 = (r.headers.get("content-type") || "").toLowerCase();
@@ -44,9 +44,20 @@ async function __assertAssetExists(path) {
     // Body sniff: catch corrupted/garbled cached responses that still claim JS content-type.
     // (Valid JS in this app typically starts with "const", "import", or a block comment.)
     const txt = await r.clone().text();
+    const trimmed = (txt || "").trim();
+    if (!trimmed) {
+      throw new Error(`Empty JS response for ${path}. Try Reset Cache.`);
+    }
+    if (trimmed.length < 24) {
+      throw new Error(`Incomplete JS response for ${path} (${trimmed.length} bytes). Try Reset Cache.`);
+    }
     const head = (txt || "").trimStart().slice(0, 64);
     if (head.startsWith("<") || head.startsWith(")") || head.startsWith("]") || head.startsWith("}")) {
       throw new Error(`Corrupted JS response for ${path} (starts with: ${head.slice(0, 12)}). Try Reset Cache.`);
+    }
+    const sniff = trimmed.slice(0, 512);
+    if (!/(^|\s)(import|export|const|let|var|function|class)\b/.test(sniff)) {
+      throw new Error(`Unexpected JS payload for ${path}. Try Reset Cache.`);
     }
   }
 }
