@@ -1221,18 +1221,6 @@ function readTextFile(file){
   });
 }
 
-function __countNestedArrays(rows, keys){
-  if(!Array.isArray(rows) || !Array.isArray(keys) || !keys.length) return 0;
-  let total = 0;
-  for(const row of rows){
-    if(!row || typeof row !== "object") continue;
-    for(const key of keys){
-      if(Array.isArray(row[key])) total += row[key].length;
-    }
-  }
-  return total;
-}
-
 function __formatFileSize(bytes){
   const n = Number(bytes);
   if(!Number.isFinite(n) || n <= 0) return "unknown size";
@@ -1258,7 +1246,6 @@ function parseBackupFileForRestore(file){
     const obj = (raw && typeof raw === "object") ? raw : {};
     const data = (obj.data && typeof obj.data === "object") ? obj.data : obj;
     const normalized = normalizedResult.normalized;
-    const tripsRaw = Array.isArray(data.trips) ? data.trips : [];
     const warnings = [...(normalizedResult.warnings || [])];
 
     if(!(obj.data && typeof obj.data === "object")){
@@ -1275,14 +1262,6 @@ function parseBackupFileForRestore(file){
       warnings.push(`Large file (${__formatFileSize(fileSize)}) may take longer to restore`);
     }
 
-    const catchesCount = Array.isArray(data.catches)
-      ? data.catches.length
-      : __countNestedArrays(tripsRaw, ["catches", "catchesList", "catch"]);
-
-    const receiptsCount = Array.isArray(data.receipts)
-      ? data.receipts.length
-      : __countNestedArrays(tripsRaw, ["receipts", "receipt", "receiptImages", "receiptFiles"]);
-
     return {
       fileName: String(file?.name || "backup.json"),
       fileSize,
@@ -1291,17 +1270,13 @@ function parseBackupFileForRestore(file){
       counts: {
         trips: Array.isArray(normalized?.data?.trips) ? normalized.data.trips.length : 0,
         areas: Array.isArray(normalized?.data?.areas) ? normalized.data.areas.length : 0,
-        dealers: Array.isArray(normalized?.data?.dealers) ? normalized.data.dealers.length : 0,
-        catches: Number.isFinite(catchesCount) ? catchesCount : 0,
-        receipts: Number.isFinite(receiptsCount) ? receiptsCount : 0
+        dealers: Array.isArray(normalized?.data?.dealers) ? normalized.data.dealers.length : 0
       },
       metadata: {
         exportedAt: String(normalized?.exportedAt || ""),
         appVersion: String(normalized?.appVersion || "")
       },
-      hasSettingsKey: ("settings" in data),
-      hasCatches: Array.isArray(data.catches) || catchesCount > 0,
-      hasReceipts: Array.isArray(data.receipts) || receiptsCount > 0
+      hasSettingsKey: ("settings" in data)
     };
   });
 }
@@ -1334,11 +1309,6 @@ function openRestorePreviewModal(preview){
       : `<div class="muted small mt10">No validation warnings.</div>`;
 
     const counts = preview.counts || {};
-    const optionalRows = [
-      preview.hasCatches ? `<div class="row" style="justify-content:space-between"><span class="muted">Catches</span><b>${escapeHtml(String(counts.catches || 0))}</b></div>` : "",
-      preview.hasReceipts ? `<div class="row" style="justify-content:space-between"><span class="muted">Receipts</span><b>${escapeHtml(String(counts.receipts || 0))}</b></div>` : ""
-    ].join("");
-
     openModal({
       title: "Restore Preview",
       backdropClose: false,
@@ -1353,8 +1323,8 @@ function openRestorePreviewModal(preview){
           <div class="row" style="justify-content:space-between"><span class="muted">Trips</span><b>${escapeHtml(String(counts.trips || 0))}</b></div>
           <div class="row" style="justify-content:space-between"><span class="muted">Areas</span><b>${escapeHtml(String(counts.areas || 0))}</b></div>
           <div class="row" style="justify-content:space-between"><span class="muted">Dealers</span><b>${escapeHtml(String(counts.dealers || 0))}</b></div>
-          ${optionalRows}
         </div>
+        <div class="muted small" style="margin-top:8px">This restore imports trips plus area/dealer lists from this file.</div>
         <div class="sep" style="margin:10px 0"></div>
         <div class="muted small">Metadata</div>
         <div class="mt8" style="display:grid;gap:6px">
@@ -1374,7 +1344,7 @@ function openRestorePreviewModal(preview){
         </label>
         <label class="row" style="gap:8px;align-items:flex-start;margin-top:10px">
           <input id="${includeSettingsId}" type="checkbox" />
-          <span>Restore settings too (default: off, data-only).</span>
+          <span>Also import settings from backup (off by default).</span>
         </label>
         <div class="modalActions" style="margin-top:12px">
           <button class="btn" id="${cancelId}" type="button">Cancel</button>
