@@ -12,7 +12,8 @@ if (moduleV && bootV && moduleV !== bootV) {
 window.__SHELLFISH_APP_STARTED = false;
 
 import { uid, toCSV, downloadText, formatMoney, formatDateDMY as formatDateLegacyDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
-import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
+const settingsModule = await import(`./settings.js${moduleV ? `?v=${encodeURIComponent(moduleV)}` : ""}`);
+const { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } = settingsModule;
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;

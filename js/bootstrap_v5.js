@@ -1,8 +1,25 @@
-const SW_VERSION = "183";
+const URL_VERSION = new URL(import.meta.url).searchParams.get("v") || "";
+let SW_VERSION = URL_VERSION || "69";
 
-// Single source of truth for build/version
-window.APP_BUILD = `v5.${SW_VERSION}`;
-window.APP_VERSION = SW_VERSION;
+async function resolveBuildVersion() {
+  let resolved = SW_VERSION;
+  try {
+    const versionUrl = new URL("../version.json", import.meta.url);
+    const resp = await fetch(versionUrl.href, { cache: "no-store" });
+    if (resp.ok) {
+      const data = await resp.json();
+      const v = String(data?.version || "").trim();
+      if (/^\d+$/.test(v)) resolved = v;
+    }
+  } catch (_) {}
+
+  SW_VERSION = resolved;
+  window.APP_BUILD = `v5.${SW_VERSION}`;
+  window.APP_VERSION = SW_VERSION;
+  return SW_VERSION;
+}
+
+const BUILD_VERSION_READY = resolveBuildVersion();
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -284,13 +301,16 @@ window.__showModuleError = function (err) {
 // surface real import/parse errors (404, HTML-as-JS, syntax errors) instead of only the watchdog.
 (async () => {
   try {
+    await BUILD_VERSION_READY;
     __setBootStage("assets:checking");
     // Assert and import using absolute URLs derived from this module's location.
     // (Avoids "./js/..." resolving to "/js/js/..." when bootstrap lives in /js/.)
     const UTILS_URL = new URL(`./utils_v5.js?v=${SW_VERSION}`, import.meta.url).href;
+    const SETTINGS_URL = new URL(`./settings.js?v=${SW_VERSION}`, import.meta.url).href;
     const APP_URL = new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href;
 
     await __assertAssetExists(UTILS_URL);
+    await __assertAssetExists(SETTINGS_URL);
     await __assertAssetExists(APP_URL);
     __setBootStage("app:importing");
     await import(APP_URL);
@@ -318,6 +338,7 @@ async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
 
   try {
+    await BUILD_VERSION_READY;
     __setBootStage("sw:registering");
     const swUrl = `./sw.js?v=${SW_VERSION}`;
     const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
