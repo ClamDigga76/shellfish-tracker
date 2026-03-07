@@ -3231,6 +3231,8 @@ state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
 
 // v59: confirm + save now (no review screen)
 const summary =
+  `Harvest Date: ${String(mdy||"").trim() || "—"}
+` +
   `Dealer: ${String(state.draft.dealer||"").trim() || "—"}
 ` +
   `Area: ${String(state.draft.area||"").trim() || "—"}
