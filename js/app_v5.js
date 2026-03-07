@@ -15,6 +15,7 @@ import { uid, toCSV, downloadText, formatMoney, formatDateDMY as formatDateLegac
 import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
+const DISPLAY_BUILD_VERSION = VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;
 const QUICK_CHIP_MOVE_CANCEL_PX = 10;
 
@@ -80,17 +81,17 @@ async function updateBuildInfo(){
   try{
     if(versionEl){
       const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator.standalone === true);
-      versionEl.textContent = `Version: ${VERSION}${standalone ? " • Standalone: yes" : ""}`;
+      versionEl.textContent = `Version: ${DISPLAY_BUILD_VERSION}${standalone ? " • Standalone: yes" : ""}`;
     }
   }catch(_){
-    try{ if(versionEl) versionEl.textContent = `Version: ${VERSION}`; }catch(__){}
+    try{ if(versionEl) versionEl.textContent = `Version: ${DISPLAY_BUILD_VERSION}`; }catch(__){}
   }
 
   if(!detailsEl) return;
 
   const parts = [];
   // App + schema
-  parts.push(`App: ${VERSION} (schema ${typeof SCHEMA_VERSION!=="undefined"?SCHEMA_VERSION:"?"})`);
+  parts.push(`App: ${DISPLAY_BUILD_VERSION} (schema ${typeof SCHEMA_VERSION!=="undefined"?SCHEMA_VERSION:"?"})`);
 
   // Display mode + SW controller
   const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator.standalone === true);
@@ -284,24 +285,16 @@ async function updateBuildBadge(){
   if(!el) return;
 
   const schema = (typeof SCHEMA_VERSION !== "undefined" ? SCHEMA_VERSION : null);
-  const parts = [`App ${VERSION}`];
+  const parts = [`App ${DISPLAY_BUILD_VERSION}`];
   if(schema !== null) parts.push(`Schema ${schema}`);
 
   // Service Worker info
   let swCtrl = false;
-  let swV = null;
   try{
     swCtrl = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
-    if(navigator.serviceWorker && navigator.serviceWorker.getRegistration){
-      const reg = await navigator.serviceWorker.getRegistration();
-      const w = (reg && (reg.active || reg.waiting || reg.installing)) || null;
-      const scriptURL = w ? (w.scriptURL || "") : "";
-      const m = scriptURL.match(/[?&]v=(\d+)/);
-      if(m) swV = m[1];
-    }
   }catch{}
 
-  parts.push(`SW ${swCtrl ? "on" : "off"}${swV ? " v"+swV : ""}`);
+  parts.push(`SW ${swCtrl ? "on" : "off"}`);
 
   // Cache name info (best-effort)
   try{
@@ -722,8 +715,8 @@ function getDebugInfo(){
   const snooze = settings.backupSnoozeUntil ? new Date(settings.backupSnoozeUntil).toISOString() : "";
 
   return [
-    `${appName} ${APP_VERSION} (schema ${SCHEMA_VERSION})`,
-    `Build: ${VERSION}`,
+    `${appName} ${DISPLAY_BUILD_VERSION} (schema ${SCHEMA_VERSION})`,
+    `Build: ${DISPLAY_BUILD_VERSION}`,
     view ? `View: ${view}` : "",
     location.hash ? `Route: ${location.hash}` : "",
     `DisplayMode: ${dm}`,
@@ -2018,7 +2011,7 @@ function showFatal(err){
   const swCtrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? "yes" : "no";
 
   const dump = [
-    `App: ${APP_VERSION} (schema ${SCHEMA_VERSION})`,
+    `App: ${DISPLAY_BUILD_VERSION} (schema ${SCHEMA_VERSION})`,
     `URL: ${location.href}`,
     `UA: ${navigator.userAgent}`,
     `Standalone: ${isStandalone ? "yes" : "no"}`,
@@ -3446,7 +3439,7 @@ getApp().innerHTML = `
       <div class="row" style="justify-content:space-between;align-items:center">
         <button class="smallbtn" id="navBack">← Back</button>
         <b>Review & Confirm</b>
-        <span class="muted small">v ${APP_VERSION}</span>
+        <span class="muted small">v ${DISPLAY_BUILD_VERSION}</span>
       </div>
       <div class="hint">Nothing saves until you press <b>Confirm &amp; Save Trip</b>. Edit any field if needed.</div>
     </div>
@@ -5157,7 +5150,7 @@ function __renderListMgmtPanel(mode){
       <b>About</b>
       <div class="sep"></div>
       <div class="muted small mt10">Created by <b>Jeremy Wood</b> — <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
-      <div class="muted small" style="margin-top:8px">Version: <b>${VERSION}</b></div>
+      <div class="muted small" style="margin-top:8px">Version: <b>${DISPLAY_BUILD_VERSION}</b></div>
       <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
 
       <div class="muted small" style="margin-top:8px">© 2026 Jeremy Wood. All rights reserved.</div>
@@ -5588,7 +5581,7 @@ function renderHelp(){
       <b>Build info</b>
       <div class="sep"></div>
       <div class="muted small" style="line-height:1.6">
-        <div>App: <b>${escapeHtml(String(VERSION))}</b> (schema ${escapeHtml(String(state.schemaVersion||state.schema||""))})</div>
+        <div>App: <b>${escapeHtml(String(DISPLAY_BUILD_VERSION))}</b> (schema ${escapeHtml(String(state.schemaVersion||state.schema||""))})</div>
         <div>Standalone: <b>${window.matchMedia("(display-mode: standalone)").matches ? "yes" : "no"}</b></div>
         <div>SW controller: <b>${navigator.serviceWorker && navigator.serviceWorker.controller ? "yes" : "no"}</b></div>
       </div>
@@ -5639,7 +5632,7 @@ function renderAbout(){
     <div class="card">
       <b>App details</b>
       <div class="sep"></div>
-      <div class="muted small">Version: <b>${VERSION}</b></div>
+      <div class="muted small">Version: <b>${DISPLAY_BUILD_VERSION}</b></div>
       <div class="muted small" style="margin-top:8px">All data stays on this device unless you export/backup.</div>
       <div class="row mt12">
         <button class="btn" id="copyDebug">Copy Debug Info</button>
@@ -5657,7 +5650,7 @@ function renderAbout(){
 
   document.getElementById("feedback").onclick = ()=>{
     const body = encodeURIComponent(getDebugInfo() + "\n\nWhat happened?\n");
-    const subj = encodeURIComponent("Bank the Catch Feedback ("+VERSION+")");
+    const subj = encodeURIComponent("Bank the Catch Feedback ("+DISPLAY_BUILD_VERSION+")");
     location.href = `mailto:?subject=${subj}&body=${body}`;
   };
 }
@@ -5690,7 +5683,7 @@ try{
   window.__SHELLFISH_APP_STARTED = true;
   render();
   const bp = document.getElementById("bootPill");
-  if(bp && !bp.classList.contains("err")){ bp.textContent = "OK"; bp.title = `v ${VERSION}`; }
+  if(bp && !bp.classList.contains("err")){ bp.textContent = "OK"; bp.title = `v ${DISPLAY_BUILD_VERSION}`; }
 }catch(err){ showFatal(err); }
 
 // ---- Display helpers (no state) ----
