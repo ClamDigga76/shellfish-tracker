@@ -1,4 +1,4 @@
-const SW_VERSION = "185";
+const SW_VERSION = "186";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -288,9 +288,11 @@ window.__showModuleError = function (err) {
     // Assert and import using absolute URLs derived from this module's location.
     // (Avoids "./js/..." resolving to "/js/js/..." when bootstrap lives in /js/.)
     const UTILS_URL = new URL(`./utils_v5.js?v=${SW_VERSION}`, import.meta.url).href;
+    const SETTINGS_URL = new URL(`./settings.js?v=${SW_VERSION}`, import.meta.url).href;
     const APP_URL = new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href;
 
     await __assertAssetExists(UTILS_URL);
+    await __assertAssetExists(SETTINGS_URL);
     await __assertAssetExists(APP_URL);
     __setBootStage("app:importing");
     await import(APP_URL);
