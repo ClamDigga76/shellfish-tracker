@@ -2920,7 +2920,6 @@ const getBarSelectChoices = (kind)=>{
           </select>
           <span class="chev">›</span>
         </div>
-        <div id="dealerPrompt"></div>
       </div>
 
       </section>
@@ -2956,7 +2955,6 @@ const getBarSelectChoices = (kind)=>{
           </select>
           <span class="chev">›</span>
         </div>
-        <div id="areaPrompt"></div>
       </div>
 
       </section>
@@ -2984,9 +2982,6 @@ const getBarSelectChoices = (kind)=>{
   const elArea = document.getElementById("t_area");
   const elRate = document.getElementById("rateValue");
   bindDatePill("t_date");
-  const elDealerPrompt = document.getElementById("dealerPrompt");
-  const elAreaPrompt = document.getElementById("areaPrompt");
-
   const updateRateLine = ()=>{
     if(!elRate) return;
     const p = Number(String(elPounds?.value||"").trim() || 0);
