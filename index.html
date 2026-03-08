@@ -31,16 +31,16 @@
   --color-primary-press:#1f6feb;
   --color-header-bg:rgba(47,109,246,.18);
   --color-header-text:#5d92ff;
-  --bg:#0b0f16;
-  --bg2:#070a10;
-  --glass:rgba(255,255,255,.045);
-  --glass2:rgba(255,255,255,.028);
-  --line:rgba(255,255,255,.10);
-  --border:rgba(255,255,255,.12);
-  --border2:rgba(255,255,255,.08);
-  --text:#e8eefc;
-  --muted:rgba(232,238,252,.70);
-  --accent:#2f6df6;
+  --bg:var(--color-bg);
+  --bg2:var(--color-bg-alt);
+  --glass:var(--color-surface);
+  --glass2:var(--color-surface-alt);
+  --line:var(--color-line);
+  --border:var(--color-border);
+  --border2:var(--color-border);
+  --text:var(--color-text);
+  --muted:var(--color-muted);
+  --accent:var(--color-primary);
   --lbsBlue:var(--accent);
   --good:#2EA043;
   --pplYellow:#ffd54a;
@@ -78,18 +78,6 @@
   --color-header-bg:rgba(47,109,246,.12);
   --color-header-text:#2257d8;
 }
-:root{
-  --bg:var(--color-bg);
-  --bg2:var(--color-bg-alt);
-  --glass:var(--color-surface);
-  --glass2:var(--color-surface-alt);
-  --line:var(--color-line);
-  --border:var(--color-border);
-  --border2:var(--color-border);
-  --text:var(--color-text);
-  --muted:var(--color-muted);
-  --accent:var(--color-primary);
-}
 .safeBottom{ padding-bottom: max(10px, var(--safeBottom)); }
 .safeTop{ padding-top: max(10px, var(--safeTop)); }
 
@@ -116,7 +104,6 @@ main{padding:14px 14px 18px}
 .btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .btn.primary{background:linear-gradient(180deg, rgba(47,109,246,.92) 0%, rgba(31,111,235,.92) 100%);border-color:rgba(47,109,246,.9);box-shadow:0 10px 26px rgba(31,111,235,.20)}
 .btn.good{background:rgba(46,160,67,.22);border-color:rgba(46,160,67,.55)}
-.btn.danger{background:rgba(255,77,79,.14);border-color:rgba(255,77,79,.45);color:var(--text)}
 .btn.ghost{background:transparent}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .muted{color:var(--muted)}
@@ -960,7 +947,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=205"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=206"></script>
 
   <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
