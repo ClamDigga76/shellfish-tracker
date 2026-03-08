@@ -8,7 +8,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDMY as formatDateLegacyDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDMY as formatDateLegacyDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
 import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
@@ -4382,20 +4382,19 @@ function renderReports(){
   // Aggregations
   const byDealer = new Map();
   const byArea = new Map();
-  const byMonth = new Map(); // 1-12
-  for(let m=1;m<=12;m++) byMonth.set(m, { trips:0, lbs:0, amt:0 });
+  const byMonth = new Map(); // YYYY-MM
 
   trips.forEach(t=>{
     const dealerRaw = (t?.dealer||"").toString();
-    const dealer = normalizeDealerDisplay(dealerRaw) || "(Unspecified)";
-    const dealerKey = dealer.toLowerCase();
+    const dealerName = normalizeDealerDisplay(dealerRaw) || "(Unspecified)";
+    const dealerKey = canonicalDealerGroupKey(dealerRaw) || "(unspecified)";
     const area = ((t?.area||"").toString().trim()) || "(Unspecified)";
     const areaKey = area.toLowerCase();
 
     const lbs = Number(t?.pounds)||0;
     const amt = Number(t?.amount)||0;
 
-    const d = byDealer.get(dealerKey) || { name: dealer, trips:0, lbs:0, amt:0 };
+    const d = byDealer.get(dealerKey) || { name: dealerName, trips:0, lbs:0, amt:0 };
     d.trips += 1; d.lbs += lbs; d.amt += amt;
     byDealer.set(dealerKey, d);
 
@@ -4404,10 +4403,11 @@ function renderReports(){
     byArea.set(areaKey, a);
 
     const iso = String(t?.dateISO||"");
-    const mm = parseInt(iso.slice(5,7), 10);
-    if(mm>=1 && mm<=12){
-      const mo = byMonth.get(mm);
+    if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){
+      const monthKey = iso.slice(0,7);
+      const mo = byMonth.get(monthKey) || { trips:0, lbs:0, amt:0 };
       mo.trips += 1; mo.lbs += lbs; mo.amt += amt;
+      byMonth.set(monthKey, mo);
     }
   });
 
@@ -4421,11 +4421,16 @@ function renderReports(){
     return { ...x, avg };
   }).sort((a,b)=> b.amt - a.amt);
 
-  const monthRows = Array.from(byMonth.entries()).map(([m,x])=>{
-    const label = new Date(2000, m-1, 1).toLocaleString(undefined,{month:"short"});
-    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-    return { month:m, label, ...x, avg };
-  });
+  const monthRows = Array.from(byMonth.entries())
+    .sort((a,b)=> a[0].localeCompare(b[0]))
+    .map(([monthKey,x])=>{
+      const year = Number(monthKey.slice(0,4));
+      const month = Number(monthKey.slice(5,7));
+      const dt = new Date(year, month - 1, 1);
+      const label = `${dt.toLocaleString(undefined,{month:"short"})} ${year}`;
+      const avg = x.lbs>0 ? x.amt/x.lbs : 0;
+      return { monthKey, month, year, label, ...x, avg };
+    });
 
   const renderAggList = (rows, emptyMsg)=>{
     if(!rows.length) return `<div class="muted small">${escapeHtml(emptyMsg||"No data")}</div>`;

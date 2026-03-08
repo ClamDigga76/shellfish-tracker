@@ -195,6 +195,12 @@ export function normalizeKey(s){
     .replaceAll("#", "");
 }
 
+export function canonicalDealerGroupKey(name){
+  const raw = String(name || "").trim();
+  if(!raw) return "";
+  return normalizeKey(raw);
+}
+
 export function likelyDuplicate(a, b){
   if(a.dateISO !== b.dateISO) return false;
   if(normalizeKey(a.dealer) !== normalizeKey(b.dealer)) return false;
