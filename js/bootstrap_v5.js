@@ -1,8 +1,9 @@
-const SW_VERSION = "192";
+const BOOTSTRAP_URL = new URL(import.meta.url, location.href);
+const APP_VERSION = BOOTSTRAP_URL.searchParams.get("v") || "0";
 
 // Single source of truth for build/version
-window.APP_BUILD = `v5.${SW_VERSION}`;
-window.APP_VERSION = SW_VERSION;
+window.APP_VERSION = APP_VERSION;
+window.APP_BUILD = `v5.${APP_VERSION}`;
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -129,9 +130,9 @@ function __assertBootstrapVersionChain() {
     const bootstrapUrl = new URL(import.meta.url, location.href);
     const scriptV = bootstrapUrl.searchParams.get("v");
     if (!scriptV) return;
-    if (String(scriptV) !== String(SW_VERSION)) {
+    if (String(scriptV) !== String(APP_VERSION)) {
       throw new Error(
-        `Bootstrap version mismatch: script v=${scriptV}, runtime v=${SW_VERSION}. Bump index.html bootstrap ?v and SW_VERSION together.`
+        `Bootstrap version mismatch: script v=${scriptV}, runtime v=${APP_VERSION}. Bump index.html bootstrap ?v and APP_VERSION together.`
       );
     }
   } catch (err) {
@@ -343,9 +344,9 @@ window.__showModuleError = function (err) {
     __setBootStage("assets:checking");
     // Assert and import using absolute URLs derived from this module's location.
     // (Avoids "./js/..." resolving to "/js/js/..." when bootstrap lives in /js/.)
-    const UTILS_URL = new URL(`./utils_v5.js?v=${SW_VERSION}`, import.meta.url).href;
-    const SETTINGS_URL = new URL(`./settings.js?v=${SW_VERSION}`, import.meta.url).href;
-    const APP_URL = new URL(`./app_v5.js?v=${SW_VERSION}`, import.meta.url).href;
+    const UTILS_URL = new URL(`./utils_v5.js?v=${APP_VERSION}`, import.meta.url).href;
+    const SETTINGS_URL = new URL(`./settings.js?v=${APP_VERSION}`, import.meta.url).href;
+    const APP_URL = new URL(`./app_v5.js?v=${APP_VERSION}`, import.meta.url).href;
 
     await __assertAssetExists(UTILS_URL);
     await __assertAssetExists(SETTINGS_URL);
@@ -377,7 +378,7 @@ async function registerServiceWorker() {
 
   try {
     __setBootStage("sw:registering");
-    const swUrl = `./sw.js?v=${SW_VERSION}`;
+    const swUrl = `./sw.js?v=${APP_VERSION}`;
     const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
     __setBootStage("sw:registered");
     try {
@@ -395,7 +396,7 @@ async function registerServiceWorker() {
       if (!__swUpdateReadyNotified) {
         __swUpdateReadyNotified = true;
         try {
-          window.dispatchEvent(new CustomEvent("sw-update-ready", { detail: { version: SW_VERSION } }));
+          window.dispatchEvent(new CustomEvent("sw-update-ready", { detail: { version: APP_VERSION } }));
         } catch (_) {}
       }
     };
