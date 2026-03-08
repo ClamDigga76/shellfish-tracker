@@ -2216,7 +2216,13 @@ function getTripsFilteredRows(){
     if(ad !== bd) return bd.localeCompare(ad);
     const ac = String(a?.createdAt||"");
     const bc = String(b?.createdAt||"");
-    return bc.localeCompare(ac);
+    if(ac !== bc) return bc.localeCompare(ac);
+    const aid = String(a?.id||a?._id||"");
+    const bid = String(b?.id||b?._id||"");
+    if(aid !== bid) return aid.localeCompare(bid);
+    const af = `${String(a?.dealer||"")}|${String(a?.area||"")}|${String(a?.species||"")}|${String(a?.pounds||"")}|${String(a?.amount||"")}|${String(a?.notes||"")}`;
+    const bf = `${String(b?.dealer||"")}|${String(b?.area||"")}|${String(b?.species||"")}|${String(b?.pounds||"")}|${String(b?.amount||"")}|${String(b?.notes||"")}`;
+    return af.localeCompare(bf);
   });
 
   return { rows, range:r, tf };
