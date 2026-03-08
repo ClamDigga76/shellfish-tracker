@@ -2115,7 +2115,20 @@ function safeSetItem(key, value){
 }
 
 function saveState(){
+  if(window.__pendingStateSaveTimer){
+    clearTimeout(window.__pendingStateSaveTimer);
+    window.__pendingStateSaveTimer = null;
+  }
   safeSetItem(LS_KEY, JSON.stringify(state));
+}
+
+function scheduleStateSave(delayMs = 300){
+  const delay = Number.isFinite(Number(delayMs)) ? Number(delayMs) : 300;
+  if(window.__pendingStateSaveTimer) clearTimeout(window.__pendingStateSaveTimer);
+  window.__pendingStateSaveTimer = setTimeout(()=>{
+    window.__pendingStateSaveTimer = null;
+    saveState();
+  }, delay);
 }
 
 // Draft persistence is just state persistence (draft lives under state.draft)
@@ -3285,13 +3298,14 @@ const btnClear = document.getElementById("clearDraft");
   }
 // Persist draft as the user edits fields (fixes iOS select + prevents resets)
   const persistDraft = ()=>{ try{ saveDraft(); }catch{}; try{ updateSaveEnabled(); }catch{} };
+  const persistDraftInput = ()=>{ try{ scheduleStateSave(); }catch{}; try{ updateSaveEnabled(); }catch{} };
   [elDate, elDealer, elPounds, elAmount].forEach(el=>{
     if(!el) return;
-    el.addEventListener("input", persistDraft);
+    el.addEventListener("input", persistDraftInput);
     el.addEventListener("change", persistDraft);
   });
   if(elArea){
-    elArea.addEventListener("input", persistDraft);
+    elArea.addEventListener("input", persistDraftInput);
     elArea.addEventListener("change", persistDraft);
   }
 
@@ -3510,7 +3524,7 @@ getApp().innerHTML = `
   const elDateLive = document.getElementById("r_date");
   const elDealerLive = document.getElementById("r_dealer");
 
-  const updateReviewDerived = ()=>{
+  const updateReviewDerived = (immediateSave = false)=>{
     if(!state.reviewDraft) return;
     const p = parseNum(elPoundsLive ? elPoundsLive.value : "");
     const a = parseMoney(elAmountLive ? elAmountLive.value : "");
@@ -3578,7 +3592,8 @@ getApp().innerHTML = `
         warnEl.innerHTML = html;
       }
     }catch(_){}
-    saveState();
+    if(immediateSave) saveState();
+    else scheduleStateSave();
   };
 
   function updateReviewDealerPrompt(){
@@ -3639,21 +3654,21 @@ getApp().innerHTML = `
   // iOS sometimes fires change more reliably than input for certain keyboards/pickers.
   [elPoundsLive, elAmountLive].forEach(el=>{
     if(!el) return;
-    el.addEventListener("input", updateReviewDerived);
-    el.addEventListener("change", updateReviewDerived);
-    el.addEventListener("blur", updateReviewDerived);
+    el.addEventListener("input", ()=>updateReviewDerived(false));
+    el.addEventListener("change", ()=>updateReviewDerived(true));
+    el.addEventListener("blur", ()=>updateReviewDerived(true));
   });
   if(elAreaLive){
-    elAreaLive.addEventListener("input", updateReviewDerived);
-    elAreaLive.addEventListener("change", updateReviewDerived);
+    elAreaLive.addEventListener("input", ()=>updateReviewDerived(false));
+    elAreaLive.addEventListener("change", ()=>updateReviewDerived(true));
   }
 
 
   [elDateLive, elDealerLive].forEach(el=>{
     if(!el) return;
-    el.addEventListener("input", updateReviewDerived);
-    el.addEventListener("change", updateReviewDerived);
-    el.addEventListener("blur", updateReviewDerived);
+    el.addEventListener("input", ()=>updateReviewDerived(false));
+    el.addEventListener("change", ()=>updateReviewDerived(true));
+    el.addEventListener("blur", ()=>updateReviewDerived(true));
   });
 
   if(elDealerLive){
