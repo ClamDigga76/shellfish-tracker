@@ -261,21 +261,38 @@ export function toCSV(trips){
 
 
 
+function parseTripCreatedAt(createdAt){
+  if(typeof createdAt === "number" && Number.isFinite(createdAt)) return createdAt;
+  const raw = String(createdAt || "").trim();
+  if(!raw) return 0;
+  const ts = Date.parse(raw);
+  if(Number.isFinite(ts)) return ts;
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : 0;
+}
+
+export function compareTripsNewestFirst(a, b){
+  const da = String(a?.dateISO || "");
+  const db = String(b?.dateISO || "");
+  if(db && da && db !== da) return db.localeCompare(da);
+
+  const ca = parseTripCreatedAt(a?.createdAt);
+  const cb = parseTripCreatedAt(b?.createdAt);
+  if(cb !== ca) return cb - ca;
+
+  const ia = String(a?.id || a?._id || "");
+  const ib = String(b?.id || b?._id || "");
+  if(ia !== ib) return ia.localeCompare(ib);
+
+  const af = `${String(a?.dealer||"")}|${String(a?.area||"")}|${String(a?.species||"")}|${String(a?.pounds||"")}|${String(a?.amount||"")}|${String(a?.notes||"")}`;
+  const bf = `${String(b?.dealer||"")}|${String(b?.area||"")}|${String(b?.species||"")}|${String(b?.pounds||"")}|${String(b?.amount||"")}|${String(b?.notes||"")}`;
+  return af.localeCompare(bf);
+}
+
 // Return a NEW array of trips sorted newest-first.
-// Prefers dateISO (YYYY-MM-DD). Falls back to createdAt (ms) if present.
 export function getTripsNewestFirst(trips){
   const arr = Array.isArray(trips) ? trips.slice() : [];
-  return arr.sort((a,b)=>{
-    const da = String(a?.dateISO || "");
-    const db = String(b?.dateISO || "");
-    if(db && da && db !== da) return db.localeCompare(da);
-    const ca = Number(a?.createdAt || 0);
-    const cb = Number(b?.createdAt || 0);
-    if(cb !== ca) return cb - ca;
-    const ia = String(a?.id || "");
-    const ib = String(b?.id || "");
-    return ib.localeCompare(ia);
-  });
+  return arr.sort(compareTripsNewestFirst);
 }
 
 let overlayLockCount = 0;
