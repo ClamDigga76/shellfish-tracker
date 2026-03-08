@@ -11,6 +11,7 @@ window.__SHELLFISH_APP_STARTED = false;
 import { uid, toCSV, downloadText, formatMoney, formatDateDMY as formatDateLegacyDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, isValidISODate } from "./utils_v5.js";
 import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
 import { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback } from "./migrations_v5.js";
+import { ensureNavState, createNavigator } from "./navigation_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;
@@ -201,6 +202,10 @@ const LAST_ERROR_KEY = "shellfish-last-error";
 const LAST_ERROR_AT_KEY = "shellfish-last-error-at";
 const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
 const LEGACY_LAST_ERROR_AT_KEY = "SHELLFISH_LAST_ERROR_AT";
+const { pushView, goBack, bindNavHandlers } = createNavigator({
+  saveState: () => saveState(),
+  render: () => render()
+});
 
 
 // Local helper to avoid hard dependency on utils export during SW update races (iOS Safari).
@@ -778,59 +783,6 @@ window.addEventListener("unhandledrejection", (e)=>{ if(window.__SHELLFISH_APP_S
 // Signal to the page watchdog that the module loaded
 try{ window.__SHELLFISH_STARTED = true; }catch{}
 function getApp(){ return document.getElementById("app"); }
-
-const NAV_STACK_LIMIT = 50;
-
-function ensureNavState(state){
-  if(!state || typeof state !== "object") state = {};
-  if(!Array.isArray(state.navStack)) state.navStack = [];
-  return state;
-}
-
-function navReset(state){ state.navStack = []; }
-
-function pushView(state, nextView, {resetStack=false} = {}){
-  if(resetStack) navReset(state);
-  if(state.view !== nextView){
-    state.navStack.push(state.view);
-    if(state.navStack.length > NAV_STACK_LIMIT){
-      state.navStack.splice(0, state.navStack.length - NAV_STACK_LIMIT);
-    }
-  }
-  state.view = nextView;
-  saveState();
-  render();
-}
-
-function goBack(state, {fallback="home"} = {}){
-  const stack = Array.isArray(state.navStack) ? state.navStack : [];
-  let prev = null;
-  while(stack.length){
-    const c = stack.pop();
-    if(c && c !== state.view){ prev = c; break; }
-  }
-  state.navStack = stack;
-  state.view = prev || fallback;
-  saveState();
-  render();
-}
-
-function bindNavHandlers(state){
-  const back = document.getElementById("navBack");
-  if(back) back.onclick = () => goBack(state);
-
-  const cancel = document.getElementById("navCancel");
-  if(cancel) cancel.onclick = () => goBack(state);
-
-  const home = document.getElementById("navHome");
-  if(home) home.onclick = () => pushView(state, "home", {resetStack:true});
-
-  const help = document.getElementById("homeHelp");
-  if(help) help.onclick = () => { state.view = "help"; state.lastAction = "nav:help"; saveState(); render(); };
-}
-
-
-
 
 function loadState(){
   return loadStateWithLegacyFallback(localStorage, ensureNavState);
