@@ -1,4 +1,4 @@
-const SW_VERSION = "188";
+const SW_VERSION = "190";
 
 // Single source of truth for build/version
 window.APP_BUILD = `v5.${SW_VERSION}`;
@@ -123,6 +123,28 @@ window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {
   assetChecks: [],
   lastBootError: null,
 };
+
+function __assertBootstrapVersionChain() {
+  try {
+    const bootstrapUrl = new URL(import.meta.url, location.href);
+    const scriptV = bootstrapUrl.searchParams.get("v");
+    if (!scriptV) return;
+    if (String(scriptV) !== String(SW_VERSION)) {
+      throw new Error(
+        `Bootstrap version mismatch: script v=${scriptV}, runtime v=${SW_VERSION}. Bump index.html bootstrap ?v and SW_VERSION together.`
+      );
+    }
+  } catch (err) {
+    try {
+      window.__BOOT_DIAG__.lastBootError = {
+        name: err?.name || "Error",
+        message: String(err?.message || err || "Unknown error"),
+        stackTop: String(err?.stack || "").split("\n").slice(0, 3).join("\n"),
+      };
+    } catch (_) {}
+    throw err;
+  }
+}
 
 function __setBootStage(stage) {
   try {
@@ -317,6 +339,7 @@ window.__showModuleError = function (err) {
 // surface real import/parse errors (404, HTML-as-JS, syntax errors) instead of only the watchdog.
 (async () => {
   try {
+    __assertBootstrapVersionChain();
     __setBootStage("assets:checking");
     // Assert and import using absolute URLs derived from this module's location.
     // (Avoids "./js/..." resolving to "/js/js/..." when bootstrap lives in /js/.)
