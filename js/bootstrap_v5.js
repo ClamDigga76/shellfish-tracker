@@ -57,7 +57,7 @@ async function __assertAssetExists(path) {
     }
   }
 
-  // Accept v-param'd JS URLs (e.g., app_v5.js?v=78)
+  // Accept v-param'd JS URLs
   if (/\.js($|\?)/i.test(path)) {
     const ct = ct0;
     if (!(ct.includes("javascript") || ct.includes("ecmascript"))) {

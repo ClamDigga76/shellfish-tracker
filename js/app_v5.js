@@ -1,6 +1,3 @@
-// Shellfish Tracker — V2 ESM (Phase 2C-UI)
-// Goal: Restore polished UI shell (cards/buttons) while keeping ESM structure stable.
-
 const moduleV = new URL(import.meta.url).searchParams.get("v") || "";
 const bootV = String(window.APP_VERSION || "");
 if (moduleV && bootV && moduleV !== bootV) {
