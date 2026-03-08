@@ -1703,12 +1703,18 @@ function validateTrip(t){
   else{
     if(!t.dateISO || !/^\d{4}-\d{2}-\d{2}$/.test(String(t.dateISO))) errs.push("Date");
     if(!String(t.dealer||"").trim()) errs.push("Dealer");
+    if(!isValidAreaValue(t.area)) errs.push("Area");
     const lbs = Number(t.pounds);
     const amt = Number(t.amount);
     if(!(Number.isFinite(lbs) && lbs > 0)) errs.push("Pounds");
     if(!(Number.isFinite(amt) && amt > 0)) errs.push("Amount");
   }
   return errs;
+}
+
+function isValidAreaValue(v){
+  const area = String(v || "").trim();
+  return !!area && area !== "__add_new_area__";
 }
 
 
@@ -1891,6 +1897,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   const errs = [];
   if(!dateISO) errs.push("Date");
   if(!dealer) errs.push("Dealer");
+  if(!isValidAreaValue(area)) errs.push("Area");
   if(!(poundsNum > 0)) errs.push("Pounds");
   if(!(amountNum > 0)) errs.push("Amount");
   if(errs.length){
@@ -3107,7 +3114,7 @@ const getBarSelectChoices = (kind)=>{
   // Enable Save only when required fields are valid, and keep lbs/$ coloring consistent.
   const updateSaveEnabled = ()=>{
     const dealerOk = !!String(elDealer?.value||"").trim();
-    const areaOk = !!String(elArea?.value||"").trim();
+    const areaOk = isValidAreaValue(elArea?.value);
     const pounds = parseNum(elPounds?.value);
     const amount = parseMoney(elAmount?.value);
     const poundsOk = isFinite(pounds) && pounds > 0;
@@ -3541,6 +3548,7 @@ getApp().innerHTML = `
         if(!dateISO) missing.push("Date");
         if(!dealer) missing.push("Dealer");
         if(!(pounds > 0)) missing.push("Pounds");
+        if(!isValidAreaValue(document.getElementById("r_area")?.value || "")) missing.push("Area");
         if(!(amount > 0)) missing.push("Amount");
 
         const candidate = { dateISO, dealer, pounds, amount };
@@ -4090,7 +4098,7 @@ function renderEditTrip(){
       const p = parseNum(elPounds ? elPounds.value : "");
       const a = parseMoney(elAmount ? elAmount.value : "");
       const dealerOk = !!String(elDealer?.value || "").trim() && String(elDealer?.value || "") !== dealerAddSentinel;
-      const areaOk = !!String(elArea?.value || "").trim() && String(elArea?.value || "") !== areaAddSentinel;
+      const areaOk = isValidAreaValue(elArea?.value);
       const poundsOk = Number.isFinite(p) && p > 0;
       const amountOk = Number.isFinite(a) && a > 0;
       if(elPounds) elPounds.classList.toggle("lbsBlue", poundsOk);
