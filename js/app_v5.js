@@ -22,7 +22,7 @@ const QUICK_CHIP_MOVE_CANCEL_PX = 10;
 // Backup meta (local-only; no user data duplication)
 const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
 
-// In-app update UI: shows an Update button only when a new Service Worker is ready.
+// In-app update UI: primary action always refreshes app assets/reload; SW state only changes status text.
 let SW_UPDATE_READY = false;
 let SW_UPDATE_VERSION = "";
 let themeMediaQuery = null;
@@ -143,8 +143,8 @@ function updateUpdateRow(){
   if(inlineMsg) inlineMsg.style.display = "none";
 
   if(SW_UPDATE_READY){
-    statusEl.textContent = "Update available";
-    btnPrimary.textContent = "Refresh to update";
+    statusEl.textContent = "Update ready • tap Refresh app";
+    btnPrimary.textContent = "Refresh app";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
   }else{
     statusEl.textContent = "Up to date";
