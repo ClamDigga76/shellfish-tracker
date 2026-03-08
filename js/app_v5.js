@@ -8,7 +8,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDMY as formatDateLegacyDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatDateDMY as formatDateLegacyDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, isValidISODate } from "./utils_v5.js";
 import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
@@ -983,7 +983,7 @@ function renderTripCatchCard(t, opts = {}){
     valueOverride = "",
     metaOverride = ""
   } = opts;
-  const date = formatDateDMY(t?.dateISO || "");
+  const date = t?.invalidDateQuarantined ? "Invalid date (quarantined)" : formatDateDMY(t?.dateISO || "");
   const dealerRaw = String(t?.dealer || "").trim();
   const dealer = dealerRaw || "(dealer)";
   const area = String(t?.area || "").trim() || "(area)";
@@ -1647,14 +1647,16 @@ function normalizeTripRow(t){
   if(!t) return null;
 
   let dateISO = String(t?.dateISO || t?.date || t?.when || t?.tripDate || "").slice(0,10);
+  let invalidDateQuarantined = false;
 
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateISO) && t?.createdAt){
+  if(!isValidISODate(dateISO) && t?.createdAt){
     const d = new Date(t.createdAt);
     if(!isNaN(d)) dateISO = d.toISOString().slice(0,10);
   }
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateISO)){
+  if(!isValidISODate(dateISO)){
     // quarantine weird records out of normal ranges but keep app stable
-    dateISO = "1900-01-01";
+    dateISO = "";
+    invalidDateQuarantined = true;
   }
 
   const pounds = Number(t?.pounds ?? t?.lbs ?? 0);
@@ -1663,6 +1665,7 @@ function normalizeTripRow(t){
   return {
     ...t,
     dateISO,
+    invalidDateQuarantined: Boolean(t?.invalidDateQuarantined) || invalidDateQuarantined,
     pounds: Number.isFinite(pounds) ? pounds : 0,
     amount: Number.isFinite(amount) ? amount : 0,
     dealer: String(t?.dealer || "").trim(),
@@ -2367,7 +2370,7 @@ function filterByISOInclusive(trips, startISO, endISO){
   const e = String(endISO);
   return trips.filter(t=>{
     const d = String(t?.dateISO||"");
-    if(!d) return true;
+    if(!d) return false;
     return d >= s && d <= e;
   });
 }
