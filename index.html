@@ -442,7 +442,7 @@ body{
     radial-gradient(1000px 520px at 50% 6%, rgba(47,109,246,.18) 0%, rgba(47,109,246,0) 56%),
     radial-gradient(900px 520px at 12% 20%, rgba(140,170,255,.10) 0%, rgba(140,170,255,0) 60%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
-  padding:calc(var(--pad) + env(safe-area-inset-top)) 12px var(--pad);
+  padding:calc(var(--pad) + var(--safeTop)) 12px var(--pad);
 }
 
 .phone{
@@ -885,7 +885,6 @@ body.scrollLock{
   position: sticky;
   bottom: 0;
   padding: 10px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom));
   background: linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--line);
@@ -902,7 +901,7 @@ body.scrollLock{
   align-items:flex-end;
   justify-content:center;
   padding:16px;
-  padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  padding-bottom:calc(16px + var(--safeBottom));
   background:rgba(0,0,0,.45);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
@@ -947,9 +946,9 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=207"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=208"></script>
 
-  <div id="swUpdateBanner" class="card safeBottom" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
+  <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
     <div class="muted small" style="margin-top:6px;line-height:1.35">
       A new version is ready. Reload to apply it.
