@@ -1420,7 +1420,7 @@ function ensureUnifiedFilters(){
 
     if(legacyMode === "ALL") range = "all";
     else if(legacyMode === "YTD") range = "ytd";
-    else if(legacyMode === "MONTH") range = "30d";
+    else if(legacyMode === "MONTH") range = "mtd";
     else if(legacyMode === "7D") range = "7d";
     else if(legacyMode === "RANGE") {
       range = "custom";
