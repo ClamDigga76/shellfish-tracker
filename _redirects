@@ -3,6 +3,5 @@
 /legal/*                  /legal/:splat              200
 /manifest.webmanifest     /manifest.webmanifest      200
 /sw.js                    /sw.js                     200
-/version.json             /version.json              200
 
 /*                        /index.html                200
