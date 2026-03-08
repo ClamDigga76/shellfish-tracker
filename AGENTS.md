@@ -43,8 +43,8 @@ If instructions conflict, use this order:
 ## Safety locks
 Do not modify these unless the user explicitly asks:
 
-- service worker
-- caching
+- service worker behavior
+- caching behavior
 - install/update flow
 - storage
 - schema
@@ -52,6 +52,44 @@ Do not modify these unless the user explicitly asks:
 - migrations
 
 Never bundle service worker work or storage/schema work with normal UI patches.
+
+## Version chain guard
+Bank the Catch uses a locked version chain.
+
+For any build/version bump, treat these as one bundle that must stay aligned:
+
+- `index.html` bootstrap/script query version
+- bootstrap/runtime version check
+- shared app version source
+- service worker version
+- cache name/version
+- Settings/build display version
+
+Do not update only one version reference.
+
+Do not ship a patch if any version value is hard-coded separately and can drift from the others.
+
+Preferred rule:
+- there should be one shared source of truth for the app version
+- all other version consumers must read from that shared source
+
+## Version bump rule
+Every patch includes a **build/version bump +1**.
+
+For Bank the Catch, a version bump is not complete unless:
+- bootstrap version matches runtime version
+- runtime version matches service worker version
+- service worker version matches cache version
+- Settings shows the same version
+
+If version-chain files are split across multiple files, include all of them in scope for the patch.
+
+## Version exception to safety lock
+A normal patch must not change service worker/caching behavior unless explicitly requested.
+
+Exception:
+- if a patch includes a required build/version bump, version-chain files may be edited as needed to keep bootstrap, runtime, service worker, cache key, and Settings version aligned
+- this exception allows version alignment work only, not unrelated service worker changes
 
 ## Explanation style
 Use short plain-English:
