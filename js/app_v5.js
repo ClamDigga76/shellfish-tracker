@@ -2885,7 +2885,7 @@ function renderNewTrip(){
   const topAreas = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
   const topDealers = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
 
-  const dealerListForSelect = getDealerSelectList(topDealers);
+  const dealerListForSelect = getDealerSelectList(topDealers, draft.dealer);
   const dealerOptions = buildDealerOptionsHtml(draft.dealer, dealerListForSelect, dealerAddSentinel);
   const areaOptions = buildAreaOptionsHtml(draft.area, areaAddSentinel);
 
@@ -3817,7 +3817,7 @@ function renderEditTrip(){
   const topAreasE = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
   const topDealersE = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
 
-  const dealerListForSelect = getDealerSelectList(topDealersE);
+  const dealerListForSelect = getDealerSelectList(topDealersE, draft.dealer);
   const dealerOptions = buildDealerOptionsHtml(draft.dealer, dealerListForSelect, dealerAddSentinel);
   const areaOptions = buildAreaOptionsHtml(draft.area, areaAddSentinel);
 
@@ -5361,6 +5361,12 @@ function __bindListMgmtHandlers(){
           const i = Number(btn.getAttribute("data-del-area"));
           if(!Number.isFinite(i) || i<0) return;
           const name = String(state.areas?.[i] || "");
+          const inUseCount = countTripsUsingValue("area", name);
+          if(inUseCount > 0){
+            alert(`Can't delete area \"${name}\" yet. ${inUseCount} trip(s) still use it.`);
+            showToast("Area is used by saved trips");
+            return;
+          }
           if(!confirm(`Delete area "${name}"?`)) return;
           state.areas.splice(i, 1);
           ensureAreas();
@@ -5373,6 +5379,12 @@ function __bindListMgmtHandlers(){
           const i = Number(btn.getAttribute("data-del-dealer"));
           if(!Number.isFinite(i) || i<0) return;
           const name = String(state.dealers?.[i] || "");
+          const inUseCount = countTripsUsingValue("dealer", name);
+          if(inUseCount > 0){
+            alert(`Can't delete dealer \"${name}\" yet. ${inUseCount} trip(s) still use it.`);
+            showToast("Dealer is used by saved trips");
+            return;
+          }
           if(!confirm(`Delete dealer "${name}"?`)) return;
           state.dealers.splice(i, 1);
           ensureDealers();
@@ -5638,17 +5650,17 @@ function displayAmount(val){
 }
 
 function buildAreaOptionsHtml(selectedArea, addSentinel){
-  return ["", ...(Array.isArray(state.areas) ? state.areas : [])].map((area)=>{
+  return ["", ...getValuesWithLegacyEntry("area", selectedArea, Array.isArray(state.areas) ? state.areas : [])].map((area)=>{
     const label = area ? area : "—";
     const sel = (String(selectedArea || "") === String(area || "")) ? "selected" : "";
     return `<option value="${escapeHtml(String(area || ""))}" ${sel}>${label}</option>`;
   }).concat(`<option value="${addSentinel}">+ Add new Area</option>`).join("");
 }
 
-function getDealerSelectList(topDealers){
+function getDealerSelectList(topDealers, selectedDealer=""){
   const out = [];
   const seenDealerKeys = new Set();
-  for(const dealer of [...(Array.isArray(topDealers) ? topDealers : []), ...(Array.isArray(state.dealers) ? state.dealers : [])]){
+  for(const dealer of getValuesWithLegacyEntry("dealer", selectedDealer, [...(Array.isArray(topDealers) ? topDealers : []), ...(Array.isArray(state.dealers) ? state.dealers : [])])){
     const val = String(dealer || "").trim();
     if(!val) continue;
     const key = normalizeKey(val);
@@ -5657,6 +5669,30 @@ function getDealerSelectList(topDealers){
     out.push(val);
   }
   return out;
+}
+
+function countTripsUsingValue(kind, rawValue){
+  const needle = String(rawValue || "").trim();
+  if(!needle) return 0;
+  const needleKey = normalizeKey(needle);
+  const trips = Array.isArray(state?.trips) ? state.trips : [];
+  let count = 0;
+  for(const trip of trips){
+    const tripValue = String(kind === "dealer" ? trip?.dealer : trip?.area || "").trim();
+    if(!tripValue) continue;
+    if(normalizeKey(tripValue) === needleKey) count += 1;
+  }
+  return count;
+}
+
+function getValuesWithLegacyEntry(kind, legacyValue, values){
+  const list = Array.isArray(values) ? values.slice() : [];
+  const legacy = String(legacyValue || "").trim();
+  if(!legacy) return list;
+  const legacyKey = normalizeKey(legacy);
+  const hasLegacy = list.some((item)=>normalizeKey(String(item || "").trim()) === legacyKey);
+  if(!hasLegacy) list.unshift(legacy);
+  return list;
 }
 
 function buildDealerOptionsHtml(selectedDealer, dealerList, addSentinel){
