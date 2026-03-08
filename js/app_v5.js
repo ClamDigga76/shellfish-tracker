@@ -234,10 +234,14 @@ function formatDateDMY(input){
 }
 
 function sanitizeDecimalInput(raw){
-  let s = String(raw || "").replace(/[^\d.]/g, "");
-  const dot = s.indexOf(".");
-  if(dot !== -1){
-    s = s.slice(0, dot + 1) + s.slice(dot + 1).replace(/\./g, "");
+  let s = String(raw || "").replace(/[^\d.,]/g, "");
+  const decimalIdx = s.search(/[.,]/);
+  if(decimalIdx !== -1){
+    const intPart = s.slice(0, decimalIdx).replace(/[.,]/g, "");
+    const fracPart = s.slice(decimalIdx + 1).replace(/[.,]/g, "");
+    s = `${intPart}.${fracPart}`;
+  }else{
+    s = s.replace(/[.,]/g, "");
   }
   return s;
 }
@@ -257,7 +261,7 @@ function normalizeAmountOnBlur(el){
   try{
     const s = String(el.value || "").trim();
     if(!s){ el.value = "0.00"; return; }
-    const n = Number(s);
+    const n = parseMoney(s);
     el.value = Number.isFinite(n) ? n.toFixed(2) : "0.00";
   }catch(_){ }
 }
@@ -2929,7 +2933,7 @@ const getBarSelectChoices = (kind)=>{
         <div class="field">
           <label class="fieldLabel overline" for="t_pounds">POUNDS</label>
           <div class="inputWrap">
-            <input class="input inputWithSuffix" id="t_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+            <input class="input inputWithSuffix" id="t_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
             <span class="unitSuffix lbsBlue">lbs</span>
           </div>
         </div>
@@ -2937,7 +2941,7 @@ const getBarSelectChoices = (kind)=>{
           <label class="fieldLabel overline" for="t_amount">AMOUNT</label>
           <div class="inputWrap">
             <span class="moneyPrefix moneyGreen">$</span>
-            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountVal))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountVal))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
           </div>
         </div>
       </div>
@@ -2984,8 +2988,8 @@ const getBarSelectChoices = (kind)=>{
   bindDatePill("t_date");
   const updateRateLine = ()=>{
     if(!elRate) return;
-    const p = Number(String(elPounds?.value||"").trim() || 0);
-    const a = Number(String(elAmount?.value||"").trim() || 0);
+    const p = parseNum(elPounds?.value);
+    const a = parseMoney(elAmount?.value);
     elRate.textContent = formatMoney(computePPL(p, a));
   };
   const openQuickAdd = (kind, opts = {})=>{
