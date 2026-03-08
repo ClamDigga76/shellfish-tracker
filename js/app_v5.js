@@ -2209,21 +2209,8 @@ function getTripsFilteredRows(){
     rows = rows.filter(t => String(t?.area||"") === String(tf.area));
   }
 
-  // Stable sort: newest first
-  rows.sort((a,b)=>{
-    const ad = String(a?.dateISO||"");
-    const bd = String(b?.dateISO||"");
-    if(ad !== bd) return bd.localeCompare(ad);
-    const ac = String(a?.createdAt||"");
-    const bc = String(b?.createdAt||"");
-    if(ac !== bc) return bc.localeCompare(ac);
-    const aid = String(a?.id||a?._id||"");
-    const bid = String(b?.id||b?._id||"");
-    if(aid !== bid) return aid.localeCompare(bid);
-    const af = `${String(a?.dealer||"")}|${String(a?.area||"")}|${String(a?.species||"")}|${String(a?.pounds||"")}|${String(a?.amount||"")}|${String(a?.notes||"")}`;
-    const bf = `${String(b?.dealer||"")}|${String(b?.area||"")}|${String(b?.species||"")}|${String(b?.pounds||"")}|${String(b?.amount||"")}|${String(b?.notes||"")}`;
-    return af.localeCompare(bf);
-  });
+  // Stable sort: newest first (shared with Home and other trip views)
+  rows = getTripsNewestFirst(rows);
 
   return { rows, range:r, tf };
 }
