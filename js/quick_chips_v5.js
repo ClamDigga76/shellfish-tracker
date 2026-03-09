@@ -73,6 +73,20 @@ export function createQuickChipHelpers({
     return settings[key];
   }
 
+  function getCustomQuickChipKey(kind){
+    return kind === "dealer" ? "dealerPinnedCustom" : "areaPinnedCustom";
+  }
+
+  function getCustomQuickChipMap(kind){
+    const settings = getQuickChipSettings();
+    const key = getCustomQuickChipKey(kind);
+    const raw = settings[key];
+    if(raw && typeof raw === "object" && !Array.isArray(raw)) return raw;
+    settings[key] = {};
+    saveState();
+    return settings[key];
+  }
+
   function setQuickChipMapping(kind, chipIndex, nextValue){
     const idx = Number(chipIndex);
     if(idx < 0) return;
@@ -83,6 +97,8 @@ export function createQuickChipHelpers({
     const arr = Array.isArray(quickChips[key]) ? [...quickChips[key]] : [];
     arr[idx] = value;
     quickChips[key] = arr;
+    const customMap = getCustomQuickChipMap(kind);
+    customMap[idx] = true;
     saveState();
   }
 
@@ -107,10 +123,37 @@ export function createQuickChipHelpers({
     const max = Number.isFinite(Number(limit)) ? Math.max(0, Number(limit)) : 0;
     const choices = getQuickChipChoices(kind);
     const pinned = getPinnedQuickChipValues(kind, { seedItems: sourceItems, limit: max });
+    const customMap = getCustomQuickChipMap(kind);
     const len = max || pinned.length;
+    const recentPool = [];
+    const recentSeen = new Set();
+    for(const raw of [...(Array.isArray(sourceItems) ? sourceItems : []), ...getLastUniqueFromTrips(kind, Math.max(len, 6)), ...choices]){
+      const value = String(raw || "").trim();
+      if(!value) continue;
+      const dedupeKey = (kind === "dealer") ? normalizeKey(value) : value;
+      if(recentSeen.has(dedupeKey)) continue;
+      recentSeen.add(dedupeKey);
+      recentPool.push(value);
+    }
+
+    const fallbackBySlot = [];
+    const usedFallback = new Set();
+    for(let i=0;i<len;i++){
+      let fill = "";
+      for(const candidate of recentPool){
+        const candidateKey = (kind === "dealer") ? normalizeKey(candidate) : candidate;
+        if(usedFallback.has(candidateKey)) continue;
+        fill = candidate;
+        usedFallback.add(candidateKey);
+        break;
+      }
+      fallbackBySlot.push(fill);
+    }
+
     const out = [];
     for(let i=0;i<len;i++){
-      const candidate = String(pinned[i] || "").trim();
+      const isCustom = !!customMap[i];
+      const candidate = String((isCustom ? pinned[i] : (fallbackBySlot[i] || pinned[i])) || "").trim();
       if(!candidate){
         out.push("");
         continue;
