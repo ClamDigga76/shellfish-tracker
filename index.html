@@ -328,8 +328,19 @@ header{padding:14px 18px 12px}
 .pageHeader.simple .phIcon{display:none}
 .pageHeader.simple .phTitle{text-align:center;margin:0 auto;font-size:22px;letter-spacing:.2px}
 
-body[data-view="new"] .formCard{padding:14px 12px}
+body[data-view="new"] .formCard{padding:12px}
 #newTripForm .field{margin-bottom:10px}
+
+.tripFormFoundation{padding:12px}
+.tripFormFoundation .trip-section.trip-card{
+  margin:0 0 10px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--glass2);
+}
+.tripFormFoundation .trip-section.trip-card:last-of-type{margin-bottom:0}
+body[data-view="edit"] .tripFormFoundation .trip-section.trip-card{background:rgba(255,255,255,.04)}
 .overline,.fieldLabel{letter-spacing:.12em}
 .chipRow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px}
 
@@ -883,14 +894,16 @@ body.scrollLock{
 /* v71: New Trip bottom sticky actions */
 .tripActionBar{
   position: sticky;
-  bottom: 0;
-  padding: 10px;
+  bottom: calc(var(--safeBottom) + 2px);
+  margin:0 -12px -2px;
+  padding: 10px 12px calc(10px + var(--safeBottom));
   background: linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--line);
   z-index: 40;
 }
 .tripActionRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tripActionRow.tripActionRow--three{grid-template-columns:1fr 1fr 1fr}
 
 /* v81: modal (quick add) */
 .modalRoot{
@@ -946,7 +959,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=228"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=229"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
