@@ -564,3 +564,77 @@ export function attachLongPress(el, { ms = 500, movePx = 10, onLongPressArmed, o
     el.removeEventListener("pointercancel", onPointerCancel);
   };
 }
+
+
+export function resolveModeDateRange(mode, fromMDY = "", toMDY = "", { isoToday, parseUsDateToISODate } = {}) {
+  const todayISO = typeof isoToday === "function" ? isoToday() : "";
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const parseDate = (value) => {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    return (typeof parseUsDateToISODate === "function" ? parseUsDateToISODate(raw) : "") || "";
+  };
+
+  const m = String(mode || "").toUpperCase();
+  const normalizedMode = (m === "MONTH") ? "THIS_MONTH" : (m === "7D" ? "RANGE_7D" : m);
+
+  if (normalizedMode === "YTD") return { startISO: `${now.getFullYear()}-01-01`, endISO: todayISO, label: "YTD" };
+  if (normalizedMode === "THIS_MONTH") return { startISO: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`, endISO: todayISO, label: "THIS_MONTH" };
+  if (normalizedMode === "LAST_MONTH") {
+    const d = new Date(now.getFullYear(), now.getMonth(), 1);
+    d.setMonth(d.getMonth() - 1);
+    const start = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`;
+    const endD = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    return { startISO: start, endISO: `${endD.getFullYear()}-${pad(endD.getMonth() + 1)}-${pad(endD.getDate())}`, label: "LAST_MONTH" };
+  }
+  if (normalizedMode === "RANGE_7D") {
+    const d = new Date(now);
+    d.setDate(now.getDate() - 6);
+    return { startISO: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, endISO: todayISO, label: "7D" };
+  }
+  if (normalizedMode === "RANGE") {
+    const s = parseDate(fromMDY);
+    const e = parseDate(toMDY);
+    if (s && e) return (s <= e) ? { startISO: s, endISO: e, label: "RANGE" } : { startISO: e, endISO: s, label: "RANGE" };
+    return { startISO: "", endISO: "", label: "RANGE" };
+  }
+  return { startISO: "", endISO: "", label: "ALL" };
+}
+
+export function resolveTripsDateRange(tf, isoToday) {
+  const range = String(tf?.range || "ytd");
+  const todayISO = isoToday();
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const y = now.getFullYear();
+
+  if (range === "all") return { startISO: "", endISO: "", label: "ALL" };
+  if (range === "ytd") return { startISO: `${y}-01-01`, endISO: todayISO, label: "YTD" };
+  if (range === "12m" || range === "90d" || range === "30d") {
+    const d = new Date(now);
+    const days = (range === "12m") ? 364 : (range === "90d" ? 89 : 29);
+    d.setDate(d.getDate() - days);
+    const startISO = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const label = (range === "12m") ? "12M" : (range === "90d" ? "90D" : "30D");
+    return { startISO, endISO: todayISO, label };
+  }
+
+  const s = String(tf?.fromISO || "").slice(0, 10);
+  const e = String(tf?.toISO || "").slice(0, 10);
+  if (s && e) return (s <= e) ? { startISO: s, endISO: e, label: "RANGE" } : { startISO: e, endISO: s, label: "RANGE" };
+  return { startISO: "", endISO: "", label: "RANGE" };
+}
+
+export function applyTripCriteria(trips, { startISO = "", endISO = "", dealer = "", area = "", species = "" } = {}) {
+  const rows = Array.isArray(trips) ? trips : [];
+  return rows.filter((t) => {
+    const d = String(t?.dateISO || "");
+    if (startISO && endISO && !(d >= startISO && d <= endISO)) return false;
+    if (dealer && dealer !== "all" && String(t?.dealer || "") !== String(dealer)) return false;
+    if (area && area !== "all" && String(t?.area || "") !== String(area)) return false;
+    if (species && species !== "all" && String(t?.species || "") !== String(species)) return false;
+    return true;
+  });
+}
