@@ -58,21 +58,21 @@ export function renderTripEntryForm({
           <div class="tripMetricsRow">
             <div class="field">
               <label class="fieldLabel overline" for="${escapeHtml(poundsId)}">POUNDS</label>
-              <div class="inputWrap">
+              <div class="inputWrap inputWrap--suffix">
                 <input class="input inputWithSuffix" id="${escapeHtml(poundsId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(poundsValue ?? ""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
-                <span class="unitSuffix lbsBlue">lbs</span>
+                <span class="unitSuffix lbsBlue" aria-hidden="true">lbs</span>
               </div>
             </div>
             <div class="field">
               <label class="fieldLabel overline" for="${escapeHtml(amountId)}">AMOUNT</label>
-              <div class="inputWrap">
-                <span class="moneyPrefix moneyGreen">$</span>
+              <div class="inputWrap inputWrap--prefix">
+                <span class="moneyPrefix moneyGreen" aria-hidden="true">$</span>
                 <input class="input inputWithPrefix" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountValue ?? ""))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
               </div>
             </div>
             <div class="field">
               <label class="fieldLabel overline" for="${escapeHtml(rateId)}">$/LB</label>
-              <div class="inputWrap">
+              <div class="inputWrap inputWrap--rate">
                 <input class="input" id="${escapeHtml(rateId)}" type="text" value="${formatMoney(computePPL(Number(poundsValue || 0), Number(amountValue || 0)))}" readonly tabindex="-1" aria-readonly="true" />
               </div>
             </div>
