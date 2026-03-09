@@ -370,7 +370,7 @@ body[data-view="new"] .formCard{padding:12px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tripMetricsRow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .tripMetricsRow .fieldLabel{font-size:13px;letter-spacing:.08em}
-.tripMetricsRow .input{padding-left:10px;padding-right:10px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.tripMetricsRow .input{padding-left:10px;padding-right:10px}
 .tripMetricsRow #rateValue,
 .tripMetricsRow #rateValueEdit{font-weight:800;color:var(--pplYellow);background:rgba(255,210,63,.08)}
 .rate{color:var(--muted);font-weight:700}
@@ -418,20 +418,16 @@ body[data-view="new"] .formCard{padding:12px}
 .actionsNew .btnRow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .actionsNew .btnRow2 .btn{width:100%}
 
-/* New Trip: metrics shell hardening + save disabled */
-.tripMetricsRow .inputWrap{display:flex;align-items:stretch;min-width:0;overflow:hidden}
-.tripMetricsRow .inputLane{display:flex;align-items:center;min-width:0}
-.tripMetricsRow .inputLane--value{flex:1 1 auto;min-width:0;overflow:hidden}
-.tripMetricsRow .inputLane--value .input{width:100%;min-width:0;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
-.tripMetricsRow .inputLane--indicator{flex:0 0 var(--metrics-indicator-w,34px);width:var(--metrics-indicator-w,34px);justify-content:center;pointer-events:none}
-.tripMetricsRow .inputWrap--suffix{--metrics-indicator-w:42px}
-.tripMetricsRow .inputWrap--prefix{--metrics-indicator-w:28px}
-.tripMetricsRow .inputWrap--suffix .inputWithSuffix{text-align:right;padding-right:8px}
-.tripMetricsRow .inputWrap--prefix .inputWithPrefix{text-align:right;padding-left:8px}
-.tripMetricsRow .inputWrap--rate .input{text-align:right;padding-left:10px;padding-right:10px}
-.tripMetricsRow .inputWrap--rate .inputLane--value{padding-right:0}
-.tripMetricsRow .unitSuffix,
-.tripMetricsRow .moneyPrefix{font-weight:800;opacity:.95;line-height:1}
+/* New Trip: suffix units + save disabled */
+.inputWrap{position:relative;min-width:0}
+.inputWrap .input{min-width:0}
+.inputWrap .unitSuffix,
+.inputWrap .moneyPrefix{position:absolute;top:50%;transform:translateY(-50%);font-weight:800;opacity:.95;pointer-events:none;z-index:2}
+.inputWrap .unitSuffix{right:12px}
+.inputWrap .moneyPrefix{left:12px}
+.inputWrap--suffix .inputWithSuffix{padding-right:46px;text-overflow:ellipsis}
+.inputWrap--prefix .inputWithPrefix{padding-left:30px;text-overflow:ellipsis}
+.inputWrap--rate .input{padding-left:10px;padding-right:10px;text-overflow:ellipsis}
 .moneyGreen{color:var(--good)!important}
 .btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}
 
@@ -959,7 +955,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=234"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=233"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
