@@ -419,11 +419,15 @@ body[data-view="new"] .formCard{padding:12px}
 .actionsNew .btnRow2 .btn{width:100%}
 
 /* New Trip: suffix units + save disabled */
-.inputWrap{position:relative}
-.inputWrap .unitSuffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-weight:800;opacity:.95;pointer-events:none}
-.inputWithSuffix{padding-right:44px}
-.inputWithPrefix{padding-left:32px}
-.moneyPrefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-weight:800;opacity:.95;pointer-events:none}
+.inputWrap{position:relative;min-width:0}
+.inputWrap .input{min-width:0}
+.inputWrap .unitSuffix,
+.inputWrap .moneyPrefix{position:absolute;top:50%;transform:translateY(-50%);font-weight:800;opacity:.95;pointer-events:none;z-index:2}
+.inputWrap .unitSuffix{right:12px}
+.inputWrap .moneyPrefix{left:12px}
+.inputWrap--suffix .inputWithSuffix{padding-right:46px;text-overflow:ellipsis}
+.inputWrap--prefix .inputWithPrefix{padding-left:30px;text-overflow:ellipsis}
+.inputWrap--rate .input{padding-left:10px;padding-right:10px;text-overflow:ellipsis}
 .moneyGreen{color:var(--good)!important}
 .btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}
 
