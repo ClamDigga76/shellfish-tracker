@@ -18,11 +18,18 @@ import { createQuickChipHelpers } from "./quick_chips_v5.js";
 import { createReportsFilterHelpers } from "./reports_filters_v5.js";
 import { createSettingsListManagement } from "./settings_list_management_v5.js";
 import { createBackupRestoreSubsystem } from "./backup_restore_v5.js";
+import { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled } from "./trip_shared_engine_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;
 const QUICK_CHIP_MOVE_CANCEL_PX = 10;
+const {
+  normalizeTripRow,
+  normalizeTrip,
+  isValidAreaValue,
+  validateTrip
+} = createTripDataEngine({ uid, isValidISODate });
 
 // Backup meta (local-only; no user data duplication)
 const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
@@ -978,85 +985,6 @@ function ensureUnifiedFilters(){
   }
 }
 
-// Add-on E: normalize trip shape so filtering is reliable
-function normalizeTripRow(t){
-  if(!t) return null;
-
-  let dateISO = String(t?.dateISO || t?.date || t?.when || t?.tripDate || "").slice(0,10);
-  let invalidDateQuarantined = false;
-
-  if(!isValidISODate(dateISO) && t?.createdAt){
-    const d = new Date(t.createdAt);
-    if(!isNaN(d)) dateISO = d.toISOString().slice(0,10);
-  }
-  if(!isValidISODate(dateISO)){
-    // quarantine weird records out of normal ranges but keep app stable
-    dateISO = "";
-    invalidDateQuarantined = true;
-  }
-
-  const pounds = Number(t?.pounds ?? t?.lbs ?? 0);
-  const amount = Number(t?.amount ?? t?.total ?? 0);
-
-  return {
-    ...t,
-    dateISO,
-    invalidDateQuarantined: Boolean(t?.invalidDateQuarantined) || invalidDateQuarantined,
-    pounds: Number.isFinite(pounds) ? pounds : 0,
-    amount: Number.isFinite(amount) ? amount : 0,
-    dealer: String(t?.dealer || "").trim(),
-    area: String(t?.area || "").trim(),
-    species: String(t?.species || "").trim(),
-    notes: String(t?.notes || "")
-  };
-}
-// Tier 1: canonical trip schema normalizer
-function normalizeTrip(t){
-  const n = normalizeTripRow(t);
-  if(!n) return null;
-  const id = String(n.id || n._id || "");
-  // Ensure stable id and createdAt
-  if(!id){
-    n.id = uid();
-  } else {
-    n.id = id;
-  }
-  if(!n.createdAt){
-    // best-effort: derive from dateISO at noon local to avoid TZ edge
-    try{
-      const d = new Date(String(n.dateISO||"") + "T12:00:00");
-      n.createdAt = isNaN(d) ? new Date().toISOString() : d.toISOString();
-    }catch(e){
-      n.createdAt = new Date().toISOString();
-    }
-  }
-  if(n.species == null) n.species = String(t?.species||"").trim();
-  if(n.notes == null) n.notes = String(t?.notes||"");
-  return n;
-}
-
-// Tier 1: trip validator (used on save)
-function validateTrip(t){
-  const errs = [];
-  if(!t) errs.push("Trip");
-  else{
-    if(!t.dateISO || !/^\d{4}-\d{2}-\d{2}$/.test(String(t.dateISO))) errs.push("Date");
-    if(!String(t.dealer||"").trim()) errs.push("Dealer");
-    if(!isValidAreaValue(t.area)) errs.push("Area");
-    const lbs = Number(t.pounds);
-    const amt = Number(t.amount);
-    if(!(Number.isFinite(lbs) && lbs > 0)) errs.push("Pounds");
-    if(!(Number.isFinite(amt) && amt > 0)) errs.push("Amount");
-  }
-  return errs;
-}
-
-function isValidAreaValue(v){
-  const area = String(v || "").trim();
-  return !!area && area !== "__add_new_area__";
-}
-
-
 // Add-on C: resolve range (includes custom + guardrails)
 function resolveUnifiedRange(filter){
   const now = isoToday();
@@ -1456,48 +1384,20 @@ function safeSetItem(key, value){
   }
 }
 
-function saveState(){
-  if(window.__pendingStateSaveTimer){
-    clearTimeout(window.__pendingStateSaveTimer);
-    window.__pendingStateSaveTimer = null;
-  }
+function baseSaveState(){
   safeSetItem(LS_KEY, JSON.stringify(state));
 }
 
-function flushPendingStateSave(){
-  if(!window.__pendingStateSaveTimer) return;
-  clearTimeout(window.__pendingStateSaveTimer);
-  window.__pendingStateSaveTimer = null;
-  saveState();
-}
+const {
+  saveStateNow,
+  flushPendingStateSave,
+  scheduleStateSave,
+  saveDraft,
+  bindLifecycleSaveFlush
+} = createTripDraftSaveEngine({ saveState: baseSaveState });
 
-function scheduleStateSave(delayMs = 300){
-  const delay = Number.isFinite(Number(delayMs)) ? Number(delayMs) : 300;
-  if(window.__pendingStateSaveTimer) clearTimeout(window.__pendingStateSaveTimer);
-  window.__pendingStateSaveTimer = setTimeout(()=>{
-    window.__pendingStateSaveTimer = null;
-    saveState();
-  }, delay);
-}
-
-// Draft persistence is just state persistence (draft lives under state.draft)
-function saveDraft(){
-  try{ saveState(); }catch(e){ /* ignore storage failures */ }
-}
-
-let lifecycleSaveFlushBound = false;
-function bindLifecycleSaveFlush(){
-  if(lifecycleSaveFlushBound) return;
-  lifecycleSaveFlushBound = true;
-
-  const flush = ()=>{
-    try{ flushPendingStateSave(); }catch(_){ }
-  };
-
-  window.addEventListener("pagehide", flush, { capture: true });
-  document.addEventListener("visibilitychange", ()=>{
-    if(document.visibilityState === "hidden") flush();
-  }, { capture: true });
+function saveState(){
+  saveStateNow();
 }
 
 
@@ -2318,19 +2218,22 @@ const getBarSelectChoices = (kind)=>{
 
   // Enable Save only when required fields are valid, and keep lbs/$ coloring consistent.
   const updateSaveEnabled = ()=>{
-    const dealerOk = !!String(elDealer?.value||"").trim();
-    const areaOk = isValidAreaValue(elArea?.value);
-    const pounds = parseNum(elPounds?.value);
-    const amount = parseMoney(elAmount?.value);
-    const poundsOk = isFinite(pounds) && pounds > 0;
-    const amountOk = isFinite(amount) && amount > 0;
+    const ready = computeTripSaveEnabled({
+      dealer: elDealer?.value,
+      area: elArea?.value,
+      poundsInput: elPounds?.value,
+      amountInput: elAmount?.value,
+      parseNum,
+      parseMoney,
+      isValidAreaValue
+    });
 
-    if(elPounds) elPounds.classList.toggle("lbsBlue", poundsOk);
-    if(elAmount) elAmount.classList.toggle("money", amountOk);
+    if(elPounds) elPounds.classList.toggle("lbsBlue", ready.poundsOk);
+    if(elAmount) elAmount.classList.toggle("money", ready.amountOk);
 
     const btn = document.getElementById("saveTrip");
     if(btn){
-      const enabled = (dealerOk && areaOk && poundsOk && amountOk);
+      const enabled = ready.enabled;
       btn.disabled = !enabled;
       btn.setAttribute("aria-disabled", enabled ? "false" : "true");
       // Prevent accidental taps while scrolling (iOS/Android)
@@ -3302,17 +3205,20 @@ function renderEditTrip(){
   // Color consistency: lbs blue, $ green
   const updateSaveEnabled = ()=>{
     try{
-      const p = parseNum(elPounds ? elPounds.value : "");
-      const a = parseMoney(elAmount ? elAmount.value : "");
-      const dealerOk = !!String(elDealer?.value || "").trim() && String(elDealer?.value || "") !== dealerAddSentinel;
-      const areaOk = isValidAreaValue(elArea?.value);
-      const poundsOk = Number.isFinite(p) && p > 0;
-      const amountOk = Number.isFinite(a) && a > 0;
-      if(elPounds) elPounds.classList.toggle("lbsBlue", poundsOk);
-      if(elAmount) elAmount.classList.toggle("money", amountOk);
+      const ready = computeTripSaveEnabled({
+        dealer: (String(elDealer?.value || "") === dealerAddSentinel) ? "" : elDealer?.value,
+        area: elArea?.value,
+        poundsInput: elPounds?.value,
+        amountInput: elAmount?.value,
+        parseNum,
+        parseMoney,
+        isValidAreaValue
+      });
+      if(elPounds) elPounds.classList.toggle("lbsBlue", ready.poundsOk);
+      if(elAmount) elAmount.classList.toggle("money", ready.amountOk);
       const btn = document.getElementById("saveEdit");
       if(btn){
-        const enabled = dealerOk && areaOk && poundsOk && amountOk;
+        const enabled = ready.enabled;
         btn.disabled = !enabled;
         btn.setAttribute("aria-disabled", enabled ? "false" : "true");
         btn.style.pointerEvents = enabled ? "auto" : "none";
@@ -4381,4 +4287,3 @@ function buildDealerOptionsHtml(selectedDealer, dealerList, addSentinel){
     return `<option value="${value}" ${sel}>${escapeHtml(label)}</option>`;
   }).concat(`<option value="${addSentinel}">+ Add new Dealer</option>`).join("");
 }
-
