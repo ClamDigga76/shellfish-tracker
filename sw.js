@@ -19,6 +19,10 @@ const CORE = [
   "./js/settings.js?v="+SW_V,
   "./js/migrations_v5.js?v="+SW_V,
   "./js/navigation_v5.js?v="+SW_V,
+  "./js/reports_charts_v5.js?v="+SW_V,
+  "./js/quick_chips_v5.js?v="+SW_V,
+  "./js/reports_filters_v5.js?v="+SW_V,
+  "./js/settings_list_management_v5.js?v="+SW_V,
   "./js/app_v5.js?v="+SW_V,
 ];
 

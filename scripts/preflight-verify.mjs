@@ -65,6 +65,10 @@ const requiredFiles = [
   "js/settings.js",
   "js/migrations_v5.js",
   "js/navigation_v5.js",
+  "js/reports_charts_v5.js",
+  "js/quick_chips_v5.js",
+  "js/reports_filters_v5.js",
+  "js/settings_list_management_v5.js",
 ];
 
 for (const relPath of requiredFiles) {
@@ -113,6 +117,10 @@ if (swJs) {
     '"./js/settings.js?v="+SW_V',
     '"./js/migrations_v5.js?v="+SW_V',
     '"./js/navigation_v5.js?v="+SW_V',
+    '"./js/reports_charts_v5.js?v="+SW_V',
+    '"./js/quick_chips_v5.js?v="+SW_V',
+    '"./js/reports_filters_v5.js?v="+SW_V',
+    '"./js/settings_list_management_v5.js?v="+SW_V',
     '"./js/app_v5.js?v="+SW_V',
   ];
 
@@ -121,6 +129,22 @@ if (swJs) {
       pass(`service worker core reference: ${ref}`);
     } else {
       fail(`service worker core reference: ${ref}`);
+    }
+  }
+}
+
+if (appJs && swJs) {
+  const startupImports = Array.from(
+    appJs.matchAll(/import\s+[^;]*?from\s+"(\.\/[^"?]+\.js)";/g),
+    (match) => match[1],
+  );
+
+  for (const rel of startupImports) {
+    const swNeedle = `"./js/${rel.slice(2)}?v="+SW_V`;
+    if (swJs.includes(swNeedle)) {
+      pass(`service worker startup parity: ${rel}`);
+    } else {
+      fail(`service worker startup parity: ${rel}`);
     }
   }
 }
