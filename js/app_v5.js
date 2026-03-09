@@ -1815,7 +1815,6 @@ ensureHomeFilter();
 ensureAreas();
 ensureDealers();
 ensureUnifiedFilters();
-bindLifecycleSaveFlush();
 function showFatal(err){
   if(window.__SHELLFISH_FATAL_SHOWN) return;
   window.__SHELLFISH_FATAL_SHOWN = true;
@@ -1988,6 +1987,8 @@ function bindLifecycleSaveFlush(){
 
 
 
+
+bindLifecycleSaveFlush();
 
 function ensureTripsFilter(){
   // v65: Trips filter is dropdown-based and page-scoped.
