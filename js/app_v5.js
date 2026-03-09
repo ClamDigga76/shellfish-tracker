@@ -21,6 +21,7 @@ import { createBackupRestoreSubsystem } from "./backup_restore_v5.js";
 import { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled } from "./trip_shared_engine_v5.js";
 import { createTripCardRenderHelpers, normalizeDealerDisplay } from "./trip_cards_v5.js";
 import { renderHelpViewHTML, renderAboutViewHTML } from "./help_about_render_v5.js";
+import { renderTripEntryForm } from "./trip_form_render_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;
@@ -1962,83 +1963,28 @@ const getBarSelectChoices = (kind)=>{
 
 ;getApp().innerHTML = `
     ${renderPageHeader("new")}
-
-    <div class="card formCard">
-      <form id="newTripForm">
-
-      <section class="trip-section">
-      <div class="field">
-        <label class="fieldLabel overline center" for="t_date">HARVEST DATE</label>
-        <div class="dateRow">
-          <span class="dateIcon">${iconSvg("calendar")}</span>
-          <input class="input datePill" id="t_date" type="date" enterkeyhint="next" value="${escapeHtml(String(draft.dateISO||isoToday()).slice(0,10))}" />
-          <button class="todayBtn" id="todayBtn" type="button">Today</button>
-        </div>
-      </div>
-
-      </section>
-
-      <section class="trip-section">
-      <div class="field">
-        <label class="fieldLabel overline center" for="t_dealer">DEALERS</label>
-        ${renderTopDealerChips(topDealers, draft.dealer, "topDealers")}
-        <div class="selectRowWrap">
-          <select class="input" id="t_dealer" autocomplete="organization" enterkeyhint="next">
-            ${dealerOptions}
-          </select>
-          <span class="chev">›</span>
-        </div>
-      </div>
-
-      </section>
-
-      <section class="trip-section">
-      <div class="grid2">
-        <div class="field">
-          <label class="fieldLabel overline" for="t_pounds">POUNDS</label>
-          <div class="inputWrap">
-            <input class="input inputWithSuffix" id="t_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
-            <span class="unitSuffix lbsBlue">lbs</span>
-          </div>
-        </div>
-        <div class="field">
-          <label class="fieldLabel overline" for="t_amount">AMOUNT</label>
-          <div class="inputWrap">
-            <span class="moneyPrefix moneyGreen">$</span>
-            <input class="input inputWithPrefix" id="t_amount" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountVal))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
-          </div>
-        </div>
-      </div>
-      <div class="rateLine muted small">$/lb: <b class="rate ppl" id="rateValue">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
-
-      </section>
-
-      <section class="trip-section">
-      <div class="field">
-        <label class="fieldLabel overline center" for="t_area">AREA</label>
-        ${renderTopAreaChips(topAreas, draft.area, "topAreas")}
-        <div class="selectRowWrap">
-          <select class="input" id="t_area" enterkeyhint="done">
-            ${areaOptions}
-          </select>
-          <span class="chev">›</span>
-        </div>
-      </div>
-
-      </section>
-
-      <section class="trip-section trip-actions">
-      <div class="tripActionBar">
-  <div class="tripActionRow">
-    <button class="btn primary" id="saveTrip" type="submit" disabled>Save Trip</button>
-    <button class="btn danger" id="clearDraft" type="button">Clear</button>
-  </div>
-</div>
-</section>
-
-      </form>
-
-    </div>
+    ${renderTripEntryForm({
+      mode: "new",
+      formId: "newTripForm",
+      dateId: "t_date",
+      dealerId: "t_dealer",
+      poundsId: "t_pounds",
+      amountId: "t_amount",
+      areaId: "t_area",
+      rateId: "rateValue",
+      todayBtnId: "todayBtn",
+      dateValue: String(draft.dateISO || isoToday()),
+      dealerOptions,
+      areaOptions,
+      topDealerChipsHtml: renderTopDealerChips(topDealers, draft.dealer, "topDealers"),
+      topAreaChipsHtml: renderTopAreaChips(topAreas, draft.area, "topAreas"),
+      poundsValue: draft.pounds,
+      amountValue: amountVal,
+      primaryActionLabel: "Save Trip",
+      secondaryActionLabel: "Clear",
+      secondaryActionId: "clearDraft",
+      dateIconHtml: iconSvg("calendar")
+    })}
   `;
   bindNavHandlers(state);
 
@@ -2896,85 +2842,31 @@ function renderEditTrip(){
 
   getApp().innerHTML = `
     ${renderPageHeader("edit")}
-
-    <div class="card formCard edit-mode">
-      <form id="editTripForm">
-        <section class="trip-section trip-edit-indicator" aria-label="Edit mode indicator">
-          <h1 class="edit-trip-title">EDIT TRIP</h1>
-          <div class="editModePill" role="status" aria-live="polite">
-            <span class="editModePillIcon" aria-hidden="true">✎</span>
-            <span>Editing</span>
-          </div>
-        </section>
-
-        <section class="trip-section">
-          <div class="field">
-            <label class="fieldLabel overline center" for="e_date">HARVEST DATE</label>
-            <div class="dateRow">
-              <span class="dateIcon">${iconSvg("calendar")}</span>
-              <input class="input datePill" id="e_date" type="date" enterkeyhint="next" value="${escapeHtml(String(draft.dateISO||"").slice(0,10))}" />
-              <button class="todayBtn" id="todayBtnEdit" type="button">Today</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="trip-section">
-          <div class="field">
-            <label class="fieldLabel overline center" for="e_dealer">DEALERS</label>
-            ${renderTopDealerChips(topDealersE, draft.dealer, "topDealersE")}
-            <div class="selectRowWrap">
-              <select class="input" id="e_dealer" autocomplete="organization" enterkeyhint="next">
-                ${dealerOptions}
-              </select>
-              <span class="chev">›</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="trip-section">
-          <div class="grid2">
-            <div class="field">
-              <label class="fieldLabel overline" for="e_pounds">POUNDS</label>
-              <div class="inputWrap">
-                <input class="input inputWithSuffix" id="e_pounds" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(draft.pounds??""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
-                <span class="unitSuffix lbsBlue">lbs</span>
-              </div>
-            </div>
-            <div class="field">
-              <label class="fieldLabel overline" for="e_amount">AMOUNT</label>
-              <div class="inputWrap">
-                <span class="moneyPrefix moneyGreen">$</span>
-                <input class="input inputWithPrefix" id="e_amount" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountDispE))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocapitalize="none" spellcheck="false"/>
-              </div>
-            </div>
-          </div>
-          <div class="rateLine muted small">$/lb: <b class="rate ppl" id="rateValueEdit">${formatMoney(computePPL(Number(draft.pounds||0), Number(draft.amount||0)))}</b></div>
-        </section>
-
-        <section class="trip-section">
-          <div class="field">
-            <label class="fieldLabel overline center" for="e_area">AREA</label>
-            ${renderTopAreaChips(topAreasE, draft.area, "topAreasE")}
-            <div class="selectRowWrap">
-              <select class="input" id="e_area" enterkeyhint="done">
-                ${areaOptions}
-              </select>
-              <span class="chev">›</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="trip-section trip-actions">
-          <div class="tripActionBar">
-            <div class="tripActionRow">
-              <button class="btn primary" id="saveEdit" type="submit">Save Changes</button>
-              <button class="btn" id="navCancel" type="button">Cancel</button>
-              <button class="btn danger" id="deleteTrip" type="button">Delete</button>
-            </div>
-          </div>
-        </section>
-      </form>
-    </div>
+    ${renderTripEntryForm({
+      mode: "edit",
+      formId: "editTripForm",
+      dateId: "e_date",
+      dealerId: "e_dealer",
+      poundsId: "e_pounds",
+      amountId: "e_amount",
+      areaId: "e_area",
+      rateId: "rateValueEdit",
+      todayBtnId: "todayBtnEdit",
+      dateValue: draft.dateISO,
+      dealerOptions,
+      areaOptions,
+      topDealerChipsHtml: renderTopDealerChips(topDealersE, draft.dealer, "topDealersE"),
+      topAreaChipsHtml: renderTopAreaChips(topAreasE, draft.area, "topAreasE"),
+      poundsValue: draft.pounds,
+      amountValue: amountDispE,
+      primaryActionLabel: "Save Changes",
+      secondaryActionLabel: "Cancel",
+      secondaryActionId: "navCancel",
+      tertiaryActionLabel: "Delete",
+      tertiaryActionId: "deleteTrip",
+      extraCardClass: "edit-mode",
+      dateIconHtml: iconSvg("calendar")
+    })}
   `;
 
   // ensure top on iPhone
