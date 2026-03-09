@@ -8,11 +8,13 @@ export function renderTripEntryForm({
   poundsId,
   amountId,
   areaId,
+  speciesId,
   rateId,
   todayBtnId,
   dateValue,
   dealerOptions,
   areaOptions,
+  speciesOptions,
   topDealerChipsHtml,
   topAreaChipsHtml,
   poundsValue,
@@ -75,6 +77,16 @@ export function renderTripEntryForm({
               <div class="inputWrap inputWrap--rate">
                 <input class="input" id="${escapeHtml(rateId)}" type="text" value="${formatMoney(computePPL(Number(poundsValue || 0), Number(amountValue || 0)))}" readonly tabindex="-1" aria-readonly="true" />
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="trip-section">
+          <div class="field">
+            <label class="fieldLabel overline center" for="${escapeHtml(speciesId)}">SPECIES</label>
+            <div class="selectRowWrap">
+              <select class="input" id="${escapeHtml(speciesId)}" enterkeyhint="next">${speciesOptions}</select>
+              <span class="chev">›</span>
             </div>
           </div>
         </section>

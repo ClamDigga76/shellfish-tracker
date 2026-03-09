@@ -1,3 +1,5 @@
+const DEFAULT_SPECIES = "Soft-shell Clams";
+
 export function createTripDataEngine({ uid, isValidISODate }) {
   function normalizeTripRow(t) {
     if (!t) return null;
@@ -25,7 +27,7 @@ export function createTripDataEngine({ uid, isValidISODate }) {
       amount: Number.isFinite(amount) ? amount : 0,
       dealer: String(t?.dealer || "").trim(),
       area: String(t?.area || "").trim(),
-      species: String(t?.species || "").trim(),
+      species: String(t?.species || DEFAULT_SPECIES).trim() || DEFAULT_SPECIES,
       notes: String(t?.notes || "")
     };
   }
@@ -46,7 +48,7 @@ export function createTripDataEngine({ uid, isValidISODate }) {
       }
     }
 
-    if (n.species == null) n.species = String(t?.species || "").trim();
+    if (!String(n.species || "").trim()) n.species = DEFAULT_SPECIES;
     if (n.notes == null) n.notes = String(t?.notes || "");
     return n;
   }
