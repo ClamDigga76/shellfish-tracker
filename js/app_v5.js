@@ -13,6 +13,7 @@ import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMod
 import { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback } from "./migrations_v5.js";
 import { ensureNavState, createNavigator } from "./navigation_v5.js";
 import { drawReportsCharts } from "./reports_charts_v5.js";
+import { buildReportsAggregationState } from "./reports_aggregation_v5.js";
 import { createQuickChipHelpers } from "./quick_chips_v5.js";
 import { createReportsFilterHelpers } from "./reports_filters_v5.js";
 import { createSettingsListManagement } from "./settings_list_management_v5.js";
@@ -4092,58 +4093,23 @@ function renderReports(){
     return;
   }
 
-  // Aggregations
-  const byDealer = new Map();
-  const byArea = new Map();
-  const byMonth = new Map(); // YYYY-MM
-
-  trips.forEach(t=>{
-    const dealerRaw = (t?.dealer||"").toString();
-    const dealerName = normalizeDealerDisplay(dealerRaw) || "(Unspecified)";
-    const dealerKey = canonicalDealerGroupKey(dealerRaw) || "(unspecified)";
-    const area = ((t?.area||"").toString().trim()) || "(Unspecified)";
-    const areaKey = area.toLowerCase();
-
-    const lbs = Number(t?.pounds)||0;
-    const amt = Number(t?.amount)||0;
-
-    const d = byDealer.get(dealerKey) || { name: dealerName, trips:0, lbs:0, amt:0 };
-    d.trips += 1; d.lbs += lbs; d.amt += amt;
-    byDealer.set(dealerKey, d);
-
-    const a = byArea.get(areaKey) || { name: area, trips:0, lbs:0, amt:0 };
-    a.trips += 1; a.lbs += lbs; a.amt += amt;
-    byArea.set(areaKey, a);
-
-    const iso = String(t?.dateISO||"");
-    if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){
-      const monthKey = iso.slice(0,7);
-      const mo = byMonth.get(monthKey) || { trips:0, lbs:0, amt:0 };
-      mo.trips += 1; mo.lbs += lbs; mo.amt += amt;
-      byMonth.set(monthKey, mo);
-    }
+  const {
+    dealerRows,
+    areaRows,
+    monthRows,
+    maxLbs,
+    minLbs,
+    maxAmt,
+    minAmt,
+    pplRows,
+    maxPpl,
+    minPpl,
+    tripsTimeline
+  } = buildReportsAggregationState({
+    trips,
+    canonicalDealerGroupKey,
+    normalizeDealerDisplay
   });
-
-  const dealerRows = Array.from(byDealer.values()).map(x=>{
-    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-    return { ...x, avg };
-  }).sort((a,b)=> b.amt - a.amt);
-
-  const areaRows = Array.from(byArea.values()).map(x=>{
-    const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-    return { ...x, avg };
-  }).sort((a,b)=> b.amt - a.amt);
-
-  const monthRows = Array.from(byMonth.entries())
-    .sort((a,b)=> a[0].localeCompare(b[0]))
-    .map(([monthKey,x])=>{
-      const year = Number(monthKey.slice(0,4));
-      const month = Number(monthKey.slice(5,7));
-      const dt = new Date(year, month - 1, 1);
-      const label = `${dt.toLocaleString(undefined,{month:"short"})} ${year}`;
-      const avg = x.lbs>0 ? x.amt/x.lbs : 0;
-      return { monthKey, month, year, label, ...x, avg };
-    });
 
   const renderAggList = (rows, emptyMsg)=>{
     if(!rows.length) return `<div class="muted small">${escapeHtml(emptyMsg||"No data")}</div>`;
@@ -4180,16 +4146,6 @@ function renderReports(){
     }).join("");
   };
 
-  // High/Low items
-  const maxLbs = trips.reduce((best,t)=> (Number(t?.pounds)||0) > (Number(best?.pounds)||0) ? t : best, trips[0]);
-  const minLbs = trips.reduce((best,t)=> (Number(t?.pounds)||0) < (Number(best?.pounds)||0) ? t : best, trips[0]);
-  const maxAmt = trips.reduce((best,t)=> (Number(t?.amount)||0) > (Number(best?.amount)||0) ? t : best, trips[0]);
-  const minAmt = trips.reduce((best,t)=> (Number(t?.amount)||0) < (Number(best?.amount)||0) ? t : best, trips[0]);
-
-  const pplRows = trips.filter(t => (Number(t?.pounds)||0) > 0 && (Number(t?.amount)||0) > 0);
-  const maxPpl = pplRows.reduce((best,t)=> (Number(t?.amount)||0)/(Number(t?.pounds)||1) > (Number(best?.amount)||0)/(Number(best?.pounds)||1) ? t : best, pplRows[0]);
-  const minPpl = pplRows.reduce((best,t)=> (Number(t?.amount)||0)/(Number(t?.pounds)||1) < (Number(best?.amount)||0)/(Number(best?.pounds)||1) ? t : best, pplRows[0]);
-
   const renderHLItem = (label, t, metric)=>{
     if(!t) return `<div class="muted small">—</div>`;
     const lbsNum = Number(t?.pounds)||0;
@@ -4220,35 +4176,11 @@ function renderReports(){
     `;
   };
 
-  function buildTripsTimeline(rows){
-    const byKey = new Map();
-    rows.forEach((t)=>{
-      const iso = String(t?.dateISO || "");
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
-      const key = iso.slice(0,7);
-      byKey.set(key, (byKey.get(key) || 0) + 1);
-    });
-    return Array.from(byKey.entries())
-      .sort((a,b)=> a[0].localeCompare(b[0]))
-      .map(([key, count])=>{
-        const year = Number(key.slice(0,4));
-        const month = Number(key.slice(5,7));
-        const dt = new Date(year, month - 1, 1);
-        return {
-          key,
-          count,
-          label: dt.toLocaleString(undefined, { month:"short" }),
-          shortLabel: `${dt.toLocaleString(undefined, { month:"short" })} ${String(year).slice(-2)}`
-        };
-      });
-  }
-
   const renderChartsSection = ()=>{
     const latestMonth = monthRows[monthRows.length - 1] || null;
     const pplPeak = monthRows.reduce((best,r)=> (Number(r?.avg)||0) > (Number(best?.avg)||0) ? r : best, monthRows[0] || null);
     const dealerPeak = dealerRows[0] || null;
     const lbsPeak = monthRows.reduce((best,r)=> (Number(r?.lbs)||0) > (Number(best?.lbs)||0) ? r : best, monthRows[0] || null);
-    const tripsTimeline = buildTripsTimeline(trips);
     const tripsLatest = tripsTimeline[tripsTimeline.length - 1] || null;
     const tripsPeak = tripsTimeline.reduce((best,r)=> (Number(r?.count)||0) > (Number(best?.count)||0) ? r : best, tripsTimeline[0] || null);
     const tripsTotal = tripsTimeline.reduce((sum,r)=> sum + (Number(r?.count)||0), 0);
