@@ -1815,6 +1815,7 @@ ensureHomeFilter();
 ensureAreas();
 ensureDealers();
 ensureUnifiedFilters();
+bindLifecycleSaveFlush();
 function showFatal(err){
   if(window.__SHELLFISH_FATAL_SHOWN) return;
   window.__SHELLFISH_FATAL_SHOWN = true;
@@ -1948,6 +1949,13 @@ function saveState(){
   safeSetItem(LS_KEY, JSON.stringify(state));
 }
 
+function flushPendingStateSave(){
+  if(!window.__pendingStateSaveTimer) return;
+  clearTimeout(window.__pendingStateSaveTimer);
+  window.__pendingStateSaveTimer = null;
+  saveState();
+}
+
 function scheduleStateSave(delayMs = 300){
   const delay = Number.isFinite(Number(delayMs)) ? Number(delayMs) : 300;
   if(window.__pendingStateSaveTimer) clearTimeout(window.__pendingStateSaveTimer);
@@ -1960,6 +1968,21 @@ function scheduleStateSave(delayMs = 300){
 // Draft persistence is just state persistence (draft lives under state.draft)
 function saveDraft(){
   try{ saveState(); }catch(e){ /* ignore storage failures */ }
+}
+
+let lifecycleSaveFlushBound = false;
+function bindLifecycleSaveFlush(){
+  if(lifecycleSaveFlushBound) return;
+  lifecycleSaveFlushBound = true;
+
+  const flush = ()=>{
+    try{ flushPendingStateSave(); }catch(_){ }
+  };
+
+  window.addEventListener("pagehide", flush, { capture: true });
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState === "hidden") flush();
+  }, { capture: true });
 }
 
 
