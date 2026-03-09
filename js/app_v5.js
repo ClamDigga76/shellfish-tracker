@@ -8,7 +8,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY as formatDateLegacyDMY, computePPL, parseMDYToISO as parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, isValidISODate } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY as formatDateLegacyDMY, computePPL, parseMDYToISO as parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, isValidISODate, resolveTripsDateRange, applyTripCriteria } from "./utils_v5.js";
 import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
 import { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback } from "./migrations_v5.js";
 import { ensureNavState, createNavigator } from "./navigation_v5.js";
@@ -223,7 +223,6 @@ const {
   parseReportDateToISO,
   formatReportDateValue,
   modeRange,
-  filterByISOInclusive,
   tripsFilename,
   exportTripsWithLabel
 } = createReportsFilterHelpers({
@@ -1833,7 +1832,6 @@ ensureReportsFilter();
 ensureHomeFilter();
 ensureAreas();
 ensureDealers();
-ensureUnifiedFilters();
 function showFatal(err){
   if(window.__SHELLFISH_FATAL_SHOWN) return;
   window.__SHELLFISH_FATAL_SHOWN = true;
@@ -2051,34 +2049,7 @@ function ensureTripsFilter(){
 }
 
 function getTripsRangeWindow(tf){
-  const range = String(tf?.range || "ytd");
-  const todayISO = isoToday();
-  const now = new Date();
-  const pad = (n)=>String(n).padStart(2,"0");
-  const y = now.getFullYear();
-
-  if(range === "all"){
-    return { startISO:"", endISO:"", label:"ALL" };
-  }
-  if(range === "ytd"){
-    return { startISO:`${y}-01-01`, endISO:todayISO, label:"YTD" };
-  }
-  if(range === "12m" || range === "90d" || range === "30d"){
-    const d = new Date(now);
-    const days = (range==="12m") ? 364 : (range==="90d" ? 89 : 29);
-    d.setDate(d.getDate() - days);
-    const startISO = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    const label = (range==="12m") ? "12M" : (range==="90d" ? "90D" : "30D");
-    return { startISO, endISO:todayISO, label };
-  }
-  // custom
-  const s = String(tf?.fromISO || "").slice(0,10);
-  const e = String(tf?.toISO || "").slice(0,10);
-  if(s && e){
-    const a = s <= e ? {startISO:s,endISO:e} : {startISO:e,endISO:s};
-    return { ...a, label:"RANGE" };
-  }
-  return { startISO:"", endISO:"", label:"RANGE" };
+  return resolveTripsDateRange(tf, isoToday);
 }
 
 function getTripsFilteredRows(){
@@ -2087,15 +2058,12 @@ function getTripsFilteredRows(){
   const tripsAll = Array.isArray(state.trips) ? state.trips.map(normalizeTripRow).filter(Boolean) : [];
 
   const r = getTripsRangeWindow(tf);
-  let rows = (r.label === "ALL") ? tripsAll.slice() : filterByISOInclusive(tripsAll, r.startISO, r.endISO);
-
-  // Dealer / Area filters (Trips-only)
-  if(tf.dealer && tf.dealer !== "all"){
-    rows = rows.filter(t => String(t?.dealer||"") === String(tf.dealer));
-  }
-  if(tf.area && tf.area !== "all"){
-    rows = rows.filter(t => String(t?.area||"") === String(tf.area));
-  }
+  let rows = applyTripCriteria(tripsAll, {
+    startISO: (r.label === "ALL") ? "" : r.startISO,
+    endISO: (r.label === "ALL") ? "" : r.endISO,
+    dealer: tf.dealer,
+    area: tf.area
+  });
 
   // Stable sort: newest first (shared with Home and other trip views)
   rows = getTripsNewestFirst(rows);
@@ -2358,7 +2326,10 @@ function renderHome(
   const hf = state.homeFilter || { mode:"YTD", from:"", to:"" };
   const hMode = String(hf.mode || "YTD").toUpperCase();
   const hr = modeRange(hMode, hf.from, hf.to);
-  const trips = (hr.label === "ALL") ? tripsAll.slice() : (hr.startISO && hr.endISO ? filterByISOInclusive(tripsAll, hr.startISO, hr.endISO) : tripsAll.slice());
+  const trips = applyTripCriteria(tripsAll, {
+    startISO: (hr.label === "ALL") ? "" : hr.startISO,
+    endISO: (hr.label === "ALL") ? "" : hr.endISO
+  });
   const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
   const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
   const avgPpl = totalLbs > 0 ? computePPL(totalLbs, totalAmount) : null;
@@ -3953,12 +3924,12 @@ function renderReports(){
 
   const r = modeRange(fMode, rf.from, rf.to);
   const hasValidRange = (r.label !== "RANGE") || (r.startISO && r.endISO);
-  let trips = (r.label === "ALL") ? tripsAll : (hasValidRange ? filterByISOInclusive(tripsAll, r.startISO, r.endISO) : tripsAll);
-
-  const dealerF = String(rf.dealer || "");
-  const areaF = String(rf.area || "");
-  if(dealerF) trips = trips.filter(t=>String(t?.dealer||"") === dealerF);
-  if(areaF) trips = trips.filter(t=>String(t?.area||"") === areaF);
+  let trips = applyTripCriteria(tripsAll, {
+    startISO: (r.label === "ALL" || !hasValidRange) ? "" : r.startISO,
+    endISO: (r.label === "ALL" || !hasValidRange) ? "" : r.endISO,
+    dealer: String(rf.dealer || ""),
+    area: String(rf.area || "")
+  });
 
   const chip = (key,label) => `<button class="chip ${fMode===key?'on':''}" data-rf="${key}">${label}</button>`;
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;

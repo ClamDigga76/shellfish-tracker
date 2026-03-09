@@ -1,3 +1,5 @@
+import { resolveModeDateRange } from "./utils_v5.js";
+
 export function createReportsFilterHelpers({ parseUsDateToISODate, formatDateDMY, round2, downloadText }) {
   function isoToday() {
     const d = new Date();
@@ -19,49 +21,7 @@ export function createReportsFilterHelpers({ parseUsDateToISODate, formatDateDMY
   }
 
   function modeRange(mode, fromMDY = "", toMDY = "") {
-    const todayISO = isoToday();
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, "0");
-    const m = String(mode || "").toUpperCase();
-
-    // Back-compat: old keys
-    if (m === "MONTH") mode = "THIS_MONTH";
-    if (m === "7D") mode = "RANGE_7D";
-
-    const M = String(mode || "").toUpperCase();
-
-    if (M === "YTD") {
-      const start = `${now.getFullYear()}-01-01`;
-      return { startISO: start, endISO: todayISO, label: "YTD" };
-    }
-    if (M === "THIS_MONTH") {
-      const start = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
-      return { startISO: start, endISO: todayISO, label: "THIS_MONTH" };
-    }
-    if (M === "LAST_MONTH") {
-      const d = new Date(now.getFullYear(), now.getMonth(), 1);
-      d.setMonth(d.getMonth() - 1);
-      const start = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`;
-      const endD = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-      const end = `${endD.getFullYear()}-${pad(endD.getMonth() + 1)}-${pad(endD.getDate())}`;
-      return { startISO: start, endISO: end, label: "LAST_MONTH" };
-    }
-    if (M === "RANGE_7D") {
-      const d = new Date(now);
-      d.setDate(now.getDate() - 6);
-      const start = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-      return { startISO: start, endISO: todayISO, label: "7D" };
-    }
-    if (M === "RANGE") {
-      const s = parseReportDateToISO(fromMDY);
-      const e = parseReportDateToISO(toMDY);
-      if (s && e) {
-        const a = s <= e ? { startISO: s, endISO: e } : { startISO: e, endISO: s };
-        return { ...a, label: "RANGE" };
-      }
-      return { startISO: "", endISO: "", label: "RANGE" };
-    }
-    return { startISO: "", endISO: "", label: "ALL" };
+    return resolveModeDateRange(mode, fromMDY, toMDY, { isoToday, parseUsDateToISODate });
   }
 
   function filterByISOInclusive(trips, startISO, endISO) {

@@ -61,10 +61,7 @@ export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, th
     }
     if (!st.reportsMode) st.reportsMode = "tables";
 
-    if (!st.filters || typeof st.filters !== "object") st.filters = {};
-    if (!st.filters.active || typeof st.filters.active !== "object") {
-      st.filters.active = { range: "ytd", fromISO: "", toISO: "", dealer: "all", area: "all", species: "all" };
-    } else {
+    if (st.filters && typeof st.filters === "object" && st.filters.active && typeof st.filters.active === "object") {
       st.filters.active.range = st.filters.active.range || "ytd";
       if (st.filters.active.dealer == null) st.filters.active.dealer = "all";
       if (st.filters.active.area == null) st.filters.active.area = "all";
