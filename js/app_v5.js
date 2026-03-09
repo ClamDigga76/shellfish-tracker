@@ -2836,9 +2836,7 @@ function renderEditTrip(){
   const areaOptions = buildAreaOptionsHtml(draft.area, areaAddSentinel);
 
 
-  getApp().innerHTML = `
-    ${renderPageHeader("edit")}
-    ${renderTripEntryForm({
+  const editTripFormHtml = renderTripEntryForm({
       mode: "edit",
       formId: "editTripForm",
       dateId: "e_date",
@@ -2862,7 +2860,11 @@ function renderEditTrip(){
       tertiaryActionId: "deleteTrip",
       extraCardClass: "edit-mode",
       dateIconHtml: iconSvg("calendar")
-    })}
+    }).replace("card formCard", "formCard");
+
+  getApp().innerHTML = `
+    ${renderPageHeader("edit")}
+    ${editTripFormHtml}
   `;
 
   // ensure top on iPhone
