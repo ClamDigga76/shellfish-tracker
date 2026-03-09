@@ -1327,6 +1327,26 @@ function saveState(){
   saveStateNow();
 }
 
+const {
+  renderTopAreaChips,
+  renderTopDealerChips,
+  resolveQuickChipItems,
+  openQuickChipCustomizeModal,
+  bindQuickChips,
+  bindAreaChips,
+  bindQuickChipLongPress
+} = createQuickChipHelpers({
+  getState: () => state,
+  saveState: () => saveState(),
+  getLastUniqueFromTrips: (kind, maxN) => getLastUniqueFromTrips(kind, maxN),
+  normalizeKey,
+  escapeHtml,
+  openModal,
+  closeModal,
+  longPressMs: QUICK_CHIP_LONG_PRESS_MS,
+  moveCancelPx: QUICK_CHIP_MOVE_CANCEL_PX
+});
+
 
 
 
@@ -3925,26 +3945,6 @@ function displayAmount(val){
   return display2(val);
 }
 
-
-const {
-  renderTopAreaChips,
-  renderTopDealerChips,
-  resolveQuickChipItems,
-  openQuickChipCustomizeModal,
-  bindQuickChips,
-  bindAreaChips,
-  bindQuickChipLongPress
-} = createQuickChipHelpers({
-  getState: () => state,
-  saveState: () => saveState(),
-  getLastUniqueFromTrips: (kind, maxN) => getLastUniqueFromTrips(kind, maxN),
-  normalizeKey,
-  escapeHtml,
-  openModal,
-  closeModal,
-  longPressMs: QUICK_CHIP_LONG_PRESS_MS,
-  moveCancelPx: QUICK_CHIP_MOVE_CANCEL_PX
-});
 
 function buildAreaOptionsHtml(selectedArea, addSentinel){
   return ["", ...getValuesWithLegacyEntry("area", selectedArea, Array.isArray(state.areas) ? state.areas : [])].map((area)=>{
