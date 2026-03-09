@@ -43,7 +43,7 @@ export function renderTripEntryForm({
       <form id="${escapeHtml(formId)}">
         ${modeBanner}
 
-        <section class="trip-section trip-card">
+        <section class="trip-section">
           <div class="field">
             <label class="fieldLabel overline center" for="${escapeHtml(dateId)}">HARVEST DATE</label>
             <div class="dateRow">
@@ -54,8 +54,8 @@ export function renderTripEntryForm({
           </div>
         </section>
 
-        <section class="trip-section trip-card">
-          <div class="grid2">
+        <section class="trip-section">
+          <div class="tripMetricsRow">
             <div class="field">
               <label class="fieldLabel overline" for="${escapeHtml(poundsId)}">POUNDS</label>
               <div class="inputWrap">
@@ -70,11 +70,16 @@ export function renderTripEntryForm({
                 <input class="input inputWithPrefix" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountValue ?? ""))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
               </div>
             </div>
+            <div class="field">
+              <label class="fieldLabel overline" for="${escapeHtml(rateId)}">$/LB</label>
+              <div class="inputWrap">
+                <input class="input" id="${escapeHtml(rateId)}" type="text" value="${formatMoney(computePPL(Number(poundsValue || 0), Number(amountValue || 0)))}" readonly tabindex="-1" aria-readonly="true" />
+              </div>
+            </div>
           </div>
-          <div class="rateLine muted small">$/lb: <b class="rate ppl" id="${escapeHtml(rateId)}">${formatMoney(computePPL(Number(poundsValue || 0), Number(amountValue || 0)))}</b></div>
         </section>
 
-        <section class="trip-section trip-card">
+        <section class="trip-section">
           <div class="field">
             <label class="fieldLabel overline center" for="${escapeHtml(areaId)}">AREA</label>
             ${topAreaChipsHtml}
@@ -85,7 +90,7 @@ export function renderTripEntryForm({
           </div>
         </section>
 
-        <section class="trip-section trip-card">
+        <section class="trip-section">
           <div class="field">
             <label class="fieldLabel overline center" for="${escapeHtml(dealerId)}">DEALER</label>
             ${topDealerChipsHtml}

@@ -331,16 +331,10 @@ header{padding:14px 18px 12px}
 body[data-view="new"] .formCard{padding:12px}
 #newTripForm .field{margin-bottom:10px}
 
-.tripFormFoundation{padding:12px}
-.tripFormFoundation .trip-section.trip-card{
-  margin:0 0 10px;
-  padding:12px;
-  border:1px solid var(--border);
-  border-radius:16px;
-  background:var(--glass2);
-}
-.tripFormFoundation .trip-section.trip-card:last-of-type{margin-bottom:0}
-body[data-view="edit"] .tripFormFoundation .trip-section.trip-card{background:rgba(255,255,255,.04)}
+.tripFormFoundation{padding:8px 10px 10px}
+.tripFormFoundation .trip-section{padding:10px 0}
+.tripFormFoundation .trip-section + .trip-section{border-top:1px solid var(--line)}
+.tripFormFoundation .trip-section.trip-actions{padding-top:12px}
 .overline,.fieldLabel{letter-spacing:.12em}
 .chipRow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px}
 
@@ -374,22 +368,20 @@ body[data-view="edit"] .tripFormFoundation .trip-section.trip-card{background:rg
 .grid2 .field{min-width:0;overflow:visible}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#newTripForm .rateLine{margin-top:-4px;margin-bottom:4px}
+.tripMetricsRow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.tripMetricsRow .fieldLabel{font-size:13px;letter-spacing:.08em}
+.tripMetricsRow .input{padding-left:10px;padding-right:10px}
+.tripMetricsRow #rateValue,
+.tripMetricsRow #rateValueEdit{font-weight:800;color:var(--pplYellow);background:rgba(255,210,63,.08)}
 .rate{color:var(--muted);font-weight:700}
 .rate.ppl{color:var(--pplYellow)!important;font-weight:800}
 
 
 .actionsNew .btn.primary{width:100%}
 
-#newTripForm .trip-section{
-  padding: 10px 0;
-}
-#newTripForm .trip-section + .trip-section{
-  border-top: 1px solid var(--line);
-}
-#newTripForm .trip-section.trip-actions{
-  padding-top: 14px;
-}
+#newTripForm .trip-section{padding:10px 0}
+#newTripForm .trip-section + .trip-section{border-top:1px solid var(--line)}
+#newTripForm .trip-section.trip-actions{padding-top:14px}
 .edit-mode{
   background:linear-gradient(180deg, rgba(255,77,79,.10) 0%, rgba(255,77,79,.04) 34%, rgba(255,255,255,.03) 100%);
 }
@@ -959,7 +951,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=229"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=230"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
