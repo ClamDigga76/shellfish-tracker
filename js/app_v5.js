@@ -26,6 +26,7 @@ const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;
+const DEFAULT_TRIP_SPECIES = "Soft-shell Clams";
 const QUICK_CHIP_MOVE_CANCEL_PX = 10;
 const {
   normalizeTripRow,
@@ -1115,6 +1116,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   const poundsNum = parseNum(inputs?.pounds);
   const amountNum = parseMoney(inputs?.amount);
   const area = String(inputs?.area||"").trim();
+  const species = String(inputs?.species || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
 
   const errs = [];
   if(!dateISO) errs.push("Date");
@@ -1164,7 +1166,8 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
     dealer,
     pounds: to2(poundsNum),
     amount: to2(amountNum),
-    area
+    area,
+    species
   };
 
   // Tier 1: normalize + validate before saving
@@ -1214,6 +1217,16 @@ ensureReportsFilter();
 ensureHomeFilter();
 ensureAreas();
 ensureDealers();
+if(Array.isArray(state.trips)) {
+  let changed = false;
+  state.trips = state.trips.map((trip)=>{
+    const n = normalizeTrip(trip);
+    if(!n) return trip;
+    if(String(trip?.species || "").trim() !== n.species) changed = true;
+    return n;
+  }).filter(Boolean);
+  if(changed) saveState();
+}
 function showFatal(err){
   if(window.__SHELLFISH_FATAL_SHOWN) return;
   window.__SHELLFISH_FATAL_SHOWN = true;
@@ -1935,8 +1948,9 @@ function renderNewTrip(){
   const areaAddSentinel = "__add_new_area__";
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
-  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"" };
+  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"", species: DEFAULT_TRIP_SPECIES };
   const amountVal = String(draft.amount ?? "");
+  draft.species = String(draft.species || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
 
 
   // Recent (last 2) unique values from saved trips (ignores filters)
@@ -1961,11 +1975,13 @@ const newTripFormHtml = renderTripEntryForm({
       poundsId: "t_pounds",
       amountId: "t_amount",
       areaId: "t_area",
+      speciesId: "t_species",
       rateId: "rateValue",
       todayBtnId: "todayBtn",
       dateValue: String(draft.dateISO || isoToday()),
       dealerOptions,
       areaOptions,
+      speciesOptions: `<option value="${escapeHtml(DEFAULT_TRIP_SPECIES)}" selected>${escapeHtml(DEFAULT_TRIP_SPECIES)}</option>`,
       topDealerChipsHtml: renderTopDealerChips(topDealers, draft.dealer, "topDealers"),
       topAreaChipsHtml: renderTopAreaChips(topAreas, draft.area, "topAreas"),
       poundsValue: draft.pounds,
@@ -1988,6 +2004,7 @@ const newTripFormHtml = renderTripEntryForm({
   const elAmount = document.getElementById("t_amount");
 
   const elArea = document.getElementById("t_area");
+  const elSpecies = document.getElementById("t_species");
   const elRate = document.getElementById("rateValue");
   bindDatePill("t_date");
   const updateRateLine = ()=>{
@@ -2209,6 +2226,7 @@ state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
       state.draft.pounds = parseNum(elPounds?.value);
       state.draft.amount = parseMoney(elAmount?.value);
       state.draft.area = String(elArea?.value||"").trim();
+      state.draft.species = String(elSpecies?.value || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
 
       // basic guard: if nothing entered, do nothing (prevents "dead tap" feel)
       const anyEntered = Boolean(mdy || state.draft.dealer || (state.draft.pounds>0) || (state.draft.amount>0) || state.draft.area);
@@ -2228,6 +2246,8 @@ const summary =
 ` +
   `Area: ${String(state.draft.area||"").trim() || "—"}
 ` +
+  `Species: ${String(state.draft.species||DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES}
+` +
   `Pounds: ${String(state.draft.pounds||"").trim() || "—"}
 ` +
   `Amount: ${String(state.draft.amount||"").trim() || "—"}`;
@@ -2241,7 +2261,8 @@ commitTripFromDraft({
     dealer: state.draft.dealer,
     pounds: state.draft.pounds,
     amount: state.draft.amount,
-    area: state.draft.area
+    area: state.draft.area,
+    species: state.draft.species
   },
   nextView: "all_trips"
 });
@@ -2290,7 +2311,7 @@ const btnClear = document.getElementById("clearDraft");
 // Persist draft as the user edits fields (fixes iOS select + prevents resets)
   const persistDraft = ()=>{ try{ saveDraft(); }catch{}; try{ updateSaveEnabled(); }catch{} };
   const persistDraftInput = ()=>{ try{ scheduleStateSave(); }catch{}; try{ updateSaveEnabled(); }catch{} };
-  [elDate, elDealer, elPounds, elAmount].forEach(el=>{
+  [elDate, elDealer, elPounds, elAmount, elSpecies].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", persistDraftInput);
     el.addEventListener("change", persistDraft);
@@ -2780,7 +2801,8 @@ if(elDealerLive){
         dealer: elDealer.value,
         pounds: elPounds.value,
         amount: elAmount.value,
-        area: elArea.value
+        area: elArea.value,
+        species: DEFAULT_TRIP_SPECIES
       }
     });
   });
@@ -2821,7 +2843,8 @@ function renderEditTrip(){
     dealer: t.dealer || "",
     pounds: String(t.pounds ?? ""),
     amount: String(t.amount ?? ""),
-    area: t.area || ""
+    area: t.area || "",
+    species: t.species || DEFAULT_TRIP_SPECIES
   };
 
   const dealerAddSentinel = "__add_new_dealer__";
@@ -2844,11 +2867,13 @@ function renderEditTrip(){
       poundsId: "e_pounds",
       amountId: "e_amount",
       areaId: "e_area",
+      speciesId: "e_species",
       rateId: "rateValueEdit",
       todayBtnId: "todayBtnEdit",
       dateValue: draft.dateISO,
       dealerOptions,
       areaOptions,
+      speciesOptions: `<option value="${escapeHtml(DEFAULT_TRIP_SPECIES)}" selected>${escapeHtml(DEFAULT_TRIP_SPECIES)}</option>`,
       topDealerChipsHtml: renderTopDealerChips(topDealersE, draft.dealer, "topDealersE"),
       topAreaChipsHtml: renderTopAreaChips(topAreasE, draft.area, "topAreasE"),
       poundsValue: draft.pounds,
@@ -2875,6 +2900,7 @@ function renderEditTrip(){
   const elPounds = document.getElementById("e_pounds");
   const elAmount = document.getElementById("e_amount");
   const elArea = document.getElementById("e_area");
+  const elSpecies = document.getElementById("e_species");
   const elRate = document.getElementById("rateValueEdit");
   const elToday = document.getElementById("todayBtnEdit");
   const topDealerWrapE = document.getElementById("topDealersE");
@@ -3112,7 +3138,7 @@ function renderEditTrip(){
     });
   }
 
-  [elDate, elDealer, elPounds, elAmount, elArea].forEach(el=>{
+  [elDate, elDealer, elPounds, elAmount, elArea, elSpecies].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", ()=>{ updateSaveEnabled(); updateRateLine(); });
     el.addEventListener("change", ()=>{ updateSaveEnabled(); updateRateLine(); });
@@ -3129,7 +3155,8 @@ function renderEditTrip(){
         dealer: elDealer.value,
         pounds: elPounds.value,
         amount: elAmount.value,
-        area: elArea.value
+        area: elArea.value,
+        species: elSpecies?.value || DEFAULT_TRIP_SPECIES
       }
     });
   });
