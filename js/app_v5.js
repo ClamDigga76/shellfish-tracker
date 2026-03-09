@@ -1953,9 +1953,7 @@ const getBarSelectChoices = (kind)=>{
   return Array.isArray(state.areas) ? [...state.areas] : [];
 };
 
-;getApp().innerHTML = `
-    ${renderPageHeader("new")}
-    ${renderTripEntryForm({
+const newTripFormHtml = renderTripEntryForm({
       mode: "new",
       formId: "newTripForm",
       dateId: "t_date",
@@ -1976,7 +1974,11 @@ const getBarSelectChoices = (kind)=>{
       secondaryActionLabel: "Clear",
       secondaryActionId: "clearDraft",
       dateIconHtml: iconSvg("calendar")
-    })}
+    }).replace("card formCard", "formCard");
+
+;getApp().innerHTML = `
+    ${renderPageHeader("new")}
+    ${newTripFormHtml}
   `;
   bindNavHandlers(state);
 
