@@ -3419,7 +3419,8 @@ function renderReports(){
         <div class="hlValue ${metricClass}" style="text-align:center">${escapeHtml(metricText)}</div>
         <div style="margin-top:8px">
           ${renderTripCatchCard(t, {
-            valueOverride: ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—"
+            valueOverride: ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—",
+            extraClass: "hlTripFlat"
           })}
         </div>
       </div>
