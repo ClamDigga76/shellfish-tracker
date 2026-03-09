@@ -1117,6 +1117,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   const amountNum = parseMoney(inputs?.amount);
   const area = String(inputs?.area||"").trim();
   const species = String(inputs?.species || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
+  const notes = String(inputs?.notes || "").trim();
 
   const errs = [];
   if(!dateISO) errs.push("Date");
@@ -1167,7 +1168,8 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
     pounds: to2(poundsNum),
     amount: to2(amountNum),
     area,
-    species
+    species,
+    notes
   };
 
   // Tier 1: normalize + validate before saving
@@ -1948,9 +1950,10 @@ function renderNewTrip(){
   const areaAddSentinel = "__add_new_area__";
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
-  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"", species: DEFAULT_TRIP_SPECIES };
+  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"", species: DEFAULT_TRIP_SPECIES, notes:"" };
   const amountVal = String(draft.amount ?? "");
   draft.species = String(draft.species || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
+  draft.notes = String(draft.notes || "");
 
 
   // Recent (last 2) unique values from saved trips (ignores filters)
@@ -1976,6 +1979,7 @@ const newTripFormHtml = renderTripEntryForm({
       amountId: "t_amount",
       areaId: "t_area",
       speciesId: "t_species",
+      notesId: "t_notes",
       rateId: "rateValue",
       todayBtnId: "todayBtn",
       dateValue: String(draft.dateISO || isoToday()),
@@ -1986,6 +1990,7 @@ const newTripFormHtml = renderTripEntryForm({
       topAreaChipsHtml: renderTopAreaChips(topAreas, draft.area, "topAreas"),
       poundsValue: draft.pounds,
       amountValue: amountVal,
+      notesValue: draft.notes,
       primaryActionLabel: "Save Trip",
       secondaryActionLabel: "Clear",
       secondaryActionId: "clearDraft",
@@ -2005,6 +2010,7 @@ const newTripFormHtml = renderTripEntryForm({
 
   const elArea = document.getElementById("t_area");
   const elSpecies = document.getElementById("t_species");
+  const elNotes = document.getElementById("t_notes");
   const elRate = document.getElementById("rateValue");
   bindDatePill("t_date");
   const updateRateLine = ()=>{
@@ -2227,9 +2233,10 @@ state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
       state.draft.amount = parseMoney(elAmount?.value);
       state.draft.area = String(elArea?.value||"").trim();
       state.draft.species = String(elSpecies?.value || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
+      state.draft.notes = String(elNotes?.value || "").trim();
 
       // basic guard: if nothing entered, do nothing (prevents "dead tap" feel)
-      const anyEntered = Boolean(mdy || state.draft.dealer || (state.draft.pounds>0) || (state.draft.amount>0) || state.draft.area);
+      const anyEntered = Boolean(mdy || state.draft.dealer || (state.draft.pounds>0) || (state.draft.amount>0) || state.draft.area || state.draft.notes);
       if(!anyEntered){
         announce("Error: Enter trip details first", "assertive");
         showToast("Enter trip details first");
@@ -2250,7 +2257,9 @@ const summary =
 ` +
   `Pounds: ${String(state.draft.pounds||"").trim() || "—"}
 ` +
-  `Amount: ${String(state.draft.amount||"").trim() || "—"}`;
+  `Amount: ${String(state.draft.amount||"").trim() || "—"}
+` +
+  `Notes: ${String(state.draft.notes||"").trim() || "—"}`;
 const ok = await confirmSaveModal({ title: "Save this trip?", body: summary });
 if(!ok){ state._savingTrip = false; saveState(); return; }
 
@@ -2262,7 +2271,8 @@ commitTripFromDraft({
     pounds: state.draft.pounds,
     amount: state.draft.amount,
     area: state.draft.area,
-    species: state.draft.species
+    species: state.draft.species,
+    notes: state.draft.notes
   },
   nextView: "all_trips"
 });
@@ -2311,7 +2321,7 @@ const btnClear = document.getElementById("clearDraft");
 // Persist draft as the user edits fields (fixes iOS select + prevents resets)
   const persistDraft = ()=>{ try{ saveDraft(); }catch{}; try{ updateSaveEnabled(); }catch{} };
   const persistDraftInput = ()=>{ try{ scheduleStateSave(); }catch{}; try{ updateSaveEnabled(); }catch{} };
-  [elDate, elDealer, elPounds, elAmount, elSpecies].forEach(el=>{
+  [elDate, elDealer, elPounds, elAmount, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", persistDraftInput);
     el.addEventListener("change", persistDraft);
@@ -2844,7 +2854,8 @@ function renderEditTrip(){
     pounds: String(t.pounds ?? ""),
     amount: String(t.amount ?? ""),
     area: t.area || "",
-    species: t.species || DEFAULT_TRIP_SPECIES
+    species: t.species || DEFAULT_TRIP_SPECIES,
+    notes: String(t.notes || "")
   };
 
   const dealerAddSentinel = "__add_new_dealer__";
@@ -2868,6 +2879,7 @@ function renderEditTrip(){
       amountId: "e_amount",
       areaId: "e_area",
       speciesId: "e_species",
+      notesId: "e_notes",
       rateId: "rateValueEdit",
       todayBtnId: "todayBtnEdit",
       dateValue: draft.dateISO,
@@ -2878,6 +2890,7 @@ function renderEditTrip(){
       topAreaChipsHtml: renderTopAreaChips(topAreasE, draft.area, "topAreasE"),
       poundsValue: draft.pounds,
       amountValue: amountDispE,
+      notesValue: draft.notes,
       primaryActionLabel: "Save Changes",
       secondaryActionLabel: "Cancel",
       secondaryActionId: "navCancel",
@@ -2901,6 +2914,7 @@ function renderEditTrip(){
   const elAmount = document.getElementById("e_amount");
   const elArea = document.getElementById("e_area");
   const elSpecies = document.getElementById("e_species");
+  const elNotes = document.getElementById("e_notes");
   const elRate = document.getElementById("rateValueEdit");
   const elToday = document.getElementById("todayBtnEdit");
   const topDealerWrapE = document.getElementById("topDealersE");
@@ -3138,7 +3152,7 @@ function renderEditTrip(){
     });
   }
 
-  [elDate, elDealer, elPounds, elAmount, elArea, elSpecies].forEach(el=>{
+  [elDate, elDealer, elPounds, elAmount, elArea, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", ()=>{ updateSaveEnabled(); updateRateLine(); });
     el.addEventListener("change", ()=>{ updateSaveEnabled(); updateRateLine(); });
@@ -3156,7 +3170,8 @@ function renderEditTrip(){
         pounds: elPounds.value,
         amount: elAmount.value,
         area: elArea.value,
-        species: elSpecies?.value || DEFAULT_TRIP_SPECIES
+        species: elSpecies?.value || DEFAULT_TRIP_SPECIES,
+        notes: elNotes?.value || ""
       }
     });
   });

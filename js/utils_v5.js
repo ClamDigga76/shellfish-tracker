@@ -256,7 +256,7 @@ export function downloadText(filename, text){
 
 
 export function toCSV(trips){
-  const headers = ["Date","Dealer","Pounds","Amount","PricePerLb","Area","RecordID"];
+  const headers = ["Date","Dealer","Pounds","Amount","PricePerLb","Area","Species","Notes","RecordID"];
   const lines = [headers.join(",")];
   const clean = (v) => String(v ?? "").replace(/[\r\n]+/g, " ").trim();
 
@@ -269,6 +269,8 @@ export function toCSV(trips){
       String(to2(t.amount)),
       String(to2(ppl)),
       clean(t.area || ""),
+      clean(t.species || "Soft-shell Clams"),
+      clean(t.notes || ""),
       clean(t.id || "")
     ].map(v => {
       const needs = v.includes(",") || v.includes('"');

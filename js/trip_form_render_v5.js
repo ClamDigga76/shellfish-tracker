@@ -9,6 +9,7 @@ export function renderTripEntryForm({
   amountId,
   areaId,
   speciesId,
+  notesId,
   rateId,
   todayBtnId,
   dateValue,
@@ -19,6 +20,7 @@ export function renderTripEntryForm({
   topAreaChipsHtml,
   poundsValue,
   amountValue,
+  notesValue,
   primaryActionLabel,
   secondaryActionLabel,
   secondaryActionId,
@@ -110,6 +112,13 @@ export function renderTripEntryForm({
               <select class="input" id="${escapeHtml(dealerId)}" autocomplete="organization" enterkeyhint="next">${dealerOptions}</select>
               <span class="chev">›</span>
             </div>
+          </div>
+        </section>
+
+        <section class="trip-section">
+          <div class="field">
+            <label class="fieldLabel overline center" for="${escapeHtml(notesId)}">NOTES</label>
+            <textarea class="input textarea" id="${escapeHtml(notesId)}" rows="3" maxlength="280" placeholder="Optional notes">${escapeHtml(String(notesValue ?? ""))}</textarea>
           </div>
         </section>
 
