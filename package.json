@@ -1,1 +1,1 @@
-{"type":"module"}
+{"type":"module","scripts":{"preflight":"node scripts/preflight-verify.mjs --expect-version=212"}}
