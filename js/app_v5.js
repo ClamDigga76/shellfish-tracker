@@ -1263,7 +1263,6 @@ function showFatal(err){
         <button class="btn" id="fatalCopy">Copy debug</button>
         <button class="btn good" id="fatalReload">Reload</button>
         <button class="btn" id="fatalResetCache">Reset cache</button>
-        <button class="btn danger" id="fatalResetData">Reset app data</button>
       </div>
 
       <div class="muted small" style="margin-top:10px;line-height:1.35">
@@ -1288,26 +1287,6 @@ function showFatal(err){
     location.reload();
   };
 
-  const resetAppData = async ()=>{
-    try{
-      const keys = [];
-      for(let i=0;i<localStorage.length;i++){
-        const k = localStorage.key(i);
-        if(k) keys.push(k);
-      }
-      keys
-        .filter(k => k.startsWith("shellfish-") || k === LS_KEY)
-        .forEach(k => { try{ localStorage.removeItem(k); }catch(_){} });
-      // legacy one-off keys
-      try{ localStorage.removeItem(LEGACY_LAST_ERROR_KEY); }catch(_){ }
-      try{ localStorage.removeItem(LEGACY_LAST_ERROR_AT_KEY); }catch(_){ }
-      try{ localStorage.removeItem("ST_LAST_ERROR"); }catch(_){ }
-      try{ localStorage.removeItem("ST_LAST_ERROR_AT"); }catch(_){ }
-
-    }catch(_){}
-    location.reload();
-  };
-
   const btnCopy = document.getElementById("fatalCopy");
   if(btnCopy) btnCopy.onclick = ()=> { void copyTextWithFeedback(dump, "Debug copied"); };
 
@@ -1316,13 +1295,6 @@ function showFatal(err){
 
   const btnResetCache = document.getElementById("fatalResetCache");
   if(btnResetCache) btnResetCache.onclick = ()=> safeAsync(()=> resetCache());
-
-  const btnResetData = document.getElementById("fatalResetData");
-  if(btnResetData) btnResetData.onclick = ()=> {
-    if(confirm("This clears all local app data (trips, areas, settings). Continue?")){
-      safeAsync(()=> resetAppData());
-    }
-  };
 }
 window.addEventListener("error", (e)=> showFatal(e?.error || e?.message || e));
 window.addEventListener("unhandledrejection", (e)=> showFatal(e?.reason || e));
