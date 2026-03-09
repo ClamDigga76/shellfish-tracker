@@ -44,7 +44,7 @@ export function isValidISODate(value){
   return dt.getUTCFullYear() === y && (dt.getUTCMonth() + 1) === mo && dt.getUTCDate() === d;
 }
 
-export function formatDateDMY(input){
+export function formatISODateToDisplayDMY(input){
   if(input == null || input === "") return "";
 
   // Pure date input (YYYY-MM-DD): preserve exact calendar day via UTC.
@@ -68,14 +68,16 @@ export function formatDateDMY(input){
   return `${pad2(dt.getDate())}/${pad2(dt.getMonth() + 1)}/${dt.getFullYear()}`;
 }
 
-export function formatDateDisplay(iso){
-  return formatDateDMY(iso);
+export function formatDateDisplayDMY(iso){
+  return formatISODateToDisplayDMY(iso);
 }
 
-// Back-compat alias (older call sites still reference this name).
-export const formatDateMDY = formatDateDisplay;
+// Back-compat aliases (older call sites still reference these names).
+export const formatDateDMY = formatISODateToDisplayDMY;
+export const formatDateDisplay = formatDateDisplayDMY;
+export const formatDateMDY = formatISODateToDisplayDMY;
 
-export function parseMDYToISO(mdy){
+export function parseUsDateToISODate(mdy){
   const s = String(mdy || "").trim();
   if(!s) return "";
   if(s.length === 10 && s[4] === "-" && s[7] === "-") return s;
@@ -105,6 +107,9 @@ export function parseMDYToISO(mdy){
   if(dt.getFullYear() !== y || (dt.getMonth()+1) !== mm || dt.getDate() !== dd) return "";
   return y + "-" + pad2(mm) + "-" + pad2(dd);
 }
+
+// Back-compat alias (older call sites still reference this name).
+export const parseMDYToISO = parseUsDateToISODate;
 
 export function parseNum(s){
   const raw = String(s || "").trim();
@@ -258,7 +263,7 @@ export function toCSV(trips){
   for(const t of trips){
     const ppl = computePPL(t.pounds, t.amount);
     const cells = [
-      clean(formatDateMDY(t.dateISO)),
+      clean(formatISODateToDisplayDMY(t.dateISO)),
       clean(normalizeDealerForExport(t.dealer)),
       String(to2(t.pounds)),
       String(to2(t.amount)),

@@ -8,7 +8,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatDateDMY as formatDateLegacyDMY, computePPL, parseMDYToISO, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, isValidISODate } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY as formatDateLegacyDMY, computePPL, parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, isValidISODate } from "./utils_v5.js";
 import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
 import { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback } from "./migrations_v5.js";
 import { ensureNavState, createNavigator } from "./navigation_v5.js";
@@ -1424,8 +1424,8 @@ function ensureUnifiedFilters(){
     else if(legacyMode === "7D") range = "7d";
     else if(legacyMode === "RANGE") {
       range = "custom";
-      fromISO = parseMDYToISO(String(pick?.from||"")) || "";
-      toISO = parseMDYToISO(String(pick?.to||"")) || "";
+      fromISO = parseUsDateToISODate(String(pick?.from||"")) || "";
+      toISO = parseUsDateToISODate(String(pick?.to||"")) || "";
     }
 
     state.filters.active = {
@@ -1710,7 +1710,7 @@ function findDuplicateTrip(candidate, excludeId=""){
 
 
 function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
-  const dateISO = parseMDYToISO(String(inputs?.date||""));
+  const dateISO = parseUsDateToISODate(String(inputs?.date||""));
   const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
   const poundsNum = parseNum(inputs?.pounds);
   const amountNum = parseMoney(inputs?.amount);
@@ -2008,8 +2008,8 @@ function ensureTripsFilter(){
       (mode === "7D") ? "30d" :
       (mode === "MONTH") ? "30d" :
       "all";
-    const fromISO = parseMDYToISO(state.tripsFilter.from || "") || "";
-    const toISO = parseMDYToISO(state.tripsFilter.to || "") || "";
+    const fromISO = parseUsDateToISODate(state.tripsFilter.from || "") || "";
+    const toISO = parseUsDateToISODate(state.tripsFilter.to || "") || "";
     state.tripsFilter = { range, fromISO, toISO, dealer:"all", area:"all" };
   }
 
@@ -2123,7 +2123,7 @@ function parseReportDateToISO(value){
   const raw = String(value || "").trim();
   if(!raw) return "";
   if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  return parseMDYToISO(raw) || "";
+  return parseUsDateToISODate(raw) || "";
 }
 
 function formatReportDateValue(value){
@@ -3061,7 +3061,7 @@ const getBarSelectChoices = (kind)=>{
       state.draft = state.draft || {};
       const rawDate = String(elDate?.value||"").trim();
 // v71: t_date is type="date" (YYYY-MM-DD). Accept both ISO and legacy MM/DD/YYYY.
-const iso = rawDate.includes("-") ? rawDate.slice(0,10) : (parseMDYToISO(rawDate) || "");
+const iso = rawDate.includes("-") ? rawDate.slice(0,10) : (parseUsDateToISODate(rawDate) || "");
 const mdy = rawDate.includes("-") ? formatDateDMY(iso) : rawDate;
 state.draft.dateISO = iso || state.draft.dateISO || "";
 state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
