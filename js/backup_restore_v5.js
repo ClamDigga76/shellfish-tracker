@@ -429,12 +429,16 @@ export function createBackupRestoreSubsystem(deps){
     const area = String(o.area || "").trim();
     const pounds = Number(o.pounds);
     const amount = Number(o.amount);
+    const species = String(o.species || "Soft-shell Clams").trim() || "Soft-shell Clams";
+    const notes = String(o.notes || "");
     return {
       ...o,
       id,
       dateISO,
       dealer,
       area,
+      species,
+      notes,
       pounds: Number.isFinite(pounds) ? pounds : 0,
       amount: Number.isFinite(amount) ? amount : 0,
     };
