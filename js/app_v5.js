@@ -2244,25 +2244,6 @@ state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
         return;
       }
 
-
-// v59: confirm + save now (no review screen)
-const summary =
-  `Harvest Date: ${String(mdy||"").trim() || "—"}
-` +
-  `Dealer: ${String(state.draft.dealer||"").trim() || "—"}
-` +
-  `Area: ${String(state.draft.area||"").trim() || "—"}
-` +
-  `Species: ${String(state.draft.species||DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES}
-` +
-  `Pounds: ${String(state.draft.pounds||"").trim() || "—"}
-` +
-  `Amount: ${String(state.draft.amount||"").trim() || "—"}
-` +
-  `Notes: ${String(state.draft.notes||"").trim() || "—"}`;
-const ok = await confirmSaveModal({ title: "Save this trip?", body: summary });
-if(!ok){ state._savingTrip = false; saveState(); return; }
-
 commitTripFromDraft({
   mode: "new",
   inputs: {
