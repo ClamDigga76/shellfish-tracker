@@ -2000,7 +2000,9 @@ const getBarSelectChoices = (kind)=>{
     if(!elRate) return;
     const p = parseNum(elPounds?.value);
     const a = parseMoney(elAmount?.value);
-    elRate.textContent = formatMoney(computePPL(p, a));
+    const next = formatMoney(computePPL(p, a));
+    if("value" in elRate) elRate.value = next;
+    else elRate.textContent = next;
   };
   const openQuickAdd = (kind, opts = {})=>{
     const isDealer = (kind==="dealer");
@@ -2886,7 +2888,9 @@ function renderEditTrip(){
     if(!elRate) return;
     const p = Number(String(elPounds?.value || "").trim() || 0);
     const a = Number(String(elAmount?.value || "").trim() || 0);
-    elRate.textContent = formatMoney(computePPL(p, a));
+    const next = formatMoney(computePPL(p, a));
+    if("value" in elRate) elRate.value = next;
+    else elRate.textContent = next;
   };
 
   const openQuickAdd = (kind, opts = {})=>{
