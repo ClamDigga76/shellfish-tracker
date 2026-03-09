@@ -1956,10 +1956,10 @@ function renderNewTrip(){
   draft.notes = String(draft.notes || "");
 
 
-  // Recent (last 2) unique values from saved trips (ignores filters)
+  // Recent (last 3) unique values from saved trips (ignores filters)
   // NOTE: Chips are always shown; if none exist yet we show a muted "No recent …" line.
-  const topAreas = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
-  const topDealers = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
+  const topAreas = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 3), 3);
+  const topDealers = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 3), 3);
 
   const dealerListForSelect = getDealerSelectList(topDealers, draft.dealer);
   const dealerOptions = buildDealerOptionsHtml(draft.dealer, dealerListForSelect, dealerAddSentinel);
