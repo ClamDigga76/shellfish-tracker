@@ -3413,15 +3413,23 @@ function renderReports(){
       metricText = ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—";
       metricClass = "rate ppl";
     }
+    const tripDate = formatDateDMY(t?.dateISO || "") || "—";
+    const tripArea = String(t?.area || "").trim() || "(area)";
+    const tripDealer = String(t?.dealer || "").trim() || "(dealer)";
     return `
       <div class="hlStatCard">
-        <div class="hlHdr" style="text-align:center">${escapeHtml(label)}</div>
-        <div class="hlValue ${metricClass}" style="text-align:center">${escapeHtml(metricText)}</div>
-        <div style="margin-top:8px">
-          ${renderTripCatchCard(t, {
-            valueOverride: ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—",
-            extraClass: "hlTripFlat"
-          })}
+        <div class="hlTopRow">
+          <div class="hlHdr">${escapeHtml(label)}</div>
+          <div class="hlValue ${metricClass}">${escapeHtml(metricText)}</div>
+        </div>
+        <div class="hlTripFlat">
+          <div class="hlTripLine"><b>${escapeHtml(tripDate)}</b></div>
+          <div class="hlTripLine muted">${escapeHtml(tripArea)} • ${escapeHtml(tripDealer)}</div>
+          <div class="hlTripMeta">
+            <span><b class="lbsBlue">${to2(lbsNum)}</b> lbs</span>
+            <span><b class="rate ppl">${ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—"}</b></span>
+            <span><b class="money">${formatMoney(to2(amtNum))}</b></span>
+          </div>
         </div>
       </div>
     `;
