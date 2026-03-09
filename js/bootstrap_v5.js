@@ -346,10 +346,14 @@ window.__showModuleError = function (err) {
     // (Avoids "./js/..." resolving to "/js/js/..." when bootstrap lives in /js/.)
     const UTILS_URL = new URL(`./utils_v5.js?v=${APP_VERSION}`, import.meta.url).href;
     const SETTINGS_URL = new URL(`./settings.js?v=${APP_VERSION}`, import.meta.url).href;
+    const MIGRATIONS_URL = new URL(`./migrations_v5.js?v=${APP_VERSION}`, import.meta.url).href;
+    const NAVIGATION_URL = new URL(`./navigation_v5.js?v=${APP_VERSION}`, import.meta.url).href;
     const APP_URL = new URL(`./app_v5.js?v=${APP_VERSION}`, import.meta.url).href;
 
     await __assertAssetExists(UTILS_URL);
     await __assertAssetExists(SETTINGS_URL);
+    await __assertAssetExists(MIGRATIONS_URL);
+    await __assertAssetExists(NAVIGATION_URL);
     await __assertAssetExists(APP_URL);
     __setBootStage("app:importing");
     await import(APP_URL);

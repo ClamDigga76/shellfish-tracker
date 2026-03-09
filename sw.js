@@ -16,6 +16,9 @@ const CORE = [
   "./legal/license.html",
   `./js/bootstrap_v5.js?v=${SW_V}`,
   "./js/utils_v5.js?v="+SW_V,
+  "./js/settings.js?v="+SW_V,
+  "./js/migrations_v5.js?v="+SW_V,
+  "./js/navigation_v5.js?v="+SW_V,
   "./js/app_v5.js?v="+SW_V,
 ];
 
