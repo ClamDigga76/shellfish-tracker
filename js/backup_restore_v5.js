@@ -137,7 +137,7 @@ export function createBackupRestoreSubsystem(deps){
       const file = new File([blob], fname, { type: "application/json" });
       const canShareFiles = !!(navigator?.canShare && navigator.canShare({ files: [file] }));
       if(canShareFiles && navigator?.share){
-        await navigator.share({ files: [file], title: "Bank the Catch backup" });
+        await navigator.share({ files: [file] });
         try{ updateLastBackupLine(); }catch(_){ }
         return { ok:true, method:"share", filename: fname, tripCount };
       }
