@@ -117,8 +117,13 @@ function renderReports(){
 
         ${advPanel}
 
-        
-        <div class="hint">${fMode==="RANGE" && !hasValidRange ? "Set a valid date range to see tables and charts." : "No trips in this range yet."}</div>
+
+        <div class="emptyState" style="margin-top:12px">
+          <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Pick a valid date range" : "No trips found for this report"}</div>
+          <div class="emptyStateBody">${fMode==="RANGE" && !hasValidRange
+            ? "Set both From and To dates in Advanced, then tap Apply to load tables and charts."
+            : "Try a broader range, or add a trip to start seeing dealer, area, and monthly summaries."}</div>
+        </div>
       </div>
     `;
     getApp().scrollTop = 0;
@@ -220,7 +225,11 @@ function renderReports(){
   });
 
   const renderAggList = (rows, emptyMsg)=>{
-    if(!rows.length) return `<div class="muted small">${escapeHtml(emptyMsg||"No data")}</div>`;
+    if(!rows.length) return `
+      <div class="emptyState compact">
+        <div class="emptyStateTitle">Nothing to summarize</div>
+        <div class="emptyStateBody">${escapeHtml(emptyMsg||"No data")}</div>
+      </div>`;
     return rows.map(r=>{
       return `
         <div class="trow">
@@ -371,7 +380,11 @@ function renderReports(){
           <div class="sep"></div>
 
           ${renderHLItem("Lowest $/lb", minPpl, "ppl")}
-        ` : `<div class="muted small">No trips with valid pounds + amount in this range.</div>`}
+        ` : `
+          <div class="emptyState compact">
+            <div class="emptyStateTitle">Not enough valid data yet</div>
+            <div class="emptyStateBody">No trips with valid pounds and amount in this range.</div>
+          </div>`}
       </div>
     `;
   };
