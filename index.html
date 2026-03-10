@@ -31,6 +31,13 @@
   --color-primary-press:#1f6feb;
   --color-header-bg:rgba(47,109,246,.18);
   --color-header-text:#5d92ff;
+  --surface-card-top:rgba(255,255,255,.07);
+  --surface-card-bottom:rgba(255,255,255,.03);
+  --surface-control:rgba(255,255,255,.075);
+  --surface-control-strong:rgba(255,255,255,.12);
+  --surface-chip-top:rgba(255,255,255,.12);
+  --surface-chip-bottom:rgba(255,255,255,.05);
+  --text-muted-strong:rgba(232,238,252,.82);
   --bg:var(--color-bg);
   --bg2:var(--color-bg-alt);
   --glass:var(--color-surface);
@@ -77,6 +84,13 @@
   --color-primary-press:#1f6feb;
   --color-header-bg:rgba(47,109,246,.12);
   --color-header-text:#2257d8;
+  --surface-card-top:rgba(255,255,255,.94);
+  --surface-card-bottom:rgba(255,255,255,.80);
+  --surface-control:rgba(255,255,255,.93);
+  --surface-control-strong:rgba(255,255,255,.98);
+  --surface-chip-top:rgba(255,255,255,.98);
+  --surface-chip-bottom:rgba(243,247,255,.92);
+  --text-muted-strong:rgba(28,39,64,.80);
 }
 .safeBottom{ padding-bottom: max(10px, var(--safeBottom)); }
 .safeTop{ padding-top: max(10px, var(--safeTop)); }
@@ -489,7 +503,7 @@ header{padding:14px 18px 12px}
 
 /* Cards */
 .card{
-  background:linear-gradient(180deg, var(--glass) 0%, var(--glass2) 100%);
+  background:linear-gradient(180deg, var(--surface-card-top) 0%, var(--surface-card-bottom) 100%);
   border:1px solid var(--border);
   border-radius:16px;
   padding:14px;
@@ -514,10 +528,11 @@ header{padding:14px 18px 12px}
   border-radius:var(--r-btn);
   font-weight:850;
   letter-spacing:.1px;
-  background:var(--glass);
+  background:var(--surface-control);
   border:1px solid var(--border);
   min-height:48px;
 }
+.btn.ghost{background:transparent;border-color:var(--line)}
 .btn.primary{
   background:linear-gradient(180deg, rgba(47,109,246,.95) 0%, rgba(31,111,235,.92) 100%);
   background:linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-press) 100%);
@@ -534,8 +549,8 @@ header{padding:14px 18px 12px}
 .filters{gap:10px}
 .chip{
   border-radius:var(--r-pill);
-  background:linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);
-  border:1px solid rgba(255,255,255,.22);
+  background:linear-gradient(180deg, var(--surface-chip-top) 0%, var(--surface-chip-bottom) 100%);
+  border:1px solid var(--border);
   font-weight:850;
   font-size:14px;
   padding:10px 14px;
@@ -552,7 +567,7 @@ header{padding:14px 18px 12px}
 }
 .chip.on{
   background:linear-gradient(180deg, rgba(47,109,246,.42) 0%, rgba(47,109,246,.26) 100%);
-  border-color:rgba(126,169,255,.9);
+  border-color:rgba(126,169,255,.78);
   box-shadow:0 5px 14px rgba(31,111,235,.28), inset 0 0 0 1px rgba(255,255,255,.10);
 }
 .chip:active{transform:translateY(1px);box-shadow:0 1px 5px rgba(0,0,0,.26)}
@@ -561,7 +576,7 @@ header{padding:14px 18px 12px}
 .pill{
   border-radius:var(--r-pill);
   border:1px solid var(--border);
-  background:var(--glass2);
+  background:var(--surface-control);
 }
 
 /* Report table rows (C1) */
@@ -576,7 +591,7 @@ header{padding:14px 18px 12px}
 .tsub{color:var(--muted);font-size:13px;margin-top:2px}
 .tright{
   text-align:right;
-  color:var(--muted);
+  color:var(--text-muted-strong);
   font-size:13px;
   display:grid;
   gap:2px;
@@ -589,7 +604,7 @@ header{padding:14px 18px 12px}
 .triplist .trip{
   padding:10px 2px;
   border-radius:14px;
-  background:var(--glass2);
+  background:var(--surface-card-bottom);
   border:1px solid var(--border);
 }
 .triplist .trip + .trip{margin-top:10px}
@@ -604,7 +619,7 @@ header{padding:14px 18px 12px}
   padding:12px;
   border-radius:14px;
   border:1px solid var(--border);
-  background:var(--glass2);
+  background:var(--surface-control);
 }
 .catchCard .catchHead{
   color:var(--muted);
@@ -628,7 +643,7 @@ header{padding:14px 18px 12px}
   align-items:center;
   border-radius:999px;
   border:1px solid var(--border);
-  background:var(--glass);
+  background:var(--surface-control-strong);
   padding:5px 8px;
   font-size:12px;
   line-height:1;
@@ -650,7 +665,7 @@ header{padding:14px 18px 12px}
 
 /* Inputs + small buttons (C1) */
 .input,.select,.textarea{
-  background:var(--glass2) !important;
+  background:var(--surface-control) !important;
   border:1px solid var(--border) !important;
 }
 .input:focus-visible,.select:focus-visible,.textarea:focus-visible{
@@ -661,7 +676,7 @@ header{padding:14px 18px 12px}
 .smallbtn{
   border-radius:var(--r-pill);
   border:1px solid var(--border);
-  background:var(--glass2);
+  background:var(--surface-control);
   padding:10px 12px;
   font-weight:800;
 }
@@ -985,7 +1000,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=258"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=259"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
