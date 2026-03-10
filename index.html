@@ -143,8 +143,9 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 .pill{background:var(--glass2);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:999px;font-size:12px}
 /* Phase 2C-1 additions */
 .filters{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.chip{border:1px solid var(--border);background:var(--glass);color:var(--text);padding:10px 12px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer}
-.chip.on{background:rgba(80,130,255,.35);border-color:rgba(120,160,255,.55)}
+.chip{border:1px solid rgba(255,255,255,.22);background:linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);color:var(--text);padding:10px 14px;border-radius:999px;font-weight:750;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-height:40px;letter-spacing:.1px;box-shadow:0 2px 8px rgba(0,0,0,.22);transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .08s ease}
+.chip.on{background:linear-gradient(180deg, rgba(47,109,246,.42) 0%, rgba(47,109,246,.26) 100%);border-color:rgba(126,169,255,.9);box-shadow:0 5px 14px rgba(31,111,235,.28), inset 0 0 0 1px rgba(255,255,255,.10)}
+.chip:active{transform:translateY(1px);box-shadow:0 1px 5px rgba(0,0,0,.26)}
 .chip,.areachip,.chip-selector{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
 /* Area quick-pick chips (smaller than filter chips) */
@@ -533,19 +534,28 @@ header{padding:14px 18px 12px}
 .filters{gap:10px}
 .chip{
   border-radius:var(--r-pill);
-  background:var(--glass);
-  border:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);
+  border:1px solid rgba(255,255,255,.22);
   font-weight:850;
   font-size:14px;
   padding:10px 14px;
+  min-height:40px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  letter-spacing:.1px;
+  box-shadow:0 2px 8px rgba(0,0,0,.22);
+  transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .08s ease;
   -webkit-user-select:none;
   user-select:none;
   -webkit-touch-callout:none;
 }
 .chip.on{
-  background:rgba(47,109,246,.25);
-  border-color:rgba(120,160,255,.55);
+  background:linear-gradient(180deg, rgba(47,109,246,.42) 0%, rgba(47,109,246,.26) 100%);
+  border-color:rgba(126,169,255,.9);
+  box-shadow:0 5px 14px rgba(31,111,235,.28), inset 0 0 0 1px rgba(255,255,255,.10);
 }
+.chip:active{transform:translateY(1px);box-shadow:0 1px 5px rgba(0,0,0,.26)}
 
 /* Range pill */
 .pill{
@@ -975,7 +985,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=256"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=257"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
