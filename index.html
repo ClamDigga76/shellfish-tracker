@@ -115,11 +115,12 @@ header p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
 main{padding:14px 14px 18px}
 .card{background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
-.btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .08s ease,filter .12s ease,box-shadow .12s ease,border-color .12s ease}
 .btn.primary{background:linear-gradient(180deg, rgba(47,109,246,.92) 0%, rgba(31,111,235,.92) 100%);border-color:rgba(47,109,246,.9);box-shadow:0 10px 26px rgba(31,111,235,.20)}
 .btn.good{background:rgba(46,160,67,.22);border-color:rgba(46,160,67,.55)}
 .btn.ghost{background:transparent}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:not(:disabled):active{transform:translateY(1px);filter:brightness(.96)}
 .muted{color:var(--muted)}
 .srOnly,.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 /* Semantic value colors */
@@ -164,8 +165,8 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 
 /* Area quick-pick chips (smaller than filter chips) */
 .areachips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.areachip{border:1px solid var(--border);background:var(--glass);color:var(--text);padding:8px 10px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer}
-.areachip:active{transform:scale(.99)}
+.areachip{border:1px solid var(--border);background:var(--glass);color:var(--text);padding:8px 10px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer;transition:transform .08s ease,filter .12s ease,border-color .12s ease}
+.areachip:active{transform:translateY(1px);filter:brightness(.96)}
 .triplist{display:flex;flex-direction:column;gap:12px}
 .trip{padding:12px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08)}
 .trip-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
@@ -181,7 +182,8 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 .textarea{min-height:110px;resize:vertical;font-weight:600}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
 .btn.danger{background:rgba(255,80,80,.18);border:1px solid rgba(255,80,80,.30)}
-.smallbtn{padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--glass2);color:var(--text);font-weight:800;cursor:pointer}
+.smallbtn{padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--glass2);color:var(--text);font-weight:800;cursor:pointer;transition:transform .08s ease,filter .12s ease,border-color .12s ease}
+.smallbtn:active{transform:translateY(1px);filter:brightness(.96)}
 
 
 /* Phase 2C-2.1: iPhone scroll + back button usability */
@@ -203,11 +205,11 @@ body[data-view="edit"] .tripActionBar{padding:8px}
 
 #tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;height:var(--tabbar-total-h);padding:0 8px var(--tabbar-safe);background:linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);backdrop-filter:blur(10px);display:flex;justify-content:space-around;align-items:flex-end}
 #tabbar::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--line);opacity:.75}
-.tabbtn{flex:1;min-width:0;appearance:none;border:0;background:transparent;color:var(--muted);padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:12px;line-height:1}
+.tabbtn{flex:1;min-width:0;appearance:none;border:0;background:transparent;color:var(--muted);padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:12px;line-height:1;transition:transform .08s ease,color .12s ease,opacity .12s ease,filter .12s ease}
 .tabbtn svg{width:22px;height:22px;display:block}
 .tabbtn.active{color:var(--accent)}
 .tabbtn.active svg{stroke:var(--accent)}
-.tabbtn:active{transform:translateY(1px)}
+.tabbtn:active{transform:translateY(1px);filter:brightness(1.08)}
 
 .tabbtn.plus{flex:0 0 64px;min-width:64px;max-width:64px;padding:0;margin-bottom:6px;color:#fff;background:var(--accent);border-radius:999px;height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px rgba(0,0,0,.45);transform:translateY(-14px)}
 .tabbtn.plus svg{width:26px;height:26px;stroke:#fff}
@@ -236,7 +238,8 @@ header{padding:18px 22px 14px}
   align-items:center;
   gap:8px;
 }
-.chipLink:active{transform:scale(.99)}
+.chipLink{transition:transform .08s ease,filter .12s ease,border-color .12s ease}
+.chipLink:active{transform:translateY(1px);filter:brightness(.96)}
 .expTag{font-size:12px;opacity:.7;font-weight:700}
 .expWarn{opacity:.75;cursor:pointer;user-select:none}
 .expTip{padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:var(--glass2)}
@@ -532,6 +535,7 @@ header{padding:14px 18px 12px}
   border:1px solid var(--border);
   min-height:48px;
 }
+.btn:not(:disabled):active{transform:translateY(1px);filter:brightness(.96)}
 .btn.ghost{background:transparent;border-color:var(--line)}
 .btn.primary{
   background:linear-gradient(180deg, rgba(47,109,246,.95) 0%, rgba(31,111,235,.92) 100%);
@@ -568,7 +572,7 @@ header{padding:14px 18px 12px}
 .chip.on{
   background:linear-gradient(180deg, rgba(47,109,246,.42) 0%, rgba(47,109,246,.26) 100%);
   border-color:rgba(126,169,255,.78);
-  box-shadow:0 5px 14px rgba(31,111,235,.28), inset 0 0 0 1px rgba(255,255,255,.10);
+  box-shadow:0 6px 16px rgba(31,111,235,.30), inset 0 0 0 1px rgba(255,255,255,.12);
 }
 .chip:active{transform:translateY(1px);box-shadow:0 1px 5px rgba(0,0,0,.26)}
 
@@ -680,6 +684,7 @@ header{padding:14px 18px 12px}
   padding:10px 12px;
   font-weight:800;
 }
+.smallbtn:active{transform:translateY(1px);filter:brightness(.96)}
 .actions{
   display:grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -1000,7 +1005,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=259"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=260"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
