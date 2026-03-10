@@ -25,7 +25,7 @@ import { renderTripEntryForm } from "./trip_form_render_v5.js";
 import { createHomeDashboardRenderer } from "./home_dashboard_v5.js";
 import { createSettingsScreenOrchestrator } from "./settings_screen_v5.js";
 import { createReportsScreenRenderer } from "./reports_screen_v5.js";
-import { createFeedbackHelpers } from "./feedback_helpers_v5.js";
+import { createFeedbackSeam } from "./feedback_seam_v5.js";
 import {
   renderPageHeader as renderPageHeaderShell,
   bindHeaderHelpButtons as bindHeaderHelpButtonsShell,
@@ -355,18 +355,19 @@ async function updateBuildBadge(){
   el.textContent = parts.join(" • ");
 }
 
+const feedback = createFeedbackSeam({
+  escapeHtml,
+  lockBodyScroll,
+  unlockBodyScroll,
+  focusFirstFocusable
+});
 const {
   announce,
   showToast,
   maybeOfferInstallAfterFirstSave,
   confirmSaveModal,
   copyTextWithFeedback
-} = createFeedbackHelpers({
-  escapeHtml,
-  lockBodyScroll,
-  unlockBodyScroll,
-  focusFirstFocusable
-});
+} = feedback;
 
 
 function iconSvg(name){
@@ -2654,7 +2655,7 @@ const { renderReports } = createReportsScreenRenderer({
   renderPageHeader,
   saveState: () => saveState(),
   bindDatePill,
-  showToast: (msg) => showToast(msg),
+  showToast: feedback.showToast,
   buildReportsAggregationState,
   canonicalDealerGroupKey,
   normalizeDealerDisplay,
@@ -2674,8 +2675,8 @@ const settingsListManagement = createSettingsListManagement({
   ensureDealers: () => ensureDealers(),
   normalizeKey,
   escapeHtml,
-  showToast: (msg) => showToast(msg),
-  copyTextWithFeedback: (text, successMsg) => copyTextWithFeedback(text, successMsg),
+  showToast: feedback.showToast,
+  copyTextWithFeedback: feedback.copyTextWithFeedback,
   getDebugInfo: () => getDebugInfo(),
   forceRefreshApp: () => forceRefreshApp(),
   render: () => render()
