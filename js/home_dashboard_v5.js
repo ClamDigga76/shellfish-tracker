@@ -214,6 +214,7 @@ export function createHomeDashboardRenderer({
         ensureHomeFilter();
         state.homeFilter.mode = String(btn.getAttribute("data-hf") || "YTD").toUpperCase();
         saveState();
+        showToast("Home filter updated");
         renderHome();
       });
     });
@@ -226,6 +227,7 @@ export function createHomeDashboardRenderer({
         state.homeFilter.from = from;
         state.homeFilter.to = to;
         saveState();
+        showToast("Date range applied");
         renderHome();
       };
     }
@@ -303,6 +305,7 @@ export function createHomeDashboardRenderer({
         state.settings = state.settings || {};
         state.settings.backupSnoozeUntil = Date.now() + (24 * 60 * 60 * 1000);
         saveState();
+        showToast("Backup reminder snoozed");
         renderHome();
       };
     }

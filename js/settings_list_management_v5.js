@@ -151,6 +151,7 @@ export function createSettingsListManagement(deps){
           ensureAreas();
           saveState();
           refreshListMgmt("areas", true);
+          showToast("Area added");
         };
       }
 
@@ -167,6 +168,7 @@ export function createSettingsListManagement(deps){
           ensureDealers();
           saveState();
           refreshListMgmt("dealers", true);
+          showToast("Dealer added");
         };
       }
 
@@ -186,6 +188,7 @@ export function createSettingsListManagement(deps){
           ensureAreas();
           saveState();
           refreshListMgmt("areas", true);
+          showToast("Area deleted");
         };
       });
 
@@ -205,6 +208,7 @@ export function createSettingsListManagement(deps){
           ensureDealers();
           saveState();
           refreshListMgmt("dealers", true);
+          showToast("Dealer deleted");
         };
       });
 
@@ -226,9 +230,10 @@ export function createSettingsListManagement(deps){
 
     document.getElementById("resetData").onclick = ()=>{
       const typed = prompt('Type DELETE to permanently erase ALL trips and lists on this device.');
-      if(typed !== "DELETE") return;
+      if(typed !== "DELETE") { showToast("Erase canceled"); return; }
       setState({ trips: [], areas: [], dealers: [], filter: "YTD", view: "home", settings: {} });
       saveState();
+      showToast("All data erased");
       render();
     };
   }

@@ -133,6 +133,7 @@ function renderReports(){
           state.reportsFilter.to = "";
         }
         saveState();
+        showToast("Filter applied");
         renderReports();
       };
     });
@@ -178,6 +179,7 @@ function renderReports(){
         state.reportsFilter.to = to;
 
         saveState();
+        showToast("Filter applied");
         renderReports();
       };
     }
@@ -191,6 +193,7 @@ function renderReports(){
         state.reportsFilter.dealer = "";
         state.reportsFilter.area = "";
         saveState();
+        showToast("Filters reset");
         renderReports();
       };
     }
@@ -458,6 +461,7 @@ function renderReports(){
         state.reportsFilter.mode = "RANGE";
       }
       saveState();
+      showToast("Filter applied");
       renderReports();
     };
   }
@@ -467,6 +471,7 @@ function renderReports(){
     advReset.onclick = ()=>{
       state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
       saveState();
+      showToast("Filters reset");
       renderReports();
     };
   }
