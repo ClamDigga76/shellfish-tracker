@@ -22,6 +22,9 @@ export function createBackupRestoreSubsystem(deps){
 
   function buildBackupPayloadFromState(st, exportedAtISO){
     const safeState = (st && typeof st === "object") ? st : {};
+    const trips = Array.isArray(safeState.trips) ? safeState.trips : [];
+    const areas = Array.isArray(safeState.areas) ? safeState.areas : [];
+    const dealers = Array.isArray(safeState.dealers) ? safeState.dealers : [];
     return {
       app: "Bank the Catch",
       schema: SCHEMA_VERSION, // legacy
@@ -29,10 +32,16 @@ export function createBackupRestoreSubsystem(deps){
       version: APP_VERSION, // legacy
       appVersion: APP_VERSION,
       exportedAt: exportedAtISO || new Date().toISOString(),
+      backupMeta: {
+        tripCount: trips.length,
+        areaCount: areas.length,
+        dealerCount: dealers.length,
+        createdBy: "Bank the Catch"
+      },
       data: {
-        trips: Array.isArray(safeState.trips) ? safeState.trips : [],
-        areas: Array.isArray(safeState.areas) ? safeState.areas : [],
-        dealers: Array.isArray(safeState.dealers) ? safeState.dealers : [],
+        trips,
+        areas,
+        dealers,
         settings: (safeState.settings && typeof safeState.settings === "object") ? safeState.settings : {}
       }
     };
@@ -150,6 +159,7 @@ export function createBackupRestoreSubsystem(deps){
     const schemaVersion = Number(obj.schemaVersion ?? obj.schema ?? 0) || 0;
     const appVersion = String(obj.appVersion ?? obj.version ?? "");
     const exportedAt = String(obj.exportedAt || "");
+    const backupMeta = (obj.backupMeta && typeof obj.backupMeta === "object") ? obj.backupMeta : {};
     const data = (obj.data && typeof obj.data === "object") ? obj.data : obj;
 
     const trips = Array.isArray(data.trips) ? data.trips : [];
@@ -157,7 +167,7 @@ export function createBackupRestoreSubsystem(deps){
     const dealers = Array.isArray(data.dealers) ? data.dealers : [];
     const settings = (data.settings && typeof data.settings === "object") ? data.settings : {};
 
-    const normalized = { schemaVersion, appVersion, exportedAt, data:{ trips, areas, dealers, settings } };
+    const normalized = { schemaVersion, appVersion, exportedAt, backupMeta, data:{ trips, areas, dealers, settings } };
     const { errors, warnings } = validateNormalizedBackupPayload(normalized);
     return { ok: errors.length === 0, errors, warnings, normalized };
   }
@@ -179,6 +189,17 @@ export function createBackupRestoreSubsystem(deps){
     if(!Array.isArray(data.areas)) errors.push("Backup areas must be an array");
     if(data.settings && typeof data.settings !== "object") errors.push("Backup settings must be an object");
     if(!Array.isArray(data.dealers)) errors.push("Backup dealers must be an array");
+
+    if(normalized.schemaVersion <= 0) warnings.push("Backup schema version was not set; importing with compatibility mode.");
+    if(!String(normalized.appVersion || "").trim()) warnings.push("Backup build/version is missing.");
+
+    const exportedAt = String(normalized.exportedAt || "").trim();
+    if(exportedAt){
+      const exportedDate = new Date(exportedAt);
+      if(isNaN(exportedDate.getTime())) warnings.push("Export date was unreadable.");
+    }else{
+      warnings.push("Export date was not included.");
+    }
 
     if(Array.isArray(data.trips) && data.trips.length > 20000){
       warnings.push(`Large backup (${data.trips.length} trips) may be slow to import on mobile`);
@@ -228,6 +249,10 @@ export function createBackupRestoreSubsystem(deps){
       const normalized = normalizedResult.normalized;
       const warnings = [...(normalizedResult.warnings || [])];
 
+      if(String(obj.app || "").trim() && String(obj.app).trim() !== "Bank the Catch"){
+        warnings.push(`Backup app label was "${String(obj.app).trim()}".`);
+      }
+
       if(!(obj.data && typeof obj.data === "object")){
         warnings.push("Legacy backup shape detected (top-level data). Import remains compatible.");
       }
@@ -254,7 +279,10 @@ export function createBackupRestoreSubsystem(deps){
         },
         metadata: {
           exportedAt: String(normalized?.exportedAt || ""),
-          appVersion: String(normalized?.appVersion || "")
+          appVersion: String(normalized?.appVersion || ""),
+          schemaVersion: Number(normalized?.schemaVersion || 0) || 0,
+          createdBy: String(normalized?.backupMeta?.createdBy || ""),
+          sourceTripCount: Number(normalized?.backupMeta?.tripCount || 0) || 0
         },
         hasSettingsKey: ("settings" in data)
       };
@@ -278,6 +306,7 @@ export function createBackupRestoreSubsystem(deps){
       const modeMergeId = `${uidBase}_mode_merge`;
       const modeReplaceId = `${uidBase}_mode_replace`;
       const includeSettingsId = `${uidBase}_include_settings`;
+      const replaceConfirmId = `${uidBase}_replace_confirm`;
       const cancelId = `${uidBase}_cancel`;
       const continueId = `${uidBase}_continue`;
 
@@ -307,6 +336,7 @@ export function createBackupRestoreSubsystem(deps){
           <div class="mt8" style="display:grid;gap:6px">
             <div class="row" style="justify-content:space-between"><span class="muted">Exported</span><b>${escapeHtml(__formatRestoreMetaDate(preview?.metadata?.exportedAt))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Build/Version</span><b>${escapeHtml(String(preview?.metadata?.appVersion || "unknown"))}</b></div>
+            <div class="row" style="justify-content:space-between"><span class="muted">Schema</span><b>${escapeHtml(String(preview?.metadata?.schemaVersion || "unknown"))}</b></div>
           </div>
           ${warningHtml}
           <div class="sep" style="margin:10px 0"></div>
@@ -323,12 +353,38 @@ export function createBackupRestoreSubsystem(deps){
             <input id="${includeSettingsId}" type="checkbox" />
             <span>Also import settings from backup (off by default).</span>
           </label>
+          <label class="row" id="${replaceConfirmId}_row" style="gap:8px;align-items:flex-start;margin-top:10px;display:none">
+            <input id="${replaceConfirmId}" type="checkbox" />
+            <span>I understand Replace removes current trips and list entries on this device before importing this backup.</span>
+          </label>
           <div class="modalActions" style="margin-top:12px">
             <button class="btn" id="${cancelId}" type="button">Cancel</button>
             <button class="btn primary" id="${continueId}" type="button">Continue</button>
           </div>
         `,
         onOpen: ()=>{
+          const replaceEl = document.getElementById(modeReplaceId);
+          const mergeEl = document.getElementById(modeMergeId);
+          const replaceConfirmEl = document.getElementById(replaceConfirmId);
+          const replaceConfirmRow = document.getElementById(`${replaceConfirmId}_row`);
+          const continueBtn = document.getElementById(continueId);
+
+          const syncReplaceGuard = ()=>{
+            const replaceChecked = !!replaceEl?.checked;
+            if(replaceConfirmRow) replaceConfirmRow.style.display = replaceChecked ? "flex" : "none";
+            if(replaceConfirmEl && !replaceChecked) replaceConfirmEl.checked = false;
+            if(continueBtn){
+              const safeToContinue = !replaceChecked || !!replaceConfirmEl?.checked;
+              continueBtn.disabled = !safeToContinue;
+              continueBtn.setAttribute("aria-disabled", safeToContinue ? "false" : "true");
+            }
+          };
+
+          replaceEl?.addEventListener("change", syncReplaceGuard);
+          mergeEl?.addEventListener("change", syncReplaceGuard);
+          replaceConfirmEl?.addEventListener("change", syncReplaceGuard);
+          syncReplaceGuard();
+
           const cancel = ()=>{ closeModal(); resolve(null); };
           document.getElementById(cancelId)?.addEventListener("click", cancel);
           document.getElementById(continueId)?.addEventListener("click", ()=>{
