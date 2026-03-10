@@ -65,6 +65,9 @@
   --safeBottom:env(safe-area-inset-bottom);
   --tabbar-safe:max(0px, var(--safeBottom));
   --tabbar-total-h:calc(var(--tabbar-h) + var(--tabbar-safe));
+  --section-gap:14px;
+  --section-gap-tight:12px;
+  --divider-color:rgba(255,255,255,.14);
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
@@ -91,6 +94,7 @@
   --surface-chip-top:rgba(255,255,255,.98);
   --surface-chip-bottom:rgba(243,247,255,.92);
   --text-muted-strong:rgba(28,39,64,.80);
+  --divider-color:rgba(37,53,92,.22);
 }
 .safeBottom{ padding-bottom: max(10px, var(--safeBottom)); }
 .safeTop{ padding-top: max(10px, var(--safeTop)); }
@@ -355,13 +359,13 @@ header{padding:14px 18px 12px}
 
 body[data-view="new"] .formCard,
 body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transparent;box-shadow:none}
-#newTripForm{display:flex;flex-direction:column;gap:2px}
-#newTripForm .field{margin-bottom:10px}
+#newTripForm{display:flex;flex-direction:column;gap:0}
+#newTripForm .field{margin-bottom:12px}
 
 .tripFormFoundation{padding:10px 10px 12px}
-.tripFormFoundation .trip-section{padding:12px 0}
-.tripFormFoundation .trip-section + .trip-section{border-top:1px solid var(--line)}
-.tripFormFoundation .trip-section.trip-actions{padding-top:14px}
+.tripFormFoundation .trip-section{padding:var(--section-gap-tight) 0}
+.tripFormFoundation .trip-section + .trip-section{border-top:1px solid var(--divider-color)}
+.tripFormFoundation .trip-section.trip-actions{padding-top:var(--section-gap)}
 .overline,.fieldLabel{letter-spacing:.12em}
 .chipRow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
 
@@ -407,9 +411,9 @@ body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transpar
 
 .actionsNew .btn.primary{width:100%}
 
-#newTripForm .trip-section{padding:10px 0}
-#newTripForm .trip-section + .trip-section{border-top:1px solid var(--line)}
-#newTripForm .trip-section.trip-actions{padding-top:14px}
+#newTripForm .trip-section{padding:var(--section-gap-tight) 0}
+#newTripForm .trip-section + .trip-section{border-top:1px solid var(--divider-color)}
+#newTripForm .trip-section.trip-actions{padding-top:var(--section-gap)}
 .edit-mode{
   background:linear-gradient(180deg, rgba(255,77,79,.10) 0%, rgba(255,77,79,.04) 34%, rgba(255,255,255,.03) 100%);
 }
@@ -510,7 +514,7 @@ header{padding:14px 18px 12px}
   border:1px solid var(--border);
   border-radius:16px;
   padding:14px;
-  margin-bottom:12px;
+  margin-bottom:var(--section-gap);
   box-shadow:0 6px 20px rgba(0,0,0,.18);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
@@ -524,7 +528,7 @@ header{padding:14px 18px 12px}
 }
 
 /* Separators */
-.sep{height:1px;background:var(--line);margin:10px 0;opacity:.85}
+.sep{height:1px;background:var(--divider-color);margin:12px 0;opacity:1}
 
 /* Buttons */
 .btn{
@@ -858,7 +862,7 @@ header{padding:14px 18px 12px}
   bottom:-6px;
   width:70%;
   height:1px;
-  background:var(--line);
+  background:var(--divider-color);
 }
 .phTitle{
   margin:0;
@@ -895,7 +899,7 @@ header{padding:14px 18px 12px}
   display:block;
   width:70%;
   height:1px;
-  background:var(--line);
+  background:var(--divider-color);
   margin:8px auto 0;
 }
 .card > b:first-child + .sep{
@@ -1005,7 +1009,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=260"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=261"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
