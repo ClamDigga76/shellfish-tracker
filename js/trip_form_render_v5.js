@@ -51,7 +51,6 @@ export function renderTripEntryForm({
 
         <section class="trip-section">
           <div class="field">
-            <label class="fieldLabel overline center" for="${escapeHtml(dateId)}">HARVEST DATE</label>
             <div class="dateRow">
               <span class="dateIcon">${dateIconHtml}</span>
               <input class="input datePill" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
