@@ -1447,7 +1447,9 @@ const newTripFormHtml = renderTripEntryForm({
       primaryActionLabel: "Save Trip",
       secondaryActionLabel: "Clear",
       secondaryActionId: "clearDraft",
-      dateIconHtml: iconSvg("calendar")
+      dateIconHtml: iconSvg("calendar"),
+      showSpeciesField: false,
+      showNotesField: false
     }).replace("card formCard", "formCard");
 
 ;getApp().innerHTML = `
@@ -2331,7 +2333,9 @@ function renderEditTrip(){
       tertiaryActionLabel: "Delete",
       tertiaryActionId: "deleteTrip",
       extraCardClass: "edit-mode",
-      dateIconHtml: iconSvg("calendar")
+      dateIconHtml: iconSvg("calendar"),
+      showSpeciesField: false,
+      showNotesField: false
     }).replace("card formCard", "formCard");
 
   getApp().innerHTML = `
@@ -2604,8 +2608,8 @@ function renderEditTrip(){
         pounds: elPounds.value,
         amount: elAmount.value,
         area: elArea.value,
-        species: elSpecies?.value || DEFAULT_TRIP_SPECIES,
-        notes: elNotes?.value || ""
+        species: elSpecies?.value || draft.species || DEFAULT_TRIP_SPECIES,
+        notes: (elNotes?.value ?? draft.notes ?? "")
       }
     });
   });
