@@ -2,10 +2,12 @@
 
 Effective Date: 2026-01-01
 
-The Shellfish Harvest Tracking App does not collect, transmit, or store personal data on external servers.
+This Privacy Policy applies to Bank the Catch (Shellfish Tracker PWA).
+
+This app does not collect, transmit, or store personal data on external servers.
 
 ## Local Storage Only
-All harvest data is stored locally on your device using browser storage.
+Trip records and related app data are stored locally on your device using browser storage.
 
 ## No Tracking
 This app:
@@ -14,8 +16,14 @@ This app:
 - Does not share data with third parties
 - Does not transmit user information
 
+## Backups and Exports
+When you create a backup/export file, that file is saved to a location you choose (for example, your Files app or cloud drive). You control how those files are stored and shared.
+
 ## User Control
-You may clear your data at any time by clearing browser storage.
+You may clear locally stored app data at any time from your browser/device storage.
+
+## Contact
+Privacy questions can be sent to: jeremywwood76@gmail.com
 
 ## Future Updates
 If future versions include accounts, subscriptions, payments, or analytics, this policy will be updated accordingly.
