@@ -149,8 +149,8 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 .preWrap{white-space:pre-wrap}
 .lh135{line-height:1.35}
 .helpText{font-size:14px}
-.phHelpBtn{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:rgba(232,238,252,.92);font-weight:900;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;color:#ff3b30}
-.phHelpBtn:active{transform:translateY(-50%) scale(.98)}
+.phHelpBtn{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:999px;border:1px solid var(--color-border-strong);background:linear-gradient(180deg, var(--surface-control-strong) 0%, var(--surface-control) 100%);color:var(--color-header-text);font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;box-shadow:0 5px 14px rgba(0,0,0,.18)}
+.phHelpBtn:active{transform:translateY(-50%) scale(.98);filter:brightness(.98)}
 .hint{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.35}
 .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .pillbar.stats3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;flex-wrap:unset}
@@ -850,8 +850,8 @@ header{padding:14px 18px 12px}
   align-items:center;
   justify-content:center;
   gap:0;
-  margin:10px 0 14px;
-  padding:0 12px;
+  margin:8px 0 12px;
+  padding:0 10px;
   position:relative;
 }
 .pageHeader::after{
@@ -859,22 +859,24 @@ header{padding:14px 18px 12px}
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  bottom:-6px;
-  width:70%;
+  bottom:-5px;
+  width:min(72%, 280px);
   height:1px;
   background:var(--divider-color);
 }
 .phTitle{
   margin:0;
-  font-size:clamp(22px,5.2vw,28px) !important;
-  font-weight:850 !important;
+  font-size:clamp(22px,5.2vw,27px) !important;
+  font-weight:860 !important;
   letter-spacing:0.1px !important;
   text-align:center;
   color:var(--color-header-text) !important;
   font-family:inherit !important;
 }
 
-.pageHeader > div > div:last-child{
+.pageHeader > div{
+  padding:4px 12px;
+  border-radius:999px;
   background:var(--color-header-bg) !important;
   border:1px solid var(--color-border-strong) !important;
 }
@@ -1009,7 +1011,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=263"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=264"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
