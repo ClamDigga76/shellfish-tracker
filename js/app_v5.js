@@ -1625,7 +1625,7 @@ function renderAllTrips(){
     });
   });
 
-  const rerender = ()=>{ saveState(); renderAllTrips(); };
+  const rerender = ()=>{ scheduleStateSave(); renderAllTrips(); };
 
   const rangeEl = document.getElementById("flt_range");
   rangeEl?.addEventListener("change", ()=>{
@@ -2726,7 +2726,7 @@ getApp().innerHTML = `
     elDealerLive.addEventListener("input", ()=>{
       state.reviewDraft = state.reviewDraft || {};
       state.reviewDraft._dealerPromptValue = null;
-      saveState();
+      scheduleStateSave();
       updateReviewDealerPrompt();
     });
   }
