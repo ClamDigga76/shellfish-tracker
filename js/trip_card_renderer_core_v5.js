@@ -44,9 +44,9 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, for
             <div class="catchHead" style="margin-top:2px;font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(model.dealer)}</div>
           </div>
           <div class="catchFoot" style="margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap">
-            <span class="catchMetric lbsBlue" style="font-size:14px;padding:6px 10px"><b class="lbsBlue">${model.lbs}</b> lbs</span>
-            <span class="catchMetric" style="font-size:14px;padding:6px 10px"><b class="rate ppl">${escapeHtml(model.valueText)}</b></span>
-            <span class="catchMetric money" style="font-size:14px;padding:6px 10px"><b class="money">${model.amountText}</b></span>
+            <span class="catchMetric lbsBlue" style="font-size:14px;padding:6px 10px"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
+            <span class="catchMetric" style="font-size:14px;padding:6px 10px"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
+            <span class="catchMetric money" style="font-size:14px;padding:6px 10px"><b class="metricValue money">${model.amountText}</b></span>
           </div>
         </div>
       </${tag}>
