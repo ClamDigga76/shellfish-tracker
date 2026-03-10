@@ -8,7 +8,7 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY as formatDateLegacyDMY, computePPL, parseMDYToISO as parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, isValidISODate, resolveTripsDateRange, applyTripCriteria } from "./utils_v5.js";
+import { uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY as formatDateLegacyDMY, computePPL, parseMDYToISO as parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable , isValidISODate } from "./utils_v5.js";
 import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
 import { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback } from "./migrations_v5.js";
 import { ensureNavState, createNavigator } from "./navigation_v5.js";
@@ -235,7 +235,6 @@ const {
   isoToday,
   parseReportDateToISO,
   formatReportDateValue,
-  modeRange,
   tripsFilename,
   exportTripsWithLabel
 } = createReportsFilterHelpers({
@@ -955,6 +954,14 @@ function resolveUnifiedRange(filter){
   if(filter.range === "all") return { fromISO:"1900-01-01", toISO:now, label:"All time" };
   if(filter.range === "ytd") return { fromISO:`${y}-01-01`, toISO:now, label:"YTD" };
   if(filter.range === "mtd") return { fromISO:`${y}-${String(new Date().getMonth()+1).padStart(2,"0")}-01`, toISO:now, label:"Month" };
+  if(filter.range === "last_month"){
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth()-1);
+    const fromISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`;
+    const toISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()).padStart(2,"0")}`;
+    return { fromISO, toISO, label:"Last Month" };
+  }
   if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"7 Days" };
   if(filter.range === "12m"){
     const d = new Date();
@@ -988,6 +995,54 @@ function buildUnifiedFilterLabel(filter, rangeLabel){
   if(filter.species && filter.species !== "all") parts.push(`Species: ${filter.species}`);
   if(filter.text && String(filter.text).trim()) parts.push(`Search: "${String(filter.text).trim()}"`);
   return parts.join(" • ");
+}
+
+function legacyModeToUnifiedRange(mode){
+  const m = String(mode || "").toUpperCase();
+  if(m === "ALL") return "all";
+  if(m === "YTD") return "ytd";
+  if(m === "MONTH" || m === "THIS_MONTH") return "mtd";
+  if(m === "LAST_MONTH") return "last_month";
+  if(m === "7D") return "7d";
+  if(m === "12M") return "12m";
+  if(m === "90D") return "90d";
+  if(m === "30D") return "30d";
+  if(m === "RANGE" || m === "CUSTOM") return "custom";
+  return "ytd";
+}
+
+function makeUnifiedFilter(partial){
+  const f = {
+    range: partial?.range || "ytd",
+    fromISO: partial?.fromISO || "",
+    toISO: partial?.toISO || "",
+    dealer: partial?.dealer || "all",
+    area: partial?.area || "all",
+    species: partial?.species || "all",
+    text: partial?.text || ""
+  };
+  const resolved = resolveUnifiedRange(f);
+  return { ...f, fromISO: resolved.fromISO, toISO: resolved.toISO };
+}
+
+function buildUnifiedFilterFromHomeFilter(hf){
+  return makeUnifiedFilter({
+    range: legacyModeToUnifiedRange(hf?.mode || "YTD"),
+    fromISO: parseReportDateToISO(hf?.from || "") || "",
+    toISO: parseReportDateToISO(hf?.to || "") || "",
+    dealer: "all",
+    area: "all"
+  });
+}
+
+function buildUnifiedFilterFromReportsFilter(rf){
+  return makeUnifiedFilter({
+    range: legacyModeToUnifiedRange(rf?.mode || "YTD"),
+    fromISO: parseReportDateToISO(rf?.from || "") || "",
+    toISO: parseReportDateToISO(rf?.to || "") || "",
+    dealer: rf?.dealer ? String(rf.dealer) : "all",
+    area: rf?.area ? String(rf.area) : "all"
+  });
 }
 
 function applyUnifiedTripFilter(rawTrips, filter){
@@ -1369,62 +1424,36 @@ const {
 bindLifecycleSaveFlush();
 
 function ensureTripsFilter(){
-  // v65: Trips filter is dropdown-based and page-scoped.
-  // Shape:
-  //   { range:"ytd|all|12m|90d|30d|custom", fromISO:"YYYY-MM-DD", toISO:"YYYY-MM-DD", dealer:"all|<name>", area:"all|<name>" }
-  if(!state.tripsFilter || typeof state.tripsFilter !== "object"){
-    state.tripsFilter = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all" };
-    return;
-  }
+  // Trips now uses the unified filter object as its source of truth.
+  ensureUnifiedFilters();
+  state.tripsFilter = state.filters.active;
 
-  // Migrate legacy shape { mode:"ALL|YTD|MONTH|7D|RANGE", from:"MM/DD/YYYY", to:"MM/DD/YYYY" }
-  if("mode" in state.tripsFilter){
-    const mode = String(state.tripsFilter.mode || "ALL").toUpperCase();
-    const range =
-      (mode === "YTD") ? "ytd" :
-      (mode === "RANGE") ? "custom" :
-      (mode === "7D") ? "30d" :
-      (mode === "MONTH") ? "30d" :
-      "all";
-    const fromISO = parseUsDateToISODate(state.tripsFilter.from || "") || "";
-    const toISO = parseUsDateToISODate(state.tripsFilter.to || "") || "";
-    state.tripsFilter = { range, fromISO, toISO, dealer:"all", area:"all" };
-  }
-
-  if(!state.tripsFilter.range) state.tripsFilter.range = "ytd";
-  if(state.tripsFilter.fromISO == null) state.tripsFilter.fromISO = "";
-  if(state.tripsFilter.toISO == null) state.tripsFilter.toISO = "";
-  if(!("dealer" in state.tripsFilter)) state.tripsFilter.dealer = "all";
-  if(!("area" in state.tripsFilter)) state.tripsFilter.area = "all";
-
-  // Guardrails: if custom is selected, ensure usable defaults.
-  if(state.tripsFilter.range === "custom"){
-    const now = isoToday();
-    const y = now.slice(0,4);
-    if(!state.tripsFilter.fromISO) state.tripsFilter.fromISO = `${y}-01-01`;
-    if(!state.tripsFilter.toISO) state.tripsFilter.toISO = now;
-    if(state.tripsFilter.fromISO > state.tripsFilter.toISO){
-      const tmp = state.tripsFilter.fromISO; state.tripsFilter.fromISO = state.tripsFilter.toISO; state.tripsFilter.toISO = tmp;
-    }
-  }
-}
-
-function getTripsRangeWindow(tf){
-  return resolveTripsDateRange(tf, isoToday);
+  // Guardrails for Trips-visible selectors.
+  if(state.tripsFilter.dealer == null) state.tripsFilter.dealer = "all";
+  if(state.tripsFilter.area == null) state.tripsFilter.area = "all";
 }
 
 function getTripsFilteredRows(){
   ensureTripsFilter();
   const tf = state.tripsFilter;
-  const tripsAll = Array.isArray(state.trips) ? state.trips.map(normalizeTripRow).filter(Boolean) : [];
+  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
+  const filtered = applyUnifiedTripFilter(tripsAll, tf);
 
-  const r = getTripsRangeWindow(tf);
-  let rows = applyTripCriteria(tripsAll, {
-    startISO: (r.label === "ALL") ? "" : r.startISO,
-    endISO: (r.label === "ALL") ? "" : r.endISO,
-    dealer: tf.dealer,
-    area: tf.area
-  });
+  const rangeMap = {
+    "All time": "ALL",
+    "YTD": "YTD",
+    "Last 12 months": "Last 12m",
+    "Last 90 days": "Last 90d",
+    "Last 30 days": "Last 30d",
+    "7 Days": "Last 7d"
+  };
+  const r = {
+    startISO: filtered.range.fromISO,
+    endISO: filtered.range.toISO,
+    label: (tf.range === "custom") ? "CUSTOM" : (rangeMap[resolveUnifiedRange(tf).label] || "YTD")
+  };
+
+  let rows = filtered.rows;
 
   // Stable sort: newest first (shared with Home and other trip views)
   rows = getTripsNewestFirst(rows);
@@ -1622,7 +1651,9 @@ function renderAllTrips(){
   bindDatePill("flt_to");
 
   document.getElementById("flt_reset")?.addEventListener("click", ()=>{
-    state.tripsFilter = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all" };
+    state.filters = state.filters || {};
+    state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", species:"all", text:"" };
+    state.tripsFilter = state.filters.active;
     saveState();
     renderAllTrips();
   });
@@ -1685,12 +1716,8 @@ function renderHome(
   const tripsAll = Array.isArray(state.trips) ? state.trips : [];
   ensureHomeFilter();
   const hf = state.homeFilter || { mode:"YTD", from:"", to:"" };
-  const hMode = String(hf.mode || "YTD").toUpperCase();
-  const hr = modeRange(hMode, hf.from, hf.to);
-  const trips = applyTripCriteria(tripsAll, {
-    startISO: (hr.label === "ALL") ? "" : hr.startISO,
-    endISO: (hr.label === "ALL") ? "" : hr.endISO
-  });
+  const unified = buildUnifiedFilterFromHomeFilter(hf);
+  const trips = applyUnifiedTripFilter(tripsAll, unified).rows;
   const totalAmount = trips.reduce((s,t)=> s + (Number(t?.amount)||0), 0);
   const totalLbs = trips.reduce((s,t)=> s + (Number(t?.pounds)||0), 0);
   const avgPpl = totalLbs > 0 ? computePPL(totalLbs, totalAmount) : null;
@@ -3196,14 +3223,9 @@ function renderReports(){
   const fMode = String(rf.mode || "YTD").toUpperCase();
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
 
-  const r = modeRange(fMode, rf.from, rf.to);
-  const hasValidRange = (r.label !== "RANGE") || (r.startISO && r.endISO);
-  let trips = applyTripCriteria(tripsAll, {
-    startISO: (r.label === "ALL" || !hasValidRange) ? "" : r.startISO,
-    endISO: (r.label === "ALL" || !hasValidRange) ? "" : r.endISO,
-    dealer: String(rf.dealer || ""),
-    area: String(rf.area || "")
-  });
+  const hasValidRange = (fMode !== "RANGE") || (parseReportDateToISO(rf.from) && parseReportDateToISO(rf.to));
+  const unified = buildUnifiedFilterFromReportsFilter(rf);
+  let trips = applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" }).rows;
 
   const chip = (key,label) => `<button class="chip ${fMode===key?'on':''}" data-rf="${key}">${label}</button>`;
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
@@ -3254,8 +3276,9 @@ function renderReports(){
     </div>
   ` : "";
 
+  const resolvedReportsRange = resolveUnifiedRange(unified);
   const rangeLabel = (fMode === "RANGE")
-    ? (hasValidRange ? `${formatDateDMY(r.startISO)} → ${formatDateDMY(r.endISO)}` : "Set dates")
+    ? (hasValidRange ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}` : "Set dates")
     : (fMode === "THIS_MONTH" ? "This Month"
       : (fMode === "LAST_MONTH" ? "Last Month"
         : (fMode === "ALL" ? "All Time"
