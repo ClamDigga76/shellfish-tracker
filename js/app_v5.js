@@ -25,6 +25,11 @@ import { renderTripEntryForm } from "./trip_form_render_v5.js";
 import { createHomeDashboardRenderer } from "./home_dashboard_v5.js";
 import { createSettingsScreenOrchestrator } from "./settings_screen_v5.js";
 import { createReportsScreenRenderer } from "./reports_screen_v5.js";
+import {
+  renderPageHeader as renderPageHeaderShell,
+  bindHeaderHelpButtons as bindHeaderHelpButtonsShell,
+  renderTabBar as renderTabBarShell
+} from "./app_shell_v5.js";
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;
@@ -580,40 +585,7 @@ async function copyTextWithFeedback(txt, successMsg = "Copied"){
 }
 
 
-// ---- Bottom Tab Bar (Home / Trips / Reports / Settings) ----
-const TABS = [
-  { key: "home", label: "Home", icon: "home" },
-  { key: "all_trips", label: "Trips", icon: "trips" },
-  { key: "new", label: "New", icon: "plus", aria: "New Trip", isPlus: true },
-  { key: "reports", label: "Reports", icon: "reports" },
-  { key: "settings", label: "Settings", icon: "settings" },
-];
-
 function iconSvg(name){
-  // Inline SVGs (stroke-based, readable at small sizes)
-  if(name === "home"){
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M3 10.5 12 3l9 7.5"/><path d="M5 10.5V21h14V10.5"/>
-      <path d="M9 21v-7h6v7"/>
-    </svg>`;
-  }
-  if(name === "trips"){
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M9 4h6"/><path d="M9 2h6v2H9z"/>
-      <path d="M7 4h10"/><path d="M6 6h12v16H6z"/>
-      <path d="M9 10h6"/><path d="M9 14h6"/><path d="M9 18h4"/>
-    </svg>`;
-  }
-  if(name === "reports"){
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M3 20h18"/>
-    </svg>`;
-  }
-  if(name === "plus"){
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 5v14"/><path d="M5 12h14"/>
-    </svg>`;
-  }
   if(name === "calendar"){
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M8 2v3"/><path d="M16 2v3"/>
@@ -622,20 +594,7 @@ function iconSvg(name){
       <path d="M7 11h4"/>
     </svg>`;
   }
-  if(name === "settings"){
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
-      <path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.2-2-3.5-2.3.6a7.2 7.2 0 0 0-1.7-1L15 4h-6l-.5 2.9a7.2 7.2 0 0 0-1.7 1L4.5 7.3 2.5 10.8 4.5 12a7.9 7.9 0 0 0 0 2l-2 1.2 2 3.5 2.3-.6a7.2 7.2 0 0 0 1.7 1L9 20h6l.5-2.9a7.2 7.2 0 0 0 1.7-1l2.3.6 2-3.5-2.1-1.2z"/>
-    </svg>`;
-  }
   return "";
-}
-
-function getActiveTabKey(view){
-  // Map sub-views back to a primary tab
-  if(view === "new" || view === "edit") return "new";
-  if(view === "help" || view === "about") return "settings";
-  return view || "home";
 }
 
 function hasUnsavedDraft(){
@@ -644,75 +603,31 @@ function hasUnsavedDraft(){
 }
 
 
-// ---- Page Header (Option N1: brand title + compact subtitle) ----
-const VIEW_META = {
-  home:      { title: "Home", icon: "home" },
-  all_trips: { title: "Trips", icon: "trips" },
-  reports:   { title: "Reports", icon: "reports" },
-  settings:  { title: "Settings", icon: "settings" },
-  new:       { title: "New Trip", icon: "plus" },
-  edit:      { title: "Editing Trip", icon: "trips" },
-  help:      { title: "Help", icon: "settings" },
-  about:     { title: "About", icon: "settings" },
-};
-
 function renderPageHeader(viewKey){
-  const m = VIEW_META[viewKey] || { title: String(viewKey||""), icon: "home" };
-  // Show header Help button on main sections only
-  const helpKey = (viewKey === "all_trips") ? "trips" : viewKey;
-  const showHelp = (helpKey === "home" || helpKey === "trips" || helpKey === "reports" || helpKey === "settings");
-  const titleMaxWidth = showHelp ? "calc(100% - 44px)" : "100%";
-  return `
-    <div class="pageHeader">
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;max-width:${titleMaxWidth};width:100%">
-        <div style="display:flex;align-items:center;justify-content:center;min-width:0;max-width:100%">
-          <h2 class="phTitle" style="line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bank the Catch</h2>
-        </div>
-        <div style="margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.45px;opacity:.95;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14)">${escapeHtml(m.title)}</div>
-      </div>
-      ${showHelp ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">?</button>` : ``}
-    </div>
-  `;
+  return renderPageHeaderShell(viewKey, { escapeHtml });
 }
 
 function bindHeaderHelpButtons(){
-  try{
-    document.querySelectorAll('.phHelpBtn[data-help]').forEach(btn=>{
-      btn.onclick = ()=>{
-        const k = String(btn.getAttribute('data-help')||'').toLowerCase();
-        state.helpJump = k || "";
-        state.view = "help";
-        saveState();
-        render();
-      };
-    });
-  }catch(_e){}
+  return bindHeaderHelpButtonsShell({
+    onHelpClick: (helpKey)=>{
+      state.helpJump = helpKey;
+      state.view = "help";
+      saveState();
+      render();
+    }
+  });
 }
 
 function renderTabBar(activeView){
-  const host = document.getElementById("tabbar");
-  if(!host) return;
-
-  const activeKey = getActiveTabKey(activeView);
-  host.innerHTML = TABS.map(t => `
-    <button class="tabbtn ${t.isPlus ? "plus" : ""} ${t.key===activeKey ? "active" : ""}" type="button" data-tab="${escapeHtml(t.key)}" aria-label="${escapeHtml(t.aria || t.label)}">
-      ${iconSvg(t.icon)}
-      <span>${escapeHtml(t.label)}</span>
-    </button>
-  `).join("");
-
-  // Bind handlers
-  host.querySelectorAll("[data-tab]").forEach(btn => {
-    btn.onclick = () => {
-      const next = btn.getAttribute("data-tab") || "home";
-      // Guard: if leaving a draft workflow, confirm once.
-      if((state.view === "new" || state.view === "edit") && hasUnsavedDraft()){
-        if(!confirm("Leave this screen? Your unsaved trip entry may be lost.")) return;
-      }
+  return renderTabBarShell({
+    activeView,
+    escapeHtml,
+    hasUnsavedDraft,
+    onNavigate: (next)=>{
       state.view = next;
       saveState();
       render();
-    };
+    }
   });
 }
 
