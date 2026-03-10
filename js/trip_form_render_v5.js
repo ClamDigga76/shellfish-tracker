@@ -27,7 +27,9 @@ export function renderTripEntryForm({
   tertiaryActionLabel = "",
   tertiaryActionId = "",
   extraCardClass = "",
-  dateIconHtml = "📅"
+  dateIconHtml = "📅",
+  showSpeciesField = true,
+  showNotesField = true
 }) {
   const isEdit = mode === "edit";
   const modeBanner = isEdit ? `
@@ -83,6 +85,7 @@ export function renderTripEntryForm({
           </div>
         </section>
 
+        ${showSpeciesField ? `
         <section class="trip-section">
           <div class="field">
             <label class="fieldLabel overline center" for="${escapeHtml(speciesId)}">SPECIES</label>
@@ -92,6 +95,7 @@ export function renderTripEntryForm({
             </div>
           </div>
         </section>
+        ` : ""}
 
         <section class="trip-section">
           <div class="field">
@@ -115,12 +119,14 @@ export function renderTripEntryForm({
           </div>
         </section>
 
+        ${showNotesField ? `
         <section class="trip-section">
           <div class="field">
             <label class="fieldLabel overline center" for="${escapeHtml(notesId)}">NOTES</label>
             <textarea class="input textarea" id="${escapeHtml(notesId)}" rows="3" maxlength="280" placeholder="Optional notes">${escapeHtml(String(notesValue ?? ""))}</textarea>
           </div>
         </section>
+        ` : ""}
 
         <section class="trip-section trip-actions">
           <div class="tripActionBar">
