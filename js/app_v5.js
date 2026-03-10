@@ -3745,7 +3745,7 @@ function renderSettings(opts={}){
     <div class="card">
       <b>Backup & Restore</b>
       <div class="sep"></div>
-      <div class="muted small mt10">Create a backup file you can store in Files/Drive. Restore brings it back later.</div>
+      <div class="muted small mt10">Create a backup file you can store in Files/Drive. Restore shows a preview first so you can confirm details before any changes.</div>
       <div class="muted small" id="lastBackupLine" style="margin-top:10px"></div>
       <div class="hint mt10"><b>Backup recommended</b> before major updates.</div>
       <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:nowrap">
@@ -3753,7 +3753,7 @@ function renderSettings(opts={}){
         <button class="btn" id="restoreBackup" style="flex:1">📥 Restore Backup</button>
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" style="display:none" />
       </div>
-      <div class="muted small mt10">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups.</div>
+      <div class="muted small mt10">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups. Keep at least one older backup too.</div>
     </div>
 
     <div class="card">
