@@ -130,7 +130,8 @@ export function renderAboutViewHTML({ renderPageHeader, displayBuildVersion }) {
       <b>App details</b>
       <div class="sep"></div>
       <div class="muted small">Version: <b>${displayBuildVersion}</b></div>
-      <div class="muted small" style="margin-top:8px">All data stays on this device unless you export/backup.</div>
+      <div class="muted small" style="margin-top:8px">All data stays on this device unless you choose to export/backup files.</div>
+      <div class="muted small" style="margin-top:6px">Legal: <a class="settingsEmail" href="legal/terms.html">Terms</a> • <a class="settingsEmail" href="legal/privacy.html">Privacy</a> • <a class="settingsEmail" href="legal/license.html">License</a></div>
       <div class="row mt12">
         <button class="btn" id="copyDebug">Copy Debug Info</button>
         <button class="btn" id="feedback">Send Feedback</button>

@@ -118,17 +118,19 @@ export function createSettingsScreenOrchestrator({
     <div class="card">
       <b>About</b>
       <div class="sep"></div>
-      <div class="muted small mt10">Created by <b>Jeremy Wood</b> — <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+      <div class="muted small mt10">Created by <b>Jeremy Wood</b></div>
+      <div class="muted small" style="margin-top:6px">Support/contact: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
       <div class="muted small" style="margin-top:8px">Version: <b>${displayBuildVersion}</b></div>
       <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
 
       <div class="muted small" style="margin-top:8px">© 2026 Jeremy Wood. All rights reserved.</div>
       <div class="sep" style="margin-top:10px"></div>
-      <div class="muted small mt10"><b>Legal</b></div>
+      <div class="muted small mt10"><b>Legal & Trust</b></div>
+      <div class="muted small" style="margin-top:6px">Review terms, privacy details, and license information.</div>
       <div class="row mt10 gap10 wrap">
-        <button class="btn" id="openTerms">Terms</button>
-        <button class="btn" id="openPrivacy">Privacy</button>
-        <button class="btn" id="openLicense">License</button>
+        <button class="btn" id="openTerms">Terms of Use</button>
+        <button class="btn" id="openPrivacy">Privacy Policy</button>
+        <button class="btn" id="openLicense">Open Source License</button>
       </div>
     </div>
 
