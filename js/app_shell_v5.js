@@ -6,16 +6,6 @@ const TABS = [
   { key: "settings", label: "Settings", icon: "settings" },
 ];
 
-const VIEW_META = {
-  home:      { title: "Home", icon: "home" },
-  all_trips: { title: "Trips", icon: "trips" },
-  reports:   { title: "Reports", icon: "reports" },
-  settings:  { title: "Settings", icon: "settings" },
-  new:       { title: "New Trip", icon: "plus" },
-  edit:      { title: "Editing Trip", icon: "trips" },
-  help:      { title: "Help", icon: "settings" },
-  about:     { title: "About", icon: "settings" },
-};
 
 export function getActiveTabKey(view){
   if(view === "new" || view === "edit") return "new";
@@ -24,17 +14,13 @@ export function getActiveTabKey(view){
 }
 
 export function renderPageHeader(viewKey, { escapeHtml }){
-  const m = VIEW_META[viewKey] || { title: String(viewKey||""), icon: "home" };
   const helpKey = (viewKey === "all_trips") ? "trips" : viewKey;
   const showHelp = (helpKey === "home" || helpKey === "trips" || helpKey === "reports" || helpKey === "settings");
-  const titleMaxWidth = showHelp ? "calc(100% - 44px)" : "100%";
+  const titleMaxWidth = showHelp ? "calc(100% - 48px)" : "100%";
   return `
     <div class="pageHeader">
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;max-width:${titleMaxWidth};width:100%">
-        <div style="display:flex;align-items:center;justify-content:center;min-width:0;max-width:100%">
-          <h2 class="phTitle" style="line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bank the Catch</h2>
-        </div>
-        <div style="margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.45px;opacity:.95;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14)">${escapeHtml(m.title)}</div>
+      <div style="display:flex;align-items:center;justify-content:center;min-width:0;max-width:${titleMaxWidth};width:100%">
+        <h2 class="phTitle" style="line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bank the Catch</h2>
       </div>
       ${showHelp ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">?</button>` : ``}
     </div>
