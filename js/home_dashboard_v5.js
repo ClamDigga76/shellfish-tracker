@@ -181,7 +181,7 @@ export function createHomeDashboardRenderer({
 
       <div id="reviewWarnings"></div>
 
-      <div class="card">
+      <div class="homeTripsSection">
         <b>Trips</b>
         <div class="sep"></div>
         <div class="triplist">${rows}</div>
