@@ -175,8 +175,10 @@ main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;pa
 
 /* New Trip: reduce bottom padding; action bar handles tabbar clearance via sticky offset */
 body[data-view="new"] main#app{padding-bottom:0}
-body[data-view="new"] .tripActionBar{bottom:calc(var(--tabbar-total-h) + 8px)}
-body[data-view="new"] .tripActionBar{padding:8px}
+body[data-view="new"] .tripActionBar,
+body[data-view="edit"] .tripActionBar{bottom:calc(var(--tabbar-total-h) + 8px)}
+body[data-view="new"] .tripActionBar,
+body[data-view="edit"] .tripActionBar{padding:8px}
 
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
@@ -338,12 +340,12 @@ body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transpar
 #newTripForm{display:flex;flex-direction:column;gap:2px}
 #newTripForm .field{margin-bottom:10px}
 
-.tripFormFoundation{padding:8px 10px 10px}
-.tripFormFoundation .trip-section{padding:10px 0}
+.tripFormFoundation{padding:10px 10px 12px}
+.tripFormFoundation .trip-section{padding:12px 0}
 .tripFormFoundation .trip-section + .trip-section{border-top:1px solid var(--line)}
-.tripFormFoundation .trip-section.trip-actions{padding-top:12px}
+.tripFormFoundation .trip-section.trip-actions{padding-top:14px}
 .overline,.fieldLabel{letter-spacing:.12em}
-.chipRow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px}
+.chipRow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
 
 .selectRowWrap{position:relative}
 .selectRowWrap select{width:100%;appearance:none;-webkit-appearance:none;padding-right:44px}
@@ -351,11 +353,11 @@ body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transpar
 
 
 
-.dateRow{display:flex;align-items:center;gap:8px;overflow:visible}
+.dateRow{display:flex;align-items:center;gap:10px;overflow:visible}
 .dateRow .dateIcon{display:inline-flex;align-items:center;justify-content:center;opacity:.85}
 .dateRow .dateIcon svg{width:18px;height:18px}
 .dateRow .datePill{flex:1;min-width:0}
-.dateRow .todayBtn{padding:10px 12px;border-radius:14px;background:var(--glass);border:1px solid var(--border);color:var(--text);font-weight:700}
+.dateRow .todayBtn{padding:10px 12px;border-radius:14px;background:var(--glass);border:1px solid var(--border);color:var(--text);font-weight:700;min-width:72px}
 
 .datePillWrap{position:relative;display:flex;align-items:stretch;flex:1;min-width:0;min-height:48px;overflow:visible;box-sizing:border-box}
 .datePillWrap > input[type="date"]{position:relative;z-index:2;background:transparent;width:100%;min-width:0 !important;min-height:48px;line-height:1.2;padding:12px 14px;box-sizing:border-box}
@@ -375,7 +377,7 @@ body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transpar
 .grid2 .field{min-width:0;overflow:visible}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tripMetricsRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tripMetricsRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:10px 10px 8px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02)}
 .tripMetricsRow .field{min-width:0}
 .tripMetricsRow .fieldLabel{font-size:13px;letter-spacing:.08em}
 .tripMetricsRow .input{padding-left:10px;padding-right:10px}
@@ -910,7 +912,7 @@ body.scrollLock{
   position: sticky;
   bottom: calc(var(--safeBottom) + 2px);
   margin:0 -12px -2px;
-  padding: 10px 12px calc(10px + var(--safeBottom));
+  padding: 10px 12px calc(12px + var(--safeBottom));
   background: linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--line);
@@ -973,7 +975,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=242"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=243"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
