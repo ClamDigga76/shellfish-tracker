@@ -659,6 +659,15 @@ header{padding:14px 18px 12px}
 .catchCard .catchMetric b{font-variant-numeric:tabular-nums}
 .catchCard .catchMetric .metricValue{font-size:1.25em;line-height:1}
 
+.homeTripsSection{margin-bottom:12px}
+.homeTripsSection .triplist .trip{
+  background:var(--surface-control);
+  border-radius:14px;
+  border:1px solid var(--border);
+  padding:12px;
+}
+.homeTripsSection .triplist .trip + .trip{margin-top:10px}
+
 /* KPI bar -> compact grid */
 .pillbar{
   display:grid;
@@ -1011,7 +1020,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=265"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=266"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
