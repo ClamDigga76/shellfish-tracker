@@ -131,7 +131,14 @@ export function createHomeDashboardRenderer({
     const tripsSorted = getTripsNewestFirst(trips);
     const rows = tripsSorted.length
       ? tripsSorted.slice(0, homeTripsLimit).map((t) => renderTripCatchCard(t, { interactive: true })).join("")
-      : `<div class="muted small">No trips in this range yet. Tap <b>＋ New Trip</b> to log your first one.</div>`;
+      : `
+        <div class="emptyState">
+          <div class="emptyStateTitle">No trips in this range yet</div>
+          <div class="emptyStateBody">Try a different date filter, or add your first trip to start tracking pounds, payouts, and trends.</div>
+          <div class="emptyStateAction">
+            <button class="btn good" id="homeEmptyNewTrip" type="button">＋ New Trip</button>
+          </div>
+        </div>`;
 
     getApp().innerHTML = `
       ${renderPageHeader("home")}
@@ -193,6 +200,13 @@ export function createHomeDashboardRenderer({
 
     const vbtn = document.getElementById("viewAllTrips");
     if (vbtn) { vbtn.onclick = () => { pushView(state, "all_trips"); }; }
+
+    const homeEmptyNewTrip = document.getElementById("homeEmptyNewTrip");
+    if (homeEmptyNewTrip) {
+      homeEmptyNewTrip.onclick = () => {
+        pushView(state, "new");
+      };
+    }
 
     getApp().querySelectorAll(".trip[data-id]").forEach((card) => {
       const open = () => {
