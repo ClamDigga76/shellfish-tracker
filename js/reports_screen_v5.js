@@ -473,7 +473,7 @@ function renderReports(){
         </div>
 
         ${advPanel}
-      <div class="hint"></div>
+      <div class="hint">Quick tip: presets switch date windows fast. Use Advanced for exact dates, dealer, or area, then tap Apply.</div>
     </div>
 
     ${renderHighlights()}
