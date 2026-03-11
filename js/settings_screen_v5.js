@@ -51,6 +51,8 @@ export function createSettingsScreenOrchestrator({
           <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
 
+        <div class="hint mt10">If an update is available, tap <b>Refresh app</b> and reopen to load the latest version.</div>
+
         <details class="settingsDetails">
           <summary class="muted settingsBodyTiny">Details</summary>
           <div class="muted settingsBodyTiny settingsBuildInfo" id="buildInfoDetails"></div>
@@ -96,6 +98,7 @@ export function createSettingsScreenOrchestrator({
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
       </div>
       <div class="muted small mt10">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups. Keep at least one older backup too.</div>
+      <div class="hint mt10">Restore preview lets you check trip count and choose <b>Merge</b> or <b>Replace</b> before anything changes.</div>
     </div>
 
     <div class="card">

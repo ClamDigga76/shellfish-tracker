@@ -100,6 +100,7 @@ export function renderTripEntryForm({
           <div class="field">
             <label class="fieldLabel overline center" for="${escapeHtml(areaId)}">AREA</label>
             ${topAreaChipsHtml}
+            <div class="hint">Tip: tap a chip to fill fast. Press and hold a chip to set that slot.</div>
             <div class="selectRowWrap">
               <select class="input" id="${escapeHtml(areaId)}" enterkeyhint="done">${areaOptions}</select>
               <span class="chev">›</span>
