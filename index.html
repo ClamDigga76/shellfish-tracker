@@ -426,30 +426,35 @@ body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transpar
   background:linear-gradient(180deg, rgba(255,77,79,.10) 0%, rgba(255,77,79,.04) 34%, rgba(255,255,255,.03) 100%);
 }
 .trip-edit-indicator{
-  padding-top: 2px;
-  padding-bottom: 8px;
+  padding-top:4px;
+  padding-bottom:6px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
 }
 .edit-trip-title{
-  margin:0 0 10px;
-  color:var(--bad);
-  font-size:clamp(1.55rem, 5.8vw, 2rem);
-  font-weight:900;
-  letter-spacing:.12em;
-  line-height:1.1;
+  margin:0;
+  color:var(--text);
+  font-size:clamp(1.2rem, 4.9vw, 1.55rem);
+  font-weight:800;
+  letter-spacing:.02em;
+  line-height:1.2;
   text-align:center;
 }
 .editModePill{
   display:inline-flex;
   align-items:center;
+  justify-content:center;
   gap:6px;
-  padding:5px 10px;
+  padding:6px 10px;
   border-radius:999px;
-  border:1px solid rgba(47,109,246,.45);
-  background:rgba(47,109,246,.12);
+  border:1px solid rgba(47,109,246,.38);
+  background:rgba(47,109,246,.10);
   color:var(--text);
   font-size:12px;
-  font-weight:800;
-  letter-spacing:.04em;
+  font-weight:700;
+  letter-spacing:.02em;
 }
 .editModePillIcon{
   font-size:12px;
@@ -1085,7 +1090,7 @@ body[data-view="edit"] main#app{padding-bottom:calc(var(--tabbar-total-h) + var(
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=274"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=275"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
