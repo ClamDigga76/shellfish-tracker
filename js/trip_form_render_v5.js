@@ -34,10 +34,10 @@ export function renderTripEntryForm({
   const isEdit = mode === "edit";
   const modeBanner = isEdit ? `
     <section class="trip-section trip-edit-indicator" aria-label="Edit mode indicator">
-      <h1 class="edit-trip-title">EDIT TRIP</h1>
+      <h1 class="edit-trip-title">Edit trip</h1>
       <div class="editModePill" role="status" aria-live="polite">
         <span class="editModePillIcon" aria-hidden="true">✎</span>
-        <span>Editing Trip</span>
+        <span>Changes apply to this saved trip</span>
       </div>
     </section>
   ` : "";
