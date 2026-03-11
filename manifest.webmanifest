@@ -1,10 +1,25 @@
 {
   "name": "Bank the Catch",
   "short_name": "BankCatch",
+  "description": "Offline-first shellfish trip log.",
+  "lang": "en-US",
+  "dir": "ltr",
   "start_url": "./",
+  "scope": "./",
+  "id": "./",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
   "background_color": "#0b0f16",
   "theme_color": "#2f6df6",
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -30,8 +45,5 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ],
-  "scope": "./",
-  "id": "./",
-  "description": "Offline-first shellfish trip log."
+  ]
 }
