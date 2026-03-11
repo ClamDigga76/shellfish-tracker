@@ -202,12 +202,9 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 .phone{display:flex;flex-direction:column}
 main#app{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-total-h) + 10px)}
 
-/* New Trip: reduce bottom padding; action bar handles tabbar clearance via sticky offset */
-body[data-view="new"] main#app{padding-bottom:0}
-body[data-view="new"] .tripActionBar,
-body[data-view="edit"] .tripActionBar{bottom:calc(var(--tabbar-total-h) + 8px)}
-body[data-view="new"] .tripActionBar,
-body[data-view="edit"] .tripActionBar{padding:8px}
+/* New Trip/Edit Trip: sticky action bar anchors directly above tabbar */
+body[data-view="new"] main#app,
+body[data-view="edit"] main#app{padding-bottom:0}
 
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
@@ -1016,12 +1013,14 @@ body.scrollLock{
 /* v71: New Trip bottom sticky actions */
 .tripActionBar{
   position: sticky;
-  bottom: calc(var(--safeBottom) + 2px);
-  margin:0 -12px -2px;
-  padding: 10px 12px calc(12px + var(--safeBottom));
-  background: linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);
+  bottom: calc(var(--tabbar-total-h) - 1px);
+  margin:0 -12px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(15,23,42,.98) 0%, var(--bg) 100%);
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 -8px 20px rgba(0,0,0,.28);
   z-index: 40;
 }
 .tripActionRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -1081,7 +1080,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=272"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=273"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
