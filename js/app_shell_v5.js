@@ -93,12 +93,16 @@ export function renderTabBar({
   if(!host) return;
 
   const activeKey = getActiveTabKey(activeView);
-  host.innerHTML = TABS.map(t => `
-    <button class="tabbtn ${t.isPlus ? "plus" : ""} ${t.key===activeKey ? "active" : ""}" type="button" data-tab="${escapeHtml(t.key)}" aria-label="${escapeHtml(t.aria || t.label)}">
+  host.innerHTML = TABS.map(t => {
+    const isActive = t.key === activeKey;
+    const ariaCurrent = isActive ? ' aria-current="page"' : "";
+    return `
+    <button class="tabbtn ${t.isPlus ? "plus" : ""} ${isActive ? "active" : ""}" type="button" data-tab="${escapeHtml(t.key)}" aria-label="${escapeHtml(t.aria || t.label)}"${ariaCurrent}>
       ${iconSvg(t.icon)}
       <span>${escapeHtml(t.label)}</span>
     </button>
-  `).join("");
+  `;
+  }).join("");
 
   host.querySelectorAll("[data-tab]").forEach(btn => {
     btn.onclick = () => {
