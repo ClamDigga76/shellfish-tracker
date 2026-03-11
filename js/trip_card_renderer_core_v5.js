@@ -37,16 +37,16 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, for
 
     return `
       <${tag} class="trip triprow catchCard${compactClass} ${escapeHtml(extraClass)}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start">
+        <div class="tripCardGrid">
           <div>
-            <div class="catchHead" style="font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(model.dateText)}</div>
-            <div class="catchMain" style="font-size:18px">${escapeHtml(model.area)}</div>
-            <div class="catchHead" style="margin-top:2px;font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(model.dealer)}</div>
+            <div class="catchHead tripCardHeadline">${escapeHtml(model.dateText)}</div>
+            <div class="catchMain tripCardMain">${escapeHtml(model.area)}</div>
+            <div class="catchHead tripCardHeadline tripCardHeadlineDealer">${escapeHtml(model.dealer)}</div>
           </div>
-          <div class="catchFoot" style="margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap">
-            <span class="catchMetric lbsBlue" style="font-size:14px;padding:6px 10px"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
-            <span class="catchMetric" style="font-size:14px;padding:6px 10px"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
-            <span class="catchMetric money" style="font-size:14px;padding:6px 10px"><b class="metricValue money">${model.amountText}</b></span>
+          <div class="catchFoot tripCardMetricsCol">
+            <span class="catchMetric tripCardMetricChip lbsBlue"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
+            <span class="catchMetric tripCardMetricChip"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
+            <span class="catchMetric tripCardMetricChip money"><b class="metricValue money">${model.amountText}</b></span>
           </div>
         </div>
       </${tag}>
