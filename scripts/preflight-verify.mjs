@@ -6,7 +6,7 @@ import process from "node:process";
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
 const expectedArg = args.find((arg) => arg.startsWith("--expect-version="));
-const expectedVersion = expectedArg ? expectedArg.split("=")[1] : null;
+const expectedVersionOverride = expectedArg ? expectedArg.split("=")[1] : null;
 
 const checks = [];
 
@@ -48,10 +48,14 @@ if (indexHtml) {
     const indexVersion = bootstrapMatch[1];
     pass("index bootstrap query version", `v=${indexVersion}`);
 
-    if (expectedVersion && expectedVersion !== indexVersion) {
+    const expectedVersion = expectedVersionOverride || indexVersion;
+
+    if (expectedVersion !== indexVersion) {
       fail("expected version", `expected ${expectedVersion}, found ${indexVersion}`);
-    } else if (expectedVersion) {
-      pass("expected version", `matches ${expectedVersion}`);
+    } else if (expectedVersionOverride) {
+      pass("expected version", `matches ${expectedVersionOverride}`);
+    } else {
+      pass("expected version", `auto-resolved to ${expectedVersion}`);
     }
   }
 }
