@@ -210,8 +210,10 @@ body[data-view="edit"] .tripActionBar{padding:8px}
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 
 /* Toast */
-#toast{position:fixed;left:50%;bottom:calc(var(--tabbar-total-h) + 12px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease}
+#toast{position:fixed;left:50%;bottom:calc(var(--tabbar-total-h) + 12px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,520px);background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.14);color:var(--text);padding:10px 12px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-weight:800;font-size:13px;z-index:9999;transition:opacity .18s ease, transform .18s ease;display:flex;align-items:center;gap:10px}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast .toastText{flex:1;min-width:0}
+#toast .toastAction{appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(47,109,246,.24);color:var(--text);border-radius:999px;padding:6px 10px;font-weight:800;font-size:12px;line-height:1;cursor:pointer;pointer-events:auto;min-height:30px}
 
 #tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;height:var(--tabbar-total-h);padding:0 8px var(--tabbar-safe);background:linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);backdrop-filter:blur(10px);display:flex;justify-content:space-around;align-items:flex-end}
 #tabbar::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--line);opacity:.75}
@@ -1026,7 +1028,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=268"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=269"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
