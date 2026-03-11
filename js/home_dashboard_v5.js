@@ -86,13 +86,13 @@ export function createHomeDashboardRenderer({
     const pwaNoteDismissed = !!s.pwaStorageNoteDismissed;
     const showPwaStorageNote = isStandalone && !pwaNoteDismissed;
     const pwaStorageNoteHTML = showPwaStorageNote ? `
-      <div class="card">
-        <b>Using the installed app?</b>
-        <div class="muted small" style="margin-top:6px;line-height:1.45">
+      <div class="noticeBand" role="status" aria-live="polite">
+        <div class="noticeTitle">Using the installed app?</div>
+        <div class="muted small noticeBody">
           On iPhone/iPad (and sometimes Android), the installed Home Screen app can store data separately from Safari.
           If you logged trips in Safari, create a backup there and restore it here.
         </div>
-        <div class="row mt10">
+        <div class="row mt10 noticeActions">
           <button class="btn" id="pwaNoteHelp">How to move trips</button>
           <button class="btn" id="pwaNoteDismiss">Got it</button>
         </div>
@@ -113,12 +113,12 @@ export function createHomeDashboardRenderer({
       );
 
     const backupReminderHTML = shouldRemind ? `
-      <div class="card">
-        <b>Backup reminder</b>
-        <div class="muted small" style="margin-top:6px">
+      <div class="noticeBand" role="status" aria-live="polite">
+        <div class="noticeTitle">Backup reminder</div>
+        <div class="muted small noticeBody">
           You have ${newCount > 0 ? newCount : tripsAll.length} trip${(newCount > 1 || (!lastAt && tripsAll.length !== 1)) ? "s" : ""} not included in your most recent backup.
         </div>
-        <div class="row mt10">
+        <div class="row mt10 noticeActions">
           <button class="btn" id="backupNow">💾 Create Backup</button>
           <button class="btn" id="backupLater">Not now</button>
         </div>
@@ -228,7 +228,7 @@ export function createHomeDashboardRenderer({
         ensureHomeFilter();
         state.homeFilter.mode = String(btn.getAttribute("data-hf") || "YTD").toUpperCase();
         saveState();
-        showToast("Home filter updated");
+        showToast("Filter updated");
         renderHome();
       });
     });
@@ -241,7 +241,7 @@ export function createHomeDashboardRenderer({
         state.homeFilter.from = from;
         state.homeFilter.to = to;
         saveState();
-        showToast("Date range applied");
+        showToast("Range applied");
         renderHome();
       };
     }
