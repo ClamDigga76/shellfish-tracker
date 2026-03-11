@@ -127,16 +127,17 @@ export function renderTripEntryForm({
         </section>
         ` : ""}
 
-        <section class="trip-section trip-actions">
-          <div class="tripActionBar">
-            <div class="tripActionRow${tertiaryActionLabel ? " tripActionRow--three" : ""}">
-              <button class="btn primary" id="${isEdit ? "saveEdit" : "saveTrip"}" type="submit" ${isEdit ? "" : "disabled"}>${escapeHtml(primaryActionLabel)}</button>
-              <button class="btn${isEdit ? "" : " danger"}" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
-              ${tertiaryButton}
-            </div>
-          </div>
-        </section>
       </form>
+
+      <section class="trip-action-dock" aria-label="Trip form actions">
+        <div class="tripActionBar">
+          <div class="tripActionRow${tertiaryActionLabel ? " tripActionRow--three" : ""}">
+            <button class="btn primary" id="${isEdit ? "saveEdit" : "saveTrip"}" type="submit" form="${escapeHtml(formId)}" ${isEdit ? "" : "disabled"}>${escapeHtml(primaryActionLabel)}</button>
+            <button class="btn${isEdit ? "" : " danger"}" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
+            ${tertiaryButton}
+          </div>
+        </div>
+      </section>
     </div>
   `;
 }
