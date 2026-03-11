@@ -16,11 +16,23 @@ export function getActiveTabKey(view){
 export function renderPageHeader(viewKey, { escapeHtml }){
   const helpKey = (viewKey === "all_trips") ? "trips" : viewKey;
   const showHelp = (helpKey === "home" || helpKey === "trips" || helpKey === "reports" || helpKey === "settings");
+  const titleByView = {
+    home: "Home",
+    all_trips: "Trips",
+    new: "New Trip",
+    edit: "Edit Trip",
+    review: "Review Trip",
+    reports: "Reports",
+    settings: "Settings",
+    help: "Help",
+    about: "About"
+  };
+  const headerTitle = titleByView[viewKey] || "Bank the Catch";
   const titleMaxWidth = showHelp ? "calc(100% - 48px)" : "100%";
   return `
     <div class="pageHeader">
       <div style="display:flex;align-items:center;justify-content:center;min-width:0;max-width:${titleMaxWidth};width:100%">
-        <h2 class="phTitle" style="line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bank the Catch</h2>
+        <h2 class="phTitle" style="line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(headerTitle)}</h2>
       </div>
       ${showHelp ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">?</button>` : ``}
     </div>
