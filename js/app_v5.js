@@ -1413,7 +1413,9 @@ function renderAllTrips(){
 
     <div style="height:10px"></div>
 
-    ${rows}
+    <div class="triplist">
+      ${rows}
+    </div>
   `;
 
   bindNavHandlers(state);
