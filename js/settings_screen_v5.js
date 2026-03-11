@@ -38,31 +38,31 @@ export function createSettingsScreenOrchestrator({
     getApp().innerHTML = `
     ${renderPageHeader("settings")}
 
-    <div class="row" style="gap:10px;align-items:stretch;flex-wrap:nowrap">
-      <div class="card" style="flex:1;min-width:0;padding:10px">
-        <b style="font-size:.95rem">Updates</b>
-        <div class="sep" style="margin:8px 0"></div>
+    <div class="row settingsTopRow">
+      <div class="card settingsMiniCard">
+        <b class="settingsMiniTitle">Updates</b>
+        <div class="sep settingsMiniSep"></div>
 
-        <div id="updateBigStatus" style="font-size:15px;font-weight:800;line-height:1.2">Up to date</div>
-        <div class="muted" id="updateVersionLine" style="margin-top:4px;font-size:11px;line-height:1.25"></div>
+        <div id="updateBigStatus" class="settingsUpdateStatus">Up to date</div>
+        <div class="muted settingsBodyTiny" id="updateVersionLine"></div>
 
-        <div class="row" style="margin-top:8px;gap:8px;align-items:center;min-width:0">
-          <button class="btn" id="updatePrimary" style="font-size:12px;padding:7px 10px;min-width:0;white-space:nowrap">Refresh app</button>
-          <div class="muted" id="updateInlineMsg" style="display:none;font-size:11px"></div>
+        <div class="row settingsInlineRow">
+          <button class="btn settingsInlineBtn" id="updatePrimary">Refresh app</button>
+          <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
 
-        <details style="margin-top:8px">
-          <summary class="muted" style="font-size:11px">Details</summary>
-          <div class="muted" id="buildInfoDetails" style="white-space:pre-wrap;margin-top:6px;font-size:11px;line-height:1.25"></div>
+        <details class="settingsDetails">
+          <summary class="muted settingsBodyTiny">Details</summary>
+          <div class="muted settingsBodyTiny settingsBuildInfo" id="buildInfoDetails"></div>
         </details>
       </div>
 
-      <div class="card" style="flex:1;min-width:0;padding:10px">
-        <b style="font-size:.95rem">Help</b>
-        <div class="sep" style="margin:8px 0"></div>
-        <div class="muted" style="margin-top:4px;font-size:11px;line-height:1.25">Short instructions for manual entry, clipboard paste, backups, and install.</div>
-        <div class="row" style="margin-top:8px;min-width:0">
-          <button class="btn" id="openHelp" style="font-size:12px;padding:7px 10px;min-width:0;white-space:nowrap">Open Help</button>
+      <div class="card settingsMiniCard">
+        <b class="settingsMiniTitle">Help</b>
+        <div class="sep settingsMiniSep"></div>
+        <div class="muted settingsBodyTiny">Short instructions for manual entry, clipboard paste, backups, and install.</div>
+        <div class="row settingsHelpRow">
+          <button class="btn settingsInlineBtn" id="openHelp">Open Help</button>
         </div>
       </div>
     </div>
@@ -88,12 +88,12 @@ export function createSettingsScreenOrchestrator({
       <b>Backup & Restore</b>
       <div class="sep"></div>
       <div class="muted small mt10">Create a backup file you can store in Files/Drive. Restore shows a preview first so you can confirm details before any changes.</div>
-      <div class="muted small" id="lastBackupLine" style="margin-top:10px"></div>
+      <div class="muted small mt10" id="lastBackupLine"></div>
       <div class="hint mt10"><b>Backup recommended</b> before major updates.</div>
-      <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:nowrap">
-        <button class="btn primary" id="downloadBackup" style="flex:1">💾 Create Backup</button>
-        <button class="btn" id="restoreBackup" style="flex:1">📥 Restore Backup</button>
-        <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" style="display:none" />
+      <div class="row settingsBackupRow">
+        <button class="btn primary settingsFlexBtn" id="downloadBackup">💾 Create Backup</button>
+        <button class="btn settingsFlexBtn" id="restoreBackup">📥 Restore Backup</button>
+        <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
       </div>
       <div class="muted small mt10">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups. Keep at least one older backup too.</div>
     </div>
@@ -102,12 +102,12 @@ export function createSettingsScreenOrchestrator({
       <b>List Management</b>
       <div class="sep"></div>
 
-      <div class="segWrap" style="margin-top:10px">
+      <div class="segWrap mt10">
         <button class="chip segBtn ${listMode === "areas" ? "on is-selected" : ""}" data-listmode="areas" type="button">Areas</button>
         <button class="chip segBtn ${listMode === "dealers" ? "on is-selected" : ""}" data-listmode="dealers" type="button">Dealers</button>
-        <button class="chip segBtn" type="button" disabled aria-disabled="true" title="Coming soon" style="display:flex;flex-direction:column;align-items:center;line-height:1.05">
+        <button class="chip segBtn settingsStackedSegBtn" type="button" disabled aria-disabled="true" title="Coming soon">
           <div>Species</div>
-          <div class="muted tiny" style="margin-top:2px;opacity:.85">Coming soon</div>
+          <div class="muted tiny settingsSoonNote">Coming soon</div>
         </button>
       </div>
       <div class="muted small mt10">Manage the dropdown lists used in New Trip and Edit Trip.</div>
@@ -119,14 +119,14 @@ export function createSettingsScreenOrchestrator({
       <b>About</b>
       <div class="sep"></div>
       <div class="muted small mt10">Created by <b>Jeremy Wood</b></div>
-      <div class="muted small" style="margin-top:6px">Support/contact: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
-      <div class="muted small" style="margin-top:8px">Version: <b>${displayBuildVersion}</b></div>
-      <div id="buildBadge" class="muted small" style="margin-top:8px"></div>
+      <div class="muted small mt6">Support/contact: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+      <div class="muted small mt8">Version: <b>${displayBuildVersion}</b></div>
+      <div id="buildBadge" class="muted small mt8"></div>
 
-      <div class="muted small" style="margin-top:8px">© 2026 Jeremy Wood. All rights reserved.</div>
-      <div class="sep" style="margin-top:10px"></div>
+      <div class="muted small mt8">© 2026 Jeremy Wood. All rights reserved.</div>
+      <div class="sep mt10"></div>
       <div class="muted small mt10"><b>Legal & Trust</b></div>
-      <div class="muted small" style="margin-top:6px">Review terms, privacy details, and license information.</div>
+      <div class="muted small mt6">Review terms, privacy details, and license information.</div>
       <div class="row mt10 gap10 wrap">
         <button class="btn" id="openTerms">Terms of Use</button>
         <button class="btn" id="openPrivacy">Privacy Policy</button>
@@ -135,8 +135,8 @@ export function createSettingsScreenOrchestrator({
     </div>
 
     <details class="card" id="advancedBox">
-      <summary style="cursor:pointer;"><b>Advanced</b></summary>
-      <div class="sep" style="margin-top:10px"></div>
+      <summary class="settingsAdvancedSummary"><b>Advanced</b></summary>
+      <div class="sep mt10"></div>
 
       <div class="row mt12 gap10 wrap">
         <button class="btn" id="copyDebug">Copy Debug</button>

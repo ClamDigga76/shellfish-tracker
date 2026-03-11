@@ -960,6 +960,33 @@ body.scrollLock{
 .modalCard{ width:min(420px, 100%); }
 
 
+
+.tripCardGrid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}
+.tripCardHeadline{font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tripCardHeadlineDealer{margin-top:2px}
+.tripCardMain{font-size:18px}
+.tripCardMetricsCol{margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap}
+.tripCardMetricChip{font-size:14px;padding:6px 10px}
+
+.settingsTopRow{gap:10px;align-items:stretch;flex-wrap:nowrap}
+.settingsMiniCard{flex:1;min-width:0;padding:10px}
+.settingsMiniTitle{font-size:.95rem}
+.settingsMiniSep{margin:8px 0}
+.settingsUpdateStatus{font-size:15px;font-weight:800;line-height:1.2}
+.settingsBodyTiny{margin-top:4px;font-size:11px;line-height:1.25}
+.settingsInlineRow{margin-top:8px;gap:8px;align-items:center;min-width:0}
+.settingsInlineBtn{font-size:12px;padding:7px 10px;min-width:0;white-space:nowrap}
+.settingsInlineMsg{display:none;margin-top:0}
+.settingsDetails{margin-top:8px}
+.settingsBuildInfo{white-space:pre-wrap;margin-top:6px}
+.settingsHelpRow{margin-top:8px;min-width:0}
+.settingsBackupRow{margin-top:12px;gap:10px;align-items:center;flex-wrap:nowrap}
+.settingsFlexBtn{flex:1}
+.hiddenInput{display:none}
+.settingsStackedSegBtn{display:flex;flex-direction:column;align-items:center;line-height:1.05}
+.settingsSoonNote{margin-top:2px;opacity:.85}
+.settingsAdvancedSummary{cursor:pointer}
+
 .settingsEmail{color:var(--text);text-decoration:underline}
 
 /* v71: New Trip bottom sticky actions */
@@ -1030,7 +1057,7 @@ body.scrollLock{
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=271"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=272"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
