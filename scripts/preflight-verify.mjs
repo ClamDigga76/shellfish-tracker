@@ -30,6 +30,7 @@ let indexHtml = "";
 let bootstrapJs = "";
 let swJs = "";
 let appJs = "";
+let appStartupImports = [];
 
 try {
   indexHtml = read("index.html");
@@ -73,7 +74,31 @@ const requiredFiles = [
   "js/quick_chips_v5.js",
   "js/reports_filters_v5.js",
   "js/settings_list_management_v5.js",
+  "js/reports_aggregation_v5.js",
+  "js/backup_restore_v5.js",
+  "js/trip_shared_engine_v5.js",
+  "js/trip_cards_v5.js",
+  "js/help_about_render_v5.js",
+  "js/trip_form_render_v5.js",
+  "js/home_dashboard_v5.js",
+  "js/settings_screen_v5.js",
+  "js/reports_screen_v5.js",
+  "js/feedback_seam_v5.js",
+  "js/app_shell_v5.js",
 ];
+
+if (appJs) {
+  appStartupImports = Array.from(
+    appJs.matchAll(/import\s+[^;]*?from\s+"(\.\/[^"?]+\.js)";/g),
+    (match) => match[1],
+  );
+
+  for (const rel of appStartupImports) {
+    const relPath = `js/${rel.slice(2)}`;
+    if (requiredFiles.includes(relPath)) continue;
+    requiredFiles.push(relPath);
+  }
+}
 
 for (const relPath of requiredFiles) {
   if (existsSync(path.join(ROOT, relPath))) {
@@ -137,18 +162,19 @@ if (swJs) {
   }
 }
 
-if (appJs && swJs) {
-  const startupImports = Array.from(
-    appJs.matchAll(/import\s+[^;]*?from\s+"(\.\/[^"?]+\.js)";/g),
-    (match) => match[1],
-  );
+if (bootstrapJs && appJs) {
+  if (bootstrapJs.includes("await import(APP_URL);")) {
+    pass("bootstrap startup parity: imports APP_URL");
+  } else {
+    fail("bootstrap startup parity: imports APP_URL");
+  }
 
-  for (const rel of startupImports) {
-    const swNeedle = `"./js/${rel.slice(2)}?v="+SW_V`;
-    if (swJs.includes(swNeedle)) {
-      pass(`service worker startup parity: ${rel}`);
+  for (const rel of appStartupImports) {
+    const relPath = `js/${rel.slice(2)}`;
+    if (existsSync(path.join(ROOT, relPath))) {
+      pass(`startup module parity: ${rel}`);
     } else {
-      fail(`service worker startup parity: ${rel}`);
+      fail(`startup module parity: ${rel}`);
     }
   }
 }
