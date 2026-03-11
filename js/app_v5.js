@@ -369,6 +369,54 @@ const {
   copyTextWithFeedback
 } = feedback;
 
+let pendingTripUndo = null;
+
+function cloneUndoValue(v){
+  if(typeof structuredClone === "function"){
+    try{ return structuredClone(v); }catch(_){ }
+  }
+  try{ return JSON.parse(JSON.stringify(v)); }catch(_){ return v; }
+}
+
+function applyUndoSnapshot(snapshot){
+  const snap = snapshot || {};
+  state.trips = Array.isArray(snap.trips) ? cloneUndoValue(snap.trips) : [];
+  if(Object.prototype.hasOwnProperty.call(snap, "editId")) state.editId = snap.editId;
+  else delete state.editId;
+  if(Object.prototype.hasOwnProperty.call(snap, "draft")) state.draft = cloneUndoValue(snap.draft);
+  else delete state.draft;
+  if(Object.prototype.hasOwnProperty.call(snap, "reviewDraft")) state.reviewDraft = cloneUndoValue(snap.reviewDraft);
+  else delete state.reviewDraft;
+  state.view = String(snap.view || state.view || "home");
+  saveState();
+  render();
+}
+
+function clearPendingTripUndo(){
+  if(!pendingTripUndo) return;
+  try{ clearTimeout(pendingTripUndo.timer); }catch(_){ }
+  pendingTripUndo = null;
+}
+
+function showUndoToast({ message, snapshot, durationMs = 3200 }){
+  clearPendingTripUndo();
+  const token = Date.now();
+  const undoSnapshot = cloneUndoValue(snapshot);
+  const onUndo = ()=>{
+    if(!pendingTripUndo || pendingTripUndo.token !== token) return;
+    clearPendingTripUndo();
+    applyUndoSnapshot(undoSnapshot);
+    showToast("Undone");
+  };
+  const timer = setTimeout(()=>{
+    if(pendingTripUndo && pendingTripUndo.token === token){
+      pendingTripUndo = null;
+    }
+  }, durationMs);
+  pendingTripUndo = { token, timer };
+  showToast(message, { actionLabel: "Undo", onAction: onUndo, durationMs });
+}
+
 
 function iconSvg(name){
   if(name === "calendar"){
@@ -869,6 +917,7 @@ function findDuplicateTrip(candidate, excludeId=""){
 
 
 function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
+  clearPendingTripUndo();
   const dateISO = parseUsDateToISODate(String(inputs?.date||""));
   const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
   const poundsNum = parseNum(inputs?.pounds);
@@ -944,6 +993,14 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
     ? trips.map(t => (String(t?.id||"") === id ? tripNorm : t))
     : trips.concat([tripNorm]);
 
+  const undoSnapshot = {
+    trips,
+    view: state.view
+  };
+  if(Object.prototype.hasOwnProperty.call(state, "editId")) undoSnapshot.editId = state.editId;
+  if(Object.prototype.hasOwnProperty.call(state, "draft")) undoSnapshot.draft = state.draft;
+  if(Object.prototype.hasOwnProperty.call(state, "reviewDraft")) undoSnapshot.reviewDraft = state.reviewDraft;
+
   state.trips = nextTrips;
 
   // clear transient state
@@ -957,7 +1014,7 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   state.view = nextView;
   saveState();
   render();
-  showToast("Saved");
+  showUndoToast({ message: "Saved", snapshot: undoSnapshot });
   // After first successful save, offer install (once per device).
   if(!isEdit){ try{ setTimeout(()=>{ maybeOfferInstallAfterFirstSave(); }, 350); }catch(_){} }
   return true;
@@ -2629,11 +2686,20 @@ function renderEditTrip(){
   }
 
   document.getElementById("deleteTrip").onclick = ()=>{
+    clearPendingTripUndo();
     if(!confirm("Delete this trip?")) return;
+    const undoSnapshot = {
+      trips,
+      view: state.view
+    };
+    if(Object.prototype.hasOwnProperty.call(state, "editId")) undoSnapshot.editId = state.editId;
+    if(Object.prototype.hasOwnProperty.call(state, "draft")) undoSnapshot.draft = state.draft;
+    if(Object.prototype.hasOwnProperty.call(state, "reviewDraft")) undoSnapshot.reviewDraft = state.reviewDraft;
     state.trips = trips.filter(x => String(x?.id||"") !== id);
     delete state.editId;
     saveState();
     goBack(state);
+    showUndoToast({ message: "Deleted", snapshot: undoSnapshot });
   };
 }
 

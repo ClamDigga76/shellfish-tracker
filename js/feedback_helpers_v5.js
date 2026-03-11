@@ -22,12 +22,35 @@ export function createFeedbackHelpers({
     }catch{}
   }
 
-  function showToast(msg){
+  function showToast(msg, opts = {}){
     try{
       const el = document.getElementById("toast");
       if(!el) return;
       const text = String(msg||"");
-      el.textContent = text;
+      const actionLabel = String(opts?.actionLabel || "").trim();
+      const onAction = (typeof opts?.onAction === "function") ? opts.onAction : null;
+      const durationMs = Number(opts?.durationMs);
+
+      clearTimeout(toastTimer);
+      el.textContent = "";
+      const textNode = document.createElement("span");
+      textNode.className = "toastText";
+      textNode.textContent = text;
+      el.appendChild(textNode);
+
+      if(actionLabel && onAction){
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "toastAction";
+        btn.textContent = actionLabel;
+        btn.addEventListener("click", ()=>{
+          try{ onAction(); }catch(_){ }
+          clearTimeout(toastTimer);
+          el.classList.remove("show");
+        }, { once: true });
+        el.appendChild(btn);
+      }
+
       const trimmed = text.trim();
       if(/^Saved$/i.test(trimmed)){
         announce("Saved", "polite");
@@ -35,8 +58,7 @@ export function createFeedbackHelpers({
         announce(/^Error:/i.test(trimmed) ? trimmed : `Error: ${trimmed}`, "assertive");
       }
       el.classList.add("show");
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, 2400);
+      toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 2400);
     }catch{}
   }
 
