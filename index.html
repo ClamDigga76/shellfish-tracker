@@ -54,6 +54,12 @@
   --good:#2EA043;
   --pplYellow:#ffd54a;
   --bad:#ff4d4f;
+  --money:var(--good);
+  --lbs:var(--lbsBlue);
+  --ppl:var(--pplYellow);
+  --warn-border:rgba(255,77,79,.40);
+  --warn-bg:rgba(255,77,79,.14);
+  --ppl-bg:rgba(255,210,63,.08);
   --r:20px;
   --r-card:14px;
   --r-btn:12px;
@@ -117,7 +123,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Aria
 header h1{margin:0;font-size:18px;letter-spacing:.2px}
 header p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
 .boot{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--muted);vertical-align:middle}
-.boot.err{border-color:rgba(255,77,79,.6);color:#ffd7e1;background:rgba(255,77,79,.12)}
+.boot.err{border-color:var(--warn-border);color:var(--bad);background:var(--warn-bg)}
 main{padding:14px 14px 18px}
 .card{background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
@@ -165,7 +171,7 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 /* Phase 2C-1 additions */
 .filters{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 .chip{border:1px solid rgba(255,255,255,.22);background:linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);color:var(--text);padding:10px 14px;border-radius:999px;font-weight:750;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-height:40px;letter-spacing:.1px;box-shadow:0 2px 8px rgba(0,0,0,.22);transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .08s ease}
-.chip.on{background:linear-gradient(180deg, rgba(47,109,246,.42) 0%, rgba(47,109,246,.26) 100%);border-color:rgba(126,169,255,.9);box-shadow:0 5px 14px rgba(31,111,235,.28), inset 0 0 0 1px rgba(255,255,255,.10)}
+.chip.on,.chip.is-selected{background:linear-gradient(180deg, rgba(47,109,246,.42) 0%, rgba(47,109,246,.26) 100%);border-color:rgba(126,169,255,.9);box-shadow:0 5px 14px rgba(31,111,235,.28), inset 0 0 0 1px rgba(255,255,255,.10)}
 .chip:active{transform:translateY(1px);box-shadow:0 1px 5px rgba(0,0,0,.26)}
 .chip,.areachip,.chip-selector{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
@@ -193,7 +199,7 @@ b.lbs,b.lbsBlue{color:var(--lbsBlue)!important}
 .input, .select, .textarea{width:100%;padding:12px 12px;border-radius:14px;border:1px solid var(--border);background:var(--glass2);color:var(--text);font-weight:700}
 .textarea{min-height:110px;resize:vertical;font-weight:600}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-.btn.danger{background:rgba(255,80,80,.18);border:1px solid rgba(255,80,80,.30)}
+.btn.danger,.smallbtn.danger{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--bad)}
 .smallbtn{padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--glass2);color:var(--text);font-weight:800;cursor:pointer;transition:transform .08s ease,filter .12s ease,border-color .12s ease}
 .smallbtn:active{transform:translateY(1px);filter:brightness(.96)}
 
@@ -412,9 +418,9 @@ body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transpar
 .tripMetricsRow .fieldLabel{font-size:13px;letter-spacing:.08em}
 .tripMetricsRow .input{padding-left:10px;padding-right:10px}
 .tripMetricsRow #rateValue,
-.tripMetricsRow #rateValueEdit{font-weight:800;color:var(--pplYellow);background:rgba(255,210,63,.08)}
+.tripMetricsRow #rateValueEdit{font-weight:800;color:var(--ppl);background:var(--ppl-bg)}
 .rate{color:var(--muted);font-weight:700}
-.rate.ppl{color:var(--pplYellow)!important;font-weight:800}
+.rate.ppl{color:var(--ppl)!important;font-weight:800}
 
 
 .actionsNew .btn.primary{width:100%}
@@ -556,10 +562,7 @@ header{padding:14px 18px 12px}
   border-color:var(--color-primary);
   box-shadow:0 10px 26px rgba(31,111,235,.18);
 }
-.btn.danger{
-  background:rgba(255,77,79,.14);
-  border-color:rgba(255,77,79,.40);
-}
+.btn.danger{background:var(--warn-bg);border-color:var(--warn-border);color:var(--bad)}
 
 /* Chips / segmented */
 .filters{gap:10px}
@@ -581,7 +584,7 @@ header{padding:14px 18px 12px}
   user-select:none;
   -webkit-touch-callout:none;
 }
-.chip.on{
+.chip.on,.chip.is-selected{
   background:linear-gradient(180deg, rgba(47,109,246,.42) 0%, rgba(47,109,246,.26) 100%);
   border-color:rgba(126,169,255,.78);
   box-shadow:0 6px 16px rgba(31,111,235,.30), inset 0 0 0 1px rgba(255,255,255,.12);
@@ -782,7 +785,8 @@ header{padding:14px 18px 12px}
   font-weight:800;
   letter-spacing:0.2px;
 }
-.segWrap .segBtn.on{
+.segWrap .segBtn.on,
+.segWrap .segBtn.is-selected{
   background:rgba(47,109,246,0.35);
   border-color:rgba(47,109,246,0.55);
 }
