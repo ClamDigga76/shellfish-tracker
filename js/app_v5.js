@@ -915,8 +915,46 @@ function findDuplicateTrip(candidate, excludeId=""){
   return null;
 }
 
+function openConfirmModal({
+  title = "Confirm",
+  message = "Are you sure?",
+  confirmLabel = "Yes",
+  cancelLabel = "Cancel"
+} = {}){
+  return new Promise((resolve)=>{
+    const confirmId = `confirmModalYes_${uid()}`;
+    const cancelId = `confirmModalNo_${uid()}`;
+    let settled = false;
+    const settle = (result)=>{
+      if(settled) return;
+      settled = true;
+      closeModal();
+      resolve(Boolean(result));
+    };
 
-function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
+    openModal({
+      title,
+      backdropClose: false,
+      escClose: false,
+      showCloseButton: false,
+      position: "center",
+      html: `
+        <div class="muted" style="white-space:pre-wrap;line-height:1.4">${escapeHtml(String(message||""))}</div>
+        <div class="modalActions" style="margin-top:14px">
+          <button class="btn" id="${cancelId}" type="button">${escapeHtml(String(cancelLabel||"Cancel"))}</button>
+          <button class="btn danger" id="${confirmId}" type="button">${escapeHtml(String(confirmLabel||"Yes"))}</button>
+        </div>
+      `,
+      onOpen: ()=>{
+        document.getElementById(cancelId)?.addEventListener("click", ()=>settle(false));
+        document.getElementById(confirmId)?.addEventListener("click", ()=>settle(true));
+      }
+    });
+  });
+}
+
+
+async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
   clearPendingTripUndo();
   const dateISO = parseUsDateToISODate(String(inputs?.date||""));
   const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
@@ -964,7 +1002,13 @@ function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
     const msg = isEdit
       ? `This edit matches another trip:\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`
       : `This looks like a duplicate trip:\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
-    if(!confirm(msg)) return false;
+    const ok = await openConfirmModal({
+      title: "Possible Duplicate",
+      message: msg,
+      confirmLabel: isEdit ? "Save Changes" : "Save Anyway",
+      cancelLabel: "Cancel"
+    });
+    if(!ok) return false;
   }
 
   const trip = {
@@ -1756,7 +1800,7 @@ state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
         return;
       }
 
-commitTripFromDraft({
+await commitTripFromDraft({
   mode: "new",
   inputs: {
     date: mdy,
@@ -1803,12 +1847,17 @@ commitTripFromDraft({
   }
 const btnClear = document.getElementById("clearDraft");
   if(btnClear){
-    btnClear.onclick = ()=>{
-      if(confirm("Clear this draft?")){
-        delete state.draft;
-        saveState();
-        renderNewTrip();
-      }
+    btnClear.onclick = async ()=>{
+      const ok = await openConfirmModal({
+        title: "Clear Draft",
+        message: "Clear this draft?",
+        confirmLabel: "Clear",
+        cancelLabel: "Cancel"
+      });
+      if(!ok) return;
+      delete state.draft;
+      saveState();
+      renderNewTrip();
     };
   }
 // Persist draft as the user edits fields (fixes iOS select + prevents resets)
@@ -2024,11 +2073,16 @@ getApp().innerHTML = `
   const __navBack = document.getElementById("navBack");
   if(__navBack) __navBack.onclick = ()=> goBack(state);
   const __cancelReview = document.getElementById("cancelReview");
-  if(__cancelReview) __cancelReview.onclick = ()=>{
-    if(confirm("Discard this review draft?")){
-      delete state.reviewDraft;
-      pushView(state, "new");
-    }
+  if(__cancelReview) __cancelReview.onclick = async ()=>{
+    const ok = await openConfirmModal({
+      title: "Discard Review Draft",
+      message: "Discard this review draft?",
+      confirmLabel: "Discard",
+      cancelLabel: "Keep Editing"
+    });
+    if(!ok) return;
+    delete state.reviewDraft;
+    pushView(state, "new");
   };
 
   // Persist draft + live-update Price/Lb + Area selection
@@ -2654,9 +2708,9 @@ function renderEditTrip(){
   });
 
   const editTripForm = document.getElementById("editTripForm");
-  if(editTripForm) editTripForm.addEventListener("submit", (e)=>{
+  if(editTripForm) editTripForm.addEventListener("submit", async (e)=>{
     e.preventDefault();
-    commitTripFromDraft({
+    await commitTripFromDraft({
       mode: "edit",
       editId: id,
       inputs: {
@@ -2685,9 +2739,15 @@ function renderEditTrip(){
     });
   }
 
-  document.getElementById("deleteTrip").onclick = ()=>{
+  document.getElementById("deleteTrip").onclick = async ()=>{
     clearPendingTripUndo();
-    if(!confirm("Delete this trip?")) return;
+    const ok = await openConfirmModal({
+      title: "Delete Trip",
+      message: "Delete this trip?",
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel"
+    });
+    if(!ok) return;
     const undoSnapshot = {
       trips,
       view: state.view
