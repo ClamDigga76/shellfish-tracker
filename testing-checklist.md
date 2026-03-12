@@ -9,6 +9,9 @@ Use it after patches to reduce regressions, especially on mobile.
 Test the changed thing first.
 Then test the nearby thing most likely to have been affected.
 
+## Hotspot-first caution
+Before test selection, quickly check `REGRESSION-HOTSPOTS.md` and increase caution around any touched high-risk area.
+
 ## Check order
 For runtime-facing app patches, use this order when relevant:
 
