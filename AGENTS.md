@@ -36,6 +36,7 @@ These files support the workflow, but do not outrank this file:
 - `patch-prompt-style.md`
 - `codex-app-style.md`
 - `testing-checklist.md`
+- `REGRESSION-HOTSPOTS.md`
 
 ## Default workflow
 Use this sequence for normal patch work:
