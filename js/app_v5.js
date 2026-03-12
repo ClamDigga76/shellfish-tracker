@@ -48,6 +48,31 @@ const {
 // Backup meta (local-only; no user data duplication)
 const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
 const TRIP_DRAFT_FALLBACK_KEY = "btc_trip_draft_emergency_v1";
+const SAFE_MODE_PARAM = "safeMode";
+const SAFE_MODE_SESSION_KEY = "shellfish-safe-mode-session";
+
+function isSafeModeEnabled(){
+  if (window.__SHELLFISH_SAFE_MODE__ === true) return true;
+  try{
+    const url = new URL(location.href);
+    if(url.searchParams.get(SAFE_MODE_PARAM) === "1") return true;
+  }catch(_){ }
+  try{
+    return sessionStorage.getItem(SAFE_MODE_SESSION_KEY) === "1";
+  }catch(_){
+    return false;
+  }
+}
+
+function clearSafeModeFlag(){
+  try{ sessionStorage.removeItem(SAFE_MODE_SESSION_KEY); }catch(_){ }
+  try{
+    const url = new URL(location.href);
+    if(!url.searchParams.has(SAFE_MODE_PARAM)) return;
+    url.searchParams.delete(SAFE_MODE_PARAM);
+    history.replaceState(null, "", url.toString());
+  }catch(_){ }
+}
 
 // In-app update UI: primary action always refreshes app assets/reload; SW state only changes status text.
 let SW_UPDATE_READY = false;
@@ -589,6 +614,22 @@ function clearEmergencyTripDraftFallback(){
 let emergencyDraftRecoveredOnBoot = false;
 
 function loadState(){
+  if(isSafeModeEnabled()){
+    const safeState = ensureNavState({
+      trips: [],
+      view: "home",
+      filter: "YTD",
+      settings: {},
+      areas: [],
+      dealers: [],
+      navStack: [],
+      tripsFilter: { mode: "ALL", from: "", to: "" },
+      reportsFilter: { mode: "YTD", from: "", to: "" },
+    });
+    safeState.__safeMode = true;
+    return safeState;
+  }
+
   const loaded = loadStateWithLegacyFallback(localStorage, ensureNavState);
   const hasNormalDraft = hasMeaningfulTripDraft(loaded?.draft);
   if(hasNormalDraft) return loaded;
@@ -1169,6 +1210,11 @@ ensureReportsFilter();
 ensureHomeFilter();
 ensureAreas();
 ensureDealers();
+const SAFE_MODE_ACTIVE = Boolean(state?.__safeMode);
+if(SAFE_MODE_ACTIVE){
+  clearSafeModeFlag();
+  state.view = "settings";
+}
 if(Array.isArray(state.trips)) {
   let changed = false;
   state.trips = state.trips.map((trip)=>{
@@ -1181,6 +1227,9 @@ if(Array.isArray(state.trips)) {
 }
 if(emergencyDraftRecoveredOnBoot){
   try{ showToast("Recovered your unsaved trip draft"); }catch(_){ }
+}
+if(SAFE_MODE_ACTIVE){
+  try{ showToast("Safe Mode active: loaded temporary clean state"); }catch(_){ }
 }
 function showFatal(err){
   if(window.__SHELLFISH_FATAL_SHOWN) return;
