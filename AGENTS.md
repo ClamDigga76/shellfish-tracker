@@ -86,6 +86,31 @@ Examples:
 - process files
 - Parking Lot files
 
+## Earned patch sub-types (keep lightweight)
+Use these only to clarify execution style. Do not treat them as a large taxonomy.
+
+### 1) Standard runtime patch
+Use for normal user-facing behavior/UI/runtime changes.
+
+- follow normal runtime-facing rules
+- require version bump +1 and aligned version chain
+- require `npm run check:repo` and runtime preflight verify
+
+### 2) Runtime correction/hotfix patch
+Use when the immediately previous runtime patch introduced a real break (for example, boot/runtime regressions).
+
+- prioritize restoring stability over feature scope
+- keep scope tighter than a normal runtime feature patch
+- include Repro when applicable
+- if runtime-facing, still do version bump +1 and required preflight/repo checks
+
+### 3) Repo/workflow support patch
+Use for smoke-track, repo-support, hotspot notes, and workflow/doc guidance updates.
+
+- no runtime version bump
+- no runtime preflight unless clearly needed
+- run repo-side checks relevant to touched files
+
 ## Patch rules
 - Do one main job per patch.
 - Keep the diff as small as possible.
