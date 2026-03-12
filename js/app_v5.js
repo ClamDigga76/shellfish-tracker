@@ -915,13 +915,47 @@ function renderSuggestions(list, current, dataAttr){
 
 
 
+function scoreDuplicateTripMatch(existingTrip, candidate){
+  if(!likelyDuplicate(existingTrip, candidate)) return -1;
+
+  let score = 0;
+  const sameDate = String(existingTrip?.dateISO || "") === String(candidate?.dateISO || "");
+  const sameDealer = normalizeKey(existingTrip?.dealer) === normalizeKey(candidate?.dealer);
+  const samePounds = Math.abs((Number(existingTrip?.pounds) || 0) - (Number(candidate?.pounds) || 0)) <= 0.01;
+  const sameAmount = Math.abs((Number(existingTrip?.amount) || 0) - (Number(candidate?.amount) || 0)) <= 0.01;
+  const existingArea = normalizeKey(existingTrip?.area);
+  const candidateArea = normalizeKey(candidate?.area);
+  const sameArea = existingArea && candidateArea && existingArea === candidateArea;
+
+  if(sameDate) score += 4;
+  if(sameDealer) score += 4;
+  if(samePounds) score += 3;
+  if(sameAmount) score += 3;
+  if(sameArea) score += 1;
+
+  return score;
+}
+
 function findDuplicateTrip(candidate, excludeId=""){
-  const trips = Array.isArray(state.trips) ? state.trips : [];
-  for(const t of trips){
-    if(excludeId && String(t?.id||"") === String(excludeId)) continue;
-    if(likelyDuplicate(t, candidate)) return t;
+  const trips = getTripsNewestFirst(Array.isArray(state.trips) ? state.trips : []);
+  const excludedId = String(excludeId || "");
+  let best = null;
+  let bestScore = -1;
+  let bestIndex = Number.POSITIVE_INFINITY;
+
+  for(let i = 0; i < trips.length; i++){
+    const t = trips[i];
+    if(excludedId && String(t?.id || "") === excludedId) continue;
+    const score = scoreDuplicateTripMatch(t, candidate);
+    if(score < 0) continue;
+    if(score > bestScore || (score === bestScore && i < bestIndex)){
+      best = t;
+      bestScore = score;
+      bestIndex = i;
+    }
   }
-  return null;
+
+  return best;
 }
 
 function openConfirmModal({
@@ -1005,12 +1039,15 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
     id = uid();
   }
 
-  const candidate = { dateISO, dealer, pounds: to2(poundsNum), amount: to2(amountNum) };
+  const candidate = { dateISO, dealer, pounds: to2(poundsNum), amount: to2(amountNum), area };
   const dup = findDuplicateTrip(candidate, isEdit ? id : "");
   if(dup){
+    const recentLabel = dup === getTripsNewestFirst(Array.isArray(state.trips) ? state.trips : [])[0]
+      ? "A very recent similar trip was found."
+      : "This looks like a duplicate trip.";
     const msg = isEdit
-      ? `This edit matches another trip:\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`
-      : `This looks like a duplicate trip:\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
+      ? `${recentLabel}\n\nThis edit matches another trip:\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`
+      : `${recentLabel}\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
     const ok = await openConfirmModal({
       title: "Possible Duplicate",
       message: msg,
