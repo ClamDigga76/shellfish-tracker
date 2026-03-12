@@ -1,1 +1,1 @@
-{"type":"module","scripts":{"preflight":"node scripts/preflight-verify.mjs","check:repo":"node scripts/repo-quality-checks.mjs","check":"npm run check:repo && npm run preflight"}}
+{"type":"module","scripts":{"preflight":"node scripts/preflight-verify.mjs","check:repo":"node scripts/repo-quality-checks.mjs","smoke":"node scripts/smoke-check.mjs","check":"npm run check:repo && npm run preflight"}}
