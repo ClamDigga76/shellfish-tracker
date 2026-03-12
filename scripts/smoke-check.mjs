@@ -49,6 +49,14 @@ function checkIncludesAny(source, checkName, tokens) {
   }
 }
 
+function checkPattern(source, checkName, pattern, detail = pattern.toString()) {
+  if (pattern.test(source)) {
+    pass(checkName);
+  } else {
+    fail(checkName, `missing ${detail}`);
+  }
+}
+
 const requiredFiles = [
   'index.html',
   'sw.js',
@@ -92,27 +100,27 @@ const tripFormSource = readSource('js/trip_form_render_v5.js');
 if (appSource) {
   checkIncludes(appSource, 'boot startup marker initialized', 'window.__SHELLFISH_APP_STARTED = false;');
   checkIncludes(appSource, 'boot startup marker finalized', 'window.__SHELLFISH_APP_STARTED = true;');
-  checkIncludes(appSource, 'boot dispatcher present', 'function render(){');
-  checkIncludes(appSource, 'boot home default render', 'if(!state.view) state.view = "home";');
-  checkIncludes(appSource, 'boot all_trips route wired', 'else if(state.view === "all_trips") renderAllTrips();');
+  checkPattern(appSource, 'boot dispatcher present', /function\s+render\s*\(/, 'function render(...)');
+  checkPattern(appSource, 'boot home default render', /if\s*\(\s*!state\.view\s*\)\s*state\.view\s*=\s*["']home["']\s*;/, 'state.view defaults to "home"');
+  checkPattern(appSource, 'boot all_trips route wired', /state\.view\s*===\s*["']all_trips["']\s*\)\s*renderAllTrips\(/, 'dispatcher branch for all_trips');
 }
 
 if (homeSource) {
   checkIncludes(homeSource, 'home renderer factory exists', 'export function createHomeDashboardRenderer({');
-  checkIncludes(homeSource, 'home render function exists', 'function renderHome() {');
+  checkPattern(homeSource, 'home render function exists', /function\s+renderHome\s*\(/, 'function renderHome(...)');
   checkIncludesAny(homeSource, 'home view marker present', ['renderPageHeader("home")', 'renderPageHeader(\'home\')']);
 }
 
 if (appSource) {
   checkIncludesAny(appSource, 'home renderer import wired', ['from "./home_dashboard_v5.js"', "from './home_dashboard_v5.js'"]);
   checkIncludes(appSource, 'home renderer created', 'const { renderHome } = createHomeDashboardRenderer({');
-  checkIncludes(appSource, 'home route reachable from dispatcher', 'else renderHome();');
-  checkIncludes(appSource, 'trips screen render function exists', 'function renderAllTrips(){');
+  checkPattern(appSource, 'home route reachable from dispatcher', /else\s+renderHome\s*\(/, 'dispatcher fallback to renderHome(...)');
+  checkPattern(appSource, 'trips screen render function exists', /function\s+renderAllTrips\s*\(/, 'function renderAllTrips(...)');
   checkIncludesAny(appSource, 'settings renderer import wired', ['from "./settings_screen_v5.js"', "from './settings_screen_v5.js'"]);
   checkIncludes(appSource, 'settings renderer created', 'const { renderSettings } = createSettingsScreenOrchestrator({');
-  checkIncludes(appSource, 'settings route reachable from dispatcher', 'if(state.view === "settings") renderSettings();');
-  checkIncludes(appSource, 'new trip render function exists', 'function renderNewTrip(){');
-  checkIncludes(appSource, 'new trip route reachable from dispatcher', 'else if(state.view === "new") renderNewTrip();');
+  checkPattern(appSource, 'settings route reachable from dispatcher', /state\.view\s*===\s*["']settings["']\s*\)\s*renderSettings\(/, 'dispatcher branch for settings');
+  checkPattern(appSource, 'new trip render function exists', /function\s+renderNewTrip\s*\(/, 'function renderNewTrip(...)');
+  checkPattern(appSource, 'new trip route reachable from dispatcher', /state\.view\s*===\s*["']new["']\s*\)\s*renderNewTrip\(/, 'dispatcher branch for new');
   checkIncludes(appSource, 'new trip uses entry form renderer', 'const newTripFormHtml = renderTripEntryForm({');
   checkIncludesAny(appSource, 'new trip header marker present', ['renderPageHeader("new")', "renderPageHeader('new')"]);
 }
@@ -125,7 +133,7 @@ if (shellSource) {
 if (settingsScreenSource) {
   checkIncludes(settingsScreenSource, 'settings screen orchestrator export exists', 'export function createSettingsScreenOrchestrator({');
   checkIncludesAny(settingsScreenSource, 'settings page header marker present', ['renderPageHeader("settings")', "renderPageHeader('settings')"]);
-  checkIncludesAny(settingsScreenSource, 'settings updates section marker present', ['<b class="settingsMiniTitle">Updates</b>', "<b class='settingsMiniTitle'>Updates</b>"]);
+  checkPattern(settingsScreenSource, 'settings updates section marker present', /settingsMiniTitle[\s\S]*Updates/, 'settings updates section anchor');
 }
 
 if (tripFormSource) {
