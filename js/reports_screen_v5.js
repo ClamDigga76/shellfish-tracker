@@ -1,3 +1,5 @@
+import { createReportsAdvancedPanelSeam } from "./reports_advanced_panel_v5.js";
+
 export function createReportsScreenRenderer(deps){
   const {
     ensureReportsFilter,
@@ -23,6 +25,13 @@ export function createReportsScreenRenderer(deps){
     computePPL
   } = deps;
 
+  const reportsAdvancedPanel = createReportsAdvancedPanelSeam({
+    escapeHtml,
+    formatReportDateValue,
+    parseReportDateToISO,
+    bindDatePill
+  });
+
 function renderReports(){
   const state = getState();
   ensureReportsFilter();
@@ -40,50 +49,11 @@ function renderReports(){
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
 
   const advOpen = !!rf.adv;
-  const advFromValue = formatReportDateValue(rf.from);
-  const advToValue = formatReportDateValue(rf.to);
-
-  const dealerOpts = ['<option value="">Any Dealer</option>'].concat(
-    (Array.isArray(state.dealers)?state.dealers:[]).map(d=>{
-      const v = String(d||"");
-      return `<option value="${escapeHtml(v)}" ${v===String(rf.dealer||"")?'selected':''}>${escapeHtml(v)}</option>`;
-    })
-  ).join("");
-
-  const areaOpts = ['<option value="">Any Area</option>'].concat(
-    (Array.isArray(state.areas)?state.areas:[]).map(a=>{
-      const v = String(a||"");
-      return `<option value="${escapeHtml(v)}" ${v===String(rf.area||"")?'selected':''}>${escapeHtml(v)}</option>`;
-    })
-  ).join("");
-
-  const advPanel = advOpen ? `
-    <div class="sep"></div>
-    <div class="grid2">
-      <div class="field">
-        <div class="label">From</div>
-        <input class="input" id="repAdvFrom" type="date" value="${escapeHtml(advFromValue)}">
-      </div>
-      <div class="field">
-        <div class="label">To</div>
-        <input class="input" id="repAdvTo" type="date" value="${escapeHtml(advToValue)}">
-      </div>
-    </div>
-    <div class="grid2" style="margin-top:10px">
-      <div class="field">
-        <div class="label">Dealer</div>
-        <select class="input" id="repAdvDealer">${dealerOpts}</select>
-      </div>
-      <div class="field">
-        <div class="label">Area</div>
-        <select class="input" id="repAdvArea">${areaOpts}</select>
-      </div>
-    </div>
-    <div class="row" style="justify-content:flex-end;gap:10px;margin-top:10px">
-      <button class="btn" id="repAdvReset" type="button">Reset</button>
-      <button class="btn primary" id="repAdvApply" type="button">Apply</button>
-    </div>
-  ` : "";
+  const advPanel = reportsAdvancedPanel.renderAdvancedPanel({
+    reportsFilter: rf,
+    dealers: state.dealers,
+    areas: state.areas
+  });
 
   const resolvedReportsRange = resolveUnifiedRange(unified);
   const rangeLabel = (fMode === "RANGE")
@@ -143,65 +113,14 @@ function renderReports(){
       };
     });
 
-    document.querySelectorAll(".repAdvToggle").forEach(btn=>{
-      btn.onclick = ()=>{
-        state.reportsFilter.adv = !state.reportsFilter.adv;
-        saveState();
-        renderReports();
-      };
+    reportsAdvancedPanel.bindAdvancedPanel({
+      root: getApp(),
+      state,
+      saveState,
+      renderReports,
+      showToast,
+      variant: "empty"
     });
-
-    const advFrom = document.getElementById("repAdvFrom");
-    const advTo = document.getElementById("repAdvTo");
-    bindDatePill("repAdvFrom");
-    bindDatePill("repAdvTo");
-
-    const advApply = document.getElementById("repAdvApply");
-    if(advApply){
-      advApply.onclick = ()=>{
-        let from = String(advFrom?.value || "").trim();
-        let to = String(advTo?.value || "").trim();
-        const dealer = String(document.getElementById("repAdvDealer")?.value || "");
-        const area = String(document.getElementById("repAdvArea")?.value || "");
-
-        state.reportsFilter.dealer = dealer;
-        state.reportsFilter.area = area;
-
-        if(from && !to) to = from;
-        if(!from && to) from = to;
-
-        if(from || to){
-          const sISO = parseReportDateToISO(from);
-          const eISO = parseReportDateToISO(to);
-          if(!sISO || !eISO){ showToast("Invalid dates"); return; }
-          state.reportsFilter.mode = "RANGE";
-        }
-
-        from = parseReportDateToISO(from);
-        to = parseReportDateToISO(to);
-
-        state.reportsFilter.from = from;
-        state.reportsFilter.to = to;
-
-        saveState();
-        showToast("Filter applied");
-        renderReports();
-      };
-    }
-
-    const advReset = document.getElementById("repAdvReset");
-    if(advReset){
-      advReset.onclick = ()=>{
-        state.reportsFilter.mode = "YTD";
-        state.reportsFilter.from = "";
-        state.reportsFilter.to = "";
-        state.reportsFilter.dealer = "";
-        state.reportsFilter.area = "";
-        saveState();
-        showToast("Filters reset");
-        renderReports();
-      };
-    }
 
     return;
   }
@@ -502,53 +421,13 @@ function renderReports(){
     };
   });
 
-  // advanced toggle
-  getApp().querySelectorAll(".repAdvToggle").forEach(btn=>{
-    btn.onclick = ()=>{
-      state.reportsFilter.adv = !state.reportsFilter.adv;
-      saveState();
-      renderReports();
-    };
+  reportsAdvancedPanel.bindAdvancedPanel({
+    root: getApp(),
+    state,
+    saveState,
+    renderReports,
+    showToast
   });
-
-  // advanced apply/reset (only present when panel open)
-  bindDatePill("repAdvFrom");
-  bindDatePill("repAdvTo");
-  const advApply = getApp().querySelector("#repAdvApply");
-  if(advApply){
-    advApply.onclick = ()=>{
-      const from = String(getApp().querySelector("#repAdvFrom")?.value||"").trim();
-      const to   = String(getApp().querySelector("#repAdvTo")?.value||"").trim();
-      const dealer = String(getApp().querySelector("#repAdvDealer")?.value||"");
-      const area   = String(getApp().querySelector("#repAdvArea")?.value||"");
-      const fromISO = parseReportDateToISO(from);
-      const toISO = parseReportDateToISO(to);
-      if((from && !fromISO) || (to && !toISO)){
-        showToast("Invalid dates");
-        return;
-      }
-      state.reportsFilter.from = fromISO;
-      state.reportsFilter.to = toISO;
-      state.reportsFilter.dealer = dealer;
-      state.reportsFilter.area = area;
-      if(fromISO || toISO){
-        state.reportsFilter.mode = "RANGE";
-      }
-      saveState();
-      showToast("Filter applied");
-      renderReports();
-    };
-  }
-
-  const advReset = getApp().querySelector("#repAdvReset");
-  if(advReset){
-    advReset.onclick = ()=>{
-      state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
-      saveState();
-      showToast("Filters reset");
-      renderReports();
-    };
-  }
 
 
   if(mode === "charts"){
