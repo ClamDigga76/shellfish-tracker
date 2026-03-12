@@ -27,6 +27,7 @@ import { createSettingsScreenOrchestrator } from "./settings_screen_v5.js";
 import { createReportsScreenRenderer } from "./reports_screen_v5.js";
 import { createFeedbackSeam } from "./feedback_seam_v5.js";
 import { createTripScreenOrchestrator } from "./trip_screen_orchestrator_v5.js";
+import { buildTripFormInputs, buildNewTripSaveSnapshot } from "./trip_flow_save_seam_v5.js";
 import { createUpdateRuntimeStatusSeam } from "./update_runtime_status_v5.js";
 import { createDiagnosticsFatalSeam } from "./diagnostics_fatal_v5.js";
 import {
@@ -1436,7 +1437,9 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
   openConfirmModal,
   goBack,
   showUndoToast,
-  renderHome
+  renderHome,
+  buildTripFormInputs,
+  buildNewTripSaveSnapshot
 });
 
 
