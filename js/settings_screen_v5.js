@@ -43,15 +43,15 @@ export function createSettingsScreenOrchestrator({
         <b class="settingsMiniTitle">Updates</b>
         <div class="sep settingsMiniSep"></div>
 
-        <div id="updateBigStatus" class="settingsUpdateStatus">Up to date</div>
+        <div id="updateBigStatus" class="settingsUpdateStatus">Checking update status…</div>
         <div class="muted settingsBodyTiny" id="updateVersionLine"></div>
 
         <div class="row settingsInlineRow">
-          <button class="btn settingsInlineBtn" id="updatePrimary">Refresh app</button>
+          <button class="btn settingsInlineBtn" id="updatePrimary">Load latest build</button>
           <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
 
-        <div class="hint mt10">If an update is available, tap <b>Refresh app</b> and reopen to load the latest version.</div>
+        <div class="hint mt10">When a new build is ready, tap <b>Load latest build</b>. The app reloads so the newest version opens right away.</div>
 
         <details class="settingsDetails">
           <summary class="muted settingsBodyTiny">Details</summary>
