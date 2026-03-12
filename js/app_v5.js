@@ -27,6 +27,7 @@ import { createSettingsScreenOrchestrator } from "./settings_screen_v5.js";
 import { createReportsScreenRenderer } from "./reports_screen_v5.js";
 import { createFeedbackSeam } from "./feedback_seam_v5.js";
 import { createTripScreenOrchestrator } from "./trip_screen_orchestrator_v5.js";
+import { createUpdateRuntimeStatusSeam } from "./update_runtime_status_v5.js";
 import {
   renderPageHeader as renderPageHeaderShell,
   bindHeaderHelpButtons as bindHeaderHelpButtonsShell,
@@ -75,133 +76,21 @@ function clearSafeModeFlag(){
 }
 
 // In-app update UI: primary action always refreshes app assets/reload; SW state only changes status text.
-let SW_UPDATE_READY = false;
-let themeMediaQuery = null;
-let onThemeMediaChange = null;
-window.addEventListener("sw-update-ready", (ev) => {
-  SW_UPDATE_READY = true;
-  try {
-    if (state?.view === "settings") updateUpdateRow();
-  } catch (_) {}
+const updateRuntimeStatus = createUpdateRuntimeStatusSeam({
+  displayBuildVersion: DISPLAY_BUILD_VERSION,
+  getIsSettingsView: () => state?.view === "settings",
+  getSchemaVersion: (asNullable = false) => {
+    if(typeof SCHEMA_VERSION !== "undefined") return SCHEMA_VERSION;
+    return asNullable ? null : "?";
+  }
 });
 
-async function swCheckNow(){
-  // Settings top-row CTA should mirror "Refresh App" behavior.
-  // Keep status messaging, but always force-refresh app assets.
-  const statusEl = document.getElementById("updateBigStatus");
-  const btnCheck = document.getElementById("updatePrimary");
-  try{
-    if(statusEl) statusEl.textContent = SW_UPDATE_READY ? "Loading new build…" : "Loading latest build…";
-    if(btnCheck) btnCheck.disabled = true;
-    if(statusEl) statusEl.textContent = "Reloading app…";
-    await forceRefreshApp();
-  }catch(_){
-    try{
-      if(statusEl) statusEl.textContent = "Reloading app…";
-      await forceRefreshApp();
-    }catch(__){}
-  }finally{
-    if(btnCheck) btnCheck.disabled = false;
-    // refresh build info
-    try{ updateBuildInfo(); }catch(_){ }
-  }
-}
+window.addEventListener("sw-update-ready", () => {
+  updateRuntimeStatus.markSwUpdateReady();
+});
 
-async function forceRefreshApp(){
-  // Clear SW + caches and reload.
-  try{
-    if("serviceWorker" in navigator){
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r=>r.unregister()));
-    }
-    if(window.caches && caches.keys){
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k=>caches.delete(k)));
-    }
-  }catch(_){ }
-  location.reload();
-}
-
-// Async version/build info for Settings > Updates
-async function updateBuildInfo(){
-  const detailsEl = document.getElementById("buildInfoDetails");
-  const versionEl = document.getElementById("updateVersionLine");
-
-  // Visible, non-techy line (always shown)
-  try{
-    if(versionEl){
-      const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator.standalone === true);
-      versionEl.textContent = `Build loaded: ${DISPLAY_BUILD_VERSION}${standalone ? " • Standalone: yes" : ""}`;
-    }
-  }catch(_){
-    try{ if(versionEl) versionEl.textContent = `Build loaded: ${DISPLAY_BUILD_VERSION}`; }catch(__){}
-  }
-
-  if(!detailsEl) return;
-
-  const parts = [];
-  // App + schema
-  parts.push(`App: ${DISPLAY_BUILD_VERSION} (schema ${typeof SCHEMA_VERSION!=="undefined"?SCHEMA_VERSION:"?"})`);
-
-  // Display mode + SW controller
-  const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator.standalone === true);
-  parts.push(`Standalone: ${standalone ? "yes" : "no"}`);
-
-  let swLine = "SW: unsupported";
-  try{
-    if("serviceWorker" in navigator){
-      const reg = await navigator.serviceWorker.getRegistration();
-      const ctrl = !!navigator.serviceWorker.controller;
-      const url = reg?.active?.scriptURL || reg?.waiting?.scriptURL || reg?.installing?.scriptURL || "";
-      swLine = `SW: ${ctrl ? "controller" : "no-controller"}${url ? " | " + url.split("/").slice(-1)[0] : ""}`;
-    }
-  }catch(_){}
-  parts.push(swLine);
-
-  // Cache keys
-  try{
-    if(window.caches && caches.keys){
-      const keys = await caches.keys();
-      const ours = keys.filter(k=>String(k).startsWith("shellfish-tracker-"));
-      parts.push(`Caches: ${ours.length ? ours.join(", ") : "(none)"}`);
-    }
-  }catch(_){}
-
-  // Storage estimate (optional)
-  try{
-    if(navigator.storage && navigator.storage.estimate){
-      const est = await navigator.storage.estimate();
-      if(est && typeof est.usage==="number" && typeof est.quota==="number"){
-        const mb = (n)=>Math.round((n/1024/1024)*10)/10;
-        parts.push(`Storage: ${mb(est.usage)}MB / ${mb(est.quota)}MB`);
-      }
-    }
-  }catch(_){}
-
-  detailsEl.textContent = parts.join("\n");
-}
-
-
-
-function updateUpdateRow(){
-  const statusEl = document.getElementById("updateBigStatus");
-  const btnPrimary = document.getElementById("updatePrimary");
-  const inlineMsg = document.getElementById("updateInlineMsg");
-  if(!statusEl || !btnPrimary) return;
-
-  // Hide any transient inline message unless someone explicitly sets it.
-  if(inlineMsg) inlineMsg.style.display = "none";
-
-  if(SW_UPDATE_READY){
-    statusEl.textContent = "New build ready • tap Load latest build";
-    btnPrimary.textContent = "Load latest build";
-    btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-  }else{
-    statusEl.textContent = "Latest build already loaded";
-    btnPrimary.textContent = "Load latest build";
-    btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-  }
-}
+let themeMediaQuery = null;
+let onThemeMediaChange = null;
 
 function getThemeMode(){
   const s = state?.settings || {};
@@ -350,37 +239,6 @@ function getDisplayMode(){
 
 
 
-
-async function updateBuildBadge(){
-  const el = document.getElementById("buildBadge");
-  if(!el) return;
-
-  const schema = (typeof SCHEMA_VERSION !== "undefined" ? SCHEMA_VERSION : null);
-  const parts = [`App ${DISPLAY_BUILD_VERSION}`];
-  if(schema !== null) parts.push(`Schema ${schema}`);
-
-  // Service Worker info
-  let swCtrl = false;
-  try{
-    swCtrl = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
-  }catch{}
-
-  parts.push(`SW ${swCtrl ? "on" : "off"}`);
-
-  // Cache name info (best-effort)
-  try{
-    if(window.caches && caches.keys){
-      const keys = await caches.keys();
-      const k = keys.find(x=>String(x||"").startsWith("shellfish-tracker-")) || "";
-      if(k){
-        const m = String(k).match(/-v(\d+)$/);
-        if(m) parts.push(`Cache v${m[1]}`);
-      }
-    }
-  }catch{}
-
-  el.textContent = parts.join(" • ");
-}
 
 const feedback = createFeedbackSeam({
   escapeHtml,
@@ -1777,7 +1635,7 @@ const settingsListManagement = createSettingsListManagement({
   showToast: feedback.showToast,
   copyTextWithFeedback: feedback.copyTextWithFeedback,
   getDebugInfo: () => getDebugInfo(),
-  forceRefreshApp: () => forceRefreshApp(),
+  forceRefreshApp: () => updateRuntimeStatus.forceRefreshApp(),
   render: () => render()
 });
 
@@ -1792,12 +1650,12 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   themeModeDark: THEME_MODE_DARK,
   settingsListManagement,
   displayBuildVersion: DISPLAY_BUILD_VERSION,
-  updateBuildBadge: () => updateBuildBadge(),
+  updateBuildBadge: () => updateRuntimeStatus.updateBuildBadge(),
   bindThemeControls: () => bindThemeControls(),
   bindNavHandlers,
   pushView,
-  updateUpdateRow: () => updateUpdateRow(),
-  updateBuildInfo: () => updateBuildInfo(),
+  updateUpdateRow: () => updateRuntimeStatus.updateUpdateRow(),
+  updateBuildInfo: () => updateRuntimeStatus.updateBuildInfo(),
   updateLastBackupLine: () => updateLastBackupLine(),
   exportBackup: () => exportBackup(),
   parseBackupFileForRestore: (file) => parseBackupFileForRestore(file),
