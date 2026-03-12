@@ -17,7 +17,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Bank the Catch">
 
-<link rel="stylesheet" href="./css/shell_shared_v5.css?v=291">
+<link rel="stylesheet" href="./css/shell_shared_v5.css?v=292">
+<link rel="stylesheet" href="./css/trip_form_v5.css?v=292">
 
 <style>
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
@@ -170,37 +171,6 @@ header{padding:14px 18px 12px}
 .pageHeader.simple .phIcon{display:none}
 .pageHeader.simple .phTitle{text-align:center;margin:0 auto;font-size:22px;letter-spacing:.2px}
 
-body[data-view="new"] .formCard,
-body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transparent;box-shadow:none}
-#newTripForm{display:flex;flex-direction:column;gap:0}
-#newTripForm .field{margin-bottom:12px}
-
-.tripFormFoundation{padding:10px 10px 12px}
-.tripFormFoundation .trip-section{padding:var(--section-gap-tight) 0}
-.tripFormFoundation .trip-section + .trip-section{border-top:1px solid var(--divider-color)}
-.overline,.fieldLabel{letter-spacing:.12em}
-.chipRow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
-
-.selectRowWrap{position:relative}
-.selectRowWrap select{width:100%;appearance:none;-webkit-appearance:none;padding-right:44px}
-.selectRowWrap .chev{position:absolute;right:14px;top:50%;transform:translateY(-50%);opacity:.75;font-size:20px;pointer-events:none}
-
-
-
-.dateRow{display:flex;align-items:center;gap:10px;overflow:visible}
-.dateRow .dateIcon{display:inline-flex;align-items:center;justify-content:center;opacity:.85}
-.dateRow .dateIcon svg{width:18px;height:18px}
-.dateRow .datePill{flex:1;min-width:0}
-.dateRow .todayBtn{padding:10px 12px;border-radius:14px;background:var(--glass);border:1px solid var(--border);color:var(--text);font-weight:700;min-width:72px}
-
-.datePillWrap{position:relative;display:flex;align-items:stretch;flex:1;min-width:0;min-height:48px;overflow:visible;box-sizing:border-box}
-.datePillWrap > input[type="date"]{position:relative;z-index:2;background:transparent;width:100%;min-width:0 !important;min-height:48px;line-height:1.2;padding:12px 14px;box-sizing:border-box}
-.datePillWrap .datePillPlaceholder{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);z-index:3;pointer-events:none;color:var(--muted);font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.datePillWrap:not(.is-empty) .datePillPlaceholder{display:none}
-.datePillWrap.is-empty > input[type="date"]{color:transparent;-webkit-text-fill-color:transparent}
-.datePillWrap.is-empty > input[type="date"]::-webkit-datetime-edit{color:transparent}
-.datePillWrap.is-empty > input[type="date"]::-webkit-calendar-picker-indicator{opacity:.95}
-
 /* date range rows (Home + Reports advanced): avoid seam overlap + clipping */
 .row .datePillWrap{min-width:0;overflow:visible}
 .row .datePillWrap + .datePillWrap{margin-left:0}
@@ -211,84 +181,6 @@ body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transpar
 .grid2 .field{min-width:0;overflow:visible}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tripMetricsRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:10px 10px 8px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02)}
-.tripMetricsRow .field{min-width:0}
-.tripMetricsRow .fieldLabel{font-size:13px;letter-spacing:.08em}
-.tripMetricsRow .input{padding-left:10px;padding-right:10px}
-.tripMetricsRow #rateValue,
-.tripMetricsRow #rateValueEdit{font-weight:800;color:var(--ppl);background:var(--ppl-bg)}
-.rate{color:var(--muted);font-weight:700}
-.rate.ppl{color:var(--ppl)!important;font-weight:800}
-
-
-.actionsNew .btn.primary{width:100%}
-
-#newTripForm .trip-section{padding:var(--section-gap-tight) 0}
-#newTripForm .trip-section + .trip-section{border-top:1px solid var(--divider-color)}
-.edit-mode{
-  background:linear-gradient(180deg, rgba(255,77,79,.10) 0%, rgba(255,77,79,.04) 34%, rgba(255,255,255,.03) 100%);
-}
-.trip-edit-indicator{
-  padding-top:4px;
-  padding-bottom:6px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:8px;
-}
-.edit-trip-title{
-  margin:0;
-  color:var(--text);
-  font-size:clamp(1.2rem, 4.9vw, 1.55rem);
-  font-weight:800;
-  letter-spacing:.02em;
-  line-height:1.2;
-  text-align:center;
-}
-.editModePill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid rgba(47,109,246,.38);
-  background:rgba(47,109,246,.10);
-  color:var(--text);
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:.02em;
-}
-.editModePillIcon{
-  font-size:12px;
-  line-height:1;
-}
-.actionsNew .btnRow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.actionsNew .btnRow2 .btn{width:100%}
-
-/* New Trip: suffix units + save disabled */
-.inputWrap{position:relative;min-width:0;overflow:hidden}
-.inputWrap .input{min-width:0;width:100%}
-.inputWrap .unitSuffix,
-.inputWrap .moneyPrefix{
-  position:absolute;
-  top:50%;
-  transform:translateY(-50%);
-  font-weight:800;
-  opacity:.95;
-  pointer-events:none;
-  z-index:2;
-  white-space:nowrap;
-  line-height:1;
-}
-.inputWrap .unitSuffix{right:12px;max-width:calc(100% - 16px)}
-.inputWrap .moneyPrefix{left:12px;max-width:calc(100% - 16px)}
-.inputWrap--suffix .inputWithSuffix{padding-right:52px;text-overflow:ellipsis;overflow:hidden}
-.inputWrap--prefix .inputWithPrefix{padding-left:34px;padding-right:12px;text-overflow:ellipsis;overflow:hidden}
-.inputWrap--rate .input{padding-left:12px;padding-right:12px;text-overflow:ellipsis;overflow:hidden}
-.moneyGreen{color:var(--good)!important}
-.btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}
-
 button,.btn,.tabbtn,.chip,.smallbtn,.chipLink,.pasteBanner,.todayBtn{touch-action:manipulation}
 .tabbtn span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -826,7 +718,7 @@ body[data-view="edit"] main#app{padding-bottom:calc(var(--tabbar-total-h) + var(
 <main id="app"></main>
 </div>
 
-  <script type="module" src="./js/bootstrap_v5.js?v=291"></script>
+  <script type="module" src="./js/bootstrap_v5.js?v=292"></script>
 
   <div id="swUpdateBanner" class="card" style="position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none">
     <b>Update available</b>
