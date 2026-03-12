@@ -85,6 +85,13 @@
   --text-muted-strong:rgba(28,39,64,.80);
   --divider-color:rgba(37,53,92,.22);
 }
+
+/* Semantic metric colors */
+.lbsBlue{color:var(--lbs)!important}
+.money{color:var(--money)!important}
+.ppl,
+.rate.ppl{color:var(--ppl)!important}
+
 .safeBottom{ padding-bottom: max(10px, var(--safeBottom)); }
 .safeTop{ padding-top: max(10px, var(--safeTop)); }
 
