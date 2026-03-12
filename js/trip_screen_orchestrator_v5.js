@@ -57,7 +57,9 @@ export function createTripScreenOrchestrator({
   openConfirmModal,
   goBack,
   showUndoToast,
-  renderHome
+  renderHome,
+  buildTripFormInputs,
+  buildNewTripSaveSnapshot
 }) {
 function renderNewTrip(){
   ensureAreas();
@@ -340,22 +342,25 @@ const newTripFormHtml = renderTripEntryForm({
       saveState();
 
       // snapshot current inputs into draft
-      state.draft = state.draft || {};
-      const rawDate = String(elDate?.value||"").trim();
-// v71: t_date is type="date" (YYYY-MM-DD). Accept both ISO and legacy MM/DD/YYYY.
-const iso = rawDate.includes("-") ? rawDate.slice(0,10) : (parseUsDateToISODate(rawDate) || "");
-const mdy = rawDate.includes("-") ? formatDateDMY(iso) : rawDate;
-state.draft.dateISO = iso || state.draft.dateISO || "";
-state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
-      state.draft.pounds = parseNum(elPounds?.value);
-      state.draft.amount = parseMoney(elAmount?.value);
-      state.draft.area = String(elArea?.value||"").trim();
-      state.draft.species = String(elSpecies?.value || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
-      state.draft.notes = String(elNotes?.value || "").trim();
+      const saveSnapshot = buildNewTripSaveSnapshot({
+        rawDate: elDate?.value,
+        rawDealer: elDealer?.value,
+        rawPounds: elPounds?.value,
+        rawAmount: elAmount?.value,
+        rawArea: elArea?.value,
+        rawSpecies: elSpecies?.value,
+        rawNotes: elNotes?.value,
+        defaultSpecies: DEFAULT_TRIP_SPECIES,
+        parseUsDateToISODate,
+        formatDateDMY,
+        normalizeDealerDisplay,
+        parseNum,
+        parseMoney
+      });
+      state.draft = { ...(state.draft || {}), ...saveSnapshot.draft };
 
       // basic guard: if nothing entered, do nothing (prevents "dead tap" feel)
-      const anyEntered = Boolean(mdy || state.draft.dealer || (state.draft.pounds>0) || (state.draft.amount>0) || state.draft.area || state.draft.notes);
-      if(!anyEntered){
+      if(!saveSnapshot.anyEntered){
         announce("Error: Enter trip details first", "assertive");
         showToast("Enter trip details first");
         state._savingTrip = false; saveState();
@@ -364,15 +369,7 @@ state.draft.dealer = normalizeDealerDisplay(String(elDealer?.value||"").trim());
 
 await commitTripFromDraft({
   mode: "new",
-  inputs: {
-    date: mdy,
-    dealer: state.draft.dealer,
-    pounds: state.draft.pounds,
-    amount: state.draft.amount,
-    area: state.draft.area,
-    species: state.draft.species,
-    notes: state.draft.notes
-  },
+  inputs: saveSnapshot.inputs,
   nextView: "all_trips"
 });
       state._savingTrip = false; saveState();
@@ -1276,15 +1273,16 @@ function renderEditTrip(){
     await commitTripFromDraft({
       mode: "edit",
       editId: id,
-      inputs: {
+      inputs: buildTripFormInputs({
         date: elDate.value,
         dealer: elDealer.value,
         pounds: elPounds.value,
         amount: elAmount.value,
         area: elArea.value,
         species: elSpecies?.value || draft.species || DEFAULT_TRIP_SPECIES,
-        notes: (elNotes?.value ?? draft.notes ?? "")
-      }
+        notes: (elNotes?.value ?? draft.notes ?? ""),
+        defaultSpecies: DEFAULT_TRIP_SPECIES
+      })
     });
   });
   if(elAmount && elArea){
