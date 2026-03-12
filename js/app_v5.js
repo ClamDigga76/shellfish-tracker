@@ -399,6 +399,14 @@ function clearPendingTripUndo(){
   pendingTripUndo = null;
 }
 
+function triggerTripSaveSuccessHaptic(){
+  try{
+    if(typeof navigator === "undefined") return;
+    if(typeof navigator.vibrate !== "function") return;
+    navigator.vibrate(10);
+  }catch(_){ }
+}
+
 function showUndoToast({ message, snapshot, durationMs = 3200 }){
   clearPendingTripUndo();
   const token = Date.now();
@@ -1058,6 +1066,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
 
   state.view = nextView;
   saveState();
+  triggerTripSaveSuccessHaptic();
   render();
   showUndoToast({ message: "Saved", snapshot: undoSnapshot });
   // After first successful save, offer install (once per device).
