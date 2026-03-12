@@ -809,7 +809,7 @@ function applyUnifiedTripFilter(rawTrips, filter){
   const trips = (rawTrips || []).map(normalizeTripRow).filter(Boolean);
   const r = resolveUnifiedRange(filter);
 
-  let rows = trips.filter(t => t.dateISO >= r.fromISO && t.dateISO <= r.toISO);
+  let rows = trips.filter(t => isValidISODate(t.dateISO) && t.dateISO >= r.fromISO && t.dateISO <= r.toISO);
 
   if(filter.dealer && filter.dealer !== "all") rows = rows.filter(t => t.dealer === filter.dealer);
   if(filter.area && filter.area !== "all") rows = rows.filter(t => t.area === filter.area);
