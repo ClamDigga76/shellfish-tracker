@@ -23,6 +23,32 @@ function checkFileExists(relPath) {
   }
 }
 
+function readSource(relPath) {
+  try {
+    return readFileSync(path.join(ROOT, relPath), 'utf8');
+  } catch (error) {
+    fail(`read ${relPath}`, String(error.message || error));
+    return '';
+  }
+}
+
+function checkIncludes(source, checkName, token, detail = token) {
+  if (source.includes(token)) {
+    pass(checkName);
+  } else {
+    fail(checkName, `missing ${detail}`);
+  }
+}
+
+function checkIncludesAny(source, checkName, tokens) {
+  const hit = tokens.find((token) => source.includes(token));
+  if (hit) {
+    pass(checkName, `matched ${hit}`);
+  } else {
+    fail(checkName, `expected one of: ${tokens.join(' | ')}`);
+  }
+}
+
 const requiredFiles = [
   'index.html',
   'sw.js',
@@ -38,11 +64,7 @@ for (const relPath of requiredFiles) {
 }
 
 let indexHtml = '';
-try {
-  indexHtml = readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-} catch (error) {
-  fail('read index.html', String(error.message || error));
-}
+indexHtml = readSource('index.html');
 
 if (indexHtml) {
   const bootstrapPattern = /<script\s+type="module"\s+src="\.\/js\/bootstrap_v5\.js\?v=(\d+)"\s*>\s*<\/script>/i;
@@ -59,6 +81,35 @@ if (indexHtml) {
   } else {
     fail('index manifest reference present');
   }
+}
+
+const appSource = readSource('js/app_v5.js');
+const homeSource = readSource('js/home_dashboard_v5.js');
+const shellSource = readSource('js/app_shell_v5.js');
+
+if (appSource) {
+  checkIncludes(appSource, 'boot startup marker initialized', 'window.__SHELLFISH_APP_STARTED = false;');
+  checkIncludes(appSource, 'boot startup marker finalized', 'window.__SHELLFISH_APP_STARTED = true;');
+  checkIncludes(appSource, 'boot dispatcher present', 'function render(){');
+  checkIncludes(appSource, 'boot home default render', 'if(!state.view) state.view = "home";');
+  checkIncludes(appSource, 'boot all_trips route wired', 'else if(state.view === "all_trips") renderAllTrips();');
+}
+
+if (homeSource) {
+  checkIncludes(homeSource, 'home renderer factory exists', 'export function createHomeDashboardRenderer({');
+  checkIncludes(homeSource, 'home render function exists', 'function renderHome() {');
+  checkIncludesAny(homeSource, 'home view marker present', ['renderPageHeader("home")', 'renderPageHeader(\'home\')']);
+}
+
+if (appSource) {
+  checkIncludesAny(appSource, 'home renderer import wired', ['from "./home_dashboard_v5.js"', "from './home_dashboard_v5.js'"]);
+  checkIncludes(appSource, 'home renderer created', 'const { renderHome } = createHomeDashboardRenderer({');
+  checkIncludes(appSource, 'home route reachable from dispatcher', 'else renderHome();');
+  checkIncludes(appSource, 'trips screen render function exists', 'function renderAllTrips(){');
+}
+
+if (shellSource) {
+  checkIncludesAny(shellSource, 'trips tab present', ['{ key: "all_trips", label: "Trips"', "{ key: 'all_trips', label: 'Trips'"]);
 }
 
 let passCount = 0;
