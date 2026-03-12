@@ -76,7 +76,7 @@ export function createTripDataEngine({ uid, isValidISODate }) {
   return { normalizeTripRow, normalizeTrip, isValidAreaValue, validateTrip };
 }
 
-export function createTripDraftSaveEngine({ saveState }) {
+export function createTripDraftSaveEngine({ saveState, getEmergencyDraftPayload, writeEmergencyDraftFallback, onEmergencyDraftFallbackUsed }) {
   let lifecycleSaveFlushBound = false;
 
   function saveStateNow() {
@@ -84,14 +84,14 @@ export function createTripDraftSaveEngine({ saveState }) {
       clearTimeout(window.__pendingStateSaveTimer);
       window.__pendingStateSaveTimer = null;
     }
-    saveState();
+    return saveState();
   }
 
   function flushPendingStateSave() {
     if (!window.__pendingStateSaveTimer) return;
     clearTimeout(window.__pendingStateSaveTimer);
     window.__pendingStateSaveTimer = null;
-    saveState();
+    return saveState();
   }
 
   function scheduleStateSave(delayMs = 300) {
@@ -104,8 +104,21 @@ export function createTripDraftSaveEngine({ saveState }) {
   }
 
   function saveDraft() {
+    let fullStateSaved = false;
     try {
-      saveStateNow();
+      fullStateSaved = (saveStateNow() !== false);
+    } catch (_) {}
+    if (fullStateSaved) return;
+
+    try {
+      if (typeof getEmergencyDraftPayload !== "function") return;
+      if (typeof writeEmergencyDraftFallback !== "function") return;
+      const payload = getEmergencyDraftPayload();
+      if (!payload || typeof payload !== "object") return;
+      const fallbackSaved = writeEmergencyDraftFallback(payload);
+      if (fallbackSaved && typeof onEmergencyDraftFallbackUsed === "function") {
+        onEmergencyDraftFallbackUsed(payload);
+      }
     } catch (_) {}
   }
 

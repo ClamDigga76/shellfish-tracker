@@ -47,6 +47,7 @@ const {
 
 // Backup meta (local-only; no user data duplication)
 const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
+const TRIP_DRAFT_FALLBACK_KEY = "btc_trip_draft_emergency_v1";
 
 // In-app update UI: primary action always refreshes app assets/reload; SW state only changes status text.
 let SW_UPDATE_READY = false;
@@ -557,8 +558,51 @@ window.addEventListener("unhandledrejection", (e)=>{ if(window.__SHELLFISH_APP_S
 try{ window.__SHELLFISH_STARTED = true; }catch{}
 function getApp(){ return document.getElementById("app"); }
 
+function hasMeaningfulTripDraft(draft){
+  if(!draft || typeof draft !== "object") return false;
+  const dealer = String(draft.dealer || "").trim();
+  const area = String(draft.area || "").trim();
+  const notes = String(draft.notes || "").trim();
+  const dateISO = String(draft.dateISO || "").trim();
+  const pounds = Number(draft.pounds);
+  const amount = Number(draft.amount);
+  return Boolean(dealer || area || notes || dateISO || (Number.isFinite(pounds) && pounds > 0) || (Number.isFinite(amount) && amount > 0));
+}
+
+function readEmergencyTripDraftFallback(){
+  try{
+    const raw = localStorage.getItem(TRIP_DRAFT_FALLBACK_KEY);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    if(!parsed || typeof parsed !== "object") return null;
+    if(!parsed.draft || typeof parsed.draft !== "object") return null;
+    return parsed;
+  }catch{
+    return null;
+  }
+}
+
+function clearEmergencyTripDraftFallback(){
+  try{ localStorage.removeItem(TRIP_DRAFT_FALLBACK_KEY); }catch{}
+}
+
+let emergencyDraftRecoveredOnBoot = false;
+
 function loadState(){
-  return loadStateWithLegacyFallback(localStorage, ensureNavState);
+  const loaded = loadStateWithLegacyFallback(localStorage, ensureNavState);
+  const hasNormalDraft = hasMeaningfulTripDraft(loaded?.draft);
+  if(hasNormalDraft) return loaded;
+
+  const fallback = readEmergencyTripDraftFallback();
+  if(!fallback) return loaded;
+
+  try{
+    loaded.draft = fallback.draft;
+    if(fallback.reviewDraft && typeof fallback.reviewDraft === "object") loaded.reviewDraft = fallback.reviewDraft;
+    emergencyDraftRecoveredOnBoot = true;
+    clearEmergencyTripDraftFallback();
+  }catch{}
+  return loaded;
 }
 
 
@@ -1135,6 +1179,9 @@ if(Array.isArray(state.trips)) {
   }).filter(Boolean);
   if(changed) saveState();
 }
+if(emergencyDraftRecoveredOnBoot){
+  try{ showToast("Recovered your unsaved trip draft"); }catch(_){ }
+}
 function showFatal(err){
   if(window.__SHELLFISH_FATAL_SHOWN) return;
   window.__SHELLFISH_FATAL_SHOWN = true;
@@ -1232,8 +1279,29 @@ function safeSetItem(key, value){
   }
 }
 
+function buildEmergencyTripDraftPayload(){
+  if(!hasMeaningfulTripDraft(state?.draft)) return null;
+  return {
+    kind: "trip-draft-emergency",
+    updatedAt: new Date().toISOString(),
+    draft: state.draft,
+    reviewDraft: (state?.reviewDraft && typeof state.reviewDraft === "object") ? state.reviewDraft : null
+  };
+}
+
+function writeEmergencyTripDraftFallback(payload){
+  try{
+    localStorage.setItem(TRIP_DRAFT_FALLBACK_KEY, JSON.stringify(payload));
+    return true;
+  }catch{
+    return false;
+  }
+}
+
 function baseSaveState(){
-  safeSetItem(LS_KEY, JSON.stringify(state));
+  const ok = safeSetItem(LS_KEY, JSON.stringify(state));
+  if(ok) clearEmergencyTripDraftFallback();
+  return ok;
 }
 
 const {
@@ -1242,7 +1310,14 @@ const {
   scheduleStateSave,
   saveDraft,
   bindLifecycleSaveFlush
-} = createTripDraftSaveEngine({ saveState: baseSaveState });
+} = createTripDraftSaveEngine({
+  saveState: baseSaveState,
+  getEmergencyDraftPayload: ()=> buildEmergencyTripDraftPayload(),
+  writeEmergencyDraftFallback: (payload)=> writeEmergencyTripDraftFallback(payload),
+  onEmergencyDraftFallbackUsed: ()=> {
+    try{ showToast("Saved a small emergency draft backup"); }catch(_){ }
+  }
+});
 
 function saveState(){
   saveStateNow();
