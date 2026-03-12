@@ -64,13 +64,13 @@ async function swCheckNow(){
   const statusEl = document.getElementById("updateBigStatus");
   const btnCheck = document.getElementById("updatePrimary");
   try{
-    if(statusEl) statusEl.textContent = SW_UPDATE_READY ? "Applying update…" : "Refreshing app…";
+    if(statusEl) statusEl.textContent = SW_UPDATE_READY ? "Loading new build…" : "Loading latest build…";
     if(btnCheck) btnCheck.disabled = true;
-    if(statusEl) statusEl.textContent = "Refreshing…";
+    if(statusEl) statusEl.textContent = "Reloading app…";
     await forceRefreshApp();
   }catch(_){
     try{
-      if(statusEl) statusEl.textContent = "Refreshing…";
+      if(statusEl) statusEl.textContent = "Reloading app…";
       await forceRefreshApp();
     }catch(__){}
   }finally{
@@ -104,10 +104,10 @@ async function updateBuildInfo(){
   try{
     if(versionEl){
       const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator.standalone === true);
-      versionEl.textContent = `Version: ${DISPLAY_BUILD_VERSION}${standalone ? " • Standalone: yes" : ""}`;
+      versionEl.textContent = `Build loaded: ${DISPLAY_BUILD_VERSION}${standalone ? " • Standalone: yes" : ""}`;
     }
   }catch(_){
-    try{ if(versionEl) versionEl.textContent = `Version: ${DISPLAY_BUILD_VERSION}`; }catch(__){}
+    try{ if(versionEl) versionEl.textContent = `Build loaded: ${DISPLAY_BUILD_VERSION}`; }catch(__){}
   }
 
   if(!detailsEl) return;
@@ -166,12 +166,12 @@ function updateUpdateRow(){
   if(inlineMsg) inlineMsg.style.display = "none";
 
   if(SW_UPDATE_READY){
-    statusEl.textContent = "Update ready • tap Refresh app";
-    btnPrimary.textContent = "Refresh app";
+    statusEl.textContent = "New build ready • tap Load latest build";
+    btnPrimary.textContent = "Load latest build";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
   }else{
-    statusEl.textContent = "Up to date";
-    btnPrimary.textContent = "Refresh app";
+    statusEl.textContent = "Latest build already loaded";
+    btnPrimary.textContent = "Load latest build";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
   }
 }
