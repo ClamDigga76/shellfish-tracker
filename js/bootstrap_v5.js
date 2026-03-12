@@ -1,9 +1,20 @@
 const BOOTSTRAP_URL = new URL(import.meta.url, location.href);
 const APP_VERSION = BOOTSTRAP_URL.searchParams.get("v") || "0";
+const SAFE_MODE_PARAM = "safeMode";
+const SAFE_MODE_SESSION_KEY = "shellfish-safe-mode-session";
 
 // Single source of truth for build/version
 window.APP_VERSION = APP_VERSION;
 window.APP_BUILD = `v5.${APP_VERSION}`;
+window.__SHELLFISH_SAFE_MODE__ =
+  BOOTSTRAP_URL.searchParams.get(SAFE_MODE_PARAM) === "1" ||
+  (() => {
+    try {
+      return sessionStorage.getItem(SAFE_MODE_SESSION_KEY) === "1";
+    } catch (_) {
+      return false;
+    }
+  })();
 /**
  * Shellfish Tracker v5 bootstrap
  *
@@ -290,8 +301,10 @@ window.__showModuleError = function (err) {
           <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
             <button class="btn" id="copyErr">Copy debug</button>
             <button class="btn good" id="reload">Reload</button>
+            <button class="btn" id="safeMode">Start Safe Mode</button>
             <button class="btn" id="resetCache">Reset Cache</button>
           </div>
+          <div class="muted small" style="margin-top:8px">Safe Mode starts with temporary clean state for this session and does not erase trips.</div>
         </div>
       `;
 
@@ -312,6 +325,23 @@ window.__showModuleError = function (err) {
 
       const reloadBtn = document.getElementById("reload");
       if (reloadBtn) reloadBtn.onclick = () => location.reload();
+
+      const safeModeBtn = document.getElementById("safeMode");
+      if (safeModeBtn) {
+        safeModeBtn.onclick = () => {
+          try {
+            sessionStorage.setItem(SAFE_MODE_SESSION_KEY, "1");
+          } catch (_) {}
+
+          try {
+            const nextUrl = new URL(location.href);
+            nextUrl.searchParams.set(SAFE_MODE_PARAM, "1");
+            location.assign(nextUrl.toString());
+          } catch (_) {
+            location.reload();
+          }
+        };
+      }
 
       const resetBtn = document.getElementById("resetCache");
       if (resetBtn) {
