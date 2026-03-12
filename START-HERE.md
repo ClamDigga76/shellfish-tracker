@@ -14,8 +14,7 @@ For normal work, use this order:
 3. the specific helper file for the task
 
 ## File roles
-- `AGENTS.md` = operational law
-- `PROJECT-INSTRUCTION-BLOCK.md` = portable project instruction wrapper
+- `AGENTS.md` = operational law (including earned patch sub-type guidance)
 - `PARKING-LOT-GUIDE.md` = Parking Lot behavior
 - `patch-prompt-style.md` = Web Codex patch prompt style
 - `codex-app-style.md` = desktop/local prompt style

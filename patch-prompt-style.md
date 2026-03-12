@@ -87,6 +87,13 @@ Only runtime-facing app patches require a build/version bump +1.
 
 Project-files / docs / workflow patches do not require a runtime version bump.
 
+## Earned patch sub-types (practical use)
+`AGENTS.md` is the source of truth. Use this lightweight split when writing patch prompts:
+
+- **Standard runtime patch**: runtime-facing scope, version bump +1, plus `npm run check:repo` and runtime preflight verify.
+- **Runtime correction/hotfix patch**: same runtime checks as above, keep scope extra tight, and include Repro when applicable.
+- **Repo/workflow support patch**: no runtime version bump or runtime preflight; run repo-side checks relevant to touched files.
+
 ## Scope reminders
 Prefer:
 - one screen
