@@ -28,6 +28,7 @@ import { createReportsScreenRenderer } from "./reports_screen_v5.js";
 import { createFeedbackSeam } from "./feedback_seam_v5.js";
 import { createTripScreenOrchestrator } from "./trip_screen_orchestrator_v5.js";
 import { createUpdateRuntimeStatusSeam } from "./update_runtime_status_v5.js";
+import { createDiagnosticsFatalSeam } from "./diagnostics_fatal_v5.js";
 import {
   renderPageHeader as renderPageHeaderShell,
   bindHeaderHelpButtons as bindHeaderHelpButtonsShell,
@@ -140,10 +141,6 @@ function bindThemeControls(){
 
 window.__SHELLFISH_BUILD__ = APP_VERSION;
 const HOME_TRIPS_LIMIT = 15;
-const LAST_ERROR_KEY = "shellfish-last-error";
-const LAST_ERROR_AT_KEY = "shellfish-last-error-at";
-const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
-const LEGACY_LAST_ERROR_AT_KEY = "SHELLFISH_LAST_ERROR_AT";
 const { pushView, goBack, bindNavHandlers } = createNavigator({
   saveState: () => saveState(),
   render: () => render()
@@ -254,6 +251,16 @@ const {
   copyTextWithFeedback
 } = feedback;
 
+const diagnosticsFatal = createDiagnosticsFatalSeam({
+  displayBuildVersion: DISPLAY_BUILD_VERSION,
+  getSchemaVersion: () => SCHEMA_VERSION,
+  getState: () => state,
+  copyTextWithFeedback,
+  escapeHtml
+});
+const { getDebugInfo, showFatal, bindBootErrorHandlers, bindFatalHandlers } = diagnosticsFatal;
+bindBootErrorHandlers();
+
 let pendingTripUndo = null;
 
 function cloneUndoValue(v){
@@ -358,84 +365,10 @@ function renderTabBar(activeView){
 }
 
 
-function getDebugInfo(){
-  const appName = "Bank the Catch";
-  const trips = Array.isArray(state?.trips) ? state.trips.length : 0;
-  const areas = Array.isArray(state?.areas) ? state.areas.length : 0;
-  const view = state?.view ? String(state.view) : "";
-  const last = state?.lastAction ? String(state.lastAction) : "";
-  const settings = state?.settings || {};
-
-  const isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (window.navigator && window.navigator.standalone === true);
-  const dm = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ? "standalone" : "browser";
-  const swCtrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? "controlled" : "none";
-  const swScript = (navigator.serviceWorker && navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL) ? navigator.serviceWorker.controller.scriptURL : "";
-  const installMode = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-    ? "standalone"
-    : (window.navigator && window.navigator.standalone === true ? "ios-standalone" : "browser-tab");
-  const bootStage = window.__BOOT_DIAG__?.stage ? String(window.__BOOT_DIAG__.stage) : "";
-  const appStarted = window.__SHELLFISH_APP_STARTED ? "true" : "false";
-
-  let lsChars = 0;
-  try{
-    for(const k of Object.keys(localStorage||{})){
-      const v = localStorage.getItem(k)||"";
-      lsChars += (k.length + v.length);
-    }
-  }catch{}
-
-  let lastErr = "";
-  let lastErrAt = "";
-  try{ lastErr = localStorage.getItem(LAST_ERROR_KEY) || localStorage.getItem(LEGACY_LAST_ERROR_KEY)||""; }catch{}
-  try{ lastErrAt = localStorage.getItem(LAST_ERROR_AT_KEY) || localStorage.getItem(LEGACY_LAST_ERROR_AT_KEY)||""; }catch{}
-
-  const lb = settings.lastBackupAt ? new Date(settings.lastBackupAt).toISOString() : "";
-  const lbCount = (settings.lastBackupTripCount ?? "");
-  const snooze = settings.backupSnoozeUntil ? new Date(settings.backupSnoozeUntil).toISOString() : "";
-
-  return [
-    `${appName} ${DISPLAY_BUILD_VERSION} (schema ${SCHEMA_VERSION})`,
-    `Build: ${DISPLAY_BUILD_VERSION}`,
-    view ? `View: ${view}` : "",
-    location.hash ? `Route: ${location.hash}` : "",
-    `DisplayMode: ${dm}`,
-    `InstallMode: ${installMode}`,
-    `StandaloneFlag: ${isStandalone ? "true" : "false"}`,
-    `AppStarted: ${appStarted}`,
-    bootStage ? `BootStage: ${bootStage}` : "",
-    `ServiceWorker: ${swCtrl}`,
-    swScript ? `SWScript: ${swScript}` : "",
-    `LocalStorageChars: ${lsChars}`,
-    `UserAgent: ${navigator.userAgent}`,
-    navigator.platform ? `Platform: ${navigator.platform}` : "",
-    `Trips: ${trips}`,
-    `Areas: ${areas}`,
-    last ? `LastAction: ${last}` : "",
-    lb ? `LastBackupAt: ${lb}` : "",
-    (lbCount!=="") ? `LastBackupTripCount: ${lbCount}` : "",
-    snooze ? `BackupSnoozeUntil: ${snooze}` : "",
-    lastErrAt ? `LastErrorAt: ${lastErrAt}` : "",
-    lastErr ? `LastError: ${lastErr}` : "",
-    `Time: ${new Date().toISOString()}`
-  ].filter(Boolean).join("\n");
-}
-
 
 const SCHEMA_VERSION = 1;
 
 
-
-const bootPill = document.getElementById("bootPill");
-function setBootError(msg){
-  try{
-    if(!bootPill) return;
-    bootPill.textContent = "ERROR";
-    bootPill.title = String(msg || "Unknown error");
-    bootPill.classList.add("err");
-  }catch{}
-}
-window.addEventListener("error", (e)=>{ if(window.__SHELLFISH_APP_STARTED) return; setBootError(e?.message || e?.error || "Script error"); });
-window.addEventListener("unhandledrejection", (e)=>{ if(window.__SHELLFISH_APP_STARTED) return; setBootError(e?.reason || "Unhandled rejection"); });
 
 // Signal to the page watchdog that the module loaded
 try{ window.__SHELLFISH_STARTED = true; }catch{}
@@ -1089,91 +1022,7 @@ if(emergencyDraftRecoveredOnBoot){
 if(SAFE_MODE_ACTIVE){
   try{ showToast("Safe Mode active: loaded temporary clean state"); }catch(_){ }
 }
-function showFatal(err){
-  if(window.__SHELLFISH_FATAL_SHOWN) return;
-  window.__SHELLFISH_FATAL_SHOWN = true;
-  // Persist last error so index.html can show a recovery UI even if modules fail next time.
-  try{
-    const msg = (err && (err.stack || err.message)) ? String(err.stack || err.message) : String(err || "Fatal error");
-    localStorage.setItem(LAST_ERROR_KEY, msg);
-    localStorage.setItem(LAST_ERROR_AT_KEY, new Date().toISOString());
-    // legacy
-    localStorage.setItem(LEGACY_LAST_ERROR_KEY, msg);
-    localStorage.setItem(LEGACY_LAST_ERROR_AT_KEY, new Date().toISOString());
-  }catch(_){ }
-
-  const appEl = document.getElementById("app");
-  const pill = document.getElementById("bootPill");
-
-  const errText = String(err && (err.stack || err.message || err) || "Unknown error");
-
-  if(pill){
-    pill.textContent = "ERROR";
-    pill.classList.add("err");
-    pill.title = errText;
-  }
-
-  const isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (window.navigator && window.navigator.standalone === true);
-  const swCtrl = (navigator.serviceWorker && navigator.serviceWorker.controller) ? "yes" : "no";
-
-  const dump = [
-    `App: ${DISPLAY_BUILD_VERSION} (schema ${SCHEMA_VERSION})`,
-    `URL: ${location.href}`,
-    `UA: ${navigator.userAgent}`,
-    `Standalone: ${isStandalone ? "yes" : "no"}`,
-    `SW controller: ${swCtrl}`,
-    "",
-    errText
-  ].join("\n");
-
-  if(!appEl) return;
-
-  appEl.innerHTML = `
-    <div class="card">
-      <b>App Error</b>
-      <div class="sep"></div>
-      <div class="muted small" style="white-space:pre-wrap">${escapeHtml(errText)}</div>
-
-      <div class="row mt12 gap10 wrap">
-        <button class="btn" id="fatalCopy">Copy debug</button>
-        <button class="btn good" id="fatalReload">Reload</button>
-        <button class="btn" id="fatalResetCache">Reset cache</button>
-      </div>
-
-      <div class="muted small" style="margin-top:10px;line-height:1.35">
-        If this keeps happening on iPhone/iPad: try <b>Reset cache</b>, then reload. Installed PWA updates can be delayed by cached files.
-      </div>
-    </div>
-  `;
-
-  const safeAsync = (fn)=>{ try{ fn(); }catch(_){} };
-
-  const resetCache = async ()=>{
-    try{
-      if("serviceWorker" in navigator){
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r=>r.unregister()));
-      }
-      if("caches" in window){
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k=>caches.delete(k)));
-      }
-    }catch(_){}
-    location.reload();
-  };
-
-  const btnCopy = document.getElementById("fatalCopy");
-  if(btnCopy) btnCopy.onclick = ()=> { void copyTextWithFeedback(dump, "Debug copied"); };
-
-  const btnReload = document.getElementById("fatalReload");
-  if(btnReload) btnReload.onclick = ()=> location.reload();
-
-  const btnResetCache = document.getElementById("fatalResetCache");
-  if(btnResetCache) btnResetCache.onclick = ()=> safeAsync(()=> resetCache());
-}
-window.addEventListener("error", (e)=> showFatal(e?.error || e?.message || e));
-window.addEventListener("unhandledrejection", (e)=> showFatal(e?.reason || e));
-
+bindFatalHandlers();
 function safeSetItem(key, value){
   try{
     localStorage.setItem(key, value);
