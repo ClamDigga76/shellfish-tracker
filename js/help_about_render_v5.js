@@ -15,14 +15,16 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       </div>
     </div>
 
-
     <div class="card">
-      <b style="font-size:1.05rem">Install / Offline</b>
+      <b style="font-size:1.05rem">Install & Offline</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>iPhone/iPad:</b> Safari → Share → <b>Add to Home Screen</b>.</div>
-        <div style="margin-top:6px"><b>Android:</b> Chrome menu → <b>Install app</b> (or Add to Home screen).</div>
-        <div style="margin-top:6px">Installed PWAs can lag behind updates due to cached files—use <b>Refresh App</b> if something looks wrong.</div>
+        <div><b>What this is for:</b> Keep Bank the Catch on your home screen and usable even with weak signal.</div>
+        <ul style="margin:8px 0 0 18px">
+          <li><b>iPhone/iPad:</b> Safari → Share → <b>Add to Home Screen</b>.</li>
+          <li><b>Android:</b> Chrome menu → <b>Install app</b> (or Add to Home screen).</li>
+          <li>If the app looks out of date, open <b>Settings → Refresh App</b>, then reopen.</li>
+        </ul>
       </div>
     </div>
 
@@ -30,10 +32,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_home" style="font-size:1.05rem">Home</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
+        <div><b>What this screen is for:</b> Fast snapshot of your current totals and recent activity.</div>
         <ul style="margin:8px 0 0 18px">
-          <li><b>Totals</b> and the recent list follow your current filter (YTD / Month / Last 7 days).</li>
-          <li>Use Home when you just want a quick “how am I doing?” snapshot.</li>
-          <li>If you install the app, Home works offline too.</li>
+          <li>Totals and recent trips follow your active filter (YTD / Month / Last 7 days).</li>
+          <li>Use Home when you want a quick status check before or after a trip.</li>
         </ul>
       </div>
     </div>
@@ -42,10 +44,11 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_trips" style="font-size:1.05rem">Trips</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
+        <div><b>What this screen is for:</b> Browse saved trips and open one to edit details.</div>
         <ul style="margin:8px 0 0 18px">
-          <li>Browse your trips. Tap a trip to view/edit (if available).</li>
-          <li>Duplicate warning may appear when saving a trip that looks similar—use “Save anyway” only when it’s truly a different trip.</li>
-          <li>Use <b>New Trip</b> to add a fresh harvest entry.</li>
+          <li>Tap a trip card to view/edit it.</li>
+          <li>If you see a duplicate warning on save, check date/dealer/area first, then choose <b>Save anyway</b> only if it is truly a different trip.</li>
+          <li>Use <b>New Trip</b> for a fresh entry.</li>
         </ul>
       </div>
     </div>
@@ -53,25 +56,32 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
     <div class="card">
       <b id="help_jump_newtrip" style="font-size:1.05rem">New Trip</b>
       <div class="sep"></div>
-      <ol class="muted helpText" style="margin:8px 0 0 18px;line-height:1.62;font-size:.97rem">
-        <li>Enter <b>Date</b>.</li>
-        <li>Pick or type a <b>Dealer</b>.</li>
-        <li>Enter <b>Pounds</b> and <b>Amount</b>.</li>
-        <li>Pick an <b>Area</b>.</li>
-        <li>Tap <b>Save Trip</b>.</li>
-      </ol>
-      <div class="hint">Tip: chips are quick-picks—tap to fill faster.</div>
+      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
+        <div><b>What this screen is for:</b> Record one harvest trip.</div>
+        <div style="margin-top:8px"><b>How to use it:</b></div>
+        <ol style="margin:8px 0 0 18px">
+          <li>Set the <b>Date</b>.</li>
+          <li>Select or type a <b>Dealer</b>.</li>
+          <li>Enter <b>Pounds</b> and <b>Amount</b>.</li>
+          <li>Choose an <b>Area</b>.</li>
+          <li>Tap <b>Save Trip</b>.</li>
+        </ol>
+        <div style="margin-top:8px"><b>Tip:</b> Quick chips can fill Area/Dealer faster.</div>
+      </div>
     </div>
 
     <div class="card">
       <b id="help_jump_reports" style="font-size:1.05rem">Reports</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <ul style="margin:8px 0 0 18px">
-          <li>Reports uses the same date filter idea as Home, plus optional advanced range controls.</li>
-          <li>Switch between <b>Charts</b> and <b>Tables</b> to see the same data different ways.</li>
-          <li>If something looks off, double-check your filter/range first.</li>
-        </ul>
+        <div><b>What this screen is for:</b> Analyze totals, trends, and breakdowns.</div>
+        <div style="margin-top:8px"><b>How to use it:</b></div>
+        <ol style="margin:8px 0 0 18px">
+          <li>Pick a date window (preset or advanced range).</li>
+          <li>Optional: add dealer/area filters.</li>
+          <li>Switch between <b>Charts</b> and <b>Tables</b>.</li>
+        </ol>
+        <div style="margin-top:8px"><b>Tip:</b> If numbers look off, recheck filters first.</div>
       </div>
     </div>
 
@@ -79,11 +89,12 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_settings" style="font-size:1.05rem">Settings</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
+        <div><b>What this screen is for:</b> Manage updates, lists, data safety, and diagnostics.</div>
         <ul style="margin:8px 0 0 18px">
-          <li><b>Updates</b>: check for updates and see build details.</li>
-          <li><b>List Management</b>: edit Areas and Dealers used by New Trip.</li>
-          <li><b>Data</b>: create/restore backup files (see Backups below).</li>
-          <li><b>Advanced</b>: Copy Debug, Refresh App, Erase All Data.</li>
+          <li><b>Updates:</b> Check current build and refresh if needed.</li>
+          <li><b>List Management:</b> Add/edit Dealers and Areas used in trip entry.</li>
+          <li><b>Data:</b> Create or restore backups.</li>
+          <li><b>Advanced:</b> Copy Debug Info, Refresh App, Erase All Data.</li>
         </ul>
       </div>
     </div>
@@ -92,12 +103,20 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_backups" style="font-size:1.05rem">Backups & Restore</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <ul style="margin:8px 0 0 18px">
-          <li><b>Create Backup</b> makes a file containing your trips and lists. Keep it somewhere safe.</li>
-          <li><b>Where to store it:</b> move the file into a cloud-synced folder so it’s included in your normal phone backups (iPhone: Files → iCloud Drive; Android: Files → Google Drive or Drive-synced folder).</li>
-          <li><b>Restore Backup</b> lets you preview, then choose Merge or Replace. Best practice: create a backup first.</li>
-          <li>If an update seems “stuck”, use <b>Refresh App</b> in Settings → Advanced (it clears cached files and reloads).</li>
-        </ul>
+        <div><b>What this is for:</b> Protect your trip records before phone changes, resets, or major updates.</div>
+        <div style="margin-top:8px"><b>Create backup:</b></div>
+        <ol style="margin:8px 0 0 18px">
+          <li>Go to Settings → Data.</li>
+          <li>Tap <b>Create Backup</b>.</li>
+          <li>Move the file to safe storage (iCloud Drive / Google Drive).</li>
+        </ol>
+        <div style="margin-top:8px"><b>Restore backup:</b></div>
+        <ol style="margin:8px 0 0 18px">
+          <li>Open Settings → Data → <b>Restore Backup</b>.</li>
+          <li>Review the preview details.</li>
+          <li>Choose <b>Merge</b> or <b>Replace</b>.</li>
+        </ol>
+        <div style="margin-top:8px"><b>Tip:</b> Make a fresh backup before restoring.</div>
       </div>
     </div>
 
