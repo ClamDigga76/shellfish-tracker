@@ -75,12 +75,12 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
         <div style="margin-top:8px"><b>How to use it:</b></div>
         <ol style="margin:8px 0 0 18px">
           <li>Set the <b>Date</b>.</li>
-          <li>Select or type a <b>Dealer</b>.</li>
           <li>Enter <b>Pounds</b> and <b>Amount</b>.</li>
-          <li>Choose an <b>Area</b>.</li>
+          <li>Select a <b>Dealer</b> (use chips or the list).</li>
+          <li>Choose an <b>Area</b> (use chips or the list).</li>
           <li>Tap <b>Save Trip</b>.</li>
         </ol>
-        <div style="margin-top:8px"><b>Tip:</b> Quick chips can fill Area/Dealer fields faster.</div>
+        <div style="margin-top:8px"><b>Tip:</b> On first use, chips may be empty until you save trips. Use the Dealer/Area lists first, then chips become faster over time.</div>
       </div>
     </div>
 
