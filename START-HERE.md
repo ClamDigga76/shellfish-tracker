@@ -20,6 +20,7 @@ For normal work, use this order:
 - `codex-app-style.md` = desktop/local prompt style
 - `testing-checklist.md` = post-patch test loop
 - `REGRESSION-HOTSPOTS.md` = high-risk file/flow caution map before patching
+- `STORE-WRAPPER-READINESS.md` = wrapper/app-store prep baseline and known blockers
 
 ## Default mode
 Default to **Web Codex / browser sandbox** workflow unless the task clearly requires desktop/local repo flow.
