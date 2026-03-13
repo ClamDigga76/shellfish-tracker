@@ -43,15 +43,15 @@ export function createSettingsScreenOrchestrator({
         <b class="settingsMiniTitle">Updates</b>
         <div class="sep settingsMiniSep"></div>
 
-        <div id="updateBigStatus" class="settingsUpdateStatus">Checking update status…</div>
+        <div id="updateBigStatus" class="settingsUpdateStatus">Checking for updates…</div>
         <div class="muted settingsBodyTiny" id="updateVersionLine"></div>
 
         <div class="row settingsInlineRow">
-          <button class="btn settingsInlineBtn" id="updatePrimary">Load latest build</button>
+          <button class="btn settingsInlineBtn" id="updatePrimary">Load latest update</button>
           <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
 
-        <div class="hint mt10">When a new build is ready, tap <b>Load latest build</b>. The app reloads so the newest version opens right away.</div>
+        <div class="hint mt10">When a new build is ready, tap <b>Load latest update</b>. The app reloads so the newest version opens right away.</div>
 
         <details class="settingsDetails">
           <summary class="muted settingsBodyTiny">Details</summary>
@@ -62,9 +62,9 @@ export function createSettingsScreenOrchestrator({
       <div class="card settingsMiniCard">
         <b class="settingsMiniTitle">Help</b>
         <div class="sep settingsMiniSep"></div>
-        <div class="muted settingsBodyTiny">Short instructions for manual entry, clipboard paste, backups, and install.</div>
+        <div class="muted settingsBodyTiny">Quick guidance for trip entry, reports, backups, and install.</div>
         <div class="row settingsHelpRow">
-          <button class="btn settingsInlineBtn" id="openHelp">Open Help</button>
+          <button class="btn settingsInlineBtn" id="openHelp">View Help</button>
         </div>
       </div>
     </div>
@@ -72,7 +72,7 @@ export function createSettingsScreenOrchestrator({
     <div class="card">
       <b>Appearance</b>
       <div class="sep"></div>
-      <div class="muted small mt10">Choose how the app theme is applied.</div>
+      <div class="muted small mt10">Choose how the app appearance is applied.</div>
       <div class="field mt10">
         <label class="label" for="themeMode">Theme</label>
         <div class="selectRowWrap">
@@ -89,7 +89,7 @@ export function createSettingsScreenOrchestrator({
     <div class="card">
       <b>Backup & Restore</b>
       <div class="sep"></div>
-      <div class="muted small mt10">Create a backup file you can store in Files/Drive. Restore shows a preview first so you can confirm details before any changes.</div>
+      <div class="muted small mt10">Create a backup file you can save to Files/Drive. Restore shows a preview first so you can confirm details before changes are made.</div>
       <div class="muted small mt10" id="lastBackupLine"></div>
       <div class="hint mt10"><b>Backup recommended</b> before major updates.</div>
       <div class="row settingsBackupRow">
@@ -97,8 +97,8 @@ export function createSettingsScreenOrchestrator({
         <button class="btn settingsFlexBtn" id="restoreBackup">📥 Restore Backup</button>
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
       </div>
-      <div class="muted small mt10">Tip: after you download a backup, move it into <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it gets included in your regular phone/cloud backups. Keep at least one older backup too.</div>
-      <div class="hint mt10">Restore preview lets you check trip count and choose <b>Merge</b> or <b>Replace</b> before anything changes.</div>
+      <div class="muted small mt10">Tip: after you create a backup, move it to <b>iCloud Drive</b> (iPhone Files app) or <b>Google Drive</b> (Android) so it is included in your regular device/cloud backups. Keep at least one older backup too.</div>
+      <div class="hint mt10">Restore preview lets you confirm trip count and choose <b>Merge</b> or <b>Replace</b> before anything changes.</div>
     </div>
 
     <div class="card">
@@ -113,7 +113,7 @@ export function createSettingsScreenOrchestrator({
           <div class="muted tiny settingsSoonNote">Coming soon</div>
         </button>
       </div>
-      <div class="muted small mt10">Manage the dropdown lists used in New Trip and Edit Trip.</div>
+      <div class="muted small mt10">Manage the lists used in New Trip and Edit Trip.</div>
 
       <div id="listMgmtPanel">${settingsListManagement.renderListMgmtPanel(listMode)}</div>
     </div>
@@ -129,7 +129,7 @@ export function createSettingsScreenOrchestrator({
       <div class="muted small mt8">© 2026 Jeremy Wood. All rights reserved.</div>
       <div class="sep mt10"></div>
       <div class="muted small mt10"><b>Legal & Trust</b></div>
-      <div class="muted small mt6">Review terms, privacy details, and license information.</div>
+      <div class="muted small mt6">Review terms, privacy details, and open-source license information.</div>
       <div class="row mt10 gap10 wrap">
         <button class="btn" id="openTerms">Terms of Use</button>
         <button class="btn" id="openPrivacy">Privacy Policy</button>
@@ -142,8 +142,8 @@ export function createSettingsScreenOrchestrator({
       <div class="sep mt10"></div>
 
       <div class="row mt12 gap10 wrap">
-        <button class="btn" id="copyDebug">Copy Debug</button>
-        <button class="btn" id="refreshApp">Refresh App</button>
+        <button class="btn" id="copyDebug">Copy debug info</button>
+        <button class="btn" id="refreshApp">Reload app</button>
       </div>
 
       <div class="muted small mt10">Erase removes all trips and lists on this device. Use a backup first.</div>
