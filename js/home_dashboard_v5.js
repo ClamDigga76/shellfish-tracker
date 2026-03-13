@@ -133,10 +133,10 @@ export function createHomeDashboardRenderer({
       ? tripsSorted.slice(0, homeTripsLimit).map((t) => renderTripCatchCard(t, { interactive: true })).join("")
       : `
         <div class="emptyState">
-          <div class="emptyStateTitle">No trips in this range yet</div>
-          <div class="emptyStateBody">Try a different date filter, or add your first trip to start tracking pounds, payouts, and trends.</div>
+          <div class="emptyStateTitle">No trips yet for this range</div>
+          <div class="emptyStateBody">Try another date range, or add your first trip to start tracking pounds, payout, and trends.</div>
           <div class="emptyStateAction">
-            <button class="btn good" id="homeEmptyNewTrip" type="button">＋ New Trip</button>
+            <button class="btn good" id="homeEmptyNewTrip" type="button">＋ Add Trip</button>
           </div>
         </div>`;
 

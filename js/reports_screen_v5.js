@@ -96,9 +96,9 @@ function renderReports(){
 
 
         <div class="emptyState" style="margin-top:12px">
-          <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Pick a valid date range" : "No trips found for this report"}</div>
+          <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips yet for this report"}</div>
           <div class="emptyStateBody">${fMode==="RANGE" && !hasValidRange
-            ? "Set both From and To dates in Advanced, then tap Apply to load tables and charts."
+            ? "Set both From and To dates in Advanced, then tap Apply to load your report."
             : "Try a broader range, or add a trip to start seeing dealer, area, and monthly summaries."}</div>
         </div>
       </div>
@@ -153,8 +153,8 @@ function renderReports(){
   const renderAggList = (rows, emptyMsg)=>{
     if(!rows.length) return `
       <div class="emptyState compact">
-        <div class="emptyStateTitle">Nothing to summarize</div>
-        <div class="emptyStateBody">${escapeHtml(emptyMsg||"No data")}</div>
+        <div class="emptyStateTitle">No summary yet</div>
+        <div class="emptyStateBody">${escapeHtml(emptyMsg||"No data yet for this view.")}</div>
       </div>`;
     return rows.map(r=>{
       return `
@@ -276,13 +276,13 @@ function renderReports(){
       <div class="card">
         <b>Dealer Summary</b>
         <div class="sep"></div>
-        ${renderAggList(dealerRows, "No trips in this range yet.")}
+        ${renderAggList(dealerRows, "No trips yet for this range.")}
       </div>
 
       <div class="card">
         <b>Area Summary</b>
         <div class="sep"></div>
-        ${renderAggList(areaRows, "No trips in this range yet.")}
+        ${renderAggList(areaRows, "No trips yet for this range.")}
       </div>
 
       <div class="card">
@@ -314,8 +314,8 @@ function renderReports(){
           ${renderHLItem("Lowest $/lb", minPpl, "ppl")}
         ` : `
           <div class="emptyState compact">
-            <div class="emptyStateTitle">Not enough valid data yet</div>
-            <div class="emptyStateBody">No trips with valid pounds and amount in this range.</div>
+            <div class="emptyStateTitle">Need more valid data</div>
+            <div class="emptyStateBody">Add trips with both pounds and amount to see this summary.</div>
           </div>`}
       </div>
     `;

@@ -1283,7 +1283,7 @@ function renderAllTrips(){
 
   const rows = sorted.length
     ? sorted.map(t=> renderTripCatchCard(t, { interactive:true })).join("")
-    : `<div class="muted small">No trips in this filter yet.</div>`;
+    : `<div class="muted small">No trips yet for this filter. Try another filter or add a trip to get started.</div>`;
 
   root.innerHTML = `
     ${renderPageHeader("all_trips")}

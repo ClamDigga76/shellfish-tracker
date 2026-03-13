@@ -21,7 +21,7 @@ export function createUpdateRuntimeStatusSeam({
     const statusEl = documentRef.getElementById("updateBigStatus");
     const btnCheck = documentRef.getElementById("updatePrimary");
     try{
-      if(statusEl) statusEl.textContent = swUpdateReady ? "Loading new build…" : "Loading latest build…";
+      if(statusEl) statusEl.textContent = swUpdateReady ? "Loading update…" : "Loading latest update…";
       if(btnCheck) btnCheck.disabled = true;
       if(statusEl) statusEl.textContent = "Reloading app…";
       await forceRefreshApp();
@@ -57,10 +57,10 @@ export function createUpdateRuntimeStatusSeam({
     try{
       if(versionEl){
         const standalone = (windowRef.matchMedia && windowRef.matchMedia("(display-mode: standalone)").matches) || (navigatorRef.standalone === true);
-        versionEl.textContent = `Build loaded: ${displayBuildVersion}${standalone ? " • Standalone: yes" : ""}`;
+        versionEl.textContent = `Current build: ${displayBuildVersion}${standalone ? " • Standalone: yes" : ""}`;
       }
     }catch(_){
-      try{ if(versionEl) versionEl.textContent = `Build loaded: ${displayBuildVersion}`; }catch(__){}
+      try{ if(versionEl) versionEl.textContent = `Current build: ${displayBuildVersion}`; }catch(__){}
     }
 
     if(!detailsEl) return;
@@ -112,12 +112,12 @@ export function createUpdateRuntimeStatusSeam({
     if(inlineMsg) inlineMsg.style.display = "none";
 
     if(swUpdateReady){
-      statusEl.textContent = "New build ready • tap Load latest build";
-      btnPrimary.textContent = "Load latest build";
+      statusEl.textContent = "Update ready • tap Load latest update";
+      btnPrimary.textContent = "Load latest update";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     }else{
-      statusEl.textContent = "Latest build already loaded";
-      btnPrimary.textContent = "Load latest build";
+      statusEl.textContent = "You already have the latest update";
+      btnPrimary.textContent = "Load latest update";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     }
   }
