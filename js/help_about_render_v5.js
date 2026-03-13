@@ -16,6 +16,20 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
     </div>
 
     <div class="card">
+      <b style="font-size:1.05rem">Start here</b>
+      <div class="sep"></div>
+      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
+        <div><b>New to Bank the Catch?</b> Start with one trip, then use Home and Reports to check progress.</div>
+        <ol style="margin:8px 0 0 18px">
+          <li>Open <b>New Trip</b> and save your first entry.</li>
+          <li>Go to <b>Home</b> for a quick totals snapshot.</li>
+          <li>Open <b>Reports</b> when you want date-range trends.</li>
+        </ol>
+        <div style="margin-top:8px"><b>Tip:</b> After your first save, create a backup in <b>Settings → Backup & Restore</b>.</div>
+      </div>
+    </div>
+
+    <div class="card">
       <b style="font-size:1.05rem">Install & Offline</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
@@ -32,10 +46,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_home" style="font-size:1.05rem">Home</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this screen is for:</b> Fast snapshot of your current totals and recent activity.</div>
+        <div><b>What this screen is for:</b> Your quick check-in screen for totals and recent trips.</div>
         <ul style="margin:8px 0 0 18px">
           <li>Totals and recent trips follow your selected filter (YTD / Month / Last 7 days).</li>
-          <li>Use Home when you want a quick status check before or after a trip.</li>
+          <li>Use Home before or after a trip when you want a fast status check.</li>
         </ul>
       </div>
     </div>
@@ -44,7 +58,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_trips" style="font-size:1.05rem">Trips</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this screen is for:</b> Browse saved trips and open one to edit details.</div>
+        <div><b>What this screen is for:</b> Your trip log. Browse saved trips and open one to edit details.</div>
         <ul style="margin:8px 0 0 18px">
           <li>Tap a trip card to view or edit it.</li>
           <li>If you see a duplicate warning on save, check date/dealer/area first, then choose <b>Save anyway</b> only if it is truly a different trip.</li>
@@ -74,7 +88,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_reports" style="font-size:1.05rem">Reports</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this screen is for:</b> Review totals, trends, and breakdowns.</div>
+        <div><b>What this screen is for:</b> Compare totals and trends across date ranges, dealers, and areas.</div>
         <div style="margin-top:8px"><b>How to use it:</b></div>
         <ol style="margin:8px 0 0 18px">
           <li>Pick a date window (preset or advanced range).</li>
@@ -89,7 +103,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_settings" style="font-size:1.05rem">Settings</b>
       <div class="sep"></div>
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this screen is for:</b> Manage updates, lists, data safety, and diagnostics tools.</div>
+        <div><b>What this screen is for:</b> Manage app updates, lists, backups, and support tools.</div>
         <ul style="margin:8px 0 0 18px">
           <li><b>Updates:</b> Check your current build and reload when needed.</li>
           <li><b>List Management:</b> Add/edit Dealers and Areas used in trip entry.</li>
@@ -112,7 +126,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
         </ol>
         <div style="margin-top:8px"><b>Restore backup:</b></div>
         <ol style="margin:8px 0 0 18px">
-          <li>Open Settings → Data → <b>Restore Backup</b>.</li>
+          <li>Open Settings → <b>Backup & Restore</b>.</li>
           <li>Review the preview details.</li>
           <li>Choose <b>Merge</b> or <b>Replace</b>.</li>
         </ol>
