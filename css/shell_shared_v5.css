@@ -174,3 +174,28 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .modalBody{ padding:14px 16px 16px 16px; }
 .modalActions{display:flex;gap:10px;justify-content:flex-end;padding:0 16px 16px 16px}
 .modalErr{margin-top:10px;font-size:12px;opacity:.9;color: var(--danger, #ff6b6b)}
+
+/* Settings shell block extracted from index.html (v311) */
+.settingsTopRow{gap:12px;align-items:stretch;flex-wrap:nowrap;margin-bottom:2px}
+.settingsMiniCard{flex:1;min-width:0;padding:12px}
+.settingsMiniTitle{font-size:.95rem}
+.settingsMiniSep{margin:9px 0}
+.settingsUpdateStatus{font-size:15px;font-weight:800;line-height:1.2}
+.settingsBodyTiny{margin-top:4px;font-size:11px;line-height:1.35}
+.settingsInlineRow{margin-top:10px;gap:8px;align-items:center;min-width:0}
+.settingsInlineBtn{font-size:12px;padding:7px 10px;min-width:0;white-space:nowrap}
+.settingsInlineMsg{display:none;margin-top:0}
+.settingsDetails{margin-top:10px}
+.settingsBuildInfo{white-space:pre-wrap;margin-top:6px}
+.settingsHelpRow{margin-top:10px;min-width:0}
+.settingsBackupRow{margin-top:12px;gap:10px;align-items:center;flex-wrap:nowrap}
+.settingsFlexBtn{flex:1}
+.hiddenInput{display:none}
+.settingsStackedSegBtn{display:flex;flex-direction:column;align-items:center;line-height:1.05}
+.settingsSoonNote{margin-top:2px;opacity:.85}
+.settingsAdvancedSummary{cursor:pointer}
+.settingsSectionCard{margin-bottom:16px}
+.settingsSectionCard .muted.small{line-height:1.4}
+.settingsSectionCard .hint{line-height:1.4}
+.settingsAdvancedCard{margin-top:4px}
+.settingsEmail{color:var(--text);text-decoration:underline}
