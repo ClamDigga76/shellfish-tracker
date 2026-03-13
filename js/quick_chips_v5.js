@@ -29,11 +29,11 @@ export function createQuickChipHelpers({
   }
 
   function renderTopAreaChips(topAreas, currentArea, containerId){
-    return renderTopChips({ items: topAreas, currentValue: currentArea, containerId, kind: "area", emptyLabel: "No recent areas yet" });
+    return renderTopChips({ items: topAreas, currentValue: currentArea, containerId, kind: "area", emptyLabel: "No recent areas yet — choose from Area list below" });
   }
 
   function renderTopDealerChips(topDealers, currentDealer, containerId){
-    return renderTopChips({ items: topDealers, currentValue: currentDealer, containerId, kind: "dealer", emptyLabel: "No recent dealers yet" });
+    return renderTopChips({ items: topDealers, currentValue: currentDealer, containerId, kind: "dealer", emptyLabel: "No recent dealers yet — choose from Dealer list below" });
   }
 
   function getQuickChipSettings(){
@@ -125,46 +125,41 @@ export function createQuickChipHelpers({
     const pinned = getPinnedQuickChipValues(kind, { seedItems: sourceItems, limit: max });
     const customMap = getCustomQuickChipMap(kind);
     const len = max || pinned.length;
-    const recentPool = [];
-    const recentSeen = new Set();
+    const sourcePool = [];
+    const sourceSeen = new Set();
     for(const raw of [...(Array.isArray(sourceItems) ? sourceItems : []), ...getLastUniqueFromTrips(kind, Math.max(len, 6)), ...choices]){
       const value = String(raw || "").trim();
       if(!value) continue;
       const dedupeKey = (kind === "dealer") ? normalizeKey(value) : value;
-      if(recentSeen.has(dedupeKey)) continue;
-      recentSeen.add(dedupeKey);
-      recentPool.push(value);
-    }
-
-    const fallbackBySlot = [];
-    const usedFallback = new Set();
-    for(let i=0;i<len;i++){
-      let fill = "";
-      for(const candidate of recentPool){
-        const candidateKey = (kind === "dealer") ? normalizeKey(candidate) : candidate;
-        if(usedFallback.has(candidateKey)) continue;
-        fill = candidate;
-        usedFallback.add(candidateKey);
-        break;
-      }
-      fallbackBySlot.push(fill);
+      if(sourceSeen.has(dedupeKey)) continue;
+      sourceSeen.add(dedupeKey);
+      sourcePool.push({ key: dedupeKey, value });
     }
 
     const out = [];
+    const usedKeys = new Set();
     for(let i=0;i<len;i++){
       const isCustom = !!customMap[i];
-      const candidate = String((isCustom ? pinned[i] : (fallbackBySlot[i] || pinned[i])) || "").trim();
-      if(!candidate){
-        out.push("");
-        continue;
+      let picked = "";
+      if(isCustom){
+        const customCandidate = String(pinned[i] || "").trim();
+        if(customCandidate){
+          const customKey = (kind === "dealer") ? normalizeKey(customCandidate) : customCandidate;
+          const canonical = choices.find(v=>((kind === "dealer") ? normalizeKey(v) : v) === customKey) || "";
+          if(canonical && !usedKeys.has(customKey)){
+            picked = canonical;
+            usedKeys.add(customKey);
+          }
+        }
       }
-      const candidateKey = (kind === "dealer") ? normalizeKey(candidate) : candidate;
-      const canonical = choices.find(v=>((kind === "dealer") ? normalizeKey(v) : v) === candidateKey) || "";
-      if(!canonical){
-        out.push("");
-        continue;
+      if(!picked){
+        const fallback = sourcePool.find(item=>!usedKeys.has(item.key));
+        if(fallback){
+          picked = fallback.value;
+          usedKeys.add(fallback.key);
+        }
       }
-      out.push(canonical);
+      out.push(picked);
     }
     return out;
   }

@@ -98,10 +98,10 @@ export function renderTripEntryForm({
 
         <section class="trip-section">
           <div class="field">
-            <label class="fieldLabel overline center" for="${escapeHtml(areaId)}">AREA</label>
-            ${topAreaChipsHtml}
+            <label class="fieldLabel overline center" for="${escapeHtml(dealerId)}">DEALER</label>
+            ${topDealerChipsHtml}
             <div class="selectRowWrap">
-              <select class="input" id="${escapeHtml(areaId)}" enterkeyhint="done">${areaOptions}</select>
+              <select class="input" id="${escapeHtml(dealerId)}" autocomplete="organization" enterkeyhint="next">${dealerOptions}</select>
               <span class="chev">›</span>
             </div>
           </div>
@@ -109,10 +109,10 @@ export function renderTripEntryForm({
 
         <section class="trip-section">
           <div class="field">
-            <label class="fieldLabel overline center" for="${escapeHtml(dealerId)}">DEALER</label>
-            ${topDealerChipsHtml}
+            <label class="fieldLabel overline center" for="${escapeHtml(areaId)}">AREA</label>
+            ${topAreaChipsHtml}
             <div class="selectRowWrap">
-              <select class="input" id="${escapeHtml(dealerId)}" autocomplete="organization" enterkeyhint="next">${dealerOptions}</select>
+              <select class="input" id="${escapeHtml(areaId)}" enterkeyhint="done">${areaOptions}</select>
               <span class="chev">›</span>
             </div>
           </div>
