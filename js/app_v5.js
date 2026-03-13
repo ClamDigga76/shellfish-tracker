@@ -1286,10 +1286,10 @@ function renderAllTrips(){
     : `
       <div class="emptyState">
         <div class="emptyStateTitle">No trips yet for this filter</div>
-        <div class="emptyStateBody">No saved trips match your current filter. Add a trip, or reset filters to see more.</div>
+        <div class="emptyStateBody">No saved trips match your current filter. Add a trip or reset filters to see more.</div>
         <div class="emptyStateAction">
           <button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>
-          <button class="btn" id="tripsEmptyReset" type="button">Reset filters</button>
+          <button class="btn" id="tripsEmptyReset" type="button">Clear filters</button>
         </div>
       </div>`;
 
@@ -1377,7 +1377,7 @@ function renderAllTrips(){
       state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", species:"all", text:"" };
       state.tripsFilter = state.filters.active;
       saveState();
-      showToast("Filters reset");
+      showToast("Filters cleared");
       renderAllTrips();
     };
   }

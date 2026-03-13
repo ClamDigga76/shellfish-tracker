@@ -73,7 +73,7 @@ function renderReports(){
   const activeReportFilters = [];
   if(String(rf.dealer || "").trim()) activeReportFilters.push(`Dealer: ${String(rf.dealer).trim()}`);
   if(String(rf.area || "").trim()) activeReportFilters.push(`Area: ${String(rf.area).trim()}`);
-  const reportFilterSummary = activeReportFilters.length ? activeReportFilters.join(" • ") : "No dealer/area filter";
+  const reportFilterSummary = activeReportFilters.length ? activeReportFilters.join(" • ") : "No dealer or area filter";
 
   if(!trips.length){
     getApp().innerHTML = `
@@ -103,11 +103,11 @@ function renderReports(){
         <div class="emptyState" style="margin-top:12px">
           <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips yet for this report"}</div>
           <div class="emptyStateBody">${fMode==="RANGE" && !hasValidRange
-            ? "Set both dates, then apply to load this report."
+            ? "Set both dates, then tap Apply to load this report."
             : "No saved trips match this report filter yet. Add a trip to start dealer, area, and monthly summaries."}</div>
           <div class="emptyStateAction">
-            <button class="btn good" id="reportsEmptyPrimary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Advanced" : "＋ Add Trip"}</button>
-            <button class="btn" id="reportsEmptySecondary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Help" : "Try All Time"}</button>
+            <button class="btn good" id="reportsEmptyPrimary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
+            <button class="btn" id="reportsEmptySecondary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Help" : "Switch to All Time"}</button>
           </div>
         </div>
       </div>
@@ -124,7 +124,7 @@ function renderReports(){
           state.reportsFilter.to = "";
         }
         saveState();
-        showToast("Filter applied");
+        showToast("Filter updated");
         renderReports();
       };
     });
@@ -170,7 +170,7 @@ function renderReports(){
         state.reportsFilter.from = "";
         state.reportsFilter.to = "";
         saveState();
-        showToast("Filter applied");
+        showToast("Filter updated");
         renderReports();
       };
     }
