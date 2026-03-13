@@ -1283,7 +1283,15 @@ function renderAllTrips(){
 
   const rows = sorted.length
     ? sorted.map(t=> renderTripCatchCard(t, { interactive:true })).join("")
-    : `<div class="muted small">No trips yet for this filter. Try another filter or add a trip to get started.</div>`;
+    : `
+      <div class="emptyState">
+        <div class="emptyStateTitle">No trips yet for this filter</div>
+        <div class="emptyStateBody">No saved trips match your current filter. Add a trip, or reset filters to see more.</div>
+        <div class="emptyStateAction">
+          <button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>
+          <button class="btn" id="tripsEmptyReset" type="button">Reset filters</button>
+        </div>
+      </div>`;
 
   root.innerHTML = `
     ${renderPageHeader("all_trips")}
@@ -1350,6 +1358,27 @@ function renderAllTrips(){
       const { rows, range } = getTripsFilteredRows();
       exportTripsWithLabel(rows, range.label, range.startISO, range.endISO);
       showToast("CSV exported");
+    };
+  }
+
+  const tripsEmptyAdd = document.getElementById("tripsEmptyAdd");
+  if (tripsEmptyAdd) {
+    tripsEmptyAdd.onclick = () => {
+      state.view = "new";
+      saveState();
+      render();
+    };
+  }
+
+  const tripsEmptyReset = document.getElementById("tripsEmptyReset");
+  if (tripsEmptyReset) {
+    tripsEmptyReset.onclick = () => {
+      state.filters = state.filters || {};
+      state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", species:"all", text:"" };
+      state.tripsFilter = state.filters.active;
+      saveState();
+      showToast("Filters reset");
+      renderAllTrips();
     };
   }
 }
@@ -1471,7 +1500,8 @@ const { renderReports } = createReportsScreenRenderer({
   formatMoney,
   to2,
   drawReportsCharts,
-  computePPL
+  computePPL,
+  renderApp: () => render()
 });
 
 

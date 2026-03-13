@@ -148,10 +148,10 @@ export function createHomeDashboardRenderer({
       : `
         <div class="emptyState">
           <div class="emptyStateTitle">No trips yet for this range</div>
-          <div class="emptyStateBody">If you are just getting started, add your first trip. You can also switch date ranges if this view is filtered too narrowly.</div>
+          <div class="emptyStateBody">No saved trips match this range yet. Add your first trip or open Help for a quick start.</div>
           <div class="emptyStateAction">
             <button class="btn good" id="homeEmptyNewTrip" type="button">＋ Add Trip</button>
-            <button class="btn" id="homeEmptyHelp" type="button">Help: start guide</button>
+            <button class="btn" id="homeEmptyHelp" type="button">Open Help</button>
           </div>
         </div>`;
 

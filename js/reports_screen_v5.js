@@ -23,7 +23,8 @@ export function createReportsScreenRenderer(deps){
     formatMoney,
     to2,
     drawReportsCharts,
-    computePPL
+    computePPL,
+    renderApp
   } = deps;
 
   const reportsAdvancedPanel = createReportsAdvancedPanelSeam({
@@ -102,8 +103,12 @@ function renderReports(){
         <div class="emptyState" style="margin-top:12px">
           <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips yet for this report"}</div>
           <div class="emptyStateBody">${fMode==="RANGE" && !hasValidRange
-            ? "Set both From and To dates in Advanced, then tap Apply to load your report."
-            : "Try a broader range, or add a trip to start seeing dealer, area, and monthly summaries."}</div>
+            ? "Set both dates, then apply to load this report."
+            : "No saved trips match this report filter yet. Add a trip to start dealer, area, and monthly summaries."}</div>
+          <div class="emptyStateAction">
+            <button class="btn good" id="reportsEmptyPrimary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Advanced" : "＋ Add Trip"}</button>
+            <button class="btn" id="reportsEmptySecondary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Help" : "Try All Time"}</button>
+          </div>
         </div>
       </div>
     `;
@@ -132,6 +137,43 @@ function renderReports(){
       showToast,
       variant: "empty"
     });
+
+    const reportsEmptyPrimary = document.getElementById("reportsEmptyPrimary");
+    if (reportsEmptyPrimary) {
+      reportsEmptyPrimary.onclick = () => {
+        if (fMode === "RANGE" && !hasValidRange) {
+          if (!state.reportsFilter) state.reportsFilter = {};
+          state.reportsFilter.adv = true;
+          saveState();
+          renderReports();
+          return;
+        }
+        state.view = "new";
+        saveState();
+        showToast("Start with one trip");
+        renderApp();
+      };
+    }
+
+    const reportsEmptySecondary = document.getElementById("reportsEmptySecondary");
+    if (reportsEmptySecondary) {
+      reportsEmptySecondary.onclick = () => {
+        if (fMode === "RANGE" && !hasValidRange) {
+          state.helpJump = "reports";
+          state.view = "help";
+          saveState();
+          renderApp();
+          return;
+        }
+        if (!state.reportsFilter) state.reportsFilter = {};
+        state.reportsFilter.mode = "ALL";
+        state.reportsFilter.from = "";
+        state.reportsFilter.to = "";
+        saveState();
+        showToast("Filter applied");
+        renderReports();
+      };
+    }
 
     return;
   }
