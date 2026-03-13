@@ -1221,16 +1221,16 @@ function renderAllTrips(){
   ];
 
   const filtersCard = `
-    <div class="card">
-      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-        <div style="min-width:140px;flex:1">
+    <div class="card tripsFiltersCard">
+      <div class="tripsFiltersGrid">
+        <div class="tripsFilterField">
           <div class="muted small">Range</div>
           <select id="flt_range" class="select">
             ${rangeOptions.map(([k,l])=>`<option value="${k}" ${tf.range===k?"selected":""}>${l}</option>`).join("")}
           </select>
         </div>
 
-        <div style="min-width:140px;flex:1">
+        <div class="tripsFilterField">
           <div class="muted small">Dealer</div>
           <select id="flt_dealer" class="select">
             <option value="all" ${tf.dealer==="all"?"selected":""}>All</option>
@@ -1238,7 +1238,7 @@ function renderAllTrips(){
           </select>
         </div>
 
-        <div style="min-width:140px;flex:1">
+        <div class="tripsFilterField">
           <div class="muted small">Area</div>
           <select id="flt_area" class="select">
             <option value="all" ${tf.area==="all"?"selected":""}>All</option>
@@ -1246,36 +1246,36 @@ function renderAllTrips(){
           </select>
         </div>
 
-        <div style="min-width:160px;flex:1;opacity:.75">
+        <div class="tripsFilterField tripsFilterField--disabled">
           <div class="muted small">Species (Coming soon)</div>
           <select id="flt_species" class="select" disabled aria-disabled="true">
             <option>Coming soon</option>
           </select>
         </div>
 
-        <div style="min-width:160px;flex:2;display:flex;align-items:flex-end">
-          <button class="btn" id="exportTrips" type="button" style="width:100%">Export CSV</button>
-        </div>
-
-        <div style="display:flex;gap:10px;">
-          <button class="btn" id="flt_reset" type="button">Reset</button>
-        </div>
       </div>
 
-      <div id="flt_custom_wrap" style="margin-top:10px;display:${tf.range==="custom"?"block":"none"}">
-        <div class="row" style="gap:10px;flex-wrap:wrap">
-          <div style="min-width:140px;flex:1">
+      <div class="tripsFilterActions">
+        <div class="tripsFilterActionExport">
+          <button class="btn" id="exportTrips" type="button">Export CSV</button>
+        </div>
+        <button class="btn btn-ghost" id="flt_reset" type="button">Reset</button>
+      </div>
+
+      <div id="flt_custom_wrap" class="tripsCustomRangeWrap" style="display:${tf.range==="custom"?"block":"none"}">
+        <div class="row tripsCustomRangeRow">
+          <div class="tripsFilterField">
             <div class="muted small">From</div>
             <input id="flt_from" type="date" class="input" value="${escapeHtml(String(tf.fromISO||"").slice(0,10))}" />
           </div>
-          <div style="min-width:140px;flex:1">
+          <div class="tripsFilterField">
             <div class="muted small">To</div>
             <input id="flt_to" type="date" class="input" value="${escapeHtml(String(tf.toISO||"").slice(0,10))}" />
           </div>
         </div>
       </div>
 
-      <div class="muted small mt10">
+      <div class="muted small mt10 tripsFilterSummary">
         Showing: <b>${escapeHtml(tripsActiveLabel(tf, r.label))}</b>
       </div>
     </div>
