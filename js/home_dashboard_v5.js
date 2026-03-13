@@ -134,11 +134,11 @@ export function createHomeDashboardRenderer({
       if (f === "RANGE") {
         const from = parseReportDateToISO(hf.from);
         const to = parseReportDateToISO(hf.to);
-        return (from && to) ? `${from} → ${to}` : "Custom range (set dates)";
+        return (from && to) ? `${from} → ${to}` : "Custom Range (set dates)";
       }
-      if (f === "MONTH") return "This month";
-      if (f === "7D") return "Last 7 days";
-      return "Year to date";
+      if (f === "MONTH") return "This Month";
+      if (f === "7D") return "Last 7 Days";
+      return "YTD";
     })();
     const newestSavedLabel = newestSavedTrip
       ? `${parseReportDateToISO(newestSavedTrip.dateISO || "") || "Saved"} • ${String(newestSavedTrip.dealer || "").trim() || "Dealer not set"}`
@@ -162,9 +162,9 @@ export function createHomeDashboardRenderer({
         <div class="homeFilterStack">
           <div class="segWrap">
             ${chip("YTD", "YTD")}
-            ${chip("MONTH", "Month")}
-            ${chip("7D", "7 Days")}
-            ${chip("RANGE", "Range")}
+            ${chip("MONTH", "This Month")}
+            ${chip("7D", "Last 7 Days")}
+            ${chip("RANGE", "Custom Range")}
           </div>
           ${f === "RANGE" ? `
             <div class="row gap10 wrap dateRangeRow">
