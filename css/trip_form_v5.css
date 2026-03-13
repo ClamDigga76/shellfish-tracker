@@ -10,6 +10,24 @@ body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transpar
 .overline,.fieldLabel{letter-spacing:.12em}
 .chipRow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
 
+/* Restore compact quick-chip sizing on New/Edit Trip only */
+body[data-view="new"] .areachips,
+body[data-view="edit"] .areachips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+body[data-view="new"] .areachip,
+body[data-view="edit"] .areachip,
+body[data-view="new"] .chip-selector,
+body[data-view="edit"] .chip-selector{
+  border:1px solid var(--border);
+  background:var(--glass);
+  color:var(--text);
+  padding:8px 10px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:13px;
+  min-height:auto;
+  cursor:pointer;
+}
+
 .selectRowWrap{position:relative}
 .selectRowWrap select{width:100%;appearance:none;-webkit-appearance:none;padding-right:44px}
 .selectRowWrap .chev{position:absolute;right:14px;top:50%;transform:translateY(-50%);opacity:.75;font-size:20px;pointer-events:none}
