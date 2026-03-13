@@ -1,7 +1,7 @@
 const moduleV = new URL(import.meta.url).searchParams.get("v") || "";
 const bootV = String(window.APP_VERSION || "");
 if (moduleV && bootV && moduleV !== bootV) {
-  const mismatchError = new Error(`Version mismatch: bootstrap=${bootV}, app=${moduleV}. Please refresh to update.`);
+  const mismatchError = new Error(`Version mismatch: bootstrap=${bootV}, app=${moduleV}. Please reload to apply the latest update.`);
   if (window.__showModuleError) window.__showModuleError(mismatchError);
   throw mismatchError;
 }
@@ -921,10 +921,10 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   if(dup){
     const recentLabel = dup === getTripsNewestFirst(Array.isArray(state.trips) ? state.trips : [])[0]
       ? "A very recent similar trip was found."
-      : "This looks like a duplicate trip.";
+      : "This may be a duplicate trip.";
     const msg = isEdit
-      ? `${recentLabel}\n\nThis edit matches another trip:\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave changes anyway?`
-      : `${recentLabel}\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave anyway?`;
+      ? `${recentLabel}\n\nThis edit matches another trip:\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave these changes anyway?`
+      : `${recentLabel}\n\nDate: ${formatDateDMY(dup.dateISO)}\nDealer: ${dup.dealer||""}\nPounds: ${to2(dup.pounds)}\nAmount: ${formatMoney(dup.amount)}\n\nSave this trip anyway?`;
     const ok = await openConfirmModal({
       title: "Possible Duplicate",
       message: msg,
@@ -982,7 +982,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   saveState();
   triggerTripSaveSuccessHaptic();
   render();
-  showUndoToast({ message: "Saved", snapshot: undoSnapshot });
+  showUndoToast({ message: "Trip saved", snapshot: undoSnapshot });
   // After first successful save, offer install (once per device).
   if(!isEdit){ try{ setTimeout(()=>{ maybeOfferInstallAfterFirstSave(); }, 350); }catch(_){} }
   return true;
@@ -1021,7 +1021,7 @@ if(emergencyDraftRecoveredOnBoot){
   try{ showToast("Recovered your unsaved trip draft"); }catch(_){ }
 }
 if(SAFE_MODE_ACTIVE){
-  try{ showToast("Safe Mode active: loaded temporary clean state"); }catch(_){ }
+  try{ showToast("Safe Mode is on. Loaded a temporary clean state."); }catch(_){ }
 }
 bindFatalHandlers();
 function safeSetItem(key, value){
@@ -1031,7 +1031,7 @@ function safeSetItem(key, value){
   }catch(e){
     // Quota exceeded / private mode / storage blocked
     try{ console.warn("localStorage write failed", e); }catch(_){}
-    try{ showToast("Storage full — export CSV and clear old trips"); }catch(_){}
+    try{ showToast("Storage is full — export CSV and remove older trips."); }catch(_){}
     return false;
   }
 }
@@ -1072,7 +1072,7 @@ const {
   getEmergencyDraftPayload: ()=> buildEmergencyTripDraftPayload(),
   writeEmergencyDraftFallback: (payload)=> writeEmergencyTripDraftFallback(payload),
   onEmergencyDraftFallbackUsed: ()=> {
-    try{ showToast("Saved a small emergency draft backup"); }catch(_){ }
+    try{ showToast("Saved an emergency trip draft backup"); }catch(_){ }
   }
 });
 

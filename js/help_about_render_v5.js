@@ -91,7 +91,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
         <div><b>What this screen is for:</b> Manage updates, lists, data safety, and diagnostics tools.</div>
         <ul style="margin:8px 0 0 18px">
-          <li><b>Updates:</b> Check current build and refresh if needed.</li>
+          <li><b>Updates:</b> Check your current build and reload when needed.</li>
           <li><b>List Management:</b> Add/edit Dealers and Areas used in trip entry.</li>
           <li><b>Backups:</b> Create or restore backups.</li>
           <li><b>Advanced:</b> Copy debug info, reload app, erase all data.</li>

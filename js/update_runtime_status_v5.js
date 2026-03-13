@@ -21,13 +21,13 @@ export function createUpdateRuntimeStatusSeam({
     const statusEl = documentRef.getElementById("updateBigStatus");
     const btnCheck = documentRef.getElementById("updatePrimary");
     try{
-      if(statusEl) statusEl.textContent = swUpdateReady ? "Loading update…" : "Loading latest update…";
+      if(statusEl) statusEl.textContent = swUpdateReady ? "Loading update…" : "Loading latest build…";
       if(btnCheck) btnCheck.disabled = true;
-      if(statusEl) statusEl.textContent = "Reloading app…";
+      if(statusEl) statusEl.textContent = "Reloading app now…";
       await forceRefreshApp();
     }catch(_){
       try{
-        if(statusEl) statusEl.textContent = "Reloading app…";
+        if(statusEl) statusEl.textContent = "Reloading app now…";
         await forceRefreshApp();
       }catch(__){}
     }finally{
@@ -116,7 +116,7 @@ export function createUpdateRuntimeStatusSeam({
       btnPrimary.textContent = "Load latest update";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     }else{
-      statusEl.textContent = "You already have the latest update";
+      statusEl.textContent = "You're already on the latest build";
       btnPrimary.textContent = "Load latest update";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     }

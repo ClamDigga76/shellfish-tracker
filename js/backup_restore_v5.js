@@ -312,7 +312,7 @@ export function createBackupRestoreSubsystem(deps){
 
       const warningHtml = (preview.warnings && preview.warnings.length)
         ? `<div class="modalErr" style="display:block;margin-top:10px"><b>Warnings</b><ul style="margin:8px 0 0 16px;padding:0">${preview.warnings.map(w=>`<li>${escapeHtml(String(w || ""))}</li>`).join("")}</ul></div>`
-        : `<div class="muted small mt10">No validation warnings.</div>`;
+        : `<div class="muted small mt10">No restore warnings found.</div>`;
 
       const counts = preview.counts || {};
       openModal({
@@ -343,19 +343,19 @@ export function createBackupRestoreSubsystem(deps){
           <div class="muted small" style="margin-bottom:6px">Restore mode</div>
           <label class="row" style="gap:8px;align-items:flex-start">
             <input id="${modeMergeId}" type="radio" name="${uidBase}_restore_mode" value="merge" checked />
-            <span>Merge (recommended): keep existing data and skip likely duplicates.</span>
+            <span>Merge (recommended): keep current data and skip likely duplicates.</span>
           </label>
           <label class="row" style="gap:8px;align-items:flex-start;margin-top:6px">
             <input id="${modeReplaceId}" type="radio" name="${uidBase}_restore_mode" value="replace" />
-            <span>Replace: overwrite current trips/lists with this backup.</span>
+            <span>Replace: overwrite current trips and lists with this backup.</span>
           </label>
           <label class="row" style="gap:8px;align-items:flex-start;margin-top:10px">
             <input id="${includeSettingsId}" type="checkbox" />
-            <span>Also import settings from backup (off by default).</span>
+            <span>Also import settings from this backup (off by default).</span>
           </label>
           <label class="row" id="${replaceConfirmId}_row" style="gap:8px;align-items:flex-start;margin-top:10px;display:none">
             <input id="${replaceConfirmId}" type="checkbox" />
-            <span>I understand Replace removes current trips and list entries on this device before importing this backup.</span>
+            <span>I understand Replace removes current trips and list entries on this device before this backup is imported.</span>
           </label>
           <div class="modalActions" style="margin-top:12px">
             <button class="btn" id="${cancelId}" type="button">Cancel</button>
@@ -413,7 +413,7 @@ export function createBackupRestoreSubsystem(deps){
         showCloseButton: false,
         position: "center",
         html: `
-          <div class="muted small">Recommended before Replace restore mode.</div>
+          <div class="muted small">Recommended before using Replace restore mode.</div>
           <div class="modalErr" id="${errId}" style="display:none;margin-top:10px"></div>
           <div class="modalActions" style="margin-top:12px">
             <button class="btn" id="${cancelId}" type="button">Cancel</button>
@@ -452,7 +452,7 @@ export function createBackupRestoreSubsystem(deps){
       const closeId = `${uidBase}_ok`;
       const reason = String(err?.message || err || "Unknown restore error");
 
-      announce("Restore failed. Open details for more information.", "assertive");
+      announce("Restore failed. Open details for next steps.", "assertive");
 
       openModal({
         title: "Restore failed",
@@ -461,7 +461,7 @@ export function createBackupRestoreSubsystem(deps){
         showCloseButton: false,
         position: "center",
         html: `
-          <div class="muted small">We could not restore this backup file.</div>
+          <div class="muted small">We couldn't restore this backup file.</div>
           <details style="margin-top:10px">
             <summary class="muted small">Details</summary>
             <div class="muted small preWrap" style="margin-top:8px">${escapeHtml(reason)}</div>
