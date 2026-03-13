@@ -69,7 +69,7 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
-    <div class="card">
+    <div class="card settingsSectionCard">
       <b>Appearance</b>
       <div class="sep"></div>
       <div class="muted small mt10">Choose how app appearance is applied.</div>
@@ -86,10 +86,10 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
-    <div class="card">
+    <div class="card settingsSectionCard">
       <b>Backup & Restore</b>
       <div class="sep"></div>
-      <div class="muted small mt10">Create a backup you can save to Files/Drive. Restore always opens a preview first so you can confirm details before changes are applied.</div>
+      <div class="muted small mt10">Create a backup to Files/Drive. Restore opens a preview first so you can confirm details before changes are applied.</div>
       <div class="muted small mt10" id="lastBackupLine"></div>
       <div class="hint mt10"><b>Recommended:</b> create a fresh backup before major updates, restore actions, or bulk edits.</div>
       <div class="row settingsBackupRow">
@@ -97,11 +97,11 @@ export function createSettingsScreenOrchestrator({
         <button class="btn settingsFlexBtn" id="restoreBackup">📥 Restore Backup</button>
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
       </div>
-      <div class="muted small mt10">Tip: after creating a backup, move it to <b>iCloud Drive</b> (iPhone Files) or <b>Google Drive</b> (Android) so it stays in your normal safety routine. Keep at least one older copy too.</div>
+      <div class="muted small mt10">Tip: after creating a backup, move it to <b>iCloud Drive</b> (iPhone Files) or <b>Google Drive</b> (Android). Keep at least one older copy too.</div>
       <div class="hint mt10">Restore preview shows trip count and lets you choose <b>Merge</b> or <b>Replace</b> before anything changes.</div>
     </div>
 
-    <div class="card">
+    <div class="card settingsSectionCard">
       <b>List Management</b>
       <div class="sep"></div>
 
@@ -118,7 +118,7 @@ export function createSettingsScreenOrchestrator({
       <div id="listMgmtPanel">${settingsListManagement.renderListMgmtPanel(listMode)}</div>
     </div>
 
-    <div class="card">
+    <div class="card settingsSectionCard">
       <b>About</b>
       <div class="sep"></div>
       <div class="muted small mt10">Created by <b>Jeremy Wood</b></div>
@@ -137,7 +137,7 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
-    <details class="card" id="advancedBox">
+    <details class="card settingsSectionCard settingsAdvancedCard" id="advancedBox">
       <summary class="settingsAdvancedSummary"><b>Advanced</b></summary>
       <div class="sep mt10"></div>
       <div class="muted small">Diagnostics and recovery tools for app-health troubleshooting. Use only when needed.</div>
