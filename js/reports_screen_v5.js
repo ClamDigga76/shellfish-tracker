@@ -199,8 +199,8 @@ function renderReports(){
   const renderAggList = (rows, emptyMsg)=>{
     if(!rows.length) return `
       <div class="emptyState compact">
-        <div class="emptyStateTitle">No summary yet</div>
-        <div class="emptyStateBody">${escapeHtml(emptyMsg||"No data yet for this view.")}</div>
+        <div class="emptyStateTitle">Summary pending</div>
+        <div class="emptyStateBody">${escapeHtml(emptyMsg||"Add trips to unlock this summary.")}</div>
       </div>`;
     return rows.map(r=>{
       return `
@@ -322,13 +322,13 @@ function renderReports(){
       <div class="card">
         <b>Dealer Summary</b>
         <div class="sep"></div>
-        ${renderAggList(dealerRows, "No trips yet for this range.")}
+        ${renderAggList(dealerRows, "Add a trip in this range to populate dealer totals.")}
       </div>
 
       <div class="card">
         <b>Area Summary</b>
         <div class="sep"></div>
-        ${renderAggList(areaRows, "No trips yet for this range.")}
+        ${renderAggList(areaRows, "Add a trip in this range to populate area totals.")}
       </div>
 
       <div class="card">
@@ -360,8 +360,8 @@ function renderReports(){
           ${renderHLItem("Lowest $/lb", minPpl, "ppl")}
         ` : `
           <div class="emptyState compact">
-            <div class="emptyStateTitle">Need more valid data</div>
-            <div class="emptyStateBody">Add trips with both pounds and amount to see this summary.</div>
+            <div class="emptyStateTitle">$/lb summary pending</div>
+            <div class="emptyStateBody">Add trips that include both pounds and amount to unlock this view.</div>
           </div>`}
       </div>
     `;
