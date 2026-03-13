@@ -51,7 +51,7 @@ export function createSettingsScreenOrchestrator({
           <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
 
-        <div class="hint mt10">Check here anytime for app-health status. When a new build is ready, tap <b>Load latest update</b> for a safe reload into the newest version.</div>
+        <div class="hint mt10">Check app health here anytime. When a new build is ready, tap <b>Load latest update</b> for a safe reload to the latest version.</div>
 
         <details class="settingsDetails">
           <summary class="muted settingsBodyTiny">Details</summary>
@@ -62,7 +62,7 @@ export function createSettingsScreenOrchestrator({
       <div class="card settingsMiniCard">
         <b class="settingsMiniTitle">Help</b>
         <div class="sep settingsMiniSep"></div>
-        <div class="muted settingsBodyTiny">Quick trust notes for trips, reports, install/offline use, and backup safety.</div>
+        <div class="muted settingsBodyTiny">Quick trust guidance for trips, reports, install/offline use, and backup safety.</div>
         <div class="row settingsHelpRow">
           <button class="btn settingsInlineBtn" id="openHelp">View Help</button>
         </div>
@@ -72,7 +72,7 @@ export function createSettingsScreenOrchestrator({
     <div class="card">
       <b>Appearance</b>
       <div class="sep"></div>
-      <div class="muted small mt10">Choose how the app appearance is applied.</div>
+      <div class="muted small mt10">Choose how app appearance is applied.</div>
       <div class="field mt10">
         <label class="label" for="themeMode">Theme</label>
         <div class="selectRowWrap">
@@ -89,7 +89,7 @@ export function createSettingsScreenOrchestrator({
     <div class="card">
       <b>Backup & Restore</b>
       <div class="sep"></div>
-      <div class="muted small mt10">Create a backup you can save to Files/Drive. Restore always opens a preview first, so you can confirm details before any changes are applied.</div>
+      <div class="muted small mt10">Create a backup you can save to Files/Drive. Restore always opens a preview first so you can confirm details before changes are applied.</div>
       <div class="muted small mt10" id="lastBackupLine"></div>
       <div class="hint mt10"><b>Recommended:</b> create a fresh backup before major updates, restore actions, or bulk edits.</div>
       <div class="row settingsBackupRow">
@@ -97,7 +97,7 @@ export function createSettingsScreenOrchestrator({
         <button class="btn settingsFlexBtn" id="restoreBackup">📥 Restore Backup</button>
         <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
       </div>
-      <div class="muted small mt10">Tip: after creating a backup, move it to <b>iCloud Drive</b> (iPhone Files) or <b>Google Drive</b> (Android) so it stays in your normal cloud/device safety routine. Keep at least one older copy too.</div>
+      <div class="muted small mt10">Tip: after creating a backup, move it to <b>iCloud Drive</b> (iPhone Files) or <b>Google Drive</b> (Android) so it stays in your normal safety routine. Keep at least one older copy too.</div>
       <div class="hint mt10">Restore preview shows trip count and lets you choose <b>Merge</b> or <b>Replace</b> before anything changes.</div>
     </div>
 
@@ -129,7 +129,7 @@ export function createSettingsScreenOrchestrator({
       <div class="muted small mt8">© 2026 Jeremy Wood. All rights reserved.</div>
       <div class="sep mt10"></div>
       <div class="muted small mt10"><b>Legal & Trust</b></div>
-      <div class="muted small mt6">Review terms, privacy details, and open-source license information.</div>
+      <div class="muted small mt6">Review terms, privacy details, and open-source license info.</div>
       <div class="row mt10 gap10 wrap">
         <button class="btn" id="openTerms">Terms of Use</button>
         <button class="btn" id="openPrivacy">Privacy Policy</button>

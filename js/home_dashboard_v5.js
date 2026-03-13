@@ -134,7 +134,7 @@ export function createHomeDashboardRenderer({
       if (f === "RANGE") {
         const from = parseReportDateToISO(hf.from);
         const to = parseReportDateToISO(hf.to);
-        return (from && to) ? `${from} → ${to}` : "Custom Range (set dates)";
+        return (from && to) ? `${from} → ${to}` : "Custom range (set dates)";
       }
       if (f === "MONTH") return "This Month";
       if (f === "7D") return "Last 7 Days";
@@ -148,7 +148,7 @@ export function createHomeDashboardRenderer({
       : `
         <div class="emptyState">
           <div class="emptyStateTitle">No trips yet for this range</div>
-          <div class="emptyStateBody">No saved trips match this range yet. Add your first trip or open Help for a quick start.</div>
+          <div class="emptyStateBody">No saved trips match this range yet. Add a trip or open Help to get started.</div>
           <div class="emptyStateAction">
             <button class="btn good" id="homeEmptyNewTrip" type="button">＋ Add Trip</button>
             <button class="btn" id="homeEmptyHelp" type="button">Open Help</button>
@@ -206,7 +206,7 @@ export function createHomeDashboardRenderer({
 
       <div class="homeTripsSection">
         <b>Trips</b>
-        <div class="muted tiny mt6">Most recent saved: <b>${escapeHtml(newestSavedLabel)}</b></div>
+        <div class="muted tiny mt6">Most recent trip: <b>${escapeHtml(newestSavedLabel)}</b></div>
         <div class="sep"></div>
         <div class="triplist">${rows}</div>
         ${trips.length > homeTripsLimit ? `<div style="margin-top:10px"><button class="btn" id="viewAllTrips">View all trips</button></div>` : ``}
