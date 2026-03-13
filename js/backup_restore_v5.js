@@ -94,7 +94,7 @@ export function createBackupRestoreSubsystem(deps){
     if(!el) return;
     const meta = __getLastBackupMeta();
     if(!meta){
-      el.textContent = "Last backup: none yet";
+      el.textContent = "Last backup: none yet • Your saved trips stay only on this device until you create one.";
       return;
     }
     const d = new Date(String(meta.iso || ""));
@@ -102,7 +102,14 @@ export function createBackupRestoreSubsystem(deps){
     const dateStr = ok ? (formatDateDMY(d) || "unknown date") : "unknown date";
     const n = Number(meta.tripCount);
     const tripsStr = Number.isFinite(n) ? `${n} trip${n===1?"":"s"}` : "unknown trips";
-    el.textContent = `Last backup: ${dateStr} — ${tripsStr}`;
+    let freshness = "";
+    if(ok){
+      const days = Math.max(0, Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)));
+      freshness = days <= 0 ? "today" : (days === 1 ? "1 day ago" : `${days} days ago`);
+    }
+    const buildNum = String(meta.build || "").trim();
+    const buildStr = buildNum ? ` • Build ${buildNum}` : "";
+    el.textContent = `Last backup: ${dateStr}${freshness ? ` (${freshness})` : ""} — ${tripsStr}${buildStr}`;
   }
 
   function downloadBackupPayload(payload, prefixOrFilename="shellfish_backup"){

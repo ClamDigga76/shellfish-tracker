@@ -129,6 +129,20 @@ export function createHomeDashboardRenderer({
     const chip = (key, label) => `<button class="chip segBtn ${f === key ? "on is-selected" : ""}" data-hf="${key}" type="button">${label}</button>`;
 
     const tripsSorted = getTripsNewestFirst(trips);
+    const newestSavedTrip = tripsSorted[0] || null;
+    const activeFilterLabel = (() => {
+      if (f === "RANGE") {
+        const from = parseReportDateToISO(hf.from);
+        const to = parseReportDateToISO(hf.to);
+        return (from && to) ? `${from} → ${to}` : "Custom range (set dates)";
+      }
+      if (f === "MONTH") return "This month";
+      if (f === "7D") return "Last 7 days";
+      return "Year to date";
+    })();
+    const newestSavedLabel = newestSavedTrip
+      ? `${parseReportDateToISO(newestSavedTrip.dateISO || "") || "Saved"} • ${String(newestSavedTrip.dealer || "").trim() || "Dealer not set"}`
+      : "No saved trips yet";
     const rows = tripsSorted.length
       ? tripsSorted.slice(0, homeTripsLimit).map((t) => renderTripCatchCard(t, { interactive: true })).join("")
       : `
@@ -161,6 +175,7 @@ export function createHomeDashboardRenderer({
               <button class="btn" id="homeRangeApply">Apply</button>
             </div>
           ` : ``}
+          <div class="muted tiny mt8">Showing <b>${trips.length}</b> of <b>${tripsAll.length}</b> saved trips • Filter: <b>${escapeHtml(activeFilterLabel)}</b></div>
         </div>
 
         <div class="kpiRow">
@@ -191,6 +206,7 @@ export function createHomeDashboardRenderer({
 
       <div class="homeTripsSection">
         <b>Trips</b>
+        <div class="muted tiny mt6">Most recent saved: <b>${escapeHtml(newestSavedLabel)}</b></div>
         <div class="sep"></div>
         <div class="triplist">${rows}</div>
         ${trips.length > homeTripsLimit ? `<div style="margin-top:10px"><button class="btn" id="viewAllTrips">View all trips</button></div>` : ``}

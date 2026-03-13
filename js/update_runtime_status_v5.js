@@ -57,7 +57,7 @@ export function createUpdateRuntimeStatusSeam({
     try{
       if(versionEl){
         const standalone = (windowRef.matchMedia && windowRef.matchMedia("(display-mode: standalone)").matches) || (navigatorRef.standalone === true);
-        versionEl.textContent = `Current build: ${displayBuildVersion}${standalone ? " • Standalone: yes" : ""}`;
+        versionEl.textContent = `Current build: ${displayBuildVersion}${standalone ? " • Installed app mode" : " • Browser mode"}`;
       }
     }catch(_){
       try{ if(versionEl) versionEl.textContent = `Current build: ${displayBuildVersion}`; }catch(__){}
@@ -112,11 +112,11 @@ export function createUpdateRuntimeStatusSeam({
     if(inlineMsg) inlineMsg.style.display = "none";
 
     if(swUpdateReady){
-      statusEl.textContent = "Update ready • tap Load latest update";
+      statusEl.textContent = "Update ready • Tap Load latest update to switch builds";
       btnPrimary.textContent = "Load latest update";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     }else{
-      statusEl.textContent = "You're already on the latest build";
+      statusEl.textContent = "Build status: Up to date";
       btnPrimary.textContent = "Load latest update";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     }
