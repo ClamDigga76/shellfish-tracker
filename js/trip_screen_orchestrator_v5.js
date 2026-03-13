@@ -110,8 +110,10 @@ const newTripFormHtml = renderTripEntryForm({
       amountValue: amountVal,
       notesValue: draft.notes,
       primaryActionLabel: "Save Trip",
-      secondaryActionLabel: "Clear",
-      secondaryActionId: "clearDraft",
+      secondaryActionLabel: "Cancel",
+      secondaryActionId: "navCancel",
+      tertiaryActionLabel: "Clear Draft",
+      tertiaryActionId: "clearDraft",
       dateIconHtml: iconSvg("calendar"),
       showSpeciesField: false,
       showNotesField: false
@@ -330,7 +332,7 @@ const newTripFormHtml = renderTripEntryForm({
     };
   }
 
-  // NEW TRIP: wire up buttons (Save / Clear) — v22
+  // NEW TRIP: wire up buttons (Save / Cancel / Clear Draft) — v23
   const btnSave = document.getElementById("saveTrip");
   const onSaveTrip = async ()=>{
     try{
