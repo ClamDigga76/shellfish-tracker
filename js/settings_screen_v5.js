@@ -51,7 +51,7 @@ export function createSettingsScreenOrchestrator({
           <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
 
-        <div class="hint mt10">When a new build is ready, tap <b>Load latest update</b>. The app reloads so the newest version opens right away.</div>
+        <div class="hint mt10">When a new build is ready, tap <b>Load latest update</b>. The app reloads and opens the newest build.</div>
 
         <details class="settingsDetails">
           <summary class="muted settingsBodyTiny">Details</summary>
@@ -89,9 +89,9 @@ export function createSettingsScreenOrchestrator({
     <div class="card">
       <b>Backup & Restore</b>
       <div class="sep"></div>
-      <div class="muted small mt10">Create a backup file you can save to Files/Drive. Restore shows a preview first so you can confirm details before changes are made.</div>
+      <div class="muted small mt10">Create a backup file you can save to Files/Drive. Restore always shows a preview first so you can confirm details before anything changes.</div>
       <div class="muted small mt10" id="lastBackupLine"></div>
-      <div class="hint mt10"><b>Backup recommended</b> before major updates.</div>
+      <div class="hint mt10"><b>Backup strongly recommended</b> before major updates.</div>
       <div class="row settingsBackupRow">
         <button class="btn primary settingsFlexBtn" id="downloadBackup">💾 Create Backup</button>
         <button class="btn settingsFlexBtn" id="restoreBackup">📥 Restore Backup</button>
@@ -181,12 +181,12 @@ export function createSettingsScreenOrchestrator({
           try {
             const r = await exportBackup();
             if (r?.ok) {
-              showToast(r.method === "share" ? "Share opened" : "Backup created");
+              showToast(r.method === "share" ? "Share sheet opened" : "Backup saved");
             } else {
-              showToast("Backup failed");
+              showToast("Could not create backup");
             }
           } catch (_) {
-            showToast("Backup failed");
+            showToast("Could not create backup");
           }
         };
       }
@@ -211,14 +211,14 @@ export function createSettingsScreenOrchestrator({
             const preview = await parseBackupFileForRestore(file);
             const options = await openRestorePreviewModal(preview);
             if (!options) {
-              showToast("Restore canceled");
+              showToast("Restore cancelled");
               return;
             }
 
             if (options.mode === "replace") {
               const safetyChoice = await openReplaceSafetyBackupModal();
               if (safetyChoice === "cancel") {
-                showToast("Restore canceled");
+                showToast("Restore cancelled");
                 return;
               }
               if (safetyChoice === "created") {
@@ -234,11 +234,11 @@ export function createSettingsScreenOrchestrator({
 
             const n = Number(result?.tripsAdded);
             const modeLabel = result?.mode === "replace" ? "Replace" : "Merge";
-            showToast(Number.isFinite(n) ? `Restore complete (${n} trips, ${modeLabel})` : `Restore complete (${modeLabel})`);
+            showToast(Number.isFinite(n) ? `Restore finished (${n} trips, ${modeLabel})` : `Restore finished (${modeLabel})`);
             applyThemeMode();
             render();
           } catch (e) {
-            showToast("Restore failed");
+            showToast("Could not restore backup");
             await openRestoreErrorModal(e);
           }
         };
