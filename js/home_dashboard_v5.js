@@ -87,13 +87,13 @@ export function createHomeDashboardRenderer({
     const showPwaStorageNote = isStandalone && !pwaNoteDismissed;
     const pwaStorageNoteHTML = showPwaStorageNote ? `
       <div class="noticeBand" role="status" aria-live="polite">
-        <div class="noticeTitle">Using the installed app?</div>
+        <div class="noticeTitle">Installed app check</div>
         <div class="muted small noticeBody">
-          On iPhone/iPad (and sometimes Android), the installed Home Screen app can store data separately from Safari.
-          If you logged trips in Safari, create a backup there and restore it here.
+          On iPhone/iPad (and sometimes Android), the Home Screen app may use separate local storage from Safari.
+          If recent trips were saved in Safari, create a backup there and restore it here to keep records aligned.
         </div>
         <div class="row mt10 noticeActions">
-          <button class="btn" id="pwaNoteHelp">How to move trips</button>
+          <button class="btn" id="pwaNoteHelp">Review safe transfer</button>
           <button class="btn" id="pwaNoteDismiss">Got it</button>
         </div>
       </div>
@@ -116,7 +116,7 @@ export function createHomeDashboardRenderer({
       <div class="noticeBand" role="status" aria-live="polite">
         <div class="noticeTitle">Backup reminder</div>
         <div class="muted small noticeBody">
-          You have ${newCount > 0 ? newCount : tripsAll.length} trip${(newCount > 1 || (!lastAt && tripsAll.length !== 1)) ? "s" : ""} not included in your most recent backup.
+          You have ${newCount > 0 ? newCount : tripsAll.length} trip${(newCount > 1 || (!lastAt && tripsAll.length !== 1)) ? "s" : ""} not yet included in your latest backup.
         </div>
         <div class="row mt10 noticeActions">
           <button class="btn" id="backupNow">💾 Create Backup</button>
