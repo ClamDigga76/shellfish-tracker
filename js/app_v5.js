@@ -588,9 +588,9 @@ function resolveUnifiedRange(filter){
     return d.toISOString().slice(0,10);
   };
 
-  if(filter.range === "all") return { fromISO:"1900-01-01", toISO:now, label:"All time" };
+  if(filter.range === "all") return { fromISO:"1900-01-01", toISO:now, label:"All Time" };
   if(filter.range === "ytd") return { fromISO:`${y}-01-01`, toISO:now, label:"YTD" };
-  if(filter.range === "mtd") return { fromISO:`${y}-${String(new Date().getMonth()+1).padStart(2,"0")}-01`, toISO:now, label:"Month" };
+  if(filter.range === "mtd") return { fromISO:`${y}-${String(new Date().getMonth()+1).padStart(2,"0")}-01`, toISO:now, label:"This Month" };
   if(filter.range === "last_month"){
     const d = new Date();
     d.setDate(1);
@@ -599,7 +599,7 @@ function resolveUnifiedRange(filter){
     const toISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()).padStart(2,"0")}`;
     return { fromISO, toISO, label:"Last Month" };
   }
-  if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"7 Days" };
+  if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"Last 7 Days" };
   if(filter.range === "12m"){
     const d = new Date();
     d.setFullYear(d.getFullYear()-1);
@@ -607,7 +607,7 @@ function resolveUnifiedRange(filter){
   }
   if(filter.range === "90d") return { fromISO:backDays(90), toISO:now, label:"Last 90 days" };
   if(filter.range === "30d") return { fromISO:backDays(30), toISO:now, label:"Last 30 days" };
-  if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"Last 7 days" };
+  if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"Last 7 Days" };
 
   // custom
   let fromISO = String(filter.fromISO||"").slice(0,10);
@@ -1123,12 +1123,12 @@ function getTripsFilteredRows(){
   const filtered = applyUnifiedTripFilter(tripsAll, tf);
 
   const rangeMap = {
-    "All time": "ALL",
+    "All Time": "All Time",
     "YTD": "YTD",
-    "Last 12 months": "Last 12m",
-    "Last 90 days": "Last 90d",
-    "Last 30 days": "Last 30d",
-    "7 Days": "Last 7d"
+    "Last 12 months": "Last 12 Months",
+    "Last 90 days": "Last 90 Days",
+    "Last 30 days": "Last 30 Days",
+    "Last 7 Days": "Last 7 Days"
   };
   const r = {
     startISO: filtered.range.fromISO,
@@ -1212,12 +1212,12 @@ function renderAllTrips(){
   const opt = getFilterOptionsFromTrips();
 
   const rangeOptions = [
-    ["all","All"],
+    ["all","All Time"],
     ["ytd","YTD"],
-    ["12m","Last 12m"],
-    ["90d","Last 90d"],
-    ["30d","Last 30d"],
-    ["custom","Custom"]
+    ["12m","Last 12 Months"],
+    ["90d","Last 90 Days"],
+    ["30d","Last 30 Days"],
+    ["custom","Custom Range"]
   ];
 
   const filtersCard = `
