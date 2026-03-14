@@ -26,6 +26,10 @@ export function createReportsHighlightsSeam(deps){
       ? "about the same as"
       : `${relation.text} than`;
 
+    const bothZero = curNum <= 0 && prevNum <= 0;
+    const aPct = bothZero ? 0 : Math.max(10, Math.round((curNum / maxVal) * 100));
+    const bPct = bothZero ? 0 : Math.max(10, Math.round((prevNum / maxVal) * 100));
+
     return {
       type: "compare",
       label,
@@ -40,8 +44,8 @@ export function createReportsHighlightsSeam(deps){
       bLabel: priorMonth.label,
       aValue: formatter(curNum),
       bValue: formatter(prevNum),
-      aPct: Math.max(10, Math.round((curNum / maxVal) * 100)),
-      bPct: Math.max(10, Math.round((prevNum / maxVal) * 100))
+      aPct,
+      bPct
     };
   }
 
