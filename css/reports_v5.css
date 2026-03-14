@@ -32,23 +32,31 @@
 }
 .hlTripLine{font-size:14px;line-height:1.35}
 .hlTripMeta{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;font-size:13px;color:var(--muted)}
-.reportsHighlightsCard{padding:12px}
-.reportsHighlightsHdr{font-size:12px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-.reportsHighlightsGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.reportsHighlightItem{border:1px solid var(--border);border-radius:16px;padding:10px 11px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
-.reportsHighlightLabel{display:inline-flex;align-items:center;min-height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:850;letter-spacing:.09em;text-transform:uppercase;color:#a7c3ff;background:rgba(72,128,255,.18)}
-.reportsHighlightHeadline{margin-top:8px;font-size:15px;line-height:1.25;font-weight:780;letter-spacing:.1px}
-.reportsHighlightValue{margin-top:8px;font-size:24px;line-height:1.06;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums}
-.reportsCompareRow{margin-top:8px;font-size:12px;line-height:1.25;color:var(--muted);font-weight:700}
-.reportsCompareRow.tone-up{color:#83d89d}
-.reportsCompareRow.tone-down{color:#ff9e90}
-.reportsCompareRow.tone-neutral,.reportsCompareRow.tone-steady{color:#b8becc}
-.reportsCompareBars{margin-top:8px;display:grid;gap:7px}
-.reportsCompareLine{display:grid;gap:4px}
-.reportsCompareMeta{font-size:11px;line-height:1.2;color:var(--muted)}
-.reportsCompareBarTrack{height:7px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}
-.reportsCompareBarTrack span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#5a93ff,#6fb2ff)}
-.reportsCompareBarTrack.muted span{background:rgba(230,234,243,.48)}
+.reportsHighlightsCard{padding:14px 14px 15px;background:linear-gradient(182deg,rgba(22,24,31,.95),rgba(15,17,24,.93));border:1px solid rgba(255,255,255,.09);border-radius:20px;box-shadow:0 12px 28px rgba(0,0,0,.24)}
+.reportsHighlightsHdr{font-size:11px;font-weight:860;letter-spacing:.14em;text-transform:uppercase;color:#9da3b1;margin-bottom:12px}
+.reportsHighlightsGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reportsHighlightItem{border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:13px 13px 12px;background:linear-gradient(180deg,rgba(42,45,58,.62),rgba(26,29,39,.72));display:flex;flex-direction:column;min-height:100%}
+.reportsHighlightItem--compare{padding-bottom:13px}
+.reportsHighlightLabel{display:inline-flex;align-items:center;min-height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:860;letter-spacing:.1em;text-transform:uppercase;color:#adc8ff;background:rgba(95,143,255,.2)}
+.reportsHighlightHeadline{margin-top:10px;font-size:17px;line-height:1.27;font-weight:790;letter-spacing:.12px;color:#eef2fb}
+.reportsHighlightMetricRow{margin-top:11px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.reportsHighlightMetricRow--summary{min-height:41px}
+.reportsHighlightValue{margin-top:0;font-size:30px;line-height:1.02;font-weight:930;letter-spacing:.12px;font-variant-numeric:tabular-nums;color:#ffffff}
+.reportsMiniPreview{display:grid;gap:5px;min-width:72px;width:72px;padding:3px 0}
+.reportsMiniPreviewBar{height:4px;border-radius:999px;background:rgba(255,255,255,.16);overflow:hidden}
+.reportsMiniPreviewFill{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#6fa7ff,#8ec0ff)}
+.reportsMiniPreviewBar.muted .reportsMiniPreviewFill{background:rgba(222,228,243,.52)}
+.reportsCompareRow{margin-top:10px;font-size:12px;line-height:1.3;color:#acb4c4;font-weight:720;min-height:16px}
+.reportsCompareRow.tone-up{color:#91dea8}
+.reportsCompareRow.tone-down{color:#ffad9f}
+.reportsCompareRow.tone-neutral,.reportsCompareRow.tone-steady{color:#bec4d2}
+.reportsCompareBars{margin-top:9px;display:grid;gap:8px}
+.reportsCompareLine{display:grid;gap:5px}
+.reportsCompareMeta{font-size:11px;line-height:1.2;color:#97a0b1;display:flex;align-items:center;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.reportsCompareMeta b{color:#e2e8f5;font-weight:790;letter-spacing:.08px}
+.reportsCompareBarTrack{height:8px;border-radius:999px;background:rgba(255,255,255,.13);overflow:hidden}
+.reportsCompareBarTrack span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#5f9aff,#79b1ff)}
+.reportsCompareBarTrack.muted span{background:rgba(230,234,243,.44)}
 @media (max-width:480px){
   .reportsHighlightsGrid{grid-template-columns:1fr}
 }
