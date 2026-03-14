@@ -129,23 +129,32 @@ export function createReportsHighlightsSeam(deps){
         <div class="reportsHighlightsHdr">Range insights</div>
         <div class="reportsHighlightsGrid">
           ${highlights.map(item=>`
-            <div class="reportsHighlightItem">
+            <div class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare" : "summary"}">
               <div class="reportsHighlightLabel">${escapeHtml(item.label)}</div>
               <div class="reportsHighlightHeadline">${escapeHtml(item.headline)}</div>
-              <div class="reportsHighlightValue">${escapeHtml(item.value)}</div>
               ${item.type === "compare" ? `
+                <div class="reportsHighlightMetricRow">
+                  <div class="reportsHighlightValue">${escapeHtml(item.value)}</div>
+                  <div class="reportsMiniPreview" role="presentation" aria-hidden="true">
+                    <span class="reportsMiniPreviewBar"><span class="reportsMiniPreviewFill" style="width:${item.aPct}%"></span></span>
+                    <span class="reportsMiniPreviewBar muted"><span class="reportsMiniPreviewFill" style="width:${item.bPct}%"></span></span>
+                  </div>
+                </div>
                 <div class="reportsCompareRow tone-${escapeHtml(item.compareTone)}">${item.compareText}</div>
                 <div class="reportsCompareBars" role="presentation">
                   <div class="reportsCompareLine">
-                    <div class="reportsCompareMeta">${escapeHtml(item.aLabel)} • ${escapeHtml(item.aValue)}</div>
+                    <div class="reportsCompareMeta"><span>${escapeHtml(item.aLabel)}</span><b>${escapeHtml(item.aValue)}</b></div>
                     <div class="reportsCompareBarTrack"><span style="width:${item.aPct}%"></span></div>
                   </div>
                   <div class="reportsCompareLine">
-                    <div class="reportsCompareMeta">${escapeHtml(item.bLabel)} • ${escapeHtml(item.bValue)}</div>
+                    <div class="reportsCompareMeta"><span>${escapeHtml(item.bLabel)}</span><b>${escapeHtml(item.bValue)}</b></div>
                     <div class="reportsCompareBarTrack muted"><span style="width:${item.bPct}%"></span></div>
                   </div>
                 </div>
               ` : `
+                <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
+                  <div class="reportsHighlightValue">${escapeHtml(item.value)}</div>
+                </div>
                 <div class="reportsCompareRow tone-${escapeHtml(item.statusTone)}">${escapeHtml(item.statusText)}</div>
               `}
             </div>
