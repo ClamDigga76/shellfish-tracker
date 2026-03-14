@@ -40,7 +40,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
       right: compact ? 8 : 12,
       top: compact ? 12 : 14,
       bottom: compact ? 34 : 38,
-      tickFont: compact ? "9px system-ui, -apple-system, Segoe UI, Arial" : "10px system-ui, -apple-system, Segoe UI, Arial"
+      tickFont: compact ? "10px system-ui, -apple-system, Segoe UI, Arial" : "11px system-ui, -apple-system, Segoe UI, Arial"
     };
   }
 
@@ -102,7 +102,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
   }
 
   function drawBottomTicks(ctx, labels, geom, y, frame){
-    const maxTicks = frame.compact ? 4 : 6;
+    const maxTicks = frame.compact ? 3 : 5;
     const step = Math.max(1, Math.ceil(labels.length / maxTicks));
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
@@ -114,7 +114,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
       const m = ctx.measureText(text);
       let tx = x - (m.width / 2);
       tx = Math.max(2, Math.min(geom.xRight - m.width, tx));
-      if(tx <= lastRight + 4) return;
+      if(tx <= lastRight + (frame.compact ? 7 : 5)) return;
       ctx.fillText(text, tx, y);
       lastRight = tx + m.width;
     });
@@ -224,7 +224,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
         ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
       });
 
-      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-10, frame);
+      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-8, frame);
       const high = formatShortMoney(maxV);
       const mid = formatShortMoney(minV + (span * 0.5));
       const low = formatShortMoney(minV);
@@ -273,7 +273,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
         const lab = fitLabel(ctx, base, maxLabelW);
         const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
         const x = Math.max(2, tx);
-        ctx.fillText(lab, x, h-8);
+        ctx.fillText(lab, x, h-6);
       });
 
       const yLabels = [];
@@ -310,7 +310,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
         ctx.fillRect(x, y, Math.max(2, barW-2), bh);
       });
 
-      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-10, frame);
+      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-8, frame);
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
         yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: formatCompactCount(v) });
@@ -345,7 +345,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
         ctx.fillRect(x, y, Math.max(2, barW-2), bh);
       });
 
-      drawBottomTicks(ctx, timeline.map(r=>r.shortLabel), geom, h-10, frame);
+      drawBottomTicks(ctx, timeline.map(r=>r.shortLabel), geom, h-8, frame);
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
         yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: formatCompactCount(v) });

@@ -61,3 +61,21 @@
   .reportsHighlightsGrid{grid-template-columns:1fr}
 }
 .chartCard .chart{margin-top:10px}
+
+
+.chartCard{padding:14px 14px 15px;background:linear-gradient(182deg,rgba(22,24,31,.96),rgba(14,16,22,.95));border:1px solid rgba(255,255,255,.1);border-radius:20px;box-shadow:0 12px 28px rgba(0,0,0,.24)}
+.chartTakeaway{display:inline-flex;align-items:center;min-height:22px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;background:rgba(190,196,210,.14);color:#cfd5e2}
+.chartTakeaway.tone-up{background:rgba(91,198,124,.18);color:#a4efbc}
+.chartTakeaway.tone-down{background:rgba(255,124,104,.16);color:#ffb2a4}
+.chartTakeaway.tone-steady{background:rgba(143,155,180,.2);color:#d2d9e8}
+.chartCard > b{margin-top:10px;margin-bottom:0;font-size:18px;line-height:1.22}
+.chartHero{margin-top:6px;font-size:34px;line-height:1.02;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums;color:#fff}
+.chartContext{margin-top:4px;font-size:12px;line-height:1.35;color:#aeb7c8;font-weight:700}
+.chartCard .chart{margin-top:12px;border-radius:14px;background:rgba(255,255,255,.025);border-color:rgba(255,255,255,.11)}
+@media (max-width:430px){
+  .chartCard{padding:13px 12px 14px}
+  .chartTakeaway{font-size:10px;padding:0 9px}
+  .chartCard > b{font-size:17px;margin-top:9px}
+  .chartHero{font-size:30px}
+  .chartContext{font-size:11px}
+}
