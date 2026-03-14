@@ -49,7 +49,7 @@ export function createReportsHighlightsSeam(deps){
     };
   }
 
-  function renderHighlightsStrip({ dealerRows, monthRows, areaRows }){
+  function renderHighlightsStrip({ dealerRows = [], monthRows = [], areaRows = [] } = {}){
     const topDealer = dealerRows[0] || null;
     const bestPplMonth = monthRows.reduce((best,row)=>{
       if(!best) return row;
