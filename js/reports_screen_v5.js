@@ -276,36 +276,76 @@ function renderReports(){
 
   const renderChartsSection = ()=>{
     const latestMonth = monthRows[monthRows.length - 1] || null;
+    const priorMonth = monthRows.length > 1 ? monthRows[monthRows.length - 2] : null;
     const pplPeak = monthRows.reduce((best,r)=> (Number(r?.avg)||0) > (Number(best?.avg)||0) ? r : best, monthRows[0] || null);
     const dealerPeak = dealerRows[0] || null;
     const lbsPeak = monthRows.reduce((best,r)=> (Number(r?.lbs)||0) > (Number(best?.lbs)||0) ? r : best, monthRows[0] || null);
     const tripsLatest = tripsTimeline[tripsTimeline.length - 1] || null;
+    const tripsPrior = tripsTimeline.length > 1 ? tripsTimeline[tripsTimeline.length - 2] : null;
     const tripsPeak = tripsTimeline.reduce((best,r)=> (Number(r?.count)||0) > (Number(best?.count)||0) ? r : best, tripsTimeline[0] || null);
     const tripsTotal = tripsTimeline.reduce((sum,r)=> sum + (Number(r?.count)||0), 0);
 
+    const trendTone = (delta, epsilon = 0.02)=>{
+      if(Math.abs(delta) <= epsilon) return "steady";
+      return delta > 0 ? "up" : "down";
+    };
+
+    const buildMonthTakeaway = (metricKey)=>{
+      if(!latestMonth) return { text: "Holding steady", tone: "steady" };
+      const latestVal = Number(latestMonth?.[metricKey]) || 0;
+      const priorVal = Number(priorMonth?.[metricKey]) || 0;
+      if(!priorMonth) return { text: "Strongest recent month", tone: "up" };
+      if(priorVal <= 0 && latestVal <= 0) return { text: "Holding steady", tone: "steady" };
+      const baseline = Math.max(1, Math.abs(priorVal));
+      const delta = (latestVal - priorVal) / baseline;
+      const tone = trendTone(delta, 0.04);
+      if(tone === "up") return { text: "Higher than prior month", tone };
+      if(tone === "down") return { text: "Lower than prior month", tone };
+      return { text: "Holding steady", tone };
+    };
+
+    const buildTripsTakeaway = ()=>{
+      const latest = Number(tripsLatest?.count) || 0;
+      const prior = Number(tripsPrior?.count) || 0;
+      if(!tripsPrior) return { text: "Strongest recent month", tone: "up" };
+      if(latest === prior) return { text: "Trips flat", tone: "steady" };
+      return latest > prior
+        ? { text: "Trips rising", tone: "up" }
+        : { text: "Trips down", tone: "down" };
+    };
+
+    const pplTakeaway = buildMonthTakeaway("avg");
+    const lbsTakeaway = buildMonthTakeaway("lbs");
+    const tripsTakeaway = buildTripsTakeaway();
+    const dealerTakeaway = dealerPeak ? { text: "Strongest recent month", tone: "up" } : { text: "Holding steady", tone: "steady" };
+
     return `
-      <div class="card">
+      <div class="card chartCard">
+        <div class="chartTakeaway tone-${pplTakeaway.tone}">${escapeHtml(pplTakeaway.text)}</div>
         <b>Avg $/lb by Month</b>
-        <div class="muted tiny" style="margin-top:6px;line-height:1.35">Latest: <b>${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</b> • Peak: <b>${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</b></div>
-        <div class="sep"></div>
+        <div class="chartHero">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</div>
+        <div class="chartContext">Latest month • Peak ${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</div>
         <canvas class="chart" id="c_ppl" height="210"></canvas>
       </div>
-      <div class="card">
+      <div class="card chartCard">
+        <div class="chartTakeaway tone-${dealerTakeaway.tone}">${escapeHtml(dealerTakeaway.text)}</div>
         <b>Dealer Amount (Top)</b>
-        <div class="muted tiny" style="margin-top:6px;line-height:1.35">Top: <b>${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}</b> • ${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</div>
-        <div class="sep"></div>
+        <div class="chartHero">${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</div>
+        <div class="chartContext">Lead dealer • ${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}</div>
         <canvas class="chart" id="c_dealer" height="220"></canvas>
       </div>
-      <div class="card">
+      <div class="card chartCard">
+        <div class="chartTakeaway tone-${lbsTakeaway.tone}">${escapeHtml(lbsTakeaway.text)}</div>
         <b>Monthly Pounds</b>
-        <div class="muted tiny" style="margin-top:6px;line-height:1.35">Latest: <b>${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</b> • Peak: <b>${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</b></div>
-        <div class="sep"></div>
+        <div class="chartHero">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</div>
+        <div class="chartContext">Latest month • Peak ${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</div>
         <canvas class="chart" id="c_lbs" height="210"></canvas>
       </div>
-      <div class="card">
+      <div class="card chartCard">
+        <div class="chartTakeaway tone-${tripsTakeaway.tone}">${escapeHtml(tripsTakeaway.text)}</div>
         <b>Trips over time</b>
-        <div class="muted tiny" style="margin-top:6px;line-height:1.35">Latest: <b>${tripsLatest ? tripsLatest.count : "—"}</b> • Peak: <b>${tripsPeak ? tripsPeak.count : "—"}</b> • Total: <b>${tripsTotal}</b></div>
-        <div class="sep"></div>
+        <div class="chartHero">${tripsLatest ? tripsLatest.count : "—"}</div>
+        <div class="chartContext">Latest month • Peak ${tripsPeak ? tripsPeak.count : "—"} • Total ${tripsTotal}</div>
         <canvas class="chart" id="c_trips" height="210"></canvas>
       </div>
     `;
