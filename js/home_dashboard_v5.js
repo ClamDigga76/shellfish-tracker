@@ -130,6 +130,22 @@ export function createHomeDashboardRenderer({
 
     const tripsSorted = getTripsNewestFirst(trips);
     const newestSavedTrip = tripsSorted[0] || null;
+    const dealerRollup = trips.reduce((map, trip) => {
+      const dealerName = String(trip?.dealer || "").trim() || "Dealer not set";
+      const next = map.get(dealerName) || { dealer: dealerName, trips: 0, amount: 0, pounds: 0 };
+      next.trips += 1;
+      next.amount += Number(trip?.amount) || 0;
+      next.pounds += Number(trip?.pounds) || 0;
+      map.set(dealerName, next);
+      return map;
+    }, new Map());
+    const dealers = Array.from(dealerRollup.values());
+    const strongestDealer = dealers.length
+      ? dealers.slice().sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0]
+      : null;
+    const bestAvgDealer = dealers
+      .filter((item) => item.pounds > 0)
+      .sort((a, b) => (b.amount / b.pounds) - (a.amount / a.pounds))[0] || null;
     const activeFilterLabel = (() => {
       if (f === "RANGE") {
         const from = parseReportDateToISO(hf.from);
@@ -143,6 +159,30 @@ export function createHomeDashboardRenderer({
     const newestSavedLabel = newestSavedTrip
       ? `${parseReportDateToISO(newestSavedTrip.dateISO || "") || "Saved"} • ${String(newestSavedTrip.dealer || "").trim() || "Dealer not set"}`
       : "No saved trips yet";
+    const latestTripValue = newestSavedTrip
+      ? `${formatMoney(Number(newestSavedTrip.amount) || 0)} • ${round2(Number(newestSavedTrip.pounds) || 0)} lbs`
+      : "No trips saved yet";
+    const homeHeroHeadline = trips.length
+      ? `${moneyRounded} across ${lbsStr} lbs from ${trips.length} trip${trips.length === 1 ? "" : "s"}.`
+      : "No trips in this range yet.";
+    const homeHeroTone = trips.length
+      ? `Current range: ${activeFilterLabel}. Keep adding trips to sharpen trends.`
+      : `Current range: ${activeFilterLabel}. Add your next trip to start this summary.`;
+    const smartSummaryLines = [];
+    if (strongestDealer) {
+      smartSummaryLines.push(`<li><b>Top dealer:</b> ${escapeHtml(strongestDealer.dealer)} at ${formatMoney(strongestDealer.amount)} from ${round2(strongestDealer.pounds)} lbs.</li>`);
+    }
+    if (bestAvgDealer) {
+      const avg = bestAvgDealer.amount / bestAvgDealer.pounds;
+      smartSummaryLines.push(`<li><b>Best average:</b> ${escapeHtml(bestAvgDealer.dealer)} at ${formatMoney(avg)}/lb in this range.</li>`);
+    }
+    if (newestSavedTrip) {
+      const latestDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "latest trip";
+      smartSummaryLines.push(`<li><b>Latest trip:</b> ${latestDate} • ${formatMoney(Number(newestSavedTrip.amount) || 0)} on ${round2(Number(newestSavedTrip.pounds) || 0)} lbs.</li>`);
+    }
+    const smartSummaryHtml = smartSummaryLines.length
+      ? `<ul class="homeSmartSummary">${smartSummaryLines.join("")}</ul>`
+      : `<div class="homeSmartSummaryFallback muted small">Need more saved trips in this range before smart summary insights can show.</div>`;
     const rows = tripsSorted.length
       ? tripsSorted.slice(0, homeTripsLimit).map((t) => renderTripCatchCard(t, { interactive: true })).join("")
       : `
@@ -159,6 +199,17 @@ export function createHomeDashboardRenderer({
       ${renderPageHeader("home")}
 
       <div class="card dashCard">
+        <div class="homeHero">
+          <div class="homeHeroEyebrow">Home dashboard • ${escapeHtml(activeFilterLabel)}</div>
+          <div class="homeHeroHeadline">${homeHeroHeadline}</div>
+          <div class="homeHeroTone muted">${escapeHtml(homeHeroTone)}</div>
+          <div class="homeHeroStats" role="list" aria-label="Dashboard highlights">
+            <div class="homeHeroStat" role="listitem"><span class="muted tiny">Trips</span><b>${trips.length}</b></div>
+            <div class="homeHeroStat" role="listitem"><span class="muted tiny">Latest</span><b>${escapeHtml(latestTripValue)}</b></div>
+          </div>
+          ${smartSummaryHtml}
+        </div>
+
         <div class="homeFilterStack">
           <div class="segWrap">
             ${chip("YTD", "YTD")}
@@ -178,7 +229,16 @@ export function createHomeDashboardRenderer({
           <div class="muted tiny mt8">Showing <b>${trips.length}</b> of <b>${tripsAll.length}</b> saved trips • Filter: <b>${escapeHtml(activeFilterLabel)}</b></div>
         </div>
 
+        <div class="kpiGroupLabel">Core metrics</div>
         <div class="kpiRow">
+          <div class="kpiCard kpiCardPrimary">
+            <div class="kpiLabel">Amount</div>
+            <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
+          </div>
+          <div class="kpiCard kpiCardPrimary">
+            <div class="kpiLabel">Avg $/lb</div>
+            <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
+          </div>
           <div class="kpiCard">
             <div class="kpiLabel">Trips</div>
             <div class="kpiValue"><span class="kpiValueFit">${trips.length}</span></div>
@@ -186,14 +246,6 @@ export function createHomeDashboardRenderer({
           <div class="kpiCard">
             <div class="kpiLabel">Pounds</div>
             <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
-          </div>
-          <div class="kpiCard">
-            <div class="kpiLabel">Amount</div>
-            <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
-          </div>
-          <div class="kpiCard">
-            <div class="kpiLabel">Avg $/lb</div>
-            <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
           </div>
         </div>
       </div>
