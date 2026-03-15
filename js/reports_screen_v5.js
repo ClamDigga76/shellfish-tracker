@@ -357,6 +357,61 @@ function renderReports(){
     areaRows
   });
 
+  const latestMonth = monthRows[monthRows.length - 1] || null;
+  const priorMonth = monthRows.length > 1 ? monthRows[monthRows.length - 2] : null;
+  const topDealer = dealerRows[0] || null;
+  const strongestArea = areaRows[0] || null;
+  const totalLbs = trips.reduce((sum, t)=> sum + (Number(t?.pounds) || 0), 0);
+  const totalAmount = trips.reduce((sum, t)=> sum + (Number(t?.amount) || 0), 0);
+  const latestLabel = latestMonth?.label || "Latest month";
+  const monthDeltaText = (()=>{
+    if(!latestMonth || !priorMonth) return "Building trend context from your latest entries.";
+    const cur = Number(latestMonth.lbs) || 0;
+    const prev = Number(priorMonth.lbs) || 0;
+    if(cur === prev) return `${latestLabel} held steady versus ${priorMonth.label}.`;
+    return cur > prev
+      ? `${latestLabel} pounds moved higher than ${priorMonth.label}.`
+      : `${latestLabel} pounds moved lower than ${priorMonth.label}.`;
+  })();
+
+  const reportsHero = `
+    <div class="card reportsHeroCard">
+      <div class="reportsHeroEyebrow">Reports overview</div>
+      <div class="reportsHeroHeadline">${escapeHtml(monthDeltaText)}</div>
+      <div class="reportsHeroSub">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips analyzed</div>
+      <div class="reportsHeroGrid">
+        <div class="reportsHeroStat">
+          <div class="reportsHeroLabel">Total amount</div>
+          <div class="reportsHeroValue money">${formatMoney(to2(totalAmount))}</div>
+        </div>
+        <div class="reportsHeroStat">
+          <div class="reportsHeroLabel">Total pounds</div>
+          <div class="reportsHeroValue lbsBlue">${to2(totalLbs)} lbs</div>
+        </div>
+        <div class="reportsHeroStat">
+          <div class="reportsHeroLabel">Top dealer</div>
+          <div class="reportsHeroValue">${escapeHtml(topDealer?.name || "—")}</div>
+          <div class="reportsHeroMeta">${topDealer ? formatMoney(to2(topDealer.amt)) : "No data"}</div>
+        </div>
+        <div class="reportsHeroStat">
+          <div class="reportsHeroLabel">Strongest area</div>
+          <div class="reportsHeroValue">${escapeHtml(strongestArea?.name || "—")}</div>
+          <div class="reportsHeroMeta">${strongestArea ? formatMoney(to2(strongestArea.amt)) : "No data"}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const reportsSection = ({ title, intro, body, extraClass = "" })=> `
+    <section class="reportsSection ${extraClass}">
+      <div class="reportsSectionHead">
+        <h2>${escapeHtml(title)}</h2>
+        <p>${escapeHtml(intro)}</p>
+      </div>
+      ${body}
+    </section>
+  `;
+
   const renderTablesSection = ()=>{
     return `
       <div class="card">
@@ -435,9 +490,34 @@ function renderReports(){
         ${advPanel}
     </div>
 
-    ${highlightsStrip}
+    ${reportsHero}
 
-    ${mode === "charts" ? renderChartsSection() : renderTablesSection()}
+    ${reportsSection({
+      title: "Highlights",
+      intro: "Key takeaways from this date range.",
+      body: highlightsStrip || `<div class="card"><div class="muted small">Highlights will appear as more trips are added.</div></div>`,
+      extraClass: "reportsSection--highlights"
+    })}
+
+    ${mode === "charts"
+      ? `${reportsSection({
+          title: "Charts",
+          intro: "Visual trends first, then switch to tables for row-level detail.",
+          body: `<div class="reportsChartsStack">${renderChartsSection()}</div>`,
+          extraClass: "reportsSection--charts"
+        })}
+        ${reportsSection({
+          title: "Deeper detail",
+          intro: "Need line-item breakdowns? Open table mode for dealer, area, and monthly rows.",
+          body: `<div class="card reportsDetailHint"><button class="btn" type="button" id="reportsSwitchToTables">Open table detail</button></div>`,
+          extraClass: "reportsSection--detail"
+        })}`
+      : reportsSection({
+          title: "Deeper detail",
+          intro: "Dealer, area, and high/low summaries for this same range.",
+          body: `<div class="reportsTablesStack">${renderTablesSection()}</div>`,
+          extraClass: "reportsSection--detail"
+        })}
   `;
 
   getApp().scrollTop = 0;
@@ -471,6 +551,14 @@ function renderReports(){
 
 
   if(mode === "charts"){
+    const reportsSwitchToTables = document.getElementById("reportsSwitchToTables");
+    if(reportsSwitchToTables){
+      reportsSwitchToTables.onclick = ()=>{
+        state.reportsMode = "tables";
+        saveState();
+        renderReports();
+      };
+    }
     setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows, trips); }, 0);
   }
 }
