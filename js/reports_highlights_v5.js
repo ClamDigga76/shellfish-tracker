@@ -1,3 +1,5 @@
+import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.js";
+
 export function createReportsHighlightsSeam(deps){
   const {
     escapeHtml,
@@ -11,76 +13,34 @@ export function createReportsHighlightsSeam(deps){
     const latestMonth = monthRows[monthRows.length - 1] || null;
     const priorMonth = monthRows[monthRows.length - 2] || null;
     const safeNum = (v)=> Number(v) || 0;
+    const compare = buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
 
-    const relationForDelta = ({ current, previous, epsilon = 0.03 })=>{
-      const cur = safeNum(current);
-      const prev = safeNum(previous);
-      if(cur === 0 && prev === 0) return { key:"same", text:"about the same", tone:"neutral" };
-      const baseline = Math.max(Math.abs(prev), 1e-6);
-      const ratio = Math.abs(cur - prev) / baseline;
-      if(ratio <= epsilon) return { key:"same", text:"about the same", tone:"neutral" };
-      return cur > prev
-        ? { key:"higher", text:"higher", tone:"up" }
-        : { key:"lower", text:"lower", tone:"down" };
-    };
-
-    const compareCards = [];
-    if(latestMonth && priorMonth){
-      const buildCompareCard = ({ label, headlineLabel, current, previous, formatter, epsilon })=>{
-        const relation = relationForDelta({ current, previous, epsilon });
-        const curNum = safeNum(current);
-        const prevNum = safeNum(previous);
-        const maxVal = Math.max(curNum, prevNum, 1);
-        const comparisonPhrase = relation.key === "same"
-          ? "about the same as"
-          : `${relation.text} than`;
-        compareCards.push({
-          type: "compare",
-          label,
-          headline: `${headlineLabel} is ${comparisonPhrase} last month.`,
-          value: formatter(curNum),
-          compareTone: relation.tone,
-          compareText: relation.key === "same"
-            ? `${escapeHtml(latestMonth.label)} holding steady vs ${escapeHtml(priorMonth.label)}`
-            : `${escapeHtml(latestMonth.label)} ${relation.text} vs ${escapeHtml(priorMonth.label)}`,
-          aLabel: latestMonth.label,
-          bLabel: priorMonth.label,
-          aValue: formatter(curNum),
-          bValue: formatter(prevNum),
-          aPct: Math.max(10, Math.round((curNum / maxVal) * 100)),
-          bPct: Math.max(10, Math.round((prevNum / maxVal) * 100))
-        });
-      };
-
-      buildCompareCard({
-        label: "Monthly pounds",
+    const metricCompareCards = [
+      buildMetricCard({
+        payload: compare.metrics.pounds,
         headlineLabel: "Total pounds",
-        current: latestMonth.lbs,
-        previous: priorMonth.lbs,
         formatter: (v)=> `${to2(v)} lbs`,
-        epsilon: 0.04
-      });
-
-      if(safeNum(latestMonth.lbs) > 0 && safeNum(priorMonth.lbs) > 0){
-        buildCompareCard({
-          label: "Avg $/lb",
-          headlineLabel: "Average price per lb",
-          current: latestMonth.avg,
-          previous: priorMonth.avg,
-          formatter: (v)=> `${formatMoney(to2(v))}/lb`,
-          epsilon: 0.03
-        });
-      }
-
-      buildCompareCard({
-        label: "Trip count",
+        period: compare.period
+      }),
+      buildMetricCard({
+        payload: compare.metrics.ppl,
+        headlineLabel: "Average price per lb",
+        formatter: (v)=> `${formatMoney(to2(v))}/lb`,
+        period: compare.period
+      }),
+      buildMetricCard({
+        payload: compare.metrics.trips,
         headlineLabel: "Trip count",
-        current: latestMonth.trips,
-        previous: priorMonth.trips,
         formatter: (v)=> `${Math.round(v)} trips`,
-        epsilon: 0
-      });
-    }
+        period: compare.period
+      }),
+      buildMetricCard({
+        payload: compare.metrics.amount,
+        headlineLabel: "Total amount",
+        formatter: (v)=> formatMoney(to2(v)),
+        period: compare.period
+      })
+    ].filter(Boolean);
 
     const weakestDealer = dealerRows.length >= 3 ? dealerRows[dealerRows.length - 1] : null;
     const weakestArea = areaRows.length >= 3 ? areaRows[areaRows.length - 1] : null;
@@ -159,6 +119,15 @@ export function createReportsHighlightsSeam(deps){
         statusTone: "up",
         statusText: `${topDealer.trips} trips • ${to2(topDealer.lbs)} lbs`
       } : null,
+      compare.dealer && !compare.dealer.suppressed ? {
+        type: "summary",
+        label: "Dealer compare",
+        headline: `${compare.dealer.entityName} changed versus prior comparable month.`,
+        value: compare.dealer.percentValid ? `${Math.round(compare.dealer.deltaPct * 100)}%` : formatMoney(to2(compare.dealer.deltaValue)),
+        valueClass: "money",
+        statusTone: compare.dealer.compareTone,
+        statusText: `${compare.period.currentLabel} vs ${compare.period.previousLabel}`
+      } : null,
       weakestDealer && safeNum(topDealer?.amt) > 0 && (safeNum(weakestDealer.amt) / safeNum(topDealer.amt)) <= 0.7 ? {
         type: "summary",
         label: "Weakest dealer",
@@ -176,6 +145,15 @@ export function createReportsHighlightsSeam(deps){
         valueClass: "money",
         statusTone: "neutral",
         statusText: `${strongestArea.trips} trips • ${to2(strongestArea.lbs)} lbs`
+      } : null,
+      compare.area && !compare.area.suppressed ? {
+        type: "summary",
+        label: "Area compare",
+        headline: `${compare.area.entityName} changed versus prior comparable month.`,
+        value: compare.area.percentValid ? `${Math.round(compare.area.deltaPct * 100)}%` : formatMoney(to2(compare.area.deltaValue)),
+        valueClass: "money",
+        statusTone: compare.area.compareTone,
+        statusText: `${compare.period.currentLabel} vs ${compare.period.previousLabel}`
       } : null,
       weakestArea && safeNum(strongestArea?.amt) > 0 && (safeNum(weakestArea.amt) / safeNum(strongestArea.amt)) <= 0.7 ? {
         type: "summary",
@@ -196,16 +174,24 @@ export function createReportsHighlightsSeam(deps){
         valueClass: "lbsBlue",
         statusTone: trendCue.tone,
         statusText: latestMonth && priorMonth ? `${latestMonth.label} vs ${priorMonth.label}` : "Gathering trend context"
+      } : null,
+      compare.period?.suppressed ? {
+        type: "summary",
+        label: "Compare guardrail",
+        headline: "Comparison held back for fairness.",
+        value: "Suppressed",
+        statusTone: "steady",
+        statusText: compare.period.reason || "Low-data baseline"
       } : null
     ].filter(Boolean);
 
     const highlights = [];
-    if(compareCards.length >= 2 && summaryCards.length){
-      highlights.push(summaryCards[0], compareCards[0], compareCards[1], ...summaryCards.slice(1, 4));
-    }else if(compareCards.length === 1){
-      highlights.push(compareCards[0], ...summaryCards.slice(0, 4));
+    if(metricCompareCards.length >= 2 && summaryCards.length){
+      highlights.push(summaryCards[0], metricCompareCards[0], metricCompareCards[1], ...summaryCards.slice(1, 4));
+    }else if(metricCompareCards.length === 1){
+      highlights.push(metricCompareCards[0], ...summaryCards.slice(0, 4));
     }else{
-      highlights.push(...summaryCards.slice(0, 5));
+      highlights.push(...summaryCards.slice(0, 6));
     }
 
     if(!highlights.length) return "";
@@ -248,6 +234,33 @@ export function createReportsHighlightsSeam(deps){
         </div>
       </div>
     `;
+  }
+
+  function buildMetricCard({ payload, headlineLabel, formatter, period }){
+    if(!payload || payload.suppressed) return null;
+    const cur = payload.currentValue;
+    const prev = payload.previousValue;
+    const maxVal = Math.max(cur, prev, 1);
+    const deltaPctText = payload.percentValid ? `${Math.abs(Math.round(payload.deltaPct * 100))}%` : "updated";
+    const comparisonPhrase = payload.compareTone === "steady"
+      ? "about the same as"
+      : (payload.compareTone === "up" ? `${deltaPctText} higher than` : `${deltaPctText} lower than`);
+
+    return {
+      type: "compare",
+      label: payload.label,
+      headline: `${headlineLabel} is ${comparisonPhrase} prior comparable period.`,
+      value: formatter(cur),
+      valueClass: payload.metricKey === "amount" ? "money" : "",
+      compareTone: payload.compareTone,
+      compareText: `${escapeHtml(period.currentLabel || "Current")} vs ${escapeHtml(period.previousLabel || "Prior")} • ${escapeHtml(period.fairWindowLabel || "Comparable window")}`,
+      aLabel: period.currentLabel || "Current",
+      bLabel: period.previousLabel || "Prior",
+      aValue: formatter(cur),
+      bValue: formatter(prev),
+      aPct: Math.max(10, Math.round((cur / maxVal) * 100)),
+      bPct: Math.max(10, Math.round((prev / maxVal) * 100))
+    };
   }
 
   return {
