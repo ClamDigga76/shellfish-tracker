@@ -317,21 +317,21 @@ function renderReports(){
       <div class="card chartCard">
         <div class="chartTakeaway tone-${pplTakeaway.tone}">${escapeHtml(pplTakeaway.text)}</div>
         <b>Avg $/lb by Month</b>
-        <div class="chartHero">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</div>
+        <div class="chartHero rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</div>
         <div class="chartContext">Latest month • Peak ${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</div>
         <canvas class="chart" id="c_ppl" height="210"></canvas>
       </div>
       <div class="card chartCard">
         <div class="chartTakeaway tone-${dealerTakeaway.tone}">${escapeHtml(dealerTakeaway.text)}</div>
         <b>Dealer Amount (Top)</b>
-        <div class="chartHero">${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</div>
+        <div class="chartHero money">${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</div>
         <div class="chartContext">Lead dealer • ${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}</div>
         <canvas class="chart" id="c_dealer" height="220"></canvas>
       </div>
       <div class="card chartCard">
         <div class="chartTakeaway tone-${lbsTakeaway.tone}">${escapeHtml(lbsTakeaway.text)}</div>
         <b>Monthly Pounds</b>
-        <div class="chartHero">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</div>
+        <div class="chartHero lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</div>
         <div class="chartContext">Latest month • Peak ${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</div>
         <canvas class="chart" id="c_lbs" height="210"></canvas>
       </div>

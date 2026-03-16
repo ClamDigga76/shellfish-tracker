@@ -91,6 +91,7 @@ export function createReportsHighlightsSeam(deps){
         label: "Top dealer",
         headline: `${topDealer.name} led this range.`,
         value: formatMoney(to2(topDealer.amt)),
+        valueClass: "money",
         statusTone: "up",
         statusText: `${topDealer.trips} trips • ${to2(topDealer.lbs)} lbs`
       } : null,
@@ -99,6 +100,7 @@ export function createReportsHighlightsSeam(deps){
         label: "Strongest area",
         headline: `${strongestArea.name} produced the strongest total.`,
         value: formatMoney(to2(strongestArea.amt)),
+        valueClass: "money",
         statusTone: "neutral",
         statusText: `${strongestArea.trips} trips • ${to2(strongestArea.lbs)} lbs`
       } : null,
@@ -107,6 +109,7 @@ export function createReportsHighlightsSeam(deps){
         label: "Best $/lb month",
         headline: `${bestPplMonth.label} delivered the top avg $/lb.`,
         value: `${formatMoney(to2(bestPplMonth.avg))}/lb`,
+        valueClass: "rate ppl",
         statusTone: "steady",
         statusText: `${bestPplMonth.trips} trips • ${to2(bestPplMonth.lbs)} lbs`
       } : null
@@ -134,7 +137,7 @@ export function createReportsHighlightsSeam(deps){
               <div class="reportsHighlightHeadline">${escapeHtml(item.headline)}</div>
               ${item.type === "compare" ? `
                 <div class="reportsHighlightMetricRow">
-                  <div class="reportsHighlightValue">${escapeHtml(item.value)}</div>
+                  <div class="reportsHighlightValue ${item.valueClass || ""}">${escapeHtml(item.value)}</div>
                   <div class="reportsMiniPreview" role="presentation" aria-hidden="true">
                     <span class="reportsMiniPreviewBar"><span class="reportsMiniPreviewFill" style="width:${item.aPct}%"></span></span>
                     <span class="reportsMiniPreviewBar muted"><span class="reportsMiniPreviewFill" style="width:${item.bPct}%"></span></span>
@@ -153,7 +156,7 @@ export function createReportsHighlightsSeam(deps){
                 </div>
               ` : `
                 <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
-                  <div class="reportsHighlightValue">${escapeHtml(item.value)}</div>
+                  <div class="reportsHighlightValue ${item.valueClass || ""}">${escapeHtml(item.value)}</div>
                 </div>
                 <div class="reportsCompareRow tone-${escapeHtml(item.statusTone)}">${escapeHtml(item.statusText)}</div>
               `}
