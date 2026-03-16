@@ -207,7 +207,6 @@ export function createHomeDashboardRenderer({
             <div class="homeHeroStat" role="listitem"><span class="muted tiny">Trips</span><b>${trips.length}</b></div>
             <div class="homeHeroStat" role="listitem"><span class="muted tiny">Latest</span><b>${escapeHtml(latestTripValue)}</b></div>
           </div>
-          ${smartSummaryHtml}
         </div>
 
         <div class="homeFilterStack">
@@ -230,14 +229,6 @@ export function createHomeDashboardRenderer({
 
         <div class="kpiGroupLabel">Core metrics</div>
         <div class="kpiRow">
-          <div class="kpiCard kpiCardPrimary">
-            <div class="kpiLabel">Amount</div>
-            <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
-          </div>
-          <div class="kpiCard kpiCardPrimary">
-            <div class="kpiLabel">Avg $/lb</div>
-            <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
-          </div>
           <div class="kpiCard">
             <div class="kpiLabel">Trips</div>
             <div class="kpiValue"><span class="kpiValueFit">${trips.length}</span></div>
@@ -246,7 +237,17 @@ export function createHomeDashboardRenderer({
             <div class="kpiLabel">Pounds</div>
             <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
           </div>
+          <div class="kpiCard kpiCardPrimary">
+            <div class="kpiLabel">Amount</div>
+            <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
+          </div>
+          <div class="kpiCard kpiCardPrimary">
+            <div class="kpiLabel">Avg $/lb</div>
+            <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
+          </div>
         </div>
+
+        ${smartSummaryHtml}
       </div>
 
       ${pwaStorageNoteHTML}
