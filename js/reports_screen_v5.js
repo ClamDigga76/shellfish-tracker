@@ -70,11 +70,6 @@ function renderReports(){
       : (fMode === "LAST_MONTH" ? "Last Month"
         : (fMode === "ALL" ? "All Time"
           : "YTD")));
-  const activeReportFilters = [];
-  if(String(rf.dealer || "").trim()) activeReportFilters.push(`Dealer: ${String(rf.dealer).trim()}`);
-  if(String(rf.area || "").trim()) activeReportFilters.push(`Area: ${String(rf.area).trim()}`);
-  const reportFilterSummary = activeReportFilters.length ? activeReportFilters.join(" • ") : "No dealer or area filter";
-
   if(!trips.length){
     getApp().innerHTML = `
       ${renderPageHeader("reports")}
@@ -84,7 +79,6 @@ function renderReports(){
           <b>Reports</b>
           <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
         </div>
-        <div class="muted tiny mt6 reportsFilterMeta">${escapeHtml(reportFilterSummary)} • Showing <b>${trips.length}</b> of <b>${tripsAll.length}</b> saved trips</div>
 
         <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
           ${chip("YTD","YTD")}
@@ -470,7 +464,6 @@ function renderReports(){
         <b>Reports</b>
         <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
-      <div class="muted tiny mt6 reportsFilterMeta">${escapeHtml(reportFilterSummary)} • Showing <b>${trips.length}</b> of <b>${tripsAll.length}</b> saved trips</div>
 
       <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
           ${chip("YTD","YTD")}

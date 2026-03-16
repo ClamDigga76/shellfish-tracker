@@ -226,7 +226,6 @@ export function createHomeDashboardRenderer({
               <button class="btn" id="homeRangeApply">Apply</button>
             </div>
           ` : ``}
-          <div class="muted tiny mt8">Showing <b>${trips.length}</b> of <b>${tripsAll.length}</b> saved trips • Filter: <b>${escapeHtml(activeFilterLabel)}</b></div>
         </div>
 
         <div class="kpiGroupLabel">Core metrics</div>
