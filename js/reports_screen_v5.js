@@ -24,7 +24,6 @@ export function createReportsScreenRenderer(deps){
     formatMoney,
     to2,
     drawReportsCharts,
-    computePPL,
     renderApp
   } = deps;
 
@@ -49,6 +48,7 @@ function renderReports(){
   const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
   const fMode = String(rf.mode || "YTD").toUpperCase();
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
+  const activeMetricDetail = String(state.reportsMetricDetail || "").toLowerCase();
 
   const hasValidRange = (fMode !== "RANGE") || (parseReportDateToISO(rf.from) && parseReportDateToISO(rf.to));
   const unified = buildUnifiedFilterFromReportsFilter(rf);
@@ -360,6 +360,7 @@ function renderReports(){
   const totalLbs = trips.reduce((sum, t)=> sum + (Number(t?.pounds) || 0), 0);
   const totalAmount = trips.reduce((sum, t)=> sum + (Number(t?.amount) || 0), 0);
   const compareFoundation = buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
+  const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
   const monthDeltaText = (()=>{
     if(compareFoundation.period?.suppressed || !lbsCompare || lbsCompare.suppressed){
@@ -377,14 +378,14 @@ function renderReports(){
       <div class="reportsHeroHeadline">${escapeHtml(monthDeltaText)}</div>
       <div class="reportsHeroSub">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips analyzed</div>
       <div class="reportsHeroGrid">
-        <div class="reportsHeroStat">
+        <button class="reportsHeroStat reportsHeroStat--tap" data-metric-detail="amount" type="button" aria-label="Open amount detail">
           <div class="reportsHeroLabel">Total amount</div>
           <div class="reportsHeroValue money">${formatMoney(to2(totalAmount))}</div>
-        </div>
-        <div class="reportsHeroStat">
+        </button>
+        <button class="reportsHeroStat reportsHeroStat--tap" data-metric-detail="pounds" type="button" aria-label="Open pounds detail">
           <div class="reportsHeroLabel">Total pounds</div>
           <div class="reportsHeroValue lbsBlue">${to2(totalLbs)} lbs</div>
-        </div>
+        </button>
         <div class="reportsHeroStat">
           <div class="reportsHeroLabel">Top dealer</div>
           <div class="reportsHeroValue">${escapeHtml(topDealer?.name || "—")}</div>
@@ -408,6 +409,91 @@ function renderReports(){
       ${body}
     </section>
   `;
+
+  const buildMetricCompareSummary = (payload)=>{
+    if(compareFoundation.period?.suppressed || !payload || payload.suppressed){
+      return {
+        tone: "steady",
+        text: "Comparison unlocks automatically after enough trips in both periods.",
+        currentValue: "—",
+        previousValue: "—"
+      };
+    }
+    const tone = String(payload.compareTone || "steady");
+    const period = compareFoundation.period || {};
+    let text = `${period.currentLabel} held close to ${period.previousLabel}.`;
+    if(tone === "up") text = `${period.currentLabel} moved above ${period.previousLabel}.`;
+    if(tone === "down") text = `${period.currentLabel} moved below ${period.previousLabel}.`;
+    return {
+      tone,
+      text,
+      currentValue: payload.currentLabel || "—",
+      previousValue: payload.previousLabel || "—"
+    };
+  };
+
+  const buildMetricDetailView = (metricKey)=>{
+    const detailMeta = {
+      pounds: {
+        title: "Pounds detail",
+        eyebrow: "Metric detail",
+        heroLabel: "Total pounds",
+        heroValue: `${to2(totalLbs)} lbs`,
+        heroClass: "lbsBlue",
+        comparePayload: lbsCompare,
+        chartTitle: "Monthly pounds trend",
+        chartContext: "This range, month by month",
+        chartCanvasId: "c_lbs",
+        insight: "Use this view to spot weight consistency and quickly confirm if this range is trending heavier or lighter than your prior period."
+      },
+      amount: {
+        title: "Amount detail",
+        eyebrow: "Metric detail",
+        heroLabel: "Total amount",
+        heroValue: formatMoney(to2(totalAmount)),
+        heroClass: "money",
+        comparePayload: amountCompare,
+        chartTitle: "Dealer amount distribution",
+        chartContext: "Top dealers for this same range",
+        chartCanvasId: "c_dealer",
+        insight: "Use this view to see whether changes in total amount are broad-based or mostly concentrated in one buyer relationship."
+      }
+    };
+    const meta = detailMeta[metricKey];
+    if(!meta) return "";
+    const compareSummary = buildMetricCompareSummary(meta.comparePayload);
+    return `
+      <section class="reportsMetricDetail" aria-label="${escapeHtml(meta.title)}">
+        <div class="card reportsMetricDetailCard">
+          <button class="btn reportsMetricBackBtn" type="button" id="reportsMetricBack">← Back to reports</button>
+          <div class="reportsMetricEyebrow">${escapeHtml(meta.eyebrow)}</div>
+          <h2 class="reportsMetricTitle">${escapeHtml(meta.title)}</h2>
+          <div class="reportsMetricContext">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips</div>
+
+          <div class="reportsMetricHeroWrap">
+            <div class="reportsMetricHeroLabel">${escapeHtml(meta.heroLabel)}</div>
+            <div class="reportsMetricHeroValue ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
+          </div>
+
+          <div class="reportsMetricCompare tone-${escapeHtml(compareSummary.tone)}">
+            <div class="reportsMetricCompareText">${escapeHtml(compareSummary.text)}</div>
+            <div class="reportsMetricCompareRows">
+              <div><span>${escapeHtml(compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
+              <div><span>${escapeHtml(compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
+            </div>
+          </div>
+
+          <div class="reportsMetricChartBlock">
+            <b>${escapeHtml(meta.chartTitle)}</b>
+            <div class="reportsMetricChartContext">${escapeHtml(meta.chartContext)}</div>
+            <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
+          </div>
+
+          <div class="reportsMetricInsight">${escapeHtml(meta.insight)}</div>
+        </div>
+      </section>
+    `;
+  };
 
   const renderTablesSection = ()=>{
     return `
@@ -486,16 +572,16 @@ function renderReports(){
         ${advPanel}
     </div>
 
-    ${reportsHero}
+    ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : reportsHero}
 
-    ${reportsSection({
+    ${activeMetricDetail ? "" : reportsSection({
       title: "Highlights",
       intro: "Key takeaways from this date range.",
       body: highlightsStrip || `<div class="card"><div class="muted small">Highlights will appear as more trips are added.</div></div>`,
       extraClass: "reportsSection--highlights"
     })}
 
-    ${mode === "charts"
+    ${activeMetricDetail ? "" : (mode === "charts"
       ? `${reportsSection({
           title: "Charts",
           intro: "Visual trends first, then switch to tables for row-level detail.",
@@ -513,7 +599,7 @@ function renderReports(){
           intro: "Dealer, area, and high/low summaries for this same range.",
           body: `<div class="reportsTablesStack">${renderTablesSection()}</div>`,
           extraClass: "reportsSection--detail"
-        })}
+        }))}
   `;
 
   getApp().scrollTop = 0;
@@ -545,6 +631,30 @@ function renderReports(){
     showToast
   });
 
+
+  const metricDetailButtons = getApp().querySelectorAll("[data-metric-detail]");
+  metricDetailButtons.forEach((btn)=>{
+    btn.onclick = ()=>{
+      state.reportsMetricDetail = String(btn.getAttribute("data-metric-detail") || "").toLowerCase();
+      saveState();
+      renderReports();
+    };
+  });
+
+  const reportsMetricBack = document.getElementById("reportsMetricBack");
+  if(reportsMetricBack){
+    reportsMetricBack.onclick = ()=>{
+      state.reportsMetricDetail = "";
+      saveState();
+      renderReports();
+    };
+  }
+
+
+  if(activeMetricDetail){
+    setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows, trips); }, 0);
+    return;
+  }
 
   if(mode === "charts"){
     const reportsSwitchToTables = document.getElementById("reportsSwitchToTables");
