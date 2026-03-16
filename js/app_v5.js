@@ -250,7 +250,8 @@ const {
   showMilestoneToast,
   maybeOfferInstallAfterFirstSave,
   confirmSaveModal,
-  copyTextWithFeedback
+  copyTextWithFeedback,
+  triggerHaptic
 } = feedback;
 
 const diagnosticsFatal = createDiagnosticsFatalSeam({
@@ -290,14 +291,6 @@ function clearPendingTripUndo(){
   if(!pendingTripUndo) return;
   try{ clearTimeout(pendingTripUndo.timer); }catch(_){ }
   pendingTripUndo = null;
-}
-
-function triggerTripSaveSuccessHaptic(){
-  try{
-    if(typeof navigator === "undefined") return;
-    if(typeof navigator.vibrate !== "function") return;
-    navigator.vibrate(10);
-  }catch(_){ }
 }
 
 function showUndoToast({ message, snapshot, durationMs = 3200 }){
@@ -946,7 +939,10 @@ function openConfirmModal({
       `,
       onOpen: ()=>{
         document.getElementById(cancelId)?.addEventListener("click", ()=>settle(false));
-        document.getElementById(confirmId)?.addEventListener("click", ()=>settle(true));
+        document.getElementById(confirmId)?.addEventListener("click", ()=>{
+          triggerHaptic("light");
+          settle(true);
+        });
       }
     });
   });
@@ -1062,7 +1058,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
 
   state.view = nextView;
   saveState();
-  triggerTripSaveSuccessHaptic();
+  triggerHaptic("light");
   render();
   showUndoToast({ message: "Trip saved", snapshot: undoSnapshot });
   if(milestoneToast){

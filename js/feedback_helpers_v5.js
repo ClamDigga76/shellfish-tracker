@@ -9,6 +9,48 @@ export function createFeedbackHelpers({
   const LS_INSTALL_PROMPTED = "btc-install_prompted_v1";
   let deferredInstallPrompt = null;
 
+  const hapticPatterns = {
+    light: [
+      /saved/i,
+      /copied/i,
+      /copy success/i,
+      /confirm/i,
+      /undone/i
+    ],
+    medium: [
+      /delete(d)?/i,
+      /restore(d)?/i,
+      /milestone/i,
+      /backup (created|saved)/i
+    ]
+  };
+
+  function supportsHaptics(){
+    try{ return typeof navigator !== "undefined" && typeof navigator.vibrate === "function"; }catch(_){ return false; }
+  }
+
+  function triggerHaptic(level = "light"){
+    try{
+      if(!supportsHaptics()) return false;
+      if(level === "medium"){
+        navigator.vibrate([18, 24, 22]);
+        return true;
+      }
+      navigator.vibrate(10);
+      return true;
+    }catch(_){
+      return false;
+    }
+  }
+
+  function detectToastHapticLevel(text){
+    const msg = String(text || "").trim();
+    if(!msg) return "none";
+    if(hapticPatterns.medium.some((re)=>re.test(msg))) return "medium";
+    if(hapticPatterns.light.some((re)=>re.test(msg))) return "light";
+    return "none";
+  }
+
   function announce(msg, mode = "polite"){
     try{
       const el = document.getElementById("ariaLive");
@@ -58,6 +100,12 @@ export function createFeedbackHelpers({
       }else if(/(error|failed|invalid|missing)/i.test(trimmed)){
         announce(/^Error:/i.test(trimmed) ? trimmed : `Error: ${trimmed}`, "assertive");
       }
+      const hapticLevel = String(opts?.haptic || "auto").toLowerCase();
+      if(hapticLevel === "light" || hapticLevel === "medium") triggerHaptic(hapticLevel);
+      else if(hapticLevel === "auto"){
+        const detected = detectToastHapticLevel(trimmed);
+        if(detected !== "none") triggerHaptic(detected);
+      }
       el.classList.add("show");
       toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 2400);
     }catch{}
@@ -98,6 +146,7 @@ export function createFeedbackHelpers({
       el.appendChild(content);
       el.appendChild(btn);
       announce(titleNode.textContent, "polite");
+      triggerHaptic("medium");
       el.classList.add("show");
       toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 5600);
     }catch{}
@@ -261,7 +310,10 @@ export function createFeedbackHelpers({
       focusFirstFocusable(el.querySelector(".modalCard"));
 
       el.querySelector("#m_cancel")?.addEventListener("click", ()=>cleanup(false));
-      el.querySelector("#m_yes")?.addEventListener("click", ()=>cleanup(true));
+      el.querySelector("#m_yes")?.addEventListener("click", ()=>{
+        triggerHaptic("light");
+        cleanup(true);
+      });
     });
   }
 
@@ -272,10 +324,7 @@ export function createFeedbackHelpers({
 
   async function copyTextWithFeedback(txt, successMsg = "Copied"){
     const ok = await copyTextToClipboard(txt);
-    showToast(ok ? successMsg : "Copy failed");
-    if(ok){
-      try{ navigator.vibrate?.(10); }catch(_){ }
-    }
+    showToast(ok ? successMsg : "Copy failed", { haptic: ok ? "light" : "none" });
     return ok;
   }
 
@@ -297,6 +346,7 @@ export function createFeedbackHelpers({
     showMilestoneToast,
     maybeOfferInstallAfterFirstSave,
     confirmSaveModal,
-    copyTextWithFeedback
+    copyTextWithFeedback,
+    triggerHaptic
   };
 }
