@@ -26,6 +26,7 @@ export function createFeedbackHelpers({
     try{
       const el = document.getElementById("toast");
       if(!el) return;
+      el.classList.remove("toastMilestone");
       const text = String(msg||"");
       const actionLabel = String(opts?.actionLabel || "").trim();
       const onAction = (typeof opts?.onAction === "function") ? opts.onAction : null;
@@ -59,6 +60,46 @@ export function createFeedbackHelpers({
       }
       el.classList.add("show");
       toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 2400);
+    }catch{}
+  }
+
+  function showMilestoneToast({ headline = "", detail = "", okLabel = "OK", durationMs = 5600 } = {}){
+    try{
+      const el = document.getElementById("toast");
+      if(!el) return;
+      clearTimeout(toastTimer);
+      el.textContent = "";
+      el.classList.add("toastMilestone");
+
+      const content = document.createElement("div");
+      content.className = "toastMilestoneContent";
+
+      const titleNode = document.createElement("div");
+      titleNode.className = "toastMilestoneTitle";
+      titleNode.textContent = String(headline || "Milestone reached");
+      content.appendChild(titleNode);
+
+      if(String(detail || "").trim()){
+        const detailNode = document.createElement("div");
+        detailNode.className = "toastMilestoneDetail";
+        detailNode.textContent = String(detail || "").trim();
+        content.appendChild(detailNode);
+      }
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "toastAction";
+      btn.textContent = String(okLabel || "OK");
+      btn.addEventListener("click", ()=>{
+        clearTimeout(toastTimer);
+        el.classList.remove("show");
+      }, { once: true });
+
+      el.appendChild(content);
+      el.appendChild(btn);
+      announce(titleNode.textContent, "polite");
+      el.classList.add("show");
+      toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 5600);
     }catch{}
   }
 
@@ -253,6 +294,7 @@ export function createFeedbackHelpers({
   return {
     announce,
     showToast,
+    showMilestoneToast,
     maybeOfferInstallAfterFirstSave,
     confirmSaveModal,
     copyTextWithFeedback
