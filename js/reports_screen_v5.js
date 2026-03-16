@@ -1,5 +1,6 @@
 import { createReportsAdvancedPanelSeam } from "./reports_advanced_panel_v5.js";
 import { createReportsHighlightsSeam } from "./reports_highlights_v5.js";
+import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.js";
 
 export function createReportsScreenRenderer(deps){
   const {
@@ -358,15 +359,16 @@ function renderReports(){
   const strongestArea = areaRows[0] || null;
   const totalLbs = trips.reduce((sum, t)=> sum + (Number(t?.pounds) || 0), 0);
   const totalAmount = trips.reduce((sum, t)=> sum + (Number(t?.amount) || 0), 0);
-  const latestLabel = latestMonth?.label || "Latest month";
+  const compareFoundation = buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
+  const lbsCompare = compareFoundation.metrics?.pounds || null;
   const monthDeltaText = (()=>{
-    if(!latestMonth || !priorMonth) return "Building trend context from your latest entries.";
-    const cur = Number(latestMonth.lbs) || 0;
-    const prev = Number(priorMonth.lbs) || 0;
-    if(cur === prev) return `${latestLabel} held steady versus ${priorMonth.label}.`;
-    return cur > prev
-      ? `${latestLabel} pounds moved higher than ${priorMonth.label}.`
-      : `${latestLabel} pounds moved lower than ${priorMonth.label}.`;
+    if(compareFoundation.period?.suppressed || !lbsCompare || lbsCompare.suppressed){
+      return "Building fair comparison context from your latest entries.";
+    }
+    if(lbsCompare.compareTone === "steady") return `${compareFoundation.period.currentLabel} held steady versus ${compareFoundation.period.previousLabel}.`;
+    return lbsCompare.compareTone === "up"
+      ? `${compareFoundation.period.currentLabel} pounds moved higher than ${compareFoundation.period.previousLabel}.`
+      : `${compareFoundation.period.currentLabel} pounds moved lower than ${compareFoundation.period.previousLabel}.`;
   })();
 
   const reportsHero = `
