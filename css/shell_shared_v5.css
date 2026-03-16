@@ -280,3 +280,60 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   border-color:rgba(47,109,246,.34);
   background:linear-gradient(180deg, rgba(47,109,246,.18) 0%, rgba(47,109,246,.06) 100%);
 }
+
+
+/* P7 timeframe segmented-control unification (Home + Reports) */
+.timeframeUnifiedControl{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:6px;
+  padding:5px;
+  border-radius:15px;
+  border:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(12,18,31,.72) 0%, rgba(9,14,24,.58) 100%);
+}
+.timeframeUnifiedControl .segBtn{
+  width:100%;
+  min-height:38px;
+  padding:8px 9px;
+  border-radius:11px;
+  border:1px solid transparent;
+  font-size:13px;
+  font-weight:820;
+  letter-spacing:.01em;
+  color:var(--text-muted-strong);
+  box-shadow:none;
+  transition:background-color .14s ease,border-color .14s ease,color .14s ease,transform .08s ease;
+}
+.timeframeUnifiedControl .segBtn.on,
+.timeframeUnifiedControl .segBtn.is-selected{
+  color:var(--text);
+  background:linear-gradient(180deg, rgba(152,165,184,.62) 0%, rgba(122,136,160,.54) 100%);
+  border-color:rgba(197,210,231,.52);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+}
+.timeframeUnifiedControl .segBtn:active{
+  transform:translateY(1px);
+}
+.dashCard .homeFilterStack{
+  gap:8px;
+  margin-top:12px;
+  margin-bottom:14px;
+}
+.dashCard .homeFilterStack .timeframeUnifiedControl{
+  margin-top:0;
+}
+.reportsFilterMeta{
+  margin-bottom:2px;
+}
+.reportsTimeframeControl{
+  margin-top:12px;
+  margin-bottom:4px;
+}
+@media (max-width:380px){
+  .timeframeUnifiedControl .segBtn{
+    font-size:12px;
+    padding:8px 6px;
+  }
+}
