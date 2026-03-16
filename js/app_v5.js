@@ -247,6 +247,7 @@ const feedback = createFeedbackSeam({
 const {
   announce,
   showToast,
+  showMilestoneToast,
   maybeOfferInstallAfterFirstSave,
   confirmSaveModal,
   copyTextWithFeedback
@@ -835,6 +836,84 @@ function findDuplicateTrip(candidate, excludeId=""){
   return best;
 }
 
+
+function getAllTimeMetricSnapshot(trips){
+  const rows = Array.isArray(trips) ? trips : [];
+  const validRows = rows.filter(Boolean);
+  if(!validRows.length) return null;
+
+  const poundsRows = validRows.filter((t)=> Number(t?.pounds) > 0);
+  const amountRows = validRows.filter((t)=> Number(t?.amount) > 0);
+  const pplRows = validRows.filter((t)=> Number(t?.pounds) > 0 && Number(t?.amount) > 0);
+
+  const pickExtreme = (sourceRows, valueOf, mode)=>{
+    if(!sourceRows.length) return null;
+    let pick = sourceRows[0];
+    let value = valueOf(sourceRows[0]);
+    for(let i = 1; i < sourceRows.length; i++){
+      const v = valueOf(sourceRows[i]);
+      if(mode === "high"){
+        if(v > value){
+          value = v;
+          pick = sourceRows[i];
+        }
+      }else if(v < value){
+        value = v;
+        pick = sourceRows[i];
+      }
+    }
+    return { id: String(pick?.id || ""), value: Number(value) || 0 };
+  };
+
+  return {
+    pounds: {
+      high: pickExtreme(poundsRows, (t)=> Number(t?.pounds) || 0, "high"),
+      low: pickExtreme(poundsRows, (t)=> Number(t?.pounds) || 0, "low")
+    },
+    amount: {
+      high: pickExtreme(amountRows, (t)=> Number(t?.amount) || 0, "high"),
+      low: pickExtreme(amountRows, (t)=> Number(t?.amount) || 0, "low")
+    },
+    pricePerPound: {
+      high: pickExtreme(pplRows, (t)=> computePPL(Number(t?.pounds) || 0, Number(t?.amount) || 0), "high"),
+      low: pickExtreme(pplRows, (t)=> computePPL(Number(t?.pounds) || 0, Number(t?.amount) || 0), "low")
+    }
+  };
+}
+
+function buildAllTimeMilestoneToast(beforeSnap, afterSnap){
+  const metricOrder = [
+    { key: "pounds", label: "pounds", format: (v)=> `${to2(v)} lbs` },
+    { key: "amount", label: "amount", format: (v)=> formatMoney(v) },
+    { key: "pricePerPound", label: "price per pound", format: (v)=> `${formatMoney(v)}/lb` }
+  ];
+
+  const buildDetail = ({ delta, priorValue, format })=>{
+    const signed = `${delta >= 0 ? "+" : "-"}${format(Math.abs(delta))}`;
+    if(!(Number(priorValue) > 0)) return signed;
+    const pct = (Math.abs(delta) / Number(priorValue)) * 100;
+    if(!Number.isFinite(pct)) return signed;
+    return `${signed} (${delta >= 0 ? "+" : "-"}${to2(pct)}%)`;
+  };
+
+  for(const metric of metricOrder){
+    for(const direction of ["high", "low"]){
+      const prev = beforeSnap?.[metric.key]?.[direction] || null;
+      const next = afterSnap?.[metric.key]?.[direction] || null;
+      if(!next || !next.id) continue;
+      if(prev && prev.id === next.id && Math.abs((Number(prev.value) || 0) - (Number(next.value) || 0)) <= 0.0001) continue;
+
+      const delta = Number(next.value) - (Number(prev?.value) || 0);
+      const headline = `New all-time ${direction} ${metric.label}`;
+      return {
+        headline,
+        detail: buildDetail({ delta, priorValue: Number(prev?.value) || 0, format: metric.format })
+      };
+    }
+  }
+  return null;
+}
+
 function openConfirmModal({
   title = "Confirm",
   message = "Are you sure?",
@@ -956,9 +1035,12 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   }
 
 
+  const beforeRecords = getAllTimeMetricSnapshot(trips);
   const nextTrips = isEdit
     ? trips.map(t => (String(t?.id||"") === id ? tripNorm : t))
     : trips.concat([tripNorm]);
+  const afterRecords = getAllTimeMetricSnapshot(nextTrips);
+  const milestoneToast = buildAllTimeMilestoneToast(beforeRecords, afterRecords);
 
   const undoSnapshot = {
     trips,
@@ -983,6 +1065,12 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   triggerTripSaveSuccessHaptic();
   render();
   showUndoToast({ message: "Trip saved", snapshot: undoSnapshot });
+  if(milestoneToast){
+    showMilestoneToast({
+      headline: milestoneToast.headline,
+      detail: milestoneToast.detail
+    });
+  }
   // After first successful save, offer install (once per device).
   if(!isEdit){ try{ setTimeout(()=>{ maybeOfferInstallAfterFirstSave(); }, 350); }catch(_){} }
   return true;
