@@ -5,19 +5,16 @@ export function createReportsHighlightsSeam(deps){
     to2
   } = deps;
 
-  function renderHighlightsStrip({ dealerRows, monthRows, areaRows }){
+  function renderHighlightsStrip({ dealerRows, monthRows, areaRows, trips }){
     const topDealer = dealerRows[0] || null;
-    const bestPplMonth = monthRows.reduce((best,row)=>{
-      if(!best) return row;
-      return (Number(row?.avg)||0) > (Number(best?.avg)||0) ? row : best;
-    }, null);
     const strongestArea = areaRows[0] || null;
     const latestMonth = monthRows[monthRows.length - 1] || null;
     const priorMonth = monthRows[monthRows.length - 2] || null;
+    const safeNum = (v)=> Number(v) || 0;
 
     const relationForDelta = ({ current, previous, epsilon = 0.03 })=>{
-      const cur = Number(current) || 0;
-      const prev = Number(previous) || 0;
+      const cur = safeNum(current);
+      const prev = safeNum(previous);
       if(cur === 0 && prev === 0) return { key:"same", text:"about the same", tone:"neutral" };
       const baseline = Math.max(Math.abs(prev), 1e-6);
       const ratio = Math.abs(cur - prev) / baseline;
@@ -31,8 +28,8 @@ export function createReportsHighlightsSeam(deps){
     if(latestMonth && priorMonth){
       const buildCompareCard = ({ label, headlineLabel, current, previous, formatter, epsilon })=>{
         const relation = relationForDelta({ current, previous, epsilon });
-        const curNum = Number(current) || 0;
-        const prevNum = Number(previous) || 0;
+        const curNum = safeNum(current);
+        const prevNum = safeNum(previous);
         const maxVal = Math.max(curNum, prevNum, 1);
         const comparisonPhrase = relation.key === "same"
           ? "about the same as"
@@ -64,7 +61,7 @@ export function createReportsHighlightsSeam(deps){
         epsilon: 0.04
       });
 
-      if((Number(latestMonth.lbs) || 0) > 0 && (Number(priorMonth.lbs) || 0) > 0){
+      if(safeNum(latestMonth.lbs) > 0 && safeNum(priorMonth.lbs) > 0){
         buildCompareCard({
           label: "Avg $/lb",
           headlineLabel: "Average price per lb",
@@ -85,44 +82,130 @@ export function createReportsHighlightsSeam(deps){
       });
     }
 
+    const weakestDealer = dealerRows.length >= 3 ? dealerRows[dealerRows.length - 1] : null;
+    const weakestArea = areaRows.length >= 3 ? areaRows[areaRows.length - 1] : null;
+
+    const buildEntityMovementInsight = ({ entityType, label, minRatio = 0.2 })=>{
+      if(!latestMonth || !priorMonth) return null;
+      const data = Array.isArray(trips) ? trips : [];
+      if(data.length < 4) return null;
+      const byEntity = new Map();
+
+      data.forEach((t)=>{
+        const dateISO = String(t?.dateISO || "");
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) return;
+        const monthKey = dateISO.slice(0, 7);
+        const monthLabel = monthRows.find((m)=> m.monthKey === monthKey)?.label;
+        if(monthLabel !== latestMonth.label && monthLabel !== priorMonth.label) return;
+
+        const rawName = entityType === "dealer" ? String(t?.dealer || "") : String(t?.area || "");
+        const name = rawName.trim() || "(Unspecified)";
+        const key = name.toLowerCase();
+
+        const slot = byEntity.get(key) || { name, latest: 0, prior: 0 };
+        const amt = safeNum(t?.amount);
+        if(monthLabel === latestMonth.label) slot.latest += amt;
+        if(monthLabel === priorMonth.label) slot.prior += amt;
+        byEntity.set(key, slot);
+      });
+
+      let best = null;
+      byEntity.forEach((slot)=>{
+        if(slot.latest <= 0 && slot.prior <= 0) return;
+        const baseline = Math.max(slot.prior, 1);
+        const delta = slot.latest - slot.prior;
+        const ratio = Math.abs(delta) / baseline;
+        if(ratio < minRatio) return;
+        if(!best || ratio > best.ratio){
+          best = { ...slot, delta, ratio };
+        }
+      });
+
+      if(!best) return null;
+      return {
+        type: "summary",
+        label,
+        headline: `${best.name} ${best.delta > 0 ? "improved" : "cooled off"} versus last month.`,
+        value: `${best.delta > 0 ? "+" : ""}${Math.round(best.ratio * 100)}%`,
+        statusTone: best.delta > 0 ? "up" : "down",
+        statusText: `${latestMonth.label} ${formatMoney(to2(best.latest))} vs ${priorMonth.label} ${formatMoney(to2(best.prior))}`
+      };
+    };
+
+    const dealerMovement = buildEntityMovementInsight({ entityType: "dealer", label: "Dealer movement" });
+    const areaMovement = buildEntityMovementInsight({ entityType: "area", label: "Area movement" });
+
+    const trendCue = (()=>{
+      if(monthRows.length < 3) return null;
+      const recent = monthRows.slice(-3);
+      const lbs = recent.map((r)=> safeNum(r.lbs));
+      const tripsVals = recent.map((r)=> safeNum(r.trips));
+      const isUp = (arr)=> arr[2] > arr[1] && arr[1] > arr[0];
+      const isDown = (arr)=> arr[2] < arr[1] && arr[1] < arr[0];
+      if(isUp(lbs)) return { headline: "Pounds have climbed for three months.", tone: "up" };
+      if(isDown(lbs)) return { headline: "Pounds have softened for three months.", tone: "down" };
+      if(isUp(tripsVals)) return { headline: "Trips are trending up across recent months.", tone: "up" };
+      if(isDown(tripsVals)) return { headline: "Trips are trending down across recent months.", tone: "down" };
+      return { headline: "No strong rolling trend yet in this range.", tone: "steady" };
+    })();
+
     const summaryCards = [
       topDealer ? {
         type: "summary",
         label: "Top dealer",
-        headline: `${topDealer.name} led this range.`,
+        headline: `${topDealer.name} led dealer totals in this range.`,
         value: formatMoney(to2(topDealer.amt)),
         valueClass: "money",
         statusTone: "up",
         statusText: `${topDealer.trips} trips • ${to2(topDealer.lbs)} lbs`
       } : null,
+      weakestDealer && safeNum(topDealer?.amt) > 0 && (safeNum(weakestDealer.amt) / safeNum(topDealer.amt)) <= 0.7 ? {
+        type: "summary",
+        label: "Weakest dealer",
+        headline: `${weakestDealer.name} is trailing this range.`,
+        value: formatMoney(to2(weakestDealer.amt)),
+        valueClass: "money",
+        statusTone: "down",
+        statusText: `${weakestDealer.trips} trips • ${to2(weakestDealer.lbs)} lbs`
+      } : null,
       strongestArea ? {
         type: "summary",
         label: "Strongest area",
-        headline: `${strongestArea.name} produced the strongest total.`,
+        headline: `${strongestArea.name} led area totals in this range.`,
         value: formatMoney(to2(strongestArea.amt)),
         valueClass: "money",
         statusTone: "neutral",
         statusText: `${strongestArea.trips} trips • ${to2(strongestArea.lbs)} lbs`
       } : null,
-      bestPplMonth ? {
+      weakestArea && safeNum(strongestArea?.amt) > 0 && (safeNum(weakestArea.amt) / safeNum(strongestArea.amt)) <= 0.7 ? {
         type: "summary",
-        label: "Best $/lb month",
-        headline: `${bestPplMonth.label} delivered the top avg $/lb.`,
-        value: `${formatMoney(to2(bestPplMonth.avg))}/lb`,
-        valueClass: "rate ppl",
-        statusTone: "steady",
-        statusText: `${bestPplMonth.trips} trips • ${to2(bestPplMonth.lbs)} lbs`
+        label: "Weakest area",
+        headline: `${weakestArea.name} is trailing this range.`,
+        value: formatMoney(to2(weakestArea.amt)),
+        valueClass: "money",
+        statusTone: "down",
+        statusText: `${weakestArea.trips} trips • ${to2(weakestArea.lbs)} lbs`
+      } : null,
+      dealerMovement,
+      areaMovement,
+      trendCue ? {
+        type: "summary",
+        label: "Rolling trend",
+        headline: trendCue.headline,
+        value: latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—",
+        valueClass: "lbsBlue",
+        statusTone: trendCue.tone,
+        statusText: latestMonth && priorMonth ? `${latestMonth.label} vs ${priorMonth.label}` : "Gathering trend context"
       } : null
     ].filter(Boolean);
 
     const highlights = [];
-    if(compareCards.length >= 2){
-      highlights.push(compareCards[0], compareCards[1]);
-      if(summaryCards[0]) highlights.push(summaryCards[0]);
+    if(compareCards.length >= 2 && summaryCards.length){
+      highlights.push(summaryCards[0], compareCards[0], compareCards[1], ...summaryCards.slice(1, 4));
     }else if(compareCards.length === 1){
-      highlights.push(compareCards[0], ...summaryCards.slice(0, 2));
+      highlights.push(compareCards[0], ...summaryCards.slice(0, 4));
     }else{
-      highlights.push(...summaryCards.slice(0, 3));
+      highlights.push(...summaryCards.slice(0, 5));
     }
 
     if(!highlights.length) return "";
