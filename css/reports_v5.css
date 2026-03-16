@@ -87,6 +87,29 @@
 .reportsHeroSub{margin-top:7px;font-size:12px;line-height:1.35;color:#b5bfd1;font-weight:700}
 .reportsHeroGrid{margin-top:13px;display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .reportsHeroStat{border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 10px 9px;background:rgba(255,255,255,.03);min-width:0}
+.reportsHeroStat--tap{appearance:none;-webkit-appearance:none;text-align:left;color:inherit;width:100%;font:inherit;cursor:pointer;transition:border-color .16s ease,background .16s ease,transform .16s ease}
+.reportsHeroStat--tap:focus-visible{outline:2px solid rgba(47,109,246,.65);outline-offset:2px}
+.reportsHeroStat--tap:active{transform:scale(.995)}
+.reportsHeroStat--tap:hover{border-color:rgba(47,109,246,.5);background:rgba(47,109,246,.09)}
+
+.reportsMetricDetailCard{padding:14px 14px 15px;background:linear-gradient(180deg,var(--analytics-surface-top),var(--analytics-surface-bottom));border:1px solid rgba(255,255,255,.16);border-radius:22px;box-shadow:0 10px 24px rgba(0,0,0,.24)}
+.reportsMetricBackBtn{margin-bottom:12px}
+.reportsMetricEyebrow{font-size:11px;font-weight:860;letter-spacing:.13em;text-transform:uppercase;color:#aeb9cd}
+.reportsMetricTitle{margin:8px 0 0;font-size:27px;line-height:1.14;letter-spacing:.2px}
+.reportsMetricContext{margin-top:5px;font-size:12px;color:#b4bed0;font-weight:700}
+.reportsMetricHeroWrap{margin-top:13px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.03)}
+.reportsMetricHeroLabel{font-size:10px;font-weight:860;letter-spacing:.11em;text-transform:uppercase;color:#9ea8bc}
+.reportsMetricHeroValue{margin-top:6px;font-size:38px;line-height:1.02;font-weight:920;letter-spacing:.15px;color:#fff;font-variant-numeric:tabular-nums}
+.reportsMetricCompare{margin-top:12px;padding:11px 12px;border-radius:14px;border:1px solid rgba(174,184,205,.22);background:rgba(174,184,205,.08)}
+.reportsMetricCompare.tone-up{border-color:rgba(46,160,67,.36);background:rgba(46,160,67,.14)}
+.reportsMetricCompare.tone-down{border-color:rgba(255,77,79,.34);background:rgba(255,77,79,.13)}
+.reportsMetricCompareText{font-size:13px;line-height:1.35;font-weight:720;color:#e9eef9}
+.reportsMetricCompareRows{margin-top:8px;display:grid;gap:5px}
+.reportsMetricCompareRows > div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#b8c1d3}
+.reportsMetricCompareRows > div b{font-size:13px;color:#f4f8ff}
+.reportsMetricChartBlock{margin-top:13px}
+.reportsMetricChartContext{margin-top:4px;font-size:12px;line-height:1.35;color:#aeb7c8;font-weight:700}
+.reportsMetricInsight{margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.11);font-size:13px;line-height:1.4;color:#c0c8d8}
 .reportsHeroLabel{font-size:10px;font-weight:860;letter-spacing:.11em;text-transform:uppercase;color:#9ea8bc}
 .reportsHeroValue{margin-top:5px;font-size:20px;line-height:1.1;font-weight:850;letter-spacing:.12px;color:#f2f5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .reportsHeroMeta{margin-top:4px;font-size:11px;line-height:1.3;color:#aeb6c7;font-weight:700}
