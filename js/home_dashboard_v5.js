@@ -146,28 +146,9 @@ export function createHomeDashboardRenderer({
     const bestAvgDealer = dealers
       .filter((item) => item.pounds > 0)
       .sort((a, b) => (b.amount / b.pounds) - (a.amount / a.pounds))[0] || null;
-    const activeFilterLabel = (() => {
-      if (f === "RANGE") {
-        const from = parseReportDateToISO(hf.from);
-        const to = parseReportDateToISO(hf.to);
-        return (from && to) ? `${from} → ${to}` : "Custom range (set dates)";
-      }
-      if (f === "MONTH") return "This Month";
-      if (f === "7D") return "Last 7 Days";
-      return "YTD";
-    })();
     const newestSavedLabel = newestSavedTrip
       ? `${parseReportDateToISO(newestSavedTrip.dateISO || "") || "Saved"} • ${String(newestSavedTrip.dealer || "").trim() || "Dealer not set"}`
       : "No saved trips yet";
-    const latestTripValue = newestSavedTrip
-      ? `${formatMoney(Number(newestSavedTrip.amount) || 0)} • ${round2(Number(newestSavedTrip.pounds) || 0)} lbs`
-      : "No trips saved yet";
-    const homeHeroHeadline = trips.length
-      ? `${moneyRounded} across ${lbsStr} lbs from ${trips.length} trip${trips.length === 1 ? "" : "s"}.`
-      : "No trips in this range yet.";
-    const homeHeroTone = trips.length
-      ? `Current range: ${activeFilterLabel}. Keep adding trips to sharpen trends.`
-      : `Current range: ${activeFilterLabel}. Add your next trip to start this summary.`;
     const smartSummaryLines = [];
     if (strongestDealer) {
       smartSummaryLines.push(`<li><b>Top dealer:</b> ${escapeHtml(strongestDealer.dealer)} at ${formatMoney(strongestDealer.amount)} from ${round2(strongestDealer.pounds)} lbs.</li>`);
@@ -199,16 +180,6 @@ export function createHomeDashboardRenderer({
       ${renderPageHeader("home")}
 
       <div class="card dashCard">
-        <div class="homeHero">
-          <div class="homeHeroEyebrow">Home dashboard • ${escapeHtml(activeFilterLabel)}</div>
-          <div class="homeHeroHeadline">${homeHeroHeadline}</div>
-          <div class="homeHeroTone muted">${escapeHtml(homeHeroTone)}</div>
-          <div class="homeHeroStats" role="list" aria-label="Dashboard highlights">
-            <div class="homeHeroStat" role="listitem"><span class="muted tiny">Trips</span><b>${trips.length}</b></div>
-            <div class="homeHeroStat" role="listitem"><span class="muted tiny">Latest</span><b>${escapeHtml(latestTripValue)}</b></div>
-          </div>
-        </div>
-
         <div class="homeFilterStack">
           <div class="segWrap timeframeUnifiedControl" role="group" aria-label="Home timeframe filter">
             ${chip("YTD", "YTD")}
