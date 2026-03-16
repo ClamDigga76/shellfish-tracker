@@ -53,7 +53,7 @@ function renderReports(){
   const unified = buildUnifiedFilterFromReportsFilter(rf);
   let trips = applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" }).rows;
 
-  const chip = (key,label) => `<button class="chip ${fMode===key?'on':''}" data-rf="${key}">${label}</button>`;
+  const chip = (key,label) => `<button class="chip segBtn ${fMode===key?'on is-selected':''}" data-rf="${key}" type="button">${label}</button>`;
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
 
   const advOpen = !!rf.adv;
@@ -84,9 +84,9 @@ function renderReports(){
           <b>Reports</b>
           <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
         </div>
-        <div class="muted tiny mt6">${escapeHtml(reportFilterSummary)} • Showing <b>${trips.length}</b> of <b>${tripsAll.length}</b> saved trips</div>
+        <div class="muted tiny mt6 reportsFilterMeta">${escapeHtml(reportFilterSummary)} • Showing <b>${trips.length}</b> of <b>${tripsAll.length}</b> saved trips</div>
 
-        <div class="chipGrid cols-4" style="margin-top:10px">
+        <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
           ${chip("YTD","YTD")}
           ${chip("THIS_MONTH","This Month")}
           ${chip("LAST_MONTH","Last Month")}
@@ -470,9 +470,9 @@ function renderReports(){
         <b>Reports</b>
         <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
-      <div class="muted tiny mt6">${escapeHtml(reportFilterSummary)} • Showing <b>${trips.length}</b> of <b>${tripsAll.length}</b> saved trips</div>
+      <div class="muted tiny mt6 reportsFilterMeta">${escapeHtml(reportFilterSummary)} • Showing <b>${trips.length}</b> of <b>${tripsAll.length}</b> saved trips</div>
 
-      <div class="chipGrid cols-4" style="margin-top:10px">
+      <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
           ${chip("YTD","YTD")}
           ${chip("THIS_MONTH","This Month")}
           ${chip("LAST_MONTH","Last Month")}

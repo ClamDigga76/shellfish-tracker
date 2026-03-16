@@ -211,7 +211,7 @@ export function createHomeDashboardRenderer({
         </div>
 
         <div class="homeFilterStack">
-          <div class="segWrap">
+          <div class="segWrap timeframeUnifiedControl" role="group" aria-label="Home timeframe filter">
             ${chip("YTD", "YTD")}
             ${chip("MONTH", "This Month")}
             ${chip("7D", "Last 7 Days")}
