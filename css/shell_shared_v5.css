@@ -35,6 +35,10 @@
   --good:#2EA043;
   --pplYellow:#ffd54a;
   --bad:#ff4d4f;
+  --neutral:#aeb8cd;
+  --analytics-accent:rgba(47,109,246,.18);
+  --analytics-surface-top:rgba(255,255,255,.075);
+  --analytics-surface-bottom:rgba(255,255,255,.03);
   --money:var(--good);
   --lbs:var(--lbsBlue);
   --ppl:var(--pplYellow);
@@ -91,6 +95,12 @@
 .money{color:var(--money)!important}
 .ppl,
 .rate.ppl{color:var(--ppl)!important}
+.tone-up{color:var(--good)!important}
+.tone-positive{color:var(--good)!important}
+.tone-down{color:var(--bad)!important}
+.tone-negative{color:var(--bad)!important}
+.tone-neutral,
+.tone-steady{color:var(--neutral)!important}
 
 .safeBottom{ padding-bottom: max(10px, var(--safeBottom)); }
 .safeTop{ padding-top: max(10px, var(--safeTop)); }
@@ -285,8 +295,78 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   color:var(--text-muted-strong);
 }
 .kpiCard.kpiCardPrimary{
-  border-color:rgba(47,109,246,.34);
-  background:linear-gradient(180deg, rgba(47,109,246,.18) 0%, rgba(47,109,246,.06) 100%);
+  border-color:rgba(255,255,255,.18);
+  background:linear-gradient(180deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.03) 100%);
+}
+
+/* Shared analytics language (Home + Reports) */
+.dashCard,
+.reportsHeroCard,
+.reportsHighlightsCard,
+.chartCard,
+.reportsHighlightItem,
+.reportsHeroStat,
+.kpiCard{
+  border-color:var(--border);
+  background:linear-gradient(180deg, var(--analytics-surface-top) 0%, var(--analytics-surface-bottom) 100%);
+  box-shadow:0 8px 22px rgba(0,0,0,.24);
+}
+.dashCard{
+  padding:15px 14px;
+}
+.dashCard .homeFilterStack{
+  margin-bottom:18px;
+}
+.kpiGroupLabel,
+.reportsSectionHead h2,
+.reportsHeroEyebrow,
+.reportsHighlightsHdr,
+.reportsHeroLabel{
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  font-weight:860;
+}
+.kpiCard{
+  border-radius:16px;
+  border:1px solid var(--line);
+}
+.kpiCard .kpiLabel{
+  color:var(--text-muted-strong);
+}
+.kpiCard .kpiValue{
+  font-variant-numeric:tabular-nums;
+}
+.reportsSectionHead{
+  margin:0 2px 12px;
+}
+.reportsSectionHead p,
+.reportsHeroSub,
+.reportsHeroMeta{
+  color:var(--text-muted-strong);
+}
+.reportsHeroCard{
+  border-color:rgba(255,255,255,.18);
+  padding:15px 14px;
+  margin-bottom:14px;
+}
+.reportsHeroStat{
+  border-color:rgba(255,255,255,.12);
+}
+.reportsHeroValue.money,
+.chartHero.money,
+.reportsHighlightValue.money{
+  color:var(--money);
+}
+.reportsHeroValue.lbsBlue,
+.chartHero.lbsBlue,
+.reportsHighlightValue.lbsBlue{
+  color:var(--lbs);
+}
+.reportsHeroValue.ppl,
+.reportsHeroValue.rate.ppl,
+.chartHero.rate.ppl,
+.reportsHighlightValue.rate.ppl{
+  color:var(--ppl);
 }
 
 
