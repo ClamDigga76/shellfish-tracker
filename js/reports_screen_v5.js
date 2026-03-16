@@ -348,7 +348,8 @@ function renderReports(){
   const highlightsStrip = reportsHighlights.renderHighlightsStrip({
     dealerRows,
     monthRows,
-    areaRows
+    areaRows,
+    trips
   });
 
   const latestMonth = monthRows[monthRows.length - 1] || null;
