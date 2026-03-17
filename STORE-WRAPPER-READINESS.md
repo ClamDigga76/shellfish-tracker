@@ -30,9 +30,9 @@ This file is prep guidance only. It does not change runtime behavior.
 ## Known submission-path blockers (not solved in this patch)
 - Native wrapper project is not scaffolded yet (Capacitor/Cordova/Ionic or equivalent not chosen).
 - Store-required native metadata/assets are not complete yet (splash set, store listing packs, signing/release pipeline).
-- Policy/compliance checklist for app-store submission is not yet codified as a release gate.
+- Release-gate checklist now lives in `STORE-RELEASE-GATES.md` for pass/fail/N/A store-prep tracking.
 
 ## Next prep steps (small and safe)
 - Choose wrapper stack and lock minimal configuration conventions.
-- Add a store-readiness checklist doc with pass/fail gates for metadata, icons/splash, privacy/terms links, and release signing.
+- Use `STORE-RELEASE-GATES.md` as the concrete release-gate checklist before store submission prep.
 - Add CI or scripted checks only after wrapper path is selected, to avoid premature tooling drift.
