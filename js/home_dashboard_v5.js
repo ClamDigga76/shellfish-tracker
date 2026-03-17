@@ -158,6 +158,45 @@ export function createHomeDashboardRenderer({
     const smartSummaryHtml = smartSummaryLines.length
       ? `<ul class="homeSmartSummary">${smartSummaryLines.join("")}</ul>`
       : `<div class="homeSmartSummaryFallback muted small">Need more saved trips in this range before smart summary insights can show.</div>`;
+
+    const monthTotals = trips.reduce((map, trip) => {
+      const iso = parseReportDateToISO(trip?.dateISO || "");
+      if (!iso) return map;
+      const monthKey = String(iso).slice(0, 7);
+      if (!monthKey) return map;
+      const bucket = map.get(monthKey) || { monthKey, amount: 0, pounds: 0, trips: 0 };
+      bucket.amount += Number(trip?.amount) || 0;
+      bucket.pounds += Number(trip?.pounds) || 0;
+      bucket.trips += 1;
+      map.set(monthKey, bucket);
+      return map;
+    }, new Map());
+    const monthSeries = Array.from(monthTotals.values()).sort((a, b) => String(a.monthKey).localeCompare(String(b.monthKey)));
+    const currentMonth = monthSeries[monthSeries.length - 1] || null;
+    const previousMonth = monthSeries.length > 1 ? monthSeries[monthSeries.length - 2] : null;
+    const toneFromDelta = (current, prior) => {
+      if (!(prior > 0) || !(current > 0)) return "steady";
+      const delta = (current - prior) / Math.max(1, Math.abs(prior));
+      if (Math.abs(delta) <= 0.03) return "steady";
+      return delta > 0 ? "up" : "down";
+    };
+    const poundsTone = toneFromDelta(Number(currentMonth?.pounds) || 0, Number(previousMonth?.pounds) || 0);
+    const amountTone = toneFromDelta(Number(currentMonth?.amount) || 0, Number(previousMonth?.amount) || 0);
+    const homeOverviewTone = (() => {
+      if (!previousMonth || !currentMonth) return "steady";
+      if (amountTone === "up" || poundsTone === "up") return "up";
+      if (amountTone === "down" && poundsTone === "down") return "down";
+      return "steady";
+    })();
+    const homeOverviewHeadline = (() => {
+      if (!previousMonth || !currentMonth) return "Overview synced to this selected range.";
+      if (homeOverviewTone === "up") return "Recent catches are trending higher than last month.";
+      if (homeOverviewTone === "down") return "Recent catches are below last month levels.";
+      return "Recent catches are holding steady month to month.";
+    })();
+    const homeOverviewRangeLabel = currentMonth
+      ? `${currentMonth.monthKey}${previousMonth ? ` vs ${previousMonth.monthKey}` : ""}`
+      : "Current filter";
     getApp().innerHTML = `
       ${renderPageHeader("home")}
 
@@ -180,6 +219,22 @@ export function createHomeDashboardRenderer({
           ` : ``}
         </div>
 
+        <div class="homeHero">
+          <div class="homeHeroEyebrow">Overview dashboard</div>
+          <div class="homeHeroHeadline">${escapeHtml(homeOverviewHeadline)}</div>
+          <div class="homeHeroTone tone-${homeOverviewTone}">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
+          <div class="homeHeroStats">
+            <div class="homeHeroStat">
+              <span class="muted small">Total amount</span>
+              <b class="money">${formatMoney(totalAmount)}</b>
+            </div>
+            <div class="homeHeroStat">
+              <span class="muted small">Total pounds</span>
+              <b class="lbsBlue">${lbsStr} lbs</b>
+            </div>
+          </div>
+        </div>
+
         <div class="kpiGroupLabel">Core metrics</div>
         <div class="kpiRow">
           <div class="kpiCard">
@@ -195,7 +250,7 @@ export function createHomeDashboardRenderer({
             <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
           </div>
           <div class="kpiCard kpiCardPrimary">
-            <div class="kpiLabel">Avg $/lb</div>
+            <div class="kpiLabel ppl">Avg $/lb</div>
             <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
           </div>
         </div>
