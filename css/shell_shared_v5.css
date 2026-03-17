@@ -510,3 +510,9 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
     padding:8px 6px;
   }
 }
+
+
+/* SW update banner layout */
+.swUpdateBanner{position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none}
+.swUpdateBannerMessage{margin-top:6px;line-height:1.35}
+.swUpdateBannerActions{margin-top:10px;gap:10px}

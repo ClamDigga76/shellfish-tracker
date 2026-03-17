@@ -1,0 +1,625 @@
+
+
+/* Extracted from index.html inline shell styles (v345) */
+/* New Trip: chips live between field title and dropdown/input */
+.recentLabel{margin-top:-2px;margin-bottom:2px}
+.recentEmpty{margin-top:-2px;margin-bottom:2px;opacity:.85}
+
+
+#credits{margin-top:14px;padding:10px 14px 12px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+#credits a{color:inherit;text-decoration:none}
+
+header{padding:18px 22px 14px}
+
+
+.chipLink{
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--glass2);
+  color:inherit;
+  font-weight:800;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.chipLink{transition:transform .08s ease,filter .12s ease,border-color .12s ease}
+.chipLink:active{transform:translateY(1px);filter:brightness(.96)}
+.expTag{font-size:12px;opacity:.7;font-weight:700}
+.expWarn{opacity:.75;cursor:pointer;user-select:none}
+.expTip{padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:var(--glass2)}
+
+
+.brandTitle{
+  font-size:clamp(22px, 5.2vw, 30px);
+  font-weight:850;
+  letter-spacing:0.3px;
+  margin:0;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:nowrap;
+}
+.brandText{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.brandTitle #bootPill{
+  flex:0 0 auto;
+  font-size:13px;
+}
+header{padding:14px 18px 12px}
+
+.full{width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pasteBannerWrap{width:100%}
+.pasteBanner{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--glass2);
+  user-select:none;
+}
+.pasteBanner:active{transform:scale(.995)}
+.pasteIcon{font-size:18px}
+.pasteText{display:flex;align-items:baseline;gap:12px;min-width:0}
+.pasteTitle{font-weight:850;letter-spacing:.2px;white-space:nowrap}
+.pasteMeta{opacity:.7;font-weight:800;white-space:nowrap}
+.expWarn{flex:0 0 auto;opacity:.75}
+.pasteModule{
+  padding:12px 12px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--glass2);
+}
+.manualHdr{
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.2px;
+  margin:4px 0 10px;
+  opacity:.95;
+}
+.manualModule{
+  padding:12px 12px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--glass2);
+}
+.fieldLabel{
+  font-size:16px;
+  font-weight:850;
+  letter-spacing:.2px;
+  opacity:.95;
+}
+  .fieldLabel.center{ text-align:center; }
+
+/* v44 New Trip layout */
+.pageHeader.simple{justify-content:center;gap:0}
+.pageHeader.simple .phIcon{display:none}
+.pageHeader.simple .phTitle{text-align:center;margin:0 auto;font-size:22px;letter-spacing:.2px}
+
+/* date range rows (Home + Reports advanced): avoid seam overlap + clipping */
+.row .datePillWrap{min-width:0;overflow:visible}
+.row .datePillWrap + .datePillWrap{margin-left:0}
+.dateRangeRow{overflow:visible;gap:8px}
+.homeRangeInputs{display:flex;flex:1 1 280px;min-width:0;gap:10px}
+.homeRangeInputs > .input,
+.homeRangeInputs > .datePillWrap{flex:1;min-width:0}
+.grid2 .field{min-width:0;overflow:visible}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button,.btn,.tabbtn,.chip,.smallbtn,.chipLink,.pasteBanner,.todayBtn{touch-action:manipulation}
+.tabbtn span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.pillValue,.hlValue,.trip-date,.trip-dealer,#toast{-webkit-user-select:text;user-select:text}
+
+/* IOS input zoom guard */
+input, select, textarea{
+  font-size:16px !important;
+}
+
+
+/* ===== C1 Dark Glass Pro Dashboard — STYLE LOCK (v1) ===== */
+/* Background + frame */
+body{
+  background:
+    radial-gradient(1000px 520px at 50% 6%, rgba(47,109,246,.18) 0%, rgba(47,109,246,0) 56%),
+    radial-gradient(900px 520px at 12% 20%, rgba(140,170,255,.10) 0%, rgba(140,170,255,0) 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+  padding:calc(var(--pad) + var(--safeTop)) 12px var(--pad);
+}
+
+.phone{
+  border-radius:30px;
+  background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);
+  border:1px solid var(--border2);
+  box-shadow:var(--shadow);
+}
+
+header{padding:14px 18px 12px}
+.brandTitle{
+  font-size:clamp(26px, 6vw, 34px);
+  font-weight:860;
+  letter-spacing:.15px;
+}
+
+/* Cards */
+.card{
+  background:linear-gradient(180deg, var(--surface-card-top) 0%, var(--surface-card-bottom) 100%);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:var(--section-gap);
+  box-shadow:0 6px 20px rgba(0,0,0,.18);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.card > b{
+  display:block;
+  font-size:17px;
+  font-weight:850;
+  letter-spacing:.2px;
+  margin-bottom:8px;
+}
+
+/* Separators */
+.sep{height:1px;background:var(--divider-color);margin:12px 0;opacity:1}
+
+/* Buttons */
+.btn{
+  border-radius:var(--r-btn);
+  font-weight:850;
+  letter-spacing:.1px;
+  background:var(--surface-control);
+  border:1px solid var(--border);
+  min-height:48px;
+}
+.btn:not(:disabled):active{transform:translateY(1px);filter:brightness(.96)}
+.btn.ghost{background:transparent;border-color:var(--line)}
+.btn.primary{
+  background:linear-gradient(180deg, rgba(47,109,246,.95) 0%, rgba(31,111,235,.92) 100%);
+  background:linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-press) 100%);
+  border-color:rgba(47,109,246,.85);
+  border-color:var(--color-primary);
+  box-shadow:0 10px 26px rgba(31,111,235,.18);
+}
+.btn.danger{background:var(--warn-bg);border-color:var(--warn-border);color:var(--bad)}
+
+/* Chips / segmented */
+.filters{gap:10px}
+.chip{
+  border-radius:var(--r-pill);
+  background:linear-gradient(180deg, var(--surface-chip-top) 0%, var(--surface-chip-bottom) 100%);
+  border:1px solid var(--border);
+  font-weight:850;
+  font-size:14px;
+  padding:10px 14px;
+  min-height:40px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  letter-spacing:.1px;
+  box-shadow:0 2px 8px rgba(0,0,0,.22);
+  transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .08s ease;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+.chip.on,.chip.is-selected{
+  background:linear-gradient(180deg, rgba(47,109,246,.42) 0%, rgba(47,109,246,.26) 100%);
+  border-color:rgba(126,169,255,.78);
+  box-shadow:0 6px 16px rgba(31,111,235,.30), inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.chip:active{transform:translateY(1px);box-shadow:0 1px 5px rgba(0,0,0,.26)}
+
+/* Range pill */
+.pill{
+  border-radius:var(--r-pill);
+  border:1px solid var(--border);
+  background:var(--surface-control);
+}
+
+/* Report table rows (C1) */
+.trow{
+  display:grid;
+  grid-template-columns: 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:10px 0;
+}
+.tname{font-weight:850;font-size:16px;letter-spacing:.15px}
+.tsub{color:var(--muted);font-size:13px;margin-top:2px}
+.tright{
+  text-align:right;
+  color:var(--text-muted-strong);
+  font-size:13px;
+  display:grid;
+  gap:2px;
+}
+.tright b{color:var(--text);font-weight:850}
+
+
+/* Trip rows (C1) */
+.triplist{display:flex;flex-direction:column}
+.triplist .trip{
+  padding:10px 2px;
+  border-radius:14px;
+  background:var(--surface-card-bottom);
+  border:1px solid var(--border);
+}
+.triplist .trip + .trip{margin-top:10px}
+.triprow:active{transform:scale(.99)}
+.metaRow{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.tmeta{color:var(--muted);font-size:13px}
+.dot{color:var(--muted);font-size:12px;opacity:.5}
+.catchCard{
+  width:100%;
+  text-align:left;
+  color:var(--text);
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:var(--surface-control);
+}
+.catchCard .catchHead{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.35;
+}
+.catchCard .catchMain{
+  margin-top:4px;
+  font-weight:850;
+  font-size:16px;
+  letter-spacing:.1px;
+}
+.catchCard .catchFoot{
+  margin-top:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.catchCard .catchMetric{
+  display:inline-flex;
+  align-items:center;
+  border:0;
+  background:none;
+  padding:0;
+  font-size:12px;
+  line-height:1;
+  white-space:nowrap;
+}
+.catchCard .catchMetric b{font-variant-numeric:tabular-nums}
+.catchCard .catchMetric .metricValue{font-size:1.25em;line-height:1}
+
+.homeTripsSection{margin-bottom:12px}
+.homeTripsSection .triplist .trip{
+  background:var(--surface-control);
+  border-radius:14px;
+  border:1px solid var(--border);
+  padding:12px;
+}
+.homeTripsSection .triplist .trip + .trip{margin-top:10px}
+
+.noticeBand{
+  margin-bottom:12px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(120,160,255,.28);
+  background:rgba(120,160,255,.10);
+}
+.noticeBand .noticeTitle{
+  font-weight:800;
+  font-size:14px;
+  letter-spacing:.1px;
+}
+.noticeBand .noticeBody{
+  margin-top:4px;
+  line-height:1.4;
+}
+.noticeBand .noticeActions{
+  gap:8px;
+}
+.noticeBand .noticeActions .btn{
+  margin-bottom:0;
+}
+
+/* KPI bar -> compact grid */
+.pillbar{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap:10px;
+  margin-top:10px;
+}
+.pillbar .pill{
+  padding:10px 12px;
+  text-align:left;
+}
+
+/* Inputs + small buttons (C1) */
+.input,.select,.textarea{
+  background:var(--surface-control) !important;
+  border:1px solid var(--border) !important;
+}
+.input:focus-visible,.select:focus-visible,.textarea:focus-visible{
+  outline:none;
+  border-color:rgba(120,160,255,.55) !important;
+  box-shadow:0 0 0 3px rgba(47,109,246,.18);
+}
+.smallbtn{
+  border-radius:var(--r-pill);
+  border:1px solid var(--border);
+  background:var(--surface-control);
+  padding:10px 12px;
+  font-weight:800;
+}
+.smallbtn:active{transform:translateY(1px);filter:brightness(.96)}
+.actions{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:10px;
+}
+.actions .btn{width:100%}
+
+/* Charts (C1) */
+.chart{
+  width:100%;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:var(--glass2);
+}
+
+/* ===== end C1 ===== */
+
+
+/* Home dashboard header */
+.dashCard{
+  padding:14px;
+  border-color:var(--border);
+  background:linear-gradient(180deg, var(--glass) 0%, var(--glass2) 100%);
+  box-shadow:0 10px 24px rgba(0,0,0,.24);
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.dashCard:active{
+  transform:translateY(1px) scale(.995);
+  box-shadow:0 8px 18px rgba(0,0,0,.2);
+}
+.dashCard .homeFilterStack{
+  display:grid;
+  gap:10px;
+  margin-top:10px;
+  margin-bottom:12px;
+}
+.segWrap{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  padding:6px;
+  border-radius:16px;
+  background:var(--glass);
+  border:1px solid var(--border);
+}
+.segWrap .segBtn{
+  width:100%;
+  border-radius:12px;
+  padding:12px 10px;
+  font-weight:800;
+  letter-spacing:0.2px;
+}
+.segWrap .segBtn.on,
+.segWrap .segBtn.is-selected{
+  background:rgba(47,109,246,0.35);
+  border-color:rgba(47,109,246,0.55);
+}
+.segWrap .segBtn:disabled{
+  opacity:0.35;
+  pointer-events:none;
+}
+.kpiRow{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.kpiCard{
+  min-width:0;
+  min-height:clamp(78px, 21vw, 86px);
+  padding:clamp(8px, 2.5vw, 10px) clamp(7px, 2.5vw, 9px) clamp(7px, 2.2vw, 8px);
+  border-radius:18px;
+  background:var(--glass);
+  border:1px solid var(--border);
+  box-shadow:0 6px 16px rgba(0,0,0,.18);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  text-align:center;
+}
+.kpiValue.lbsBlue{color:var(--lbsBlue)!important}
+.kpiValue{
+  width:100%;
+  max-width:100%;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:1;
+  min-height:0;
+}
+.kpiValueFit{
+  display:inline-flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:.06em;
+  max-width:100%;
+  font-size:clamp(17px, calc(12.8px + 5.7vw), 32px);
+  font-weight:900;
+  line-height:0.98;
+  letter-spacing:-0.24px;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap !important;
+}
+.kpiUnit{
+  font-size:0.42em;
+  font-weight:800;
+  opacity:0.85;
+  margin-left:0;
+}
+.kpiLabel{
+  margin:0 0 clamp(4px, 1vw, 6px);
+  font-size:clamp(12px, 2.8vw, 13px);
+  font-weight:850;
+  opacity:0.9;
+  line-height:1.06;
+  letter-spacing:.015em;
+  white-space:normal;
+  overflow:visible;
+}
+
+@media (max-width: 420px){
+  .kpiValueFit{ font-size:clamp(16px, calc(11.8px + 5.3vw), 29px); }
+  .kpiCard{ min-height:clamp(74px, 24vw, 82px); }
+}
+
+@media (max-width: 360px){
+  .kpiRow{ gap:7px; }
+  .kpiCard{ padding:8px 6px 7px; }
+  .kpiValueFit{ font-size:clamp(15px, calc(10.8px + 5.1vw), 26px); letter-spacing:-0.2px; }
+  .kpiLabel{ font-size:11.5px; line-height:1.04; }
+}
+
+
+/* Page header (Option B: icon + title) */
+.pageHeader{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 14px 8px;
+}
+.pageHeader .phIcon{
+  width:20px;height:20px;flex:0 0 20px;
+  color:var(--muted);
+}
+.pageHeader .phIcon svg{width:20px;height:20px;display:block}
+.pageHeader .phTitle{
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.2px;
+  margin:0;
+  line-height:1.1;
+}
+
+
+
+/* ===== Titles: centered + enlarged + divider (v38) ===== */
+.pageHeader{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  margin:8px 0 12px;
+  padding:0 10px;
+  position:relative;
+}
+.pageHeader::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:-5px;
+  width:min(72%, 280px);
+  height:1px;
+  background:var(--divider-color);
+}
+.phTitle{
+  margin:0;
+  font-size:clamp(24px,5.8vw,30px) !important;
+  font-weight:880 !important;
+  letter-spacing:-0.18px !important;
+  text-align:center;
+  color:var(--color-header-text) !important;
+  font-family:inherit !important;
+  line-height:1.03 !important;
+  text-wrap:balance;
+  text-shadow:0 1px 0 rgba(255,255,255,.08);
+}
+
+.pageHeader > div{
+  padding:0;
+}
+.phIcon svg{
+  width:18px;
+  height:18px;
+  opacity:0.9;
+}
+
+/* Card titles: style <b> at top of a card as a centered header */
+.card > b:first-child{
+  display:block;
+  text-align:center;
+  font-size:clamp(14px,3.8vw,18px);
+  font-weight:750;
+  margin:2px 0 10px;
+  position:relative;
+  padding-bottom:8px;
+}
+.card > b:first-child::after{
+  content:"";
+  display:block;
+  width:70%;
+  height:1px;
+  background:var(--divider-color);
+  margin:8px auto 0;
+}
+.card > b:first-child + .sep{
+  display:none;
+}
+
+
+/* ===== Chip grids (Trips/Reports) ===== */
+.chipGrid{ display:grid; gap:10px; }
+.chipGrid.cols-3{ grid-template-columns: repeat(3, 1fr); }
+.chipGrid.cols-4{ grid-template-columns: repeat(4, 1fr); }
+
+.chipGrid.cols-2{ grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 380px){
+  .chipGrid.cols-3{ grid-template-columns: repeat(2, 1fr); }
+}
+.chipGrid .chip{ width:100%; justify-content:center; }
+
+
+
+.tripCardGrid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}
+.tripCardHeadline{font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tripCardHeadlineDealer{margin-top:2px}
+.tripCardMain{font-size:18px}
+.tripCardMetricsCol{margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap}
+.tripCardMetricChip{font-size:14px;padding:6px 10px}
+
+/* v274: New Trip/Edit Trip fixed actions above tabbar */
+:root{--trip-action-dock-h:56px}
+body[data-view="new"] main#app,
+body[data-view="edit"] main#app{padding-bottom:calc(var(--tabbar-total-h) + var(--trip-action-dock-h) + 20px)}
+.trip-action-dock{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:var(--tabbar-total-h);
+  z-index:9997;
+  pointer-events:none;
+  padding:8px 10px 8px;
+}
+.tripActionBar{
+  max-width:720px;
+  margin:0 auto;
+  pointer-events:auto;
+  padding:0;
+  background:linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,.35) 100%);
+}
+.tripActionRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tripActionRow.tripActionRow--three{grid-template-columns:1fr 1fr 1fr}
+
