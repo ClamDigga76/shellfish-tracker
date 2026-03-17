@@ -215,11 +215,11 @@ export function createReportsHighlightsSeam(deps){
                 <div class="reportsCompareRow tone-${escapeHtml(item.compareTone)}">${item.compareText}</div>
                 <div class="reportsCompareBars" role="presentation">
                   <div class="reportsCompareLine">
-                    <div class="reportsCompareMeta"><span>${escapeHtml(item.aLabel)}</span><b>${escapeHtml(item.aValue)}</b></div>
+                    <div class="reportsCompareMeta"><span>${escapeHtml(item.aLabel)}</span><b class="${item.valueClass || ""}">${escapeHtml(item.aValue)}</b></div>
                     <div class="reportsCompareBarTrack"><span style="width:${item.aPct}%"></span></div>
                   </div>
                   <div class="reportsCompareLine">
-                    <div class="reportsCompareMeta"><span>${escapeHtml(item.bLabel)}</span><b>${escapeHtml(item.bValue)}</b></div>
+                    <div class="reportsCompareMeta"><span>${escapeHtml(item.bLabel)}</span><b class="${item.valueClass || ""}">${escapeHtml(item.bValue)}</b></div>
                     <div class="reportsCompareBarTrack muted"><span style="width:${item.bPct}%"></span></div>
                   </div>
                 </div>
@@ -251,7 +251,9 @@ export function createReportsHighlightsSeam(deps){
       label: payload.label,
       headline: `${headlineLabel} is ${comparisonPhrase} prior comparable period.`,
       value: formatter(cur),
-      valueClass: payload.metricKey === "amount" ? "money" : "",
+      valueClass: payload.metricKey === "amount"
+        ? "money"
+        : (payload.metricKey === "pounds" ? "lbsBlue" : (payload.metricKey === "ppl" ? "rate ppl" : "")),
       compareTone: payload.compareTone,
       compareText: `${escapeHtml(period.currentLabel || "Current")} vs ${escapeHtml(period.previousLabel || "Prior")} • ${escapeHtml(period.fairWindowLabel || "Comparable window")}`,
       aLabel: period.currentLabel || "Current",

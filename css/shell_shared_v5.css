@@ -350,6 +350,10 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .dashCard{
   padding:15px 14px;
 }
+.dashCard .homeOverviewCard{
+  margin-bottom:16px;
+  border-color:rgba(126,200,255,.42);
+}
 .dashCard .homeFilterStack{
   margin-bottom:18px;
 }

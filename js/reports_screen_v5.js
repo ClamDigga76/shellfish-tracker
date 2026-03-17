@@ -358,7 +358,7 @@ function renderReports(){
         <div class="chartTitle">Avg $/lb by Month</div>
         <div class="chartSubhead">Monthly trend for this range</div>
         <div class="chartHero rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</div>
-        <div class="chartContext">Latest month • Peak ${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</div>
+        <div class="chartContext">Latest month • Peak <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span></div>
         <canvas class="chart" id="c_ppl" height="210"></canvas>
       </div>
       <div class="card chartCard">
@@ -374,7 +374,7 @@ function renderReports(){
         <div class="chartTitle">Monthly Pounds</div>
         <div class="chartSubhead">Total pounds by month</div>
         <div class="chartHero lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</div>
-        <div class="chartContext">Latest month • Peak ${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</div>
+        <div class="chartContext">Latest month • Peak <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span></div>
         <canvas class="chart" id="c_lbs" height="210"></canvas>
       </div>
       <div class="card chartCard">
@@ -395,52 +395,11 @@ function renderReports(){
     trips
   });
 
-  const latestMonth = monthRows[monthRows.length - 1] || null;
-  const priorMonth = monthRows.length > 1 ? monthRows[monthRows.length - 2] : null;
-  const topDealer = dealerRows[0] || null;
-  const strongestArea = areaRows[0] || null;
   const totalLbs = trips.reduce((sum, t)=> sum + (Number(t?.pounds) || 0), 0);
   const totalAmount = trips.reduce((sum, t)=> sum + (Number(t?.amount) || 0), 0);
   const compareFoundation = buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
   const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
-  const monthDeltaText = (()=>{
-    if(compareFoundation.period?.suppressed || !lbsCompare || lbsCompare.suppressed){
-      return "Building fair comparison context from your latest entries.";
-    }
-    if(lbsCompare.compareTone === "steady") return `${compareFoundation.period.currentLabel} held steady versus ${compareFoundation.period.previousLabel}.`;
-    return lbsCompare.compareTone === "up"
-      ? `${compareFoundation.period.currentLabel} pounds moved higher than ${compareFoundation.period.previousLabel}.`
-      : `${compareFoundation.period.currentLabel} pounds moved lower than ${compareFoundation.period.previousLabel}.`;
-  })();
-
-  const reportsHero = `
-    <div class="card reportsHeroCard">
-      <div class="reportsHeroEyebrow">Reports analysis snapshot</div>
-      <div class="reportsHeroHeadline">${escapeHtml(monthDeltaText)}</div>
-      <div class="reportsHeroSub">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips analyzed • Detailed view</div>
-      <div class="reportsHeroGrid">
-        <button class="reportsHeroStat reportsHeroStat--tap" data-metric-detail="amount" type="button" aria-label="Open amount detail">
-          <div class="reportsHeroLabel">Total amount</div>
-          <div class="reportsHeroValue money">${formatMoney(to2(totalAmount))}</div>
-        </button>
-        <button class="reportsHeroStat reportsHeroStat--tap" data-metric-detail="pounds" type="button" aria-label="Open pounds detail">
-          <div class="reportsHeroLabel">Total pounds</div>
-          <div class="reportsHeroValue lbsBlue">${to2(totalLbs)} lbs</div>
-        </button>
-        <div class="reportsHeroStat">
-          <div class="reportsHeroLabel">Top dealer</div>
-          <div class="reportsHeroValue">${escapeHtml(topDealer?.name || "—")}</div>
-          <div class="reportsHeroMeta">${topDealer ? formatMoney(to2(topDealer.amt)) : "No data"}</div>
-        </div>
-        <div class="reportsHeroStat">
-          <div class="reportsHeroLabel">Strongest area</div>
-          <div class="reportsHeroValue">${escapeHtml(strongestArea?.name || "—")}</div>
-          <div class="reportsHeroMeta">${strongestArea ? formatMoney(to2(strongestArea.amt)) : "No data"}</div>
-        </div>
-      </div>
-    </div>
-  `;
 
   const reportsSection = ({ title, intro, body, extraClass = "" })=> `
     <section class="reportsSection ${extraClass}">
@@ -614,7 +573,7 @@ function renderReports(){
         ${advPanel}
     </div>
 
-    ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : reportsHero}
+    ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : ""}
 
     ${activeMetricDetail ? "" : reportsSection({
       title: "Highlights",
