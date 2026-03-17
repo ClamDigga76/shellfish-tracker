@@ -161,7 +161,7 @@ export function createBackupRestoreSubsystem(deps){
 
   function normalizeBackupPayload(raw){
     const obj = (raw && typeof raw === "object") ? raw : null;
-    if(!obj) return { ok:false, errors:["Backup file is not valid JSON object"], warnings:[], normalized:null };
+    if(!obj) return { ok:false, errors:["Backup file must contain a JSON object at the top level."], warnings:[], normalized:null };
 
     const schemaVersion = Number(obj.schemaVersion ?? obj.schema ?? 0) || 0;
     const appVersion = String(obj.appVersion ?? obj.version ?? "");
@@ -183,27 +183,27 @@ export function createBackupRestoreSubsystem(deps){
     const errors = [];
     const warnings = [];
     if(!normalized || typeof normalized !== "object"){
-      errors.push("Backup validation failed");
+      errors.push("Backup validation failed.");
       return { errors, warnings };
     }
     const data = normalized.data;
     if(!data || typeof data !== "object"){
-      errors.push("Backup is missing data section");
+      errors.push("Backup is missing a readable data section.");
       return { errors, warnings };
     }
 
-    if(!Array.isArray(data.trips)) errors.push("Backup trips must be an array");
-    if(!Array.isArray(data.areas)) errors.push("Backup areas must be an array");
-    if(data.settings && typeof data.settings !== "object") errors.push("Backup settings must be an object");
-    if(!Array.isArray(data.dealers)) errors.push("Backup dealers must be an array");
+    if(!Array.isArray(data.trips)) errors.push("Backup trips must be an array.");
+    if(!Array.isArray(data.areas)) errors.push("Backup areas must be an array.");
+    if(data.settings && typeof data.settings !== "object") errors.push("Backup settings must be an object.");
+    if(!Array.isArray(data.dealers)) errors.push("Backup dealers must be an array.");
 
-    if(normalized.schemaVersion <= 0) warnings.push("Backup schema version was not set; importing with compatibility mode.");
+    if(normalized.schemaVersion <= 0) warnings.push("Backup schema version is missing; restore will use compatibility mode.");
     if(!String(normalized.appVersion || "").trim()) warnings.push("Backup build/version is missing.");
 
     const exportedAt = String(normalized.exportedAt || "").trim();
     if(exportedAt){
       const exportedDate = new Date(exportedAt);
-      if(isNaN(exportedDate.getTime())) warnings.push("Export date was unreadable.");
+      if(isNaN(exportedDate.getTime())) warnings.push("Export date could not be read.");
     }else{
       warnings.push("Export date was not included.");
     }
@@ -223,6 +223,45 @@ export function createBackupRestoreSubsystem(deps){
     }
 
     return { errors, warnings };
+  }
+
+  function classifyRestoreError(err){
+    const reason = String(err?.message || err || "Unknown restore error").trim();
+    const r = reason.toLowerCase();
+    if(r.includes("invalid json") || r.includes("unexpected token")){
+      return {
+        heading: "This file could not be read as backup JSON.",
+        tips: [
+          "Confirm you selected a Bank the Catch backup file.",
+          "Try opening the file in Files/Drive to make sure it is not empty or truncated."
+        ]
+      };
+    }
+    if(r.includes("must be an array") || r.includes("must be an object") || r.includes("missing")){
+      return {
+        heading: "The backup file is missing required sections or has incompatible structure.",
+        tips: [
+          "Use a complete backup exported from Bank the Catch.",
+          "If this is a legacy backup, re-export from a known-good copy when possible."
+        ]
+      };
+    }
+    if(r.includes("failed to read backup file")){
+      return {
+        heading: "The file could not be read from this device.",
+        tips: [
+          "Try selecting the file again from Files/Drive.",
+          "If the file is in cloud storage, wait for download to finish, then retry."
+        ]
+      };
+    }
+    return {
+      heading: "Restore could not complete for this file.",
+      tips: [
+        "Retry with the same file once.",
+        "If it still fails, try another known-good backup file."
+      ]
+    };
   }
 
   function readTextFile(file){
@@ -246,7 +285,7 @@ export function createBackupRestoreSubsystem(deps){
     return readTextFile(file).then((txt)=>{
       let raw;
       try{ raw = JSON.parse(txt); }
-      catch(e){ throw new Error(`Invalid JSON: ${String(e?.message || e || "Parse failed")}`); }
+      catch(e){ throw new Error(`Invalid JSON file content: ${String(e?.message || e || "Parse failed")}`); }
 
       const normalizedResult = normalizeBackupPayload(raw);
       if(!normalizedResult.ok) throw new Error(normalizedResult.errors.join("\n"));
@@ -257,21 +296,21 @@ export function createBackupRestoreSubsystem(deps){
       const warnings = [...(normalizedResult.warnings || [])];
 
       if(String(obj.app || "").trim() && String(obj.app).trim() !== "Bank the Catch"){
-        warnings.push(`Backup app label was "${String(obj.app).trim()}".`);
+        warnings.push(`Backup app label was "${String(obj.app).trim()}" instead of "Bank the Catch".`);
       }
 
       if(!(obj.data && typeof obj.data === "object")){
-        warnings.push("Legacy backup shape detected (top-level data). Import remains compatible.");
+        warnings.push("Legacy backup shape detected (top-level data). Import will continue in compatibility mode.");
       }
 
       const expectedKeys = ["trips", "areas", "dealers", "settings"];
       for(const key of expectedKeys){
-        if(!(key in data)) warnings.push(`Missing key: data.${key}`);
+        if(!(key in data)) warnings.push(`Missing key: data.${key} (using safe default).`);
       }
 
       const fileSize = Number(file?.size || 0);
       if(fileSize > 5 * 1024 * 1024){
-        warnings.push(`Large file (${__formatFileSize(fileSize)}) may take longer to restore`);
+        warnings.push(`Large file (${__formatFileSize(fileSize)}) may take longer to restore on mobile.`);
       }
 
       return {
@@ -318,8 +357,8 @@ export function createBackupRestoreSubsystem(deps){
       const continueId = `${uidBase}_continue`;
 
       const warningHtml = (preview.warnings && preview.warnings.length)
-        ? `<div class="modalErr" style="display:block;margin-top:10px"><b>Warnings</b><ul style="margin:8px 0 0 16px;padding:0">${preview.warnings.map(w=>`<li>${escapeHtml(String(w || ""))}</li>`).join("")}</ul></div>`
-        : `<div class="muted small mt10">No restore warnings found.</div>`;
+        ? `<div class="modalErr" style="display:block;margin-top:10px"><b>Review before restoring</b><ul style="margin:8px 0 0 16px;padding:0">${preview.warnings.map(w=>`<li>${escapeHtml(String(w || ""))}</li>`).join("")}</ul></div>`
+        : `<div class="muted small mt10">No restore warnings found. File shape looks complete.</div>`;
 
       const counts = preview.counts || {};
       openModal({
@@ -331,38 +370,39 @@ export function createBackupRestoreSubsystem(deps){
         html: `
           <div class="muted small">File: <b>${escapeHtml(preview.fileName || "backup.json")}</b> (${escapeHtml(__formatFileSize(preview.fileSize))})</div>
           <div class="sep" style="margin:10px 0"></div>
-          <div class="muted small">Contents</div>
+          <div class="muted small">Backup contents that will be read</div>
           <div class="mt8" style="display:grid;gap:6px">
             <div class="row" style="justify-content:space-between"><span class="muted">Trips</span><b>${escapeHtml(String(counts.trips || 0))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Areas</span><b>${escapeHtml(String(counts.areas || 0))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Dealers</span><b>${escapeHtml(String(counts.dealers || 0))}</b></div>
           </div>
-          <div class="muted small" style="margin-top:8px">This restore imports trips plus area/dealer lists from this file.</div>
+          <div class="muted small" style="margin-top:8px">This restore reads trips and list entries (areas/dealers) from this file.</div>
           <div class="sep" style="margin:10px 0"></div>
           <div class="muted small">Metadata</div>
           <div class="mt8" style="display:grid;gap:6px">
             <div class="row" style="justify-content:space-between"><span class="muted">Exported</span><b>${escapeHtml(__formatRestoreMetaDate(preview?.metadata?.exportedAt))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Build/Version</span><b>${escapeHtml(String(preview?.metadata?.appVersion || "unknown"))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Schema</span><b>${escapeHtml(String(preview?.metadata?.schemaVersion || "unknown"))}</b></div>
+            <div class="row" style="justify-content:space-between"><span class="muted">Created by</span><b>${escapeHtml(String(preview?.metadata?.createdBy || "unknown"))}</b></div>
           </div>
           ${warningHtml}
           <div class="sep" style="margin:10px 0"></div>
           <div class="muted small" style="margin-bottom:6px">Restore mode</div>
           <label class="row" style="gap:8px;align-items:flex-start">
             <input id="${modeMergeId}" type="radio" name="${uidBase}_restore_mode" value="merge" checked />
-            <span>Merge (recommended): keep current data and skip likely duplicates.</span>
+            <span>Merge (recommended): keep current trips/lists and only add entries that do not look like duplicates.</span>
           </label>
           <label class="row" style="gap:8px;align-items:flex-start;margin-top:6px">
             <input id="${modeReplaceId}" type="radio" name="${uidBase}_restore_mode" value="replace" />
-            <span>Replace: overwrite current trips and lists with this backup.</span>
+            <span>Replace: remove current trips/lists on this device, then import from this backup file.</span>
           </label>
           <label class="row" style="gap:8px;align-items:flex-start;margin-top:10px">
             <input id="${includeSettingsId}" type="checkbox" />
-            <span>Also import settings from this backup (off by default).</span>
+            <span>Also import settings from this backup (optional, off by default).</span>
           </label>
           <label class="row" id="${replaceConfirmId}_row" style="gap:8px;align-items:flex-start;margin-top:10px;display:none">
             <input id="${replaceConfirmId}" type="checkbox" />
-            <span>I understand Replace removes current trips and list entries on this device before this backup is imported.</span>
+            <span>I understand Replace first removes current trips and list entries on this device. I should protect current data with a fresh backup before continuing.</span>
           </label>
           <div class="modalActions" style="margin-top:12px">
             <button class="btn" id="${cancelId}" type="button">Cancel</button>
@@ -414,13 +454,13 @@ export function createBackupRestoreSubsystem(deps){
       const errId = `${uidBase}_err`;
 
       openModal({
-        title: "Create Safety Backup of current data first?",
+        title: "Protect current data before Replace?",
         backdropClose: false,
         escClose: false,
         showCloseButton: false,
         position: "center",
         html: `
-          <div class="muted small">Recommended before using Replace restore mode.</div>
+          <div class="muted small">Recommended: create a safety backup now so you can recover if this Replace result is not what you expected.</div>
           <div class="modalErr" id="${errId}" style="display:none;margin-top:10px"></div>
           <div class="modalActions" style="margin-top:12px">
             <button class="btn" id="${cancelId}" type="button">Cancel</button>
@@ -458,6 +498,7 @@ export function createBackupRestoreSubsystem(deps){
       const uidBase = uid("restoreErr");
       const closeId = `${uidBase}_ok`;
       const reason = String(err?.message || err || "Unknown restore error");
+      const guidance = classifyRestoreError(reason);
 
       announce("Restore failed. Open details for next steps.", "assertive");
 
@@ -468,7 +509,10 @@ export function createBackupRestoreSubsystem(deps){
         showCloseButton: false,
         position: "center",
         html: `
-          <div class="muted small">We couldn't restore this backup file.</div>
+          <div class="muted small">${escapeHtml(guidance.heading)}</div>
+          <ul class="muted small" style="margin:10px 0 0 16px;padding:0">
+            ${guidance.tips.map(t=>`<li>${escapeHtml(String(t || ""))}</li>`).join("")}
+          </ul>
           <details style="margin-top:10px">
             <summary class="muted small">Details</summary>
             <div class="muted small preWrap" style="margin-top:8px">${escapeHtml(reason)}</div>
