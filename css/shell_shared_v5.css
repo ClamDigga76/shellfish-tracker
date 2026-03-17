@@ -60,6 +60,11 @@
   --tabbar-total-h:calc(var(--tabbar-h) + var(--tabbar-safe));
   --section-gap:14px;
   --section-gap-tight:12px;
+  --card-stack-gap:14px;
+  --card-pad-y:14px;
+  --card-pad-x:14px;
+  --card-title-gap:8px;
+  --card-body-gap:10px;
   --divider-color:rgba(255,255,255,.14);
 }
 :root[data-theme="dark"]{
@@ -123,7 +128,7 @@ header p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
 .boot{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--muted);vertical-align:middle}
 .boot.err{border-color:var(--warn-border);color:var(--bad);background:var(--warn-bg)}
 main{padding:14px 14px 18px}
-.card{background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.card{background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);border:1px solid var(--line);border-radius:var(--r);padding:var(--card-pad-y) var(--card-pad-x);margin-bottom:var(--card-stack-gap)}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .btn{appearance:none;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:16px;padding:12px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;min-height:48px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .08s ease,filter .12s ease,box-shadow .12s ease,border-color .12s ease}
 .btn.primary{background:linear-gradient(180deg, rgba(47,109,246,.92) 0%, rgba(31,111,235,.92) 100%);border-color:rgba(47,109,246,.9);box-shadow:0 10px 26px rgba(31,111,235,.20)}
@@ -170,26 +175,26 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .modalRoot{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:calc(16px + var(--safeBottom));background:rgba(0,0,0,.45);-webkit-backdrop-filter: blur(6px);backdrop-filter: blur(6px);pointer-events:auto}
 
 
-.tripsFiltersCard{padding:11px 12px 10px}
+.tripsFiltersCard{padding:var(--card-pad-y) var(--card-pad-x)}
 .tripsFiltersGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;align-items:end}
 .tripsFilterField{min-width:0}
 .tripsFilterField--disabled{opacity:.72}
-.tripsFilterActions{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.tripsFilterActions{margin-top:var(--card-body-gap);padding-top:var(--card-body-gap);border-top:1px solid var(--line);display:flex;align-items:center;gap:8px}
 .tripsFilterActionExport{flex:1;min-width:0}
 .tripsFilterActionExport .btn{width:100%}
 .btn.btn-ghost{background:transparent}
-.tripsCustomRangeWrap{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.tripsCustomRangeWrap{margin-top:var(--card-title-gap);padding-top:var(--card-title-gap);border-top:1px dashed var(--line)}
 .tripsCustomRangeRow{gap:10px;flex-wrap:wrap}
 .tripsFilterSummary{padding-top:2px;line-height:1.35}
 
-.tripsBrowseFiltersCard{padding:12px 12px 11px}
-.tripsFiltersTopRow{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.tripsBrowseFiltersCard{padding:var(--card-pad-y) var(--card-pad-x)}
+.tripsFiltersTopRow{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:var(--card-body-gap)}
 .tripsFiltersEyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong)}
 .tripsFiltersTitle{font-size:17px;font-weight:860;line-height:1.2;margin-top:2px}
-.tripsBrowseList{display:grid;gap:12px}
+.tripsBrowseList{display:grid;gap:var(--card-stack-gap)}
 .tripsBrowseList .trip + .trip{margin-top:0}
 .tripsBrowseCard{
-  padding:16px 16px 15px;
+  padding:var(--card-pad-y) var(--card-pad-x);
   border:1px solid var(--border);
   border-radius:18px;
   background:linear-gradient(180deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.035) 100%);
@@ -245,10 +250,10 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .modalErr{margin-top:10px;font-size:12px;opacity:.9;color: var(--danger, #ff6b6b)}
 
 /* Settings grouped-list polish (P3) */
-.settingsGroupBlock{margin-bottom:16px}
-.settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px 10px}
+.settingsGroupBlock{margin-bottom:var(--card-stack-gap)}
+.settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px var(--card-title-gap)}
 .settingsSectionCard.settingsGroupedCard{margin-bottom:0;padding:0;overflow:hidden}
-.settingsRow{padding:13px 14px}
+.settingsRow{padding:13px var(--card-pad-x)}
 .settingsRow + .settingsRow{border-top:1px solid var(--line)}
 .settingsRow--split{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .settingsRow--field{padding-top:11px;padding-bottom:11px}
@@ -286,8 +291,8 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 
 /* Home dashboard polish (P2) */
 .homeHero{
-  margin-bottom:12px;
-  padding:12px;
+  margin-bottom:var(--card-stack-gap);
+  padding:var(--card-pad-y) var(--card-pad-x);
   border-radius:16px;
   border:1px solid var(--border);
   background:linear-gradient(180deg, rgba(47,109,246,.20) 0%, rgba(47,109,246,.06) 62%, rgba(255,255,255,.02) 100%);
@@ -297,7 +302,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   text-transform:uppercase;
   letter-spacing:.08em;
   color:var(--text-muted-strong);
-  margin-bottom:6px;
+  margin-bottom:var(--card-title-gap);
 }
 .homeHeroHeadline{
   font-size:clamp(20px, 5vw, 28px);
@@ -306,12 +311,12 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   letter-spacing:-.01em;
 }
 .homeHeroTone{
-  margin-top:6px;
+  margin-top:var(--card-title-gap);
   font-size:13px;
   line-height:1.4;
 }
 .homeHeroStats{
-  margin-top:10px;
+  margin-top:var(--card-body-gap);
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:8px;
@@ -335,7 +340,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   text-overflow:ellipsis;
 }
 .homeSmartSummary{
-  margin:12px 0 0;
+  margin:var(--card-body-gap) 0 0;
   padding:11px 13px 11px 26px;
   border-radius:12px;
   border:1px dashed var(--line);
@@ -347,14 +352,14 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .homeSmartSummary b{font-weight:850}
 .homeSmartSummaryFallback{
-  margin-top:12px;
+  margin-top:var(--card-body-gap);
   border-radius:12px;
   border:1px dashed var(--line);
   background:rgba(8,12,20,.28);
   padding:10px 12px;
 }
 .kpiGroupLabel{
-  margin:6px 0 10px;
+  margin:var(--card-title-gap) 0 var(--card-body-gap);
   font-size:11px;
   text-transform:uppercase;
   letter-spacing:.08em;
@@ -378,14 +383,14 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   box-shadow:0 8px 22px rgba(0,0,0,.24);
 }
 .dashCard{
-  padding:16px 15px;
+  padding:var(--card-pad-y) var(--card-pad-x);
 }
 .dashCard .homeOverviewCard{
-  margin-bottom:14px;
+  margin-bottom:var(--card-stack-gap);
   border-color:rgba(126,200,255,.42);
 }
 .dashCard .homeFilterStack{
-  margin-bottom:16px;
+  margin-bottom:var(--card-stack-gap);
 }
 .kpiGroupLabel,
 .reportsSectionHead h2,
@@ -428,7 +433,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   transform:translateY(1px);
 }
 .reportsSectionHead{
-  margin:0 2px 12px;
+  margin:0 2px var(--card-body-gap);
 }
 .reportsSectionHead p,
 .reportsHeroSub,
@@ -437,8 +442,8 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .reportsHeroCard{
   border-color:rgba(255,255,255,.18);
-  padding:16px 15px;
-  margin-bottom:14px;
+  padding:var(--card-pad-y) var(--card-pad-x);
+  margin-bottom:var(--card-stack-gap);
 }
 .reportsHeroStat{
   border-color:rgba(255,255,255,.12);
@@ -497,8 +502,8 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .dashCard .homeFilterStack{
   gap:8px;
-  margin-top:10px;
-  margin-bottom:16px;
+  margin-top:var(--card-body-gap);
+  margin-bottom:var(--card-stack-gap);
 }
 .dashCard .homeFilterStack .timeframeUnifiedControl{
   margin-top:0;
