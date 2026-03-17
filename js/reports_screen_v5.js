@@ -96,41 +96,54 @@ function renderReports(){
         : (fMode === "LAST_MONTH" ? "Last Month"
           : (fMode === "ALL" ? "All Time"
             : "YTD")));
+
+  const renderReportsTopShell = ({ includeModeToggle = true, body = "" })=> `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+        <b>Reports</b>
+        <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
+      </div>
+
+      <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
+        ${chip("YTD","YTD")}
+        ${chip("THIS_MONTH","This Month")}
+        ${chip("LAST_MONTH","Last Month")}
+        ${chip("ALL","All Time")}
+      </div>
+
+      <div class="row ${includeModeToggle ? "repCtlRow" : ""}" style="justify-content:${includeModeToggle ? "space-between" : "flex-end"};align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
+        ${includeModeToggle ? `
+          <div class="row" style="gap:8px;margin-top:0">
+            ${seg("charts","Charts")}
+            ${seg("tables","Tables")}
+          </div>
+        ` : ""}
+      </div>
+
+      ${advPanel}
+      ${body}
+    </div>
+  `;
+
+  const renderNoResultsState = ()=> `
+    <div class="emptyState">
+      <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips in this range"}</div>
+      <div class="emptyStateBody">${fMode==="RANGE" && !hasValidRange
+        ? "Set both dates, then tap Apply to load this report."
+        : "No saved trips match this filter yet. Add a trip to unlock dealer, area, and monthly summaries."}</div>
+      <div class="emptyStateAction">
+        <button class="btn good" id="reportsEmptyPrimary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
+        <button class="btn" id="reportsEmptySecondary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Help" : "Switch to All Time"}</button>
+      </div>
+    </div>
+  `;
+
   if(!trips.length){
     getApp().innerHTML = `
       ${renderPageHeader("reports")}
 
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-          <b>Reports</b>
-          <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
-        </div>
-
-        <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
-          ${chip("YTD","YTD")}
-          ${chip("THIS_MONTH","This Month")}
-          ${chip("LAST_MONTH","Last Month")}
-          ${chip("ALL","All Time")}
-        </div>
-
-        <div class="row" style="justify-content:flex-end;margin-top:10px">
-          <button class="btn repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
-        </div>
-
-        ${advPanel}
-
-
-        <div class="emptyState">
-          <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips in this range"}</div>
-          <div class="emptyStateBody">${fMode==="RANGE" && !hasValidRange
-            ? "Set both dates, then tap Apply to load this report."
-            : "No saved trips match this filter yet. Add a trip to unlock dealer, area, and monthly summaries."}</div>
-          <div class="emptyStateAction">
-            <button class="btn good" id="reportsEmptyPrimary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
-            <button class="btn" id="reportsEmptySecondary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Help" : "Switch to All Time"}</button>
-          </div>
-        </div>
-      </div>
+      ${renderReportsTopShell({ includeModeToggle: false, body: renderNoResultsState() })}
     `;
     getApp().scrollTop = 0;
 
@@ -332,6 +345,17 @@ function renderReports(){
     `;
   };
 
+  const renderChartCard = ({ takeaway, title, subhead, hero, context, canvasId, height = 210 })=> `
+    <div class="card chartCard">
+      <div class="chartTakeaway tone-${takeaway.tone}">${escapeHtml(takeaway.text)}</div>
+      <div class="chartTitle">${escapeHtml(title)}</div>
+      <div class="chartSubhead">${escapeHtml(subhead)}</div>
+      <div class="chartHero">${hero}</div>
+      <div class="chartContext">${context}</div>
+      <canvas class="chart" id="${escapeHtml(canvasId)}" height="${height}"></canvas>
+    </div>
+  `;
+
   const renderChartsSection = ()=>{
     const latestMonth = monthRows[monthRows.length - 1] || null;
     const priorMonth = monthRows.length > 1 ? monthRows[monthRows.length - 2] : null;
@@ -377,40 +401,41 @@ function renderReports(){
     const tripsTakeaway = buildTripsTakeaway();
     const dealerTakeaway = dealerPeak ? { text: "Top dealer stands out in this range", tone: "up" } : { text: "Dealer mix still building", tone: "steady" };
 
-    return `
-      <div class="card chartCard">
-        <div class="chartTakeaway tone-${pplTakeaway.tone}">${escapeHtml(pplTakeaway.text)}</div>
-        <div class="chartTitle">Avg $/lb by Month</div>
-        <div class="chartSubhead">Month-by-month trend for the selected range</div>
-        <div class="chartHero rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</div>
-        <div class="chartContext">Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span></div>
-        <canvas class="chart" id="c_ppl" height="210"></canvas>
-      </div>
-      <div class="card chartCard">
-        <div class="chartTakeaway tone-${dealerTakeaway.tone}">${escapeHtml(dealerTakeaway.text)}</div>
-        <div class="chartTitle">Dealer Amount (Top)</div>
-        <div class="chartSubhead">Top dealers by total amount in this range</div>
-        <div class="chartHero money">${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</div>
-        <div class="chartContext">Leading dealer this range • ${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}</div>
-        <canvas class="chart" id="c_dealer" height="220"></canvas>
-      </div>
-      <div class="card chartCard">
-        <div class="chartTakeaway tone-${lbsTakeaway.tone}">${escapeHtml(lbsTakeaway.text)}</div>
-        <div class="chartTitle">Monthly Pounds</div>
-        <div class="chartSubhead">Month-by-month pounds landed in this range</div>
-        <div class="chartHero lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</div>
-        <div class="chartContext">Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span></div>
-        <canvas class="chart" id="c_lbs" height="210"></canvas>
-      </div>
-      <div class="card chartCard">
-        <div class="chartTakeaway tone-${tripsTakeaway.tone}">${escapeHtml(tripsTakeaway.text)}</div>
-        <div class="chartTitle">Trips over time</div>
-        <div class="chartSubhead">Trip count by month for this same range</div>
-        <div class="chartHero">${tripsLatest ? tripsLatest.count : "—"}</div>
-        <div class="chartContext">Latest ${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"} • Range high ${tripsPeak ? tripsPeak.count : "—"} • Total ${tripsTotal}</div>
-        <canvas class="chart" id="c_trips" height="210"></canvas>
-      </div>
-    `;
+    return [
+      renderChartCard({
+        takeaway: pplTakeaway,
+        title: "Avg $/lb by Month",
+        subhead: "Month-by-month trend for the selected range",
+        hero: `<span class="rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</span>`,
+        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span>`,
+        canvasId: "c_ppl"
+      }),
+      renderChartCard({
+        takeaway: dealerTakeaway,
+        title: "Dealer Amount (Top)",
+        subhead: "Top dealers by total amount in this range",
+        hero: `<span class="money">${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</span>`,
+        context: `Leading dealer this range • ${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}`,
+        canvasId: "c_dealer",
+        height: 220
+      }),
+      renderChartCard({
+        takeaway: lbsTakeaway,
+        title: "Monthly Pounds",
+        subhead: "Month-by-month pounds landed in this range",
+        hero: `<span class="lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</span>`,
+        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
+        canvasId: "c_lbs"
+      }),
+      renderChartCard({
+        takeaway: tripsTakeaway,
+        title: "Trips over time",
+        subhead: "Trip count by month for this same range",
+        hero: `${tripsLatest ? tripsLatest.count : "—"}`,
+        context: `Latest ${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"} • Range high ${tripsPeak ? tripsPeak.count : "—"} • Total ${tripsTotal}`,
+        canvasId: "c_trips"
+      })
+    ].join("");
   };
 
   const highlightsStrip = reportsHighlights.renderHighlightsStrip({
@@ -436,6 +461,29 @@ function renderReports(){
     </section>
   `;
 
+  const renderMainModeSection = ()=> {
+    if(mode === "charts"){
+      return `${reportsSection({
+        title: "Charts",
+        intro: "Quick mobile-read charts for trend scanning; switch to tables for exact rows.",
+        body: `<div class="reportsChartsStack">${renderChartsSection()}</div>`,
+        extraClass: "reportsSection--charts"
+      })}
+      ${reportsSection({
+        title: "Deeper detail",
+        intro: "Need line-item breakdowns? Open table mode for dealer, area, and monthly rows.",
+        body: `<div class="card reportsDetailHint"><button class="btn" type="button" id="reportsSwitchToTables">Open table detail</button></div>`,
+        extraClass: "reportsSection--detail"
+      })}`;
+    }
+    return reportsSection({
+      title: "Deeper detail",
+      intro: "Dealer, area, and high/low summaries for this same range.",
+      body: `<div class="reportsTablesStack">${renderTablesSection()}</div>`,
+      extraClass: "reportsSection--detail"
+    });
+  };
+
   const buildMetricCompareSummary = (payload)=>{
     if(compareFoundation.period?.suppressed || !payload || payload.suppressed){
       return {
@@ -457,6 +505,38 @@ function renderReports(){
       previousValue: payload.previousLabel || "—"
     };
   };
+
+  const renderMetricDetailSection = ({ meta, compareSummary })=> `
+    <section class="reportsMetricDetail" aria-label="${escapeHtml(meta.title)}">
+      <div class="card reportsMetricDetailCard">
+        <button class="btn reportsMetricBackBtn" type="button" id="reportsMetricBack">${isHomeMetricDetail ? "← Back to Home" : "← Back to reports"}</button>
+        <div class="reportsMetricEyebrow">${escapeHtml(isHomeMetricDetail ? "Home metric detail" : meta.eyebrow)}</div>
+        <h2 class="reportsMetricTitle">${escapeHtml(meta.title)}</h2>
+        <div class="reportsMetricContext">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips</div>
+
+        <div class="reportsMetricHeroWrap">
+          <div class="reportsMetricHeroLabel">${escapeHtml(meta.heroLabel)}</div>
+          <div class="reportsMetricHeroValue ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
+        </div>
+
+        <div class="reportsMetricCompare tone-${escapeHtml(compareSummary.tone)}">
+          <div class="reportsMetricCompareText">${escapeHtml(compareSummary.text)}</div>
+          <div class="reportsMetricCompareRows">
+            <div><span>${escapeHtml(compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
+            <div><span>${escapeHtml(compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
+          </div>
+        </div>
+
+        <div class="reportsMetricChartBlock">
+          <b>${escapeHtml(meta.chartTitle)}</b>
+          <div class="reportsMetricChartContext">${escapeHtml(meta.chartContext)}</div>
+          <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
+        </div>
+
+        <div class="reportsMetricInsight">${escapeHtml(meta.insight)}</div>
+      </div>
+    </section>
+  `;
 
   const buildMetricDetailView = (metricKey)=>{
     const avgPpl = totalLbs > 0 ? (totalAmount / totalLbs) : 0;
@@ -515,115 +595,54 @@ function renderReports(){
     const meta = detailMeta[metricKey];
     if(!meta) return "";
     const compareSummary = buildMetricCompareSummary(meta.comparePayload);
-    return `
-      <section class="reportsMetricDetail" aria-label="${escapeHtml(meta.title)}">
-        <div class="card reportsMetricDetailCard">
-          <button class="btn reportsMetricBackBtn" type="button" id="reportsMetricBack">${isHomeMetricDetail ? "← Back to Home" : "← Back to reports"}</button>
-          <div class="reportsMetricEyebrow">${escapeHtml(isHomeMetricDetail ? "Home metric detail" : meta.eyebrow)}</div>
-          <h2 class="reportsMetricTitle">${escapeHtml(meta.title)}</h2>
-          <div class="reportsMetricContext">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips</div>
-
-          <div class="reportsMetricHeroWrap">
-            <div class="reportsMetricHeroLabel">${escapeHtml(meta.heroLabel)}</div>
-            <div class="reportsMetricHeroValue ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
-          </div>
-
-          <div class="reportsMetricCompare tone-${escapeHtml(compareSummary.tone)}">
-            <div class="reportsMetricCompareText">${escapeHtml(compareSummary.text)}</div>
-            <div class="reportsMetricCompareRows">
-              <div><span>${escapeHtml(compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
-              <div><span>${escapeHtml(compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
-            </div>
-          </div>
-
-          <div class="reportsMetricChartBlock">
-            <b>${escapeHtml(meta.chartTitle)}</b>
-            <div class="reportsMetricChartContext">${escapeHtml(meta.chartContext)}</div>
-            <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
-          </div>
-
-          <div class="reportsMetricInsight">${escapeHtml(meta.insight)}</div>
-        </div>
-      </section>
-    `;
+    return renderMetricDetailSection({ meta, compareSummary });
   };
 
+  const renderTableCard = (title, body)=> `
+    <div class="card">
+      <b>${escapeHtml(title)}</b>
+      <div class="sep"></div>
+      ${body}
+    </div>
+  `;
+
   const renderTablesSection = ()=>{
-    return `
-      <div class="card">
-        <b>Dealer Summary</b>
-        <div class="sep"></div>
-        ${renderAggList(dealerRows, "Add a trip in this range to populate dealer totals.")}
-      </div>
+    const highLowBody = `
+      ${renderHLItem("Most Pounds", maxLbs, "lbs", "max")}
+      <div class="sep"></div>
 
-      <div class="card">
-        <b>Area Summary</b>
-        <div class="sep"></div>
-        ${renderAggList(areaRows, "Add a trip in this range to populate area totals.")}
-      </div>
+      ${renderHLItem("Least Pounds", minLbs, "lbs", "min")}
+      <div class="sep"></div>
 
-      <div class="card">
-        <b>Monthly Totals</b>
-        <div class="sep"></div>
-        ${renderMonthList()}
-      </div>
+      ${renderHLItem("Highest Amount", maxAmt, "amount", "max")}
+      <div class="sep"></div>
 
-      <div class="card">
-        <b>High / Low Summary</b>
+      ${renderHLItem("Lowest Amount", minAmt, "amount", "min")}
+      <div class="sep"></div>
+
+      ${pplRows.length ? `
+        ${renderHLItem("Highest $/lb", maxPpl, "ppl", "max")}
         <div class="sep"></div>
 
-        ${renderHLItem("Most Pounds", maxLbs, "lbs", "max")}
-        <div class="sep"></div>
-
-        ${renderHLItem("Least Pounds", minLbs, "lbs", "min")}
-        <div class="sep"></div>
-
-        ${renderHLItem("Highest Amount", maxAmt, "amount", "max")}
-        <div class="sep"></div>
-
-        ${renderHLItem("Lowest Amount", minAmt, "amount", "min")}
-        <div class="sep"></div>
-
-        ${pplRows.length ? `
-          ${renderHLItem("Highest $/lb", maxPpl, "ppl", "max")}
-          <div class="sep"></div>
-
-          ${renderHLItem("Lowest $/lb", minPpl, "ppl", "min")}
-        ` : `
-          <div class="emptyState compact">
-            <div class="emptyStateTitle">$/lb insights pending</div>
-            <div class="emptyStateBody">Add trips that include both pounds and amount to unlock this view.</div>
-          </div>`}
-      </div>
+        ${renderHLItem("Lowest $/lb", minPpl, "ppl", "min")}
+      ` : `
+        <div class="emptyState compact">
+          <div class="emptyStateTitle">$/lb insights pending</div>
+          <div class="emptyStateBody">Add trips that include both pounds and amount to unlock this view.</div>
+        </div>`}
     `;
+    return [
+      renderTableCard("Dealer Summary", renderAggList(dealerRows, "Add a trip in this range to populate dealer totals.")),
+      renderTableCard("Area Summary", renderAggList(areaRows, "Add a trip in this range to populate area totals.")),
+      renderTableCard("Monthly Totals", renderMonthList()),
+      renderTableCard("High / Low Summary", highLowBody)
+    ].join("");
   };
 
   getApp().innerHTML = `
     ${renderPageHeader("reports")}
 
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
-        <b>Reports</b>
-        <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
-      </div>
-
-      <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
-          ${chip("YTD","YTD")}
-          ${chip("THIS_MONTH","This Month")}
-          ${chip("LAST_MONTH","Last Month")}
-          ${chip("ALL","All Time")}
-        </div>
-
-        <div class="row repCtlRow" style="justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
-          <div class="row" style="gap:8px;margin-top:0">
-            ${seg("charts","Charts")}
-            ${seg("tables","Tables")}
-          </div>
-        </div>
-
-        ${advPanel}
-    </div>
+    ${renderReportsTopShell()}
 
     ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : ""}
 
@@ -634,25 +653,7 @@ function renderReports(){
       extraClass: "reportsSection--highlights"
     })}
 
-    ${activeMetricDetail ? "" : (mode === "charts"
-      ? `${reportsSection({
-          title: "Charts",
-          intro: "Quick mobile-read charts for trend scanning; switch to tables for exact rows.",
-          body: `<div class="reportsChartsStack">${renderChartsSection()}</div>`,
-          extraClass: "reportsSection--charts"
-        })}
-        ${reportsSection({
-          title: "Deeper detail",
-          intro: "Need line-item breakdowns? Open table mode for dealer, area, and monthly rows.",
-          body: `<div class="card reportsDetailHint"><button class="btn" type="button" id="reportsSwitchToTables">Open table detail</button></div>`,
-          extraClass: "reportsSection--detail"
-        })}`
-      : reportsSection({
-          title: "Deeper detail",
-          intro: "Dealer, area, and high/low summaries for this same range.",
-          body: `<div class="reportsTablesStack">${renderTablesSection()}</div>`,
-          extraClass: "reportsSection--detail"
-        }))}
+    ${activeMetricDetail ? "" : renderMainModeSection()}
   `;
 
   getApp().scrollTop = 0;
