@@ -230,7 +230,30 @@ function renderReports(){
     }).join("");
   };
 
-  const renderHLItem = (label, t, metric)=>{
+  const getTripMetricValue = (trip, metric)=>{
+    const lbsNum = Number(trip?.pounds) || 0;
+    const amtNum = Number(trip?.amount) || 0;
+    if(metric === "lbs") return lbsNum;
+    if(metric === "amount") return amtNum;
+    if(metric === "ppl") return (lbsNum > 0 && amtNum > 0) ? (amtNum / lbsNum) : 0;
+    return 0;
+  };
+
+  const selectRecordBaseline = (metric, direction, selectedTrip)=>{
+    if(!selectedTrip) return null;
+    const ordered = trips
+      .map((trip)=> ({ trip, value: getTripMetricValue(trip, metric) }))
+      .filter((row)=> Number.isFinite(row.value) && row.value > 0)
+      .sort((a,b)=> direction === "max" ? (b.value - a.value) : (a.value - b.value));
+    if(ordered.length < 2) return null;
+    const selectedValue = getTripMetricValue(selectedTrip, metric);
+    const selectedIdx = ordered.findIndex((row)=> row.trip === selectedTrip);
+    if(selectedIdx === -1) return null;
+    const baseline = ordered.find((row, idx)=> idx !== selectedIdx && row.value !== selectedValue);
+    return baseline ? baseline.value : null;
+  };
+
+  const renderHLItem = (label, t, metric, direction)=>{
     if(!t) return `<div class="muted small">—</div>`;
     const lbsNum = Number(t?.pounds)||0;
     const amtNum = Number(t?.amount)||0;
@@ -250,13 +273,28 @@ function renderReports(){
     const tripDate = formatDateDMY(t?.dateISO || "") || "—";
     const tripArea = String(t?.area || "").trim() || "(area)";
     const tripDealer = String(t?.dealer || "").trim() || "(dealer)";
+    const currentValue = getTripMetricValue(t, metric);
+    const baselineValue = selectRecordBaseline(metric, direction, t);
+    const deltaRatio = (baselineValue && baselineValue > 0)
+      ? ((currentValue - baselineValue) / baselineValue)
+      : null;
+    const hasCompare = Number.isFinite(deltaRatio) && Math.abs(deltaRatio) >= 0.005;
+    const deltaPct = hasCompare ? Math.round(Math.abs(deltaRatio) * 1000) / 10 : 0;
+    const compareWord = hasCompare
+      ? (deltaRatio > 0 ? "higher" : "lower")
+      : "";
+    const compareTone = hasCompare
+      ? (deltaRatio > 0 ? "up" : "down")
+      : "steady";
     return `
       <div class="hlStatCard">
-        <div class="hlTopRow">
+        <div class="hlTopRow hlTopRow--stacked">
           <div class="hlHdr">${escapeHtml(label)}</div>
           <div class="hlValue ${metricClass}">${escapeHtml(metricText)}</div>
+          ${hasCompare ? `<div class="hlDelta tone-${compareTone}">${deltaPct}% ${compareWord} vs previous record</div>` : ""}
         </div>
         <div class="hlTripFlat">
+          <div class="hlTripCardHdr">Record trip</div>
           <div class="hlTripLine"><b>${escapeHtml(tripDate)}</b></div>
           <div class="hlTripLine muted">${escapeHtml(tripArea)} • ${escapeHtml(tripDealer)}</div>
           <div class="hlTripMeta">
@@ -317,28 +355,32 @@ function renderReports(){
     return `
       <div class="card chartCard">
         <div class="chartTakeaway tone-${pplTakeaway.tone}">${escapeHtml(pplTakeaway.text)}</div>
-        <b>Avg $/lb by Month</b>
+        <div class="chartTitle">Avg $/lb by Month</div>
+        <div class="chartSubhead">Monthly trend for this range</div>
         <div class="chartHero rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</div>
         <div class="chartContext">Latest month • Peak ${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</div>
         <canvas class="chart" id="c_ppl" height="210"></canvas>
       </div>
       <div class="card chartCard">
         <div class="chartTakeaway tone-${dealerTakeaway.tone}">${escapeHtml(dealerTakeaway.text)}</div>
-        <b>Dealer Amount (Top)</b>
+        <div class="chartTitle">Dealer Amount (Top)</div>
+        <div class="chartSubhead">Top dealers in this filter range</div>
         <div class="chartHero money">${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</div>
         <div class="chartContext">Lead dealer • ${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}</div>
         <canvas class="chart" id="c_dealer" height="220"></canvas>
       </div>
       <div class="card chartCard">
         <div class="chartTakeaway tone-${lbsTakeaway.tone}">${escapeHtml(lbsTakeaway.text)}</div>
-        <b>Monthly Pounds</b>
+        <div class="chartTitle">Monthly Pounds</div>
+        <div class="chartSubhead">Total pounds by month</div>
         <div class="chartHero lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</div>
         <div class="chartContext">Latest month • Peak ${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</div>
         <canvas class="chart" id="c_lbs" height="210"></canvas>
       </div>
       <div class="card chartCard">
         <div class="chartTakeaway tone-${tripsTakeaway.tone}">${escapeHtml(tripsTakeaway.text)}</div>
-        <b>Trips over time</b>
+        <div class="chartTitle">Trips over time</div>
+        <div class="chartSubhead">Monthly activity in this range</div>
         <div class="chartHero">${tripsLatest ? tripsLatest.count : "—"}</div>
         <div class="chartContext">Latest month • Peak ${tripsPeak ? tripsPeak.count : "—"} • Total ${tripsTotal}</div>
         <canvas class="chart" id="c_trips" height="210"></canvas>
@@ -519,23 +561,23 @@ function renderReports(){
         <b>High / Low Summary</b>
         <div class="sep"></div>
 
-        ${renderHLItem("Most Pounds", maxLbs, "lbs")}
+        ${renderHLItem("Most Pounds", maxLbs, "lbs", "max")}
         <div class="sep"></div>
 
-        ${renderHLItem("Least Pounds", minLbs, "lbs")}
+        ${renderHLItem("Least Pounds", minLbs, "lbs", "min")}
         <div class="sep"></div>
 
-        ${renderHLItem("Highest Amount", maxAmt, "amount")}
+        ${renderHLItem("Highest Amount", maxAmt, "amount", "max")}
         <div class="sep"></div>
 
-        ${renderHLItem("Lowest Amount", minAmt, "amount")}
+        ${renderHLItem("Lowest Amount", minAmt, "amount", "min")}
         <div class="sep"></div>
 
         ${pplRows.length ? `
-          ${renderHLItem("Highest $/lb", maxPpl, "ppl")}
+          ${renderHLItem("Highest $/lb", maxPpl, "ppl", "max")}
           <div class="sep"></div>
 
-          ${renderHLItem("Lowest $/lb", minPpl, "ppl")}
+          ${renderHLItem("Lowest $/lb", minPpl, "ppl", "min")}
         ` : `
           <div class="emptyState compact">
             <div class="emptyStateTitle">$/lb summary pending</div>

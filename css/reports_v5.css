@@ -8,12 +8,13 @@
   margin:0;
 }
 .hlStatCard{
-  padding:8px 0;
+  padding:10px 0 11px;
 }
 .hlTopRow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.hlTopRow--stacked{flex-direction:column;align-items:flex-start;gap:4px}
 .hlValue{
-  margin-top:0;
-  font-size:30px;
+  margin-top:1px;
+  font-size:34px;
   font-weight:900;
   letter-spacing:.2px;
   line-height:1.05;
@@ -26,12 +27,18 @@
 }
 .hlTrip{margin-bottom:0}
 .hlTripFlat{
-  margin-top:8px;
-  padding-left:10px;
-  border-left:2px solid var(--line);
+  margin-top:9px;
+  padding:9px 10px 8px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:14px;
+  background:rgba(255,255,255,.03);
 }
-.hlTripLine{font-size:14px;line-height:1.35}
-.hlTripMeta{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;font-size:13px;color:var(--muted)}
+.hlTripCardHdr{font-size:10px;line-height:1.2;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:#9ea8bc;margin-bottom:6px}
+.hlTripLine{font-size:13px;line-height:1.35}
+.hlTripMeta{display:flex;flex-wrap:wrap;gap:11px;margin-top:7px;font-size:12px;color:var(--muted)}
+.hlDelta{font-size:12px;line-height:1.3;font-weight:760;color:var(--neutral)}
+.hlDelta.tone-up{color:var(--good)}
+.hlDelta.tone-down{color:var(--bad)}
 .reportsHighlightsCard{padding:14px 14px 15px;background:linear-gradient(180deg,var(--analytics-surface-top),var(--analytics-surface-bottom));border:1px solid var(--border);border-radius:20px;box-shadow:0 10px 24px rgba(0,0,0,.24)}
 .reportsHighlightsHdr{font-size:11px;font-weight:860;letter-spacing:.14em;text-transform:uppercase;color:#9da3b1;margin-bottom:12px}
 .reportsHighlightsGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -63,20 +70,22 @@
 .chartCard .chart{margin-top:10px}
 
 
-.chartCard{padding:14px 14px 15px;background:linear-gradient(180deg,var(--analytics-surface-top),var(--analytics-surface-bottom));border:1px solid var(--border);border-radius:20px;box-shadow:0 10px 24px rgba(0,0,0,.24)}
+.chartCard{padding:15px 14px 16px;background:linear-gradient(180deg,var(--analytics-surface-top),var(--analytics-surface-bottom));border:1px solid var(--border);border-radius:22px;box-shadow:0 12px 28px rgba(0,0,0,.24)}
 .chartTakeaway{display:inline-flex;align-items:center;min-height:22px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;background:rgba(190,196,210,.14);color:#cfd5e2}
 .chartTakeaway.tone-up{background:rgba(46,160,67,.16);color:var(--good)}
 .chartTakeaway.tone-down{background:rgba(255,77,79,.15);color:var(--bad)}
 .chartTakeaway.tone-steady{background:rgba(174,184,205,.16);color:var(--neutral)}
-.chartCard > b{margin-top:10px;margin-bottom:0;font-size:18px;line-height:1.22}
-.chartHero{margin-top:6px;font-size:34px;line-height:1.02;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums;color:#fff}
-.chartContext{margin-top:4px;font-size:12px;line-height:1.35;color:#aeb7c8;font-weight:700}
-.chartCard .chart{margin-top:12px;border-radius:14px;background:rgba(255,255,255,.025);border-color:rgba(255,255,255,.11)}
+.chartTitle{margin-top:10px;margin-bottom:0;font-size:19px;line-height:1.2;font-weight:860;letter-spacing:.16px;color:#f3f6ff}
+.chartSubhead{margin-top:3px;font-size:11px;line-height:1.3;color:#9ea9bd;font-weight:760;letter-spacing:.02em}
+.chartHero{margin-top:8px;font-size:35px;line-height:1.01;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums;color:#fff}
+.chartContext{margin-top:5px;font-size:12px;line-height:1.35;color:#aeb7c8;font-weight:700}
+.chartCard .chart{margin-top:13px;border-radius:16px;background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.09)}
 @media (max-width:430px){
   .chartCard{padding:13px 12px 14px}
   .chartTakeaway{font-size:10px;padding:0 9px}
-  .chartCard > b{font-size:17px;margin-top:9px}
-  .chartHero{font-size:30px}
+  .chartTitle{font-size:17px;margin-top:9px}
+  .chartSubhead{font-size:10px}
+  .chartHero{font-size:31px}
   .chartContext{font-size:11px}
 }
 
@@ -120,7 +129,7 @@
 .reportsSectionHead p{margin:6px 0 0;font-size:12px;line-height:1.4;color:var(--text-muted-strong);font-weight:650}
 .reportsSection .card:last-child{margin-bottom:0}
 .reportsSection--highlights .reportsHighlightsCard{margin-bottom:0}
-.reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:12px}
+.reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:14px}
 .reportsChartsStack .chartCard:last-child,.reportsTablesStack .card:last-child{margin-bottom:0}
 .reportsDetailHint{padding:12px}
 .reportsDetailHint .btn{width:100%}

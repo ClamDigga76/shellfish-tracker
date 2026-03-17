@@ -27,18 +27,19 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
     ppl: color("--ppl", "rgba(255,196,77,0.92)"),
     lbs: color("--lbs", "rgba(77,155,255,0.9)"),
     trips: color("--accent", "rgba(180,161,255,0.78)"),
-    grid: "rgba(255,255,255,0.10)",
-    label: "rgba(255,255,255,0.72)",
-    plotBg: "rgba(255,255,255,0.035)"
+    grid: "rgba(255,255,255,0.07)",
+    label: "rgba(255,255,255,0.8)",
+    axis: "rgba(255,255,255,0.2)",
+    plotBg: "rgba(255,255,255,0.025)"
   };
 
   function chartFrame(w,h){
     const compact = w < 360;
     return {
       compact,
-      left: compact ? 40 : 50,
-      right: compact ? 8 : 12,
-      top: compact ? 12 : 14,
+      left: compact ? 42 : 52,
+      right: compact ? 10 : 14,
+      top: compact ? 14 : 16,
       bottom: compact ? 34 : 38,
       tickFont: compact ? "10px system-ui, -apple-system, Segoe UI, Arial" : "11px system-ui, -apple-system, Segoe UI, Arial"
     };
@@ -53,7 +54,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
     ctx.strokeStyle = palette.grid;
     ctx.lineWidth = 1;
 
-    const gridLines = 4;
+    const gridLines = 3;
     for(let i=0;i<=gridLines;i++){
       const y = y0 - ((y0 - yTop) * (i / gridLines));
       ctx.beginPath();
@@ -62,6 +63,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
       ctx.stroke();
     }
 
+    ctx.strokeStyle = palette.axis;
     ctx.beginPath();
     ctx.moveTo(x0, yTop);
     ctx.lineTo(x0, y0);
@@ -208,7 +210,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
       const span = (maxV - minV) || maxV || 1;
 
       ctx.strokeStyle = palette.ppl;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = frame.compact ? 2.8 : 3.2;
       ctx.beginPath();
       vals.forEach((v,i)=>{
         const x = geom.x0 + (i/(vals.length-1 || 1))*geom.plotW;
@@ -221,7 +223,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
       vals.forEach((v,i)=>{
         const x = geom.x0 + (i/(vals.length-1 || 1))*geom.plotW;
         const y = geom.y0 - ((v - minV)/span)*geom.plotH;
-        ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x,y,frame.compact ? 3.3 : 3.8,0,Math.PI*2); ctx.fill();
       });
 
       drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-8, frame);
@@ -257,10 +259,11 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
       top.forEach((r,i)=>{
         const v = Number(r.amt)||0;
         const bh = (v/maxV)*geom.plotH;
-        const x = geom.x0 + i*barW + 4;
+        const barPad = frame.compact ? 3 : 4;
+        const x = geom.x0 + i*barW + barPad;
         const y = geom.y0 - bh;
         ctx.fillStyle = palette.money;
-        ctx.fillRect(x, y, Math.max(6, barW-8), bh);
+        ctx.fillRect(x, y, Math.max(8, barW - (barPad * 2)), bh);
       });
 
       ctx.fillStyle = palette.label;
@@ -304,10 +307,11 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
 
       vals.forEach((v,i)=>{
         const bh = (v/maxV)*geom.plotH;
-        const x = geom.x0 + i*barW + 1;
+        const barPad = frame.compact ? 0.8 : 1.2;
+        const x = geom.x0 + i*barW + barPad;
         const y = geom.y0 - bh;
         ctx.fillStyle = palette.lbs;
-        ctx.fillRect(x, y, Math.max(2, barW-2), bh);
+        ctx.fillRect(x, y, Math.max(4, barW - (barPad * 2)), bh);
       });
 
       drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-8, frame);
@@ -339,10 +343,11 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
 
       vals.forEach((v,i)=>{
         const bh = (v/maxV)*geom.plotH;
-        const x = geom.x0 + i*barW + 1;
+        const barPad = frame.compact ? 0.8 : 1.2;
+        const x = geom.x0 + i*barW + barPad;
         const y = geom.y0 - bh;
         ctx.fillStyle = palette.trips;
-        ctx.fillRect(x, y, Math.max(2, barW-2), bh);
+        ctx.fillRect(x, y, Math.max(4, barW - (barPad * 2)), bh);
       });
 
       drawBottomTicks(ctx, timeline.map(r=>r.shortLabel), geom, h-8, frame);
