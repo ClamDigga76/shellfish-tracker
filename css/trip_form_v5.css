@@ -36,7 +36,6 @@ body[data-view="edit"] .chip-selector{
 .dateRow .dateIcon{display:inline-flex;align-items:center;justify-content:center;opacity:.85}
 .dateRow .dateIcon svg{width:18px;height:18px}
 .dateRow .datePill{flex:1;min-width:0}
-.dateRow .todayBtn{padding:10px 12px;border-radius:14px;background:var(--glass);border:1px solid var(--border);color:var(--text);font-weight:700;min-width:72px}
 
 .datePillWrap{position:relative;display:flex;align-items:stretch;flex:1;min-width:0;min-height:48px;overflow:visible;box-sizing:border-box}
 .datePillWrap > input[type="date"]{position:relative;z-index:2;background:transparent;width:100%;min-width:0 !important;min-height:48px;line-height:1.2;padding:12px 14px;box-sizing:border-box}

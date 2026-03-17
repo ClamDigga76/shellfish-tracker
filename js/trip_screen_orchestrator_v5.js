@@ -99,7 +99,6 @@ const newTripFormHtml = renderTripEntryForm({
       speciesId: "t_species",
       notesId: "t_notes",
       rateId: "rateValue",
-      todayBtnId: "todayBtn",
       dateValue: String(draft.dateISO || isoToday()),
       dealerOptions,
       areaOptions,
@@ -135,13 +134,31 @@ const newTripFormHtml = renderTripEntryForm({
   const elNotes = document.getElementById("t_notes");
   const elRate = document.getElementById("rateValue");
   bindDatePill("t_date");
+  let lastEditedMetric = "";
+  let syncingMetric = false;
+  const setMetricValue = (el, value, decimals)=>{
+    if(!el || !Number.isFinite(value)) return;
+    el.value = Number(value).toFixed(decimals);
+  };
   const updateRateLine = ()=>{
-    if(!elRate) return;
-    const p = parseNum(elPounds?.value);
-    const a = parseMoney(elAmount?.value);
-    const next = formatMoney(computePPL(p, a));
-    if("value" in elRate) elRate.value = next;
-    else elRate.textContent = next;
+    if(!elRate || syncingMetric) return;
+    const pounds = parseNum(elPounds?.value);
+    const amount = parseMoney(elAmount?.value);
+    const rate = parseNum(elRate?.value);
+    syncingMetric = true;
+    if(lastEditedMetric === "t_pounds"){
+      if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
+      else if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
+    }else if(lastEditedMetric === "t_amount"){
+      if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
+      else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
+    }else if(lastEditedMetric === "rateValue"){
+      if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
+      else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
+    }else if(pounds > 0 && amount > 0){
+      setMetricValue(elRate, computePPL(pounds, amount), 2);
+    }
+    syncingMetric = false;
   };
   const openQuickAdd = (kind, opts = {})=>{
     const isDealer = (kind==="dealer");
@@ -249,10 +266,6 @@ const newTripFormHtml = renderTripEntryForm({
       }
     });
   };
-
-
-  const elToday = document.getElementById("todayBtn");
-
   // Quick-pick chip containers
   const topAreaWrap = document.getElementById("topAreas");
   const topDealerWrap = document.getElementById("topDealers");
@@ -271,6 +284,7 @@ const newTripFormHtml = renderTripEntryForm({
 
     if(elPounds) elPounds.classList.toggle("lbsBlue", ready.poundsOk);
     if(elAmount) elAmount.classList.toggle("money", ready.amountOk);
+    if(elRate) elRate.classList.toggle("ppl", parseNum(elRate.value) > 0);
 
     const btn = document.getElementById("saveTrip");
     if(btn){
@@ -290,6 +304,7 @@ const newTripFormHtml = renderTripEntryForm({
     elPounds.addEventListener("pointerdown", prime);
     elPounds.addEventListener("focus", prime);
     elPounds.addEventListener("input", ()=>{
+      lastEditedMetric = "t_pounds";
       const s = sanitizeDecimalInput(elPounds.value);
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
@@ -308,6 +323,7 @@ const newTripFormHtml = renderTripEntryForm({
     elAmount.addEventListener("pointerdown", prime);
     elAmount.addEventListener("focus", prime);
     elAmount.addEventListener("input", ()=>{
+      lastEditedMetric = "t_amount";
       const s = sanitizeDecimalInput(elAmount.value);
       if(s !== elAmount.value) elAmount.value = s;
       updateSaveEnabled();
@@ -320,16 +336,25 @@ const newTripFormHtml = renderTripEntryForm({
     });
   }
 
-  if(elToday && elDate){
-    elToday.onclick = ()=>{
-      const today = isoToday();
-      elDate.value = today;
-      state.draft = state.draft || {};
-      state.draft.dateISO = today;
-      saveDraft();
-      updateSaveEnabled();
+  if(elRate && !elRate.__boundNumeric){
+    elRate.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elRate, ["0","0.0","0.00"]);
+    elRate.addEventListener("pointerdown", prime);
+    elRate.addEventListener("focus", prime);
+    elRate.addEventListener("input", ()=>{
+      lastEditedMetric = "rateValue";
+      const s = sanitizeDecimalInput(elRate.value);
+      if(s !== elRate.value) elRate.value = s;
       updateRateLine();
-    };
+      updateSaveEnabled();
+    });
+    elRate.addEventListener("blur", ()=>{
+      if(String(elRate.value||"").endsWith(".")) elRate.value = String(elRate.value).slice(0, -1);
+      const rate = parseNum(elRate.value);
+      if(rate > 0) elRate.value = rate.toFixed(2);
+      updateRateLine();
+      updateSaveEnabled();
+    });
   }
 
   // NEW TRIP: wire up buttons (Save / Cancel / Clear Draft) — v23
@@ -990,7 +1015,6 @@ function renderEditTrip(){
       speciesId: "e_species",
       notesId: "e_notes",
       rateId: "rateValueEdit",
-      todayBtnId: "todayBtnEdit",
       dateValue: draft.dateISO,
       dealerOptions,
       areaOptions,
@@ -1027,17 +1051,34 @@ function renderEditTrip(){
   const elSpecies = document.getElementById("e_species");
   const elNotes = document.getElementById("e_notes");
   const elRate = document.getElementById("rateValueEdit");
-  const elToday = document.getElementById("todayBtnEdit");
   const topDealerWrapE = document.getElementById("topDealersE");
   const topAreaWrapE = document.getElementById("topAreasE");
 
+  let lastEditedMetric = "";
+  let syncingMetric = false;
+  const setMetricValue = (el, value, decimals)=>{
+    if(!el || !Number.isFinite(value)) return;
+    el.value = Number(value).toFixed(decimals);
+  };
   const updateRateLine = ()=>{
-    if(!elRate) return;
-    const p = Number(String(elPounds?.value || "").trim() || 0);
-    const a = Number(String(elAmount?.value || "").trim() || 0);
-    const next = formatMoney(computePPL(p, a));
-    if("value" in elRate) elRate.value = next;
-    else elRate.textContent = next;
+    if(!elRate || syncingMetric) return;
+    const pounds = parseNum(elPounds?.value);
+    const amount = parseMoney(elAmount?.value);
+    const rate = parseNum(elRate?.value);
+    syncingMetric = true;
+    if(lastEditedMetric === "e_pounds"){
+      if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
+      else if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
+    }else if(lastEditedMetric === "e_amount"){
+      if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
+      else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
+    }else if(lastEditedMetric === "rateValueEdit"){
+      if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
+      else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
+    }else if(pounds > 0 && amount > 0){
+      setMetricValue(elRate, computePPL(pounds, amount), 2);
+    }
+    syncingMetric = false;
   };
 
   const openQuickAdd = (kind, opts = {})=>{
@@ -1170,9 +1211,6 @@ function renderEditTrip(){
   elDealer?.addEventListener("change", ()=>handleSelectAddNew("dealer", elDealer));
   elArea?.addEventListener("change", ()=>handleSelectAddNew("area", elArea));
 
-  if(elToday && elDate){
-    elToday.onclick = ()=>{ elDate.value = isoToday(); };
-  }
 
   bindQuickChipLongPress(topDealerWrapE, (btn)=>{
     const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
@@ -1213,6 +1251,7 @@ function renderEditTrip(){
       });
       if(elPounds) elPounds.classList.toggle("lbsBlue", ready.poundsOk);
       if(elAmount) elAmount.classList.toggle("money", ready.amountOk);
+      if(elRate) elRate.classList.toggle("ppl", parseNum(elRate.value) > 0);
       const btn = document.getElementById("saveEdit");
       if(btn){
         const enabled = ready.enabled;
@@ -1233,6 +1272,7 @@ function renderEditTrip(){
     elPounds.addEventListener("pointerdown", prime);
     elPounds.addEventListener("focus", prime);
     elPounds.addEventListener("input", ()=>{
+      lastEditedMetric = "e_pounds";
       const s = sanitizeDecimalInput(elPounds.value);
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
@@ -1251,6 +1291,7 @@ function renderEditTrip(){
     elAmount.addEventListener("pointerdown", prime);
     elAmount.addEventListener("focus", prime);
     elAmount.addEventListener("input", ()=>{
+      lastEditedMetric = "e_amount";
       const s = sanitizeDecimalInput(elAmount.value);
       if(s !== elAmount.value) elAmount.value = s;
       updateSaveEnabled();
@@ -1260,6 +1301,27 @@ function renderEditTrip(){
       normalizeAmountOnBlur(elAmount);
       updateSaveEnabled();
       updateRateLine();
+    });
+  }
+
+  if(elRate && !elRate.__boundNumeric){
+    elRate.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elRate, ["0","0.0","0.00"]);
+    elRate.addEventListener("pointerdown", prime);
+    elRate.addEventListener("focus", prime);
+    elRate.addEventListener("input", ()=>{
+      lastEditedMetric = "rateValueEdit";
+      const s = sanitizeDecimalInput(elRate.value);
+      if(s !== elRate.value) elRate.value = s;
+      updateRateLine();
+      updateSaveEnabled();
+    });
+    elRate.addEventListener("blur", ()=>{
+      if(String(elRate.value||"").endsWith(".")) elRate.value = String(elRate.value).slice(0, -1);
+      const rate = parseNum(elRate.value);
+      if(rate > 0) elRate.value = rate.toFixed(2);
+      updateRateLine();
+      updateSaveEnabled();
     });
   }
 
