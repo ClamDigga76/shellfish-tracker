@@ -232,22 +232,22 @@ export function createHomeDashboardRenderer({
 
         <div class="kpiGroupLabel">Core metrics</div>
         <div class="kpiRow">
-          <div class="kpiCard">
+          <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="trips" aria-label="Open trips detail">
             <div class="kpiLabel">Trips</div>
             <div class="kpiValue"><span class="kpiValueFit">${trips.length}</span></div>
-          </div>
-          <div class="kpiCard">
+          </button>
+          <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="pounds" aria-label="Open pounds detail">
             <div class="kpiLabel lbsBlue">Pounds</div>
             <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
-          </div>
-          <div class="kpiCard kpiCardPrimary">
+          </button>
+          <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="amount" aria-label="Open amount detail">
             <div class="kpiLabel money">Amount</div>
             <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
-          </div>
-          <div class="kpiCard kpiCardPrimary">
+          </button>
+          <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="ppl" aria-label="Open average dollars per pound detail">
             <div class="kpiLabel rate ppl">Avg $/lb</div>
             <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
-          </div>
+          </button>
         </div>
 
         <div class="card reportsHeroCard homeOverviewCard">
@@ -314,6 +314,17 @@ export function createHomeDashboardRenderer({
     bindDatePill("homeRangeFrom");
     bindDatePill("homeRangeTo");
     fitHomeKpiValues();
+
+    getApp().querySelectorAll("[data-kpi-detail]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const metricKey = String(btn.getAttribute("data-kpi-detail") || "").toLowerCase();
+        if (!metricKey) return;
+        state.reportsMetricDetail = metricKey;
+        state.view = "reports";
+        saveState();
+        render();
+      });
+    });
 
     const toggleToast = (e) => {
       try {

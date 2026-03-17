@@ -376,6 +376,27 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .kpiCard .kpiValue{
   font-variant-numeric:tabular-nums;
 }
+.kpiCardTap{
+  width:100%;
+  text-align:left;
+  cursor:pointer;
+  position:relative;
+}
+.kpiCardTap::after{
+  content:"";
+  position:absolute;
+  right:10px;
+  top:10px;
+  width:7px;
+  height:7px;
+  border-top:2px solid var(--text-muted-strong);
+  border-right:2px solid var(--text-muted-strong);
+  transform:rotate(45deg);
+  opacity:.7;
+}
+.kpiCardTap:active{
+  transform:translateY(1px);
+}
 .reportsSectionHead{
   margin:0 2px 12px;
 }

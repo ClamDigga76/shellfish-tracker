@@ -434,7 +434,22 @@ function renderReports(){
   };
 
   const buildMetricDetailView = (metricKey)=>{
+    const avgPpl = totalLbs > 0 ? (totalAmount / totalLbs) : 0;
+    const tripsCompare = compareFoundation.metrics?.trips || null;
+    const pplCompare = compareFoundation.metrics?.ppl || null;
     const detailMeta = {
+      trips: {
+        title: "Trips detail",
+        eyebrow: "Metric detail",
+        heroLabel: "Total trips",
+        heroValue: `${trips.length}`,
+        heroClass: "",
+        comparePayload: tripsCompare,
+        chartTitle: "Trips over time",
+        chartContext: "Monthly activity in this range",
+        chartCanvasId: "c_trips",
+        insight: "Use this view to track effort volume and quickly spot whether recent activity is increasing, flat, or cooling."
+      },
       pounds: {
         title: "Pounds detail",
         eyebrow: "Metric detail",
@@ -458,6 +473,18 @@ function renderReports(){
         chartContext: "Top dealers for this same range",
         chartCanvasId: "c_dealer",
         insight: "Use this view to see whether changes in total amount are broad-based or mostly concentrated in one buyer relationship."
+      },
+      ppl: {
+        title: "$/lb detail",
+        eyebrow: "Metric detail",
+        heroLabel: "Average $/lb",
+        heroValue: avgPpl > 0 ? `${formatMoney(to2(avgPpl))}/lb` : "—",
+        heroClass: "rate ppl",
+        comparePayload: pplCompare,
+        chartTitle: "Monthly $/lb trend",
+        chartContext: "This range, month by month",
+        chartCanvasId: "c_ppl",
+        insight: "Use this view to watch price efficiency independent of total volume so rate movement is easier to separate from trip count swings."
       }
     };
     const meta = detailMeta[metricKey];
