@@ -233,8 +233,8 @@ export function createHomeDashboardRenderer({
         <div class="kpiGroupLabel">Core metrics</div>
         <div class="kpiRow">
           <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="trips" aria-label="Open trips detail">
-            <div class="kpiLabel">Trips</div>
-            <div class="kpiValue"><span class="kpiValueFit">${trips.length}</span></div>
+            <div class="kpiLabel trips">Trips</div>
+            <div class="kpiValue trips"><span class="kpiValueFit">${trips.length}</span></div>
           </button>
           <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="pounds" aria-label="Open pounds detail">
             <div class="kpiLabel lbsBlue">Pounds</div>

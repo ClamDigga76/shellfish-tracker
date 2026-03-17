@@ -440,8 +440,8 @@ function renderReports(){
         takeaway: tripsTakeaway,
         title: "Trips over time",
         subhead: "Trip count by month for this same range",
-        hero: `${tripsLatest ? tripsLatest.count : "—"}`,
-        context: `Latest ${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"} • Range high ${tripsPeak ? tripsPeak.count : "—"} • Total ${tripsTotal}`,
+        hero: `<span class="trips">${tripsLatest ? tripsLatest.count : "—"}</span>`,
+        context: `Latest ${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"} • Range high <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
         canvasId: "c_trips"
       })
     ].join("");
@@ -557,7 +557,7 @@ function renderReports(){
         eyebrow: "Metric detail",
         heroLabel: "Total trips",
         heroValue: `${trips.length}`,
-        heroClass: "",
+        heroClass: "trips",
         comparePayload: tripsCompare,
         chartTitle: "Trips over time",
         chartContext: "Monthly activity in this range",
