@@ -319,7 +319,16 @@ export function createHomeDashboardRenderer({
       btn.addEventListener("click", () => {
         const metricKey = String(btn.getAttribute("data-kpi-detail") || "").toLowerCase();
         if (!metricKey) return;
+        ensureHomeFilter();
         state.reportsMetricDetail = metricKey;
+        state.reportsMetricDetailContext = {
+          source: "home",
+          homeFilter: {
+            mode: String(state.homeFilter?.mode || "YTD").toUpperCase(),
+            from: parseReportDateToISO(state.homeFilter?.from || "") || "",
+            to: parseReportDateToISO(state.homeFilter?.to || "") || ""
+          }
+        };
         state.view = "reports";
         saveState();
         render();

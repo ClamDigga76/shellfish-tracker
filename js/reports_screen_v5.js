@@ -49,9 +49,30 @@ function renderReports(){
   const fMode = String(rf.mode || "YTD").toUpperCase();
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
   const activeMetricDetail = String(state.reportsMetricDetail || "").toLowerCase();
+  const metricDetailContext = state.reportsMetricDetailContext && typeof state.reportsMetricDetailContext === "object"
+    ? state.reportsMetricDetailContext
+    : null;
+  const isHomeMetricDetail = metricDetailContext?.source === "home";
 
   const hasValidRange = (fMode !== "RANGE") || (parseReportDateToISO(rf.from) && parseReportDateToISO(rf.to));
-  const unified = buildUnifiedFilterFromReportsFilter(rf);
+  const homeCtxFilter = (isHomeMetricDetail && metricDetailContext?.homeFilter && typeof metricDetailContext.homeFilter === "object")
+    ? metricDetailContext.homeFilter
+    : null;
+  const homeMode = String(homeCtxFilter?.mode || "YTD").toUpperCase();
+  const homeRangeMode = homeMode === "RANGE"
+    ? "custom"
+    : (homeMode === "MONTH" ? "this_month" : (homeMode === "7D" ? "last_7_days" : "ytd"));
+  const unified = (isHomeMetricDetail && activeMetricDetail && homeCtxFilter)
+    ? {
+      range: homeRangeMode,
+      fromISO: parseReportDateToISO(homeCtxFilter.from || "") || "",
+      toISO: parseReportDateToISO(homeCtxFilter.to || "") || "",
+      dealer: "all",
+      area: "all",
+      species: "all",
+      text: ""
+    }
+    : buildUnifiedFilterFromReportsFilter(rf);
   let trips = applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" }).rows;
 
   const chip = (key,label) => `<button class="chip segBtn ${fMode===key?'on is-selected':''}" data-rf="${key}" type="button">${label}</button>`;
@@ -65,12 +86,16 @@ function renderReports(){
   });
 
   const resolvedReportsRange = resolveUnifiedRange(unified);
-  const rangeLabel = (fMode === "RANGE")
-    ? (hasValidRange ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}` : "Set dates")
-    : (fMode === "THIS_MONTH" ? "This Month"
-      : (fMode === "LAST_MONTH" ? "Last Month"
-        : (fMode === "ALL" ? "All Time"
-          : "YTD")));
+  const rangeLabel = isHomeMetricDetail
+    ? (homeMode === "RANGE"
+      ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}`
+      : (homeMode === "MONTH" ? "This Month" : (homeMode === "7D" ? "Last 7 Days" : "YTD")))
+    : (fMode === "RANGE")
+      ? (hasValidRange ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}` : "Set dates")
+      : (fMode === "THIS_MONTH" ? "This Month"
+        : (fMode === "LAST_MONTH" ? "Last Month"
+          : (fMode === "ALL" ? "All Time"
+            : "YTD")));
   if(!trips.length){
     getApp().innerHTML = `
       ${renderPageHeader("reports")}
@@ -493,8 +518,8 @@ function renderReports(){
     return `
       <section class="reportsMetricDetail" aria-label="${escapeHtml(meta.title)}">
         <div class="card reportsMetricDetailCard">
-          <button class="btn reportsMetricBackBtn" type="button" id="reportsMetricBack">← Back to reports</button>
-          <div class="reportsMetricEyebrow">${escapeHtml(meta.eyebrow)}</div>
+          <button class="btn reportsMetricBackBtn" type="button" id="reportsMetricBack">${isHomeMetricDetail ? "← Back to Home" : "← Back to reports"}</button>
+          <div class="reportsMetricEyebrow">${escapeHtml(isHomeMetricDetail ? "Home metric detail" : meta.eyebrow)}</div>
           <h2 class="reportsMetricTitle">${escapeHtml(meta.title)}</h2>
           <div class="reportsMetricContext">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips</div>
 
@@ -664,6 +689,7 @@ function renderReports(){
   metricDetailButtons.forEach((btn)=>{
     btn.onclick = ()=>{
       state.reportsMetricDetail = String(btn.getAttribute("data-metric-detail") || "").toLowerCase();
+      state.reportsMetricDetailContext = { source: "reports" };
       saveState();
       renderReports();
     };
@@ -673,6 +699,14 @@ function renderReports(){
   if(reportsMetricBack){
     reportsMetricBack.onclick = ()=>{
       state.reportsMetricDetail = "";
+      if(isHomeMetricDetail){
+        state.reportsMetricDetailContext = null;
+        state.view = "home";
+        saveState();
+        renderApp();
+        return;
+      }
+      state.reportsMetricDetailContext = null;
       saveState();
       renderReports();
     };
