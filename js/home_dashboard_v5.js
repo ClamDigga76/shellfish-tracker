@@ -6,14 +6,11 @@ export function createHomeDashboardRenderer({
   computePPL,
   round2,
   getTripsNewestFirst,
-  homeTripsLimit,
-  renderTripCatchCard,
   renderPageHeader,
   escapeHtml,
   parseReportDateToISO,
   formatMoney,
   getApp,
-  pushView,
   saveState,
   render,
   bindDatePill,
@@ -146,9 +143,6 @@ export function createHomeDashboardRenderer({
     const bestAvgDealer = dealers
       .filter((item) => item.pounds > 0)
       .sort((a, b) => (b.amount / b.pounds) - (a.amount / a.pounds))[0] || null;
-    const newestSavedLabel = newestSavedTrip
-      ? `${parseReportDateToISO(newestSavedTrip.dateISO || "") || "Saved"} • ${String(newestSavedTrip.dealer || "").trim() || "Dealer not set"}`
-      : "No saved trips yet";
     const smartSummaryLines = [];
     if (strongestDealer) {
       smartSummaryLines.push(`<li><b>Top dealer:</b> ${escapeHtml(strongestDealer.dealer)} at ${formatMoney(strongestDealer.amount)} from ${round2(strongestDealer.pounds)} lbs.</li>`);
@@ -164,18 +158,6 @@ export function createHomeDashboardRenderer({
     const smartSummaryHtml = smartSummaryLines.length
       ? `<ul class="homeSmartSummary">${smartSummaryLines.join("")}</ul>`
       : `<div class="homeSmartSummaryFallback muted small">Need more saved trips in this range before smart summary insights can show.</div>`;
-    const rows = tripsSorted.length
-      ? tripsSorted.slice(0, homeTripsLimit).map((t) => renderTripCatchCard(t, { interactive: true })).join("")
-      : `
-        <div class="emptyState">
-          <div class="emptyStateTitle">No trips yet for this range</div>
-          <div class="emptyStateBody">No saved trips match this range yet. Add a trip or open Help to get started.</div>
-          <div class="emptyStateAction">
-            <button class="btn good" id="homeEmptyNewTrip" type="button">＋ Add Trip</button>
-            <button class="btn" id="homeEmptyHelp" type="button">Open Help</button>
-          </div>
-        </div>`;
-
     getApp().innerHTML = `
       ${renderPageHeader("home")}
 
@@ -226,48 +208,9 @@ export function createHomeDashboardRenderer({
       ${backupReminderHTML}
 
       <div id="reviewWarnings"></div>
-
-      <div class="homeTripsSection">
-        <b>Trips</b>
-        <div class="muted tiny mt6">Most recent trip: <b>${escapeHtml(newestSavedLabel)}</b></div>
-        <div class="sep"></div>
-        <div class="triplist">${rows}</div>
-        ${trips.length > homeTripsLimit ? `<div style="margin-top:10px"><button class="btn" id="viewAllTrips">View all trips</button></div>` : ``}
-      </div>
     `;
 
     try { const app = getApp(); if (app) app.scrollTop = 0; } catch (_e) { }
-
-    const vbtn = document.getElementById("viewAllTrips");
-    if (vbtn) { vbtn.onclick = () => { pushView(state, "all_trips"); }; }
-
-    const homeEmptyNewTrip = document.getElementById("homeEmptyNewTrip");
-    if (homeEmptyNewTrip) {
-      homeEmptyNewTrip.onclick = () => {
-        pushView(state, "new");
-      };
-    }
-    const homeEmptyHelp = document.getElementById("homeEmptyHelp");
-    if (homeEmptyHelp) {
-      homeEmptyHelp.onclick = () => {
-        pushView(state, "help");
-      };
-    }
-
-    getApp().querySelectorAll(".trip[data-id]").forEach((card) => {
-      const open = () => {
-        const id = card.getAttribute("data-id");
-        if (!id) return;
-        state.view = "edit";
-        state.editId = id;
-        saveState();
-        render();
-      };
-      card.addEventListener("click", open);
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
-      });
-    });
 
     getApp().querySelectorAll("button.chip[data-hf]").forEach((btn) => {
       btn.addEventListener("click", () => {
