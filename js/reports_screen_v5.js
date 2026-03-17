@@ -206,7 +206,7 @@ function renderReports(){
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="rate ppl">${formatMoney(r.avg)}</b></div>
+            <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
           </div>
         </div>
       `;
@@ -223,7 +223,7 @@ function renderReports(){
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
-            <div>$/lb <b class="rate ppl">${formatMoney(r.avg)}</b></div>
+            <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
           </div>
         </div>
       `;
@@ -416,9 +416,9 @@ function renderReports(){
 
   const reportsHero = `
     <div class="card reportsHeroCard">
-      <div class="reportsHeroEyebrow">Reports overview</div>
+      <div class="reportsHeroEyebrow">Reports analysis snapshot</div>
       <div class="reportsHeroHeadline">${escapeHtml(monthDeltaText)}</div>
-      <div class="reportsHeroSub">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips analyzed</div>
+      <div class="reportsHeroSub">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips analyzed • Detailed view</div>
       <div class="reportsHeroGrid">
         <button class="reportsHeroStat reportsHeroStat--tap" data-metric-detail="amount" type="button" aria-label="Open amount detail">
           <div class="reportsHeroLabel">Total amount</div>
@@ -618,7 +618,7 @@ function renderReports(){
 
     ${activeMetricDetail ? "" : reportsSection({
       title: "Highlights",
-      intro: "Key takeaways from this date range.",
+      intro: "Analysis takeaways from this date range.",
       body: highlightsStrip || `<div class="card"><div class="muted small">Highlights will appear as more trips are added.</div></div>`,
       extraClass: "reportsSection--highlights"
     })}
