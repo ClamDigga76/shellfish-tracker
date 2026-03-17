@@ -121,10 +121,10 @@ function renderReports(){
 
 
         <div class="emptyState">
-          <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips in this report range"}</div>
+          <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips in this range"}</div>
           <div class="emptyStateBody">${fMode==="RANGE" && !hasValidRange
             ? "Set both dates, then tap Apply to load this report."
-            : "No saved trips match this report filter yet. Add a trip to unlock dealer, area, and monthly summaries."}</div>
+            : "No saved trips match this filter yet. Add a trip to unlock dealer, area, and monthly summaries."}</div>
           <div class="emptyStateAction">
             <button class="btn good" id="reportsEmptyPrimary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
             <button class="btn" id="reportsEmptySecondary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Help" : "Switch to All Time"}</button>
@@ -219,8 +219,8 @@ function renderReports(){
   const renderAggList = (rows, emptyMsg)=>{
     if(!rows.length) return `
       <div class="emptyState compact">
-        <div class="emptyStateTitle">Summary pending</div>
-        <div class="emptyStateBody">${escapeHtml(emptyMsg||"Add trips to unlock this summary.")}</div>
+        <div class="emptyStateTitle">Insights pending</div>
+        <div class="emptyStateBody">${escapeHtml(emptyMsg||"Add trips to unlock these insights.")}</div>
       </div>`;
     return rows.map(r=>{
       return `
@@ -591,7 +591,7 @@ function renderReports(){
           ${renderHLItem("Lowest $/lb", minPpl, "ppl", "min")}
         ` : `
           <div class="emptyState compact">
-            <div class="emptyStateTitle">$/lb summary pending</div>
+            <div class="emptyStateTitle">$/lb insights pending</div>
             <div class="emptyStateBody">Add trips that include both pounds and amount to unlock this view.</div>
           </div>`}
       </div>

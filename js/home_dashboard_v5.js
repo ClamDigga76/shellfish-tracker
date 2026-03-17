@@ -168,7 +168,7 @@ export function createHomeDashboardRenderer({
     }
     const smartSummaryHtml = smartSummaryLines.length
       ? `<ul class="homeSmartSummary">${smartSummaryLines.join("")}</ul>`
-      : `<div class="emptyState compact homeSmartSummaryFallback"><div class="emptyStateTitle">Summary waiting on trips</div><div class="emptyStateBody">Add a trip or widen the range to unlock quick Home insights.</div></div>`;
+      : `<div class="emptyState compact homeSmartSummaryFallback"><div class="emptyStateTitle">Insights waiting on trips</div><div class="emptyStateBody">Add a trip or widen the range to unlock quick Home insights.</div></div>`;
 
     const monthTotals = trips.reduce((map, trip) => {
       const iso = parseReportDateToISO(trip?.dateISO || "");
@@ -200,7 +200,7 @@ export function createHomeDashboardRenderer({
       return "steady";
     })();
     const homeOverviewHeadline = (() => {
-      if (!previousMonth || !currentMonth) return "Overview synced to this selected range.";
+      if (!previousMonth || !currentMonth) return "Overview aligned to the selected range.";
       if (homeOverviewTone === "up") return "Recent catches are trending higher than last month.";
       if (homeOverviewTone === "down") return "Recent catches are below last month levels.";
       return "Recent catches are holding steady month to month.";
@@ -253,7 +253,7 @@ export function createHomeDashboardRenderer({
         <div class="card reportsHeroCard homeOverviewCard">
           <div class="reportsHeroEyebrow">Overview</div>
           <div class="homeHeroHeadline">${escapeHtml(homeOverviewHeadline)}</div>
-          <div class="reportsHeroSub">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips • Dashboard surface</div>
+          <div class="reportsHeroSub">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips • Home summary</div>
           <div class="reportsHeroGrid">
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Total amount</div>
