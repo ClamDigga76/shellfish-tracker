@@ -36,6 +36,7 @@ const CORE = [
   "./js/feedback_seam_v5.js?v="+SW_V,
   "./js/app_shell_v5.js?v="+SW_V,
   "./js/trip_flow_save_seam_v5.js?v="+SW_V,
+  "./js/root_state_save_seam_v5.js?v="+SW_V,
   "./js/runtime_orchestration_seam_v5.js?v="+SW_V,
   "./js/app_v5.js?v="+SW_V,
 ];
