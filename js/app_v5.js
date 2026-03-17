@@ -30,6 +30,7 @@ import { createTripScreenOrchestrator } from "./trip_screen_orchestrator_v5.js";
 import { buildTripFormInputs, buildNewTripSaveSnapshot } from "./trip_flow_save_seam_v5.js";
 import { createUpdateRuntimeStatusSeam } from "./update_runtime_status_v5.js";
 import { createDiagnosticsFatalSeam } from "./diagnostics_fatal_v5.js";
+import { createRuntimeOrchestrationSeam, renderViewDispatch, startRuntimeRender } from "./runtime_orchestration_seam_v5.js";
 import {
   renderPageHeader as renderPageHeaderShell,
   bindHeaderHelpButtons as bindHeaderHelpButtonsShell,
@@ -41,6 +42,7 @@ const DISPLAY_BUILD_VERSION = VERSION;
 const QUICK_CHIP_LONG_PRESS_MS = 500;
 const DEFAULT_TRIP_SPECIES = "Soft-shell Clams";
 const QUICK_CHIP_MOVE_CANCEL_PX = 10;
+const SCHEMA_VERSION = 1;
 const {
   normalizeTripRow,
   normalizeTrip,
@@ -76,20 +78,6 @@ function clearSafeModeFlag(){
     history.replaceState(null, "", url.toString());
   }catch(_){ }
 }
-
-// In-app update UI: primary action always refreshes app assets/reload; SW state only changes status text.
-const updateRuntimeStatus = createUpdateRuntimeStatusSeam({
-  displayBuildVersion: DISPLAY_BUILD_VERSION,
-  getIsSettingsView: () => state?.view === "settings",
-  getSchemaVersion: (asNullable = false) => {
-    if(typeof SCHEMA_VERSION !== "undefined") return SCHEMA_VERSION;
-    return asNullable ? null : "?";
-  }
-});
-
-window.addEventListener("sw-update-ready", () => {
-  updateRuntimeStatus.markSwUpdateReady();
-});
 
 let themeMediaQuery = null;
 let onThemeMediaChange = null;
@@ -253,15 +241,22 @@ const {
   triggerHaptic
 } = feedback;
 
-const diagnosticsFatal = createDiagnosticsFatalSeam({
+const {
+  updateRuntimeStatus,
+  getDebugInfo,
+  showFatal,
+  bindRuntimeBootHandlers
+} = createRuntimeOrchestrationSeam({
+  createUpdateRuntimeStatusSeam,
+  createDiagnosticsFatalSeam,
   displayBuildVersion: DISPLAY_BUILD_VERSION,
-  getSchemaVersion: () => SCHEMA_VERSION,
   getState: () => state,
+  getSchemaVersion: (asNullable = false) => {
+    try{ return SCHEMA_VERSION; }catch(_){ return asNullable ? null : "?"; }
+  },
   copyTextWithFeedback,
   escapeHtml
 });
-const { getDebugInfo, showFatal, bindBootErrorHandlers, bindFatalHandlers } = diagnosticsFatal;
-bindBootErrorHandlers();
 
 let pendingTripUndo = null;
 
@@ -357,10 +352,6 @@ function renderTabBar(activeView){
     }
   });
 }
-
-
-
-const SCHEMA_VERSION = 1;
 
 
 
@@ -1106,7 +1097,7 @@ if(emergencyDraftRecoveredOnBoot){
 if(SAFE_MODE_ACTIVE){
   try{ showToast("Safe Mode is on. Loaded a temporary clean state."); }catch(_){ }
 }
-bindFatalHandlers();
+bindRuntimeBootHandlers();
 function safeSetItem(key, value){
   try{
     localStorage.setItem(key, value);
@@ -1696,35 +1687,30 @@ function renderAbout(){
 }
 
 function render(){
-  if(!state.view) state.view = "home";
-
-  // Expose current view to CSS (used for view-specific layout tweaks)
-  try{ document.body.dataset.view = String(state.view||""); }catch(_){ }
-
-  // Render main view
-  if(state.view === "settings") renderSettings();
-  else if(state.view === "new") renderNewTrip();
-  else if(state.view === "review") { state.view = "new"; saveState(); renderNewTrip(); }
-  else if(state.view === "edit") renderEditTrip();
-  else if(state.view === "reports") renderReports();
-  else if(state.view === "help") renderHelp();
-  else if(state.view === "all_trips") renderAllTrips();
-  else if(state.view === "about") renderAbout();
-  else renderHome();
-
-  // Render persistent tab bar
-  renderTabBar(state.view);
-
-  // Header Help buttons (Home/Trips/Reports/Settings)
-  bindHeaderHelpButtons();
+  renderViewDispatch({
+    state,
+    renderers: {
+      renderSettings,
+      renderNewTrip,
+      renderEditTrip,
+      renderReports,
+      renderHelp,
+      renderAllTrips,
+      renderAbout,
+      renderHome
+    },
+    onRedirectToNew: ()=>{ state.view = "new"; saveState(); renderNewTrip(); },
+    renderTabBar,
+    bindHeaderHelpButtons
+  });
 }
 
-try{
-  window.__SHELLFISH_APP_STARTED = true;
-  render();
-  const bp = document.getElementById("bootPill");
-  if(bp && !bp.classList.contains("err")){ bp.textContent = "OK"; bp.title = `v ${DISPLAY_BUILD_VERSION}`; }
-}catch(err){ showFatal(err); }
+startRuntimeRender({
+  render,
+  getBootPill: () => document.getElementById("bootPill"),
+  displayBuildVersion: DISPLAY_BUILD_VERSION,
+  showFatal
+});
 
 // ---- Display helpers (no state) ----
 function display2(val){
