@@ -189,18 +189,21 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripsBrowseList{display:grid;gap:12px}
 .tripsBrowseList .trip + .trip{margin-top:0}
 .tripsBrowseCard{
-  padding:14px;
+  padding:16px 16px 15px;
   border:1px solid var(--border);
-  border-radius:16px;
-  background:linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 100%);
-  box-shadow:0 8px 20px rgba(0,0,0,.18);
+  border-radius:18px;
+  background:linear-gradient(180deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.035) 100%);
+  box-shadow:0 10px 24px rgba(0,0,0,.2);
 }
-.tripsBrowseCard .tripCardGrid{gap:12px}
-.tripsBrowseCard .tripCardHeadline{font-size:15px;line-height:1.25;color:var(--text-muted-strong)}
-.tripsBrowseCard .tripCardMain{font-size:19px;line-height:1.15}
-.tripsBrowseCard .tripCardHeadlineDealer{font-size:14px;margin-top:5px;color:var(--text)}
-.tripsBrowseCard .tripCardMetricChip{font-size:13px;padding:6px 0}
-.tripsBrowseCard .tripCardMetricChip .metricValue{font-size:1.35em}
+.tripsBrowseCard .tripCardGrid{gap:14px}
+.tripsBrowseCard .tripCardHeadline{font-size:16px;line-height:1.25;color:var(--text-muted-strong)}
+.tripsBrowseCard .tripCardMain{font-size:21px;line-height:1.14}
+.tripsBrowseCard .tripCardHeadlineDealer{font-size:15px;margin-top:6px;color:var(--text)}
+.tripsBrowseCard .tripCardLowerLeft{display:grid;gap:4px;margin-top:10px}
+.tripsBrowseCard .tripCardSpecies{font-size:14px;line-height:1.2;font-weight:760;color:var(--text)}
+.tripsBrowseCard .tripCardNotes{font-size:12px;line-height:1.35;color:var(--text-muted-strong)}
+.tripsBrowseCard .tripCardMetricChip{font-size:13px;padding:7px 0}
+.tripsBrowseCard .tripCardMetricChip .metricValue{font-size:1.4em}
 .tripsEmptyState{padding:15px 14px}
 
 .emptyState{
