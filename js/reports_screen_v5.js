@@ -33,12 +33,21 @@ export function createReportsScreenRenderer(deps){
     parseReportDateToISO,
     bindDatePill
   });
+  const renderReportsAdvancedPanel = typeof reportsAdvancedPanel?.renderAdvancedPanel === "function"
+    ? reportsAdvancedPanel.renderAdvancedPanel
+    : (()=>"");
+  const bindReportsAdvancedPanel = typeof reportsAdvancedPanel?.bindAdvancedPanel === "function"
+    ? reportsAdvancedPanel.bindAdvancedPanel
+    : (()=>{});
 
   const reportsHighlights = createReportsHighlightsSeam({
     escapeHtml,
     formatMoney,
     to2
   });
+  const renderReportsHighlightsStrip = typeof reportsHighlights?.renderHighlightsStrip === "function"
+    ? reportsHighlights.renderHighlightsStrip
+    : (()=>"");
 
 function renderReports(){
   const state = getState();
@@ -79,7 +88,7 @@ function renderReports(){
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
 
   const advOpen = !!rf.adv;
-  const advPanel = reportsAdvancedPanel.renderAdvancedPanel({
+  const advPanel = renderReportsAdvancedPanel({
     reportsFilter: rf,
     dealers: state.dealers,
     areas: state.areas
@@ -162,7 +171,7 @@ function renderReports(){
       };
     });
 
-    reportsAdvancedPanel.bindAdvancedPanel({
+    bindReportsAdvancedPanel({
       root: getApp(),
       state,
       saveState,
@@ -438,7 +447,7 @@ function renderReports(){
     ].join("");
   };
 
-  const highlightsStrip = reportsHighlights.renderHighlightsStrip({
+  const highlightsStrip = renderReportsHighlightsStrip({
     dealerRows,
     monthRows,
     areaRows,
@@ -677,7 +686,7 @@ function renderReports(){
     };
   });
 
-  reportsAdvancedPanel.bindAdvancedPanel({
+  bindReportsAdvancedPanel({
     root: getApp(),
     state,
     saveState,
