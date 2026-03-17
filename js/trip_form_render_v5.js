@@ -1,4 +1,4 @@
-import { computePPL, formatMoney, escapeHtml } from "./utils_v5.js";
+import { computePPL, escapeHtml } from "./utils_v5.js";
 
 export function renderTripEntryForm({
   mode = "new",
@@ -11,7 +11,6 @@ export function renderTripEntryForm({
   speciesId,
   notesId,
   rateId,
-  todayBtnId,
   dateValue,
   dealerOptions,
   areaOptions,
@@ -54,7 +53,6 @@ export function renderTripEntryForm({
             <div class="dateRow">
               <span class="dateIcon">${dateIconHtml}</span>
               <input class="input datePill" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
-              <button class="todayBtn" id="${escapeHtml(todayBtnId)}" type="button">Today</button>
             </div>
           </div>
         </section>
@@ -78,7 +76,7 @@ export function renderTripEntryForm({
             <div class="field">
               <label class="fieldLabel overline" for="${escapeHtml(rateId)}">$/LB</label>
               <div class="inputWrap inputWrap--rate">
-                <input class="input" id="${escapeHtml(rateId)}" type="text" value="${formatMoney(computePPL(Number(poundsValue || 0), Number(amountValue || 0)))}" readonly tabindex="-1" aria-readonly="true" />
+                <input class="input" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
               </div>
             </div>
           </div>
