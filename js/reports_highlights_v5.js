@@ -253,7 +253,7 @@ export function createReportsHighlightsSeam(deps){
       value: formatter(cur),
       valueClass: payload.metricKey === "amount"
         ? "money"
-        : (payload.metricKey === "pounds" ? "lbsBlue" : (payload.metricKey === "ppl" ? "rate ppl" : "")),
+        : (payload.metricKey === "pounds" ? "lbsBlue" : (payload.metricKey === "ppl" ? "rate ppl" : (payload.metricKey === "trips" ? "trips" : ""))),
       compareTone: payload.compareTone,
       compareText: `${escapeHtml(period.currentLabel || "Current")} vs ${escapeHtml(period.previousLabel || "Prior")} • ${escapeHtml(period.fairWindowLabel || "Comparable window")}`,
       aLabel: period.currentLabel || "Current",

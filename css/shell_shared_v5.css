@@ -42,6 +42,7 @@
   --money:var(--good);
   --lbs:var(--lbsBlue);
   --ppl:var(--pplYellow);
+  --trips:#f2f5ff;
   --warn-border:rgba(255,77,79,.40);
   --warn-bg:rgba(255,77,79,.14);
   --ppl-bg:rgba(255,210,63,.08);
@@ -96,6 +97,8 @@
 }
 
 /* Semantic metric colors */
+.trips,
+.tripsMetric{color:var(--trips)!important}
 .lbsBlue{color:var(--lbs)!important}
 .money{color:var(--money)!important}
 .ppl,
