@@ -168,7 +168,7 @@ export function createHomeDashboardRenderer({
     }
     const smartSummaryHtml = smartSummaryLines.length
       ? `<ul class="homeSmartSummary">${smartSummaryLines.join("")}</ul>`
-      : `<div class="homeSmartSummaryFallback muted small">Need more saved trips in this range before smart summary insights can show.</div>`;
+      : `<div class="emptyState compact homeSmartSummaryFallback"><div class="emptyStateTitle">Summary waiting on trips</div><div class="emptyStateBody">Add a trip or widen the range to unlock quick Home insights.</div></div>`;
 
     const monthTotals = trips.reduce((map, trip) => {
       const iso = parseReportDateToISO(trip?.dateISO || "");
@@ -266,12 +266,12 @@ export function createHomeDashboardRenderer({
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Top dealer</div>
               <div class="reportsHeroValue">${escapeHtml(strongestDealer?.dealer || "—")}</div>
-              <div class="reportsHeroMeta money">${strongestDealer ? formatMoney(round2(strongestDealer.amount)) : "No data"}</div>
+              <div class="reportsHeroMeta money">${strongestDealer ? formatMoney(round2(strongestDealer.amount)) : "No trips in range"}</div>
             </div>
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Strongest area</div>
               <div class="reportsHeroValue">${escapeHtml(strongestArea?.area || "—")}</div>
-              <div class="reportsHeroMeta money">${strongestArea ? formatMoney(round2(strongestArea.amount)) : "No data"}</div>
+              <div class="reportsHeroMeta money">${strongestArea ? formatMoney(round2(strongestArea.amount)) : "No trips in range"}</div>
             </div>
           </div>
         </div>
