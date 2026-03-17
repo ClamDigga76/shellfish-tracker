@@ -5,7 +5,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
     <div class="card">
       <b style="font-size:1.05rem">Help hub</b>
       <div class="sep"></div>
-      <div class="muted small" style="line-height:1.5">Jump to the support area you need.</div>
+      <div class="muted small" style="line-height:1.5">Jump to the section you need.</div>
       <div class="helpHubNav" style="margin-top:10px">
         <button class="chip" type="button" data-helpjump="home">Home</button>
         <button class="chip" type="button" data-helpjump="trips">Trips</button>
@@ -154,11 +154,11 @@ export function renderAboutViewHTML({ renderPageHeader, displayBuildVersion }) {
     <div class="card">
       <b>App details</b>
       <div class="sep"></div>
-      <div class="muted small">Version: <b>${displayBuildVersion}</b></div>
-      <div class="muted small" style="margin-top:8px">All data stays on this device unless you choose to export/backup files for safekeeping.</div>
+      <div class="muted small">Build: <b>${displayBuildVersion}</b></div>
+      <div class="muted small" style="margin-top:8px">Data stays on this device unless you choose to export a backup file.</div>
       <div class="muted small" style="margin-top:6px">Legal: <a class="settingsEmail" href="legal/terms.html">Terms</a> • <a class="settingsEmail" href="legal/privacy.html">Privacy</a> • <a class="settingsEmail" href="legal/license.html">License</a></div>
       <div class="row mt12">
-        <button class="btn" id="copyDebug">Copy Debug Info</button>
+        <button class="btn" id="copyDebug">Copy diagnostics info</button>
         <button class="btn" id="feedback">Send Feedback</button>
       </div>
     </div>

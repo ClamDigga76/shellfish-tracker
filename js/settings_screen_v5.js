@@ -86,7 +86,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Help</div>
-            <div class="muted small">Trust guidance for install, offline use, and backup safety.</div>
+            <div class="muted small">Practical guidance for install, offline use, and backup safety.</div>
           </div>
           <button class="btn settingsInlineBtn" id="openHelp">View Help</button>
         </div>
@@ -99,7 +99,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Backup & Restore</div>
-            <div class="muted small">Create and restore backups with a preview before changes are applied.</div>
+            <div class="muted small">Create or restore backups with a preview before changes are applied.</div>
           </div>
           <span class="settingsValuePill">Freshness</span>
         </div>
@@ -160,7 +160,7 @@ export function createSettingsScreenOrchestrator({
         </div>
         <div class="settingsRow settingsRow--minor">
           <div class="muted small">Created by <b>Jeremy Wood</b></div>
-          <div class="muted small mt6">Support/contact: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+          <div class="muted small mt6">Support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
           <div class="muted small mt8">© 2026 Jeremy Wood. All rights reserved.</div>
         </div>
         <div class="settingsRow settingsRow--split settingsRow--minor">
@@ -183,10 +183,10 @@ export function createSettingsScreenOrchestrator({
     <div class="settingsGroupBlock">
       <div class="settingsGroupLabel">Advanced</div>
       <details class="card settingsSectionCard settingsGroupedCard settingsAdvancedCard" id="advancedBox">
-        <summary class="settingsAdvancedSummary">Diagnostics and reset tools</summary>
+        <summary class="settingsAdvancedSummary">Diagnostics and reset</summary>
         <div class="settingsRow settingsRow--action mt10">
           <div class="row gap10 wrap">
-            <button class="btn" id="copyDebug">Copy diagnostics info</button>
+            <button class="btn" id="copyDebug">Copy diagnostics</button>
             <button class="btn" id="refreshApp">Reload app safely</button>
           </div>
         </div>

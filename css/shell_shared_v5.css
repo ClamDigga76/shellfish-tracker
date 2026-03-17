@@ -205,25 +205,25 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 
 .emptyState{
   margin-top:12px;
-  padding:14px;
+  padding:15px;
   border:1px dashed var(--border-strong);
   border-radius:14px;
   background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.025) 100%);
   display:grid;
-  gap:8px;
+  gap:9px;
 }
-.emptyStateTitle{font-size:15px;font-weight:830;line-height:1.25}
-.emptyStateBody{font-size:13px;line-height:1.45;color:var(--text-muted-strong)}
+.emptyStateTitle{font-size:15px;font-weight:840;line-height:1.2}
+.emptyStateBody{font-size:13px;line-height:1.5;color:var(--text-muted-strong)}
 .emptyStateAction{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
 .emptyStateAction .btn{flex:1;min-width:132px}
-.emptyState.compact{margin-top:8px;padding:12px;gap:6px}
+.emptyState.compact{margin-top:8px;padding:12px;gap:7px}
 .emptyState.compact .emptyStateTitle{font-size:14px}
 .emptyState.compact .emptyStateBody{font-size:12px}
 
 .helpHubNav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .helpHubNav .chip{width:100%;justify-content:center}
-.helpSectionTitle{font-size:1.05rem}
-.helpSectionLead{line-height:1.56;font-size:.96rem}
+.helpSectionTitle{font-size:1.03rem;font-weight:840;letter-spacing:.01em}
+.helpSectionLead{line-height:1.5;font-size:.95rem}
 
 @media (max-width:380px){
   .helpHubNav{grid-template-columns:1fr}
@@ -242,18 +242,18 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .modalErr{margin-top:10px;font-size:12px;opacity:.9;color: var(--danger, #ff6b6b)}
 
 /* Settings grouped-list polish (P3) */
-.settingsGroupBlock{margin-bottom:14px}
-.settingsGroupLabel{font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px 8px}
+.settingsGroupBlock{margin-bottom:16px}
+.settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px 10px}
 .settingsSectionCard.settingsGroupedCard{margin-bottom:0;padding:0;overflow:hidden}
-.settingsRow{padding:12px 13px}
+.settingsRow{padding:13px 14px}
 .settingsRow + .settingsRow{border-top:1px solid var(--line)}
 .settingsRow--split{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.settingsRow--field{padding-top:10px;padding-bottom:10px}
+.settingsRow--field{padding-top:11px;padding-bottom:11px}
 .settingsRow--action{display:grid;gap:8px}
 .settingsRow--status{display:grid;gap:4px;background:rgba(255,255,255,.02)}
 .settingsRow--minor{background:rgba(255,255,255,.015)}
 .settingsRow--danger{background:rgba(255,107,107,.08);border-top:1px solid rgba(255,107,107,.26)}
-.settingsRowTitle{font-size:14px;font-weight:820;line-height:1.25}
+.settingsRowTitle{font-size:14px;font-weight:840;line-height:1.22}
 .settingsValuePill{display:inline-flex;align-items:center;padding:4px 10px;border:1px solid var(--line);border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.02em;white-space:nowrap;background:rgba(8,12,20,.3);color:var(--text-muted-strong)}
 .settingsSelectWrap{max-width:220px;margin-left:auto}
 .settingsUpdateStatus{font-size:15px;font-weight:800;line-height:1.2}
@@ -270,7 +270,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .settingsSoonNote{margin-top:2px;opacity:.85}
 .settingsAdvancedSummary{cursor:pointer;padding:12px 13px;font-size:14px;font-weight:820;list-style:none}
 .settingsAdvancedSummary::-webkit-details-marker{display:none}
-.settingsSectionCard .muted.small{line-height:1.4}
+.settingsSectionCard .muted.small{line-height:1.45}
 .settingsSectionCard .hint{line-height:1.4}
 .settingsAdvancedCard{margin-top:0}
 .settingsEmail{color:var(--text);text-decoration:underline}
@@ -332,26 +332,26 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   text-overflow:ellipsis;
 }
 .homeSmartSummary{
-  margin:10px 0 0;
-  padding:10px 12px 10px 26px;
+  margin:12px 0 0;
+  padding:11px 13px 11px 26px;
   border-radius:12px;
   border:1px dashed var(--line);
   background:rgba(8,12,20,.28);
   display:grid;
   gap:7px;
   font-size:13px;
-  line-height:1.35;
+  line-height:1.4;
 }
 .homeSmartSummary b{font-weight:850}
 .homeSmartSummaryFallback{
-  margin-top:10px;
+  margin-top:12px;
   border-radius:12px;
   border:1px dashed var(--line);
   background:rgba(8,12,20,.28);
   padding:10px 12px;
 }
 .kpiGroupLabel{
-  margin:4px 0 8px;
+  margin:6px 0 10px;
   font-size:11px;
   text-transform:uppercase;
   letter-spacing:.08em;
@@ -375,14 +375,14 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   box-shadow:0 8px 22px rgba(0,0,0,.24);
 }
 .dashCard{
-  padding:15px 14px;
+  padding:16px 15px;
 }
 .dashCard .homeOverviewCard{
-  margin-bottom:16px;
+  margin-bottom:14px;
   border-color:rgba(126,200,255,.42);
 }
 .dashCard .homeFilterStack{
-  margin-bottom:18px;
+  margin-bottom:16px;
 }
 .kpiGroupLabel,
 .reportsSectionHead h2,
@@ -434,7 +434,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .reportsHeroCard{
   border-color:rgba(255,255,255,.18);
-  padding:15px 14px;
+  padding:16px 15px;
   margin-bottom:14px;
 }
 .reportsHeroStat{
@@ -494,7 +494,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .dashCard .homeFilterStack{
   gap:8px;
-  margin-top:12px;
+  margin-top:10px;
   margin-bottom:16px;
 }
 .dashCard .homeFilterStack .timeframeUnifiedControl{
