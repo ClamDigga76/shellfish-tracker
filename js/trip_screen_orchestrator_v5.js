@@ -134,33 +134,43 @@ const newTripFormHtml = renderTripEntryForm({
   const elNotes = document.getElementById("t_notes");
   const elRate = document.getElementById("rateValue");
   bindDatePill("t_date");
-  let lastEditedMetric = "";
-  let syncingMetric = false;
-  const setMetricValue = (el, value, decimals)=>{
-    if(!el || !Number.isFinite(value)) return;
-    el.value = Number(value).toFixed(decimals);
+
+  const createMetricSync = ()=>{
+    let lastEditedMetric = "";
+    let syncingMetric = false;
+    const setMetricValue = (el, value, decimals)=>{
+      if(!el || !Number.isFinite(value)) return;
+      el.value = Number(value).toFixed(decimals);
+    };
+    const updateRateLine = ()=>{
+      if(!elRate || syncingMetric) return;
+      const pounds = parseNum(elPounds?.value);
+      const amount = parseMoney(elAmount?.value);
+      const rate = parseNum(elRate?.value);
+      syncingMetric = true;
+      if(lastEditedMetric === "t_pounds"){
+        if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
+        else if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
+      }else if(lastEditedMetric === "t_amount"){
+        if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
+        else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
+      }else if(lastEditedMetric === "rateValue"){
+        if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
+        else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
+      }else if(pounds > 0 && amount > 0){
+        setMetricValue(elRate, computePPL(pounds, amount), 2);
+      }
+      syncingMetric = false;
+    };
+    return {
+      updateRateLine,
+      setLastEditedMetric: (field)=>{ lastEditedMetric = field; }
+    };
   };
-  const updateRateLine = ()=>{
-    if(!elRate || syncingMetric) return;
-    const pounds = parseNum(elPounds?.value);
-    const amount = parseMoney(elAmount?.value);
-    const rate = parseNum(elRate?.value);
-    syncingMetric = true;
-    if(lastEditedMetric === "t_pounds"){
-      if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
-      else if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
-    }else if(lastEditedMetric === "t_amount"){
-      if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
-      else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
-    }else if(lastEditedMetric === "rateValue"){
-      if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
-      else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
-    }else if(pounds > 0 && amount > 0){
-      setMetricValue(elRate, computePPL(pounds, amount), 2);
-    }
-    syncingMetric = false;
-  };
-  const openQuickAdd = (kind, opts = {})=>{
+
+  const metricSync = createMetricSync();
+  const updateRateLine = metricSync.updateRateLine;
+  const createQuickAddHandler = ()=> (kind, opts = {})=>{
     const isDealer = (kind==="dealer");
     const label = isDealer ? "Dealer" : "Area";
     const placeholder = isDealer ? "New dealer name" : "New area (ex: 19/626)";
@@ -190,40 +200,21 @@ const newTripFormHtml = renderTripEntryForm({
       onOpen: ()=>{
         const elIn = document.getElementById(inputId);
         const elErr = document.getElementById(errId);
-        const showErr = (msg)=>{
-          if(!elErr) return;
-          elErr.textContent = msg;
-          elErr.style.display = "block";
-        };
-        const clearErr = ()=>{
-          if(!elErr) return;
-          elErr.textContent = "";
-          elErr.style.display = "none";
-        };
+        const showErr = (msg)=>{ if(!elErr) return; elErr.textContent = msg; elErr.style.display = "block"; };
+        const clearErr = ()=>{ if(!elErr) return; elErr.textContent = ""; elErr.style.display = "none"; };
 
         const commit = ()=>{
           clearErr();
           const raw = String(elIn?.value||"").trim();
-          if(!raw){
-            showErr("Enter a value first.");
-            elIn?.focus();
-            return;
-          }
-          if(raw.length > 40){
-            showErr("Keep it under 40 characters.");
-            elIn?.focus();
-            return;
-          }
+          if(!raw){ showErr("Enter a value first."); elIn?.focus(); return; }
+          if(raw.length > 40){ showErr("Keep it under 40 characters."); elIn?.focus(); return; }
 
           let addedValue = raw;
           if(isDealer){
             if(!Array.isArray(state.dealers)) state.dealers = [];
             const key = normalizeKey(raw);
             const exists = state.dealers.some(d => normalizeKey(String(d||"")) === key);
-            if(exists){
-              showErr("That dealer already exists.");
-              return;
-            }
+            if(exists){ showErr("That dealer already exists."); return; }
             state.dealers.push(raw);
             ensureDealers();
             addedValue = state.dealers.find(d => normalizeKey(String(d||"")) === key) || raw;
@@ -232,10 +223,7 @@ const newTripFormHtml = renderTripEntryForm({
             if(!Array.isArray(state.areas)) state.areas = [];
             const key = normalizeKey(raw);
             const exists = state.areas.some(a => normalizeKey(String(a||"")) === key);
-            if(exists){
-              showErr("That area already exists.");
-              return;
-            }
+            if(exists){ showErr("That area already exists."); return; }
             state.areas.push(raw);
             ensureAreas();
             addedValue = state.areas.find(a => normalizeKey(String(a||"")) === key) || raw;
@@ -244,28 +232,18 @@ const newTripFormHtml = renderTripEntryForm({
 
           saveState();
           closeModal();
-          if(onAdded){
-            onAdded(addedValue);
-            return;
-          }
+          if(onAdded){ onAdded(addedValue); return; }
           render();
         };
 
-        document.getElementById(cancelId)?.addEventListener("click", ()=>{
-          closeModal();
-        });
+        document.getElementById(cancelId)?.addEventListener("click", ()=>{ closeModal(); });
         document.getElementById(addId)?.addEventListener("click", commit);
-        elIn?.addEventListener("keydown", (e)=>{
-          if(e.key === "Enter"){
-            e.preventDefault();
-            commit();
-          }
-        });
-
+        elIn?.addEventListener("keydown", (e)=>{ if(e.key === "Enter"){ e.preventDefault(); commit(); } });
         setTimeout(()=>elIn?.focus(), 50);
       }
     });
   };
+  const openQuickAdd = createQuickAddHandler();
   // Quick-pick chip containers
   const topAreaWrap = document.getElementById("topAreas");
   const topDealerWrap = document.getElementById("topDealers");
@@ -304,7 +282,7 @@ const newTripFormHtml = renderTripEntryForm({
     elPounds.addEventListener("pointerdown", prime);
     elPounds.addEventListener("focus", prime);
     elPounds.addEventListener("input", ()=>{
-      lastEditedMetric = "t_pounds";
+      metricSync.setLastEditedMetric("t_pounds");
       const s = sanitizeDecimalInput(elPounds.value);
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
@@ -323,7 +301,7 @@ const newTripFormHtml = renderTripEntryForm({
     elAmount.addEventListener("pointerdown", prime);
     elAmount.addEventListener("focus", prime);
     elAmount.addEventListener("input", ()=>{
-      lastEditedMetric = "t_amount";
+      metricSync.setLastEditedMetric("t_amount");
       const s = sanitizeDecimalInput(elAmount.value);
       if(s !== elAmount.value) elAmount.value = s;
       updateSaveEnabled();
@@ -342,7 +320,7 @@ const newTripFormHtml = renderTripEntryForm({
     elRate.addEventListener("pointerdown", prime);
     elRate.addEventListener("focus", prime);
     elRate.addEventListener("input", ()=>{
-      lastEditedMetric = "rateValue";
+      metricSync.setLastEditedMetric("rateValue");
       const s = sanitizeDecimalInput(elRate.value);
       if(s !== elRate.value) elRate.value = s;
       updateRateLine();
@@ -357,18 +335,13 @@ const newTripFormHtml = renderTripEntryForm({
     });
   }
 
-  // NEW TRIP: wire up buttons (Save / Cancel / Clear Draft) — v23
-  const btnSave = document.getElementById("saveTrip");
-  const onSaveTrip = async ()=>{
+  const createNewTripSubmitHandler = (btnSave)=>async ()=>{
     try{
-      // Hard guard: if button is disabled, do nothing (prevents scroll-tap accidents).
       if(btnSave?.disabled) return;
-      // Double-save latch (iOS/Android fast taps)
       if(state._savingTrip) return;
       state._savingTrip = true;
       saveState();
 
-      // snapshot current inputs into draft
       const saveSnapshot = buildNewTripSaveSnapshot({
         rawDate: elDate?.value,
         rawDealer: elDealer?.value,
@@ -386,7 +359,6 @@ const newTripFormHtml = renderTripEntryForm({
       });
       state.draft = { ...(state.draft || {}), ...saveSnapshot.draft };
 
-      // basic guard: if nothing entered, do nothing (prevents "dead tap" feel)
       if(!saveSnapshot.anyEntered){
         announce("Error: Enter trip details first", "assertive");
         showToast("Enter trip details first");
@@ -394,11 +366,11 @@ const newTripFormHtml = renderTripEntryForm({
         return;
       }
 
-await commitTripFromDraft({
-  mode: "new",
-  inputs: saveSnapshot.inputs,
-  nextView: "all_trips"
-});
+      await commitTripFromDraft({
+        mode: "new",
+        inputs: saveSnapshot.inputs,
+        nextView: "all_trips"
+      });
       state._savingTrip = false; saveState();
 
     }catch(err){
@@ -406,6 +378,10 @@ await commitTripFromDraft({
       state._savingTrip = false; saveState();
     }
   };
+
+  // NEW TRIP: wire up buttons (Save / Cancel / Clear Draft) — v23
+  const btnSave = document.getElementById("saveTrip");
+  const onSaveTrip = createNewTripSubmitHandler(btnSave);
   const newTripForm = document.getElementById("newTripForm");
   if(newTripForm){
     newTripForm.addEventListener("submit", (e)=>{
@@ -446,9 +422,21 @@ const btnClear = document.getElementById("clearDraft");
       renderNewTrip();
     };
   }
-// Persist draft as the user edits fields (fixes iOS select + prevents resets)
-  const persistDraft = ()=>{ try{ saveDraft(); }catch{}; try{ updateSaveEnabled(); }catch{} };
-  const persistDraftInput = ()=>{ try{ scheduleStateSave(); }catch{}; try{ updateSaveEnabled(); }catch{} };
+  const createDraftHelpers = ()=>({
+    persistDraft: ()=>{ try{ saveDraft(); }catch{}; try{ updateSaveEnabled(); }catch{} },
+    persistDraftInput: ()=>{ try{ scheduleStateSave(); }catch{}; try{ updateSaveEnabled(); }catch{} },
+    applyDraftValue: ({ key, value, inputEl })=>{
+      const nextValue = String(value || "").trim();
+      if(!nextValue || !inputEl) return;
+      inputEl.value = nextValue;
+      state.draft = state.draft || {};
+      state.draft[key] = nextValue;
+      saveDraft();
+      updateSaveEnabled();
+      updateRateLine();
+    }
+  });
+  const { persistDraft, persistDraftInput, applyDraftValue } = createDraftHelpers();
   [elDate, elDealer, elPounds, elAmount, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", persistDraftInput);
@@ -496,13 +484,7 @@ if(topAreaWrap && elArea){
       return;
     }
     const a = String(btn.getAttribute("data-area") || "").trim();
-    if(!a) return;
-    elArea.value = a;
-    state.draft = state.draft || {};
-    state.draft.area = a;
-    saveDraft();
-    updateSaveEnabled();
-      updateRateLine();
+    applyDraftValue({ key: "area", value: a, inputEl: elArea });
   });
 }
 
@@ -519,13 +501,7 @@ if(topDealerWrap && elDealer){
       return;
     }
     const d = String(btn.getAttribute("data-dealer") || "").trim();
-    if(!d) return;
-    elDealer.value = d;
-    state.draft = state.draft || {};
-    state.draft.dealer = d;
-    saveDraft();
-    updateSaveEnabled();
-      updateRateLine();
+    applyDraftValue({ key: "dealer", value: d, inputEl: elDealer });
   });
 }
 
