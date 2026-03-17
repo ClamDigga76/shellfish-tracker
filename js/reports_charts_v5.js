@@ -37,11 +37,11 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
     const compact = w < 360;
     return {
       compact,
-      left: compact ? 42 : 52,
-      right: compact ? 10 : 14,
+      left: compact ? 46 : 54,
+      right: compact ? 12 : 16,
       top: compact ? 14 : 16,
-      bottom: compact ? 34 : 38,
-      tickFont: compact ? "10px system-ui, -apple-system, Segoe UI, Arial" : "11px system-ui, -apple-system, Segoe UI, Arial"
+      bottom: compact ? 40 : 42,
+      tickFont: compact ? "11px system-ui, -apple-system, Segoe UI, Arial" : "12px system-ui, -apple-system, Segoe UI, Arial"
     };
   }
 
@@ -104,7 +104,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
   }
 
   function drawBottomTicks(ctx, labels, geom, y, frame){
-    const maxTicks = frame.compact ? 3 : 5;
+    const maxTicks = frame.compact ? 4 : 6;
     const step = Math.max(1, Math.ceil(labels.length / maxTicks));
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
@@ -116,7 +116,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
       const m = ctx.measureText(text);
       let tx = x - (m.width / 2);
       tx = Math.max(2, Math.min(geom.xRight - m.width, tx));
-      if(tx <= lastRight + (frame.compact ? 7 : 5)) return;
+      if(tx <= lastRight + (frame.compact ? 9 : 7)) return;
       ctx.fillText(text, tx, y);
       lastRight = tx + m.width;
     });
@@ -162,10 +162,10 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
     const src = String(name || "").trim();
     if(!src) return "";
     const cleaned = src.replace(/\s+/g, " ");
-    if(cleaned.length <= 12) return cleaned;
+    if(cleaned.length <= 14) return cleaned;
     const words = cleaned.split(" ").filter(Boolean);
     if(words.length > 1){
-      return words.map(w => w[0]).join("").slice(0, 5).toUpperCase();
+      return `${words[0]} ${words[1]}`;
     }
     return cleaned;
   }
@@ -226,7 +226,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
         ctx.beginPath(); ctx.arc(x,y,frame.compact ? 3.3 : 3.8,0,Math.PI*2); ctx.fill();
       });
 
-      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-8, frame);
+      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-10, frame);
       const high = formatShortMoney(maxV);
       const mid = formatShortMoney(minV + (span * 0.5));
       const low = formatShortMoney(minV);
@@ -268,15 +268,15 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
 
       ctx.fillStyle = palette.label;
       ctx.font = frame.tickFont;
-      const labelStep = Math.max(1, Math.ceil(top.length / (frame.compact ? 4 : 6)));
+      const labelStep = Math.max(1, Math.ceil(top.length / (frame.compact ? 5 : 7)));
       top.forEach((r,i)=>{
         if(i % labelStep !== 0 && i !== top.length - 1) return;
-        const maxLabelW = Math.max(16, barW - 2);
+        const maxLabelW = Math.max(18, barW - 1);
         const base = normalizeDealerLabel(r.name || "");
         const lab = fitLabel(ctx, base, maxLabelW);
         const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
         const x = Math.max(2, tx);
-        ctx.fillText(lab, x, h-6);
+        ctx.fillText(lab, x, h-10);
       });
 
       const yLabels = [];
@@ -314,7 +314,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
         ctx.fillRect(x, y, Math.max(4, barW - (barPad * 2)), bh);
       });
 
-      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-8, frame);
+      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-10, frame);
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
         yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: formatCompactCount(v) });
@@ -350,7 +350,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
         ctx.fillRect(x, y, Math.max(4, barW - (barPad * 2)), bh);
       });
 
-      drawBottomTicks(ctx, timeline.map(r=>r.shortLabel), geom, h-8, frame);
+      drawBottomTicks(ctx, timeline.map(r=>r.shortLabel), geom, h-10, frame);
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
         yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: formatCompactCount(v) });
