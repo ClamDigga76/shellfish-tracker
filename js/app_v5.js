@@ -141,7 +141,6 @@ function bindThemeControls(){
 
 
 window.__SHELLFISH_BUILD__ = APP_VERSION;
-const HOME_TRIPS_LIMIT = 15;
 const { pushView, goBack, bindNavHandlers } = createNavigator({
   saveState: () => saveState(),
   render: () => render()
@@ -1305,7 +1304,13 @@ function renderAllTrips(){
   ];
 
   const filtersCard = `
-    <div class="card tripsFiltersCard">
+    <div class="card tripsFiltersCard tripsBrowseFiltersCard">
+      <div class="tripsFiltersTopRow">
+        <div>
+          <div class="tripsFiltersEyebrow">Trip history</div>
+          <div class="tripsFiltersTitle">Browse saved trips</div>
+        </div>
+      </div>
       <div class="tripsFiltersGrid">
         <div class="tripsFilterField">
           <div class="muted small">Range</div>
@@ -1366,11 +1371,11 @@ function renderAllTrips(){
   `;
 
   const rows = sorted.length
-    ? sorted.map(t=> renderTripCatchCard(t, { interactive:true })).join("")
+    ? sorted.map(t=> renderTripCatchCard(t, { interactive:true, extraClass:"tripsBrowseCard" })).join("")
     : `
-      <div class="emptyState">
-        <div class="emptyStateTitle">No trips yet for this filter</div>
-        <div class="emptyStateBody">No saved trips match your current filter. Add a trip or reset filters to see more.</div>
+      <div class="emptyState tripsEmptyState">
+        <div class="emptyStateTitle">No trips match this filter</div>
+        <div class="emptyStateBody">Try a wider range, clear dealer/area filters, or add a new trip.</div>
         <div class="emptyStateAction">
           <button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>
           <button class="btn" id="tripsEmptyReset" type="button">Clear filters</button>
@@ -1384,7 +1389,7 @@ function renderAllTrips(){
 
     <div style="height:10px"></div>
 
-    <div class="triplist">
+    <div class="triplist tripsBrowseList">
       ${rows}
     </div>
   `;
@@ -1475,14 +1480,11 @@ const { renderHome } = createHomeDashboardRenderer({
   computePPL,
   round2: to2,
   getTripsNewestFirst,
-  homeTripsLimit: HOME_TRIPS_LIMIT,
-  renderTripCatchCard,
   renderPageHeader,
   escapeHtml,
   parseReportDateToISO,
   formatMoney,
   getApp,
-  pushView,
   saveState,
   render,
   bindDatePill,
