@@ -106,7 +106,7 @@ function renderReports(){
           : (fMode === "ALL" ? "All Time"
             : "YTD")));
 
-  const renderReportsTopShell = ({ includeModeToggle = true, body = "" })=> `
+  const renderReportsTopShell = ({ includeModeToggle = true, body = "" } = {})=> `
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
         <b>Reports</b>
