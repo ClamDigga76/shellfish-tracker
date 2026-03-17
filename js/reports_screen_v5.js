@@ -103,7 +103,7 @@ function renderReports(){
       <div class="card">
         <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
           <b>Reports</b>
-          <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
+          <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
         </div>
 
         <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
@@ -357,57 +357,57 @@ function renderReports(){
       const baseline = Math.max(1, Math.abs(priorVal));
       const delta = (latestVal - priorVal) / baseline;
       const tone = trendTone(delta, 0.04);
-      if(tone === "up") return { text: "Higher than prior month", tone };
-      if(tone === "down") return { text: "Lower than prior month", tone };
+      if(tone === "up") return { text: "Up vs prior month", tone };
+      if(tone === "down") return { text: "Down vs prior month", tone };
       return { text: "Holding steady", tone };
     };
 
     const buildTripsTakeaway = ()=>{
       const latest = Number(tripsLatest?.count) || 0;
       const prior = Number(tripsPrior?.count) || 0;
-      if(!tripsPrior) return { text: "Strongest recent month", tone: "up" };
-      if(latest === prior) return { text: "Trips flat", tone: "steady" };
+      if(!tripsPrior) return { text: "Baseline month set", tone: "steady" };
+      if(latest === prior) return { text: "Trips unchanged month to month", tone: "steady" };
       return latest > prior
-        ? { text: "Trips rising", tone: "up" }
-        : { text: "Trips down", tone: "down" };
+        ? { text: "Trips up vs prior month", tone: "up" }
+        : { text: "Trips down vs prior month", tone: "down" };
     };
 
     const pplTakeaway = buildMonthTakeaway("avg");
     const lbsTakeaway = buildMonthTakeaway("lbs");
     const tripsTakeaway = buildTripsTakeaway();
-    const dealerTakeaway = dealerPeak ? { text: "Strongest recent month", tone: "up" } : { text: "Holding steady", tone: "steady" };
+    const dealerTakeaway = dealerPeak ? { text: "Top dealer stands out in this range", tone: "up" } : { text: "Dealer mix still building", tone: "steady" };
 
     return `
       <div class="card chartCard">
         <div class="chartTakeaway tone-${pplTakeaway.tone}">${escapeHtml(pplTakeaway.text)}</div>
         <div class="chartTitle">Avg $/lb by Month</div>
-        <div class="chartSubhead">Monthly trend for this range</div>
+        <div class="chartSubhead">Month-by-month trend for the selected range</div>
         <div class="chartHero rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</div>
-        <div class="chartContext">Latest month • Peak <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span></div>
+        <div class="chartContext">Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span></div>
         <canvas class="chart" id="c_ppl" height="210"></canvas>
       </div>
       <div class="card chartCard">
         <div class="chartTakeaway tone-${dealerTakeaway.tone}">${escapeHtml(dealerTakeaway.text)}</div>
         <div class="chartTitle">Dealer Amount (Top)</div>
-        <div class="chartSubhead">Top dealers in this filter range</div>
+        <div class="chartSubhead">Top dealers by total amount in this range</div>
         <div class="chartHero money">${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</div>
-        <div class="chartContext">Lead dealer • ${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}</div>
+        <div class="chartContext">Leading dealer this range • ${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}</div>
         <canvas class="chart" id="c_dealer" height="220"></canvas>
       </div>
       <div class="card chartCard">
         <div class="chartTakeaway tone-${lbsTakeaway.tone}">${escapeHtml(lbsTakeaway.text)}</div>
         <div class="chartTitle">Monthly Pounds</div>
-        <div class="chartSubhead">Total pounds by month</div>
+        <div class="chartSubhead">Month-by-month pounds landed in this range</div>
         <div class="chartHero lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</div>
-        <div class="chartContext">Latest month • Peak <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span></div>
+        <div class="chartContext">Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span></div>
         <canvas class="chart" id="c_lbs" height="210"></canvas>
       </div>
       <div class="card chartCard">
         <div class="chartTakeaway tone-${tripsTakeaway.tone}">${escapeHtml(tripsTakeaway.text)}</div>
         <div class="chartTitle">Trips over time</div>
-        <div class="chartSubhead">Monthly activity in this range</div>
+        <div class="chartSubhead">Trip count by month for this same range</div>
         <div class="chartHero">${tripsLatest ? tripsLatest.count : "—"}</div>
-        <div class="chartContext">Latest month • Peak ${tripsPeak ? tripsPeak.count : "—"} • Total ${tripsTotal}</div>
+        <div class="chartContext">Latest ${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"} • Range high ${tripsPeak ? tripsPeak.count : "—"} • Total ${tripsTotal}</div>
         <canvas class="chart" id="c_trips" height="210"></canvas>
       </div>
     `;
@@ -604,7 +604,7 @@ function renderReports(){
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
         <b>Reports</b>
-        <span class="pill">Range: <b>${escapeHtml(rangeLabel)}</b></span>
+        <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
 
       <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
@@ -637,7 +637,7 @@ function renderReports(){
     ${activeMetricDetail ? "" : (mode === "charts"
       ? `${reportsSection({
           title: "Charts",
-          intro: "Visual trends first, then switch to tables for row-level detail.",
+          intro: "Quick mobile-read charts for trend scanning; switch to tables for exact rows.",
           body: `<div class="reportsChartsStack">${renderChartsSection()}</div>`,
           extraClass: "reportsSection--charts"
         })}
