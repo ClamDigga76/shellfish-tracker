@@ -99,7 +99,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Backup & Restore</div>
-            <div class="muted small">Create or restore backups with a preview before changes are applied.</div>
+            <div class="muted small">Create or restore backups with a preview and clear warnings before changes are applied.</div>
           </div>
           <span class="settingsValuePill">Freshness</span>
         </div>
@@ -112,7 +112,7 @@ export function createSettingsScreenOrchestrator({
           <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="hint"><b>Recommended:</b> create a fresh backup before major updates, restore actions, or bulk edits.</div>
+          <div class="hint"><b>Recommended:</b> create a fresh backup before major updates, restore actions (especially Replace), or bulk edits.</div>
           <div class="muted small mt8">After creating a backup, move it to <b>iCloud Drive</b> (iPhone Files) or <b>Google Drive</b> (Android) and keep one older copy too.</div>
         </div>
       </div>
