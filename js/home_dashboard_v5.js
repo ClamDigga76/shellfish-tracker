@@ -143,6 +143,17 @@ export function createHomeDashboardRenderer({
     const bestAvgDealer = dealers
       .filter((item) => item.pounds > 0)
       .sort((a, b) => (b.amount / b.pounds) - (a.amount / a.pounds))[0] || null;
+    const areaRollup = trips.reduce((map, trip) => {
+      const areaName = String(trip?.area || "").trim() || "Area not set";
+      const next = map.get(areaName) || { area: areaName, trips: 0, amount: 0, pounds: 0 };
+      next.trips += 1;
+      next.amount += Number(trip?.amount) || 0;
+      next.pounds += Number(trip?.pounds) || 0;
+      map.set(areaName, next);
+      return map;
+    }, new Map());
+    const strongestArea = Array.from(areaRollup.values())
+      .sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null;
     const smartSummaryLines = [];
     if (strongestDealer) {
       smartSummaryLines.push(`<li><b>Top dealer:</b> ${escapeHtml(strongestDealer.dealer)} at ${formatMoney(strongestDealer.amount)} from ${round2(strongestDealer.pounds)} lbs.</li>`);
@@ -219,22 +230,6 @@ export function createHomeDashboardRenderer({
           ` : ``}
         </div>
 
-        <div class="homeHero">
-          <div class="homeHeroEyebrow">Overview dashboard</div>
-          <div class="homeHeroHeadline">${escapeHtml(homeOverviewHeadline)}</div>
-          <div class="homeHeroTone tone-${homeOverviewTone}">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
-          <div class="homeHeroStats">
-            <div class="homeHeroStat">
-              <span class="muted small">Total amount</span>
-              <b class="money">${formatMoney(totalAmount)}</b>
-            </div>
-            <div class="homeHeroStat">
-              <span class="muted small">Total pounds</span>
-              <b class="lbsBlue">${lbsStr} lbs</b>
-            </div>
-          </div>
-        </div>
-
         <div class="kpiGroupLabel">Core metrics</div>
         <div class="kpiRow">
           <div class="kpiCard">
@@ -242,18 +237,45 @@ export function createHomeDashboardRenderer({
             <div class="kpiValue"><span class="kpiValueFit">${trips.length}</span></div>
           </div>
           <div class="kpiCard">
-            <div class="kpiLabel">Pounds</div>
+            <div class="kpiLabel lbsBlue">Pounds</div>
             <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
           </div>
           <div class="kpiCard kpiCardPrimary">
-            <div class="kpiLabel">Amount</div>
+            <div class="kpiLabel money">Amount</div>
             <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
           </div>
           <div class="kpiCard kpiCardPrimary">
-            <div class="kpiLabel ppl">Avg $/lb</div>
+            <div class="kpiLabel rate ppl">Avg $/lb</div>
             <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
           </div>
         </div>
+
+        <div class="card reportsHeroCard homeOverviewCard">
+          <div class="reportsHeroEyebrow">Overview</div>
+          <div class="homeHeroHeadline">${escapeHtml(homeOverviewHeadline)}</div>
+          <div class="reportsHeroSub">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips • Dashboard surface</div>
+          <div class="reportsHeroGrid">
+            <div class="reportsHeroStat">
+              <div class="reportsHeroLabel">Total amount</div>
+              <div class="reportsHeroValue money">${formatMoney(totalAmount)}</div>
+            </div>
+            <div class="reportsHeroStat">
+              <div class="reportsHeroLabel">Total pounds</div>
+              <div class="reportsHeroValue lbsBlue">${lbsStr} lbs</div>
+            </div>
+            <div class="reportsHeroStat">
+              <div class="reportsHeroLabel">Top dealer</div>
+              <div class="reportsHeroValue">${escapeHtml(strongestDealer?.dealer || "—")}</div>
+              <div class="reportsHeroMeta money">${strongestDealer ? formatMoney(round2(strongestDealer.amount)) : "No data"}</div>
+            </div>
+            <div class="reportsHeroStat">
+              <div class="reportsHeroLabel">Strongest area</div>
+              <div class="reportsHeroValue">${escapeHtml(strongestArea?.area || "—")}</div>
+              <div class="reportsHeroMeta money">${strongestArea ? formatMoney(round2(strongestArea.amount)) : "No data"}</div>
+            </div>
+          </div>
+        </div>
+
 
         ${smartSummaryHtml}
       </div>
