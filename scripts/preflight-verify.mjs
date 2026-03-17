@@ -30,13 +30,16 @@ let indexHtml = "";
 let bootstrapJs = "";
 let swJs = "";
 let appJs = "";
+let runtimeStatusJs = "";
 let appStartupImports = [];
+let canonicalVersion = "";
 
 try {
   indexHtml = read("index.html");
   bootstrapJs = read("js/bootstrap_v5.js");
   swJs = read("sw.js");
   appJs = read("js/app_v5.js");
+  runtimeStatusJs = read("js/update_runtime_status_v5.js");
 } catch (error) {
   fail("core files load", String(error.message || error));
 }
@@ -46,17 +49,44 @@ if (indexHtml) {
   if (!bootstrapMatch) {
     fail("index bootstrap query version", "index.html is missing ./js/bootstrap_v5.js?v=<build>");
   } else {
-    const indexVersion = bootstrapMatch[1];
-    pass("index bootstrap query version", `v=${indexVersion}`);
+    canonicalVersion = bootstrapMatch[1];
+    pass("index bootstrap query version", `v=${canonicalVersion}`);
 
-    const expectedVersion = expectedVersionOverride || indexVersion;
+    const expectedVersion = expectedVersionOverride || canonicalVersion;
 
-    if (expectedVersion !== indexVersion) {
-      fail("expected version", `expected ${expectedVersion}, found ${indexVersion}`);
+    if (expectedVersion !== canonicalVersion) {
+      fail("expected version", `expected ${expectedVersion}, found ${canonicalVersion}`);
     } else if (expectedVersionOverride) {
       pass("expected version", `matches ${expectedVersionOverride}`);
     } else {
       pass("expected version", `auto-resolved to ${expectedVersion}`);
+    }
+
+    const cssVersionMatches = Array.from(indexHtml.matchAll(/<link\s+rel="stylesheet"\s+href="([^"?]+\.css)\?v=(\d+)"\s*>/gi));
+    if (cssVersionMatches.length === 0) {
+      fail("index stylesheet query versions", "no stylesheet query versions found");
+    } else {
+      for (const [, href, cssVersion] of cssVersionMatches) {
+        if (cssVersion === canonicalVersion) {
+          pass(`index css version aligned: ${href}`, `v=${cssVersion}`);
+        } else {
+          fail(`index css version aligned: ${href}`, `expected v=${canonicalVersion}, found v=${cssVersion}`);
+        }
+      }
+    }
+
+    const requiredCssRefs = [
+      `./css/shell_shared_v5.css?v=${canonicalVersion}`,
+      `./css/trip_form_v5.css?v=${canonicalVersion}`,
+      `./css/reports_v5.css?v=${canonicalVersion}`,
+    ];
+
+    for (const ref of requiredCssRefs) {
+      if (indexHtml.includes(ref)) {
+        pass(`index required css ref: ${ref}`);
+      } else {
+        fail(`index required css ref: ${ref}`);
+      }
     }
   }
 }
@@ -66,6 +96,7 @@ const requiredFiles = [
   "sw.js",
   "js/bootstrap_v5.js",
   "js/app_v5.js",
+  "js/update_runtime_status_v5.js",
   "js/utils_v5.js",
   "js/settings.js",
   "js/migrations_v5.js",
@@ -124,6 +155,12 @@ if (bootstrapJs) {
     } else {
       fail(`startup reference sanity: ${ref}`);
     }
+  }
+
+  if (bootstrapJs.includes("window.APP_BUILD = `v5.${APP_VERSION}`;")) {
+    pass("bootstrap exposes APP_BUILD from APP_VERSION");
+  } else {
+    fail("bootstrap exposes APP_BUILD from APP_VERSION");
   }
 }
 
@@ -184,6 +221,20 @@ if (appJs) {
     pass("app version source uses window.APP_BUILD");
   } else {
     fail("app version source uses window.APP_BUILD");
+  }
+}
+
+if (runtimeStatusJs) {
+  if (runtimeStatusJs.includes("Current build: ${displayBuildVersion}")) {
+    pass("settings update status shows displayBuildVersion");
+  } else {
+    fail("settings update status shows displayBuildVersion");
+  }
+
+  if (runtimeStatusJs.includes("const parts = [`App ${displayBuildVersion}`];")) {
+    pass("settings build badge uses displayBuildVersion");
+  } else {
+    fail("settings build badge uses displayBuildVersion");
   }
 }
 
