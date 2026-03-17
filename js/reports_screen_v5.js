@@ -95,11 +95,11 @@ function renderReports(){
         ${advPanel}
 
 
-        <div class="emptyState" style="margin-top:12px">
-          <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips yet for this report"}</div>
+        <div class="emptyState">
+          <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips in this report range"}</div>
           <div class="emptyStateBody">${fMode==="RANGE" && !hasValidRange
             ? "Set both dates, then tap Apply to load this report."
-            : "No saved trips match this report filter yet. Add a trip to start dealer, area, and monthly summaries."}</div>
+            : "No saved trips match this report filter yet. Add a trip to unlock dealer, area, and monthly summaries."}</div>
           <div class="emptyStateAction">
             <button class="btn good" id="reportsEmptyPrimary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
             <button class="btn" id="reportsEmptySecondary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Help" : "Switch to All Time"}</button>

@@ -1374,8 +1374,8 @@ function renderAllTrips(){
     ? sorted.map(t=> renderTripCatchCard(t, { interactive:true, extraClass:"tripsBrowseCard" })).join("")
     : `
       <div class="emptyState tripsEmptyState">
-        <div class="emptyStateTitle">No trips match this filter</div>
-        <div class="emptyStateBody">Try a wider range, clear dealer/area filters, or add a new trip.</div>
+        <div class="emptyStateTitle">No trips in this Trips view</div>
+        <div class="emptyStateBody">Try a wider range, clear dealer/area filters, or add a trip to get this list moving again.</div>
         <div class="emptyStateAction">
           <button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>
           <button class="btn" id="tripsEmptyReset" type="button">Clear filters</button>

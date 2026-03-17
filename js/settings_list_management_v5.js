@@ -26,14 +26,14 @@ export function createSettingsListManagement(deps){
         <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
         <button class="smallbtn danger" data-del-area="${i}" type="button">Delete</button>
       </div>
-    `).join("") : `<div class="muted small mt10">No areas yet. Add one below.</div>`;
+    `).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No areas yet</div><div class="emptyStateBody">Add your first area below so New Trip choices are ready.</div></div>`;
 
     const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
         <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
         <button class="smallbtn danger" data-del-dealer="${i}" type="button">Delete</button>
       </div>
-    `).join("") : `<div class="muted small mt10">No dealers yet. Add one below.</div>`;
+    `).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No dealers yet</div><div class="emptyStateBody">Add your first dealer below so trip entry stays fast.</div></div>`;
 
     return (m === "dealers") ? `
       <div style="margin-top:12px">

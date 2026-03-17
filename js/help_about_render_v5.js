@@ -3,134 +3,126 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
     ${renderPageHeader("help")}
 
     <div class="card">
-      <b style="font-size:1.05rem">Help quick links</b>
+      <b style="font-size:1.05rem">Help hub</b>
       <div class="sep"></div>
-      <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">
+      <div class="muted small" style="line-height:1.5">Jump to the support area you need.</div>
+      <div class="helpHubNav" style="margin-top:10px">
         <button class="chip" type="button" data-helpjump="home">Home</button>
         <button class="chip" type="button" data-helpjump="trips">Trips</button>
-        <button class="chip" type="button" data-helpjump="newtrip">New Trip</button>
         <button class="chip" type="button" data-helpjump="reports">Reports</button>
         <button class="chip" type="button" data-helpjump="settings">Settings</button>
-        <button class="chip" type="button" data-helpjump="backups">Backups</button>
+        <button class="chip" type="button" data-helpjump="newtrip">New Trip</button>
+        <button class="chip" type="button" data-helpjump="backups">Backup & Restore</button>
       </div>
     </div>
 
     <div class="card">
-      <b style="font-size:1.05rem">Start here</b>
+      <b class="helpSectionTitle">Quick start</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>New to Bank the Catch?</b> Start with one trip, then use Home and Reports to check progress.</div>
+      <div class="muted helpSectionLead">
+        <div><b>Start with one trip</b>, then use Home for snapshots and Reports for trends.</div>
         <ol style="margin:8px 0 0 18px">
           <li>Open <b>New Trip</b> and save your first entry.</li>
-          <li>Go to <b>Home</b> for a quick totals view.</li>
-          <li>Open <b>Reports</b> when you want date-range trends and summaries.</li>
+          <li>Check <b>Home</b> for totals, latest trip, and range context.</li>
+          <li>Open <b>Reports</b> when you need deeper date-range summaries.</li>
         </ol>
-        <div style="margin-top:8px"><b>Tip:</b> After your first save, create a backup in <b>Settings → Backup & Restore</b> so your records stay protected.</div>
       </div>
     </div>
 
     <div class="card">
-      <b style="font-size:1.05rem">Install & Offline</b>
+      <b id="help_jump_home" class="helpSectionTitle">Home</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this section covers:</b> Keep Bank the Catch on your home screen and available even with weak signal.</div>
+      <div class="muted helpSectionLead">
+        <div><b>Use it for:</b> quick status checks before or after a trip.</div>
         <ul style="margin:8px 0 0 18px">
-          <li><b>iPhone/iPad:</b> Safari → Share → <b>Add to Home Screen</b>.</li>
-          <li><b>Android:</b> Chrome menu → <b>Install app</b> (or Add to Home screen).</li>
-          <li>If the app looks out of date, open <b>Settings</b>, check update status, then use <b>Load latest update</b> for a safe reload.</li>
+          <li>Totals and trend cards follow your selected range.</li>
+          <li>If stats look light, widen the range first.</li>
         </ul>
       </div>
     </div>
 
     <div class="card">
-      <b id="help_jump_home" style="font-size:1.05rem">Home</b>
+      <b id="help_jump_trips" class="helpSectionTitle">Trips</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this screen covers:</b> Your quick check-in screen for totals and recent trips.</div>
+      <div class="muted helpSectionLead">
+        <div><b>Use it for:</b> browsing and editing saved entries.</div>
         <ul style="margin:8px 0 0 18px">
-          <li>Totals and recent trips follow your selected filter (YTD / Month / Last 7 days).</li>
-          <li>Use Home before or after a trip when you want a quick status check.</li>
+          <li>Tap a trip card to view and edit details.</li>
+          <li>Use filters to narrow by range, dealer, or area.</li>
+          <li>Duplicate warning on save means: check date/dealer/area before saving anyway.</li>
         </ul>
       </div>
     </div>
 
     <div class="card">
-      <b id="help_jump_trips" style="font-size:1.05rem">Trips</b>
+      <b id="help_jump_newtrip" class="helpSectionTitle">New Trip</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this screen covers:</b> Your trip log. Browse saved trips and open one to edit details.</div>
-        <ul style="margin:8px 0 0 18px">
-          <li>Tap a trip card to view or edit it.</li>
-          <li>If you see a duplicate warning on save, check date/dealer/area first, then choose <b>Save anyway</b> only if it is truly a different trip.</li>
-          <li>Use <b>New Trip</b> to add another trip.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <b id="help_jump_newtrip" style="font-size:1.05rem">New Trip</b>
-      <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this screen covers:</b> Record one harvest trip.</div>
-        <div style="margin-top:8px"><b>How to use it:</b></div>
+      <div class="muted helpSectionLead">
+        <div><b>Use it for:</b> logging one harvest trip at a time.</div>
         <ol style="margin:8px 0 0 18px">
-          <li>Set the <b>Date</b>.</li>
+          <li>Set <b>Date</b>.</li>
           <li>Enter <b>Pounds</b> and <b>Amount</b>.</li>
-          <li>Select a <b>Dealer</b> (use chips or the list).</li>
-          <li>Choose an <b>Area</b> (use chips or the list).</li>
+          <li>Choose <b>Dealer</b> and <b>Area</b>.</li>
           <li>Tap <b>Save Trip</b>.</li>
         </ol>
-        <div style="margin-top:8px"><b>Tip:</b> On first use, chips may be empty until you save trips. Use the Dealer/Area lists first, then chips become faster over time.</div>
+        <div style="margin-top:8px"><b>Tip:</b> chips fill in after more saved trips. Use list pickers first if chips are empty.</div>
       </div>
     </div>
 
     <div class="card">
-      <b id="help_jump_reports" style="font-size:1.05rem">Reports</b>
+      <b id="help_jump_reports" class="helpSectionTitle">Reports</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this screen covers:</b> Compare totals and trends across date ranges, dealers, and areas.</div>
-        <div style="margin-top:8px"><b>How to use it:</b></div>
+      <div class="muted helpSectionLead">
+        <div><b>Use it for:</b> date-range trends by dealer, area, and month.</div>
         <ol style="margin:8px 0 0 18px">
-          <li>Pick a date window (preset or advanced range).</li>
-          <li>Optional: add dealer/area filters.</li>
-          <li>Switch between <b>Charts</b> and <b>Tables</b>.</li>
+          <li>Pick a date window.</li>
+          <li>Add optional dealer/area filters.</li>
+          <li>Switch between charts and table views.</li>
         </ol>
-        <div style="margin-top:8px"><b>Tip:</b> If numbers look off, check your filters first.</div>
       </div>
     </div>
 
     <div class="card">
-      <b id="help_jump_settings" style="font-size:1.05rem">Settings</b>
+      <b id="help_jump_settings" class="helpSectionTitle">Settings</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this screen covers:</b> Manage app-health status, lists, backups, and support tools.</div>
+      <div class="muted helpSectionLead">
+        <div><b>Use it for:</b> updates, lists, backups, and diagnostics.</div>
         <ul style="margin:8px 0 0 18px">
-          <li><b>Updates:</b> Check your current build and safely reload when needed.</li>
-          <li><b>List Management:</b> Add/edit Dealers and Areas used in trip entry.</li>
-          <li><b>Backups:</b> Create or restore backups.</li>
-          <li><b>Advanced:</b> Copy debug info, reload app, erase all data.</li>
+          <li><b>Updates:</b> check build status and load latest update safely.</li>
+          <li><b>List Management:</b> maintain Dealers and Areas.</li>
+          <li><b>Backup & Restore:</b> export and recover your trip data.</li>
         </ul>
       </div>
     </div>
 
     <div class="card">
-      <b id="help_jump_backups" style="font-size:1.05rem">Backups & Restore</b>
+      <b id="help_jump_backups" class="helpSectionTitle">Backup & Restore guidance</b>
       <div class="sep"></div>
-      <div class="muted helpText" style="line-height:1.62;font-size:.97rem">
-        <div><b>What this section covers:</b> Protect your trip records before phone changes, resets, restores, or major updates.</div>
-        <div style="margin-top:8px"><b>Create backup:</b></div>
+      <div class="muted helpSectionLead">
+        <div><b>Create backup:</b></div>
         <ol style="margin:8px 0 0 18px">
-          <li>Go to Settings → Backup & Restore.</li>
+          <li>Open Settings → <b>Backup & Restore</b>.</li>
           <li>Tap <b>Create Backup</b>.</li>
-          <li>Move the file to trusted storage (iCloud Drive / Google Drive).</li>
+          <li>Store a copy in iCloud Drive or Google Drive.</li>
         </ol>
         <div style="margin-top:8px"><b>Restore backup:</b></div>
         <ol style="margin:8px 0 0 18px">
-          <li>Open Settings → <b>Backup & Restore</b>.</li>
-          <li>Review the preview details.</li>
-          <li>Choose <b>Merge</b> or <b>Replace</b> to continue.</li>
+          <li>Open <b>Restore Backup</b>.</li>
+          <li>Review preview details.</li>
+          <li>Choose <b>Merge</b> or <b>Replace</b>.</li>
         </ol>
-        <div style="margin-top:8px"><b>Tip:</b> Create a fresh backup before restoring so you keep a known-safe rollback copy.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <b class="helpSectionTitle">Updates & troubleshooting</b>
+      <div class="sep"></div>
+      <div class="muted helpSectionLead">
+        <ul style="margin:0 0 0 18px">
+          <li>If the app looks stale, open <b>Settings</b> and use <b>Load latest update</b>.</li>
+          <li>For install help: iPhone/iPad → Safari Share → <b>Add to Home Screen</b>; Android → Chrome menu → <b>Install app</b>.</li>
+          <li>If behavior seems off after an update, reload once and recheck in Help/Settings status lines.</li>
+        </ul>
       </div>
     </div>
 
