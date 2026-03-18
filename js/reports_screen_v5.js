@@ -513,7 +513,17 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     });
   };
 
-  const buildMetricCompareSummary = (payload)=>{
+  const formatMetricCompareValue = (metricKey, value)=>{
+    const safeValue = Number(value);
+    if(!Number.isFinite(safeValue)) return "—";
+    if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
+    if(metricKey === "pounds") return `${to2(safeValue)} lbs`;
+    if(metricKey === "amount") return formatMoney(to2(safeValue));
+    if(metricKey === "ppl") return `${formatMoney(to2(safeValue))}/lb`;
+    return `${to2(safeValue)}`;
+  };
+
+  const buildMetricCompareSummary = (metricKey, payload)=>{
     if(compareFoundation.period?.suppressed || !payload || payload.suppressed){
       return {
         tone: "steady",
@@ -524,14 +534,34 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     }
     const tone = String(payload.compareTone || "steady");
     const period = compareFoundation.period || {};
-    let text = `${period.currentLabel} held close to ${period.previousLabel}.`;
-    if(tone === "up") text = `${period.currentLabel} moved above ${period.previousLabel}.`;
-    if(tone === "down") text = `${period.currentLabel} moved below ${period.previousLabel}.`;
+    const summaryByMetric = {
+      trips: {
+        steady: `${period.currentLabel} matched ${period.previousLabel} trip count.`,
+        up: `${period.currentLabel} logged more trips than ${period.previousLabel}.`,
+        down: `${period.currentLabel} logged fewer trips than ${period.previousLabel}.`
+      },
+      pounds: {
+        steady: `${period.currentLabel} landed about the same pounds as ${period.previousLabel}.`,
+        up: `${period.currentLabel} landed more pounds than ${period.previousLabel}.`,
+        down: `${period.currentLabel} landed fewer pounds than ${period.previousLabel}.`
+      },
+      amount: {
+        steady: `${period.currentLabel} earned about the same amount as ${period.previousLabel}.`,
+        up: `${period.currentLabel} earned more than ${period.previousLabel}.`,
+        down: `${period.currentLabel} earned less than ${period.previousLabel}.`
+      },
+      ppl: {
+        steady: `${period.currentLabel} held close to ${period.previousLabel} on average $/lb.`,
+        up: `${period.currentLabel} beat ${period.previousLabel} on average $/lb.`,
+        down: `${period.currentLabel} trailed ${period.previousLabel} on average $/lb.`
+      }
+    };
+    const metricSummary = summaryByMetric[metricKey] || summaryByMetric.amount;
     return {
       tone,
-      text,
-      currentValue: payload.currentLabel || "—",
-      previousValue: payload.previousLabel || "—"
+      text: metricSummary[tone] || metricSummary.steady,
+      currentValue: formatMetricCompareValue(metricKey, payload.currentValue),
+      previousValue: formatMetricCompareValue(metricKey, payload.previousValue)
     };
   };
 
@@ -653,7 +683,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     };
     const meta = detailMeta[metricKey];
     if(!meta) return "";
-    const compareSummary = buildMetricCompareSummary(meta.comparePayload);
+    const compareSummary = buildMetricCompareSummary(metricKey, meta.comparePayload);
     return renderMetricDetailSection({ meta, compareSummary });
   };
 
