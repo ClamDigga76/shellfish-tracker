@@ -331,7 +331,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
     {
       minBarWidth: 8,
       barPad: (frame)=> frame.compact ? 3 : 4,
-      customLabels: ({ ctx, frame, geom, barW })=>{
+      customLabels: ({ ctx, frame, geom, barW, canvasHeight })=>{
         ctx.fillStyle = palette.label;
         ctx.font = frame.tickFont;
         const labelStep = Math.max(1, Math.ceil(topDealers.length / (frame.compact ? 5 : 7)));
@@ -342,7 +342,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
           const lab = fitLabel(ctx, base, maxLabelW);
           const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
           const x = Math.max(2, tx);
-          ctx.fillText(lab, x, h-10);
+          ctx.fillText(lab, x, canvasHeight-10);
         });
       }
     }
