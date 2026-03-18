@@ -62,16 +62,44 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
       };
     });
 
-  const maxLbs = safeTrips.reduce((best,t)=> (Number(t?.pounds) || 0) > (Number(best?.pounds) || 0) ? t : best, safeTrips[0]);
-  const minLbs = safeTrips.reduce((best,t)=> (Number(t?.pounds) || 0) < (Number(best?.pounds) || 0) ? t : best, safeTrips[0]);
-  const maxAmt = safeTrips.reduce((best,t)=> (Number(t?.amount) || 0) > (Number(best?.amount) || 0) ? t : best, safeTrips[0]);
-  const minAmt = safeTrips.reduce((best,t)=> (Number(t?.amount) || 0) < (Number(best?.amount) || 0) ? t : best, safeTrips[0]);
+  const maxLbs = pickExtremeTrip(safeTrips, (t)=> Number(t?.pounds) || 0, "max");
+  const maxAmt = pickExtremeTrip(safeTrips, (t)=> Number(t?.amount) || 0, "max");
+
+  const lowLbsRows = buildMeaningfulLowRecordPool({
+    rows: safeTrips,
+    valueFromTrip: (t)=> Number(t?.pounds) || 0,
+    highTrip: maxLbs,
+    highValueFromTrip: (t)=> Number(t?.pounds) || 0,
+    absoluteFloor: 1,
+    ratioFloor: 0.05
+  });
+  const lowAmtRows = buildMeaningfulLowRecordPool({
+    rows: safeTrips,
+    valueFromTrip: (t)=> Number(t?.amount) || 0,
+    highTrip: maxAmt,
+    highValueFromTrip: (t)=> Number(t?.amount) || 0,
+    absoluteFloor: 10,
+    ratioFloor: 0.05
+  });
+
+  const minLbs = pickExtremeTrip(lowLbsRows, (t)=> Number(t?.pounds) || 0, "min");
+  const minAmt = pickExtremeTrip(lowAmtRows, (t)=> Number(t?.amount) || 0, "min");
 
   const pplRows = safeTrips.filter((t)=> (Number(t?.pounds) || 0) > 0 && (Number(t?.amount) || 0) > 0);
-  const maxPpl = pplRows.reduce((best,t)=> (Number(t?.amount) || 0) / (Number(t?.pounds) || 1) > (Number(best?.amount) || 0) / (Number(best?.pounds) || 1) ? t : best, pplRows[0]);
-  const minPpl = pplRows.reduce((best,t)=> (Number(t?.amount) || 0) / (Number(t?.pounds) || 1) < (Number(best?.amount) || 0) / (Number(best?.pounds) || 1) ? t : best, pplRows[0]);
+  const maxPpl = pickExtremeTrip(pplRows, (t)=> (Number(t?.amount) || 0) / (Number(t?.pounds) || 1), "max");
+  const lowPplRows = pplRows.filter((t)=>{
+    const lbs = Number(t?.pounds) || 0;
+    const amt = Number(t?.amount) || 0;
+    return lbs >= 5 && amt >= 20;
+  });
+  const minPpl = pickExtremeTrip(lowPplRows, (t)=> (Number(t?.amount) || 0) / (Number(t?.pounds) || 1), "min");
 
   const tripsTimeline = buildTripsTimeline(safeTrips);
+  const recordPools = {
+    lbs: { max: safeTrips, min: lowLbsRows },
+    amount: { max: safeTrips, min: lowAmtRows },
+    ppl: { max: pplRows, min: lowPplRows }
+  };
 
   return {
     dealerRows,
@@ -84,8 +112,30 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
     pplRows,
     maxPpl,
     minPpl,
-    tripsTimeline
+    tripsTimeline,
+    recordPools
   };
+}
+
+function pickExtremeTrip(rows, valueFromTrip, direction){
+  const safeRows = Array.isArray(rows) ? rows : [];
+  if(!safeRows.length) return null;
+  return safeRows.reduce((best, trip)=>{
+    if(!best) return trip;
+    const tripValue = Number(valueFromTrip(trip)) || 0;
+    const bestValue = Number(valueFromTrip(best)) || 0;
+    return direction === "min"
+      ? (tripValue < bestValue ? trip : best)
+      : (tripValue > bestValue ? trip : best);
+  }, safeRows[0] || null);
+}
+
+function buildMeaningfulLowRecordPool({ rows, valueFromTrip, highTrip, highValueFromTrip, absoluteFloor, ratioFloor }){
+  const positiveRows = (Array.isArray(rows) ? rows : []).filter((trip)=> (Number(valueFromTrip(trip)) || 0) > 0);
+  if(!positiveRows.length) return [];
+  const highValue = Number(highValueFromTrip(highTrip)) || 0;
+  const threshold = Math.max(Number(absoluteFloor) || 0, highValue > 0 ? highValue * (Number(ratioFloor) || 0) : 0);
+  return positiveRows.filter((trip)=> (Number(valueFromTrip(trip)) || 0) >= threshold);
 }
 
 function buildTripsTimeline(rows){

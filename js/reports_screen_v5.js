@@ -288,7 +288,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     pplRows,
     maxPpl,
     minPpl,
-    tripsTimeline
+    tripsTimeline,
+    recordPools
   } = buildReportsAggregationState({
     trips,
     canonicalDealerGroupKey,
@@ -345,7 +346,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const selectRecordBaseline = (metric, direction, selectedTrip)=>{
     if(!selectedTrip) return null;
-    const ordered = trips
+    const sourceTrips = recordPools?.[metric]?.[direction] || trips;
+    const ordered = sourceTrips
       .map((trip)=> ({ trip, value: getTripMetricValue(trip, metric) }))
       .filter((row)=> Number.isFinite(row.value) && row.value > 0)
       .sort((a,b)=> direction === "max" ? (b.value - a.value) : (a.value - b.value));
