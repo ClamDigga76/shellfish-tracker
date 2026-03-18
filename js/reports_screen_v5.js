@@ -110,6 +110,21 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         : (fMode === "LAST_MONTH" ? "Last Month"
           : (fMode === "ALL" ? "All Time"
             : "YTD")));
+  const detailSurfaceClass = isHomeMetricDetail ? "homeMetricDetail" : "reportsMetricDetail";
+  const detailCardClass = isHomeMetricDetail ? "homeMetricDetailCard" : "reportsMetricDetailCard";
+  const detailBackClass = isHomeMetricDetail ? "homeMetricBackBtn" : "reportsMetricBackBtn";
+  const detailEyebrowClass = isHomeMetricDetail ? "homeMetricEyebrow" : "reportsMetricEyebrow";
+  const detailTitleClass = isHomeMetricDetail ? "homeMetricTitle" : "reportsMetricTitle";
+  const detailContextClass = isHomeMetricDetail ? "homeMetricContext" : "reportsMetricContext";
+  const detailHeroWrapClass = isHomeMetricDetail ? "homeMetricHeroWrap" : "reportsMetricHeroWrap";
+  const detailHeroLabelClass = isHomeMetricDetail ? "homeMetricHeroLabel" : "reportsMetricHeroLabel";
+  const detailHeroValueClass = isHomeMetricDetail ? "homeMetricHeroValue" : "reportsMetricHeroValue";
+  const detailCompareClass = isHomeMetricDetail ? "homeMetricCompare" : "reportsMetricCompare";
+  const detailCompareTextClass = isHomeMetricDetail ? "homeMetricCompareText" : "reportsMetricCompareText";
+  const detailCompareRowsClass = isHomeMetricDetail ? "homeMetricCompareRows" : "reportsMetricCompareRows";
+  const detailChartClass = isHomeMetricDetail ? "homeMetricChartBlock" : "reportsMetricChartBlock";
+  const detailChartContextClass = isHomeMetricDetail ? "homeMetricChartContext" : "reportsMetricChartContext";
+  const detailInsightClass = isHomeMetricDetail ? "homeMetricInsight" : "reportsMetricInsight";
 
   const renderReportsTopShell = ({ includeModeToggle = true, body = "" } = {})=> `
     <div class="card">
@@ -520,37 +535,47 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     };
   };
 
-  const renderMetricDetailSection = ({ meta, compareSummary })=> `
-    <section class="reportsMetricDetail" aria-label="${escapeHtml(meta.title)}">
-      <div class="card reportsMetricDetailCard">
-        <button class="btn reportsMetricBackBtn" type="button" id="reportsMetricBack">${isHomeMetricDetail ? "← Back to Home" : "← Back to reports"}</button>
-        <div class="reportsMetricEyebrow">${escapeHtml(isHomeMetricDetail ? "Home metric detail" : meta.eyebrow)}</div>
-        <h2 class="reportsMetricTitle">${escapeHtml(meta.title)}</h2>
-        <div class="reportsMetricContext">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips</div>
+  const renderMetricDetailSection = ({ meta, compareSummary })=> {
+    const detailBackLabel = isHomeMetricDetail ? "← Home KPIs" : "← Back to reports";
+    const detailEyebrow = isHomeMetricDetail ? "Home KPI detail" : meta.eyebrow;
+    const detailContext = isHomeMetricDetail
+      ? `Home • Range ${rangeLabel} • ${trips.length} trips`
+      : `Range ${rangeLabel} • ${trips.length} trips`;
+    const detailChartTitle = isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
+    const detailChartContext = isHomeMetricDetail ? meta.homeChartContext : meta.chartContext;
+    const detailInsight = isHomeMetricDetail ? meta.homeInsight : meta.insight;
+    return `
+    <section class="${detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
+      <div class="card ${detailCardClass}">
+        <button class="btn ${detailBackClass}" type="button" id="reportsMetricBack">${detailBackLabel}</button>
+        <div class="${detailEyebrowClass}">${escapeHtml(detailEyebrow)}</div>
+        <h2 class="${detailTitleClass}">${escapeHtml(isHomeMetricDetail ? meta.homeTitle : meta.title)}</h2>
+        <div class="${detailContextClass}">${escapeHtml(detailContext)}</div>
 
-        <div class="reportsMetricHeroWrap">
-          <div class="reportsMetricHeroLabel">${escapeHtml(meta.heroLabel)}</div>
-          <div class="reportsMetricHeroValue ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
+        <div class="${detailHeroWrapClass}">
+          <div class="${detailHeroLabelClass}">${escapeHtml(isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
+          <div class="${detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
         </div>
 
-        <div class="reportsMetricCompare tone-${escapeHtml(compareSummary.tone)}">
-          <div class="reportsMetricCompareText">${escapeHtml(compareSummary.text)}</div>
-          <div class="reportsMetricCompareRows">
+        <div class="${detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
+          <div class="${detailCompareTextClass}">${escapeHtml(compareSummary.text)}</div>
+          <div class="${detailCompareRowsClass}">
             <div><span>${escapeHtml(compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
             <div><span>${escapeHtml(compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
           </div>
         </div>
 
-        <div class="reportsMetricChartBlock">
-          <b>${escapeHtml(meta.chartTitle)}</b>
-          <div class="reportsMetricChartContext">${escapeHtml(meta.chartContext)}</div>
+        <div class="${detailChartClass}">
+          <b>${escapeHtml(detailChartTitle)}</b>
+          <div class="${detailChartContextClass}">${escapeHtml(detailChartContext)}</div>
           <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
         </div>
 
-        <div class="reportsMetricInsight">${escapeHtml(meta.insight)}</div>
+        <div class="${detailInsightClass}">${escapeHtml(detailInsight)}</div>
       </div>
     </section>
   `;
+  };
 
   const buildMetricDetailView = (metricKey)=>{
     const avgPpl = totalLbs > 0 ? (totalAmount / totalLbs) : 0;
@@ -559,51 +584,71 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const detailMeta = {
       trips: {
         title: "Trips detail",
+        homeTitle: "Home trips snapshot",
         eyebrow: "Metric detail",
         heroLabel: "Total trips",
+        homeHeroLabel: "Trips in this Home range",
         heroValue: `${trips.length}`,
         heroClass: "trips",
         comparePayload: tripsCompare,
         chartTitle: "Trips over time",
+        homeChartTitle: "Home trip activity",
         chartContext: "Monthly activity in this range",
+        homeChartContext: "Monthly trips for this Home filter",
         chartCanvasId: "c_trips",
-        insight: "Use this view to track effort volume and quickly spot whether recent activity is increasing, flat, or cooling."
+        insight: "Use this view to track effort volume and quickly spot whether recent activity is increasing, flat, or cooling.",
+        homeInsight: "Stay in Home while checking whether trip activity in this saved range is building, steady, or cooling off."
       },
       pounds: {
         title: "Pounds detail",
+        homeTitle: "Home pounds snapshot",
         eyebrow: "Metric detail",
         heroLabel: "Total pounds",
+        homeHeroLabel: "Pounds in this Home range",
         heroValue: `${to2(totalLbs)} lbs`,
         heroClass: "lbsBlue",
         comparePayload: lbsCompare,
         chartTitle: "Monthly pounds trend",
+        homeChartTitle: "Home pounds trend",
         chartContext: "This range, month by month",
+        homeChartContext: "Monthly pounds for this Home filter",
         chartCanvasId: "c_lbs",
-        insight: "Use this view to spot weight consistency and quickly confirm if this range is trending heavier or lighter than your prior period."
+        insight: "Use this view to spot weight consistency and quickly confirm if this range is trending heavier or lighter than your prior period.",
+        homeInsight: "Stay in Home while checking whether this range is landing heavier or lighter than the prior comparison period."
       },
       amount: {
         title: "Amount detail",
+        homeTitle: "Home amount snapshot",
         eyebrow: "Metric detail",
         heroLabel: "Total amount",
+        homeHeroLabel: "Amount in this Home range",
         heroValue: formatMoney(to2(totalAmount)),
         heroClass: "money",
         comparePayload: amountCompare,
         chartTitle: "Dealer amount distribution",
+        homeChartTitle: "Home dealer amount mix",
         chartContext: "Top dealers for this same range",
+        homeChartContext: "Top dealers inside this Home filter",
         chartCanvasId: "c_dealer",
-        insight: "Use this view to see whether changes in total amount are broad-based or mostly concentrated in one buyer relationship."
+        insight: "Use this view to see whether changes in total amount are broad-based or mostly concentrated in one buyer relationship.",
+        homeInsight: "Stay in Home while checking whether this range stays balanced across dealers or leans on one buyer."
       },
       ppl: {
         title: "$/lb detail",
+        homeTitle: "Home $/lb snapshot",
         eyebrow: "Metric detail",
         heroLabel: "Average $/lb",
+        homeHeroLabel: "Average $/lb in this Home range",
         heroValue: avgPpl > 0 ? `${formatMoney(to2(avgPpl))}/lb` : "—",
         heroClass: "rate ppl",
         comparePayload: pplCompare,
         chartTitle: "Monthly $/lb trend",
+        homeChartTitle: "Home $/lb trend",
         chartContext: "This range, month by month",
+        homeChartContext: "Monthly average $/lb for this Home filter",
         chartCanvasId: "c_ppl",
-        insight: "Use this view to watch price efficiency independent of total volume so rate movement is easier to separate from trip count swings."
+        insight: "Use this view to watch price efficiency independent of total volume so rate movement is easier to separate from trip count swings.",
+        homeInsight: "Stay in Home while checking whether rate strength is improving without leaving your Home KPI context."
       }
     };
     const meta = detailMeta[metricKey];
