@@ -159,3 +159,14 @@
   .reportsHeroGrid{grid-template-columns:1fr}
   .reportsHeroValue{font-size:19px}
 }
+
+
+/* v355 overflow guardrail pass */
+.hlTripFlat,.reportsHighlightsCard,.reportsHighlightItem,.chartCard,.reportsHeroCard,.reportsHeroStat,.reportsMetricDetailCard,.reportsMetricHeroWrap,.reportsMetricCompare,.homeMetricDetailCard,.homeMetricHeroWrap,.homeMetricCompare{min-width:0;max-width:100%}
+.hlTripLine,.hlTripMeta,.reportsHighlightHeadline,.reportsCompareRow,.chartTitle,.chartSubhead,.chartContext,.reportsHeroHeadline,.reportsHeroSub,.reportsMetricTitle,.reportsMetricContext,.reportsMetricChartContext,.reportsMetricInsight,.homeMetricTitle,.homeMetricContext,.homeMetricChartContext,.homeMetricInsight,.reportsHeroMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+.reportsHighlightMetricRow,.reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{min-width:0;max-width:100%}
+.reportsHighlightMetricRow{flex-wrap:wrap}
+.reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{flex-wrap:wrap}
+.reportsHighlightValue,.reportsMiniPreview,.reportsCompareMeta > span,.reportsCompareMeta > b,.reportsMetricCompareRows > div > span,.reportsMetricCompareRows > div > b,.homeMetricCompareRows > div > span,.homeMetricCompareRows > div > b{min-width:0;max-width:100%}
+.reportsHighlightValue,.reportsMetricHeroValue,.homeMetricHeroValue{overflow-wrap:anywhere;word-break:break-word}
+.chartCard .chart,.reportsHeroGrid,.reportsHighlightsGrid,.reportsCompareBars,.reportsMetricCompareRows,.homeMetricCompareRows{min-width:0;max-width:100%}
