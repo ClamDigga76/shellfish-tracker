@@ -53,6 +53,7 @@ const {
 
 // Backup meta (local-only; no user data duplication)
 const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
+const LS_RESTORE_ROLLBACK_SNAPSHOT = "btc_restore_rollback_snapshot_v1";
 let themeMediaQuery = null;
 let onThemeMediaChange = null;
 
@@ -367,13 +368,16 @@ const { renderTripCatchCard } = createTripCardRenderHelpers({
 const {
   buildBackupPayloadFromState,
   updateLastBackupLine,
+  getRestoreRollbackSnapshotMeta,
+  updateRestoreRollbackLine,
   downloadBackupPayload,
   exportBackup,
   parseBackupFileForRestore,
   openRestorePreviewModal,
   openReplaceSafetyBackupModal,
   openRestoreErrorModal,
-  importBackupFromFile
+  importBackupFromFile,
+  restoreFromRollbackSnapshot
 } = createBackupRestoreSubsystem({
   getState: ()=> state,
   saveState: ()=> saveState(),
@@ -383,6 +387,7 @@ const {
   APP_VERSION,
   VERSION,
   LS_LAST_BACKUP_META,
+  LS_RESTORE_ROLLBACK_SNAPSHOT,
   formatDateDMY,
   downloadText,
   uid,
@@ -1496,11 +1501,13 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   updateUpdateRow: () => updateRuntimeStatus.updateUpdateRow(),
   updateBuildInfo: () => updateRuntimeStatus.updateBuildInfo(),
   updateLastBackupLine: () => updateLastBackupLine(),
+  updateRestoreRollbackLine: () => updateRestoreRollbackLine(),
   exportBackup: () => exportBackup(),
   parseBackupFileForRestore: (file) => parseBackupFileForRestore(file),
   openRestorePreviewModal: (preview) => openRestorePreviewModal(preview),
   openReplaceSafetyBackupModal: () => openReplaceSafetyBackupModal(),
   importBackupFromFile: (file, options) => importBackupFromFile(file, options),
+  restoreFromRollbackSnapshot: () => restoreFromRollbackSnapshot(),
   applyThemeMode: () => applyThemeMode(),
   render: () => render(),
   openRestoreErrorModal: (error) => openRestoreErrorModal(error),
