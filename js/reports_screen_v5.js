@@ -1,6 +1,7 @@
 import { createReportsAdvancedPanelSeam } from "./reports_advanced_panel_v5.js";
 import { createReportsHighlightsSeam } from "./reports_highlights_v5.js";
 import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.js";
+import { createTripCardRendererCore } from "./trip_card_renderer_core_v5.js";
 
 export function createReportsScreenRenderer(deps){
   const {
@@ -44,6 +45,13 @@ export function createReportsScreenRenderer(deps){
     escapeHtml,
     formatMoney,
     to2
+  });
+  const { resolveTripCardModel, renderTripCardHTML } = createTripCardRendererCore({
+    formatDateDMY,
+    to2,
+    computePPL: (lbs, amt)=> (Number(lbs) > 0 && Number(amt) > 0) ? (Number(amt) / Number(lbs)) : 0,
+    formatMoney,
+    escapeHtml
   });
   const renderReportsHighlightsStrip = typeof reportsHighlights?.renderHighlightsStrip === "function"
     ? reportsHighlights.renderHighlightsStrip
@@ -376,9 +384,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       metricText = ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—";
       metricClass = "rate ppl";
     }
-    const tripDate = formatDateDMY(t?.dateISO || "") || "—";
-    const tripArea = String(t?.area || "").trim() || "(area)";
-    const tripDealer = String(t?.dealer || "").trim() || "(dealer)";
     const currentValue = getTripMetricValue(t, metric);
     const baselineValue = selectRecordBaseline(metric, direction, t);
     const deltaRatio = (baselineValue && baselineValue > 0)
@@ -392,6 +397,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const compareTone = hasCompare
       ? (deltaRatio > 0 ? "up" : "down")
       : "steady";
+    const recordModel = resolveTripCardModel(t, {
+      metaOverride: formatDateDMY(t?.dateISO || "") || "—"
+    });
     return `
       <div class="hlStatCard">
         <div class="hlTopRow hlTopRow--stacked">
@@ -399,15 +407,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           <div class="hlValue ${metricClass}">${escapeHtml(metricText)}</div>
           ${hasCompare ? `<div class="hlDelta tone-${compareTone}">${deltaPct}% ${compareWord} vs previous record</div>` : ""}
         </div>
-        <div class="hlTripFlat">
+        <div class="hlTripCardWrap">
           <div class="hlTripCardHdr">Record trip</div>
-          <div class="hlTripLine"><b>${escapeHtml(tripDate)}</b></div>
-          <div class="hlTripLine muted">${escapeHtml(tripArea)} • ${escapeHtml(tripDealer)}</div>
-          <div class="hlTripMeta">
-            <span><b class="lbsBlue">${to2(lbsNum)}</b> lbs</span>
-            <span><b class="rate ppl">${ppl>0 ? `${formatMoney(to2(ppl))}/lb` : "—"}</b></span>
-            <span><b class="money">${formatMoney(to2(amtNum))}</b></span>
-          </div>
+          ${renderTripCardHTML(recordModel, { compact: true, extraClass: "tripsBrowseCard reportsRecordTripCard" })}
         </div>
       </div>
     `;
