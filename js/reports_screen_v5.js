@@ -49,6 +49,43 @@ export function createReportsScreenRenderer(deps){
     ? reportsHighlights.renderHighlightsStrip
     : (()=>"");
 
+  const REPORTS_TRANSITION_MS = 150;
+  let reportsTransitionTimer = null;
+
+  function animateReportsShellEnter(root){
+    if(!root) return;
+    root.classList.remove("is-ready");
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        root.classList.add("is-ready");
+      });
+    });
+  }
+
+  function runReportsTransition({ mutate, renderNext = () => renderReportsScreen(), homeMetricOnly = false } = {}){
+    if(typeof mutate !== "function") return;
+    const app = getApp();
+    const root = app?.querySelector("#reportsTransitionRoot");
+    const finish = ()=>{
+      mutate();
+      if(typeof renderNext === "function") renderNext({ homeMetricOnly });
+    };
+    if(!root){
+      finish();
+      return;
+    }
+    if(reportsTransitionTimer){
+      clearTimeout(reportsTransitionTimer);
+      reportsTransitionTimer = null;
+    }
+    root.classList.remove("is-ready");
+    root.classList.add("is-leaving");
+    reportsTransitionTimer = setTimeout(()=>{
+      reportsTransitionTimer = null;
+      finish();
+    }, REPORTS_TRANSITION_MS);
+  }
+
 function renderReportsScreen({ homeMetricOnly = false } = {}){
   const state = getState();
   ensureReportsFilter();
@@ -728,28 +765,32 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ].join("");
   };
 
+  const reportsBodyView = activeMetricDetail ? "metric-detail" : mode;
   getApp().innerHTML = homeMetricOnly ? `
     ${renderPageHeader("home")}
 
-    ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : ""}
+    <div id="reportsTransitionRoot" class="reportsTransitionRoot reportsTransitionRoot--detail" data-reports-view="${escapeHtml(reportsBodyView)}">
+      ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : ""}
+    </div>
   ` : `
     ${renderPageHeader("reports")}
 
-    ${renderReportsTopShell()}
+    ${renderReportsTopShell({
+      body: `<div id="reportsTransitionRoot" class="reportsTransitionRoot" data-reports-view="${escapeHtml(reportsBodyView)}">
+        ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : `${reportsSection({
+          title: "Highlights",
+          intro: "Analysis takeaways from this date range.",
+          body: highlightsStrip || `<div class="card"><div class="muted small">Highlights will appear as more trips are added.</div></div>`,
+          extraClass: "reportsSection--highlights"
+        })}
 
-    ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : ""}
-
-    ${activeMetricDetail ? "" : reportsSection({
-      title: "Highlights",
-      intro: "Analysis takeaways from this date range.",
-      body: highlightsStrip || `<div class="card"><div class="muted small">Highlights will appear as more trips are added.</div></div>`,
-      extraClass: "reportsSection--highlights"
+        ${renderMainModeSection()}`}
+      </div>`
     })}
-
-    ${activeMetricDetail ? "" : renderMainModeSection()}
   `;
 
   getApp().scrollTop = 0;
+  animateReportsShellEnter(document.getElementById("reportsTransitionRoot"));
 
   // range chips
   getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
@@ -764,9 +805,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   getApp().querySelectorAll(".chip[data-m]").forEach(btn=>{
     btn.onclick = ()=>{
       const key = btn.getAttribute("data-m");
-      state.reportsMode = key;
-      saveState();
-      renderReportsScreen();
+      runReportsTransition({
+        mutate: ()=>{
+          state.reportsMode = key;
+          saveState();
+        }
+      });
     };
   });
 
@@ -782,33 +826,44 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const metricDetailButtons = getApp().querySelectorAll("[data-metric-detail]");
   metricDetailButtons.forEach((btn)=>{
     btn.onclick = ()=>{
-      state.reportsMetricDetail = String(btn.getAttribute("data-metric-detail") || "").toLowerCase();
-      state.reportsMetricDetailContext = { source: "reports" };
-      saveState();
-      renderReportsScreen();
+      runReportsTransition({
+        mutate: ()=>{
+          state.reportsMetricDetail = String(btn.getAttribute("data-metric-detail") || "").toLowerCase();
+          state.reportsMetricDetailContext = { source: "reports" };
+          saveState();
+        }
+      });
     };
   });
 
   const reportsMetricBack = document.getElementById("reportsMetricBack");
   if(reportsMetricBack){
     reportsMetricBack.onclick = ()=>{
-      state.reportsMetricDetail = "";
       if(isHomeMetricDetail){
-        state.reportsMetricDetailContext = null;
-        state.view = "home";
-        saveState();
-        renderApp();
+        runReportsTransition({
+          mutate: ()=>{
+            state.reportsMetricDetail = "";
+            state.reportsMetricDetailContext = null;
+            state.view = "home";
+            saveState();
+          },
+          renderNext: ()=>{ renderApp(); }
+        });
         return;
       }
-      state.reportsMetricDetailContext = null;
-      saveState();
-      renderReportsScreen();
+      runReportsTransition({
+        mutate: ()=>{
+          state.reportsMetricDetail = "";
+          state.reportsMetricDetailContext = null;
+          saveState();
+        }
+      });
     };
   }
 
 
   if(activeMetricDetail){
-    setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows, trips); }, 0);
+    requestAnimationFrame(()=>{ drawReportsCharts(monthRows, dealerRows, trips); });
     return;
   }
 
@@ -816,12 +871,15 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const reportsSwitchToTables = document.getElementById("reportsSwitchToTables");
     if(reportsSwitchToTables){
       reportsSwitchToTables.onclick = ()=>{
-        state.reportsMode = "tables";
-        saveState();
-        renderReportsScreen();
+        runReportsTransition({
+          mutate: ()=>{
+            state.reportsMode = "tables";
+            saveState();
+          }
+        });
       };
     }
-    setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows, trips); }, 0);
+    requestAnimationFrame(()=>{ drawReportsCharts(monthRows, dealerRows, trips); });
   }
 }
 
