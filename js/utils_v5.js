@@ -373,6 +373,8 @@ export function focusFirstFocusable(container){
 // ===========================
 // v81: Modal helpers (Quick Add, etc.)
 let activeModalState = null;
+const MODAL_ROOT_EXIT_MS = 240;
+
 
 export function openModal({
   title,
@@ -386,7 +388,7 @@ export function openModal({
   const root = document.getElementById("modalRoot");
   if(!root) return;
 
-  closeModal();
+  closeModal({ immediate: true });
 
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
@@ -399,7 +401,7 @@ export function openModal({
     : "";
 
   const sheetStyle = isCenter
-    ? "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 32px);max-width:400px;border-radius:16px;box-shadow:0 16px 44px rgba(0,0,0,.48);"
+    ? "position:absolute;top:50%;left:50%;width:calc(100% - 32px);max-width:400px;border-radius:16px;box-shadow:0 16px 44px rgba(0,0,0,.48);"
     : "";
 
   if(isCenter){
@@ -408,7 +410,7 @@ export function openModal({
   }
 
   root.innerHTML = `
-    <div class="modalSheet" style="${sheetStyle}" role="dialog" aria-modal="true">
+    <div class="modalSheet${isCenter ? " modalSheet--center" : ""}" style="${sheetStyle}" role="dialog" aria-modal="true">
       <div class="modalHdr">
         <div class="modalTitle">${escapeHtml(String(title||""))}</div>
         ${closeBtnHtml}
@@ -453,18 +455,23 @@ export function openModal({
     root,
     opener,
     escHandler: escClose ? escHandler : null,
-    backdropHandler: backdropClose ? closeFromBackdrop : null
+    backdropHandler: backdropClose ? closeFromBackdrop : null,
+    closing: false
   };
 
+  requestAnimationFrame(()=>{ root.classList.add("is-visible"); });
   focusFirstFocusable(sheet);
 
   try{ onOpen && onOpen(); }catch(_e){}
 }
 
-export function closeModal(){
+export function closeModal({ immediate = false } = {}){
   const root = document.getElementById("modalRoot");
   if(!root) return;
   const state = activeModalState;
+
+  if(state?.closing) return;
+  if(state) state.closing = true;
 
   if(state?.backdropHandler){
     root.removeEventListener("pointerdown", state.backdropHandler);
@@ -474,17 +481,30 @@ export function closeModal(){
     window.removeEventListener("keydown", state.escHandler);
   }
 
-  root.classList.add("hidden");
-  root.style.alignItems = "";
-  root.style.paddingBottom = "";
-  root.setAttribute("aria-hidden","true");
-  root.innerHTML = "";
-  unlockBodyScroll(root);
+  const finalizeClose = ()=>{
+    root.classList.add("hidden");
+    root.classList.remove("is-closing", "is-visible");
+    root.style.alignItems = "";
+    root.style.paddingBottom = "";
+    root.setAttribute("aria-hidden","true");
+    root.innerHTML = "";
+    unlockBodyScroll(root);
 
-  if(state?.opener && document.contains(state.opener)){
-    try{ state.opener.focus({ preventScroll: true }); }catch(_){ }
+    if(state?.opener && document.contains(state.opener)){
+      try{ state.opener.focus({ preventScroll: true }); }catch(_){ }
+    }
+    activeModalState = null;
+  };
+
+  if(immediate){
+    finalizeClose();
+    return;
   }
-  activeModalState = null;
+
+  root.classList.remove("is-visible");
+  root.classList.add("is-closing");
+
+  window.setTimeout(finalizeClose, MODAL_ROOT_EXIT_MS);
 }
 
 export function attachLongPress(el, { ms = 500, movePx = 10, onLongPressArmed, onLongPressTrigger } = {}){
