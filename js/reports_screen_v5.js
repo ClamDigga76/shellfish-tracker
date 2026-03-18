@@ -575,32 +575,46 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     }
     const tone = String(payload.compareTone || "steady");
     const period = compareFoundation.period || {};
-    const summaryByMetric = {
-      trips: {
-        steady: `${period.currentLabel} matched ${period.previousLabel} trip count.`,
-        up: `${period.currentLabel} logged more trips than ${period.previousLabel}.`,
-        down: `${period.currentLabel} logged fewer trips than ${period.previousLabel}.`
+    const currentLabel = period.currentLabel || "Current";
+    const previousLabel = period.previousLabel || "Previous";
+    const safeNum = (value)=> Number(value) || 0;
+    const pctText = (value)=> `${Math.abs(Math.round((Number(value) || 0) * 100))}%`;
+    const amountPayload = compareFoundation.metrics?.amount || null;
+    const poundsPayload = compareFoundation.metrics?.pounds || null;
+    const tripsPayload = compareFoundation.metrics?.trips || null;
+    const pplPayload = compareFoundation.metrics?.ppl || null;
+    const currentPoundsPerTrip = safeNum(period.current?.trips) > 0 ? safeNum(period.current?.lbs) / safeNum(period.current?.trips) : 0;
+    const previousPoundsPerTrip = safeNum(period.previous?.trips) > 0 ? safeNum(period.previous?.lbs) / safeNum(period.previous?.trips) : 0;
+    const productivityTone = currentPoundsPerTrip > previousPoundsPerTrip * 1.05
+      ? "up"
+      : (currentPoundsPerTrip < previousPoundsPerTrip * 0.95 ? "down" : "steady");
+
+    const summaryBuilders = {
+      trips: ()=> {
+        if(tone === "up") return `${currentLabel} added more trips than ${previousLabel}. ${productivityTone === "down" ? "Average pounds per trip slipped while effort increased." : (productivityTone === "up" ? "Average pounds per trip improved alongside the extra effort." : "Average pounds per trip stayed close." )}`;
+        if(tone === "down") return `${currentLabel} ran fewer trips than ${previousLabel}. ${productivityTone === "up" ? "Average pounds per trip improved even with less effort." : (productivityTone === "down" ? "Average pounds per trip also softened." : "Average pounds per trip stayed close." )}`;
+        return `${currentLabel} matched ${previousLabel} on trip count, with pounds per trip ${productivityTone === "up" ? "improving" : (productivityTone === "down" ? "slipping" : "holding steady")}.`;
       },
-      pounds: {
-        steady: `${period.currentLabel} landed about the same pounds as ${period.previousLabel}.`,
-        up: `${period.currentLabel} landed more pounds than ${period.previousLabel}.`,
-        down: `${period.currentLabel} landed fewer pounds than ${period.previousLabel}.`
+      pounds: ()=> {
+        if(tone === "up") return `${currentLabel} landed more pounds than ${previousLabel}. ${tripsPayload?.compareTone === "up" ? "More trips helped drive the gain." : (productivityTone === "up" ? "The gain came from stronger pounds per trip." : "Trip count stayed close while pounds climbed.")}`;
+        if(tone === "down") return `${currentLabel} landed fewer pounds than ${previousLabel}. ${tripsPayload?.compareTone === "down" ? "Fewer trips were part of the drop." : (productivityTone === "down" ? "Average pounds per trip also declined." : "Trip count stayed close while pounds fell.")}`;
+        return `${currentLabel} held close to ${previousLabel} on pounds, with ${productivityTone === "up" ? "better" : (productivityTone === "down" ? "softer" : "steady")} pounds per trip.`;
       },
-      amount: {
-        steady: `${period.currentLabel} earned about the same amount as ${period.previousLabel}.`,
-        up: `${period.currentLabel} earned more than ${period.previousLabel}.`,
-        down: `${period.currentLabel} earned less than ${period.previousLabel}.`
+      amount: ()=> {
+        if(tone === "up") return `${currentLabel} earned more than ${previousLabel}. ${poundsPayload?.compareTone === "up" && pplPayload?.compareTone === "up" ? "Both pounds and $/lb moved up." : (poundsPayload?.compareTone === "up" ? "Heavier pounds carried most of the gain." : (pplPayload?.compareTone === "up" ? "Stronger $/lb did most of the lifting." : "Volume and rate both stayed fairly close."))}`;
+        if(tone === "down") return `${currentLabel} earned less than ${previousLabel}. ${poundsPayload?.compareTone === "down" && pplPayload?.compareTone === "down" ? "Lighter pounds and softer $/lb both contributed." : (poundsPayload?.compareTone === "down" ? "The drop came mostly from lighter pounds." : (pplPayload?.compareTone === "down" ? "Softer $/lb did most of the damage." : "Volume and rate both stayed fairly close."))}`;
+        return `${currentLabel} stayed close to ${previousLabel} on total amount, while pounds were ${poundsPayload?.compareTone === "up" ? "up" : (poundsPayload?.compareTone === "down" ? "down" : "steady")} and $/lb was ${pplPayload?.compareTone === "up" ? "up" : (pplPayload?.compareTone === "down" ? "down" : "steady")}.`;
       },
-      ppl: {
-        steady: `${period.currentLabel} held close to ${period.previousLabel} on average $/lb.`,
-        up: `${period.currentLabel} beat ${period.previousLabel} on average $/lb.`,
-        down: `${period.currentLabel} trailed ${period.previousLabel} on average $/lb.`
+      ppl: ()=> {
+        if(tone === "up") return `${currentLabel} improved average $/lb over ${previousLabel}${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "down" ? "That happened even with lighter pounds." : "Pricing strengthened across the comparable window."}`;
+        if(tone === "down") return `${currentLabel} came in below ${previousLabel} on average $/lb${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "up" ? "Heavier pounds did not fully offset the softer rate." : "Pricing softened across the comparable window."}`;
+        return `${currentLabel} held close to ${previousLabel} on average $/lb, with total amount ${amountPayload?.compareTone === "up" ? "still up" : (amountPayload?.compareTone === "down" ? "still down" : "also holding steady")}.`;
       }
     };
-    const metricSummary = summaryByMetric[metricKey] || summaryByMetric.amount;
+    const summaryText = (summaryBuilders[metricKey] || summaryBuilders.amount)();
     return {
       tone,
-      text: metricSummary[tone] || metricSummary.steady,
+      text: summaryText,
       currentValue: formatMetricCompareValue(metricKey, payload.currentValue),
       previousValue: formatMetricCompareValue(metricKey, payload.previousValue)
     };
