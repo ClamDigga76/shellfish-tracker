@@ -63,6 +63,12 @@
 .reportsMiniPreviewFill{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(47,109,246,.72),rgba(47,109,246,.52))}
 .reportsMiniPreviewBar.muted .reportsMiniPreviewFill{background:rgba(222,228,243,.52)}
 .reportsCompareRow{margin-top:10px;font-size:12px;line-height:1.3;color:#acb4c4;font-weight:720;min-height:16px}
+.reportsPercentEmphasis{display:inline-block;margin:0 .08em;padding:.08em .44em .1em;border-radius:999px;font-size:1.08em;line-height:1.1;font-weight:880;letter-spacing:.01em;font-variant-numeric:tabular-nums;color:#f7fbff;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);white-space:nowrap;vertical-align:baseline}
+.reportsHighlightHeadline .reportsPercentEmphasis{margin-left:.04em;margin-right:.04em;background:rgba(255,255,255,.09)}
+.reportsCompareRow .reportsPercentEmphasis{background:rgba(255,255,255,.14)}
+.reportsCompareRow.tone-up .reportsPercentEmphasis,.reportsMetricCompare.tone-up .reportsPercentEmphasis,.homeMetricCompare.tone-up .reportsPercentEmphasis{color:#f3fff8;background:rgba(46,160,67,.22);box-shadow:inset 0 0 0 1px rgba(46,160,67,.28)}
+.reportsCompareRow.tone-down .reportsPercentEmphasis,.reportsMetricCompare.tone-down .reportsPercentEmphasis,.homeMetricCompare.tone-down .reportsPercentEmphasis{color:#fff6f6;background:rgba(255,77,79,.2);box-shadow:inset 0 0 0 1px rgba(255,77,79,.28)}
+.reportsMetricCompareText .reportsPercentEmphasis,.homeMetricCompareText .reportsPercentEmphasis{margin-left:.06em;margin-right:.06em;font-size:1.12em;background:rgba(255,255,255,.16)}
 .reportsCompareRow.tone-up{color:var(--good)}
 .reportsCompareRow.tone-down{color:var(--bad)}
 .reportsCompareRow.tone-neutral,.reportsCompareRow.tone-steady{color:var(--neutral)}
@@ -121,7 +127,7 @@
 .reportsMetricCompare{margin-top:12px;padding:11px 12px;border-radius:14px;border:1px solid rgba(174,184,205,.22);background:rgba(174,184,205,.08)}
 .reportsMetricCompare.tone-up{border-color:rgba(46,160,67,.36);background:rgba(46,160,67,.14)}
 .reportsMetricCompare.tone-down{border-color:rgba(255,77,79,.34);background:rgba(255,77,79,.13)}
-.reportsMetricCompareText{font-size:13px;line-height:1.35;font-weight:720;color:#e9eef9}
+.reportsMetricCompareText{font-size:13px;line-height:1.42;font-weight:760;color:#eef3fc;text-wrap:pretty}
 .reportsMetricCompareRows{margin-top:8px;display:grid;gap:5px}
 .reportsMetricCompareRows > div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#b8c1d3}
 .reportsMetricCompareRows > div b{font-size:13px;color:#f4f8ff}
@@ -140,7 +146,7 @@
 .homeMetricCompare{margin-top:12px;padding:11px 12px;border-radius:14px;border:1px solid rgba(126,200,255,.24);background:rgba(126,200,255,.1)}
 .homeMetricCompare.tone-up{border-color:rgba(46,160,67,.42);background:rgba(46,160,67,.18)}
 .homeMetricCompare.tone-down{border-color:rgba(255,77,79,.4);background:rgba(255,77,79,.16)}
-.homeMetricCompareText{font-size:13px;line-height:1.35;font-weight:720;color:#f4f8ff}
+.homeMetricCompareText{font-size:13px;line-height:1.42;font-weight:760;color:#f7fbff;text-wrap:pretty}
 .homeMetricCompareRows{margin-top:8px;display:grid;gap:5px}
 .homeMetricCompareRows > div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#d4ebff}
 .homeMetricCompareRows > div b{font-size:13px;color:#ffffff}
@@ -163,6 +169,8 @@
 .reportsDetailHint .btn{width:100%}
 
 @media (max-width:430px){
+  .reportsPercentEmphasis{padding:.07em .4em;font-size:1.04em}
+  .reportsMetricCompareText .reportsPercentEmphasis,.homeMetricCompareText .reportsPercentEmphasis{font-size:1.08em}
   .reportsHeroCard{padding:14px 12px 13px}
   .reportsHeroHeadline{font-size:20px}
   .reportsHeroGrid{grid-template-columns:1fr}
