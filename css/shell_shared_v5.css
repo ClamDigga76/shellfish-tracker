@@ -395,6 +395,12 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .dashCard .homeFilterStack{
   margin-bottom:var(--card-stack-gap);
 }
+.dashCard .kpiRow{
+  margin-bottom:calc(var(--card-stack-gap) + 2px);
+}
+.dashCard .homeOverviewCard{
+  margin-top:0;
+}
 .kpiGroupLabel,
 .reportsSectionHead h2,
 .reportsHeroEyebrow,
