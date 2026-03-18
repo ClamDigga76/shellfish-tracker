@@ -8,6 +8,7 @@ export function createBackupRestoreSubsystem(deps){
     APP_VERSION,
     VERSION,
     LS_LAST_BACKUP_META,
+    LS_RESTORE_ROLLBACK_SNAPSHOT,
     formatDateDMY,
     downloadText,
     uid,
@@ -20,6 +21,29 @@ export function createBackupRestoreSubsystem(deps){
     announce
   } = deps;
 
+
+
+  function __cloneData(value){
+    if(typeof structuredClone === "function") {
+      try{ return structuredClone(value); }catch(_){ }
+    }
+    try{ return JSON.parse(JSON.stringify(value)); }catch(_){ return value; }
+  }
+
+  function __readJSONLocal(key){
+    try{
+      const raw = localStorage.getItem(key);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    }catch(_){
+      return null;
+    }
+  }
+
+  function __writeJSONLocal(key, value){
+    localStorage.setItem(key, JSON.stringify(value));
+  }
   function buildBackupPayloadFromState(st, exportedAtISO){
     const safeState = (st && typeof st === "object") ? st : {};
     const trips = Array.isArray(safeState.trips) ? safeState.trips : [];
@@ -87,6 +111,100 @@ export function createBackupRestoreSubsystem(deps){
     }catch(_){ }
 
     return null;
+  }
+
+  function buildRestoreRollbackSnapshotMeta(snapshot){
+    const snap = (snapshot && typeof snapshot === "object") ? snapshot : null;
+    if(!snap || !snap.payload || typeof snap.payload !== "object") return null;
+    const payload = snap.payload;
+    const trips = Array.isArray(payload.trips) ? payload.trips : [];
+    const areas = Array.isArray(payload.areas) ? payload.areas : [];
+    const dealers = Array.isArray(payload.dealers) ? payload.dealers : [];
+    return {
+      createdAt: String(snap.createdAt || ""),
+      mode: String(snap.mode || "merge"),
+      includeSettings: !!snap.includeSettings,
+      sourceFileName: String(snap.sourceFileName || ""),
+      appVersion: String(snap.appVersion || APP_VERSION || ""),
+      schemaVersion: Number(snap.schemaVersion || SCHEMA_VERSION || 0) || 0,
+      tripCount: trips.length,
+      areaCount: areas.length,
+      dealerCount: dealers.length
+    };
+  }
+
+  function getRestoreRollbackSnapshot(){
+    const snapshot = __readJSONLocal(LS_RESTORE_ROLLBACK_SNAPSHOT);
+    return buildRestoreRollbackSnapshotMeta(snapshot) ? snapshot : null;
+  }
+
+  function getRestoreRollbackSnapshotMeta(){
+    return buildRestoreRollbackSnapshotMeta(getRestoreRollbackSnapshot());
+  }
+
+  function clearRestoreRollbackSnapshot(){
+    try{ localStorage.removeItem(LS_RESTORE_ROLLBACK_SNAPSHOT); }catch(_){ }
+  }
+
+  function capturePreRestoreRollbackSnapshot({ mode="merge", includeSettings=false, sourceFileName="" }={}){
+    const state = getState();
+    const payload = buildBackupPayloadFromState(state, new Date().toISOString()).data;
+    const snapshot = {
+      kind: "restore-rollback-snapshot",
+      createdAt: new Date().toISOString(),
+      mode: String(mode || "merge"),
+      includeSettings: !!includeSettings,
+      sourceFileName: String(sourceFileName || ""),
+      appVersion: APP_VERSION,
+      schemaVersion: SCHEMA_VERSION,
+      payload: {
+        trips: __cloneData(Array.isArray(payload?.trips) ? payload.trips : []),
+        areas: __cloneData(Array.isArray(payload?.areas) ? payload.areas : []),
+        dealers: __cloneData(Array.isArray(payload?.dealers) ? payload.dealers : []),
+        settings: __cloneData((payload?.settings && typeof payload.settings === "object") ? payload.settings : {})
+      }
+    };
+    __writeJSONLocal(LS_RESTORE_ROLLBACK_SNAPSHOT, snapshot);
+    return buildRestoreRollbackSnapshotMeta(snapshot);
+  }
+
+  function restoreFromRollbackSnapshot(){
+    const snapshot = getRestoreRollbackSnapshot();
+    const meta = buildRestoreRollbackSnapshotMeta(snapshot);
+    if(!snapshot || !meta) throw new Error("No restore rollback snapshot is available.");
+
+    const payload = snapshot.payload || {};
+    const nextSettings = (payload.settings && typeof payload.settings === "object") ? __cloneData(payload.settings) : {};
+    const state = getState();
+    state.trips = __cloneData(Array.isArray(payload.trips) ? payload.trips : []);
+    state.areas = __cloneData(Array.isArray(payload.areas) ? payload.areas : []);
+    state.dealers = __cloneData(Array.isArray(payload.dealers) ? payload.dealers : []);
+    state.settings = nextSettings;
+    ensureAreas();
+    ensureDealers();
+    saveState();
+    clearRestoreRollbackSnapshot();
+    return meta;
+  }
+
+  function updateRestoreRollbackLine(){
+    const el = document.getElementById("restoreRollbackLine");
+    const btn = document.getElementById("restoreRollbackBtn");
+    const meta = getRestoreRollbackSnapshotMeta();
+    if(btn){
+      btn.disabled = !meta;
+      btn.setAttribute("aria-disabled", meta ? "false" : "true");
+      btn.hidden = !meta;
+    }
+    if(!el) return;
+    if(!meta){
+      el.textContent = "Temporary restore rollback snapshot: none yet.";
+      return;
+    }
+    const stamp = __formatRestoreMetaDate(meta.createdAt);
+    const modeLabel = meta.mode === "replace" ? "Replace" : "Merge";
+    const filePart = meta.sourceFileName ? ` from ${meta.sourceFileName}` : "";
+    el.textContent = `Temporary rollback snapshot ready: ${stamp} before ${modeLabel}${filePart} (${meta.tripCount} trips, ${meta.areaCount} areas, ${meta.dealerCount} dealers).`;
   }
 
   function updateLastBackupLine(){
@@ -573,6 +691,12 @@ export function createBackupRestoreSubsystem(deps){
     const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
     const importedDealers = dealersIn.map(d=>String(d||"").trim()).filter(Boolean);
 
+    capturePreRestoreRollbackSnapshot({
+      mode: replace ? "replace" : "merge",
+      includeSettings,
+      sourceFileName: String(parsed?.fileName || file?.name || "")
+    });
+
     const nextTrips = replace ? [] : (Array.isArray(state.trips) ? [...state.trips] : []);
     const seen = new Set(nextTrips.map(t=> normalizeKey(`${t?.dateISO||""}|${t?.dealer||""}|${t?.area||""}|${to2(Number(t?.pounds)||0)}|${to2(Number(t?.amount)||0)}`)));
 
@@ -634,12 +758,15 @@ export function createBackupRestoreSubsystem(deps){
   return {
     buildBackupPayloadFromState,
     updateLastBackupLine,
+    getRestoreRollbackSnapshotMeta,
+    updateRestoreRollbackLine,
     downloadBackupPayload,
     exportBackup,
     parseBackupFileForRestore,
     openRestorePreviewModal,
     openReplaceSafetyBackupModal,
     openRestoreErrorModal,
-    importBackupFromFile
+    importBackupFromFile,
+    restoreFromRollbackSnapshot
   };
 }

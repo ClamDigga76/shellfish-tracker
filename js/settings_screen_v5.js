@@ -16,6 +16,7 @@ export function createSettingsScreenOrchestrator({
   updateUpdateRow,
   updateBuildInfo,
   updateLastBackupLine,
+  updateRestoreRollbackLine,
   exportBackup,
   parseBackupFileForRestore,
   openRestorePreviewModal,
@@ -24,6 +25,7 @@ export function createSettingsScreenOrchestrator({
   applyThemeMode,
   render,
   openRestoreErrorModal,
+  restoreFromRollbackSnapshot,
   showToast
 }) {
   function renderSettings(opts = {}) {
@@ -114,6 +116,12 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--minor">
           <div class="hint"><b>Recommended:</b> create a fresh backup before major updates, restore actions (especially Replace), or bulk edits.</div>
           <div class="muted small mt8">After creating a backup, move it to <b>iCloud Drive</b> (iPhone Files) or <b>Google Drive</b> (Android) and keep one older copy too.</div>
+        </div>
+        <div class="settingsRow settingsRow--status">
+          <div class="muted small" id="restoreRollbackLine"></div>
+        </div>
+        <div class="settingsRow settingsRow--action">
+          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Restore pre-restore snapshot</button>
         </div>
       </div>
     </div>
@@ -219,8 +227,10 @@ export function createSettingsScreenOrchestrator({
 
     try {
       updateLastBackupLine();
+      updateRestoreRollbackLine();
       const btnDl = document.getElementById("downloadBackup");
       const btnRs = document.getElementById("restoreBackup");
+      const btnRollback = document.getElementById("restoreRollbackBtn");
       const inp = document.getElementById("backupFile");
 
       if (btnDl) {
@@ -234,6 +244,20 @@ export function createSettingsScreenOrchestrator({
             }
           } catch (_) {
             showToast("Could not create Bank the Catch backup");
+          }
+        };
+      }
+
+      if (btnRollback) {
+        btnRollback.onclick = async () => {
+          try {
+            const restored = await restoreFromRollbackSnapshot();
+            const modeLabel = restored?.mode === "replace" ? "Replace" : "Merge";
+            showToast(`Pre-restore snapshot restored (${modeLabel})`);
+            applyThemeMode();
+            render();
+          } catch (_) {
+            showToast("Could not restore pre-restore snapshot");
           }
         };
       }
@@ -282,6 +306,7 @@ export function createSettingsScreenOrchestrator({
             const n = Number(result?.tripsAdded);
             const modeLabel = result?.mode === "replace" ? "Replace" : "Merge";
             showToast(Number.isFinite(n) ? `Bank the Catch backup restored (${n} trips, ${modeLabel})` : `Bank the Catch backup restored (${modeLabel})`);
+            updateRestoreRollbackLine();
             applyThemeMode();
             render();
           } catch (e) {
