@@ -228,12 +228,12 @@ export function createSettingsScreenOrchestrator({
           try {
             const r = await exportBackup();
             if (r?.ok) {
-              showToast(r.method === "share" ? "Share sheet opened" : "Backup saved");
+              showToast(r.method === "share" ? "Bank the Catch backup ready to share" : "Bank the Catch backup saved");
             } else {
-              showToast("Could not create backup");
+              showToast("Could not create Bank the Catch backup");
             }
           } catch (_) {
-            showToast("Could not create backup");
+            showToast("Could not create Bank the Catch backup");
           }
         };
       }
@@ -269,7 +269,7 @@ export function createSettingsScreenOrchestrator({
                 return;
               }
               if (safetyChoice === "created") {
-                showToast("Safety backup created");
+                showToast("Bank the Catch safety backup created");
               }
             }
 
@@ -281,11 +281,11 @@ export function createSettingsScreenOrchestrator({
 
             const n = Number(result?.tripsAdded);
             const modeLabel = result?.mode === "replace" ? "Replace" : "Merge";
-            showToast(Number.isFinite(n) ? `Restore finished (${n} trips, ${modeLabel})` : `Restore finished (${modeLabel})`);
+            showToast(Number.isFinite(n) ? `Bank the Catch backup restored (${n} trips, ${modeLabel})` : `Bank the Catch backup restored (${modeLabel})`);
             applyThemeMode();
             render();
           } catch (e) {
-            showToast("Could not restore backup");
+            showToast("Could not restore Bank the Catch backup");
             await openRestoreErrorModal(e);
           }
         };

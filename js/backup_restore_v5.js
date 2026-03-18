@@ -112,8 +112,8 @@ export function createBackupRestoreSubsystem(deps){
     el.textContent = `Last backup: ${dateStr}${freshness ? ` (${freshness})` : ""} — ${tripsStr}${buildStr}`;
   }
 
-  function downloadBackupPayload(payload, prefixOrFilename="shellfish_backup"){
-    const s = String(prefixOrFilename||"shellfish_backup");
+  function downloadBackupPayload(payload, prefixOrFilename="bank-the-catch_backup"){
+    const s = String(prefixOrFilename||"bank-the-catch_backup");
     if(/\.json$/i.test(s)){
       downloadText(s, JSON.stringify(payload, null, 2));
       return;
@@ -230,7 +230,7 @@ export function createBackupRestoreSubsystem(deps){
     const r = reason.toLowerCase();
     if(r.includes("invalid json") || r.includes("unexpected token")){
       return {
-        heading: "This file could not be read as backup JSON.",
+        heading: "This Bank the Catch backup file could not be read as JSON.",
         tips: [
           "Confirm you selected a Bank the Catch backup file.",
           "Try opening the file in Files/Drive to make sure it is not empty or truncated."
@@ -239,7 +239,7 @@ export function createBackupRestoreSubsystem(deps){
     }
     if(r.includes("must be an array") || r.includes("must be an object") || r.includes("missing")){
       return {
-        heading: "The backup file is missing required sections or has incompatible structure.",
+        heading: "This Bank the Catch backup file is missing required sections or has incompatible structure.",
         tips: [
           "Use a complete backup exported from Bank the Catch.",
           "If this is a legacy backup, re-export from a known-good copy when possible."
@@ -248,7 +248,7 @@ export function createBackupRestoreSubsystem(deps){
     }
     if(r.includes("failed to read backup file")){
       return {
-        heading: "The file could not be read from this device.",
+        heading: "This Bank the Catch backup file could not be read from this device.",
         tips: [
           "Try selecting the file again from Files/Drive.",
           "If the file is in cloud storage, wait for download to finish, then retry."
@@ -256,7 +256,7 @@ export function createBackupRestoreSubsystem(deps){
       };
     }
     return {
-      heading: "Restore could not complete for this file.",
+      heading: "Bank the Catch could not finish restoring this backup file.",
       tips: [
         "Retry with the same file once.",
         "If it still fails, try another known-good backup file."
@@ -314,7 +314,7 @@ export function createBackupRestoreSubsystem(deps){
       }
 
       return {
-        fileName: String(file?.name || "backup.json"),
+        fileName: String(file?.name || "bank-the-catch_backup.json"),
         fileSize,
         warnings: [...new Set(warnings)],
         normalizedResult,
@@ -368,7 +368,7 @@ export function createBackupRestoreSubsystem(deps){
         showCloseButton: false,
         position: "center",
         html: `
-          <div class="muted small">File: <b>${escapeHtml(preview.fileName || "backup.json")}</b> (${escapeHtml(__formatFileSize(preview.fileSize))})</div>
+          <div class="muted small">File: <b>${escapeHtml(preview.fileName || "bank-the-catch_backup.json")}</b> (${escapeHtml(__formatFileSize(preview.fileSize))})</div>
           <div class="sep" style="margin:10px 0"></div>
           <div class="muted small">Backup contents that will be read</div>
           <div class="mt8" style="display:grid;gap:6px">
@@ -460,7 +460,7 @@ export function createBackupRestoreSubsystem(deps){
         showCloseButton: false,
         position: "center",
         html: `
-          <div class="muted small">Recommended: create a safety backup now so you can recover if this Replace result is not what you expected.</div>
+          <div class="muted small">Recommended: create a Bank the Catch safety backup now so you can recover if this Replace result is not what you expected.</div>
           <div class="modalErr" id="${errId}" style="display:none;margin-top:10px"></div>
           <div class="modalActions" style="margin-top:12px">
             <button class="btn" id="${cancelId}" type="button">Cancel</button>
@@ -481,7 +481,7 @@ export function createBackupRestoreSubsystem(deps){
           document.getElementById(createId)?.addEventListener("click", ()=>{
             try{
               const safetyPayload = buildBackupPayloadFromState(getState());
-              downloadBackupPayload(safetyPayload, "shellfish_safety_before_restore");
+              downloadBackupPayload(safetyPayload, "bank-the-catch_safety-before-restore");
               closeModal();
               resolve("created");
             }catch(e){
