@@ -512,12 +512,13 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     dealerRows,
     monthRows,
     areaRows,
-    trips
+    trips,
+    rangeContext: resolvedReportsRange
   });
 
   const totalLbs = trips.reduce((sum, t)=> sum + (Number(t?.pounds) || 0), 0);
   const totalAmount = trips.reduce((sum, t)=> sum + (Number(t?.amount) || 0), 0);
-  const compareFoundation = buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
+  const compareFoundation = buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows, rangeContext: resolvedReportsRange });
   const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
 
