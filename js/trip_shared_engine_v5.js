@@ -145,6 +145,96 @@ export function createTripDraftSaveEngine({ saveState, getEmergencyDraftPayload,
   return { saveStateNow, flushPendingStateSave, scheduleStateSave, saveDraft, bindLifecycleSaveFlush };
 }
 
+
+export function createTripMetricSyncEngine({ parseNum, parseMoney, computePPL, syncTargets }) {
+  const FIELD_KEYS = ["pounds", "amount", "rate"];
+  let syncingMetric = false;
+  let lockPair = null;
+  let lastUserMetric = "";
+
+  const getFieldValue = (field)=> {
+    if(field === "amount") return parseMoney(syncTargets.amount?.value);
+    return parseNum(syncTargets[field]?.value);
+  };
+
+  const isMeaningful = (value)=> Number.isFinite(value) && value > 0;
+  const setMetricValue = (field, value, decimals = 2)=> {
+    const el = syncTargets[field];
+    if(!el || !Number.isFinite(value)) return;
+    el.value = Number(value).toFixed(decimals);
+  };
+  const getMeaningfulFields = ()=> FIELD_KEYS.filter((field)=> isMeaningful(getFieldValue(field)));
+  const chooseCompanionField = (editedField)=> {
+    if(!Array.isArray(lockPair) || lockPair.length !== 2) return "";
+    const candidates = lockPair.filter((field)=> field !== editedField && isMeaningful(getFieldValue(field)));
+    if(!candidates.length) return "";
+    if(candidates.includes(lastUserMetric)) return lastUserMetric;
+    return candidates[0];
+  };
+  const normalizeLockPair = ()=> {
+    const meaningful = getMeaningfulFields();
+    if(meaningful.length < 2){
+      lockPair = null;
+      return;
+    }
+    if(meaningful.length === 2){
+      lockPair = [...meaningful];
+      return;
+    }
+    if(Array.isArray(lockPair) && lockPair.length === 2 && lockPair.every((field)=> meaningful.includes(field))){
+      return;
+    }
+    lockPair = ["pounds", "amount"];
+  };
+
+  function updateDerivedField() {
+    if(syncingMetric) return;
+    syncingMetric = true;
+    try {
+      normalizeLockPair();
+      if(!Array.isArray(lockPair) || lockPair.length !== 2) return;
+      const pounds = getFieldValue("pounds");
+      const amount = getFieldValue("amount");
+      const rate = getFieldValue("rate");
+      if(lockPair.includes("pounds") && lockPair.includes("amount")){
+        if(isMeaningful(pounds) && isMeaningful(amount)) setMetricValue("rate", computePPL(pounds, amount), 2);
+        return;
+      }
+      if(lockPair.includes("pounds") && lockPair.includes("rate")){
+        if(isMeaningful(pounds) && isMeaningful(rate)) setMetricValue("amount", pounds * rate, 2);
+        return;
+      }
+      if(lockPair.includes("amount") && lockPair.includes("rate")){
+        if(isMeaningful(amount) && isMeaningful(rate)) setMetricValue("pounds", amount / rate, 2);
+      }
+    } finally {
+      syncingMetric = false;
+    }
+  }
+
+  function onUserEdit(field) {
+    if(syncingMetric) return;
+    lastUserMetric = field;
+    normalizeLockPair();
+    const meaningful = getMeaningfulFields();
+    if(meaningful.length < 2) return;
+    if(meaningful.length === 2){
+      lockPair = [...meaningful];
+      return;
+    }
+    if(Array.isArray(lockPair) && !lockPair.includes(field)){
+      const companion = chooseCompanionField(field);
+      if(companion) lockPair = [companion, field];
+    }
+  }
+
+  return {
+    updateDerivedField,
+    onUserEdit,
+    getLockPair: ()=> Array.isArray(lockPair) ? [...lockPair] : []
+  };
+}
+
 export function computeTripSaveEnabled({ dealer, area, poundsInput, amountInput, parseNum, parseMoney, isValidAreaValue }) {
   const dealerOk = !!String(dealer || "").trim();
   const areaOk = isValidAreaValue(area);
