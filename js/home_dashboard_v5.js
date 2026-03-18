@@ -16,7 +16,8 @@ export function createHomeDashboardRenderer({
   bindDatePill,
   showToast,
   tipMsg,
-  exportBackup
+  exportBackup,
+  renderHomeMetricDetail
 }) {
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
@@ -61,6 +62,15 @@ export function createHomeDashboardRenderer({
   }
 
   function renderHome() {
+    const isHomeMetricDetail = state.reportsMetricDetailContext
+      && typeof state.reportsMetricDetailContext === "object"
+      && state.reportsMetricDetailContext.source === "home"
+      && String(state.reportsMetricDetail || "").trim();
+    if (isHomeMetricDetail && typeof renderHomeMetricDetail === "function") {
+      renderHomeMetricDetail();
+      return;
+    }
+
     const tripsAll = Array.isArray(state.trips) ? state.trips : [];
     ensureHomeFilter();
     const hf = state.homeFilter || { mode: "YTD", from: "", to: "" };
@@ -329,7 +339,7 @@ export function createHomeDashboardRenderer({
             to: parseReportDateToISO(state.homeFilter?.to || "") || ""
           }
         };
-        state.view = "reports";
+        state.view = "home";
         saveState();
         render();
       });
