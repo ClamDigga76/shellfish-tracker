@@ -1,3 +1,12 @@
+.reportsTransitionRoot{opacity:0;transform:translateY(8px) scale(.995);transform-origin:top center;transition:opacity .16s ease,transform .18s ease;will-change:opacity,transform}
+.reportsTransitionRoot.is-ready{opacity:1;transform:translateY(0) scale(1)}
+.reportsTransitionRoot.is-leaving{opacity:0;transform:translateY(-6px) scale(.992);pointer-events:none}
+.reportsTransitionRoot--detail{margin-top:0}
+.chart{transition:opacity .18s ease,transform .18s ease;transform-origin:center bottom}
+@media (prefers-reduced-motion: reduce){
+  .reportsTransitionRoot,.chart{transition:none;transform:none;opacity:1}
+}
+
 .chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
 .hlHdr{
   font-size:13px;

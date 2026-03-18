@@ -1,3 +1,5 @@
+const chartAnimationState = new Map();
+
 export function drawReportsCharts(monthRows, dealerRows, trips){
   function setupCanvas(canvas){
     if(!canvas) return null;
@@ -11,7 +13,7 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
     canvas.style.height = h + "px";
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    return { ctx, w, h };
+    return { canvas, ctx, w, h };
   }
 
   function clear(ctx, w, h){
@@ -139,7 +141,6 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
     return out.length < src.length ? (out + "…") : out;
   }
 
-
   function formatShortMoney(v){
     const n = Number(v)||0;
     return "$" + (Math.round(n*100)/100).toFixed(2);
@@ -193,170 +194,170 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
       });
   }
 
-  // Line: Avg $/lb by month
-  {
-      const c = setupCanvas(document.getElementById("c_ppl"));
-      if(c){
-        const {ctx,w,h} = c;
-      const frame = chartFrame(w,h);
+  function easeOutCubic(t){
+    return 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
+  }
+
+  function renderAnimatedChart(canvas, nextValues, drawFrame){
+    const key = canvas.id || `reports-chart-${Math.random().toString(36).slice(2)}`;
+    const next = nextValues.map((v)=> Number(v) || 0);
+    const signature = JSON.stringify(next);
+    const prevState = chartAnimationState.get(key) || null;
+    if(prevState?.signature === signature){
+      drawFrame(next, 1);
+      return;
+    }
+
+    if(prevState?.rafId) cancelAnimationFrame(prevState.rafId);
+    const from = next.map((_, index)=> (prevState?.values?.[index] ?? 0));
+    const duration = prevState ? 170 : 230;
+    const state = {
+      signature,
+      values: next.slice(),
+      rafId: 0
+    };
+    chartAnimationState.set(key, state);
+
+    const start = performance.now();
+    const tick = (now)=>{
+      const progress = duration <= 0 ? 1 : Math.min(1, (now - start) / duration);
+      const eased = easeOutCubic(progress);
+      const frameValues = next.map((target, index)=> from[index] + ((target - from[index]) * eased));
+      drawFrame(frameValues, Math.max(0.84, eased));
+      if(progress < 1){
+        state.rafId = requestAnimationFrame(tick);
+      }else{
+        state.rafId = 0;
+        drawFrame(next, 1);
+      }
+    };
+    state.rafId = requestAnimationFrame(tick);
+  }
+
+  function drawLineChart(canvasId, values, labels){
+    const c = setupCanvas(document.getElementById(canvasId));
+    if(!c) return;
+    const { canvas, ctx, w, h } = c;
+    const frame = chartFrame(w,h);
+    const targetMax = Math.max(1e-6, ...values, 0);
+    const targetMin = Math.min(...values, 0);
+    const targetSpan = (targetMax - targetMin) || targetMax || 1;
+    renderAnimatedChart(canvas, values, (animatedVals, alpha)=>{
       clear(ctx,w,h);
+      ctx.save();
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = palette.plotBg;
       ctx.fillRect(frame.left, frame.top, w - frame.left - frame.right, h - frame.top - frame.bottom);
       const geom = drawAxes(ctx,w,h,frame);
-
-      const vals = monthRows.map(r=> Number(r.avg)||0);
-      const maxV = Math.max(1e-6, ...vals);
-      const minV = Math.min(...vals);
-      const span = (maxV - minV) || maxV || 1;
-
       ctx.strokeStyle = palette.ppl;
       ctx.lineWidth = frame.compact ? 2.8 : 3.2;
       ctx.beginPath();
-      vals.forEach((v,i)=>{
-        const x = geom.x0 + (i/(vals.length-1 || 1))*geom.plotW;
-        const y = geom.y0 - ((v - minV)/span)*geom.plotH;
+      animatedVals.forEach((v,i)=>{
+        const x = geom.x0 + (i/(animatedVals.length-1 || 1))*geom.plotW;
+        const y = geom.y0 - ((v - targetMin)/targetSpan)*geom.plotH;
         if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       });
       ctx.stroke();
-
       ctx.fillStyle = palette.ppl;
-      vals.forEach((v,i)=>{
-        const x = geom.x0 + (i/(vals.length-1 || 1))*geom.plotW;
-        const y = geom.y0 - ((v - minV)/span)*geom.plotH;
-        ctx.beginPath(); ctx.arc(x,y,frame.compact ? 3.3 : 3.8,0,Math.PI*2); ctx.fill();
+      animatedVals.forEach((v,i)=>{
+        const x = geom.x0 + (i/(animatedVals.length-1 || 1))*geom.plotW;
+        const y = geom.y0 - ((v - targetMin)/targetSpan)*geom.plotH;
+        ctx.beginPath();
+        ctx.arc(x,y,frame.compact ? 3.3 : 3.8,0,Math.PI*2);
+        ctx.fill();
       });
-
-      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-10, frame);
-      const high = formatShortMoney(maxV);
-      const mid = formatShortMoney(minV + (span * 0.5));
-      const low = formatShortMoney(minV);
+      drawBottomTicks(ctx, labels, geom, h-10, frame);
       drawYTickLabels(ctx, geom, frame, [
-        { pos: 1, label: high },
-        { pos: 0.5, label: mid },
-        { pos: 0, label: low }
+        { pos: 1, label: formatShortMoney(targetMax) },
+        { pos: 0.5, label: formatShortMoney(targetMin + (targetSpan * 0.5)) },
+        { pos: 0, label: formatShortMoney(targetMin) }
       ]);
-      drawYLabel(ctx, formatShortMoney(maxV), frame);
-    }
+      drawYLabel(ctx, formatShortMoney(targetMax), frame);
+      ctx.restore();
+    });
   }
 
-  // Bar: Total $ by dealer (top 8)
-  {
-      const c = setupCanvas(document.getElementById("c_dealer"));
-      if(c){
-      const {ctx,w,h} = c;
-      const frame = chartFrame(w,h);
+  function drawBarChart(canvasId, values, labels, barColor, yLabelFormatter, topLabel, options = {}){
+    const c = setupCanvas(document.getElementById(canvasId));
+    if(!c) return;
+    const { canvas, ctx, w, h } = c;
+    const frame = chartFrame(w,h);
+    const targetTop = Math.max(options.minTop || 1, ...values, 0);
+    renderAnimatedChart(canvas, values, (animatedVals, alpha)=>{
       clear(ctx,w,h);
+      ctx.save();
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = palette.plotBg;
       ctx.fillRect(frame.left, frame.top, w - frame.left - frame.right, h - frame.top - frame.bottom);
       const geom = drawAxes(ctx,w,h,frame);
-
-      const top = dealerRows.slice(0,8);
-      const vals = top.map(r=> Number(r.amt)||0);
-      const maxV = Math.max(1e-6, ...vals);
-      const barW = geom.plotW / (top.length || 1);
-      const yScale = niceScale(maxV, 4);
-
-      top.forEach((r,i)=>{
-        const v = Number(r.amt)||0;
-        const bh = (v/maxV)*geom.plotH;
-        const barPad = frame.compact ? 3 : 4;
+      const yScale = niceScale(targetTop, 4);
+      const barW = geom.plotW / (animatedVals.length || 1);
+      animatedVals.forEach((v,i)=>{
+        const safe = Math.max(0, Number(v) || 0);
+        const bh = yScale.top ? (safe / yScale.top) * geom.plotH : 0;
+        const barPad = typeof options.barPad === "function" ? options.barPad(frame) : (frame.compact ? 1 : 1.4);
         const x = geom.x0 + i*barW + barPad;
         const y = geom.y0 - bh;
-        ctx.fillStyle = palette.money;
-        ctx.fillRect(x, y, Math.max(8, barW - (barPad * 2)), bh);
+        ctx.fillStyle = barColor;
+        ctx.fillRect(x, y, Math.max(options.minBarWidth || 4, barW - (barPad * 2)), bh);
       });
-
-      ctx.fillStyle = palette.label;
-      ctx.font = frame.tickFont;
-      const labelStep = Math.max(1, Math.ceil(top.length / (frame.compact ? 5 : 7)));
-      top.forEach((r,i)=>{
-        if(i % labelStep !== 0 && i !== top.length - 1) return;
-        const maxLabelW = Math.max(18, barW - 1);
-        const base = normalizeDealerLabel(r.name || "");
-        const lab = fitLabel(ctx, base, maxLabelW);
-        const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
-        const x = Math.max(2, tx);
-        ctx.fillText(lab, x, h-10);
-      });
-
+      if(options.customLabels){
+        options.customLabels({ ctx, frame, geom, barW, canvasHeight: h });
+      }else{
+        drawBottomTicks(ctx, labels, geom, h-10, frame);
+      }
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
-        yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: formatCompactMoney(v) });
+        yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: yLabelFormatter(v) });
       }
       drawYTickLabels(ctx, geom, frame, yLabels);
-
-      drawYLabel(ctx, formatShortMoney(maxV), frame);
-    }
+      drawYLabel(ctx, topLabel, frame);
+      ctx.restore();
+    });
   }
 
-  // Bar: Total Lbs by month
-  {
-      const c = setupCanvas(document.getElementById("c_lbs"));
-      if(c){
-      const {ctx,w,h} = c;
-      const frame = chartFrame(w,h);
-      clear(ctx,w,h);
-      ctx.fillStyle = palette.plotBg;
-      ctx.fillRect(frame.left, frame.top, w - frame.left - frame.right, h - frame.top - frame.bottom);
-      const geom = drawAxes(ctx,w,h,frame);
+  const tripsTimeline = makeTripsTimeline(trips);
+  const pplValues = monthRows.map((r)=> Number(r.avg) || 0);
+  drawLineChart("c_ppl", pplValues, monthRows.map((r)=> r.label));
 
-      const vals = monthRows.map(r=> Number(r.lbs)||0);
-      const maxV = Math.max(1e-6, ...vals);
-      const yScale = niceScale(maxV, 4);
-      const barW = geom.plotW / (vals.length || 1);
-
-      vals.forEach((v,i)=>{
-        const bh = (v/maxV)*geom.plotH;
-        const barPad = frame.compact ? 0.8 : 1.2;
-        const x = geom.x0 + i*barW + barPad;
-        const y = geom.y0 - bh;
-        ctx.fillStyle = palette.lbs;
-        ctx.fillRect(x, y, Math.max(4, barW - (barPad * 2)), bh);
-      });
-
-      drawBottomTicks(ctx, monthRows.map(r=>r.label), geom, h-10, frame);
-      const yLabels = [];
-      for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
-        yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: formatCompactCount(v) });
+  const topDealers = dealerRows.slice(0,8);
+  drawBarChart(
+    "c_dealer",
+    topDealers.map((r)=> Number(r.amt) || 0),
+    topDealers.map((r)=> normalizeDealerLabel(r.name || "")),
+    palette.money,
+    formatCompactMoney,
+    formatShortMoney(Math.max(...topDealers.map((r)=> Number(r.amt) || 0), 0)),
+    {
+      minBarWidth: 8,
+      barPad: (frame)=> frame.compact ? 3 : 4,
+      customLabels: ({ ctx, frame, geom, barW })=>{
+        ctx.fillStyle = palette.label;
+        ctx.font = frame.tickFont;
+        const labelStep = Math.max(1, Math.ceil(topDealers.length / (frame.compact ? 5 : 7)));
+        topDealers.forEach((r,i)=>{
+          if(i % labelStep !== 0 && i !== topDealers.length - 1) return;
+          const maxLabelW = Math.max(18, barW - 1);
+          const base = normalizeDealerLabel(r.name || "");
+          const lab = fitLabel(ctx, base, maxLabelW);
+          const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
+          const x = Math.max(2, tx);
+          ctx.fillText(lab, x, h-10);
+        });
       }
-      drawYTickLabels(ctx, geom, frame, yLabels);
-      drawYLabel(ctx, String(Math.round(maxV)), frame);
     }
-  }
+  );
 
-  // Bar: Trips over time (by month in range)
-  {
-    const c = setupCanvas(document.getElementById("c_trips"));
-    if(c){
-      const {ctx,w,h} = c;
-      const frame = chartFrame(w,h);
-      clear(ctx,w,h);
-      ctx.fillStyle = palette.plotBg;
-      ctx.fillRect(frame.left, frame.top, w - frame.left - frame.right, h - frame.top - frame.bottom);
-      const geom = drawAxes(ctx,w,h,frame);
+  const lbsValues = monthRows.map((r)=> Number(r.lbs) || 0);
+  drawBarChart("c_lbs", lbsValues, monthRows.map((r)=> r.label), palette.lbs, formatCompactCount, String(Math.round(Math.max(...lbsValues, 0))), {
+    minBarWidth: 4,
+    barPad: (frame)=> frame.compact ? 0.8 : 1.2
+  });
 
-      const timeline = makeTripsTimeline(trips);
-      const vals = timeline.map(r=> Number(r.count)||0);
-      const maxV = Math.max(1, ...vals);
-      const yScale = niceScale(maxV, 4);
-      const barW = geom.plotW / (vals.length || 1);
-
-      vals.forEach((v,i)=>{
-        const bh = (v/maxV)*geom.plotH;
-        const barPad = frame.compact ? 0.8 : 1.2;
-        const x = geom.x0 + i*barW + barPad;
-        const y = geom.y0 - bh;
-        ctx.fillStyle = palette.trips;
-        ctx.fillRect(x, y, Math.max(4, barW - (barPad * 2)), bh);
-      });
-
-      drawBottomTicks(ctx, timeline.map(r=>r.shortLabel), geom, h-10, frame);
-      const yLabels = [];
-      for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
-        yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: formatCompactCount(v) });
-      }
-      drawYTickLabels(ctx, geom, frame, yLabels);
-      drawYLabel(ctx, String(Math.round(maxV)), frame);
-    }
-  }
+  const tripValues = tripsTimeline.map((r)=> Number(r.count) || 0);
+  drawBarChart("c_trips", tripValues, tripsTimeline.map((r)=> r.shortLabel), palette.trips, formatCompactCount, String(Math.round(Math.max(...tripValues, 1))), {
+    minBarWidth: 4,
+    minTop: 1,
+    barPad: (frame)=> frame.compact ? 0.8 : 1.2
+  });
 }
