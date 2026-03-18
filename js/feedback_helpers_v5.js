@@ -5,7 +5,11 @@ export function createFeedbackHelpers({
   focusFirstFocusable
 }){
   let toastTimer = null;
+  let toastCleanupTimer = null;
   let ariaLiveTimer = null;
+  const TOAST_EXIT_MS = 260;
+  const MODAL_EXIT_MS = 220;
+
   const LS_INSTALL_PROMPTED = "btc-install_prompted_v1";
   let deferredInstallPrompt = null;
 
@@ -24,6 +28,54 @@ export function createFeedbackHelpers({
       /backup (created|saved)/i
     ]
   };
+
+  function resetToastState(el){
+    if(!el) return;
+    clearTimeout(toastTimer);
+    clearTimeout(toastCleanupTimer);
+    el.classList.remove("show", "toastMilestone");
+    el.textContent = "";
+  }
+
+  function hideToast(el, { immediate = false } = {}){
+    if(!el) return;
+    clearTimeout(toastTimer);
+    clearTimeout(toastCleanupTimer);
+    if(immediate){
+      el.classList.remove("show", "toastMilestone");
+      el.textContent = "";
+      return;
+    }
+    el.classList.remove("show");
+    toastCleanupTimer = setTimeout(()=>{
+      if(!el.classList.contains("show")){
+        el.classList.remove("toastMilestone");
+        el.textContent = "";
+      }
+    }, TOAST_EXIT_MS);
+  }
+
+  function showToastElement(el){
+    if(!el) return;
+    requestAnimationFrame(()=>{ el.classList.add("show"); });
+  }
+
+  function animateModalOverlayIn(el){
+    if(!el) return;
+    requestAnimationFrame(()=>{ el.classList.add("is-visible"); });
+  }
+
+  function animateModalOverlayOut(el, onDone){
+    if(!el){
+      onDone && onDone();
+      return;
+    }
+    el.classList.remove("is-visible");
+    el.classList.add("is-closing");
+    setTimeout(()=>{
+      onDone && onDone();
+    }, MODAL_EXIT_MS);
+  }
 
   function supportsHaptics(){
     try{ return typeof navigator !== "undefined" && typeof navigator.vibrate === "function"; }catch(_){ return false; }
@@ -74,8 +126,7 @@ export function createFeedbackHelpers({
       const onAction = (typeof opts?.onAction === "function") ? opts.onAction : null;
       const durationMs = Number(opts?.durationMs);
 
-      clearTimeout(toastTimer);
-      el.textContent = "";
+      resetToastState(el);
       const textNode = document.createElement("span");
       textNode.className = "toastText";
       textNode.textContent = text;
@@ -88,8 +139,7 @@ export function createFeedbackHelpers({
         btn.textContent = actionLabel;
         btn.addEventListener("click", ()=>{
           try{ onAction(); }catch(_){ }
-          clearTimeout(toastTimer);
-          el.classList.remove("show");
+          hideToast(el);
         }, { once: true });
         el.appendChild(btn);
       }
@@ -106,8 +156,8 @@ export function createFeedbackHelpers({
         const detected = detectToastHapticLevel(trimmed);
         if(detected !== "none") triggerHaptic(detected);
       }
-      el.classList.add("show");
-      toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 2400);
+      showToastElement(el);
+      toastTimer = setTimeout(()=>{ hideToast(el); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 2400);
     }catch{}
   }
 
@@ -115,8 +165,7 @@ export function createFeedbackHelpers({
     try{
       const el = document.getElementById("toast");
       if(!el) return;
-      clearTimeout(toastTimer);
-      el.textContent = "";
+      resetToastState(el);
       el.classList.add("toastMilestone");
 
       const content = document.createElement("div");
@@ -139,16 +188,15 @@ export function createFeedbackHelpers({
       btn.className = "toastAction";
       btn.textContent = String(okLabel || "OK");
       btn.addEventListener("click", ()=>{
-        clearTimeout(toastTimer);
-        el.classList.remove("show");
+        hideToast(el);
       }, { once: true });
 
       el.appendChild(content);
       el.appendChild(btn);
       announce(titleNode.textContent, "polite");
       triggerHaptic("medium");
-      el.classList.add("show");
-      toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 5600);
+      showToastElement(el);
+      toastTimer = setTimeout(()=>{ hideToast(el); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 5600);
     }catch{}
   }
 
@@ -192,15 +240,20 @@ export function createFeedbackHelpers({
         </div>
       `;
 
+      let settled = false;
       const cleanup = (v)=>{
+        if(settled) return;
+        settled = true;
         el.removeEventListener("pointerdown", onBackdrop);
         el.removeEventListener("click", onBackdrop);
-        unlockBodyScroll(el);
-        try{ el.remove(); }catch(_){ }
-        if(opener && document.contains(opener)){
-          try{ opener.focus({ preventScroll: true }); }catch(_){ }
-        }
-        resolve(v);
+        animateModalOverlayOut(el, ()=>{
+          unlockBodyScroll(el);
+          try{ el.remove(); }catch(_){ }
+          if(opener && document.contains(opener)){
+            try{ opener.focus({ preventScroll: true }); }catch(_){ }
+          }
+          resolve(v);
+        });
       };
 
       const onBackdrop = (e)=>{
@@ -214,6 +267,7 @@ export function createFeedbackHelpers({
       el.addEventListener("click", onBackdrop);
       document.body.appendChild(el);
       lockBodyScroll(el);
+      animateModalOverlayIn(el);
       focusFirstFocusable(el.querySelector(".modalCard"));
 
       el.querySelector("#im_cancel")?.addEventListener("click", ()=>cleanup(false));
@@ -285,15 +339,20 @@ export function createFeedbackHelpers({
         </div>
       `;
 
+      let settled = false;
       const cleanup = (v)=>{
+        if(settled) return;
+        settled = true;
         el.removeEventListener("pointerdown", onBackdrop);
         el.removeEventListener("click", onBackdrop);
-        unlockBodyScroll(el);
-        try{ el.remove(); }catch(_){ }
-        if(opener && document.contains(opener)){
-          try{ opener.focus({ preventScroll: true }); }catch(_){ }
-        }
-        resolve(v);
+        animateModalOverlayOut(el, ()=>{
+          unlockBodyScroll(el);
+          try{ el.remove(); }catch(_){ }
+          if(opener && document.contains(opener)){
+            try{ opener.focus({ preventScroll: true }); }catch(_){ }
+          }
+          resolve(v);
+        });
       };
 
       const onBackdrop = (e)=>{
@@ -307,6 +366,7 @@ export function createFeedbackHelpers({
       el.addEventListener("click", onBackdrop);
       document.body.appendChild(el);
       lockBodyScroll(el);
+      animateModalOverlayIn(el);
       focusFirstFocusable(el.querySelector(".modalCard"));
 
       el.querySelector("#m_cancel")?.addEventListener("click", ()=>cleanup(false));
