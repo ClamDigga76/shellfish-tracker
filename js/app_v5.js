@@ -18,7 +18,7 @@ import { createQuickChipHelpers } from "./quick_chips_v5.js";
 import { createReportsFilterHelpers } from "./reports_filters_v5.js";
 import { createSettingsListManagement } from "./settings_list_management_v5.js";
 import { createBackupRestoreSubsystem } from "./backup_restore_v5.js";
-import { createTripDataEngine, createTripDraftSaveEngine, createTripMetricSyncEngine, computeTripSaveEnabled } from "./trip_shared_engine_v5.js";
+import { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled } from "./trip_shared_engine_v5.js";
 import { createTripCardRenderHelpers, normalizeDealerDisplay } from "./trip_cards_v5.js";
 import { renderHelpViewHTML, renderAboutViewHTML } from "./help_about_render_v5.js";
 import { renderTripEntryForm } from "./trip_form_render_v5.js";
@@ -1399,7 +1399,6 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
   saveState,
   scheduleStateSave,
   computeTripSaveEnabled,
-  createTripMetricSyncEngine,
   isValidAreaValue,
   sanitizeDecimalInput,
   primeNumericField,
