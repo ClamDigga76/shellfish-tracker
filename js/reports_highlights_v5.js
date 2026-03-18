@@ -11,6 +11,8 @@ export function createReportsHighlightsSeam(deps){
   const pctText = (value)=> `${Math.abs(Math.round(safeNum(value) * 100))}%`;
   const signedPctText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${Math.round(safeNum(value) * 100)}%`;
   const signedMoneyText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${formatMoney(to2(safeNum(value)))}`;
+  const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
+  const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
   const buildPeriodLabel = (period)=> `${period?.currentLabel || "Current"} vs ${period?.previousLabel || "Prior"}`;
   const buildComparableWindowLabel = (period)=> period?.fairWindowLabel || "Comparable window";
 
@@ -327,16 +329,16 @@ export function createReportsHighlightsSeam(deps){
           ${highlights.map(item=>`
             <div class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare" : "summary"}">
               <div class="reportsHighlightLabel">${escapeHtml(item.label)}</div>
-              <div class="reportsHighlightHeadline">${escapeHtml(item.headline)}</div>
+              <div class="reportsHighlightHeadline">${renderPercentEmphasisText(item.headline)}</div>
               ${item.type === "compare" ? `
                 <div class="reportsHighlightMetricRow">
-                  <div class="reportsHighlightValue ${item.valueClass || ""}">${escapeHtml(item.value)}</div>
+                  <div class="reportsHighlightValue ${item.valueClass || ""}">${renderPercentEmphasisText(item.value)}</div>
                   <div class="reportsMiniPreview" role="presentation" aria-hidden="true">
                     <span class="reportsMiniPreviewBar"><span class="reportsMiniPreviewFill" style="width:${item.aPct}%"></span></span>
                     <span class="reportsMiniPreviewBar muted"><span class="reportsMiniPreviewFill" style="width:${item.bPct}%"></span></span>
                   </div>
                 </div>
-                <div class="reportsCompareRow tone-${escapeHtml(item.compareTone)}">${escapeHtml(item.compareText)}</div>
+                <div class="reportsCompareRow tone-${escapeHtml(item.compareTone)}">${renderPercentEmphasisText(item.compareText)}</div>
                 <div class="reportsCompareBars" role="presentation">
                   <div class="reportsCompareLine">
                     <div class="reportsCompareMeta"><span>${escapeHtml(item.aLabel)}</span><b class="${item.valueClass || ""}">${escapeHtml(item.aValue)}</b></div>
@@ -349,9 +351,9 @@ export function createReportsHighlightsSeam(deps){
                 </div>
               ` : `
                 <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
-                  <div class="reportsHighlightValue ${item.valueClass || ""}">${escapeHtml(item.value)}</div>
+                  <div class="reportsHighlightValue ${item.valueClass || ""}">${renderPercentEmphasisText(item.value)}</div>
                 </div>
-                <div class="reportsCompareRow tone-${escapeHtml(item.statusTone)}">${escapeHtml(item.statusText)}</div>
+                <div class="reportsCompareRow tone-${escapeHtml(item.statusTone)}">${renderPercentEmphasisText(item.statusText)}</div>
               `}
             </div>
           `).join("")}

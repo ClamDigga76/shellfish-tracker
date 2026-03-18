@@ -554,6 +554,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     });
   };
 
+  const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
+  const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
+
   const formatMetricCompareValue = (metricKey, value)=>{
     const safeValue = Number(value);
     if(!Number.isFinite(safeValue)) return "—";
@@ -643,7 +646,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         </div>
 
         <div class="${detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
-          <div class="${detailCompareTextClass}">${escapeHtml(compareSummary.text)}</div>
+          <div class="${detailCompareTextClass}">${renderPercentEmphasisText(compareSummary.text)}</div>
           <div class="${detailCompareRowsClass}">
             <div><span>${escapeHtml(compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
             <div><span>${escapeHtml(compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
