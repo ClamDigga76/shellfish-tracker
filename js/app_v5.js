@@ -1360,7 +1360,8 @@ const { renderHome } = createHomeDashboardRenderer({
   bindDatePill,
   showToast,
   tipMsg: typeof tipMsg !== "undefined" ? tipMsg : undefined,
-  exportBackup
+  exportBackup,
+  renderHomeMetricDetail: () => renderHomeMetricDetail()
 });
 
 const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrchestrator({
@@ -1435,7 +1436,7 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
 
 
 
-const { renderReports } = createReportsScreenRenderer({
+const { renderReports, renderHomeMetricDetail } = createReportsScreenRenderer({
   ensureReportsFilter: () => ensureReportsFilter(),
   getState: () => state,
   buildUnifiedFilterFromReportsFilter,

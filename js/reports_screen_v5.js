@@ -49,7 +49,7 @@ export function createReportsScreenRenderer(deps){
     ? reportsHighlights.renderHighlightsStrip
     : (()=>"");
 
-function renderReports(){
+function renderReportsScreen({ homeMetricOnly = false } = {}){
   const state = getState();
   ensureReportsFilter();
 
@@ -62,6 +62,11 @@ function renderReports(){
     ? state.reportsMetricDetailContext
     : null;
   const isHomeMetricDetail = metricDetailContext?.source === "home";
+
+  if (homeMetricOnly && !isHomeMetricDetail) {
+    renderApp();
+    return;
+  }
 
   const hasValidRange = (fMode !== "RANGE") || (parseReportDateToISO(rf.from) && parseReportDateToISO(rf.to));
   const homeCtxFilter = (isHomeMetricDetail && metricDetailContext?.homeFilter && typeof metricDetailContext.homeFilter === "object")
@@ -167,7 +172,7 @@ function renderReports(){
         }
         saveState();
         showToast("Filter updated");
-        renderReports();
+        renderReportsScreen();
       };
     });
 
@@ -187,7 +192,7 @@ function renderReports(){
           if (!state.reportsFilter) state.reportsFilter = {};
           state.reportsFilter.adv = true;
           saveState();
-          renderReports();
+          renderReportsScreen();
           return;
         }
         state.view = "new";
@@ -213,7 +218,7 @@ function renderReports(){
         state.reportsFilter.to = "";
         saveState();
         showToast("Filter updated");
-        renderReports();
+        renderReportsScreen();
       };
     }
 
@@ -648,7 +653,11 @@ function renderReports(){
     ].join("");
   };
 
-  getApp().innerHTML = `
+  getApp().innerHTML = homeMetricOnly ? `
+    ${renderPageHeader("home")}
+
+    ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : ""}
+  ` : `
     ${renderPageHeader("reports")}
 
     ${renderReportsTopShell()}
@@ -672,7 +681,7 @@ function renderReports(){
     btn.onclick = ()=>{
       state.reportsFilter.mode = String(btn.getAttribute("data-rf")||"YTD");
       saveState();
-      renderReports();
+      renderReportsScreen();
     };
   });
 
@@ -682,7 +691,7 @@ function renderReports(){
       const key = btn.getAttribute("data-m");
       state.reportsMode = key;
       saveState();
-      renderReports();
+      renderReportsScreen();
     };
   });
 
@@ -701,7 +710,7 @@ function renderReports(){
       state.reportsMetricDetail = String(btn.getAttribute("data-metric-detail") || "").toLowerCase();
       state.reportsMetricDetailContext = { source: "reports" };
       saveState();
-      renderReports();
+      renderReportsScreen();
     };
   });
 
@@ -718,7 +727,7 @@ function renderReports(){
       }
       state.reportsMetricDetailContext = null;
       saveState();
-      renderReports();
+      renderReportsScreen();
     };
   }
 
@@ -734,13 +743,20 @@ function renderReports(){
       reportsSwitchToTables.onclick = ()=>{
         state.reportsMode = "tables";
         saveState();
-        renderReports();
+        renderReportsScreen();
       };
     }
     setTimeout(()=>{ drawReportsCharts(monthRows, dealerRows, trips); }, 0);
   }
 }
 
+function renderReports(){
+  renderReportsScreen();
+}
 
-  return { renderReports };
+function renderHomeMetricDetail(){
+  renderReportsScreen({ homeMetricOnly: true });
+}
+
+  return { renderReports, renderHomeMetricDetail };
 }
