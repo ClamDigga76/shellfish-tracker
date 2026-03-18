@@ -59,9 +59,9 @@
   --safeBottom:env(safe-area-inset-bottom);
   --tabbar-safe:max(0px, var(--safeBottom));
   --tabbar-total-h:calc(var(--tabbar-h) + var(--tabbar-safe));
-  --section-gap:14px;
-  --section-gap-tight:12px;
-  --card-stack-gap:14px;
+  --section-gap:16px;
+  --section-gap-tight:13px;
+  --card-stack-gap:16px;
   --card-pad-y:14px;
   --card-pad-x:14px;
   --card-title-gap:8px;
