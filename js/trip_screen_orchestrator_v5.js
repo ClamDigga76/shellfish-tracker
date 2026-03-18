@@ -28,6 +28,7 @@ export function createTripScreenOrchestrator({
   saveState,
   scheduleStateSave,
   computeTripSaveEnabled,
+  createTripMetricSyncEngine,
   isValidAreaValue,
   sanitizeDecimalInput,
   primeNumericField,
@@ -135,41 +136,17 @@ const newTripFormHtml = renderTripEntryForm({
   const elRate = document.getElementById("rateValue");
   bindDatePill("t_date");
 
-  const createMetricSync = ()=>{
-    let lastEditedMetric = "";
-    let syncingMetric = false;
-    const setMetricValue = (el, value, decimals)=>{
-      if(!el || !Number.isFinite(value)) return;
-      el.value = Number(value).toFixed(decimals);
-    };
-    const updateRateLine = ()=>{
-      if(!elRate || syncingMetric) return;
-      const pounds = parseNum(elPounds?.value);
-      const amount = parseMoney(elAmount?.value);
-      const rate = parseNum(elRate?.value);
-      syncingMetric = true;
-      if(lastEditedMetric === "t_pounds"){
-        if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
-        else if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
-      }else if(lastEditedMetric === "t_amount"){
-        if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
-        else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
-      }else if(lastEditedMetric === "rateValue"){
-        if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
-        else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
-      }else if(pounds > 0 && amount > 0){
-        setMetricValue(elRate, computePPL(pounds, amount), 2);
-      }
-      syncingMetric = false;
-    };
-    return {
-      updateRateLine,
-      setLastEditedMetric: (field)=>{ lastEditedMetric = field; }
-    };
-  };
-
-  const metricSync = createMetricSync();
-  const updateRateLine = metricSync.updateRateLine;
+  const metricSync = createTripMetricSyncEngine({
+    parseNum,
+    parseMoney,
+    computePPL,
+    syncTargets: {
+      pounds: elPounds,
+      amount: elAmount,
+      rate: elRate
+    }
+  });
+  const updateRateLine = metricSync.updateDerivedField;
   const createQuickAddHandler = ()=> (kind, opts = {})=>{
     const isDealer = (kind==="dealer");
     const label = isDealer ? "Dealer" : "Area";
@@ -282,7 +259,7 @@ const newTripFormHtml = renderTripEntryForm({
     elPounds.addEventListener("pointerdown", prime);
     elPounds.addEventListener("focus", prime);
     elPounds.addEventListener("input", ()=>{
-      metricSync.setLastEditedMetric("t_pounds");
+      metricSync.onUserEdit("pounds");
       const s = sanitizeDecimalInput(elPounds.value);
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
@@ -301,7 +278,7 @@ const newTripFormHtml = renderTripEntryForm({
     elAmount.addEventListener("pointerdown", prime);
     elAmount.addEventListener("focus", prime);
     elAmount.addEventListener("input", ()=>{
-      metricSync.setLastEditedMetric("t_amount");
+      metricSync.onUserEdit("amount");
       const s = sanitizeDecimalInput(elAmount.value);
       if(s !== elAmount.value) elAmount.value = s;
       updateSaveEnabled();
@@ -320,7 +297,7 @@ const newTripFormHtml = renderTripEntryForm({
     elRate.addEventListener("pointerdown", prime);
     elRate.addEventListener("focus", prime);
     elRate.addEventListener("input", ()=>{
-      metricSync.setLastEditedMetric("rateValue");
+      metricSync.onUserEdit("rate");
       const s = sanitizeDecimalInput(elRate.value);
       if(s !== elRate.value) elRate.value = s;
       updateRateLine();
@@ -1030,32 +1007,17 @@ function renderEditTrip(){
   const topDealerWrapE = document.getElementById("topDealersE");
   const topAreaWrapE = document.getElementById("topAreasE");
 
-  let lastEditedMetric = "";
-  let syncingMetric = false;
-  const setMetricValue = (el, value, decimals)=>{
-    if(!el || !Number.isFinite(value)) return;
-    el.value = Number(value).toFixed(decimals);
-  };
-  const updateRateLine = ()=>{
-    if(!elRate || syncingMetric) return;
-    const pounds = parseNum(elPounds?.value);
-    const amount = parseMoney(elAmount?.value);
-    const rate = parseNum(elRate?.value);
-    syncingMetric = true;
-    if(lastEditedMetric === "e_pounds"){
-      if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
-      else if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
-    }else if(lastEditedMetric === "e_amount"){
-      if(pounds > 0 && amount > 0) setMetricValue(elRate, computePPL(pounds, amount), 2);
-      else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
-    }else if(lastEditedMetric === "rateValueEdit"){
-      if(pounds > 0 && rate > 0) setMetricValue(elAmount, pounds * rate, 2);
-      else if(amount > 0 && rate > 0) setMetricValue(elPounds, amount / rate, 2);
-    }else if(pounds > 0 && amount > 0){
-      setMetricValue(elRate, computePPL(pounds, amount), 2);
+  const metricSync = createTripMetricSyncEngine({
+    parseNum,
+    parseMoney,
+    computePPL,
+    syncTargets: {
+      pounds: elPounds,
+      amount: elAmount,
+      rate: elRate
     }
-    syncingMetric = false;
-  };
+  });
+  const updateRateLine = metricSync.updateDerivedField;
 
   const openQuickAdd = (kind, opts = {})=>{
     const isDealer = (kind === "dealer");
@@ -1248,7 +1210,7 @@ function renderEditTrip(){
     elPounds.addEventListener("pointerdown", prime);
     elPounds.addEventListener("focus", prime);
     elPounds.addEventListener("input", ()=>{
-      lastEditedMetric = "e_pounds";
+      metricSync.onUserEdit("pounds");
       const s = sanitizeDecimalInput(elPounds.value);
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
@@ -1267,7 +1229,7 @@ function renderEditTrip(){
     elAmount.addEventListener("pointerdown", prime);
     elAmount.addEventListener("focus", prime);
     elAmount.addEventListener("input", ()=>{
-      lastEditedMetric = "e_amount";
+      metricSync.onUserEdit("amount");
       const s = sanitizeDecimalInput(elAmount.value);
       if(s !== elAmount.value) elAmount.value = s;
       updateSaveEnabled();
@@ -1286,7 +1248,7 @@ function renderEditTrip(){
     elRate.addEventListener("pointerdown", prime);
     elRate.addEventListener("focus", prime);
     elRate.addEventListener("input", ()=>{
-      lastEditedMetric = "rateValueEdit";
+      metricSync.onUserEdit("rate");
       const s = sanitizeDecimalInput(elRate.value);
       if(s !== elRate.value) elRate.value = s;
       updateRateLine();
