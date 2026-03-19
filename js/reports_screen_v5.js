@@ -720,18 +720,18 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ].join("");
   };
 
-  const highlightsStrip = renderReportsHighlightsStrip({
-    dealerRows,
-    monthRows,
-    areaRows,
-    trips
-  });
-
   const totalLbs = trips.reduce((sum, t)=> sum + (Number(t?.pounds) || 0), 0);
   const totalAmount = trips.reduce((sum, t)=> sum + (Number(t?.amount) || 0), 0);
   const compareFoundation = isHomeMetricDetail
     ? buildHomeMetricDetailFoundation({ monthRows })
     : buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
+  const highlightsStrip = renderReportsHighlightsStrip({
+    dealerRows,
+    monthRows,
+    areaRows,
+    trips,
+    compareFoundation: isHomeMetricDetail ? null : compareFoundation
+  });
   const detailCharts = compareFoundation.detailCharts || {};
   const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
@@ -1134,7 +1134,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   if(activeMetricDetail){
     requestAnimationFrame(()=>{
-      drawReportsCharts(monthRows, dealerRows, trips, {
+      drawReportsCharts(monthRows, dealerRows, tripsTimeline, {
         metricDetail: {
           metricKey: activeMetricDetail,
           compareChart: detailCharts?.[activeMetricDetail] || null
@@ -1156,7 +1156,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         });
       };
     }
-    requestAnimationFrame(()=>{ drawReportsCharts(monthRows, dealerRows, trips); });
+    requestAnimationFrame(()=>{ drawReportsCharts(monthRows, dealerRows, tripsTimeline); });
   }
 }
 

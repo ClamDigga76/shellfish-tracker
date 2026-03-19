@@ -1,3 +1,5 @@
+import { buildEntityPeriodRows, buildMonthWindowValueSeries, summarizeTripsByMonthWindow } from "./reports_aggregation_v5.js";
+
 export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows }){
   const safeTrips = Array.isArray(trips) ? trips : [];
   const safeMonths = Array.isArray(monthRows) ? monthRows : [];
@@ -40,8 +42,8 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
   }
 
   const periodRules = getPeriodRules(latestKey, safeTrips);
-  const current = summarizePeriod(safeTrips, latestKey, periodRules.dayLimit);
-  const previous = summarizePeriod(safeTrips, priorKey, periodRules.dayLimit);
+  const current = summarizeTripsByMonthWindow(safeTrips, latestKey, periodRules.dayLimit);
+  const previous = summarizeTripsByMonthWindow(safeTrips, priorKey, periodRules.dayLimit);
   const periodSupport = buildPeriodSupport({ current, previous });
   const periodComparable = periodSupport.comparable;
   const period = {
@@ -202,8 +204,7 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
     });
   }
 
-  const keyName = entityType === "dealer" ? "dealer" : "area";
-  const entityStats = summarizeEntityCandidates(safeTrips, keyName, period);
+  const entityStats = buildEntityPeriodRows({ trips: safeTrips, entityType, period });
   const movement = buildEntityMovementModel({
     entityStats,
     entityType,
@@ -439,49 +440,6 @@ function buildEntityExplanation({ entityType, viable, movement }){
   return parts.join(" ");
 }
 
-function summarizeEntityCandidates(trips, keyName, period){
-  const map = new Map();
-
-  (Array.isArray(trips) ? trips : []).forEach((t)=>{
-    const iso = String(t?.dateISO || "");
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
-    const rawName = String(t?.[keyName] || "").trim();
-    const name = rawName || "(Unspecified)";
-    const bucket = iso.slice(0, 7) === period.current?.monthKey
-      ? "current"
-      : (iso.slice(0, 7) === period.previous?.monthKey ? "previous" : "");
-    if(!bucket) return;
-    const day = Number(iso.slice(8, 10));
-    const dayLimit = period?.[bucket]?.dayLimit;
-    if(dayLimit && day > dayLimit) return;
-    const key = name.toLowerCase();
-    if(!map.has(key)){
-      map.set(key, {
-        name,
-        current: { amount: 0, trips: 0, uniqueDays: 0, _days: new Set() },
-        previous: { amount: 0, trips: 0, uniqueDays: 0, _days: new Set() }
-      });
-    }
-    const row = map.get(key);
-    row[bucket].amount += safeNum(t?.amount);
-    row[bucket].trips += 1;
-    row[bucket]._days.add(iso);
-  });
-  return Array.from(map.values()).map((row)=>({
-    name: row.name,
-    current: finalizeEntityBucket(row.current),
-    previous: finalizeEntityBucket(row.previous)
-  }));
-}
-
-function finalizeEntityBucket(bucket){
-  return {
-    amount: safeNum(bucket.amount),
-    trips: safeNum(bucket.trips),
-    uniqueDays: bucket._days instanceof Set ? bucket._days.size : safeNum(bucket.uniqueDays)
-  };
-}
-
 function compareEntityRows(a, b){
   const aScore = scoreSupport({
     currentTrips: a.current.trips,
@@ -506,39 +464,6 @@ function compareMovementRows(a, b){
 
 function compareShareShiftRows(a, b){
   return Math.abs(b.shareDeltaPct) - Math.abs(a.shareDeltaPct) || compareMovementRows(a, b);
-}
-
-function summarizePeriod(trips, monthKey, dayLimit){
-  let amount = 0;
-  let lbs = 0;
-  let tripsCount = 0;
-  const days = new Set();
-
-  (Array.isArray(trips) ? trips : []).forEach((t)=>{
-    const iso = String(t?.dateISO || "");
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
-    if(iso.slice(0, 7) !== monthKey) return;
-    const day = Number(iso.slice(8, 10));
-    if(dayLimit && day > dayLimit) return;
-    amount += safeNum(t?.amount);
-    lbs += safeNum(t?.pounds);
-    tripsCount += 1;
-    days.add(iso);
-  });
-
-  return {
-    monthKey,
-    dayLimit,
-    amount,
-    lbs,
-    trips: tripsCount,
-    uniqueDays: days.size,
-    ppl: lbs > 0 ? amount / lbs : 0,
-    amountPerTrip: tripsCount > 0 ? amount / tripsCount : 0,
-    poundsPerTrip: tripsCount > 0 ? lbs / tripsCount : 0,
-    amountPerDay: days.size > 0 ? amount / days.size : 0,
-    poundsPerDay: days.size > 0 ? lbs / days.size : 0
-  };
 }
 
 function buildPeriodSupport({ current, previous }){
@@ -634,17 +559,7 @@ function buildMetricDetailCompareChart({ labels, currentValue, previousValue, me
 
 function buildMetricDetailAmountCharts({ period, monthRows, trips }){
   const dayLimit = safeNum(period?.current?.dayLimit) || safeNum(period?.previous?.dayLimit) || 0;
-  const safeMonthRows = Array.isArray(monthRows) ? monthRows : [];
-  const safeTrips = Array.isArray(trips) ? trips : [];
-  const trendRows = safeMonthRows.map((row)=>{
-    const monthKey = String(row?.monthKey || "");
-    const summary = summarizePeriod(safeTrips, monthKey, dayLimit || undefined);
-    return {
-      monthKey,
-      label: String(row?.label || monthKey),
-      value: safeNum(summary.amount)
-    };
-  }).filter((row)=> row.monthKey);
+  const trendRows = buildMonthWindowValueSeries({ monthRows, trips, dayLimit, metricKey: "amount" });
   return {
     chartType: "time-series",
     metricKey: "amount",
