@@ -283,10 +283,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   }
 
   const hasValidRange = (fMode !== "RANGE") || (parseReportDateToISO(rf.from) && parseReportDateToISO(rf.to));
-  const homeCtxFilter = (isHomeMetricDetail && metricDetailContext?.homeFilter && typeof metricDetailContext.homeFilter === "object")
-    ? metricDetailContext.homeFilter
-    : null;
-  const homeMode = String(homeCtxFilter?.mode || "YTD").toUpperCase();
   const mapHomeModeToUnifiedRange = (modeValue)=> {
     const normalized = String(modeValue || "YTD").toUpperCase();
     if(normalized === "ALL") return "all";
@@ -299,19 +295,54 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     if(normalized === "RANGE" || normalized === "CUSTOM") return "custom";
     return "ytd";
   };
-  const homeRangeMode = mapHomeModeToUnifiedRange(homeMode);
-  const unified = (isHomeMetricDetail && activeMetricDetail && homeCtxFilter)
-    ? {
-      range: homeRangeMode,
-      fromISO: parseReportDateToISO(homeCtxFilter.from || "") || "",
-      toISO: parseReportDateToISO(homeCtxFilter.to || "") || "",
+  const buildHomeMetricScope = (homeFilter, homeScopeSnapshot = null)=> {
+    const normalizedFilter = homeFilter && typeof homeFilter === "object"
+      ? {
+        mode: String(homeFilter.mode || "YTD").toUpperCase(),
+        from: parseReportDateToISO(homeFilter.from || "") || "",
+        to: parseReportDateToISO(homeFilter.to || "") || ""
+      }
+      : null;
+    if(!normalizedFilter) return null;
+    const unifiedFilter = {
+      range: mapHomeModeToUnifiedRange(normalizedFilter.mode),
+      fromISO: normalizedFilter.from,
+      toISO: normalizedFilter.to,
       dealer: "all",
       area: "all",
       species: "all",
       text: ""
-    }
+    };
+    const resolvedRange = resolveUnifiedRange(unifiedFilter);
+    const displayRangeLabel = unifiedFilter.range === "custom"
+      ? `${formatDateDMY(resolvedRange.fromISO)} → ${formatDateDMY(resolvedRange.toISO)}`
+      : String(resolvedRange.label || "YTD");
+    const filtered = applyUnifiedTripFilter(tripsAll, unifiedFilter);
+    const fallbackTripCount = filtered.rows.length;
+    const snapshotTripCount = Number(homeScopeSnapshot?.tripCount);
+    const tripCount = Number.isFinite(snapshotTripCount) && snapshotTripCount >= 0
+      ? snapshotTripCount
+      : fallbackTripCount;
+    const contextText = `Home • Range ${displayRangeLabel} • ${tripCount} trips`;
+    return {
+      filter: normalizedFilter,
+      unifiedFilter,
+      resolvedRange,
+      rangeLabel: displayRangeLabel,
+      tripCount,
+      contextText,
+      trips: filtered.rows
+    };
+  };
+  const homeScope = isHomeMetricDetail
+    ? buildHomeMetricScope(metricDetailContext?.homeFilter, metricDetailContext?.homeScope)
+    : null;
+  const unified = (isHomeMetricDetail && activeMetricDetail && homeScope)
+    ? homeScope.unifiedFilter
     : buildUnifiedFilterFromReportsFilter(rf);
-  let trips = applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" }).rows;
+  let trips = isHomeMetricDetail && activeMetricDetail && homeScope
+    ? homeScope.trips
+    : applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" }).rows;
 
   const chip = (key,label) => `<button class="chip segBtn ${fMode===key?'on is-selected':''}" data-rf="${key}" type="button">${label}</button>`;
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
@@ -323,15 +354,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     areas: state.areas
   });
 
-  const resolvedReportsRange = resolveUnifiedRange(unified);
-  const rangeLabel = isHomeMetricDetail
-    ? (homeRangeMode === "custom"
-      ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}`
-      : (homeRangeMode === "mtd" ? "This Month"
-        : (homeRangeMode === "7d" ? "Last 7 Days"
-          : (homeRangeMode === "all" ? "All Time"
-            : (homeRangeMode === "last_month" ? "Last Month"
-              : "YTD")))))
+  const resolvedReportsRange = isHomeMetricDetail && homeScope
+    ? homeScope.resolvedRange
+    : resolveUnifiedRange(unified);
+  const rangeLabel = isHomeMetricDetail && homeScope
+    ? homeScope.rangeLabel
     : (fMode === "RANGE")
       ? (hasValidRange ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}` : "Set dates")
       : (fMode === "THIS_MONTH" ? "This Month"
@@ -832,7 +859,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const detailBackLabel = isHomeMetricDetail ? "← Home KPIs" : "← Back to reports";
     const detailEyebrow = isHomeMetricDetail ? "Home KPI detail" : meta.eyebrow;
     const detailContext = isHomeMetricDetail
-      ? `Home • Range ${rangeLabel} • ${trips.length} trips`
+      ? String(homeScope?.contextText || `Home • Range ${rangeLabel} • ${homeScope?.tripCount ?? trips.length} trips`)
       : `Range ${rangeLabel} • ${trips.length} trips`;
     const detailChartTitle = isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = isHomeMetricDetail ? meta.homeChartContext : meta.chartContext;
