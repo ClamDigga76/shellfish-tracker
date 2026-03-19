@@ -98,19 +98,20 @@ export function createReportsHighlightsSeam(deps){
 
   function buildMetricCompareText({ payload, compare, period }){
     const windowText = buildComparableWindowLabel(period);
+    const trustText = payload?.confidenceLabel && payload.confidenceLabel !== "suppressed" ? ` • ${payload.confidenceLabel} signal` : "";
     if(payload.metricKey === "trips"){
-      return `${buildTripsDriverText(compare)} • ${windowText}`;
+      return `${buildTripsDriverText(compare)} • ${windowText}${trustText}`;
     }
     if(payload.metricKey === "amount"){
-      return `${buildAmountDriverText(compare).replace(/\.$/, "")} • ${windowText}`;
+      return `${buildAmountDriverText(compare).replace(/\.$/, "")} • ${windowText}${trustText}`;
     }
     if(payload.metricKey === "pounds"){
-      return `${buildPoundsDriverText(compare).replace(/\.$/, "")} • ${windowText}`;
+      return `${buildPoundsDriverText(compare).replace(/\.$/, "")} • ${windowText}${trustText}`;
     }
     if(payload.metricKey === "ppl"){
-      return `${buildPplDriverText(compare).replace(/\.$/, "")} • ${windowText}`;
+      return `${buildPplDriverText(compare).replace(/\.$/, "")} • ${windowText}${trustText}`;
     }
-    return `${buildPeriodLabel(period)} • ${windowText}`;
+    return `${buildPeriodLabel(period)} • ${windowText}${trustText}`;
   }
 
   function buildLeaderSummary({ label, entity, totalAmount, noun }){
@@ -307,7 +308,7 @@ export function createReportsHighlightsSeam(deps){
         headline: "Comparison held back for fairness.",
         value: "Suppressed",
         statusTone: "steady",
-        statusText: compare.period.reason || "Low-data baseline"
+        statusText: compare.period.reason || compare.period.explanation || "Low-data baseline"
       } : null
     ].filter(Boolean);
 

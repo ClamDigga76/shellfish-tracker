@@ -4,19 +4,17 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
   const latestMonth = safeMonths[safeMonths.length - 1] || null;
   const priorMonth = safeMonths[safeMonths.length - 2] || null;
 
-  const missingPeriod = {
-    comparable: false,
-    suppressed: true,
+  const missingPeriod = buildSuppressedPeriod({
     reason: "Need at least two months for comparison.",
-    confidence: "none"
-  };
+    suppressionCode: "missing-periods"
+  });
 
   if(!latestMonth || !priorMonth){
     return {
       period: missingPeriod,
       metrics: {},
-      dealer: { suppressed: true, reason: missingPeriod.reason },
-      area: { suppressed: true, reason: missingPeriod.reason }
+      dealer: buildSuppressedEntityPayload({ entityType: "dealer", reason: missingPeriod.reason, suppressionCode: missingPeriod.suppressionCode }),
+      area: buildSuppressedEntityPayload({ entityType: "area", reason: missingPeriod.reason, suppressionCode: missingPeriod.suppressionCode })
     };
   }
 
@@ -25,36 +23,40 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
   const monthAdjacent = isPriorMonth(latestKey, priorKey);
   if(!monthAdjacent){
     const reason = "Comparison suppressed: missing adjacent prior month.";
+    const period = buildSuppressedPeriod({
+      reason,
+      suppressionCode: "non-adjacent-months",
+      currentLabel: latestMonth.label,
+      previousLabel: priorMonth.label
+    });
     return {
-      period: {
-        comparable: false,
-        suppressed: true,
-        reason,
-        confidence: "none",
-        currentLabel: latestMonth.label,
-        previousLabel: priorMonth.label
-      },
+      period,
       metrics: {},
-      dealer: { suppressed: true, reason },
-      area: { suppressed: true, reason }
+      dealer: buildSuppressedEntityPayload({ entityType: "dealer", reason, suppressionCode: period.suppressionCode }),
+      area: buildSuppressedEntityPayload({ entityType: "area", reason, suppressionCode: period.suppressionCode })
     };
   }
 
   const periodRules = getPeriodRules(latestKey, safeTrips);
   const current = summarizePeriod(safeTrips, latestKey, periodRules.dayLimit);
   const previous = summarizePeriod(safeTrips, priorKey, periodRules.dayLimit);
-
-  const periodComparable = current.trips >= 2 && previous.trips >= 2 && current.uniqueDays >= 2 && previous.uniqueDays >= 2;
+  const periodSupport = buildPeriodSupport({ current, previous });
+  const periodComparable = periodSupport.comparable;
   const period = {
     comparable: periodComparable,
     suppressed: !periodComparable,
-    confidence: periodComparable ? "medium" : "low",
-    reason: periodComparable ? "" : "Comparison suppressed: low-data baseline in comparable periods.",
+    confidence: periodComparable ? classifyConfidenceFromScore(periodSupport.score) : "none",
+    confidenceLabel: periodComparable ? confidenceLabelFromScore(periodSupport.score) : "suppressed",
+    trustLabel: periodComparable ? confidenceLabelFromScore(periodSupport.score) : "suppressed",
+    reason: periodComparable ? "" : periodSupport.reason,
+    suppressionCode: periodComparable ? "" : periodSupport.suppressionCode,
+    explanation: periodComparable ? periodSupport.explanation : periodSupport.reason,
     currentLabel: latestMonth.label,
     previousLabel: priorMonth.label,
     fairWindowLabel: periodRules.dayLimit < periodRules.daysInCurrent
       ? `Days 1-${periodRules.dayLimit} in each month`
       : "Full month totals",
+    support: periodSupport.summary,
     current,
     previous
   };
@@ -65,7 +67,7 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
       label: "Amount",
       currentValue: current.amount,
       previousValue: previous.amount,
-      periodComparable,
+      period,
       minBaseline: 25,
       epsilonPct: 0.05,
       minTrips: 2,
@@ -76,7 +78,7 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
       label: "Pounds",
       currentValue: current.lbs,
       previousValue: previous.lbs,
-      periodComparable,
+      period,
       minBaseline: 10,
       epsilonPct: 0.05,
       minTrips: 2,
@@ -87,18 +89,21 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
       label: "Avg $/lb",
       currentValue: current.ppl,
       previousValue: previous.ppl,
-      periodComparable: periodComparable && current.lbs >= 10 && previous.lbs >= 10,
+      period,
       minBaseline: 0.1,
       epsilonPct: 0.035,
       minTrips: 2,
-      minUniqueDays: 2
+      minUniqueDays: 2,
+      requiredBaselineText: "at least 10 lbs in each period",
+      baselineOk: current.lbs >= 10 && previous.lbs >= 10,
+      baselineReason: `Suppressed: average $/lb needs at least 10 lbs in each period (now ${toWholeOrTwo(current.lbs)} lbs, before ${toWholeOrTwo(previous.lbs)} lbs).`
     }),
     trips: buildMetricComparePayload({
       metricKey: "trips",
       label: "Trips",
       currentValue: current.trips,
       previousValue: previous.trips,
-      periodComparable,
+      period,
       minBaseline: 1,
       epsilonPct: 0,
       minTrips: 2,
@@ -112,7 +117,8 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     entityType: "dealer",
     metricKey: "amount",
     period,
-    minEntityTrips: 2
+    minEntityTrips: 2,
+    minBaselineAmount: 25
   });
 
   const area = buildEntityComparePayload({
@@ -121,22 +127,32 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     entityType: "area",
     metricKey: "amount",
     period,
-    minEntityTrips: 2
+    minEntityTrips: 2,
+    minBaselineAmount: 25
   });
 
   return { period, metrics, dealer, area };
 }
 
-function buildMetricComparePayload({ metricKey, label, currentValue, previousValue, periodComparable, minBaseline, epsilonPct, minTrips, minUniqueDays }){
+function buildMetricComparePayload({ metricKey, label, currentValue, previousValue, period, minBaseline, epsilonPct, minTrips, minUniqueDays, baselineOk, baselineReason, requiredBaselineText }){
   const cur = safeNum(currentValue);
   const prev = safeNum(previousValue);
   const delta = cur - prev;
-  const hasBaseline = prev >= minBaseline;
-  const canCompare = periodComparable && hasBaseline;
+  const hasBaseline = typeof baselineOk === "boolean" ? baselineOk : prev >= minBaseline;
+  const canCompare = !!period?.comparable && hasBaseline;
   const deltaPct = prev > 0 ? (delta / prev) : null;
-  const lowDataReason = !periodComparable
-    ? `Suppressed: need at least ${minTrips} trips and ${minUniqueDays} fishing days in each period.`
-    : (!hasBaseline ? "Suppressed: baseline too weak for a fair percent comparison." : "");
+  const supportScore = scoreSupport({
+    currentTrips: period?.current?.trips,
+    previousTrips: period?.previous?.trips,
+    currentDays: period?.current?.uniqueDays,
+    previousDays: period?.previous?.uniqueDays,
+    baselineRatio: minBaseline > 0 ? Math.min(cur, prev) / minBaseline : 1
+  });
+  const reason = !period?.comparable
+    ? (period.reason || `Suppressed: need at least ${minTrips} trips and ${minUniqueDays} fishing days in each period.`)
+    : (!hasBaseline
+      ? (baselineReason || `Suppressed: ${label} needs a stronger baseline${requiredBaselineText ? ` (${requiredBaselineText})` : ""}.`)
+      : "");
 
   return {
     metricKey,
@@ -147,75 +163,157 @@ function buildMetricComparePayload({ metricKey, label, currentValue, previousVal
     deltaPct,
     compareTone: canCompare ? toneFromDelta(deltaPct, epsilonPct) : "steady",
     suppressed: !canCompare,
-    reason: canCompare ? "" : lowDataReason,
-    confidence: canCompare ? "medium" : "low",
-    percentValid: canCompare && deltaPct != null
+    reason,
+    explanation: canCompare
+      ? `${label} compare uses ${period?.fairWindowLabel || "the same fair window"}. ${confidenceLabelFromScore(supportScore) === "strong" ? "Support is solid in both periods." : (confidenceLabelFromScore(supportScore) === "early" ? "Read as an early signal while the sample builds." : "Support is lighter, so read this carefully.")}`
+      : reason,
+    suppressionCode: !canCompare
+      ? (!period?.comparable ? (period.suppressionCode || "period-low-data") : "baseline-too-weak")
+      : "",
+    confidence: canCompare ? classifyConfidenceFromScore(supportScore) : "none",
+    confidenceLabel: canCompare ? confidenceLabelFromScore(supportScore) : "suppressed",
+    trustLabel: canCompare ? confidenceLabelFromScore(supportScore) : "suppressed",
+    percentValid: canCompare && deltaPct != null,
+    support: {
+      currentTrips: safeNum(period?.current?.trips),
+      previousTrips: safeNum(period?.previous?.trips),
+      currentUniqueDays: safeNum(period?.current?.uniqueDays),
+      previousUniqueDays: safeNum(period?.previous?.uniqueDays),
+      baselineFloor: minBaseline,
+      baselineMet: hasBaseline
+    }
   };
 }
 
-function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, minEntityTrips }){
-  const leader = (Array.isArray(entityRows) ? entityRows[0] : null) || null;
-  if(!period.comparable || !leader){
-    return {
-      suppressed: true,
+function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, minEntityTrips, minBaselineAmount }){
+  if(!period.comparable){
+    return buildSuppressedEntityPayload({
+      entityType,
       reason: period.reason || `No ${entityType} data for comparable periods.`,
-      confidence: "low"
-    };
+      suppressionCode: period.suppressionCode || "period-low-data"
+    });
   }
 
   const keyName = entityType === "dealer" ? "dealer" : "area";
-  const leaderName = String(leader.name || "").trim().toLowerCase();
-  const cur = summarizeEntityPeriod(safeTrips, keyName, leaderName, period.current, period.currentLabel);
-  const prev = summarizeEntityPeriod(safeTrips, keyName, leaderName, period.previous, period.previousLabel);
+  const entityStats = summarizeEntityCandidates(safeTrips, keyName, period);
+  const ranked = entityStats
+    .filter((row)=> row.current.trips > 0 || row.previous.trips > 0)
+    .sort((a, b)=> compareEntityRows(a, b));
+  const viable = ranked.find((row)=> row.current.trips >= minEntityTrips && row.previous.trips >= minEntityTrips && row.previous.amount >= minBaselineAmount) || null;
+  const fallbackLeader = (Array.isArray(entityRows) ? entityRows[0] : null) || ranked[0] || null;
 
-  if(cur.trips < minEntityTrips || prev.trips < minEntityTrips || prev.amount < 25){
-    return {
-      suppressed: true,
-      reason: `${capitalize(entityType)} compare suppressed: baseline too sparse for ${leader.name}.`,
-      confidence: "low",
-      entityName: leader.name
-    };
+  if(!viable){
+    const entityName = String(fallbackLeader?.name || "").trim();
+    const curTrips = safeNum(fallbackLeader?.current?.trips);
+    const prevTrips = safeNum(fallbackLeader?.previous?.trips);
+    const prevAmount = safeNum(fallbackLeader?.previous?.amount);
+    return buildSuppressedEntityPayload({
+      entityType,
+      entityName,
+      confidence: "none",
+      confidenceLabel: "suppressed",
+      suppressionCode: "entity-baseline-too-sparse",
+      reason: `${capitalize(entityType)} compare suppressed: no ${entityType} has at least ${minEntityTrips} trips in both periods and ${formatAmountFloor(minBaselineAmount)} in the earlier period.${entityName ? ` Closest candidate: ${entityName} (${curTrips}/${prevTrips} trips, ${formatAmountFloor(prevAmount)} earlier).` : ""}`
+    });
   }
 
   const metric = buildMetricComparePayload({
     metricKey: `${entityType}-amount`,
     label: `${capitalize(entityType)} amount`,
-    currentValue: cur.amount,
-    previousValue: prev.amount,
-    periodComparable: true,
-    minBaseline: 25,
+    currentValue: viable.current.amount,
+    previousValue: viable.previous.amount,
+    period,
+    minBaseline: minBaselineAmount,
     epsilonPct: 0.06,
     minTrips: minEntityTrips,
-    minUniqueDays: 1
+    minUniqueDays: 1,
+    baselineOk: viable.previous.amount >= minBaselineAmount,
+    baselineReason: `${capitalize(entityType)} compare suppressed: ${viable.name} needs at least ${formatAmountFloor(minBaselineAmount)} in the earlier period for a fair % compare.`
+  });
+  const entitySupportScore = scoreSupport({
+    currentTrips: viable.current.trips,
+    previousTrips: viable.previous.trips,
+    currentDays: viable.current.uniqueDays,
+    previousDays: viable.previous.uniqueDays,
+    baselineRatio: viable.previous.amount / Math.max(1, minBaselineAmount)
   });
 
   return {
     ...metric,
     suppressed: false,
     reason: "",
-    entityName: leader.name,
-    currentTrips: cur.trips,
-    previousTrips: prev.trips,
-    confidence: "medium"
+    explanation: `${viable.name} was picked as the fairest ${entityType} compare target because it has support in both periods. ${confidenceLabelFromScore(entitySupportScore) === "strong" ? "This is a stronger read." : (confidenceLabelFromScore(entitySupportScore) === "early" ? "This is still an early read." : "Use this as a light directional read.")}`,
+    entityName: viable.name,
+    currentTrips: viable.current.trips,
+    previousTrips: viable.previous.trips,
+    currentUniqueDays: viable.current.uniqueDays,
+    previousUniqueDays: viable.previous.uniqueDays,
+    compareTarget: viable.name,
+    candidateCount: ranked.length,
+    confidence: classifyConfidenceFromScore(entitySupportScore),
+    confidenceLabel: confidenceLabelFromScore(entitySupportScore),
+    trustLabel: confidenceLabelFromScore(entitySupportScore)
   };
 }
 
-function summarizeEntityPeriod(trips, keyName, entityName, periodStats){
-  let amount = 0;
-  let tripsCount = 0;
-  const dayLimit = periodStats.dayLimit;
-  const monthKey = periodStats.monthKey;
+function summarizeEntityCandidates(trips, keyName, period){
+  const map = new Map();
   (Array.isArray(trips) ? trips : []).forEach((t)=>{
     const iso = String(t?.dateISO || "");
     if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
-    if(iso.slice(0, 7) !== monthKey) return;
-    if(dayLimit && Number(iso.slice(8, 10)) > dayLimit) return;
-    const name = String(t?.[keyName] || "").trim().toLowerCase();
-    if(name !== entityName) return;
-    amount += safeNum(t?.amount);
-    tripsCount += 1;
+    const name = String(t?.[keyName] || "").trim();
+    if(!name) return;
+    const bucket = iso.slice(0, 7) === period.current?.monthKey
+      ? "current"
+      : (iso.slice(0, 7) === period.previous?.monthKey ? "previous" : "");
+    if(!bucket) return;
+    const day = Number(iso.slice(8, 10));
+    const dayLimit = period?.[bucket]?.dayLimit;
+    if(dayLimit && day > dayLimit) return;
+    const key = name.toLowerCase();
+    if(!map.has(key)){
+      map.set(key, {
+        name,
+        current: { amount: 0, trips: 0, uniqueDays: 0, _days: new Set() },
+        previous: { amount: 0, trips: 0, uniqueDays: 0, _days: new Set() }
+      });
+    }
+    const row = map.get(key);
+    row[bucket].amount += safeNum(t?.amount);
+    row[bucket].trips += 1;
+    row[bucket]._days.add(iso);
   });
-  return { amount, trips: tripsCount };
+  return Array.from(map.values()).map((row)=>({
+    name: row.name,
+    current: finalizeEntityBucket(row.current),
+    previous: finalizeEntityBucket(row.previous)
+  }));
+}
+
+function finalizeEntityBucket(bucket){
+  return {
+    amount: safeNum(bucket.amount),
+    trips: safeNum(bucket.trips),
+    uniqueDays: bucket._days instanceof Set ? bucket._days.size : safeNum(bucket.uniqueDays)
+  };
+}
+
+function compareEntityRows(a, b){
+  const aScore = scoreSupport({
+    currentTrips: a.current.trips,
+    previousTrips: a.previous.trips,
+    currentDays: a.current.uniqueDays,
+    previousDays: a.previous.uniqueDays,
+    baselineRatio: a.previous.amount / 25
+  }) + ((a.current.amount + a.previous.amount) / 1000);
+  const bScore = scoreSupport({
+    currentTrips: b.current.trips,
+    previousTrips: b.previous.trips,
+    currentDays: b.current.uniqueDays,
+    previousDays: b.previous.uniqueDays,
+    baselineRatio: b.previous.amount / 25
+  }) + ((b.current.amount + b.previous.amount) / 1000);
+  return bScore - aScore;
 }
 
 function summarizePeriod(trips, monthKey, dayLimit){
@@ -245,6 +343,110 @@ function summarizePeriod(trips, monthKey, dayLimit){
     uniqueDays: days.size,
     ppl: lbs > 0 ? amount / lbs : 0
   };
+}
+
+function buildPeriodSupport({ current, previous }){
+  const currentTrips = safeNum(current?.trips);
+  const previousTrips = safeNum(previous?.trips);
+  const currentDays = safeNum(current?.uniqueDays);
+  const previousDays = safeNum(previous?.uniqueDays);
+  const deficits = [];
+  if(currentTrips < 2) deficits.push(`current period has ${currentTrips} trip${currentTrips === 1 ? "" : "s"}`);
+  if(previousTrips < 2) deficits.push(`previous period has ${previousTrips} trip${previousTrips === 1 ? "" : "s"}`);
+  if(currentDays < 2) deficits.push(`current period has ${currentDays} unique day${currentDays === 1 ? "" : "s"}`);
+  if(previousDays < 2) deficits.push(`previous period has ${previousDays} unique day${previousDays === 1 ? "" : "s"}`);
+  const comparable = !deficits.length;
+  const score = scoreSupport({ currentTrips, previousTrips, currentDays, previousDays, baselineRatio: 1 });
+  return {
+    comparable,
+    score,
+    suppressionCode: comparable ? "" : "period-low-data",
+    reason: comparable
+      ? ""
+      : `Comparison suppressed: ${joinReasonList(deficits)}. Need at least 2 trips and 2 unique days in each period.`,
+    explanation: comparable
+      ? `${confidenceLabelFromScore(score) === "strong" ? "Strong" : (confidenceLabelFromScore(score) === "early" ? "Early" : "Weak")} compare window using ${currentTrips} vs ${previousTrips} trips across ${currentDays} vs ${previousDays} fishing days.`
+      : `Suppressed because ${joinReasonList(deficits)}.`,
+    summary: {
+      currentTrips,
+      previousTrips,
+      currentUniqueDays: currentDays,
+      previousUniqueDays: previousDays
+    }
+  };
+}
+
+function buildSuppressedPeriod({ reason, suppressionCode, currentLabel = "", previousLabel = "" }){
+  return {
+    comparable: false,
+    suppressed: true,
+    reason,
+    suppressionCode,
+    explanation: reason,
+    confidence: "none",
+    confidenceLabel: "suppressed",
+    trustLabel: "suppressed",
+    currentLabel,
+    previousLabel,
+    support: {
+      currentTrips: 0,
+      previousTrips: 0,
+      currentUniqueDays: 0,
+      previousUniqueDays: 0
+    }
+  };
+}
+
+function buildSuppressedEntityPayload({ entityType, reason, suppressionCode, entityName = "", confidence = "none", confidenceLabel = "suppressed" }){
+  return {
+    suppressed: true,
+    reason,
+    explanation: reason,
+    confidence,
+    confidenceLabel,
+    trustLabel: confidenceLabel,
+    suppressionCode,
+    entityName,
+    entityType
+  };
+}
+
+function scoreSupport({ currentTrips, previousTrips, currentDays, previousDays, baselineRatio }){
+  const tripsFloor = Math.min(safeNum(currentTrips), safeNum(previousTrips));
+  const daysFloor = Math.min(safeNum(currentDays), safeNum(previousDays));
+  const tripScore = Math.min(1.5, tripsFloor / 4);
+  const dayScore = Math.min(1.25, daysFloor / 3);
+  const baselineScore = Math.min(1.25, safeNum(baselineRatio));
+  return tripScore + dayScore + baselineScore;
+}
+
+function classifyConfidenceFromScore(score){
+  if(score >= 3.35) return "high";
+  if(score >= 2.45) return "medium";
+  return "low";
+}
+
+function confidenceLabelFromScore(score){
+  if(score >= 3.35) return "strong";
+  if(score >= 2.45) return "early";
+  return "weak";
+}
+
+function joinReasonList(items){
+  const safeItems = (Array.isArray(items) ? items : []).filter(Boolean);
+  if(!safeItems.length) return "not enough data";
+  if(safeItems.length === 1) return safeItems[0];
+  if(safeItems.length === 2) return `${safeItems[0]} and ${safeItems[1]}`;
+  return `${safeItems.slice(0, -1).join(", ")}, and ${safeItems[safeItems.length - 1]}`;
+}
+
+function formatAmountFloor(value){
+  return `$${Math.round(safeNum(value))}`;
+}
+
+function toWholeOrTwo(value){
+  const v = safeNum(value);
+  return Number.isInteger(v) ? String(v) : v.toFixed(2);
 }
 
 function getPeriodRules(latestKey, trips){

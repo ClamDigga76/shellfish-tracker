@@ -569,11 +569,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const buildMetricCompareSummary = (metricKey, payload)=>{
     if(compareFoundation.period?.suppressed || !payload || payload.suppressed){
+      const reason = payload?.reason || compareFoundation.period?.reason || "Comparison unlocks automatically after enough trips in both periods.";
       return {
         tone: "steady",
-        text: "Comparison unlocks automatically after enough trips in both periods.",
-        currentValue: "—",
-        previousValue: "—"
+        text: reason,
+        currentValue: formatMetricCompareValue(metricKey, payload?.currentValue),
+        previousValue: formatMetricCompareValue(metricKey, payload?.previousValue)
       };
     }
     const tone = String(payload.compareTone || "steady");
@@ -617,7 +618,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const summaryText = (summaryBuilders[metricKey] || summaryBuilders.amount)();
     return {
       tone,
-      text: summaryText,
+      text: `${summaryText} ${payload.confidenceLabel ? `${payload.confidenceLabel[0].toUpperCase()}${payload.confidenceLabel.slice(1)} signal.` : ""}`.trim(),
       currentValue: formatMetricCompareValue(metricKey, payload.currentValue),
       previousValue: formatMetricCompareValue(metricKey, payload.previousValue)
     };
