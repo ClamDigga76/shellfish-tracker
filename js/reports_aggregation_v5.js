@@ -14,36 +14,39 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
 
     const lbs = Number(t?.pounds) || 0;
     const amt = Number(t?.amount) || 0;
+    const iso = String(t?.dateISO || "");
 
-    const dealerAgg = byDealer.get(dealerKey) || { name: dealerName, trips: 0, lbs: 0, amt: 0 };
+    const dealerAgg = byDealer.get(dealerKey) || { name: dealerName, trips: 0, lbs: 0, amt: 0, _days: new Set() };
     dealerAgg.trips += 1;
     dealerAgg.lbs += lbs;
     dealerAgg.amt += amt;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(iso)) dealerAgg._days.add(iso);
     byDealer.set(dealerKey, dealerAgg);
 
-    const areaAgg = byArea.get(areaKey) || { name: area, trips: 0, lbs: 0, amt: 0 };
+    const areaAgg = byArea.get(areaKey) || { name: area, trips: 0, lbs: 0, amt: 0, _days: new Set() };
     areaAgg.trips += 1;
     areaAgg.lbs += lbs;
     areaAgg.amt += amt;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(iso)) areaAgg._days.add(iso);
     byArea.set(areaKey, areaAgg);
 
-    const iso = String(t?.dateISO || "");
     if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){
       const monthKey = iso.slice(0, 7);
-      const monthAgg = byMonth.get(monthKey) || { trips: 0, lbs: 0, amt: 0 };
+      const monthAgg = byMonth.get(monthKey) || { trips: 0, lbs: 0, amt: 0, _days: new Set() };
       monthAgg.trips += 1;
       monthAgg.lbs += lbs;
       monthAgg.amt += amt;
+      monthAgg._days.add(iso);
       byMonth.set(monthKey, monthAgg);
     }
   });
 
   const dealerRows = Array.from(byDealer.values())
-    .map((x)=> ({ ...x, avg: x.lbs > 0 ? x.amt / x.lbs : 0 }))
+    .map((x)=> finalizeAggregateRow(x))
     .sort((a,b)=> b.amt - a.amt);
 
   const areaRows = Array.from(byArea.values())
-    .map((x)=> ({ ...x, avg: x.lbs > 0 ? x.amt / x.lbs : 0 }))
+    .map((x)=> finalizeAggregateRow(x))
     .sort((a,b)=> b.amt - a.amt);
 
   const monthRows = Array.from(byMonth.entries())
@@ -57,8 +60,7 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
         month,
         year,
         label: `${dt.toLocaleString(undefined, { month: "short" })} ${year}`,
-        ...x,
-        avg: x.lbs > 0 ? x.amt / x.lbs : 0
+        ...finalizeAggregateRow(x)
       };
     });
 
@@ -114,6 +116,22 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
     minPpl,
     tripsTimeline,
     recordPools
+  };
+}
+
+function finalizeAggregateRow(row){
+  const trips = Number(row?.trips) || 0;
+  const lbs = Number(row?.lbs) || 0;
+  const amt = Number(row?.amt) || 0;
+  const fishingDays = row?._days instanceof Set ? row._days.size : (Number(row?.fishingDays) || 0);
+  return {
+    ...row,
+    fishingDays,
+    avg: lbs > 0 ? amt / lbs : 0,
+    poundsPerTrip: trips > 0 ? lbs / trips : 0,
+    amountPerTrip: trips > 0 ? amt / trips : 0,
+    poundsPerDay: fishingDays > 0 ? lbs / fishingDays : 0,
+    amountPerDay: fishingDays > 0 ? amt / fishingDays : 0
   };
 }
 
