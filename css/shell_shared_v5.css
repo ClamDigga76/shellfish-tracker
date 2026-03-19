@@ -143,7 +143,19 @@ main{padding:14px 14px 18px}
 .input,.select,.textarea{width:100%;padding:12px 12px;border-radius:14px;border:1px solid var(--border);background:var(--glass2);color:var(--text);font-weight:700}
 .textarea{min-height:110px;resize:vertical;font-weight:600}
 .phone{display:flex;flex-direction:column}
-main#app{flex:1;min-height:0;min-width:0;max-width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-total-h) + 10px)}
+main#app{flex:1;min-height:0;min-width:0;max-width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-total-h) + 10px);transform:translate3d(0,0,0)}
+main#app.screenTransitionActive{will-change:opacity,transform;backface-visibility:hidden}
+main#app.screenTransitionOut{opacity:0;transform:translate3d(0,8px,0) scale(.992);transition:opacity .09s ease-out,transform .09s ease-out}
+main#app.screenTransitionIn{opacity:1;transform:translate3d(0,0,0) scale(1);animation:screenTransitionIn .17s cubic-bezier(.22,.61,.36,1)}
+@keyframes screenTransitionIn{
+  from{opacity:0;transform:translate3d(0,10px,0) scale(.992)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+@media (prefers-reduced-motion: reduce){
+  main#app.screenTransitionActive,
+  main#app.screenTransitionOut,
+  main#app.screenTransitionIn{animation:none;transition:none;opacity:1;transform:none;will-change:auto}
+}
 
 /* Toast + tab shell */
 #toast{position:fixed;left:50%;bottom:calc(var(--tabbar-total-h) + 12px);transform:translateX(-50%) translateY(26px) scale(.985);transform-origin:center bottom;opacity:0;pointer-events:none;width:min(520px,calc(100vw - 24px));max-width:calc(100vw - 24px);background:linear-gradient(180deg, rgba(22,31,50,.95) 0%, rgba(11,18,33,.94) 100%);border:1px solid rgba(255,255,255,.16);color:var(--text);padding:11px 13px;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.34), 0 8px 22px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(16px) saturate(1.08);-webkit-backdrop-filter:blur(16px) saturate(1.08);font-weight:800;font-size:13px;line-height:1.35;z-index:9999;transition:opacity .24s cubic-bezier(.22,.61,.36,1), transform .28s cubic-bezier(.22,.61,.36,1), box-shadow .24s ease, border-color .24s ease;display:flex;align-items:center;gap:10px;overflow:hidden}
