@@ -120,7 +120,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const homeMode = String(homeCtxFilter?.mode || "YTD").toUpperCase();
   const homeRangeMode = homeMode === "RANGE"
     ? "custom"
-    : (homeMode === "MONTH" ? "this_month" : (homeMode === "7D" ? "last_7_days" : "ytd"));
+    : (homeMode === "MONTH" ? "mtd" : (homeMode === "7D" ? "7d" : "ytd"));
   const unified = (isHomeMetricDetail && activeMetricDetail && homeCtxFilter)
     ? {
       range: homeRangeMode,
@@ -518,6 +518,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const totalLbs = trips.reduce((sum, t)=> sum + (Number(t?.pounds) || 0), 0);
   const totalAmount = trips.reduce((sum, t)=> sum + (Number(t?.amount) || 0), 0);
   const compareFoundation = buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
+  const detailCharts = compareFoundation.detailCharts || {};
   const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
 
@@ -680,10 +681,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         heroValue: `${trips.length}`,
         heroClass: "trips",
         comparePayload: tripsCompare,
-        chartTitle: "Trips over time",
-        homeChartTitle: "Home trip activity",
-        chartContext: "Monthly activity in this range",
-        homeChartContext: "Monthly trips for this Home filter",
+        detailChart: detailCharts.trips || null,
+        chartTitle: "Comparable trips",
+        homeChartTitle: "Home comparable trips",
+        chartContext: "Current vs prior period using the same compare window",
+        homeChartContext: "Current vs prior Home period using the shared compare window",
         chartCanvasId: "c_trips",
         insight: "Use this view to track effort volume and quickly spot whether recent activity is increasing, flat, or cooling.",
         homeInsight: "Stay in Home while checking whether trip activity in this saved range is building, steady, or cooling off."
@@ -697,10 +699,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         heroValue: `${to2(totalLbs)} lbs`,
         heroClass: "lbsBlue",
         comparePayload: lbsCompare,
-        chartTitle: "Monthly pounds trend",
-        homeChartTitle: "Home pounds trend",
-        chartContext: "This range, month by month",
-        homeChartContext: "Monthly pounds for this Home filter",
+        detailChart: detailCharts.pounds || null,
+        chartTitle: "Comparable pounds",
+        homeChartTitle: "Home comparable pounds",
+        chartContext: "Current vs prior period using the same compare window",
+        homeChartContext: "Current vs prior Home period using the shared compare window",
         chartCanvasId: "c_lbs",
         insight: "Use this view to spot weight consistency and quickly confirm if this range is trending heavier or lighter than your prior period.",
         homeInsight: "Stay in Home while checking whether this range is landing heavier or lighter than the prior comparison period."
@@ -714,10 +717,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         heroValue: formatMoney(to2(totalAmount)),
         heroClass: "money",
         comparePayload: amountCompare,
-        chartTitle: "Dealer amount distribution",
-        homeChartTitle: "Home dealer amount mix",
-        chartContext: "Top dealers for this same range",
-        homeChartContext: "Top dealers inside this Home filter",
+        detailChart: detailCharts.amount || null,
+        chartTitle: "Comparable amount",
+        homeChartTitle: "Home comparable amount",
+        chartContext: "Current vs prior period using the same compare window",
+        homeChartContext: "Current vs prior Home period using the shared compare window",
         chartCanvasId: "c_dealer",
         insight: "Use this view to see whether changes in total amount are broad-based or mostly concentrated in one buyer relationship.",
         homeInsight: "Stay in Home while checking whether this range stays balanced across dealers or leans on one buyer."
@@ -731,10 +735,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         heroValue: avgPpl > 0 ? `${formatMoney(to2(avgPpl))}/lb` : "—",
         heroClass: "rate ppl",
         comparePayload: pplCompare,
-        chartTitle: "Monthly $/lb trend",
-        homeChartTitle: "Home $/lb trend",
-        chartContext: "This range, month by month",
-        homeChartContext: "Monthly average $/lb for this Home filter",
+        detailChart: detailCharts.ppl || null,
+        chartTitle: "Comparable $/lb",
+        homeChartTitle: "Home comparable $/lb",
+        chartContext: "Current vs prior period using the same compare window",
+        homeChartContext: "Current vs prior Home period using the shared compare window",
         chartCanvasId: "c_ppl",
         insight: "Use this view to watch price efficiency independent of total volume so rate movement is easier to separate from trip count swings.",
         homeInsight: "Stay in Home while checking whether rate strength is improving without leaving your Home KPI context."
@@ -885,7 +890,14 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
 
   if(activeMetricDetail){
-    requestAnimationFrame(()=>{ drawReportsCharts(monthRows, dealerRows, trips); });
+    requestAnimationFrame(()=>{
+      drawReportsCharts(monthRows, dealerRows, trips, {
+        metricDetail: {
+          metricKey: activeMetricDetail,
+          compareChart: detailCharts?.[activeMetricDetail] || null
+        }
+      });
+    });
     return;
   }
 

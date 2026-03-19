@@ -13,6 +13,7 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     return {
       period: missingPeriod,
       metrics: {},
+      detailCharts: buildDetailCharts(missingPeriod),
       dealer: buildSuppressedEntityPayload({ entityType: "dealer", reason: missingPeriod.reason, suppressionCode: missingPeriod.suppressionCode }),
       area: buildSuppressedEntityPayload({ entityType: "area", reason: missingPeriod.reason, suppressionCode: missingPeriod.suppressionCode })
     };
@@ -32,6 +33,7 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     return {
       period,
       metrics: {},
+      detailCharts: buildDetailCharts(period),
       dealer: buildSuppressedEntityPayload({ entityType: "dealer", reason, suppressionCode: period.suppressionCode }),
       area: buildSuppressedEntityPayload({ entityType: "area", reason, suppressionCode: period.suppressionCode })
     };
@@ -131,7 +133,13 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     minBaselineAmount: 25
   });
 
-  return { period, metrics, dealer, area };
+  return {
+    period,
+    metrics,
+    detailCharts: buildDetailCharts(period),
+    dealer,
+    area
+  };
 }
 
 function buildMetricComparePayload({ metricKey, label, currentValue, previousValue, period, minBaseline, epsilonPct, minTrips, minUniqueDays, baselineOk, baselineReason, requiredBaselineText }){
@@ -592,6 +600,29 @@ function buildSuppressedEntityPayload({ entityType, reason, suppressionCode, ent
     suppressionCode,
     entityName,
     entityType
+  };
+}
+
+function buildDetailCharts(period){
+  const current = period?.current || null;
+  const previous = period?.previous || null;
+  const labels = [
+    String(period?.currentLabel || "Current"),
+    String(period?.previousLabel || "Previous")
+  ];
+  return {
+    trips: buildMetricDetailChart({ labels, currentValue: current?.trips, previousValue: previous?.trips, metricKey: "trips" }),
+    pounds: buildMetricDetailChart({ labels, currentValue: current?.lbs, previousValue: previous?.lbs, metricKey: "pounds" }),
+    amount: buildMetricDetailChart({ labels, currentValue: current?.amount, previousValue: previous?.amount, metricKey: "amount" }),
+    ppl: buildMetricDetailChart({ labels, currentValue: current?.ppl, previousValue: previous?.ppl, metricKey: "ppl" })
+  };
+}
+
+function buildMetricDetailChart({ labels, currentValue, previousValue, metricKey }){
+  return {
+    metricKey,
+    labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Current", "Previous"],
+    values: [safeNum(currentValue), safeNum(previousValue)]
   };
 }
 
