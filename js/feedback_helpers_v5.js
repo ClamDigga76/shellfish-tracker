@@ -29,7 +29,7 @@ export function createFeedbackHelpers({
     ]
   };
 
-  function resetToastState(el){
+  function finalizeToastCleanup(el){
     if(!el) return;
     clearTimeout(toastTimer);
     clearTimeout(toastCleanupTimer);
@@ -37,21 +37,22 @@ export function createFeedbackHelpers({
     el.textContent = "";
   }
 
+  function resetToastState(el){
+    if(!el) return;
+    finalizeToastCleanup(el);
+  }
+
   function hideToast(el, { immediate = false } = {}){
     if(!el) return;
     clearTimeout(toastTimer);
     clearTimeout(toastCleanupTimer);
     if(immediate){
-      el.classList.remove("show", "toastMilestone");
-      el.textContent = "";
+      finalizeToastCleanup(el);
       return;
     }
     el.classList.remove("show");
     toastCleanupTimer = setTimeout(()=>{
-      if(!el.classList.contains("show")){
-        el.classList.remove("toastMilestone");
-        el.textContent = "";
-      }
+      if(!el.classList.contains("show")) finalizeToastCleanup(el);
     }, TOAST_EXIT_MS);
   }
 
@@ -161,7 +162,7 @@ export function createFeedbackHelpers({
     }catch{}
   }
 
-  function showMilestoneToast({ headline = "", detail = "", okLabel = "OK", durationMs = 5600 } = {}){
+  function showMilestoneToast({ headline = "", detail = "", okLabel = "OK", durationMs = 0 } = {}){
     try{
       const el = document.getElementById("toast");
       if(!el) return;
@@ -196,7 +197,9 @@ export function createFeedbackHelpers({
       announce(titleNode.textContent, "polite");
       triggerHaptic("medium");
       showToastElement(el);
-      toastTimer = setTimeout(()=>{ hideToast(el); }, Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 5600);
+      if(Number.isFinite(durationMs) && durationMs > 0){
+        toastTimer = setTimeout(()=>{ hideToast(el); }, durationMs);
+      }
     }catch{}
   }
 
