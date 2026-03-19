@@ -54,8 +54,14 @@ const {
 // Backup meta (local-only; no user data duplication)
 const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
 const LS_RESTORE_ROLLBACK_SNAPSHOT = "btc_restore_rollback_snapshot_v1";
+const TOP_LEVEL_TRANSITION_VIEWS = new Set(["home", "all_trips", "reports", "settings"]);
+const TOP_LEVEL_TRANSITION_OUT_MS = 90;
+const TOP_LEVEL_TRANSITION_IN_MS = 170;
 let themeMediaQuery = null;
 let onThemeMediaChange = null;
+let topLevelTransitionToken = 0;
+let topLevelTransitionOutTimer = 0;
+let topLevelTransitionCleanupTimer = 0;
 
 function getThemeMode(){
   const s = state?.settings || {};
@@ -102,6 +108,81 @@ function bindThemeControls(){
   };
 }
 
+function supportsTopLevelTransition(){
+  if(typeof window === "undefined" || !window.matchMedia) return true;
+  try{ return !window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(_){ return true; }
+}
+
+function isTopLevelTransitionView(viewKey){
+  return TOP_LEVEL_TRANSITION_VIEWS.has(String(viewKey || "home"));
+}
+
+function clearTopLevelTransitionTimers(){
+  if(topLevelTransitionOutTimer){
+    window.clearTimeout(topLevelTransitionOutTimer);
+    topLevelTransitionOutTimer = 0;
+  }
+  if(topLevelTransitionCleanupTimer){
+    window.clearTimeout(topLevelTransitionCleanupTimer);
+    topLevelTransitionCleanupTimer = 0;
+  }
+}
+
+function cleanupTopLevelTransition(app){
+  if(!app) return;
+  app.classList.remove("screenTransitionActive", "screenTransitionOut", "screenTransitionIn");
+}
+
+function shouldAnimateTopLevelScreenChange(fromView, toView){
+  const fromKey = String(fromView || "home");
+  const toKey = String(toView || "home");
+  return fromKey !== toKey && isTopLevelTransitionView(fromKey) && isTopLevelTransitionView(toKey) && supportsTopLevelTransition();
+}
+
+function navigateTopLevelView(nextView){
+  const currentView = String(state.view || "home");
+  const nextKey = String(nextView || "home");
+  if(!shouldAnimateTopLevelScreenChange(currentView, nextKey)){
+    state.view = nextKey;
+    saveState();
+    render();
+    return;
+  }
+
+  const app = getApp();
+  if(!app){
+    state.view = nextKey;
+    saveState();
+    render();
+    return;
+  }
+
+  const transitionToken = ++topLevelTransitionToken;
+  clearTopLevelTransitionTimers();
+  cleanupTopLevelTransition(app);
+  app.classList.add("screenTransitionActive", "screenTransitionOut");
+
+  topLevelTransitionOutTimer = window.setTimeout(()=>{
+    if(transitionToken !== topLevelTransitionToken) return;
+    state.view = nextKey;
+    saveState();
+    render();
+
+    const nextApp = getApp();
+    if(!nextApp){
+      clearTopLevelTransitionTimers();
+      return;
+    }
+
+    cleanupTopLevelTransition(nextApp);
+    nextApp.classList.add("screenTransitionActive", "screenTransitionIn");
+    topLevelTransitionCleanupTimer = window.setTimeout(()=>{
+      if(transitionToken !== topLevelTransitionToken) return;
+      cleanupTopLevelTransition(nextApp);
+      clearTopLevelTransitionTimers();
+    }, TOP_LEVEL_TRANSITION_IN_MS);
+  }, TOP_LEVEL_TRANSITION_OUT_MS);
+}
 
 window.__SHELLFISH_BUILD__ = APP_VERSION;
 const { pushView, goBack, bindNavHandlers } = createNavigator({
@@ -321,9 +402,7 @@ function renderTabBar(activeView){
     escapeHtml,
     hasUnsavedDraft,
     onNavigate: (next)=>{
-      state.view = next;
-      saveState();
-      render();
+      navigateTopLevelView(next);
     }
   });
 }
