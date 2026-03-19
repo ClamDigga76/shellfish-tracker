@@ -330,13 +330,24 @@ export function createHomeDashboardRenderer({
         const metricKey = String(btn.getAttribute("data-kpi-detail") || "").toLowerCase();
         if (!metricKey) return;
         ensureHomeFilter();
+        const launchedHomeFilter = {
+          mode: String(state.homeFilter?.mode || "YTD").toUpperCase(),
+          from: parseReportDateToISO(state.homeFilter?.from || "") || "",
+          to: parseReportDateToISO(state.homeFilter?.to || "") || ""
+        };
+        const launchedRangeLabel = launchedHomeFilter.mode === "RANGE"
+          ? `${launchedHomeFilter.from || "—"} → ${launchedHomeFilter.to || "—"}`
+          : (launchedHomeFilter.mode === "MONTH" ? "This Month"
+            : (launchedHomeFilter.mode === "7D" ? "Last 7 Days"
+              : "YTD"));
         state.reportsMetricDetail = metricKey;
         state.reportsMetricDetailContext = {
           source: "home",
-          homeFilter: {
-            mode: String(state.homeFilter?.mode || "YTD").toUpperCase(),
-            from: parseReportDateToISO(state.homeFilter?.from || "") || "",
-            to: parseReportDateToISO(state.homeFilter?.to || "") || ""
+          homeFilter: launchedHomeFilter,
+          homeScope: {
+            rangeLabel: launchedRangeLabel,
+            tripCount: trips.length,
+            contextText: `Home • Range ${launchedRangeLabel} • ${trips.length} trips`
           }
         };
         state.view = "home";
