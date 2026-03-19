@@ -118,9 +118,19 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ? metricDetailContext.homeFilter
     : null;
   const homeMode = String(homeCtxFilter?.mode || "YTD").toUpperCase();
-  const homeRangeMode = homeMode === "RANGE"
-    ? "custom"
-    : (homeMode === "MONTH" ? "mtd" : (homeMode === "7D" ? "7d" : "ytd"));
+  const mapHomeModeToUnifiedRange = (modeValue)=> {
+    const normalized = String(modeValue || "YTD").toUpperCase();
+    if(normalized === "ALL") return "all";
+    if(normalized === "MONTH" || normalized === "THIS_MONTH") return "mtd";
+    if(normalized === "LAST_MONTH") return "last_month";
+    if(normalized === "7D" || normalized === "LAST_7_DAYS") return "7d";
+    if(normalized === "30D") return "30d";
+    if(normalized === "90D") return "90d";
+    if(normalized === "12M") return "12m";
+    if(normalized === "RANGE" || normalized === "CUSTOM") return "custom";
+    return "ytd";
+  };
+  const homeRangeMode = mapHomeModeToUnifiedRange(homeMode);
   const unified = (isHomeMetricDetail && activeMetricDetail && homeCtxFilter)
     ? {
       range: homeRangeMode,
@@ -146,9 +156,13 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const resolvedReportsRange = resolveUnifiedRange(unified);
   const rangeLabel = isHomeMetricDetail
-    ? (homeMode === "RANGE"
+    ? (homeRangeMode === "custom"
       ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}`
-      : (homeMode === "MONTH" ? "This Month" : (homeMode === "7D" ? "Last 7 Days" : "YTD")))
+      : (homeRangeMode === "mtd" ? "This Month"
+        : (homeRangeMode === "7d" ? "Last 7 Days"
+          : (homeRangeMode === "all" ? "All Time"
+            : (homeRangeMode === "last_month" ? "Last Month"
+              : "YTD")))))
     : (fMode === "RANGE")
       ? (hasValidRange ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}` : "Set dates")
       : (fMode === "THIS_MONTH" ? "This Month"
@@ -521,6 +535,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const detailCharts = compareFoundation.detailCharts || {};
   const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
+  const amountPrimaryChart = detailCharts.amount || null;
 
   const reportsSection = ({ title, intro, body, extraClass = "" })=> `
     <section class="reportsSection ${extraClass}">
@@ -661,6 +676,14 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
         </div>
 
+        ${meta.secondaryChart ? `
+          <div class="${detailChartClass}">
+            <b>${escapeHtml(meta.secondaryChart.title)}</b>
+            <div class="${detailChartContextClass}">${escapeHtml(meta.secondaryChart.context)}</div>
+            <canvas class="chart" id="${escapeHtml(meta.secondaryChart.canvasId)}" height="220"></canvas>
+          </div>
+        ` : ""}
+
         <div class="${detailInsightClass}">${escapeHtml(detailInsight)}</div>
       </div>
     </section>
@@ -717,14 +740,19 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         heroValue: formatMoney(to2(totalAmount)),
         heroClass: "money",
         comparePayload: amountCompare,
-        detailChart: detailCharts.amount || null,
-        chartTitle: "Comparable amount",
-        homeChartTitle: "Home comparable amount",
-        chartContext: "Current vs prior period using the same compare window",
-        homeChartContext: "Current vs prior Home period using the shared compare window",
-        chartCanvasId: "c_dealer",
-        insight: "Use this view to see whether changes in total amount are broad-based or mostly concentrated in one buyer relationship.",
-        homeInsight: "Stay in Home while checking whether this range stays balanced across dealers or leans on one buyer."
+        detailChart: amountPrimaryChart,
+        chartTitle: "Amount over time",
+        homeChartTitle: "Home amount over time",
+        chartContext: amountPrimaryChart?.basisLabel || "Amount by month using the same compare basis",
+        homeChartContext: amountPrimaryChart?.basisLabel || "Amount by month using the same compare basis",
+        chartCanvasId: "c_amount_detail",
+        secondaryChart: {
+          title: "Dealer mix",
+          context: "Supporting view for this same active filter range",
+          canvasId: "c_dealer"
+        },
+        insight: "Use this view to compare amount trend on one basis first, then check dealer mix as supporting context.",
+        homeInsight: "Stay in Home while checking amount trend on the same basis before using dealer mix as supporting context."
       },
       ppl: {
         title: "$/lb detail",
