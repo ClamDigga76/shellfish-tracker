@@ -156,7 +156,108 @@ function buildMeaningfulLowRecordPool({ rows, valueFromTrip, highTrip, highValue
   return positiveRows.filter((trip)=> (Number(valueFromTrip(trip)) || 0) >= threshold);
 }
 
-function buildTripsTimeline(rows){
+
+
+export function summarizeTripsByMonthWindow(rows, monthKey, dayLimit){
+  let amount = 0;
+  let lbs = 0;
+  let tripsCount = 0;
+  const days = new Set();
+
+  (Array.isArray(rows) ? rows : []).forEach((t)=>{
+    const iso = String(t?.dateISO || "");
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+    if(iso.slice(0, 7) !== monthKey) return;
+    const day = Number(iso.slice(8, 10));
+    if(dayLimit && day > dayLimit) return;
+    amount += Number(t?.amount) || 0;
+    lbs += Number(t?.pounds) || 0;
+    tripsCount += 1;
+    days.add(iso);
+  });
+
+  return {
+    monthKey,
+    dayLimit: Number(dayLimit) || 0,
+    amount,
+    lbs,
+    trips: tripsCount,
+    uniqueDays: days.size,
+    ppl: lbs > 0 ? amount / lbs : 0,
+    amountPerTrip: tripsCount > 0 ? amount / tripsCount : 0,
+    poundsPerTrip: tripsCount > 0 ? lbs / tripsCount : 0,
+    amountPerDay: days.size > 0 ? amount / days.size : 0,
+    poundsPerDay: days.size > 0 ? lbs / days.size : 0
+  };
+}
+
+export function buildEntityPeriodRows({ trips, entityType, period }){
+  const keyName = entityType === "dealer" ? "dealer" : "area";
+  const map = new Map();
+
+  (Array.isArray(trips) ? trips : []).forEach((t)=>{
+    const iso = String(t?.dateISO || "");
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+    const rawName = String(t?.[keyName] || "").trim();
+    const name = rawName || "(Unspecified)";
+    const bucket = iso.slice(0, 7) === period.current?.monthKey
+      ? "current"
+      : (iso.slice(0, 7) === period.previous?.monthKey ? "previous" : "");
+    if(!bucket) return;
+    const day = Number(iso.slice(8, 10));
+    const dayLimit = period?.[bucket]?.dayLimit;
+    if(dayLimit && day > dayLimit) return;
+    const key = name.toLowerCase();
+    if(!map.has(key)){
+      map.set(key, {
+        name,
+        current: { amount: 0, trips: 0, uniqueDays: 0, _days: new Set() },
+        previous: { amount: 0, trips: 0, uniqueDays: 0, _days: new Set() }
+      });
+    }
+    const row = map.get(key);
+    row[bucket].amount += Number(t?.amount) || 0;
+    row[bucket].trips += 1;
+    row[bucket]._days.add(iso);
+  });
+
+  return Array.from(map.values()).map((row)=>({
+    name: row.name,
+    current: finalizeEntityPeriodBucket(row.current),
+    previous: finalizeEntityPeriodBucket(row.previous)
+  }));
+}
+
+export function buildMonthWindowValueSeries({ monthRows, trips, dayLimit, metricKey = "amount" }){
+  return (Array.isArray(monthRows) ? monthRows : []).map((row)=>{
+    const monthKey = String(row?.monthKey || "");
+    const summary = dayLimit
+      ? summarizeTripsByMonthWindow(trips, monthKey, dayLimit)
+      : { amount: Number(row?.amt) || 0, lbs: Number(row?.lbs) || 0, trips: Number(row?.trips) || 0, ppl: Number(row?.avg) || 0 };
+    const value = metricKey === "amount"
+      ? Number(summary.amount) || 0
+      : (metricKey === "pounds"
+        ? Number(summary.lbs) || 0
+        : (metricKey === "trips"
+          ? Number(summary.trips) || 0
+          : Number(summary.ppl) || 0));
+    return {
+      monthKey,
+      label: String(row?.label || monthKey),
+      value
+    };
+  }).filter((row)=> row.monthKey);
+}
+
+function finalizeEntityPeriodBucket(bucket){
+  return {
+    amount: Number(bucket?.amount) || 0,
+    trips: Number(bucket?.trips) || 0,
+    uniqueDays: bucket?._days instanceof Set ? bucket._days.size : (Number(bucket?.uniqueDays) || 0)
+  };
+}
+
+export function buildTripsTimeline(rows){
   const byKey = new Map();
   rows.forEach((t)=>{
     const iso = String(t?.dateISO || "");

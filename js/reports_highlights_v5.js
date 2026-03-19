@@ -259,12 +259,12 @@ export function createReportsHighlightsSeam(deps){
     };
   }
 
-  function renderHighlightsStrip({ dealerRows, monthRows, areaRows, trips }){
+  function renderHighlightsStrip({ dealerRows, monthRows, areaRows, trips, compareFoundation }){
     const topDealer = dealerRows[0] || null;
     const strongestArea = areaRows[0] || null;
     const latestMonth = monthRows[monthRows.length - 1] || null;
     const priorMonth = monthRows[monthRows.length - 2] || null;
-    const compare = buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
+    const compare = compareFoundation || buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
     const totalDealerAmount = dealerRows.reduce((sum, row)=> sum + safeNum(row?.amt), 0);
     const totalAreaAmount = areaRows.reduce((sum, row)=> sum + safeNum(row?.amt), 0);
 

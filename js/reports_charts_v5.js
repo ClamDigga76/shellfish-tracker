@@ -1,6 +1,8 @@
+import { buildTripsTimeline } from "./reports_aggregation_v5.js";
+
 const chartAnimationState = new Map();
 
-export function drawReportsCharts(monthRows, dealerRows, trips, options = {}){
+export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, options = {}){
   function setupCanvas(canvas){
     if(!canvas) return null;
     const dpr = window.devicePixelRatio || 1;
@@ -169,29 +171,6 @@ export function drawReportsCharts(monthRows, dealerRows, trips, options = {}){
       return `${words[0]} ${words[1]}`;
     }
     return cleaned;
-  }
-
-  function makeTripsTimeline(rows){
-    const byKey = new Map();
-    rows.forEach((t)=>{
-      const iso = String(t?.dateISO || "");
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
-      const key = iso.slice(0,7);
-      byKey.set(key, (byKey.get(key) || 0) + 1);
-    });
-    return Array.from(byKey.entries())
-      .sort((a,b)=> a[0].localeCompare(b[0]))
-      .map(([key, count])=>{
-        const year = Number(key.slice(0,4));
-        const month = Number(key.slice(5,7));
-        const dt = new Date(year, month - 1, 1);
-        return {
-          key,
-          count,
-          label: dt.toLocaleString(undefined, { month:"short" }),
-          shortLabel: `${dt.toLocaleString(undefined, { month:"short" })} ${String(year).slice(-2)}`
-        };
-      });
   }
 
   function easeOutCubic(t){
@@ -398,7 +377,9 @@ export function drawReportsCharts(monthRows, dealerRows, trips, options = {}){
     return;
   }
 
-  const tripsTimeline = makeTripsTimeline(trips);
+  const tripsTimeline = Array.isArray(tripsOrTimeline) && tripsOrTimeline[0]?.shortLabel
+    ? tripsOrTimeline
+    : buildTripsTimeline(Array.isArray(tripsOrTimeline) ? tripsOrTimeline : []);
   const pplValues = monthRows.map((r)=> Number(r.avg) || 0);
   drawLineChart("c_ppl", pplValues, monthRows.map((r)=> r.label));
 
