@@ -15,10 +15,20 @@ export function createReportsHighlightsSeam(deps){
   const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
   const buildPeriodLabel = (period)=> `${period?.currentLabel || "Current"} vs ${period?.previousLabel || "Prior"}`;
   const buildComparableWindowLabel = (period)=> period?.fairWindowLabel || "Comparable window";
+  const compareToneForRatio = (current, previous, epsilon = 0.05)=>{
+    if(!current && !previous) return "steady";
+    if(previous <= 0) return current > 0 ? "up" : "steady";
+    const delta = (safeNum(current) - safeNum(previous)) / previous;
+    if(Math.abs(delta) <= epsilon) return "steady";
+    return delta > 0 ? "up" : "down";
+  };
 
   function buildAmountDriverText(compare){
     const pounds = compare?.metrics?.pounds;
     const ppl = compare?.metrics?.ppl;
+    const period = compare?.period || {};
+    const tripTone = compareToneForRatio(period.current?.amountPerTrip, period.previous?.amountPerTrip);
+    const dayTone = compareToneForRatio(period.current?.amountPerDay, period.previous?.amountPerDay);
     if(!pounds || !ppl || pounds.suppressed || ppl.suppressed){
       return "using the same comparable window.";
     }
@@ -30,16 +40,22 @@ export function createReportsHighlightsSeam(deps){
     if(pounds.compareTone === "steady" && ppl.compareTone === "down") return "mostly because $/lb eased.";
     if(pounds.compareTone === "up" && ppl.compareTone === "steady") return "mostly because pounds increased.";
     if(pounds.compareTone === "down" && ppl.compareTone === "steady") return "mostly because pounds fell.";
+    if(tripTone === "up" && dayTone === "up") return "while both $ per trip and $ per fishing day improved.";
+    if(tripTone === "down" && dayTone === "down") return "while both $ per trip and $ per fishing day softened.";
     return "with pounds and pricing staying fairly close.";
   }
 
   function buildTripsDriverText(compare){
     const period = compare?.period || {};
-    const currentRate = safeNum(period.current?.trips) > 0 ? safeNum(period.current?.lbs) / safeNum(period.current?.trips) : 0;
-    const previousRate = safeNum(period.previous?.trips) > 0 ? safeNum(period.previous?.lbs) / safeNum(period.previous?.trips) : 0;
+    const currentRate = safeNum(period.current?.poundsPerTrip);
+    const previousRate = safeNum(period.previous?.poundsPerTrip);
+    const currentDayRate = safeNum(period.current?.poundsPerDay);
+    const previousDayRate = safeNum(period.previous?.poundsPerDay);
     if(!currentRate && !previousRate) return "";
     if(currentRate > previousRate * 1.05) return `Average pounds per trip improved to ${to2(currentRate)} lbs.`;
     if(currentRate < previousRate * 0.95) return `Average pounds per trip slipped to ${to2(currentRate)} lbs.`;
+    if(currentDayRate > previousDayRate * 1.05) return `Pounds per trip held near ${to2(currentRate)} lbs while pounds per day improved.`;
+    if(currentDayRate < previousDayRate * 0.95) return `Pounds per trip held near ${to2(currentRate)} lbs while pounds per day slipped.`;
     return `Average pounds per trip held near ${to2(currentRate)} lbs.`;
   }
 
@@ -49,11 +65,14 @@ export function createReportsHighlightsSeam(deps){
       return "using the same comparable window.";
     }
     const period = compare?.period || {};
-    const currentRate = safeNum(period.current?.trips) > 0 ? safeNum(period.current?.lbs) / safeNum(period.current?.trips) : 0;
-    const previousRate = safeNum(period.previous?.trips) > 0 ? safeNum(period.previous?.lbs) / safeNum(period.previous?.trips) : 0;
+    const currentRate = safeNum(period.current?.poundsPerTrip);
+    const previousRate = safeNum(period.previous?.poundsPerTrip);
+    const currentDayRate = safeNum(period.current?.poundsPerDay);
+    const previousDayRate = safeNum(period.previous?.poundsPerDay);
     const productivityTone = currentRate > previousRate * 1.05
       ? "up"
       : (currentRate < previousRate * 0.95 ? "down" : "steady");
+    const dayTone = compareToneForRatio(currentDayRate, previousDayRate);
 
     if(trips.compareTone === "up" && productivityTone === "up") return "with both trip count and pounds per trip rising.";
     if(trips.compareTone === "down" && productivityTone === "down") return "as fewer trips also produced less per trip.";
@@ -63,6 +82,8 @@ export function createReportsHighlightsSeam(deps){
     if(trips.compareTone === "down") return "mostly on fewer trips.";
     if(productivityTone === "up") return "mostly on stronger pounds per trip.";
     if(productivityTone === "down") return "mostly on weaker pounds per trip.";
+    if(dayTone === "up") return "with pounds per day still improving.";
+    if(dayTone === "down") return "with pounds per day still easing.";
     return "with trip count and productivity staying close.";
   }
 

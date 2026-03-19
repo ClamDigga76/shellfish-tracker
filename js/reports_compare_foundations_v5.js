@@ -533,7 +533,11 @@ function summarizePeriod(trips, monthKey, dayLimit){
     lbs,
     trips: tripsCount,
     uniqueDays: days.size,
-    ppl: lbs > 0 ? amount / lbs : 0
+    ppl: lbs > 0 ? amount / lbs : 0,
+    amountPerTrip: tripsCount > 0 ? amount / tripsCount : 0,
+    poundsPerTrip: tripsCount > 0 ? lbs / tripsCount : 0,
+    amountPerDay: days.size > 0 ? amount / days.size : 0,
+    poundsPerDay: days.size > 0 ? lbs / days.size : 0
   };
 }
 
