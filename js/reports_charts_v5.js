@@ -1,6 +1,6 @@
 const chartAnimationState = new Map();
 
-export function drawReportsCharts(monthRows, dealerRows, trips){
+export function drawReportsCharts(monthRows, dealerRows, trips, options = {}){
   function setupCanvas(canvas){
     if(!canvas) return null;
     const dpr = window.devicePixelRatio || 1;
@@ -315,6 +315,42 @@ export function drawReportsCharts(monthRows, dealerRows, trips){
       ctx.restore();
     });
   }
+
+  function resolveMetricDetailPalette(metricKey){
+    if(metricKey === "amount") return { color: palette.money, yFormatter: formatCompactMoney, topFormatter: formatShortMoney };
+    if(metricKey === "ppl") return { color: palette.ppl, yFormatter: formatShortMoney, topFormatter: formatShortMoney };
+    if(metricKey === "pounds") return { color: palette.lbs, yFormatter: formatCompactCount, topFormatter: (v)=> `${Math.round(Number(v) || 0)}` };
+    return { color: palette.trips, yFormatter: formatCompactCount, topFormatter: (v)=> `${Math.round(Number(v) || 0)}` };
+  }
+
+  function drawMetricDetailCompareChart(metricDetail){
+    const metricKey = String(metricDetail?.metricKey || "").toLowerCase();
+    const compareChart = metricDetail?.compareChart;
+    if(!metricKey || !compareChart) return false;
+    const canvasIdByMetric = { trips: "c_trips", pounds: "c_lbs", amount: "c_dealer", ppl: "c_ppl" };
+    const canvasId = canvasIdByMetric[metricKey];
+    if(!canvasId || !document.getElementById(canvasId)) return false;
+    const values = Array.isArray(compareChart?.values) ? compareChart.values.map((v)=> Number(v) || 0) : [];
+    const labels = Array.isArray(compareChart?.labels) ? compareChart.labels.map((v)=> String(v || "")) : [];
+    const paletteSet = resolveMetricDetailPalette(metricKey);
+    const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
+    drawBarChart(
+      canvasId,
+      values,
+      labels,
+      paletteSet.color,
+      paletteSet.yFormatter,
+      paletteSet.topFormatter(topValue),
+      {
+        minTop: metricKey === "trips" ? 1 : 0,
+        minBarWidth: 18,
+        barPad: (frame)=> frame.compact ? 8 : 14
+      }
+    );
+    return true;
+  }
+
+  if(drawMetricDetailCompareChart(options?.metricDetail)) return;
 
   const tripsTimeline = makeTripsTimeline(trips);
   const pplValues = monthRows.map((r)=> Number(r.avg) || 0);
