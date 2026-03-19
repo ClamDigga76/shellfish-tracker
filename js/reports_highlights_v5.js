@@ -154,8 +154,11 @@ export function createReportsHighlightsSeam(deps){
     if(!payload || payload.suppressed) return null;
     const currentLabel = period?.currentLabel || "Current";
     const previousLabel = period?.previousLabel || "prior period";
+    const leaderChange = payload?.leaderChange || {};
     let headline = `${payload.entityName} held close to ${previousLabel}.`;
-    if(payload.compareTone === "up"){
+    if(leaderChange.changed && leaderChange.currentLeader?.name === payload.entityName){
+      headline = `${payload.entityName} took the ${noun} lead from ${leaderChange.previousLeader?.name || previousLabel}.`;
+    }else if(payload.compareTone === "up"){
       headline = `${payload.entityName} out-earned its ${previousLabel} window${share >= 45 ? " and drove much of the gain" : ""}.`;
     }else if(payload.compareTone === "down"){
       headline = `${payload.entityName} cooled versus ${previousLabel}${share >= 45 ? ", which pulled on the overall result" : ""}.`;
@@ -163,6 +166,7 @@ export function createReportsHighlightsSeam(deps){
     const value = payload.percentValid ? signedPctText(payload.deltaPct) : signedMoneyText(payload.deltaValue);
     const statusBits = [`${currentLabel} ${payload.currentTrips || 0} trips`, `${previousLabel} ${payload.previousTrips || 0} trips`];
     if(share > 0) statusBits.push(`${share}% of ${noun} $ now`);
+    if(Math.abs(safeNum(payload.shareDeltaPct)) >= 3) statusBits.push(`${Math.round(payload.shareDeltaPct)} share pts`);
     return {
       type: "summary",
       label: `${noun[0].toUpperCase()}${noun.slice(1)} compare`,
@@ -171,6 +175,66 @@ export function createReportsHighlightsSeam(deps){
       valueClass: "money",
       statusTone: payload.compareTone,
       statusText: statusBits.join(" • ")
+    };
+  }
+
+  function buildEntityMovementSummary({ movement, label, noun }){
+    if(!movement) return null;
+    const topGainer = movement.topGainer;
+    const topDecliner = movement.topDecliner;
+    if(!topGainer && !topDecliner) return null;
+    const best = (()=>{
+      if(topGainer && topDecliner){
+        return Math.abs(safeNum(topGainer.deltaValue)) >= Math.abs(safeNum(topDecliner.deltaValue)) ? topGainer : topDecliner;
+      }
+      return topGainer || topDecliner;
+    })();
+    if(!best) return null;
+    const headline = `${best.name} ${best.compareTone === "down" ? "fell back most" : "gained the most"} versus the prior window.`;
+    const value = best.deltaPct != null ? signedPctText(best.deltaPct) : signedMoneyText(best.deltaValue);
+    return {
+      type: "summary",
+      label,
+      headline,
+      value,
+      valueClass: "money",
+      statusTone: best.compareTone,
+      statusText: `${formatMoney(to2(best.currentAmount))} now vs ${formatMoney(to2(best.previousAmount))} before • ${best.confidenceLabel || "light"} signal`
+    };
+  }
+
+  function buildLeaderChangeSummary({ leaderChange, noun }){
+    if(!leaderChange?.changed || !leaderChange?.currentLeader || !leaderChange?.previousLeader) return null;
+    return {
+      type: "summary",
+      label: `${noun[0].toUpperCase()}${noun.slice(1)} lead change`,
+      headline: `${leaderChange.currentLeader.name} replaced ${leaderChange.previousLeader.name} as the top ${noun}.`,
+      value: `${Math.round(safeNum(leaderChange.currentLeader.currentSharePct))}%`,
+      valueClass: "money",
+      statusTone: "up",
+      statusText: `${leaderChange.currentLeader.name} now • ${leaderChange.previousLeader.name} before`
+    };
+  }
+
+  function buildShareShiftSummary({ shareShift, noun }){
+    const gainer = shareShift?.gainer;
+    const decliner = shareShift?.decliner;
+    const strongest = (()=>{
+      if(gainer && decliner){
+        return Math.abs(safeNum(gainer.shareDeltaPct)) >= Math.abs(safeNum(decliner.shareDeltaPct)) ? gainer : decliner;
+      }
+      return gainer || decliner;
+    })();
+    if(!strongest || Math.abs(safeNum(strongest.shareDeltaPct)) < 3) return null;
+    const direction = strongest.shareDeltaPct > 0 ? "gained" : "gave back";
+    return {
+      type: "summary",
+      label: `${noun[0].toUpperCase()}${noun.slice(1)} share shift`,
+      headline: `${strongest.name} ${direction} the most ${noun} dollar share.`,
+      value: `${Math.round(strongest.shareDeltaPct)} pts`,
+      valueClass: "money",
+      statusTone: strongest.shareDeltaPct > 0 ? "up" : "down",
+      statusText: `${Math.round(safeNum(strongest.currentSharePct))}% now vs ${Math.round(safeNum(strongest.previousSharePct))}% before`
     };
   }
 
@@ -216,56 +280,12 @@ export function createReportsHighlightsSeam(deps){
 
     const weakestDealer = dealerRows.length >= 3 ? dealerRows[dealerRows.length - 1] : null;
     const weakestArea = areaRows.length >= 3 ? areaRows[areaRows.length - 1] : null;
-
-    const buildEntityMovementInsight = ({ entityType, label, minRatio = 0.2 })=>{
-      if(!latestMonth || !priorMonth) return null;
-      const data = Array.isArray(trips) ? trips : [];
-      if(data.length < 4) return null;
-      const byEntity = new Map();
-
-      data.forEach((t)=>{
-        const dateISO = String(t?.dateISO || "");
-        if(!/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) return;
-        const monthKey = dateISO.slice(0, 7);
-        const monthLabel = monthRows.find((m)=> m.monthKey === monthKey)?.label;
-        if(monthLabel !== latestMonth.label && monthLabel !== priorMonth.label) return;
-
-        const rawName = entityType === "dealer" ? String(t?.dealer || "") : String(t?.area || "");
-        const name = rawName.trim() || "(Unspecified)";
-        const key = name.toLowerCase();
-
-        const slot = byEntity.get(key) || { name, latest: 0, prior: 0 };
-        const amt = safeNum(t?.amount);
-        if(monthLabel === latestMonth.label) slot.latest += amt;
-        if(monthLabel === priorMonth.label) slot.prior += amt;
-        byEntity.set(key, slot);
-      });
-
-      let best = null;
-      byEntity.forEach((slot)=>{
-        if(slot.latest <= 0 && slot.prior <= 0) return;
-        const baseline = Math.max(slot.prior, 1);
-        const delta = slot.latest - slot.prior;
-        const ratio = Math.abs(delta) / baseline;
-        if(ratio < minRatio) return;
-        if(!best || ratio > best.ratio){
-          best = { ...slot, delta, ratio };
-        }
-      });
-
-      if(!best) return null;
-      return {
-        type: "summary",
-        label,
-        headline: `${best.name} ${best.delta > 0 ? "moved up fastest" : "fell back most"} month over month.`,
-        value: `${best.delta > 0 ? "+" : ""}${Math.round(best.ratio * 100)}%`,
-        statusTone: best.delta > 0 ? "up" : "down",
-        statusText: `${latestMonth.label} ${formatMoney(to2(best.latest))} vs ${priorMonth.label} ${formatMoney(to2(best.prior))}`
-      };
-    };
-
-    const dealerMovement = buildEntityMovementInsight({ entityType: "dealer", label: "Dealer movement" });
-    const areaMovement = buildEntityMovementInsight({ entityType: "area", label: "Area movement" });
+    const dealerMovement = buildEntityMovementSummary({ movement: compare.dealer?.movement, label: "Dealer movement", noun: "dealer" });
+    const areaMovement = buildEntityMovementSummary({ movement: compare.area?.movement, label: "Area movement", noun: "area" });
+    const dealerLeaderChange = buildLeaderChangeSummary({ leaderChange: compare.dealer?.leaderChange, noun: "dealer" });
+    const areaLeaderChange = buildLeaderChangeSummary({ leaderChange: compare.area?.leaderChange, noun: "area" });
+    const dealerShareShift = buildShareShiftSummary({ shareShift: compare.dealer?.shareShift, noun: "dealer" });
+    const areaShareShift = buildShareShiftSummary({ shareShift: compare.area?.shareShift, noun: "area" });
 
     const trendCue = (()=>{
       if(monthRows.length < 3) return null;
@@ -292,7 +312,11 @@ export function createReportsHighlightsSeam(deps){
       buildEntityCompareSummary({ payload: compare.area, period: compare.period, share: areaShare, noun: "area" }),
       buildTrailingSummary({ label: "Weakest area", entity: weakestArea, leader: strongestArea, noun: "area" }),
       dealerMovement,
+      dealerLeaderChange,
+      dealerShareShift,
       areaMovement,
+      areaLeaderChange,
+      areaShareShift,
       trendCue ? {
         type: "summary",
         label: "Rolling trend",
@@ -312,13 +336,14 @@ export function createReportsHighlightsSeam(deps){
       } : null
     ].filter(Boolean);
 
+    const featuredSummaries = summaryCards.filter(Boolean).slice(0, 8);
     const highlights = [];
-    if(metricCompareCards.length >= 2 && summaryCards.length){
-      highlights.push(summaryCards[0], metricCompareCards[0], metricCompareCards[1], ...summaryCards.slice(1, 4));
+    if(metricCompareCards.length >= 2 && featuredSummaries.length){
+      highlights.push(featuredSummaries[0], metricCompareCards[0], metricCompareCards[1], ...featuredSummaries.slice(1));
     }else if(metricCompareCards.length === 1){
-      highlights.push(metricCompareCards[0], ...summaryCards.slice(0, 4));
+      highlights.push(metricCompareCards[0], ...featuredSummaries);
     }else{
-      highlights.push(...summaryCards.slice(0, 6));
+      highlights.push(...featuredSummaries);
     }
 
     if(!highlights.length) return "";

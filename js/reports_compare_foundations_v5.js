@@ -196,25 +196,36 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
 
   const keyName = entityType === "dealer" ? "dealer" : "area";
   const entityStats = summarizeEntityCandidates(safeTrips, keyName, period);
-  const ranked = entityStats
-    .filter((row)=> row.current.trips > 0 || row.previous.trips > 0)
-    .sort((a, b)=> compareEntityRows(a, b));
-  const viable = ranked.find((row)=> row.current.trips >= minEntityTrips && row.previous.trips >= minEntityTrips && row.previous.amount >= minBaselineAmount) || null;
-  const fallbackLeader = (Array.isArray(entityRows) ? entityRows[0] : null) || ranked[0] || null;
+  const movement = buildEntityMovementModel({
+    entityStats,
+    entityType,
+    minEntityTrips,
+    minBaselineAmount,
+    period
+  });
+  const ranked = movement.ranked;
+  const viable = movement.compareTarget;
+  const fallbackLeader = (Array.isArray(entityRows) ? entityRows[0] : null) || movement.currentLeader || ranked[0] || null;
 
   if(!viable){
     const entityName = String(fallbackLeader?.name || "").trim();
     const curTrips = safeNum(fallbackLeader?.current?.trips);
     const prevTrips = safeNum(fallbackLeader?.previous?.trips);
     const prevAmount = safeNum(fallbackLeader?.previous?.amount);
-    return buildSuppressedEntityPayload({
-      entityType,
-      entityName,
-      confidence: "none",
-      confidenceLabel: "suppressed",
-      suppressionCode: "entity-baseline-too-sparse",
-      reason: `${capitalize(entityType)} compare suppressed: no ${entityType} has at least ${minEntityTrips} trips in both periods and ${formatAmountFloor(minBaselineAmount)} in the earlier period.${entityName ? ` Closest candidate: ${entityName} (${curTrips}/${prevTrips} trips, ${formatAmountFloor(prevAmount)} earlier).` : ""}`
-    });
+    return {
+      ...buildSuppressedEntityPayload({
+        entityType,
+        entityName,
+        confidence: "none",
+        confidenceLabel: "suppressed",
+        suppressionCode: "entity-baseline-too-sparse",
+        reason: `${capitalize(entityType)} compare suppressed: no ${entityType} has at least ${minEntityTrips} trips in both periods and ${formatAmountFloor(minBaselineAmount)} in the earlier period.${entityName ? ` Closest candidate: ${entityName} (${curTrips}/${prevTrips} trips, ${formatAmountFloor(prevAmount)} earlier).` : ""}`
+      }),
+      leaders: buildLeadersPayload(movement),
+      movement: buildMovementPayload(movement),
+      shareShift: buildShareShiftPayload(movement),
+      leaderChange: buildLeaderChangePayload(movement)
+    };
   }
 
   const metric = buildMetricComparePayload({
@@ -230,19 +241,12 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
     baselineOk: viable.previous.amount >= minBaselineAmount,
     baselineReason: `${capitalize(entityType)} compare suppressed: ${viable.name} needs at least ${formatAmountFloor(minBaselineAmount)} in the earlier period for a fair % compare.`
   });
-  const entitySupportScore = scoreSupport({
-    currentTrips: viable.current.trips,
-    previousTrips: viable.previous.trips,
-    currentDays: viable.current.uniqueDays,
-    previousDays: viable.previous.uniqueDays,
-    baselineRatio: viable.previous.amount / Math.max(1, minBaselineAmount)
-  });
 
   return {
     ...metric,
     suppressed: false,
     reason: "",
-    explanation: `${viable.name} was picked as the fairest ${entityType} compare target because it has support in both periods. ${confidenceLabelFromScore(entitySupportScore) === "strong" ? "This is a stronger read." : (confidenceLabelFromScore(entitySupportScore) === "early" ? "This is still an early read." : "Use this as a light directional read.")}`,
+    explanation: buildEntityExplanation({ entityType, viable, movement }),
     entityName: viable.name,
     currentTrips: viable.current.trips,
     previousTrips: viable.previous.trips,
@@ -250,19 +254,191 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
     previousUniqueDays: viable.previous.uniqueDays,
     compareTarget: viable.name,
     candidateCount: ranked.length,
-    confidence: classifyConfidenceFromScore(entitySupportScore),
-    confidenceLabel: confidenceLabelFromScore(entitySupportScore),
-    trustLabel: confidenceLabelFromScore(entitySupportScore)
+    confidence: viable.confidence,
+    confidenceLabel: viable.confidenceLabel,
+    trustLabel: viable.confidenceLabel,
+    currentSharePct: viable.currentSharePct,
+    previousSharePct: viable.previousSharePct,
+    shareDeltaPct: viable.shareDeltaPct,
+    leaders: buildLeadersPayload(movement),
+    movement: buildMovementPayload(movement),
+    shareShift: buildShareShiftPayload(movement),
+    leaderChange: buildLeaderChangePayload(movement)
   };
+}
+
+function buildEntityMovementModel({ entityStats, entityType, minEntityTrips, minBaselineAmount, period }){
+  const currentTotal = safeNum(period?.current?.amount);
+  const previousTotal = safeNum(period?.previous?.amount);
+  const enriched = (Array.isArray(entityStats) ? entityStats : []).map((row)=> enrichEntityMovementRow({
+    row,
+    currentTotal,
+    previousTotal,
+    minEntityTrips,
+    minBaselineAmount
+  }));
+  const ranked = enriched
+    .filter((row)=> row.current.trips > 0 || row.previous.trips > 0)
+    .sort((a, b)=> compareEntityRows(a, b));
+  const compareCandidates = ranked.filter((row)=> row.compareEligible);
+  const compareTarget = compareCandidates[0] || null;
+  const currentLeader = ranked.filter((row)=> row.current.amount > 0).sort((a, b)=> b.current.amount - a.current.amount)[0] || null;
+  const previousLeader = ranked.filter((row)=> row.previous.amount > 0).sort((a, b)=> b.previous.amount - a.previous.amount)[0] || null;
+  const positiveMovers = ranked.filter((row)=> row.movementEligible && row.deltaValue > 0).sort((a, b)=> compareMovementRows(a, b));
+  const negativeMovers = ranked.filter((row)=> row.movementEligible && row.deltaValue < 0).sort((a, b)=> compareMovementRows(a, b));
+  const shareGainers = ranked.filter((row)=> row.shareShiftEligible && row.shareDeltaPct > 0).sort((a, b)=> compareShareShiftRows(a, b));
+  const shareDecliners = ranked.filter((row)=> row.shareShiftEligible && row.shareDeltaPct < 0).sort((a, b)=> compareShareShiftRows(a, b));
+  const leaderChangeSupported = !!currentLeader && !!previousLeader && currentLeader.name !== previousLeader.name
+    && currentLeader.movementEligible && previousLeader.movementEligible;
+
+  return {
+    entityType,
+    ranked,
+    compareTarget,
+    currentLeader,
+    previousLeader,
+    topGainer: positiveMovers[0] || null,
+    topDecliner: negativeMovers[0] || null,
+    topShareGainer: shareGainers[0] || null,
+    topShareDecliner: shareDecliners[0] || null,
+    leaderChangeSupported,
+    currentTotal,
+    previousTotal
+  };
+}
+
+function enrichEntityMovementRow({ row, currentTotal, previousTotal, minEntityTrips, minBaselineAmount }){
+  const currentAmount = safeNum(row?.current?.amount);
+  const previousAmount = safeNum(row?.previous?.amount);
+  const deltaValue = currentAmount - previousAmount;
+  const deltaPct = previousAmount >= minBaselineAmount ? (deltaValue / previousAmount) : null;
+  const currentSharePct = currentTotal > 0 ? (currentAmount / currentTotal) * 100 : 0;
+  const previousSharePct = previousTotal > 0 ? (previousAmount / previousTotal) * 100 : 0;
+  const shareDeltaPct = currentSharePct - previousSharePct;
+  const supportScore = scoreSupport({
+    currentTrips: row?.current?.trips,
+    previousTrips: row?.previous?.trips,
+    currentDays: row?.current?.uniqueDays,
+    previousDays: row?.previous?.uniqueDays,
+    baselineRatio: previousAmount / Math.max(1, minBaselineAmount)
+  });
+  const supportConfidence = classifyConfidenceFromScore(supportScore);
+  const movementBaselineAmount = Math.max(15, minBaselineAmount * 0.6);
+  const movementEligible = row?.current?.trips >= 1
+    && row?.previous?.trips >= 1
+    && row?.current?.uniqueDays >= 1
+    && row?.previous?.uniqueDays >= 1
+    && (safeNum(row?.current?.trips) + safeNum(row?.previous?.trips)) >= Math.max(3, minEntityTrips + 1)
+    && (currentAmount >= movementBaselineAmount || previousAmount >= movementBaselineAmount);
+  const compareEligible = row?.current?.trips >= minEntityTrips
+    && row?.previous?.trips >= minEntityTrips
+    && previousAmount >= minBaselineAmount;
+  const shareShiftEligible = movementEligible && currentTotal >= minBaselineAmount * 3 && previousTotal >= minBaselineAmount * 3;
+  const movementStrength = Math.abs(deltaValue) + (Math.abs(shareDeltaPct) * 2) + (supportScore * 10);
+
+  return {
+    name: String(row?.name || "").trim() || "(Unspecified)",
+    current: row?.current || { amount: 0, trips: 0, uniqueDays: 0 },
+    previous: row?.previous || { amount: 0, trips: 0, uniqueDays: 0 },
+    deltaValue,
+    deltaPct,
+    currentSharePct,
+    previousSharePct,
+    shareDeltaPct,
+    compareTone: deltaPct == null ? toneFromDelta(deltaValue === 0 ? 0 : (deltaValue > 0 ? 1 : -1), 0.06) : toneFromDelta(deltaPct, 0.06),
+    movementEligible,
+    compareEligible,
+    shareShiftEligible,
+    supportScore,
+    confidence: supportConfidence,
+    confidenceLabel: confidenceLabelFromScore(supportScore),
+    movementStrength
+  };
+}
+
+function buildMovementPayload(movement){
+  return {
+    topGainer: buildMovementEntitySummary(movement?.topGainer),
+    topDecliner: buildMovementEntitySummary(movement?.topDecliner),
+    topShareGainer: buildMovementEntitySummary(movement?.topShareGainer),
+    topShareDecliner: buildMovementEntitySummary(movement?.topShareDecliner),
+    insightCount: [movement?.topGainer, movement?.topDecliner, movement?.topShareGainer, movement?.topShareDecliner].filter(Boolean).length
+  };
+}
+
+function buildLeadersPayload(movement){
+  return {
+    current: buildMovementEntitySummary(movement?.currentLeader),
+    previous: buildMovementEntitySummary(movement?.previousLeader)
+  };
+}
+
+function buildLeaderChangePayload(movement){
+  const currentLeader = movement?.currentLeader;
+  const previousLeader = movement?.previousLeader;
+  const changed = !!movement?.leaderChangeSupported;
+  return {
+    supported: !!currentLeader && !!previousLeader,
+    changed,
+    currentLeader: buildMovementEntitySummary(currentLeader),
+    previousLeader: buildMovementEntitySummary(previousLeader)
+  };
+}
+
+function buildShareShiftPayload(movement){
+  return {
+    gainer: buildMovementEntitySummary(movement?.topShareGainer),
+    decliner: buildMovementEntitySummary(movement?.topShareDecliner)
+  };
+}
+
+function buildMovementEntitySummary(row){
+  if(!row) return null;
+  return {
+    name: row.name,
+    currentAmount: row.current.amount,
+    previousAmount: row.previous.amount,
+    deltaValue: row.deltaValue,
+    deltaPct: row.deltaPct,
+    compareTone: row.compareTone,
+    currentTrips: row.current.trips,
+    previousTrips: row.previous.trips,
+    currentUniqueDays: row.current.uniqueDays,
+    previousUniqueDays: row.previous.uniqueDays,
+    currentSharePct: row.currentSharePct,
+    previousSharePct: row.previousSharePct,
+    shareDeltaPct: row.shareDeltaPct,
+    confidence: row.confidence,
+    confidenceLabel: row.confidenceLabel
+  };
+}
+
+function buildEntityExplanation({ entityType, viable, movement }){
+  const leaderChange = buildLeaderChangePayload(movement);
+  const shareShift = buildShareShiftPayload(movement);
+  const parts = [
+    `${viable.name} was picked as the fairest ${entityType} compare target because it has support in both periods.`
+  ];
+  if(leaderChange.changed && leaderChange.currentLeader && leaderChange.previousLeader){
+    parts.push(`${leaderChange.currentLeader.name} took the lead from ${leaderChange.previousLeader.name}.`);
+  }
+  if(shareShift.gainer && Math.abs(safeNum(shareShift.gainer.shareDeltaPct)) >= 3){
+    parts.push(`${shareShift.gainer.name} gained ${formatShareDelta(shareShift.gainer.shareDeltaPct)} of ${entityType} dollars.`);
+  }
+  if(shareShift.decliner && Math.abs(safeNum(shareShift.decliner.shareDeltaPct)) >= 3 && shareShift.decliner.name !== shareShift.gainer?.name){
+    parts.push(`${shareShift.decliner.name} gave back ${formatShareDelta(shareShift.decliner.shareDeltaPct)}.`);
+  }
+  return parts.join(" ");
 }
 
 function summarizeEntityCandidates(trips, keyName, period){
   const map = new Map();
+
   (Array.isArray(trips) ? trips : []).forEach((t)=>{
     const iso = String(t?.dateISO || "");
     if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
-    const name = String(t?.[keyName] || "").trim();
-    if(!name) return;
+    const rawName = String(t?.[keyName] || "").trim();
+    const name = rawName || "(Unspecified)";
     const bucket = iso.slice(0, 7) === period.current?.monthKey
       ? "current"
       : (iso.slice(0, 7) === period.previous?.monthKey ? "previous" : "");
@@ -305,15 +481,23 @@ function compareEntityRows(a, b){
     currentDays: a.current.uniqueDays,
     previousDays: a.previous.uniqueDays,
     baselineRatio: a.previous.amount / 25
-  }) + ((a.current.amount + a.previous.amount) / 1000);
+  }) + ((a.current.amount + a.previous.amount) / 1000) + (Math.abs(a.shareDeltaPct) / 20);
   const bScore = scoreSupport({
     currentTrips: b.current.trips,
     previousTrips: b.previous.trips,
     currentDays: b.current.uniqueDays,
     previousDays: b.previous.uniqueDays,
     baselineRatio: b.previous.amount / 25
-  }) + ((b.current.amount + b.previous.amount) / 1000);
+  }) + ((b.current.amount + b.previous.amount) / 1000) + (Math.abs(b.shareDeltaPct) / 20);
   return bScore - aScore;
+}
+
+function compareMovementRows(a, b){
+  return b.movementStrength - a.movementStrength;
+}
+
+function compareShareShiftRows(a, b){
+  return Math.abs(b.shareDeltaPct) - Math.abs(a.shareDeltaPct) || compareMovementRows(a, b);
 }
 
 function summarizePeriod(trips, monthKey, dayLimit){
@@ -442,6 +626,11 @@ function joinReasonList(items){
 
 function formatAmountFloor(value){
   return `$${Math.round(safeNum(value))}`;
+}
+
+function formatShareDelta(value){
+  const rounded = Math.abs(Math.round(safeNum(value)));
+  return `${rounded} share pt${rounded === 1 ? "" : "s"}`;
 }
 
 function toWholeOrTwo(value){
