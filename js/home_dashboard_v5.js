@@ -226,7 +226,9 @@ export function createHomeDashboardRenderer({
           <div class="segWrap timeframeUnifiedControl" role="group" aria-label="Home timeframe filter">
             ${chip("YTD", "YTD")}
             ${chip("MONTH", "This Month")}
+            ${chip("LAST_MONTH", "Last Month")}
             ${chip("7D", "Last 7 Days")}
+            ${chip("30D", "Last 30 Days")}
             ${chip("RANGE", "Custom Range")}
           </div>
           ${f === "RANGE" ? `
@@ -338,8 +340,10 @@ export function createHomeDashboardRenderer({
         const launchedRangeLabel = launchedHomeFilter.mode === "RANGE"
           ? `${launchedHomeFilter.from || "—"} → ${launchedHomeFilter.to || "—"}`
           : (launchedHomeFilter.mode === "MONTH" ? "This Month"
-            : (launchedHomeFilter.mode === "7D" ? "Last 7 Days"
-              : "YTD"));
+            : (launchedHomeFilter.mode === "LAST_MONTH" ? "Last Month"
+              : (launchedHomeFilter.mode === "7D" ? "Last 7 Days"
+                : (launchedHomeFilter.mode === "30D" ? "Last 30 Days"
+                  : "YTD"))));
         state.reportsMetricDetail = metricKey;
         state.reportsMetricDetailContext = {
           source: "home",
