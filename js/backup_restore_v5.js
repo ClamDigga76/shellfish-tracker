@@ -18,7 +18,9 @@ export function createBackupRestoreSubsystem(deps){
     openModal,
     closeModal,
     escapeHtml,
-    announce
+    announce,
+    normalizeTrip,
+    appendTripHistoryEvent
   } = deps;
 
 
@@ -646,7 +648,7 @@ export function createBackupRestoreSubsystem(deps){
     });
   }
 
-  function normalizeTripForImport(t){
+  function normalizeTripForImport(t, context = {}){
     const o = (t && typeof t === "object") ? t : {};
     const id = String(o.id || "").trim() || uid("t");
     const dateISO = String(o.dateISO || o.date || "").trim();
@@ -656,7 +658,8 @@ export function createBackupRestoreSubsystem(deps){
     const amount = Number(o.amount);
     const species = String(o.species || "Soft-shell Clams").trim() || "Soft-shell Clams";
     const notes = String(o.notes || "");
-    return {
+    const importedAt = new Date().toISOString();
+    const importedTrip = appendTripHistoryEvent({
       ...o,
       id,
       dateISO,
@@ -665,8 +668,16 @@ export function createBackupRestoreSubsystem(deps){
       species,
       notes,
       pounds: Number.isFinite(pounds) ? pounds : 0,
-      amount: Number.isFinite(amount) ? amount : 0,
-    };
+      amount: Number.isFinite(amount) ? amount : 0
+    }, {
+      type: "imported",
+      at: importedAt,
+      source: context.mode === "replace" ? "restore" : "import",
+      detail: {
+        fileName: String(context.fileName || "")
+      }
+    });
+    return normalizeTrip(importedTrip);
   }
 
   async function importBackupFromFile(file, opts={}){
@@ -687,7 +698,7 @@ export function createBackupRestoreSubsystem(deps){
     const dealersIn = normalized.data.dealers;
     const settingsIn = normalized.data.settings;
 
-    const importedTrips = tripsIn.map(normalizeTripForImport).filter(t=>t.dateISO || t.dealer || t.amount || t.pounds);
+    const importedTrips = tripsIn.map((trip)=>normalizeTripForImport(trip, { mode, fileName: String(parsed?.fileName || file?.name || "") })).filter(t=>t.dateISO || t.dealer || t.amount || t.pounds);
     const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
     const importedDealers = dealersIn.map(d=>String(d||"").trim()).filter(Boolean);
 
