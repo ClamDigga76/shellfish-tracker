@@ -467,7 +467,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const detailInsightClass = isHomeMetricDetail ? "homeMetricInsight" : "reportsMetricInsight";
 
   const renderReportsTopShell = ({ includeModeToggle = true, body = "" } = {})=> `
-    <div class="card">
+    <div class="card reportsTopShell">
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
         <b>Reports</b>
         <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
@@ -713,7 +713,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   };
 
   const renderChartCard = ({ takeaway, title, subhead, hero, context, canvasId, height = 210 })=> `
-    <div class="card chartCard">
+    <div class="chartCard">
       <div class="chartTakeaway tone-${takeaway.tone}">${escapeHtml(takeaway.text)}</div>
       <div class="chartTitle">${escapeHtml(title)}</div>
       <div class="chartSubhead">${escapeHtml(subhead)}</div>
@@ -841,7 +841,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       ${reportsSection({
         title: "Deeper detail",
         intro: "Need line-item breakdowns? Open table mode for dealer, area, and monthly rows.",
-        body: `<div class="card reportsDetailHint"><button class="btn" type="button" id="reportsSwitchToTables">Open table detail</button></div>`,
+        body: `<div class="reportsDetailHint"><button class="btn" type="button" id="reportsSwitchToTables">Open table detail</button></div>`,
         extraClass: "reportsSection--detail"
       })}`;
     }
@@ -963,7 +963,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
     return `
     <section class="${detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
-      <div class="card ${detailCardClass}">
+      <div class="${detailCardClass}">
         <button class="btn ${detailBackClass}" type="button" id="reportsMetricBack">${detailBackLabel}</button>
         <div class="${detailEyebrowClass}">${escapeHtml(detailEyebrow)}</div>
         <h2 class="${detailTitleClass}">${escapeHtml(isHomeMetricDetail ? meta.homeTitle : meta.title)}</h2>
@@ -1170,7 +1170,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : `${reportsSection({
           title: "Highlights",
           intro: "Analysis takeaways from this date range.",
-          body: highlightsStrip || `<div class="card"><div class="muted small">Highlights will appear as more trips are added.</div></div>`,
+          body: highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights will appear as more trips are added.</div></div>`,
           extraClass: "reportsSection--highlights"
         })}
 
