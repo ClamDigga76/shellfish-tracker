@@ -62,14 +62,14 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     reason: periodComparable ? "" : periodSupport.reason,
     suppressionCode: periodComparable ? "" : periodSupport.suppressionCode,
     explanation: periodComparable
-      ? `Reports detail uses a fair compare window: ${fairWindowLabel}. ${periodSupport.explanation}`
+      ? `${latestMonth.label} vs ${priorMonth.label}. ${periodSupport.explanation}`
       : periodSupport.reason,
     currentLabel: latestMonth.label,
     previousLabel: priorMonth.label,
     fairWindowLabel,
     compareModel: "reports-fair-window",
-    compareModelLabel: "Reports fair-window compare",
-    supportLabel: `Comparable window • ${fairWindowLabel}`,
+    compareModelLabel: "Comparison",
+    supportLabel: `${latestMonth.label} vs ${priorMonth.label}`,
     support: periodSupport.summary,
     current,
     previous
@@ -219,7 +219,7 @@ function buildMetricComparePayload({ metricKey, label, currentValue, previousVal
     suppressed: !canCompare,
     reason,
     explanation: canCompare
-      ? `${label} compare uses the Reports fair window (${period?.fairWindowLabel || "the same comparable window"}), not full-month totals. ${confidenceLabelFromScore(supportScore) === "strong" ? "Support is solid in both periods." : (confidenceLabelFromScore(supportScore) === "early" ? "Read as an early signal while the sample builds." : "Support is lighter, so read this carefully.")}`
+      ? `${label} changed from ${period?.previousLabel || "the prior period"} to ${period?.currentLabel || "the current period"}. ${confidenceLabelFromScore(supportScore) === "strong" ? "Support is solid in both periods." : (confidenceLabelFromScore(supportScore) === "early" ? "Read as an early signal while the sample builds." : "Support is lighter, so read this carefully.")}`
       : reason,
     suppressionCode: !canCompare
       ? (!period?.comparable ? (period.suppressionCode || "period-low-data") : "baseline-too-weak")
@@ -587,8 +587,8 @@ function buildDetailCharts({ period, monthRows, trips }){
   return {
     trips: buildMetricDetailCompareChart({ labels, currentValue: current?.trips, previousValue: previous?.trips, metricKey: "trips" }),
     pounds: buildMetricDetailCompareChart({ labels, currentValue: current?.lbs, previousValue: previous?.lbs, metricKey: "pounds" }),
-    amount: buildMetricDetailCompareChart({ labels, currentValue: current?.amount, previousValue: previous?.amount, metricKey: "amount", basisLabel: period?.fairWindowLabel ? `Reports fair compare window • ${period.fairWindowLabel}` : "Reports fair compare window" }),
-    amountCompare: buildMetricDetailCompareChart({ labels, currentValue: current?.amount, previousValue: previous?.amount, metricKey: "amount", basisLabel: period?.fairWindowLabel ? `Reports fair compare window • ${period.fairWindowLabel}` : "Reports fair compare window" }),
+    amount: buildMetricDetailCompareChart({ labels, currentValue: current?.amount, previousValue: previous?.amount, metricKey: "amount", basisLabel: labels?.length ? labels.join(" vs ") : "Comparison" }),
+    amountCompare: buildMetricDetailCompareChart({ labels, currentValue: current?.amount, previousValue: previous?.amount, metricKey: "amount", basisLabel: labels?.length ? labels.join(" vs ") : "Comparison" }),
     amountTrend,
     ppl: buildMetricDetailCompareChart({ labels, currentValue: current?.ppl, previousValue: previous?.ppl, metricKey: "ppl" })
   };
@@ -610,7 +610,7 @@ function buildMetricDetailAmountTrendChart({ period, monthRows, trips }){
   return {
     chartType: "time-series",
     metricKey: "amount",
-    basisLabel: dayLimit ? `Amount by month using the Reports fair window (days 1-${dayLimit} in each month)` : "Amount by month using the Reports compare basis",
+    basisLabel: dayLimit ? `Amount trend • days 1-${dayLimit} in each month` : "Amount trend across the range",
     labels: trendRows.map((row)=> row.label),
     values: trendRows.map((row)=> row.value),
     compareLabels: [String(period?.currentLabel || "Current"), String(period?.previousLabel || "Previous")],
