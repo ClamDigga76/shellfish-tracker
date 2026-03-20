@@ -50,6 +50,12 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
   const previous = summarizeTripsByMonthWindow(safeTrips, priorKey, periodRules.dayLimit);
   const periodSupport = buildPeriodSupport({ current, previous });
   const periodComparable = periodSupport.comparable;
+  const compareDayRangeLabel = buildCompareDayRangeLabel({
+    currentMonthKey: latestKey,
+    previousMonthKey: priorKey,
+    dayLimit: periodRules.dayLimit,
+    isPartial: periodRules.dayLimit < periodRules.daysInCurrent
+  });
   const fairWindowLabel = periodRules.dayLimit < periodRules.daysInCurrent
     ? `Days 1-${periodRules.dayLimit} in each month`
     : "Full month totals";
@@ -67,6 +73,7 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     currentLabel: latestMonth.label,
     previousLabel: priorMonth.label,
     fairWindowLabel,
+    compareDayRangeLabel,
     compareModel: "reports-fair-window",
     compareModelLabel: "Comparison",
     supportLabel: `${latestMonth.label} vs ${priorMonth.label}`,
@@ -654,6 +661,21 @@ function formatAmountFloor(value){
 function formatShareDelta(value){
   const rounded = Math.abs(Math.round(safeNum(value)));
   return `${rounded} share pt${rounded === 1 ? "" : "s"}`;
+}
+
+function buildCompareDayRangeLabel({ currentMonthKey, previousMonthKey, dayLimit, isPartial }){
+  if(!isPartial) return "";
+  const safeDayLimit = Math.max(1, Number(dayLimit) || 0);
+  const currentRange = formatMonthDayWindowLabel(currentMonthKey, safeDayLimit);
+  const previousRange = formatMonthDayWindowLabel(previousMonthKey, safeDayLimit);
+  return currentRange && previousRange ? `${currentRange} vs ${previousRange}` : "";
+}
+
+function formatMonthDayWindowLabel(monthKey, dayLimit){
+  const [year, month] = String(monthKey || "").split("-").map(Number);
+  if(!year || !month) return "";
+  const monthLabel = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" }).format(new Date(Date.UTC(year, month - 1, 1)));
+  return `${monthLabel} 1–${dayLimit}`;
 }
 
 function toWholeOrTwo(value){

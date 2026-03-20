@@ -14,9 +14,10 @@ export function createReportsHighlightsSeam(deps){
   const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
   const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
   const buildPeriodLabel = (period)=> `${period?.currentLabel || "Current"} vs ${period?.previousLabel || "Prior"}`;
-  const buildComparableWindowLabel = (period)=> period?.currentLabel && period?.previousLabel
-    ? `${period.currentLabel} vs ${period.previousLabel}`
-    : (period?.fairWindowLabel || "Comparable window");
+  const buildComparableWindowLabel = (period)=> period?.compareDayRangeLabel
+    || (period?.currentLabel && period?.previousLabel
+      ? `${period.currentLabel} vs ${period.previousLabel}`
+      : (period?.fairWindowLabel || "Comparable window"));
   const compareToneForRatio = (current, previous, epsilon = 0.05)=>{
     if(!current && !previous) return "steady";
     if(previous <= 0) return current > 0 ? "up" : "steady";
