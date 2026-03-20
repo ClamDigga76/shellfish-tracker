@@ -397,6 +397,50 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   background:rgba(8,12,20,.28);
   padding:10px 12px;
 }
+.homeScreenShell.dashCard{
+  padding:0;
+  border-color:transparent;
+  background:none;
+  box-shadow:none;
+  cursor:default;
+}
+.homeScreenShell .homeSection{
+  margin-bottom:14px;
+}
+.homeScreenShell .homeSection:last-child{
+  margin-bottom:0;
+}
+.homeScreenShell .homeFilterSection,
+.homeScreenShell .homeKpiSection{
+  padding:0;
+  border:none;
+  background:none;
+  box-shadow:none;
+}
+.homeScreenShell .homeOverviewCard{
+  padding:15px 15px 14px;
+  border-radius:18px;
+  border:1px solid rgba(126,200,255,.22);
+  background:linear-gradient(180deg, rgba(47,109,246,.16) 0%, rgba(20,29,47,.66) 62%, rgba(10,15,24,.52) 100%);
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+.homeScreenShell .homeSmartSummaryShell{
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  box-shadow:none;
+}
+.homeScreenShell .homeSmartSummary,
+.homeScreenShell .homeSmartSummaryFallback{
+  margin-top:0;
+  border:none;
+  background:none;
+  padding:0;
+}
+.homeScreenShell .homeSmartSummary{
+  padding-left:20px;
+}
 .kpiGroupLabel{
   margin:var(--card-title-gap) 0 var(--card-body-gap);
   font-size:11px;
@@ -423,6 +467,9 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .dashCard{
   padding:var(--card-pad-y) var(--card-pad-x);
+}
+.dashCard.homeScreenShell{
+  padding:0;
 }
 .dashCard .homeOverviewCard{
   margin-bottom:var(--card-stack-gap);
@@ -550,8 +597,43 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   margin-top:var(--card-body-gap);
   margin-bottom:var(--card-stack-gap);
 }
+.homeScreenShell .homeFilterStack{
+  gap:10px;
+  margin:0;
+}
 .dashCard .homeFilterStack .timeframeUnifiedControl{
   margin-top:0;
+}
+.homeScreenShell .timeframeUnifiedControl{
+  padding:0;
+  border:none;
+  border-radius:0;
+  background:none;
+}
+.homeScreenShell .timeframeUnifiedControl .segBtn{
+  min-height:40px;
+  border-color:rgba(255,255,255,.06);
+  background:rgba(255,255,255,.03);
+}
+.homeScreenShell .timeframeUnifiedControl .segBtn.on,
+.homeScreenShell .timeframeUnifiedControl .segBtn.is-selected{
+  background:linear-gradient(180deg, rgba(152,165,184,.46) 0%, rgba(122,136,160,.34) 100%);
+  border-color:rgba(197,210,231,.34);
+  box-shadow:none;
+}
+.homeScreenShell .kpiRow{
+  gap:10px;
+  margin-bottom:0;
+}
+.homeScreenShell .kpiCard{
+  border-color:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  box-shadow:none;
+}
+.homeScreenShell .reportsHeroStat{
+  border-color:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.035);
+  box-shadow:none;
 }
 .reportsTimeframeControl{
   margin-top:14px;
