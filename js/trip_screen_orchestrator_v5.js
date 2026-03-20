@@ -148,7 +148,8 @@ export function createTripScreenOrchestrator({
   showUndoToast,
   renderHome,
   buildTripFormInputs,
-  buildNewTripSaveSnapshot
+  buildNewTripSaveSnapshot,
+  buildTripProvenanceSummary
 }) {
 function renderNewTrip(){
   ensureAreas();
@@ -1045,6 +1046,17 @@ function renderEditTrip(){
   const areaOptions = buildAreaOptionsHtml(draft.area, areaAddSentinel);
 
 
+  const tripProvenance = buildTripProvenanceSummary(trip);
+  const provenanceSummaryHtml = (tripProvenance.summaryLines.length || tripProvenance.historyItems.length)
+    ? `
+      <div class="card" style="margin-top:12px">
+        <div class="muted small" style="text-transform:uppercase;letter-spacing:.08em">Trip audit</div>
+        ${tripProvenance.summaryLines.length ? `<div class="mt8" style="display:grid;gap:6px">${tripProvenance.summaryLines.map((line)=>`<div class="muted small">${escapeHtml(line)}</div>`).join("")}</div>` : ""}
+        ${tripProvenance.historyItems.length ? `<div class="sep" style="margin:10px 0"></div><div class="muted small">Recent activity</div><div class="mt8" style="display:grid;gap:6px">${tripProvenance.historyItems.map((line)=>`<div class="muted small">${escapeHtml(line)}</div>`).join("")}</div>` : ""}
+      </div>
+    `
+    : "";
+
   const editTripFormHtml = renderTripEntryForm({
       mode: "edit",
       formId: "editTripForm",
@@ -1079,6 +1091,7 @@ function renderEditTrip(){
   getApp().innerHTML = `
     ${renderPageHeader("edit")}
     ${editTripFormHtml}
+    ${provenanceSummaryHtml}
   `;
 
   // ensure top on iPhone

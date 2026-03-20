@@ -1,4 +1,104 @@
 const DEFAULT_SPECIES = "Soft-shell Clams";
+const TRIP_HISTORY_LIMIT = 12;
+
+function isValidISODateTime(value) {
+  const s = String(value || "").trim();
+  if (!s) return false;
+  const d = new Date(s);
+  return !Number.isNaN(d.getTime()) && d.toISOString() === s;
+}
+
+function normalizeHistoryEvent(event) {
+  const raw = (event && typeof event === "object") ? event : {};
+  const type = String(raw.type || "").trim().toLowerCase();
+  const at = String(raw.at || "").trim();
+  if (!type || !isValidISODateTime(at)) return null;
+  const source = String(raw.source || "").trim().toLowerCase() || "system";
+  const note = String(raw.note || "").trim();
+  const detail = raw.detail && typeof raw.detail === "object" ? { ...raw.detail } : null;
+  return {
+    type,
+    at,
+    source,
+    ...(note ? { note } : {}),
+    ...(detail ? { detail } : {})
+  };
+}
+
+function dedupeHistoryEvents(history) {
+  const seen = new Set();
+  return history.filter((event) => {
+    const key = JSON.stringify([event.type, event.at, event.source, event.note || "", event.detail || null]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export function ensureTripProvenanceShape(trip, fallbackCreatedAt = "") {
+  const sourceTrip = (trip && typeof trip === "object") ? trip : {};
+  const raw = (sourceTrip.provenance && typeof sourceTrip.provenance === "object") ? sourceTrip.provenance : {};
+  const createdAt = isValidISODateTime(raw.createdAt) ? String(raw.createdAt) : (isValidISODateTime(sourceTrip.createdAt) ? String(sourceTrip.createdAt) : (isValidISODateTime(fallbackCreatedAt) ? String(fallbackCreatedAt) : new Date().toISOString()));
+  const history = dedupeHistoryEvents(
+    (Array.isArray(raw.history) ? raw.history : [])
+      .map(normalizeHistoryEvent)
+      .filter(Boolean)
+      .sort((a, b) => String(a.at).localeCompare(String(b.at)))
+  ).slice(-TRIP_HISTORY_LIMIT);
+  const firstEvent = history[0] || null;
+  const lastEvent = history[history.length - 1] || null;
+  const createdSource = String(raw.createdSource || firstEvent?.source || "legacy").trim().toLowerCase() || "legacy";
+  const importedAt = isValidISODateTime(raw.importedAt) ? String(raw.importedAt) : ((lastEvent?.type === "imported" && isValidISODateTime(lastEvent.at)) ? String(lastEvent.at) : "");
+  const updatedAt = isValidISODateTime(raw.updatedAt) ? String(raw.updatedAt) : ((lastEvent?.type === "edited" && isValidISODateTime(lastEvent.at)) ? String(lastEvent.at) : "");
+  const lastEventAt = isValidISODateTime(raw.lastEventAt) ? String(raw.lastEventAt) : (isValidISODateTime(lastEvent?.at) ? String(lastEvent.at) : "");
+
+  return {
+    createdAt,
+    createdSource,
+    updatedAt,
+    importedAt,
+    lastEventAt,
+    history
+  };
+}
+
+export function appendTripHistoryEvent(trip, event) {
+  const sourceTrip = (trip && typeof trip === "object") ? { ...trip } : {};
+  const normalizedEvent = normalizeHistoryEvent(event);
+  const createdAt = String(sourceTrip.createdAt || "").trim();
+  const provenance = ensureTripProvenanceShape(sourceTrip, createdAt);
+  if (!normalizedEvent) {
+    return {
+      ...sourceTrip,
+      provenance
+    };
+  }
+
+  const history = dedupeHistoryEvents([...provenance.history, normalizedEvent])
+    .sort((a, b) => String(a.at).localeCompare(String(b.at)))
+    .slice(-TRIP_HISTORY_LIMIT);
+  const nextProvenance = {
+    ...provenance,
+    history,
+    lastEventAt: normalizedEvent.at
+  };
+
+  if (normalizedEvent.type === "created") {
+    nextProvenance.createdAt = normalizedEvent.at;
+    nextProvenance.createdSource = normalizedEvent.source || provenance.createdSource || "manual";
+  }
+  if (normalizedEvent.type === "edited") {
+    nextProvenance.updatedAt = normalizedEvent.at;
+  }
+  if (normalizedEvent.type === "imported") {
+    nextProvenance.importedAt = normalizedEvent.at;
+  }
+
+  return {
+    ...sourceTrip,
+    provenance: nextProvenance
+  };
+}
 
 export function createTripDataEngine({ uid, isValidISODate }) {
   function normalizeTripRow(t) {
@@ -47,6 +147,9 @@ export function createTripDataEngine({ uid, isValidISODate }) {
         n.createdAt = new Date().toISOString();
       }
     }
+
+    n.provenance = ensureTripProvenanceShape(n, n.createdAt);
+    n.createdAt = n.provenance.createdAt;
 
     if (!String(n.species || "").trim()) n.species = DEFAULT_SPECIES;
     if (n.notes == null) n.notes = String(t?.notes || "");
