@@ -3,41 +3,40 @@ import { createReportsHighlightsSeam } from "./reports_highlights_v5.js";
 import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.js";
 import { createTripCardRendererCore } from "./trip_card_renderer_core_v5.js";
 
+const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
+  fairWindowLabel: "Home monthly totals",
+  compareModel: "home-full-month",
+  compareModelLabel: "Home full-month compare",
+  supportLabel: "Full monthly totals • Active Home filter",
+  support: "Full monthly totals from the active Home range.",
+  explanation: "Home KPI detail uses full monthly totals from the active Home filter, not the Reports fair-window compare.",
+  missingReason: "Need at least two visible months in this Home range for month-to-month detail.",
+  missingSuppressionCode: "missing-home-months",
+  missingExplanation: "Home KPI detail stays on full monthly totals from the active Home filter. Add another visible month to unlock month-to-month detail.",
+  metricExplanation: (label)=> `${label} compare uses Home full-month totals from the active filter, not the Reports fair-window compare.`
+});
+
 function buildHomeMetricDetailFoundation({ monthRows }){
   const safeMonths = Array.isArray(monthRows) ? monthRows.filter((row)=> row?.monthKey) : [];
   const currentMonth = safeMonths[safeMonths.length - 1] || null;
   const previousMonth = safeMonths[safeMonths.length - 2] || null;
-  const missingPeriod = {
-    comparable: false,
-    suppressed: true,
-    confidence: "none",
-    confidenceLabel: "suppressed",
-    trustLabel: "suppressed",
-    reason: "Need at least two visible months in this Home range for month-to-month detail.",
-    suppressionCode: "missing-home-months",
-    explanation: "Home KPI detail stays on full monthly totals from the active Home filter. Add another visible month to unlock month-to-month detail.",
-    currentLabel: currentMonth?.label || "Current month",
-    previousLabel: previousMonth?.label || "Previous month",
-    fairWindowLabel: "Home monthly totals",
-    compareModel: "home-full-month",
-    compareModelLabel: "Home full-month compare",
-    supportLabel: "Full monthly totals • Active Home filter",
-    support: "Home monthly totals",
-    current: summarizeHomeMonthRow(currentMonth),
-    previous: summarizeHomeMonthRow(previousMonth)
-  };
-  if(!currentMonth || !previousMonth){
-    return {
-      period: missingPeriod,
-      metrics: buildHomeMetricPayloads(missingPeriod),
-      detailCharts: buildHomeDetailCharts({ monthRows: safeMonths, period: missingPeriod })
-    };
-  }
-
   const current = summarizeHomeMonthRow(currentMonth);
   const previous = summarizeHomeMonthRow(previousMonth);
+
+  const period = currentMonth && previousMonth
+    ? buildHomeComparablePeriod({ currentMonth, previousMonth, current, previous })
+    : buildHomeSuppressedPeriod({ currentMonth, previousMonth, current, previous });
+
+  return {
+    period,
+    metrics: buildHomeMetricPayloads(period),
+    detailCharts: buildHomeDetailCharts({ monthRows: safeMonths, period })
+  };
+}
+
+function buildHomeComparablePeriod({ currentMonth, previousMonth, current, previous }){
   const confidenceLabel = classifyHomeConfidence({ currentTrips: current.trips, previousTrips: previous.trips });
-  const period = {
+  return {
     comparable: true,
     suppressed: false,
     confidence: confidenceLabel === "strong" ? "high" : (confidenceLabel === "early" ? "medium" : "low"),
@@ -45,21 +44,40 @@ function buildHomeMetricDetailFoundation({ monthRows }){
     trustLabel: confidenceLabel,
     reason: "",
     suppressionCode: "",
-    explanation: "Home KPI detail uses full monthly totals from the active Home filter, not the Reports fair-window compare.",
+    explanation: HOME_METRIC_DETAIL_COMPARE_CONTRACT.explanation,
     currentLabel: currentMonth.label || currentMonth.monthKey,
     previousLabel: previousMonth.label || previousMonth.monthKey,
-    fairWindowLabel: "Home monthly totals",
-    compareModel: "home-full-month",
-    compareModelLabel: "Home full-month compare",
-    supportLabel: "Full monthly totals • Active Home filter",
-    support: "Full monthly totals from the active Home range.",
+    ...buildHomeCompareContractFields(),
     current,
     previous
   };
+}
+
+function buildHomeSuppressedPeriod({ currentMonth, previousMonth, current, previous }){
   return {
-    period,
-    metrics: buildHomeMetricPayloads(period),
-    detailCharts: buildHomeDetailCharts({ monthRows: safeMonths, period })
+    comparable: false,
+    suppressed: true,
+    confidence: "none",
+    confidenceLabel: "suppressed",
+    trustLabel: "suppressed",
+    reason: HOME_METRIC_DETAIL_COMPARE_CONTRACT.missingReason,
+    suppressionCode: HOME_METRIC_DETAIL_COMPARE_CONTRACT.missingSuppressionCode,
+    explanation: HOME_METRIC_DETAIL_COMPARE_CONTRACT.missingExplanation,
+    currentLabel: currentMonth?.label || "Current month",
+    previousLabel: previousMonth?.label || "Previous month",
+    ...buildHomeCompareContractFields({ support: "Home monthly totals" }),
+    current,
+    previous
+  };
+}
+
+function buildHomeCompareContractFields({ support } = {}){
+  return {
+    fairWindowLabel: HOME_METRIC_DETAIL_COMPARE_CONTRACT.fairWindowLabel,
+    compareModel: HOME_METRIC_DETAIL_COMPARE_CONTRACT.compareModel,
+    compareModelLabel: HOME_METRIC_DETAIL_COMPARE_CONTRACT.compareModelLabel,
+    supportLabel: HOME_METRIC_DETAIL_COMPARE_CONTRACT.supportLabel,
+    support: support || HOME_METRIC_DETAIL_COMPARE_CONTRACT.support
   };
 }
 
@@ -125,7 +143,7 @@ function buildHomeMetricPayload({ metricKey, label, currentValue, previousValue,
       : "steady",
     suppressed,
     reason,
-    explanation: suppressed ? reason : `${label} compare uses Home full-month totals from the active filter, not the Reports fair-window compare.`,
+    explanation: suppressed ? reason : HOME_METRIC_DETAIL_COMPARE_CONTRACT.metricExplanation(label),
     suppressionCode: suppressed ? "home-baseline-missing" : "",
     confidence: String(period?.confidence || "low"),
     confidenceLabel,
