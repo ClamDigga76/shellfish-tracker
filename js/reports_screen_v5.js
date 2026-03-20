@@ -26,11 +26,19 @@ function buildHomeMetricDetailFoundation({ monthRows }){
   const period = currentMonth && previousMonth
     ? buildHomeComparablePeriod({ currentMonth, previousMonth, current, previous })
     : buildHomeSuppressedPeriod({ currentMonth, previousMonth, current, previous });
+  const metrics = buildHomeMetricPayloads(period);
+  const detailCharts = buildHomeDetailCharts({ monthRows: safeMonths, period });
 
   return {
     period,
-    metrics: buildHomeMetricPayloads(period),
-    detailCharts: buildHomeDetailCharts({ monthRows: safeMonths, period })
+    metrics,
+    detailCharts,
+    primaryBasis: buildMetricDetailPrimaryBasisMap({
+      period,
+      metrics,
+      detailCharts,
+      source: "home"
+    })
   };
 }
 
@@ -158,24 +166,57 @@ function buildHomeMetricPayload({ metricKey, label, currentValue, previousValue,
   };
 }
 
+
+function buildMetricDetailPrimaryBasisMap({ period, metrics, detailCharts, source }){
+  const safePeriod = period && typeof period === "object" ? period : {};
+  const safeMetrics = metrics && typeof metrics === "object" ? metrics : {};
+  const safeCharts = detailCharts && typeof detailCharts === "object" ? detailCharts : {};
+  const defaultBasisLabel = String(safePeriod.supportLabel || safePeriod.support || safePeriod.fairWindowLabel || (source === "home" ? "Home monthly totals" : "Comparable window"));
+  const currentLabel = String(safePeriod.currentLabel || "Current");
+  const previousLabel = String(safePeriod.previousLabel || "Previous");
+
+  return {
+    trips: buildMetricPrimaryBasis({ metricKey: "trips", metricPayload: safeMetrics.trips, primaryChart: safeCharts.trips, period: safePeriod, basisLabel: defaultBasisLabel, currentLabel, previousLabel }),
+    pounds: buildMetricPrimaryBasis({ metricKey: "pounds", metricPayload: safeMetrics.pounds, primaryChart: safeCharts.pounds, period: safePeriod, basisLabel: defaultBasisLabel, currentLabel, previousLabel }),
+    amount: buildMetricPrimaryBasis({ metricKey: "amount", metricPayload: safeMetrics.amount, primaryChart: safeCharts.amountCompare || safeCharts.amount, period: safePeriod, basisLabel: defaultBasisLabel, currentLabel, previousLabel }),
+    ppl: buildMetricPrimaryBasis({ metricKey: "ppl", metricPayload: safeMetrics.ppl, primaryChart: safeCharts.ppl, period: safePeriod, basisLabel: defaultBasisLabel, currentLabel, previousLabel })
+  };
+}
+
+function buildMetricPrimaryBasis({ metricKey, metricPayload, primaryChart, period, basisLabel, currentLabel, previousLabel }){
+  const payload = metricPayload && typeof metricPayload === "object" ? metricPayload : null;
+  const chart = primaryChart && typeof primaryChart === "object" ? primaryChart : null;
+  return {
+    metricKey,
+    basisLabel: String(chart?.basisLabel || basisLabel || ""),
+    currentLabel,
+    previousLabel,
+    currentValue: Number(payload?.currentValue) || 0,
+    previousValue: Number(payload?.previousValue) || 0,
+    comparePayload: payload,
+    primaryChart: chart,
+    period: period && typeof period === "object" ? period : {}
+  };
+}
+
 function buildHomeDetailCharts({ monthRows, period }){
   const safeMonths = Array.isArray(monthRows) ? monthRows : [];
   const labels = [
     String(period?.currentLabel || "Current month"),
     String(period?.previousLabel || "Previous month")
   ];
+  const amountTrendChart = {
+    chartType: "time-series",
+    metricKey: "amount",
+    basisLabel: "Amount trend across visible Home months",
+    labels: safeMonths.map((row)=> String(row?.label || row?.monthKey || "")),
+    values: safeMonths.map((row)=> Number(row?.amt) || 0)
+  };
   return {
     trips: buildHomeCompareBarChart({ labels, metricKey: "trips", currentValue: period?.current?.trips, previousValue: period?.previous?.trips }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
-    amount: {
-      chartType: "time-series",
-      metricKey: "amount",
-      basisLabel: "Amount by month using full Home totals from the active filter",
-      labels: safeMonths.map((row)=> String(row?.label || row?.monthKey || "")),
-      values: safeMonths.map((row)=> Number(row?.amt) || 0),
-      compareLabels: labels,
-      compareValues: [Number(period?.current?.amount) || 0, Number(period?.previous?.amount) || 0]
-    },
+    amount: buildHomeCompareBarChart({ labels, metricKey: "amount", currentValue: period?.current?.amount, previousValue: period?.previous?.amount }),
+    amountTrend: amountTrendChart,
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl })
   };
 }
@@ -744,8 +785,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ].join("");
   };
 
-  const totalLbs = trips.reduce((sum, t)=> sum + (Number(t?.pounds) || 0), 0);
-  const totalAmount = trips.reduce((sum, t)=> sum + (Number(t?.amount) || 0), 0);
   const compareFoundation = isHomeMetricDetail
     ? buildHomeMetricDetailFoundation({ monthRows })
     : buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
@@ -757,9 +796,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     compareFoundation: isHomeMetricDetail ? null : compareFoundation
   });
   const detailCharts = compareFoundation.detailCharts || {};
+  const primaryBasisByMetric = compareFoundation.primaryBasis || {};
   const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
-  const amountPrimaryChart = detailCharts.amount || null;
 
   const reportsSection = ({ title, intro, body, extraClass = "" })=> `
     <section class="reportsSection ${extraClass}">
@@ -890,11 +929,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       ? String(homeScope?.contextText || `Home • Range ${rangeLabel} • ${homeScope?.tripCount ?? trips.length} trips`)
       : `Range ${rangeLabel} • ${trips.length} trips`;
     const detailChartTitle = isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
-    const detailChartContext = isHomeMetricDetail ? meta.homeChartContext : meta.chartContext;
+    const detailChartContext = meta.primaryBasis?.basisLabel || (isHomeMetricDetail ? meta.homeChartContext : meta.chartContext);
     const detailInsight = isHomeMetricDetail ? meta.homeInsight : meta.insight;
     const compareContractLabel = compareFoundation.period?.compareModelLabel || (isHomeMetricDetail ? "Home full-month compare" : "Reports fair-window compare");
-    const compareContractBasis = compareFoundation.period?.supportLabel || compareFoundation.period?.support || compareFoundation.period?.fairWindowLabel || (isHomeMetricDetail ? "Full monthly totals • Active Home filter" : "Comparable window");
+    const compareContractBasis = meta.primaryBasis?.basisLabel || compareFoundation.period?.supportLabel || compareFoundation.period?.support || compareFoundation.period?.fairWindowLabel || (isHomeMetricDetail ? "Full monthly totals • Active Home filter" : "Comparable window");
     const compareContractText = compareFoundation.period?.explanation || "";
+    const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
     return `
     <section class="${detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
       <div class="card ${detailCardClass}">
@@ -906,13 +946,14 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         <div class="${detailHeroWrapClass}">
           <div class="${detailHeroLabelClass}">${escapeHtml(isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
           <div class="${detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
+          <div class="${detailChartContextClass}">Primary basis • ${escapeHtml(compareContractBasis)}</div>
         </div>
 
         <div class="${detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
           <div class="${detailCompareTextClass}">${renderPercentEmphasisText(compareSummary.text)}</div>
           <div class="${detailCompareRowsClass}">
-            <div><span>${escapeHtml(compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
-            <div><span>${escapeHtml(compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
+            <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
+            <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
           </div>
           <div class="${detailChartContextClass}"><b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
           ${compareContractText ? `<div class="${detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
@@ -924,13 +965,13 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
         </div>
 
-        ${meta.secondaryChart ? `
+        ${secondaryCharts.map((chart)=> `
           <div class="${detailChartClass}">
-            <b>${escapeHtml(meta.secondaryChart.title)}</b>
-            <div class="${detailChartContextClass}">${escapeHtml(meta.secondaryChart.context)}</div>
-            <canvas class="chart" id="${escapeHtml(meta.secondaryChart.canvasId)}" height="220"></canvas>
+            <b>${escapeHtml(chart.title)}</b>
+            <div class="${detailChartContextClass}">${escapeHtml(chart.context)}</div>
+            <canvas class="chart" id="${escapeHtml(chart.canvasId)}" height="220"></canvas>
           </div>
-        ` : ""}
+        `).join("")}
 
         <div class="${detailInsightClass}">${escapeHtml(detailInsight)}</div>
       </div>
@@ -939,86 +980,106 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   };
 
   const buildMetricDetailView = (metricKey)=>{
-    const avgPpl = totalLbs > 0 ? (totalAmount / totalLbs) : 0;
-    const tripsCompare = compareFoundation.metrics?.trips || null;
-    const pplCompare = compareFoundation.metrics?.ppl || null;
+    const primaryBasis = primaryBasisByMetric?.[metricKey] || null;
+    const primaryPayload = primaryBasis?.comparePayload || compareFoundation.metrics?.[metricKey] || null;
+    const primaryChart = primaryBasis?.primaryChart || detailCharts?.[metricKey] || null;
+    const formatHeroFromPrimaryBasis = (targetMetric, basis)=> {
+      const value = Number(basis?.currentValue);
+      if(!Number.isFinite(value)) return "—";
+      if(targetMetric === "trips") return `${Math.round(value)} trips`;
+      if(targetMetric === "pounds") return `${to2(value)} lbs`;
+      if(targetMetric === "amount") return formatMoney(to2(value));
+      if(targetMetric === "ppl") return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
+      return `${to2(value)}`;
+    };
     const detailMeta = {
       trips: {
         title: "Trips detail",
         homeTitle: "Home trips snapshot",
         eyebrow: "Metric detail",
-        heroLabel: "Total trips",
-        homeHeroLabel: "Trips in this Home range",
-        heroValue: `${trips.length}`,
+        heroLabel: "Trips in current compare period",
+        homeHeroLabel: "Trips in latest visible Home month",
+        heroValue: formatHeroFromPrimaryBasis("trips", primaryBasis),
         heroClass: "trips",
-        comparePayload: tripsCompare,
-        detailChart: detailCharts.trips || null,
-        chartTitle: "Comparable trips",
-        homeChartTitle: "Trips by Home month",
-        chartContext: "Current vs prior Reports period using the fair compare window",
-        homeChartContext: "Latest visible Home month vs the prior visible Home month using full monthly totals",
+        comparePayload: primaryPayload,
+        primaryBasis,
+        chartTitle: "Trips on the primary basis",
+        homeChartTitle: "Home trips on the primary basis",
+        chartContext: primaryChart?.basisLabel || "Trips using the Reports fair compare basis",
+        homeChartContext: primaryChart?.basisLabel || "Trips using full Home monthly totals",
         chartCanvasId: "c_trips",
-        insight: "Use this view to track effort volume and quickly spot whether recent activity is increasing, flat, or cooling.",
-        homeInsight: "Stay in Home while checking whether trip activity in this saved range is building, steady, or cooling off."
+        insight: "Use this view to compare the same current and prior Reports windows without mixing in full-range totals.",
+        homeInsight: "Stay in Home while comparing the same latest and prior visible months on one basis."
       },
       pounds: {
         title: "Pounds detail",
         homeTitle: "Home pounds snapshot",
         eyebrow: "Metric detail",
-        heroLabel: "Total pounds",
-        homeHeroLabel: "Pounds in this Home range",
-        heroValue: `${to2(totalLbs)} lbs`,
+        heroLabel: "Pounds in current compare period",
+        homeHeroLabel: "Pounds in latest visible Home month",
+        heroValue: formatHeroFromPrimaryBasis("pounds", primaryBasis),
         heroClass: "lbsBlue",
-        comparePayload: lbsCompare,
-        detailChart: detailCharts.pounds || null,
-        chartTitle: "Comparable pounds",
-        homeChartTitle: "Pounds by Home month",
-        chartContext: "Current vs prior Reports period using the fair compare window",
-        homeChartContext: "Latest visible Home month vs the prior visible Home month using full monthly totals",
+        comparePayload: primaryPayload,
+        primaryBasis,
+        chartTitle: "Pounds on the primary basis",
+        homeChartTitle: "Home pounds on the primary basis",
+        chartContext: primaryChart?.basisLabel || "Pounds using the Reports fair compare basis",
+        homeChartContext: primaryChart?.basisLabel || "Pounds using full Home monthly totals",
         chartCanvasId: "c_lbs",
-        insight: "Use this view to spot weight consistency and quickly confirm if this range is trending heavier or lighter than your prior period.",
-        homeInsight: "Stay in Home while checking whether this range is landing heavier or lighter than the prior comparison period."
+        insight: "Use this view to compare pounds on one basis so the hero, compare rows, and chart tell the same story.",
+        homeInsight: "Stay in Home while checking pounds on the same latest-vs-prior month basis."
       },
       amount: {
         title: "Amount detail",
         homeTitle: "Home amount snapshot",
         eyebrow: "Metric detail",
-        heroLabel: "Total amount",
-        homeHeroLabel: "Amount in this Home range",
-        heroValue: formatMoney(to2(totalAmount)),
+        heroLabel: "Amount in current compare period",
+        homeHeroLabel: "Amount in latest visible Home month",
+        heroValue: formatHeroFromPrimaryBasis("amount", primaryBasis),
         heroClass: "money",
-        comparePayload: amountCompare,
-        detailChart: amountPrimaryChart,
-        chartTitle: "Amount over time",
-        homeChartTitle: "Home amount by month",
-        chartContext: amountPrimaryChart?.basisLabel || "Amount by month using the Reports fair compare basis",
-        homeChartContext: amountPrimaryChart?.basisLabel || "Amount by month using full Home totals from the active filter",
+        comparePayload: primaryPayload,
+        primaryBasis,
+        chartTitle: "Amount on the primary basis",
+        homeChartTitle: "Home amount on the primary basis",
+        chartContext: primaryChart?.basisLabel || "Amount using the Reports fair compare basis",
+        homeChartContext: primaryChart?.basisLabel || "Amount using full Home monthly totals",
         chartCanvasId: "c_amount_detail",
-        secondaryChart: {
-          title: "Dealer mix",
-          context: "Supporting view for this same active filter range",
-          canvasId: "c_dealer"
-        },
-        insight: "Use this view to compare amount trend on one basis first, then check dealer mix as supporting context.",
-        homeInsight: "Stay in Home while checking amount trend on the same basis before using dealer mix as supporting context."
+        secondaryCharts: [
+          detailCharts.amountTrend ? {
+            title: "Amount trend across the range",
+            context: isHomeMetricDetail
+              ? "Supporting view only • visible Home months in this active filter"
+              : "Supporting view only • full months in this active Reports range",
+            canvasId: "c_amount_trend",
+            chartModel: detailCharts.amountTrend,
+            metricKey: "amount"
+          } : null,
+          {
+            title: "Dealer mix",
+            context: "Supporting view only for this same active filter range",
+            canvasId: "c_dealer"
+          }
+        ],
+        insight: "Read the primary amount compare first, then use trend and dealer mix as supporting context.",
+        homeInsight: "Read the primary Home amount compare first, then use trend and dealer mix as supporting context."
       },
       ppl: {
         title: "$/lb detail",
         homeTitle: "Home $/lb snapshot",
         eyebrow: "Metric detail",
-        heroLabel: "Average $/lb",
-        homeHeroLabel: "Average $/lb in this Home range",
-        heroValue: avgPpl > 0 ? `${formatMoney(to2(avgPpl))}/lb` : "—",
+        heroLabel: "Average $/lb in current compare period",
+        homeHeroLabel: "Average $/lb in latest visible Home month",
+        heroValue: formatHeroFromPrimaryBasis("ppl", primaryBasis),
         heroClass: "rate ppl",
-        comparePayload: pplCompare,
-        detailChart: detailCharts.ppl || null,
-        chartTitle: "Comparable $/lb",
-        homeChartTitle: "Average $/lb by Home month",
-        chartContext: "Current vs prior Reports period using the fair compare window",
-        homeChartContext: "Latest visible Home month vs the prior visible Home month using full monthly totals",
+        comparePayload: primaryPayload,
+        primaryBasis,
+        chartTitle: "$/lb on the primary basis",
+        homeChartTitle: "Home $/lb on the primary basis",
+        chartContext: primaryChart?.basisLabel || "$/lb using the Reports fair compare basis",
+        homeChartContext: primaryChart?.basisLabel || "$/lb using full Home monthly totals",
         chartCanvasId: "c_ppl",
-        insight: "Use this view to watch price efficiency independent of total volume so rate movement is easier to separate from trip count swings.",
-        homeInsight: "Stay in Home while checking whether rate strength is improving without leaving your Home KPI context."
+        insight: "Use this view to compare rate efficiency on one basis without mixing in full-range averages.",
+        homeInsight: "Stay in Home while checking rate strength on the same latest-vs-prior month basis."
       }
     };
     const meta = detailMeta[metricKey];
@@ -1170,7 +1231,13 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       drawReportsCharts(monthRows, dealerRows, tripsTimeline, {
         metricDetail: {
           metricKey: activeMetricDetail,
-          compareChart: detailCharts?.[activeMetricDetail] || null
+          compareChart: primaryBasisByMetric?.[activeMetricDetail]?.primaryChart || detailCharts?.[activeMetricDetail] || null,
+          secondaryCharts: activeMetricDetail === "amount"
+            ? [
+              detailCharts.amountTrend ? { canvasId: "c_amount_trend", chartModel: detailCharts.amountTrend, metricKey: "amount" } : null,
+              document.getElementById("c_dealer") ? { canvasId: "c_dealer", chartModel: null, metricKey: "amount" } : null
+            ].filter(Boolean)
+            : []
         }
       });
     });

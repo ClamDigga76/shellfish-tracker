@@ -12,10 +12,12 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
   });
 
   if(!latestMonth || !priorMonth){
+    const detailCharts = buildDetailCharts({ period: missingPeriod, monthRows: safeMonths, trips: safeTrips });
     return {
       period: missingPeriod,
       metrics: {},
-      detailCharts: buildDetailCharts({ period: missingPeriod, monthRows: safeMonths, trips: safeTrips }),
+      detailCharts,
+      primaryBasis: buildMetricDetailPrimaryBasisMap({ period: missingPeriod, metrics: {}, detailCharts }),
       dealer: buildSuppressedEntityPayload({ entityType: "dealer", reason: missingPeriod.reason, suppressionCode: missingPeriod.suppressionCode }),
       area: buildSuppressedEntityPayload({ entityType: "area", reason: missingPeriod.reason, suppressionCode: missingPeriod.suppressionCode })
     };
@@ -32,10 +34,12 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
       currentLabel: latestMonth.label,
       previousLabel: priorMonth.label
     });
+    const detailCharts = buildDetailCharts({ period, monthRows: safeMonths, trips: safeTrips });
     return {
       period,
       metrics: {},
-      detailCharts: buildDetailCharts({ period, monthRows: safeMonths, trips: safeTrips }),
+      detailCharts,
+      primaryBasis: buildMetricDetailPrimaryBasisMap({ period, metrics: {}, detailCharts }),
       dealer: buildSuppressedEntityPayload({ entityType: "dealer", reason, suppressionCode: period.suppressionCode }),
       area: buildSuppressedEntityPayload({ entityType: "area", reason, suppressionCode: period.suppressionCode })
     };
@@ -141,12 +145,46 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     minBaselineAmount: 25
   });
 
+  const detailCharts = buildDetailCharts({ period, monthRows: safeMonths, trips: safeTrips });
   return {
     period,
     metrics,
-    detailCharts: buildDetailCharts({ period, monthRows: safeMonths, trips: safeTrips }),
+    detailCharts,
+    primaryBasis: buildMetricDetailPrimaryBasisMap({ period, metrics, detailCharts }),
     dealer,
     area
+  };
+}
+
+
+function buildMetricDetailPrimaryBasisMap({ period, metrics, detailCharts }){
+  const safePeriod = period && typeof period === "object" ? period : {};
+  const safeMetrics = metrics && typeof metrics === "object" ? metrics : {};
+  const safeCharts = detailCharts && typeof detailCharts === "object" ? detailCharts : {};
+  const basisLabel = String(safePeriod.supportLabel || safePeriod.support || safePeriod.fairWindowLabel || "Comparable window");
+  const currentLabel = String(safePeriod.currentLabel || "Current");
+  const previousLabel = String(safePeriod.previousLabel || "Previous");
+  return {
+    trips: buildMetricPrimaryBasis({ metricKey: "trips", metricPayload: safeMetrics.trips, primaryChart: safeCharts.trips, basisLabel, currentLabel, previousLabel, period: safePeriod }),
+    pounds: buildMetricPrimaryBasis({ metricKey: "pounds", metricPayload: safeMetrics.pounds, primaryChart: safeCharts.pounds, basisLabel, currentLabel, previousLabel, period: safePeriod }),
+    amount: buildMetricPrimaryBasis({ metricKey: "amount", metricPayload: safeMetrics.amount, primaryChart: safeCharts.amountCompare || safeCharts.amount, basisLabel, currentLabel, previousLabel, period: safePeriod }),
+    ppl: buildMetricPrimaryBasis({ metricKey: "ppl", metricPayload: safeMetrics.ppl, primaryChart: safeCharts.ppl, basisLabel, currentLabel, previousLabel, period: safePeriod })
+  };
+}
+
+function buildMetricPrimaryBasis({ metricKey, metricPayload, primaryChart, basisLabel, currentLabel, previousLabel, period }){
+  const payload = metricPayload && typeof metricPayload === "object" ? metricPayload : null;
+  const chart = primaryChart && typeof primaryChart === "object" ? primaryChart : null;
+  return {
+    metricKey,
+    basisLabel: String(chart?.basisLabel || basisLabel || ""),
+    currentLabel,
+    previousLabel,
+    currentValue: Number(payload?.currentValue) || 0,
+    previousValue: Number(payload?.previousValue) || 0,
+    comparePayload: payload,
+    primaryChart: chart,
+    period
   };
 }
 
@@ -545,25 +583,28 @@ function buildDetailCharts({ period, monthRows, trips }){
     String(period?.currentLabel || "Current"),
     String(period?.previousLabel || "Previous")
   ];
+  const amountTrend = buildMetricDetailAmountTrendChart({ period, monthRows, trips });
   return {
     trips: buildMetricDetailCompareChart({ labels, currentValue: current?.trips, previousValue: previous?.trips, metricKey: "trips" }),
     pounds: buildMetricDetailCompareChart({ labels, currentValue: current?.lbs, previousValue: previous?.lbs, metricKey: "pounds" }),
-    amount: buildMetricDetailAmountCharts({ period, monthRows, trips }),
+    amount: buildMetricDetailCompareChart({ labels, currentValue: current?.amount, previousValue: previous?.amount, metricKey: "amount", basisLabel: period?.fairWindowLabel ? `Reports fair compare window • ${period.fairWindowLabel}` : "Reports fair compare window" }),
+    amountCompare: buildMetricDetailCompareChart({ labels, currentValue: current?.amount, previousValue: previous?.amount, metricKey: "amount", basisLabel: period?.fairWindowLabel ? `Reports fair compare window • ${period.fairWindowLabel}` : "Reports fair compare window" }),
+    amountTrend,
     ppl: buildMetricDetailCompareChart({ labels, currentValue: current?.ppl, previousValue: previous?.ppl, metricKey: "ppl" })
   };
 }
 
-function buildMetricDetailCompareChart({ labels, currentValue, previousValue, metricKey }){
+function buildMetricDetailCompareChart({ labels, currentValue, previousValue, metricKey, basisLabel }){
   return {
     chartType: "compare-bars",
     metricKey,
-    basisLabel: String(labels?.length ? `Reports fair compare window • ${labels.join(" vs ")}` : "Reports fair compare window"),
+    basisLabel: String(basisLabel || (labels?.length ? `Reports fair compare window • ${labels.join(" vs ")}` : "Reports fair compare window")),
     labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Current", "Previous"],
     values: [safeNum(currentValue), safeNum(previousValue)]
   };
 }
 
-function buildMetricDetailAmountCharts({ period, monthRows, trips }){
+function buildMetricDetailAmountTrendChart({ period, monthRows, trips }){
   const dayLimit = safeNum(period?.current?.dayLimit) || safeNum(period?.previous?.dayLimit) || 0;
   const trendRows = buildMonthWindowValueSeries({ monthRows, trips, dayLimit, metricKey: "amount" });
   return {

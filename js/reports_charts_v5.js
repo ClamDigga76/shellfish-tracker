@@ -305,23 +305,18 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return { color: palette.trips, yFormatter: formatCompactCount, topFormatter: (v)=> `${Math.round(Number(v) || 0)}` };
   }
 
-  function drawMetricDetailCompareChart(metricDetail){
-    const metricKey = String(metricDetail?.metricKey || "").toLowerCase();
-    const compareChart = metricDetail?.compareChart;
-    if(!metricKey || !compareChart) return false;
-    if(compareChart.chartType === "time-series"){
-      const canvasId = "c_amount_detail";
-      if(!document.getElementById(canvasId)) return false;
-      const values = Array.isArray(compareChart?.values) ? compareChart.values.map((v)=> Number(v) || 0) : [];
-      const labels = Array.isArray(compareChart?.labels) ? compareChart.labels.map((v)=> String(v || "")) : [];
-      drawLineChart(canvasId, values, labels, { color: palette.money, yFormatter: formatCompactMoney, topLabel: formatShortMoney });
+  function drawMetricDetailChart(canvasId, chartModel, metricKeyOverride = ""){
+    const metricKey = String(metricKeyOverride || chartModel?.metricKey || "").toLowerCase();
+    if(!canvasId || !chartModel || !document.getElementById(canvasId)) return false;
+    if(chartModel.chartType === "time-series"){
+      const values = Array.isArray(chartModel?.values) ? chartModel.values.map((v)=> Number(v) || 0) : [];
+      const labels = Array.isArray(chartModel?.labels) ? chartModel.labels.map((v)=> String(v || "")) : [];
+      const paletteSet = resolveMetricDetailPalette(metricKey || "amount");
+      drawLineChart(canvasId, values, labels, { color: paletteSet.color, yFormatter: paletteSet.yFormatter, topLabel: paletteSet.topFormatter });
       return true;
     }
-    const canvasIdByMetric = { trips: "c_trips", pounds: "c_lbs", amount: "c_amount_detail", ppl: "c_ppl" };
-    const canvasId = canvasIdByMetric[metricKey];
-    if(!canvasId || !document.getElementById(canvasId)) return false;
-    const values = Array.isArray(compareChart?.values) ? compareChart.values.map((v)=> Number(v) || 0) : [];
-    const labels = Array.isArray(compareChart?.labels) ? compareChart.labels.map((v)=> String(v || "")) : [];
+    const values = Array.isArray(chartModel?.values) ? chartModel.values.map((v)=> Number(v) || 0) : [];
+    const labels = Array.isArray(chartModel?.labels) ? chartModel.labels.map((v)=> String(v || "")) : [];
     const paletteSet = resolveMetricDetailPalette(metricKey);
     const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
     drawBarChart(
@@ -340,8 +335,21 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return true;
   }
 
+  function drawMetricDetailCompareChart(metricDetail){
+    const metricKey = String(metricDetail?.metricKey || "").toLowerCase();
+    const compareChart = metricDetail?.compareChart;
+    if(!metricKey || !compareChart) return false;
+    const canvasIdByMetric = { trips: "c_trips", pounds: "c_lbs", amount: "c_amount_detail", ppl: "c_ppl" };
+    return drawMetricDetailChart(canvasIdByMetric[metricKey], compareChart, metricKey);
+  }
+
   function drawMetricDetailSecondaryCharts(metricDetail){
     const metricKey = String(metricDetail?.metricKey || "").toLowerCase();
+    const secondaryCharts = Array.isArray(metricDetail?.secondaryCharts) ? metricDetail.secondaryCharts : [];
+    secondaryCharts.forEach((chart)=> {
+      if(!chart?.canvasId || !chart?.chartModel) return;
+      drawMetricDetailChart(chart.canvasId, chart.chartModel, chart.metricKey || metricKey);
+    });
     if(metricKey !== "amount" || !document.getElementById("c_dealer")) return;
     const topDealers = dealerRows.slice(0,8);
     drawBarChart(
