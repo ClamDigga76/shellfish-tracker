@@ -221,48 +221,52 @@ export function createHomeDashboardRenderer({
     getApp().innerHTML = `
       ${renderPageHeader("home")}
 
-      <div class="card dashCard">
-        <div class="homeFilterStack">
-          <div class="segWrap timeframeUnifiedControl" role="group" aria-label="Home timeframe filter">
-            ${chip("YTD", "YTD")}
-            ${chip("MONTH", "This Month")}
-            ${chip("LAST_MONTH", "Last Month")}
-            ${chip("7D", "Last 7 Days")}
-            ${chip("30D", "Last 30 Days")}
-            ${chip("RANGE", "Custom Range")}
-          </div>
-          ${f === "RANGE" ? `
-            <div class="row gap10 wrap dateRangeRow">
-              <div class="homeRangeInputs">
-                <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(parseReportDateToISO(hf.from))}" />
-                <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(parseReportDateToISO(hf.to))}" />
-              </div>
-              <button class="btn" id="homeRangeApply">Apply</button>
+      <div class="card dashCard homeScreenShell">
+        <section class="homeSection homeFilterSection">
+          <div class="homeFilterStack">
+            <div class="segWrap timeframeUnifiedControl" role="group" aria-label="Home timeframe filter">
+              ${chip("YTD", "YTD")}
+              ${chip("MONTH", "This Month")}
+              ${chip("LAST_MONTH", "Last Month")}
+              ${chip("7D", "Last 7 Days")}
+              ${chip("30D", "Last 30 Days")}
+              ${chip("RANGE", "Custom Range")}
             </div>
-          ` : ``}
-        </div>
+            ${f === "RANGE" ? `
+              <div class="row gap10 wrap dateRangeRow">
+                <div class="homeRangeInputs">
+                  <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(parseReportDateToISO(hf.from))}" />
+                  <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(parseReportDateToISO(hf.to))}" />
+                </div>
+                <button class="btn" id="homeRangeApply">Apply</button>
+              </div>
+            ` : ``}
+          </div>
+        </section>
 
-        <div class="kpiGroupLabel">Core metrics</div>
-        <div class="kpiRow">
-          <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="trips" aria-label="Open trips detail">
-            <div class="kpiLabel trips">Trips</div>
-            <div class="kpiValue trips"><span class="kpiValueFit">${trips.length}</span></div>
-          </button>
-          <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="pounds" aria-label="Open pounds detail">
-            <div class="kpiLabel lbsBlue">Pounds</div>
-            <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
-          </button>
-          <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="amount" aria-label="Open amount detail">
-            <div class="kpiLabel money">Amount</div>
-            <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
-          </button>
-          <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="ppl" aria-label="Open average dollars per pound detail">
-            <div class="kpiLabel rate ppl">Avg $/lb</div>
-            <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
-          </button>
-        </div>
+        <section class="homeSection homeKpiSection">
+          <div class="kpiGroupLabel">Core metrics</div>
+          <div class="kpiRow">
+            <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="trips" aria-label="Open trips detail">
+              <div class="kpiLabel trips">Trips</div>
+              <div class="kpiValue trips"><span class="kpiValueFit">${trips.length}</span></div>
+            </button>
+            <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="pounds" aria-label="Open pounds detail">
+              <div class="kpiLabel lbsBlue">Pounds</div>
+              <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
+            </button>
+            <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="amount" aria-label="Open amount detail">
+              <div class="kpiLabel money">Amount</div>
+              <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
+            </button>
+            <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="ppl" aria-label="Open average dollars per pound detail">
+              <div class="kpiLabel rate ppl">Avg $/lb</div>
+              <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
+            </button>
+          </div>
+        </section>
 
-        <div class="card reportsHeroCard homeOverviewCard">
+        <section class="homeSection homeOverviewCard">
           <div class="reportsHeroEyebrow">Overview</div>
           <div class="homeHeroHeadline">${escapeHtml(homeOverviewHeadline)}</div>
           <div class="reportsHeroSub">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips • Home summary</div>
@@ -286,10 +290,11 @@ export function createHomeDashboardRenderer({
               <div class="reportsHeroMeta money">${strongestArea ? formatMoney(round2(strongestArea.amount)) : "No trips in range"}</div>
             </div>
           </div>
-        </div>
+        </section>
 
-
-        ${smartSummaryHtml}
+        <section class="homeSection homeSmartSummaryShell">
+          ${smartSummaryHtml}
+        </section>
       </div>
 
       ${pwaStorageNoteHTML}
