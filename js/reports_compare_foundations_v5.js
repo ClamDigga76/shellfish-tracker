@@ -46,6 +46,9 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
   const previous = summarizeTripsByMonthWindow(safeTrips, priorKey, periodRules.dayLimit);
   const periodSupport = buildPeriodSupport({ current, previous });
   const periodComparable = periodSupport.comparable;
+  const fairWindowLabel = periodRules.dayLimit < periodRules.daysInCurrent
+    ? `Days 1-${periodRules.dayLimit} in each month`
+    : "Full month totals";
   const period = {
     comparable: periodComparable,
     suppressed: !periodComparable,
@@ -54,12 +57,15 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     trustLabel: periodComparable ? confidenceLabelFromScore(periodSupport.score) : "suppressed",
     reason: periodComparable ? "" : periodSupport.reason,
     suppressionCode: periodComparable ? "" : periodSupport.suppressionCode,
-    explanation: periodComparable ? periodSupport.explanation : periodSupport.reason,
+    explanation: periodComparable
+      ? `Reports detail uses a fair compare window: ${fairWindowLabel}. ${periodSupport.explanation}`
+      : periodSupport.reason,
     currentLabel: latestMonth.label,
     previousLabel: priorMonth.label,
-    fairWindowLabel: periodRules.dayLimit < periodRules.daysInCurrent
-      ? `Days 1-${periodRules.dayLimit} in each month`
-      : "Full month totals",
+    fairWindowLabel,
+    compareModel: "reports-fair-window",
+    compareModelLabel: "Reports fair-window compare",
+    supportLabel: `Comparable window • ${fairWindowLabel}`,
     support: periodSupport.summary,
     current,
     previous
@@ -175,7 +181,7 @@ function buildMetricComparePayload({ metricKey, label, currentValue, previousVal
     suppressed: !canCompare,
     reason,
     explanation: canCompare
-      ? `${label} compare uses ${period?.fairWindowLabel || "the same fair window"}. ${confidenceLabelFromScore(supportScore) === "strong" ? "Support is solid in both periods." : (confidenceLabelFromScore(supportScore) === "early" ? "Read as an early signal while the sample builds." : "Support is lighter, so read this carefully.")}`
+      ? `${label} compare uses the Reports fair window (${period?.fairWindowLabel || "the same comparable window"}), not full-month totals. ${confidenceLabelFromScore(supportScore) === "strong" ? "Support is solid in both periods." : (confidenceLabelFromScore(supportScore) === "early" ? "Read as an early signal while the sample builds." : "Support is lighter, so read this carefully.")}`
       : reason,
     suppressionCode: !canCompare
       ? (!period?.comparable ? (period.suppressionCode || "period-low-data") : "baseline-too-weak")
@@ -486,7 +492,7 @@ function buildPeriodSupport({ current, previous }){
       ? ""
       : `Comparison suppressed: ${joinReasonList(deficits)}. Need at least 2 trips and 2 unique days in each period.`,
     explanation: comparable
-      ? `${confidenceLabelFromScore(score) === "strong" ? "Strong" : (confidenceLabelFromScore(score) === "early" ? "Early" : "Weak")} compare window using ${currentTrips} vs ${previousTrips} trips across ${currentDays} vs ${previousDays} fishing days.`
+      ? `${confidenceLabelFromScore(score) === "strong" ? "Strong" : (confidenceLabelFromScore(score) === "early" ? "Early" : "Weak")} fair-window compare using ${currentTrips} vs ${previousTrips} trips across ${currentDays} vs ${previousDays} fishing days.`
       : `Suppressed because ${joinReasonList(deficits)}.`,
     summary: {
       currentTrips,
@@ -551,7 +557,7 @@ function buildMetricDetailCompareChart({ labels, currentValue, previousValue, me
   return {
     chartType: "compare-bars",
     metricKey,
-    basisLabel: String(labels?.length ? `Fair compare window • ${labels.join(" vs ")}` : "Fair compare window"),
+    basisLabel: String(labels?.length ? `Reports fair compare window • ${labels.join(" vs ")}` : "Reports fair compare window"),
     labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Current", "Previous"],
     values: [safeNum(currentValue), safeNum(previousValue)]
   };
@@ -563,7 +569,7 @@ function buildMetricDetailAmountCharts({ period, monthRows, trips }){
   return {
     chartType: "time-series",
     metricKey: "amount",
-    basisLabel: dayLimit ? `Amount by month using days 1-${dayLimit} in each month` : "Amount by month using the same compare basis",
+    basisLabel: dayLimit ? `Amount by month using the Reports fair window (days 1-${dayLimit} in each month)` : "Amount by month using the Reports compare basis",
     labels: trendRows.map((row)=> row.label),
     values: trendRows.map((row)=> row.value),
     compareLabels: [String(period?.currentLabel || "Current"), String(period?.previousLabel || "Previous")],
