@@ -7,6 +7,8 @@ export function createFeedbackHelpers({
   let toastTimer = null;
   let toastCleanupTimer = null;
   let ariaLiveTimer = null;
+  let milestoneViewportCleanup = null;
+  let milestoneLayoutFrame = 0;
   const TOAST_EXIT_MS = 260;
   const MODAL_EXIT_MS = 220;
 
@@ -29,10 +31,86 @@ export function createFeedbackHelpers({
     ]
   };
 
+  function clearMilestoneToastViewport(el){
+    if(milestoneViewportCleanup){
+      try{ milestoneViewportCleanup(); }catch(_){ }
+      milestoneViewportCleanup = null;
+    }
+    if(milestoneLayoutFrame){
+      try{ cancelAnimationFrame(milestoneLayoutFrame); }catch(_){ }
+      milestoneLayoutFrame = 0;
+    }
+    if(!el) return;
+    el.style.left = "";
+    el.style.top = "";
+    el.style.bottom = "";
+    el.style.width = "";
+    el.style.maxWidth = "";
+    el.style.maxHeight = "";
+    try{ el.scrollTop = 0; }catch(_){ }
+  }
+
+  function bindMilestoneToastViewport(el){
+    clearMilestoneToastViewport(el);
+    if(!el || typeof window === "undefined") return;
+
+    const clamp = (value, min, max)=>Math.min(Math.max(value, min), max);
+    const scheduleLayout = ()=>{
+      if(milestoneLayoutFrame) return;
+      milestoneLayoutFrame = requestAnimationFrame(()=>{
+        milestoneLayoutFrame = 0;
+        if(!el.classList.contains("toastMilestone")) return;
+        const vv = window.visualViewport;
+        const viewportWidth = Math.max(0, vv?.width || window.innerWidth || document.documentElement.clientWidth || 0);
+        const viewportHeight = Math.max(0, vv?.height || window.innerHeight || document.documentElement.clientHeight || 0);
+        const offsetLeft = Math.max(0, vv?.offsetLeft || 0);
+        const offsetTop = Math.max(0, vv?.offsetTop || 0);
+        const sideInset = 12;
+        const verticalInset = 16;
+        const maxWidth = Math.max(220, viewportWidth - (sideInset * 2));
+        const maxHeight = Math.max(160, viewportHeight - (verticalInset * 2));
+
+        el.style.left = `${offsetLeft + (viewportWidth / 2)}px`;
+        el.style.top = `${offsetTop + (viewportHeight / 2)}px`;
+        el.style.bottom = "auto";
+        el.style.width = `${Math.min(420, maxWidth)}px`;
+        el.style.maxWidth = `${maxWidth}px`;
+        el.style.maxHeight = `${maxHeight}px`;
+
+        const rect = el.getBoundingClientRect();
+        const minCenterX = offsetLeft + sideInset + (rect.width / 2);
+        const maxCenterX = offsetLeft + viewportWidth - sideInset - (rect.width / 2);
+        const minCenterY = offsetTop + verticalInset + (rect.height / 2);
+        const maxCenterY = offsetTop + viewportHeight - verticalInset - (rect.height / 2);
+
+        el.style.left = `${clamp(offsetLeft + (viewportWidth / 2), minCenterX, Math.max(minCenterX, maxCenterX))}px`;
+        el.style.top = `${clamp(offsetTop + (viewportHeight / 2), minCenterY, Math.max(minCenterY, maxCenterY))}px`;
+      });
+    };
+
+    const vv = window.visualViewport;
+    if(vv && vv.addEventListener){
+      vv.addEventListener("resize", scheduleLayout);
+      vv.addEventListener("scroll", scheduleLayout);
+    }
+    window.addEventListener("resize", scheduleLayout);
+    window.addEventListener("orientationchange", scheduleLayout);
+    milestoneViewportCleanup = ()=>{
+      if(vv && vv.removeEventListener){
+        vv.removeEventListener("resize", scheduleLayout);
+        vv.removeEventListener("scroll", scheduleLayout);
+      }
+      window.removeEventListener("resize", scheduleLayout);
+      window.removeEventListener("orientationchange", scheduleLayout);
+    };
+    scheduleLayout();
+  }
+
   function finalizeToastCleanup(el){
     if(!el) return;
     clearTimeout(toastTimer);
     clearTimeout(toastCleanupTimer);
+    clearMilestoneToastViewport(el);
     el.classList.remove("show", "toastMilestone");
     el.textContent = "";
   }
@@ -194,6 +272,7 @@ export function createFeedbackHelpers({
 
       el.appendChild(content);
       el.appendChild(btn);
+      bindMilestoneToastViewport(el);
       announce(titleNode.textContent, "polite");
       triggerHaptic("medium");
       showToastElement(el);
