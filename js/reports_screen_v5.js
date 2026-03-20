@@ -293,6 +293,26 @@ export function createReportsScreenRenderer(deps){
 
   const REPORTS_TRANSITION_MS = 150;
   let reportsTransitionTimer = null;
+  let reportsChartRenderToken = 0;
+  let reportsChartScheduleRafId = 0;
+
+  function invalidateReportsChartSchedule(){
+    reportsChartRenderToken += 1;
+    if(reportsChartScheduleRafId){
+      cancelAnimationFrame(reportsChartScheduleRafId);
+      reportsChartScheduleRafId = 0;
+    }
+    return reportsChartRenderToken;
+  }
+
+  function scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, options){
+    const renderToken = invalidateReportsChartSchedule();
+    reportsChartScheduleRafId = requestAnimationFrame(()=>{
+      reportsChartScheduleRafId = 0;
+      if(renderToken !== reportsChartRenderToken) return;
+      drawReportsCharts(monthRows, dealerRows, tripsTimeline, options);
+    });
+  }
 
   function animateReportsShellEnter(root){
     if(!root) return;
@@ -1227,22 +1247,22 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
 
   if(activeMetricDetail){
-    requestAnimationFrame(()=>{
-      drawReportsCharts(monthRows, dealerRows, tripsTimeline, {
-        metricDetail: {
-          metricKey: activeMetricDetail,
-          compareChart: primaryBasisByMetric?.[activeMetricDetail]?.primaryChart || detailCharts?.[activeMetricDetail] || null,
-          secondaryCharts: activeMetricDetail === "amount"
-            ? [
-              detailCharts.amountTrend ? { canvasId: "c_amount_trend", chartModel: detailCharts.amountTrend, metricKey: "amount" } : null,
-              document.getElementById("c_dealer") ? { canvasId: "c_dealer", chartModel: null, metricKey: "amount" } : null
-            ].filter(Boolean)
-            : []
-        }
-      });
+    scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, {
+      metricDetail: {
+        metricKey: activeMetricDetail,
+        compareChart: primaryBasisByMetric?.[activeMetricDetail]?.primaryChart || detailCharts?.[activeMetricDetail] || null,
+        secondaryCharts: activeMetricDetail === "amount"
+          ? [
+            detailCharts.amountTrend ? { canvasId: "c_amount_trend", chartModel: detailCharts.amountTrend, metricKey: "amount" } : null,
+            document.getElementById("c_dealer") ? { canvasId: "c_dealer", chartModel: null, metricKey: "amount" } : null
+          ].filter(Boolean)
+          : []
+      }
     });
     return;
   }
+
+  invalidateReportsChartSchedule();
 
   if(mode === "charts"){
     const reportsSwitchToTables = document.getElementById("reportsSwitchToTables");
@@ -1256,7 +1276,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         });
       };
     }
-    requestAnimationFrame(()=>{ drawReportsCharts(monthRows, dealerRows, tripsTimeline); });
+    scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline);
   }
 }
 
