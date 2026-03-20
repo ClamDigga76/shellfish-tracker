@@ -466,8 +466,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const detailChartContextClass = isHomeMetricDetail ? "homeMetricChartContext" : "reportsMetricChartContext";
   const detailInsightClass = isHomeMetricDetail ? "homeMetricInsight" : "reportsMetricInsight";
 
-  const renderReportsTopShell = ({ includeModeToggle = true, body = "" } = {})=> `
-    <div class="card reportsTopShell">
+  const renderReportsTopShell = ({ includeModeToggle = true, body = "", shellMode = "overview" } = {})=> `
+    <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
         <b>Reports</b>
         <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
@@ -1166,6 +1166,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ${renderPageHeader("reports")}
 
     ${renderReportsTopShell({
+      shellMode: activeMetricDetail ? "detail" : "overview",
       body: `<div id="reportsTransitionRoot" class="reportsTransitionRoot" data-reports-view="${escapeHtml(reportsBodyView)}">
         ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : `${reportsSection({
           title: "Highlights",
