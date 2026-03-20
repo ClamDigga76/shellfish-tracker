@@ -14,7 +14,9 @@ export function createReportsHighlightsSeam(deps){
   const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
   const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
   const buildPeriodLabel = (period)=> `${period?.currentLabel || "Current"} vs ${period?.previousLabel || "Prior"}`;
-  const buildComparableWindowLabel = (period)=> period?.fairWindowLabel || "Comparable window";
+  const buildComparableWindowLabel = (period)=> period?.currentLabel && period?.previousLabel
+    ? `${period.currentLabel} vs ${period.previousLabel}`
+    : (period?.fairWindowLabel || "Comparable window");
   const compareToneForRatio = (current, previous, epsilon = 0.05)=>{
     if(!current && !previous) return "steady";
     if(previous <= 0) return current > 0 ? "up" : "steady";
@@ -30,7 +32,7 @@ export function createReportsHighlightsSeam(deps){
     const tripTone = compareToneForRatio(period.current?.amountPerTrip, period.previous?.amountPerTrip);
     const dayTone = compareToneForRatio(period.current?.amountPerDay, period.previous?.amountPerDay);
     if(!pounds || !ppl || pounds.suppressed || ppl.suppressed){
-      return "using the same comparable window.";
+      return "compared with the prior period.";
     }
     if(pounds.compareTone === "up" && ppl.compareTone === "up") return "as both pounds and $/lb moved up.";
     if(pounds.compareTone === "down" && ppl.compareTone === "down") return "as lighter pounds and softer $/lb stacked together.";
@@ -62,7 +64,7 @@ export function createReportsHighlightsSeam(deps){
   function buildPoundsDriverText(compare){
     const trips = compare?.metrics?.trips;
     if(!trips || trips.suppressed){
-      return "using the same comparable window.";
+      return "compared with the prior period.";
     }
     const period = compare?.period || {};
     const currentRate = safeNum(period.current?.poundsPerTrip);
@@ -91,7 +93,7 @@ export function createReportsHighlightsSeam(deps){
     const pounds = compare?.metrics?.pounds;
     const amount = compare?.metrics?.amount;
     if(!pounds || !amount || pounds.suppressed || amount.suppressed){
-      return "using the same comparable window.";
+      return "compared with the prior period.";
     }
     if(amount.compareTone === "up" && pounds.compareTone !== "up") return "even without heavier pounds.";
     if(amount.compareTone === "down" && pounds.compareTone !== "down") return "even though pounds did not grow.";
@@ -119,7 +121,9 @@ export function createReportsHighlightsSeam(deps){
 
   function buildMetricCompareText({ payload, compare, period }){
     const windowText = buildComparableWindowLabel(period);
-    const trustText = payload?.confidenceLabel && payload.confidenceLabel !== "suppressed" ? ` • ${payload.confidenceLabel} signal` : "";
+    const trustText = payload?.confidenceLabel === "early"
+      ? " • early read"
+      : (payload?.confidenceLabel === "weak" ? " • light read" : "");
     if(payload.metricKey === "trips"){
       return `${buildTripsDriverText(compare)} • ${windowText}${trustText}`;
     }
@@ -220,7 +224,7 @@ export function createReportsHighlightsSeam(deps){
       value,
       valueClass: "money",
       statusTone: best.compareTone,
-      statusText: `${formatMoney(to2(best.currentAmount))} now vs ${formatMoney(to2(best.previousAmount))} before • ${best.confidenceLabel || "light"} signal`
+      statusText: `${formatMoney(to2(best.currentAmount))} now vs ${formatMoney(to2(best.previousAmount))} before • ${best.confidenceLabel || "light"} read`
     };
   }
 

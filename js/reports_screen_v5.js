@@ -4,16 +4,16 @@ import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.
 import { createTripCardRendererCore } from "./trip_card_renderer_core_v5.js";
 
 const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
-  fairWindowLabel: "Home monthly totals",
+  fairWindowLabel: "Visible Home months",
   compareModel: "home-full-month",
-  compareModelLabel: "Home full-month compare",
-  supportLabel: "Full monthly totals • Active Home filter",
-  support: "Full monthly totals from the active Home range.",
-  explanation: "Home KPI detail uses full monthly totals from the active Home filter, not the Reports fair-window compare.",
+  compareModelLabel: "Month comparison",
+  supportLabel: "Visible Home months",
+  support: "Using the latest two visible Home months.",
+  explanation: "Comparing the latest visible month to the month before it in Home.",
   missingReason: "Need at least two visible months in this Home range for month-to-month detail.",
   missingSuppressionCode: "missing-home-months",
-  missingExplanation: "Home KPI detail stays on full monthly totals from the active Home filter. Add another visible month to unlock month-to-month detail.",
-  metricExplanation: (label)=> `${label} compare uses Home full-month totals from the active filter, not the Reports fair-window compare.`
+  missingExplanation: "Add another visible month to compare month to month in Home.",
+  metricExplanation: (label)=> `${label} compares the latest visible Home month to the month before it.`
 });
 
 function buildHomeMetricDetailFoundation({ monthRows }){
@@ -73,7 +73,7 @@ function buildHomeSuppressedPeriod({ currentMonth, previousMonth, current, previ
     explanation: HOME_METRIC_DETAIL_COMPARE_CONTRACT.missingExplanation,
     currentLabel: currentMonth?.label || "Current month",
     previousLabel: previousMonth?.label || "Previous month",
-    ...buildHomeCompareContractFields({ support: "Home monthly totals" }),
+    ...buildHomeCompareContractFields({ support: "Visible Home months" }),
     current,
     previous
   };
@@ -171,7 +171,7 @@ function buildMetricDetailPrimaryBasisMap({ period, metrics, detailCharts, sourc
   const safePeriod = period && typeof period === "object" ? period : {};
   const safeMetrics = metrics && typeof metrics === "object" ? metrics : {};
   const safeCharts = detailCharts && typeof detailCharts === "object" ? detailCharts : {};
-  const defaultBasisLabel = String(safePeriod.supportLabel || safePeriod.support || safePeriod.fairWindowLabel || (source === "home" ? "Home monthly totals" : "Comparable window"));
+  const defaultBasisLabel = String(safePeriod.supportLabel || safePeriod.support || safePeriod.fairWindowLabel || (source === "home" ? "Visible Home months" : "Comparable window"));
   const currentLabel = String(safePeriod.currentLabel || "Current");
   const previousLabel = String(safePeriod.previousLabel || "Previous");
 
@@ -208,7 +208,7 @@ function buildHomeDetailCharts({ monthRows, period }){
   const amountTrendChart = {
     chartType: "time-series",
     metricKey: "amount",
-    basisLabel: "Amount trend across visible Home months",
+    basisLabel: "Visible Home months",
     labels: safeMonths.map((row)=> String(row?.label || row?.monthKey || "")),
     values: safeMonths.map((row)=> Number(row?.amt) || 0)
   };
@@ -225,7 +225,7 @@ function buildHomeCompareBarChart({ labels, metricKey, currentValue, previousVal
   return {
     chartType: "compare-bars",
     metricKey,
-    basisLabel: String(labels?.length ? `Home monthly totals • ${labels.join(" vs ")}` : "Home monthly totals"),
+    basisLabel: String(labels?.length ? labels.join(" vs ") : "Visible Home months"),
     labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Current month", "Previous month"],
     values: [Number(currentValue) || 0, Number(previousValue) || 0]
   };
@@ -907,9 +907,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       ? "up"
       : (currentPoundsPerDay < previousPoundsPerDay * 0.95 ? "down" : "steady");
 
-    const compareBasisSummary = isHomeMetricDetail
-      ? "Home full-month totals in the active Home filter"
-      : `Reports fair compare window (${period.fairWindowLabel || "same comparable window"})`;
+    const compareBasisSummary = `${currentLabel} vs ${previousLabel}`;
 
     const summaryBuilders = {
       trips: ()=> {
@@ -928,15 +926,18 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         return `${currentLabel} stayed close to ${previousLabel} on amount over the ${compareBasisSummary.toLowerCase()}, while pounds were ${poundsPayload?.compareTone === "up" ? "up" : (poundsPayload?.compareTone === "down" ? "down" : "steady")} and $/lb was ${pplPayload?.compareTone === "up" ? "up" : (pplPayload?.compareTone === "down" ? "down" : "steady")}. ${amountPerTripTone === "steady" ? "Amount per trip stayed close." : `Amount per trip moved ${amountPerTripTone}.`} ${amountPerDayTone === "steady" ? "Amount per fishing day stayed close." : `Amount per fishing day moved ${amountPerDayTone}.`}`.trim();
       },
       ppl: ()=> {
-        if(tone === "up") return `${currentLabel} improved average $/lb over ${previousLabel}${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "down" ? "That happened even with lighter pounds." : (isHomeMetricDetail ? "Pricing strengthened across the visible Home months." : "Pricing strengthened across the comparable window.")}`;
-        if(tone === "down") return `${currentLabel} came in below ${previousLabel} on average $/lb${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "up" ? "Heavier pounds did not fully offset the softer rate." : (isHomeMetricDetail ? "Pricing softened across the visible Home months." : "Pricing softened across the comparable window.")}`;
+        if(tone === "up") return `${currentLabel} improved average $/lb over ${previousLabel}${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "down" ? "That happened even with lighter pounds." : (isHomeMetricDetail ? "Pricing strengthened versus the prior month." : "Pricing strengthened versus the prior period.")}`;
+        if(tone === "down") return `${currentLabel} came in below ${previousLabel} on average $/lb${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "up" ? "Heavier pounds did not fully offset the softer rate." : (isHomeMetricDetail ? "Pricing softened versus the prior month." : "Pricing softened versus the prior period.")}`;
         return `${currentLabel} held close to ${previousLabel} on average $/lb across the ${compareBasisSummary.toLowerCase()}, with amount ${amountPayload?.compareTone === "up" ? "still up" : (amountPayload?.compareTone === "down" ? "still down" : "also holding steady")}.`;
       }
     };
     const summaryText = (summaryBuilders[metricKey] || summaryBuilders.amount)();
+    const trustNote = payload.confidenceLabel === "early"
+      ? "Early read."
+      : (payload.confidenceLabel === "weak" ? "Light read." : "");
     return {
       tone,
-      text: `${summaryText} ${payload.confidenceLabel ? `${payload.confidenceLabel[0].toUpperCase()}${payload.confidenceLabel.slice(1)} signal.` : ""}`.trim(),
+      text: `${summaryText} ${trustNote}`.trim(),
       currentValue: formatMetricCompareValue(metricKey, payload.currentValue),
       previousValue: formatMetricCompareValue(metricKey, payload.previousValue)
     };
@@ -944,15 +945,17 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderMetricDetailSection = ({ meta, compareSummary })=> {
     const detailBackLabel = isHomeMetricDetail ? "← Home KPIs" : "← Back to reports";
-    const detailEyebrow = isHomeMetricDetail ? "Home KPI detail" : meta.eyebrow;
+    const detailEyebrow = isHomeMetricDetail ? "Home insight" : meta.eyebrow;
     const detailContext = isHomeMetricDetail
       ? String(homeScope?.contextText || `Home • Range ${rangeLabel} • ${homeScope?.tripCount ?? trips.length} trips`)
       : `Range ${rangeLabel} • ${trips.length} trips`;
     const detailChartTitle = isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = meta.primaryBasis?.basisLabel || (isHomeMetricDetail ? meta.homeChartContext : meta.chartContext);
     const detailInsight = isHomeMetricDetail ? meta.homeInsight : meta.insight;
-    const compareContractLabel = compareFoundation.period?.compareModelLabel || (isHomeMetricDetail ? "Home full-month compare" : "Reports fair-window compare");
-    const compareContractBasis = meta.primaryBasis?.basisLabel || compareFoundation.period?.supportLabel || compareFoundation.period?.support || compareFoundation.period?.fairWindowLabel || (isHomeMetricDetail ? "Full monthly totals • Active Home filter" : "Comparable window");
+    const compareContractLabel = compareFoundation.period?.compareModelLabel || "Comparison";
+    const compareContractBasis = compareFoundation.period?.currentLabel && compareFoundation.period?.previousLabel
+      ? `${compareFoundation.period.currentLabel} vs ${compareFoundation.period.previousLabel}`
+      : (meta.primaryBasis?.basisLabel || compareFoundation.period?.supportLabel || compareFoundation.period?.support || compareFoundation.period?.fairWindowLabel || "Comparable window");
     const compareContractText = compareFoundation.period?.explanation || "";
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
     return `
@@ -1015,7 +1018,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const detailMeta = {
       trips: {
         title: "Trips detail",
-        homeTitle: "Home trips snapshot",
+        homeTitle: "Trips",
         eyebrow: "Metric detail",
         heroLabel: "Trips in current compare period",
         homeHeroLabel: "Trips in latest visible Home month",
@@ -1024,16 +1027,16 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Trips on the primary basis",
-        homeChartTitle: "Home trips on the primary basis",
+        homeChartTitle: "Trips",
         chartContext: primaryChart?.basisLabel || "Trips using the Reports fair compare basis",
-        homeChartContext: primaryChart?.basisLabel || "Trips using full Home monthly totals",
+        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_trips",
         insight: "Use this view to compare the same current and prior Reports windows without mixing in full-range totals.",
-        homeInsight: "Stay in Home while comparing the same latest and prior visible months on one basis."
+        homeInsight: "See how the latest visible Home month compares with the month before it."
       },
       pounds: {
         title: "Pounds detail",
-        homeTitle: "Home pounds snapshot",
+        homeTitle: "Pounds",
         eyebrow: "Metric detail",
         heroLabel: "Pounds in current compare period",
         homeHeroLabel: "Pounds in latest visible Home month",
@@ -1042,16 +1045,16 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Pounds on the primary basis",
-        homeChartTitle: "Home pounds on the primary basis",
+        homeChartTitle: "Pounds",
         chartContext: primaryChart?.basisLabel || "Pounds using the Reports fair compare basis",
-        homeChartContext: primaryChart?.basisLabel || "Pounds using full Home monthly totals",
+        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_lbs",
         insight: "Use this view to compare pounds on one basis so the hero, compare rows, and chart tell the same story.",
-        homeInsight: "Stay in Home while checking pounds on the same latest-vs-prior month basis."
+        homeInsight: "See whether the latest visible Home month landed more or fewer pounds than the month before it."
       },
       amount: {
         title: "Amount detail",
-        homeTitle: "Home amount snapshot",
+        homeTitle: "Amount",
         eyebrow: "Metric detail",
         heroLabel: "Amount in current compare period",
         homeHeroLabel: "Amount in latest visible Home month",
@@ -1060,9 +1063,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Amount on the primary basis",
-        homeChartTitle: "Home amount on the primary basis",
+        homeChartTitle: "Amount",
         chartContext: primaryChart?.basisLabel || "Amount using the Reports fair compare basis",
-        homeChartContext: primaryChart?.basisLabel || "Amount using full Home monthly totals",
+        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_amount_detail",
         secondaryCharts: [
           detailCharts.amountTrend ? {
@@ -1081,11 +1084,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           }
         ],
         insight: "Read the primary amount compare first, then use trend and dealer mix as supporting context.",
-        homeInsight: "Read the primary Home amount compare first, then use trend and dealer mix as supporting context."
+        homeInsight: "See whether the latest visible Home month earned more or less than the month before it, then use the trend and dealer mix for context."
       },
       ppl: {
         title: "$/lb detail",
-        homeTitle: "Home $/lb snapshot",
+        homeTitle: "Avg $/lb",
         eyebrow: "Metric detail",
         heroLabel: "Average $/lb in current compare period",
         homeHeroLabel: "Average $/lb in latest visible Home month",
@@ -1094,12 +1097,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "$/lb on the primary basis",
-        homeChartTitle: "Home $/lb on the primary basis",
+        homeChartTitle: "Avg $/lb",
         chartContext: primaryChart?.basisLabel || "$/lb using the Reports fair compare basis",
-        homeChartContext: primaryChart?.basisLabel || "$/lb using full Home monthly totals",
+        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_ppl",
         insight: "Use this view to compare rate efficiency on one basis without mixing in full-range averages.",
-        homeInsight: "Stay in Home while checking rate strength on the same latest-vs-prior month basis."
+        homeInsight: "See whether the latest visible Home month paid better or softer on average than the month before it."
       }
     };
     const meta = detailMeta[metricKey];
