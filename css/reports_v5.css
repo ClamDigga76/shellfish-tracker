@@ -48,13 +48,16 @@
 .hlDelta{font-size:12px;line-height:1.3;font-weight:760;color:var(--neutral)}
 .hlDelta.tone-up{color:var(--good)}
 .hlDelta.tone-down{color:var(--bad)}
-.reportsTopShell{padding-bottom:18px}
-.reportsHighlightsCard{padding:4px 0 2px;background:transparent;border:0;border-radius:0;box-shadow:none}
-.reportsHighlightsHdr{font-size:11px;font-weight:860;letter-spacing:.14em;text-transform:uppercase;color:#9da3b1;margin-bottom:14px}
-.reportsHighlightsGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.reportsHighlightItem{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 14px 13px;background:rgba(255,255,255,.03);box-shadow:none;display:flex;flex-direction:column;min-height:100%}
-.reportsHighlightItem--compare{padding-bottom:13px}
-.reportsHighlightLabel{display:inline-flex;align-items:center;min-height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:860;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted-strong);background:rgba(255,255,255,.10)}
+.reportsTopShell{padding:0 0 18px}
+.reportsTopShell--overview{padding-top:2px}
+.reportsTopShell--detail{padding-top:0}
+.reportsHighlightsCard{padding:2px 0 0;background:transparent;border:0;border-radius:0;box-shadow:none}
+.reportsHighlightsHdr{font-size:11px;font-weight:860;letter-spacing:.14em;text-transform:uppercase;color:#9da3b1;margin-bottom:12px}
+.reportsHighlightsGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.reportsHighlightItem{position:relative;border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:15px 15px 14px;background:linear-gradient(180deg,rgba(255,255,255,.024),rgba(255,255,255,.012));box-shadow:none;display:flex;flex-direction:column;min-height:100%}
+.reportsHighlightItem::after{content:"";position:absolute;left:15px;right:15px;bottom:0;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.12),rgba(255,255,255,0));opacity:.7}
+.reportsHighlightItem--compare{padding-bottom:14px}
+.reportsHighlightLabel{display:inline-flex;align-items:center;min-height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:860;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted-strong);background:rgba(255,255,255,.08)}
 .reportsHighlightHeadline{margin-top:10px;font-size:17px;line-height:1.27;font-weight:790;letter-spacing:.12px;color:#eef2fb}
 .reportsHighlightMetricRow{margin-top:11px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .reportsHighlightMetricRow--summary{min-height:41px}
@@ -73,7 +76,7 @@
 .reportsCompareRow.tone-up{color:var(--good)}
 .reportsCompareRow.tone-down{color:var(--bad)}
 .reportsCompareRow.tone-neutral,.reportsCompareRow.tone-steady{color:var(--neutral)}
-.reportsCompareBars{margin-top:10px;display:grid;gap:8px}
+.reportsCompareBars{margin-top:12px;display:grid;gap:10px}
 .reportsCompareLine{display:grid;gap:5px}
 .reportsCompareMeta{font-size:11px;line-height:1.2;color:#97a0b1;display:flex;align-items:center;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
 .reportsCompareMeta b{color:#e2e8f5;font-weight:790;letter-spacing:.08px}
@@ -81,15 +84,16 @@
 .reportsCompareBarTrack span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(47,109,246,.80),rgba(47,109,246,.58))}
 .reportsCompareBarTrack.muted span{background:rgba(230,234,243,.44)}
 @media (max-width:480px){
-  .reportsHighlightsCard{padding:15px 14px 16px}
-  .reportsHighlightsGrid{grid-template-columns:1fr;gap:14px}
-  .reportsHighlightItem{padding:15px 14px 14px}
+  .reportsHighlightsCard{padding:0}
+  .reportsHighlightsGrid{grid-template-columns:1fr;gap:12px}
+  .reportsHighlightItem{padding:14px 13px 13px}
+  .reportsHighlightItem::after{left:13px;right:13px}
 }
 
 .chartCard .chart{margin-top:10px}
 
 
-.chartCard{padding:15px 0 16px;background:transparent;border:0;border-radius:0;box-shadow:none;border-top:1px solid rgba(255,255,255,.08)}
+.chartCard{padding:14px 0 18px;background:transparent;border:0;border-radius:0;box-shadow:none;border-top:0}
 .chartTakeaway{display:inline-flex;align-items:center;min-height:22px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;background:rgba(190,196,210,.14);color:#cfd5e2}
 .chartTakeaway.tone-up{background:rgba(46,160,67,.16);color:var(--good)}
 .chartTakeaway.tone-down{background:rgba(255,77,79,.15);color:var(--bad)}
@@ -98,9 +102,9 @@
 .chartSubhead{margin-top:3px;font-size:11px;line-height:1.3;color:#9ea9bd;font-weight:760;letter-spacing:.02em}
 .chartHero{margin-top:8px;font-size:35px;line-height:1.01;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums;color:#fff}
 .chartContext{margin-top:5px;font-size:12px;line-height:1.35;color:#aeb7c8;font-weight:700}
-.chartCard .chart{margin-top:13px;border-radius:16px;background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.09)}
+.chartCard .chart{display:block;margin-top:14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.022),rgba(255,255,255,.012));border-color:rgba(255,255,255,.06)}
 @media (max-width:430px){
-  .chartCard{padding:13px 0 14px}
+  .chartCard{padding:12px 0 15px}
   .chartTakeaway{font-size:10px;padding:0 9px}
   .chartTitle{font-size:17px;margin-top:9px}
   .chartSubhead{font-size:10px}
@@ -160,23 +164,24 @@
 .reportsHeroLabel{font-size:10px;font-weight:860;letter-spacing:.11em;text-transform:uppercase;color:#9ea8bc}
 .reportsHeroValue{margin-top:5px;font-size:20px;line-height:1.1;font-weight:850;letter-spacing:.12px;color:#f2f5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .reportsHeroMeta{margin-top:4px;font-size:11px;line-height:1.3;color:#aeb6c7;font-weight:700}
-.reportsMetricHeroWrap,.homeMetricHeroWrap{margin-top:13px;padding:12px 0 10px;border-radius:0;border:0;border-top:1px solid rgba(255,255,255,.10);background:transparent}
-.reportsMetricCompare,.homeMetricCompare{margin-top:12px;padding:0 0 0 12px;border-radius:0;border:0;border-left:2px solid rgba(174,184,205,.32);background:transparent}
-.reportsMetricCompare.tone-up,.homeMetricCompare.tone-up{border-left-color:rgba(46,160,67,.62);background:transparent}
-.reportsMetricCompare.tone-down,.homeMetricCompare.tone-down{border-left-color:rgba(255,77,79,.58);background:transparent}
-.reportsMetricChartBlock,.homeMetricChartBlock{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
-.reportsMetricInsight,.homeMetricInsight{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+.reportsMetricHeroWrap,.homeMetricHeroWrap{margin-top:14px;padding:14px 0 0;border-radius:0;border:0;border-top:1px solid rgba(255,255,255,.08);background:transparent}
+.reportsMetricCompare,.homeMetricCompare{margin-top:14px;padding:2px 0 0 14px;border-radius:0;border:0;border-left:2px solid rgba(174,184,205,.26);background:transparent}
+.reportsMetricCompare.tone-up,.homeMetricCompare.tone-up{border-left-color:rgba(46,160,67,.54);background:transparent}
+.reportsMetricCompare.tone-down,.homeMetricCompare.tone-down{border-left-color:rgba(255,77,79,.5);background:transparent}
+.reportsMetricChartBlock,.homeMetricChartBlock{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07)}
+.reportsMetricInsight,.homeMetricInsight{margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.07)}
 
 .reportsSection{margin-bottom:var(--card-stack-gap)}
-.reportsSectionHead{margin:0 2px 12px}
+.reportsSectionHead{margin:0 0 10px}
 .reportsSectionHead h2{margin:0;font-size:17px;line-height:1.2;letter-spacing:.2px}
 .reportsSectionHead p{margin:6px 0 0;font-size:12px;line-height:1.4;color:var(--text-muted-strong);font-weight:650}
 .reportsSection .card:last-child{margin-bottom:0}
 .reportsSection--highlights .reportsHighlightsCard{margin-bottom:0}
-.reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:14px}
-.reportsChartsStack .chartCard:first-child{padding-top:0;border-top:0}
-.reportsChartsStack .chartCard:last-child,.reportsTablesStack .card:last-child{margin-bottom:0}
-.reportsHighlightsEmpty,.reportsDetailHint{padding:12px 0 0;border-top:1px solid rgba(255,255,255,.08)}
+.reportsChartsStack,.reportsTablesStack{display:grid;gap:16px}
+.reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:0}
+.reportsChartsStack .chartCard{position:relative}
+.reportsChartsStack .chartCard + .chartCard::before{content:"";position:absolute;left:0;right:0;top:-8px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,0))}
+.reportsHighlightsEmpty,.reportsDetailHint{padding:14px 0 0;border-top:1px solid rgba(255,255,255,.07)}
 .reportsHighlightsEmpty{margin-top:4px}
 .reportsDetailHint .btn{width:100%}
 
@@ -184,6 +189,7 @@
   .reportsPercentEmphasis{padding:.07em .4em;font-size:1.04em}
   .reportsMetricCompareText .reportsPercentEmphasis,.homeMetricCompareText .reportsPercentEmphasis{font-size:1.08em}
   .reportsTopShell{padding-bottom:16px}
+  .reportsChartsStack,.reportsTablesStack{gap:14px}
   .reportsHeroCard{padding:14px 12px 13px}
   .reportsHeroHeadline{font-size:20px}
   .reportsHeroGrid{grid-template-columns:1fr}
