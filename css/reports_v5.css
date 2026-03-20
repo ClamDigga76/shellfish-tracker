@@ -48,10 +48,11 @@
 .hlDelta{font-size:12px;line-height:1.3;font-weight:760;color:var(--neutral)}
 .hlDelta.tone-up{color:var(--good)}
 .hlDelta.tone-down{color:var(--bad)}
-.reportsHighlightsCard{padding:16px 16px 17px;background:linear-gradient(180deg,var(--analytics-surface-top),var(--analytics-surface-bottom));border:1px solid var(--border);border-radius:20px;box-shadow:0 10px 24px rgba(0,0,0,.24)}
+.reportsTopShell{padding-bottom:18px}
+.reportsHighlightsCard{padding:4px 0 2px;background:transparent;border:0;border-radius:0;box-shadow:none}
 .reportsHighlightsHdr{font-size:11px;font-weight:860;letter-spacing:.14em;text-transform:uppercase;color:#9da3b1;margin-bottom:14px}
 .reportsHighlightsGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.reportsHighlightItem{border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px 14px 13px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));box-shadow:0 8px 18px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.04);display:flex;flex-direction:column;min-height:100%}
+.reportsHighlightItem{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 14px 13px;background:rgba(255,255,255,.03);box-shadow:none;display:flex;flex-direction:column;min-height:100%}
 .reportsHighlightItem--compare{padding-bottom:13px}
 .reportsHighlightLabel{display:inline-flex;align-items:center;min-height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:860;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted-strong);background:rgba(255,255,255,.10)}
 .reportsHighlightHeadline{margin-top:10px;font-size:17px;line-height:1.27;font-weight:790;letter-spacing:.12px;color:#eef2fb}
@@ -88,7 +89,7 @@
 .chartCard .chart{margin-top:10px}
 
 
-.chartCard{padding:15px 14px 16px;background:linear-gradient(180deg,var(--analytics-surface-top),var(--analytics-surface-bottom));border:1px solid var(--border);border-radius:22px;box-shadow:0 12px 28px rgba(0,0,0,.24)}
+.chartCard{padding:15px 0 16px;background:transparent;border:0;border-radius:0;box-shadow:none;border-top:1px solid rgba(255,255,255,.08)}
 .chartTakeaway{display:inline-flex;align-items:center;min-height:22px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;background:rgba(190,196,210,.14);color:#cfd5e2}
 .chartTakeaway.tone-up{background:rgba(46,160,67,.16);color:var(--good)}
 .chartTakeaway.tone-down{background:rgba(255,77,79,.15);color:var(--bad)}
@@ -99,7 +100,7 @@
 .chartContext{margin-top:5px;font-size:12px;line-height:1.35;color:#aeb7c8;font-weight:700}
 .chartCard .chart{margin-top:13px;border-radius:16px;background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.09)}
 @media (max-width:430px){
-  .chartCard{padding:13px 12px 14px}
+  .chartCard{padding:13px 0 14px}
   .chartTakeaway{font-size:10px;padding:0 9px}
   .chartTitle{font-size:17px;margin-top:9px}
   .chartSubhead{font-size:10px}
@@ -119,7 +120,7 @@
 .reportsHeroStat--tap:active{transform:scale(.995)}
 .reportsHeroStat--tap:hover{border-color:rgba(47,109,246,.5);background:rgba(47,109,246,.09)}
 
-.reportsMetricDetailCard{padding:14px 14px 15px;background:linear-gradient(180deg,var(--analytics-surface-top),var(--analytics-surface-bottom));border:1px solid rgba(255,255,255,.16);border-radius:22px;box-shadow:0 10px 24px rgba(0,0,0,.24)}
+.reportsMetricDetailCard{padding:0;background:transparent;border:0;border-radius:0;box-shadow:none}
 .reportsMetricBackBtn{margin-bottom:12px}
 .reportsMetricEyebrow{font-size:11px;font-weight:860;letter-spacing:.13em;text-transform:uppercase;color:#aeb9cd}
 .reportsMetricTitle{margin:8px 0 0;font-size:27px;line-height:1.14;letter-spacing:.2px}
@@ -138,7 +139,7 @@
 .reportsMetricChartContext{margin-top:4px;font-size:12px;line-height:1.35;color:#aeb7c8;font-weight:700}
 .reportsMetricInsight{margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.11);font-size:13px;line-height:1.4;color:#c0c8d8}
 .homeMetricDetail{margin-top:0}
-.homeMetricDetailCard{padding:14px 14px 15px;background:linear-gradient(180deg,rgba(22,36,64,.96),rgba(9,16,31,.98));border:1px solid rgba(126,200,255,.28);border-radius:22px;box-shadow:0 10px 24px rgba(0,0,0,.24)}
+.homeMetricDetailCard{padding:0;background:transparent;border:0;border-radius:0;box-shadow:none}
 .homeMetricBackBtn{margin-bottom:12px;border-color:rgba(126,200,255,.28);background:rgba(126,200,255,.08)}
 .homeMetricEyebrow{font-size:11px;font-weight:860;letter-spacing:.13em;text-transform:uppercase;color:#8fd6ff}
 .homeMetricTitle{margin:8px 0 0;font-size:27px;line-height:1.14;letter-spacing:.2px}
@@ -159,21 +160,30 @@
 .reportsHeroLabel{font-size:10px;font-weight:860;letter-spacing:.11em;text-transform:uppercase;color:#9ea8bc}
 .reportsHeroValue{margin-top:5px;font-size:20px;line-height:1.1;font-weight:850;letter-spacing:.12px;color:#f2f5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .reportsHeroMeta{margin-top:4px;font-size:11px;line-height:1.3;color:#aeb6c7;font-weight:700}
+.reportsMetricHeroWrap,.homeMetricHeroWrap{margin-top:13px;padding:12px 0 10px;border-radius:0;border:0;border-top:1px solid rgba(255,255,255,.10);background:transparent}
+.reportsMetricCompare,.homeMetricCompare{margin-top:12px;padding:0 0 0 12px;border-radius:0;border:0;border-left:2px solid rgba(174,184,205,.32);background:transparent}
+.reportsMetricCompare.tone-up,.homeMetricCompare.tone-up{border-left-color:rgba(46,160,67,.62);background:transparent}
+.reportsMetricCompare.tone-down,.homeMetricCompare.tone-down{border-left-color:rgba(255,77,79,.58);background:transparent}
+.reportsMetricChartBlock,.homeMetricChartBlock{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.reportsMetricInsight,.homeMetricInsight{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
 
 .reportsSection{margin-bottom:var(--card-stack-gap)}
-.reportsSectionHead{margin:0 2px 10px}
+.reportsSectionHead{margin:0 2px 12px}
 .reportsSectionHead h2{margin:0;font-size:17px;line-height:1.2;letter-spacing:.2px}
 .reportsSectionHead p{margin:6px 0 0;font-size:12px;line-height:1.4;color:var(--text-muted-strong);font-weight:650}
 .reportsSection .card:last-child{margin-bottom:0}
 .reportsSection--highlights .reportsHighlightsCard{margin-bottom:0}
 .reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:14px}
+.reportsChartsStack .chartCard:first-child{padding-top:0;border-top:0}
 .reportsChartsStack .chartCard:last-child,.reportsTablesStack .card:last-child{margin-bottom:0}
-.reportsDetailHint{padding:12px}
+.reportsHighlightsEmpty,.reportsDetailHint{padding:12px 0 0;border-top:1px solid rgba(255,255,255,.08)}
+.reportsHighlightsEmpty{margin-top:4px}
 .reportsDetailHint .btn{width:100%}
 
 @media (max-width:430px){
   .reportsPercentEmphasis{padding:.07em .4em;font-size:1.04em}
   .reportsMetricCompareText .reportsPercentEmphasis,.homeMetricCompareText .reportsPercentEmphasis{font-size:1.08em}
+  .reportsTopShell{padding-bottom:16px}
   .reportsHeroCard{padding:14px 12px 13px}
   .reportsHeroHeadline{font-size:20px}
   .reportsHeroGrid{grid-template-columns:1fr}
@@ -182,7 +192,7 @@
 
 
 /* v355 overflow guardrail pass */
-.hlTripCardWrap,.reportsRecordTripCard,.reportsHighlightsCard,.reportsHighlightItem,.chartCard,.reportsHeroCard,.reportsHeroStat,.reportsMetricDetailCard,.reportsMetricHeroWrap,.reportsMetricCompare,.homeMetricDetailCard,.homeMetricHeroWrap,.homeMetricCompare{min-width:0;max-width:100%}
+.hlTripCardWrap,.reportsRecordTripCard,.reportsHighlightsCard,.reportsHighlightItem,.chartCard,.reportsHeroCard,.reportsHeroStat,.reportsMetricDetailCard,.reportsMetricHeroWrap,.reportsMetricCompare,.homeMetricDetailCard,.homeMetricHeroWrap,.homeMetricCompare,.reportsTopShell,.reportsHighlightsEmpty,.reportsDetailHint{min-width:0;max-width:100%}
 .reportsRecordTripCard .tripCardHeadline,.reportsRecordTripCard .tripCardMain,.reportsRecordTripCard .tripCardHeadlineDealer,.reportsRecordTripCard .tripCardSpecies,.reportsRecordTripCard .tripCardNotes,.reportsHighlightHeadline,.reportsCompareRow,.chartTitle,.chartSubhead,.chartContext,.reportsHeroHeadline,.reportsHeroSub,.reportsMetricTitle,.reportsMetricContext,.reportsMetricChartContext,.reportsMetricInsight,.homeMetricTitle,.homeMetricContext,.homeMetricChartContext,.homeMetricInsight,.reportsHeroMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 .reportsHighlightMetricRow,.reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{min-width:0;max-width:100%}
 .reportsHighlightMetricRow{flex-wrap:wrap}

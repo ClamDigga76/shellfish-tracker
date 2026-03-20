@@ -375,7 +375,7 @@ export function createReportsHighlightsSeam(deps){
     if(!highlights.length) return "";
 
     return `
-      <div class="card reportsHighlightsCard">
+      <div class="reportsHighlightsCard">
         <div class="reportsHighlightsHdr">Range insights</div>
         <div class="reportsHighlightsGrid">
           ${highlights.map(item=>`
