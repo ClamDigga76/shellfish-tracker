@@ -21,6 +21,7 @@ const STARTUP_MODULE_PATHS = [
   "./settings.js",
   "./migrations_v5.js",
   "./navigation_v5.js",
+  "./area_model_v5.js",
   "./reports_charts_v5.js",
   "./reports_aggregation_v5.js",
   "./reports_seasonality_v5.js",
@@ -60,6 +61,7 @@ const [{ uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY: forma
   { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme },
   { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback },
   { ensureNavState, createNavigator },
+  { createAreaModel },
   { drawReportsCharts },
   { buildReportsAggregationState },
   { buildReportsSeasonalityFoundation },
@@ -103,6 +105,16 @@ const {
   isValidAreaValue,
   validateTrip
 } = createTripDataEngine({ uid, isValidISODate });
+const {
+  resolveAreaValue,
+  resolveTripArea,
+  canonicalizeTripArea,
+  syncAreaState,
+  addCanonicalArea,
+  mergeAreas,
+  countTripsForArea,
+  deleteArea
+} = createAreaModel({ normalizeKey });
 
 // Backup meta (local-only; no user data duplication)
 const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
@@ -654,6 +666,9 @@ const {
   appendTripHistoryEvent,
   ensureAreas: ()=> ensureAreas(),
   ensureDealers: ()=> ensureDealers(),
+  syncAreaState: ()=> syncAreaState(state),
+  canonicalizeTripArea: (trip, registry)=> canonicalizeTripArea(trip, registry),
+  resolveAreaValue: (value, registry)=> resolveAreaValue(value, registry),
   SCHEMA_VERSION,
   APP_VERSION,
   VERSION,
@@ -672,19 +687,7 @@ const {
 });
 
 function ensureAreas(){
-  if(!Array.isArray(state.areas)) state.areas = [];
-  // normalize + de-dupe (case-insensitive)
-  const seen = new Set();
-  const out = [];
-  for(const a of state.areas){
-    const v = String(a||"").trim();
-    if(!v) continue;
-    const k = normalizeKey(v);
-    if(seen.has(k)) continue;
-    seen.add(k);
-    out.push(v);
-  }
-  state.areas = out;
+  syncAreaState(state);
 }
 
 function ensureDealers(){
@@ -815,7 +818,7 @@ function resolveUnifiedRange(filter){
 function buildUnifiedFilterLabel(filter, rangeLabel){
   const parts = [rangeLabel];
   if(filter.dealer && filter.dealer !== "all") parts.push(`Dealer: ${filter.dealer}`);
-  if(filter.area && filter.area !== "all") parts.push(`Area: ${filter.area}`);
+  if(filter.area && filter.area !== "all") parts.push(`Area: ${resolveAreaValue(filter.area, state.areaRegistry).canonicalName || filter.area}`);
   if(filter.species && filter.species !== "all") parts.push(`Species: ${filter.species}`);
   if(filter.text && String(filter.text).trim()) parts.push(`Search: "${String(filter.text).trim()}"`);
   return parts.join(" • ");
@@ -860,33 +863,43 @@ function buildUnifiedFilterFromHomeFilter(hf){
 }
 
 function buildUnifiedFilterFromReportsFilter(rf){
+  const rawArea = rf?.area ? String(rf.area) : "all";
+  const resolvedArea = rawArea && rawArea !== "all" ? resolveAreaValue(rawArea, state.areaRegistry) : null;
   return makeUnifiedFilter({
     range: legacyModeToUnifiedRange(rf?.mode || "YTD"),
     fromISO: parseReportDateToISO(rf?.from || "") || "",
     toISO: parseReportDateToISO(rf?.to || "") || "",
     dealer: rf?.dealer ? String(rf.dealer) : "all",
-    area: rf?.area ? String(rf.area) : "all"
+    area: resolvedArea?.record ? resolvedArea.areaId : rawArea
   });
 }
 
 function applyUnifiedTripFilter(rawTrips, filter){
-  const trips = (rawTrips || []).map(normalizeTripRow).filter(Boolean);
+  ensureAreas();
+  const trips = (rawTrips || []).map((trip)=> canonicalizeTripArea(normalizeTripRow(trip), state.areaRegistry)).filter(Boolean);
   const r = resolveUnifiedRange(filter);
+  const areaFilterId = filter.area && filter.area !== "all"
+    ? (resolveAreaValue(filter.area, state.areaRegistry).areaId || String(filter.area))
+    : "all";
 
   let rows = trips.filter(t => isValidISODate(t.dateISO) && t.dateISO >= r.fromISO && t.dateISO <= r.toISO);
 
   if(filter.dealer && filter.dealer !== "all") rows = rows.filter(t => t.dealer === filter.dealer);
-  if(filter.area && filter.area !== "all") rows = rows.filter(t => t.area === filter.area);
+  if(areaFilterId && areaFilterId !== "all") rows = rows.filter(t => {
+    const resolved = resolveTripArea(t, state.areaRegistry);
+    return (resolved.areaId || resolved.canonicalName) === areaFilterId;
+  });
   if(filter.species && filter.species !== "all") rows = rows.filter(t => t.species === filter.species);
 
   if(filter.text && String(filter.text).trim()){
     const q = String(filter.text).trim().toLowerCase();
-    rows = rows.filter(t =>
-      (t.dealer||"").toLowerCase().includes(q) ||
-      (t.area||"").toLowerCase().includes(q) ||
-      (t.species||"").toLowerCase().includes(q) ||
-      (t.notes||"").toLowerCase().includes(q)
-    );
+    rows = rows.filter(t => {
+      const resolvedArea = resolveTripArea(t, state.areaRegistry);
+      return (t.dealer||"").toLowerCase().includes(q) ||
+        (resolvedArea.canonicalName||t.area||"").toLowerCase().includes(q) ||
+        (t.species||"").toLowerCase().includes(q) ||
+        (t.notes||"").toLowerCase().includes(q);
+    });
   }
 
   const totalLbs = rows.reduce((a,t)=> a + (Number(t.pounds)||0), 0);
@@ -915,10 +928,11 @@ function uniqueSorted(arr){
   return [...new Set((arr||[]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
 }
 function getFilterOptionsFromTrips(){
-  const trips = Array.isArray(state.trips) ? state.trips.map(normalizeTripRow).filter(Boolean) : [];
+  ensureAreas();
+  const trips = Array.isArray(state.trips) ? state.trips.map((trip)=> canonicalizeTripArea(normalizeTripRow(trip), state.areaRegistry)).filter(Boolean) : [];
   return {
     dealers: uniqueSorted(trips.map(t=>t.dealer)),
-    areas: uniqueSorted(trips.map(t=>t.area)),
+    areas: uniqueSorted([...(Array.isArray(state.areas) ? state.areas : []), ...trips.map((t)=>resolveTripArea(t, state.areaRegistry).canonicalName || t.area)]),
     species: uniqueSorted(trips.map(t=>t.species)),
   };
 }
@@ -932,7 +946,9 @@ function getLastUniqueFromTrips(field, maxN){
   const trips = Array.isArray(state.trips) ? state.trips : [];
   for(let i = trips.length - 1; i >= 0; i--){
     const t = trips[i];
-    const raw = String(t?.[field] || "").trim();
+    const raw = field === "area"
+      ? (resolveTripArea(t, state.areaRegistry).canonicalName || String(t?.area || "").trim())
+      : String(t?.[field] || "").trim();
     if(!raw) continue;
     const key = raw.toLowerCase();
     if(seen.has(key)) continue;
@@ -1148,7 +1164,11 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
   const poundsNum = parseNum(inputs?.pounds);
   const amountNum = parseMoney(inputs?.amount);
-  const area = String(inputs?.area||"").trim();
+  ensureAreas();
+  const rawArea = String(inputs?.area||"").trim();
+  const areaCreate = addCanonicalArea(state, rawArea);
+  const area = areaCreate?.record?.name || rawArea;
+  const areaId = areaCreate?.record?.id || resolveAreaValue(rawArea, state.areaRegistry).areaId || "";
   const species = String(inputs?.species || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
   const notes = String(inputs?.notes || "").trim();
 
@@ -1211,6 +1231,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
     pounds: to2(poundsNum),
     amount: to2(amountNum),
     area,
+    areaId,
     species,
     notes
   }, {
@@ -1223,7 +1244,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
     : tripWithAudit;
 
   // Tier 1: normalize + validate before saving
-  const tripNorm = normalizeTrip(trip);
+  const tripNorm = normalizeTrip(canonicalizeTripArea(trip, state.areaRegistry));
   const vErrs = validateTrip(tripNorm);
   if(vErrs.length){
     announce(`Error: Missing/invalid: ${vErrs.join(", ")}`, "assertive");
@@ -1352,9 +1373,10 @@ if(SAFE_MODE_ACTIVE){
 if(Array.isArray(state.trips)) {
   let changed = false;
   state.trips = state.trips.map((trip)=>{
-    const n = normalizeTrip(trip);
+    const n = normalizeTrip(canonicalizeTripArea(trip, state.areaRegistry));
     if(!n) return trip;
     if(String(trip?.species || "").trim() !== n.species) changed = true;
+    if(String(trip?.area || "").trim() !== String(n.area || "").trim() || String(trip?.areaId || "") !== String(n.areaId || "")) changed = true;
     return n;
   }).filter(Boolean);
   if(changed) saveState();
@@ -1442,7 +1464,7 @@ function tripsActiveLabel(tf, rangeLabel){
   const parts = [];
   parts.push(rangeLabel || "YTD");
   if(tf?.dealer && tf.dealer !== "all") parts.push(`Dealer: ${tf.dealer}`);
-  if(tf?.area && tf.area !== "all") parts.push(`Area: ${tf.area}`);
+  if(tf?.area && tf.area !== "all") parts.push(`Area: ${resolveAreaValue(tf.area, state.areaRegistry).canonicalName || tf.area}`);
   return parts.join(" • ");
 }
 
@@ -1797,6 +1819,8 @@ const { renderReports, renderHomeMetricDetail } = createReportsScreenRenderer({
   bindDatePill,
   showToast: feedback.showToast,
   buildReportsAggregationState,
+  resolveAreaValue,
+  resolveTripArea,
   buildReportsSeasonalityFoundation,
   canonicalDealerGroupKey,
   normalizeDealerDisplay,
@@ -1815,6 +1839,11 @@ const settingsListManagement = createSettingsListManagement({
   getApp: () => getApp(),
   ensureAreas: () => ensureAreas(),
   ensureDealers: () => ensureDealers(),
+  syncAreaState: () => syncAreaState(state),
+  addCanonicalArea: (rawName) => addCanonicalArea(state, rawName),
+  mergeAreas: (sourceId, targetId) => mergeAreas(state, sourceId, targetId),
+  countTripsForArea: (areaId) => countTripsForArea(state, areaId),
+  deleteArea: (areaId) => deleteArea(state, areaId),
   normalizeKey,
   escapeHtml,
   showToast: feedback.showToast,
@@ -1964,9 +1993,11 @@ function displayAmount(val){
 
 
 function buildAreaOptionsHtml(selectedArea, addSentinel){
-  return ["", ...getValuesWithLegacyEntry("area", selectedArea, Array.isArray(state.areas) ? state.areas : [])].map((area)=>{
+  ensureAreas();
+  const selectedCanonical = resolveAreaValue(selectedArea, state.areaRegistry).canonicalName || selectedArea;
+  return ["", ...getValuesWithLegacyEntry("area", selectedCanonical, Array.isArray(state.areas) ? state.areas : [])].map((area)=>{
     const label = area ? area : "—";
-    const sel = (String(selectedArea || "") === String(area || "")) ? "selected" : "";
+    const sel = (String(selectedCanonical || "") === String(area || "")) ? "selected" : "";
     return `<option value="${escapeHtml(String(area || ""))}" ${sel}>${label}</option>`;
   }).concat(`<option value="${addSentinel}">+ Add new Area</option>`).join("");
 }

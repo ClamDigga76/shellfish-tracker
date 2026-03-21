@@ -254,6 +254,7 @@ export function createReportsScreenRenderer(deps){
     bindDatePill,
     showToast,
     buildReportsAggregationState,
+    resolveTripArea,
     buildReportsSeasonalityFoundation,
     canonicalDealerGroupKey,
     normalizeDealerDisplay,
@@ -618,7 +619,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   } = buildReportsAggregationState({
     trips,
     canonicalDealerGroupKey,
-    normalizeDealerDisplay
+    normalizeDealerDisplay,
+    resolveTripArea
   });
 
   const renderSummaryAverageLine = (row)=> `<span class="muted">Avg / Trip</span> <span class="money">${formatMoney(to2(row.amountPerTrip))}</span> • <span class="lbsBlue">${to2(row.poundsPerTrip)} lbs</span>`;

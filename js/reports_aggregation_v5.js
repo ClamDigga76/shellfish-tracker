@@ -1,4 +1,4 @@
-export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, normalizeDealerDisplay }){
+export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, normalizeDealerDisplay, resolveTripArea }){
   const safeTrips = Array.isArray(trips) ? trips : [];
 
   const byDealer = new Map();
@@ -9,8 +9,9 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
     const dealerRaw = (t?.dealer || "").toString();
     const dealerName = normalizeDealerDisplay(dealerRaw) || "(Unspecified)";
     const dealerKey = canonicalDealerGroupKey(dealerRaw) || "(unspecified)";
-    const area = ((t?.area || "").toString().trim()) || "(Unspecified)";
-    const areaKey = area.toLowerCase();
+    const areaResolved = typeof resolveTripArea === "function" ? resolveTripArea(t) : null;
+    const area = (areaResolved?.canonicalName || (t?.area || "").toString().trim()) || "(Unspecified)";
+    const areaKey = (areaResolved?.areaId || area).toLowerCase();
 
     const lbs = Number(t?.pounds) || 0;
     const amt = Number(t?.amount) || 0;

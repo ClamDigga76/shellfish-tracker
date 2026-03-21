@@ -19,6 +19,7 @@ const CORE = [
   "./js/settings.js?v="+SW_V,
   "./js/migrations_v5.js?v="+SW_V,
   "./js/navigation_v5.js?v="+SW_V,
+  "./js/area_model_v5.js?v="+SW_V,
   "./js/reports_charts_v5.js?v="+SW_V,
   "./js/reports_aggregation_v5.js?v="+SW_V,
   "./js/reports_seasonality_v5.js?v="+SW_V,
