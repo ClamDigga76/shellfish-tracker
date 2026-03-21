@@ -264,3 +264,24 @@
 :root[data-theme="light"] .reportsHighlightsEmpty,
 :root[data-theme="light"] .reportsDetailHint,
 :root[data-theme="light"] .reportsChartsStack .chartCard + .chartCard::before{border-color:transparent;background:linear-gradient(90deg, rgba(37,53,92,.12), rgba(37,53,92,0));}
+
+
+.reportsSection--seasonality{margin-top:2px}
+.reportsSeasonalityGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.reportsSeasonalityCard{padding:14px 14px 15px;background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:none}
+.reportsSeasonalityCard--table{margin-top:14px}
+.reportsSeasonalityEyebrow{font-size:10px;font-weight:860;letter-spacing:.11em;text-transform:uppercase;color:#9ea8bc}
+.reportsSeasonalityValue{margin-top:7px;font-size:28px;line-height:1.08;font-weight:900;letter-spacing:.14px;font-variant-numeric:tabular-nums}
+.reportsSeasonalitySub{margin-top:6px;font-size:12px;line-height:1.4;color:#afbacd;font-weight:700;text-wrap:pretty}
+.reportsSeasonalityMeta{margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#c2cad8;font-weight:760}
+.reportsSeasonalityTableWrap{margin-top:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.reportsSeasonalityTable{width:100%;border-collapse:collapse;font-size:12px}
+.reportsSeasonalityTable th,.reportsSeasonalityTable td{padding:10px 8px;border-top:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
+.reportsSeasonalityTable th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9ea8bc;font-weight:860}
+.reportsSeasonalityTableHint{margin-top:4px;color:#8f9bb0;font-size:11px;font-weight:650}
+.reportsSeasonalityChartBlock{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+@media (max-width:480px){.reportsSeasonalityGrid{grid-template-columns:1fr}.reportsSeasonalityCard--table{margin-top:12px}}
+:root[data-theme="light"] .reportsSeasonalityCard{background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(240,245,255,.92));border-color:rgba(37,53,92,.12)}
+:root[data-theme="light"] .reportsSeasonalityEyebrow,:root[data-theme="light"] .reportsSeasonalityTable th{color:rgba(24,35,59,.62)}
+:root[data-theme="light"] .reportsSeasonalitySub,:root[data-theme="light"] .reportsSeasonalityMeta,:root[data-theme="light"] .reportsSeasonalityTableHint{color:var(--text-muted-strong)}
+:root[data-theme="light"] .reportsSeasonalityTable th,:root[data-theme="light"] .reportsSeasonalityTable td,:root[data-theme="light"] .reportsSeasonalityChartBlock{border-color:rgba(37,53,92,.12)}

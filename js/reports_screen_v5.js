@@ -254,6 +254,7 @@ export function createReportsScreenRenderer(deps){
     bindDatePill,
     showToast,
     buildReportsAggregationState,
+    buildReportsSeasonalityFoundation,
     canonicalDealerGroupKey,
     normalizeDealerDisplay,
     formatMoney,
@@ -428,6 +429,10 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   let trips = isHomeMetricDetail && activeMetricDetail && homeScope
     ? homeScope.trips
     : applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" }).rows;
+  const seasonalityUnified = { ...unified, range: "all", fromISO: "", toISO: "" };
+  const seasonalityTrips = isHomeMetricDetail && homeScope
+    ? homeScope.trips
+    : applyUnifiedTripFilter(tripsAll, seasonalityUnified).rows;
 
   const chip = (key,label) => `<button class="chip segBtn ${fMode===key?'on is-selected':''}" data-rf="${key}" type="button">${label}</button>`;
   const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
@@ -822,6 +827,10 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ].join("");
   };
 
+  const seasonalityFoundation = isHomeMetricDetail
+    ? null
+    : buildReportsSeasonalityFoundation({ trips: seasonalityTrips, nowDate: new Date() });
+
   const compareFoundation = isHomeMetricDetail
     ? buildHomeMetricDetailFoundation({ monthRows })
     : buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
@@ -846,6 +855,96 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       ${body}
     </section>
   `;
+
+  const formatSeasonalityMetric = (metricKey, value)=> {
+    const safeValue = Number(value) || 0;
+    if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
+    if(metricKey === "pounds") return `${to2(safeValue)} lbs`;
+    if(metricKey === "amount") return formatMoney(to2(safeValue));
+    if(metricKey === "ppl") return `${formatMoney(to2(safeValue))}/lb`;
+    return `${to2(safeValue)}`;
+  };
+
+  const renderSeasonalitySection = ()=> {
+    if(isHomeMetricDetail || !seasonalityFoundation || !seasonalityFoundation.hasHistory) return "";
+    const monthRowsAllYears = Array.isArray(seasonalityFoundation.monthOfYearBuckets)
+      ? seasonalityFoundation.monthOfYearBuckets.filter((row)=> row.contributingYears > 0)
+      : [];
+    const sameWindow = seasonalityFoundation.sameWindow || {};
+    const bestWindowInsight = seasonalityFoundation.bestWindowInsight || {};
+    const sameWindowBody = sameWindow.suppressed
+      ? `<div class="muted small">${escapeHtml(sameWindow.reason || "Aligned same-window comparison unlocks after more history builds.")}</div>`
+      : `
+        <div class="reportsSeasonalityValue money">${escapeHtml(formatSeasonalityMetric("amount", sameWindow.current.amount))}</div>
+        <div class="reportsSeasonalitySub">${escapeHtml(sameWindow.label || "")}</div>
+        <div class="reportsMetricCompare tone-${escapeHtml(sameWindow.tone === "up" ? "up" : (sameWindow.tone === "down" ? "down" : "steady"))}">
+          <div class="reportsMetricCompareText">${escapeHtml(sameWindow.supportStrong ? "Current year is ahead on the same seasonal window." : "Same-window read is live, but sample support is still light.")}</div>
+          <div class="reportsMetricCompareRows">
+            <div><span>${escapeHtml(String(sameWindow.current?.label || sameWindow.currentYear || "Current year"))}</span><b class="money">${escapeHtml(formatSeasonalityMetric("amount", sameWindow.current.amount))}</b></div>
+            <div><span>${escapeHtml(String(sameWindow.previous?.label || sameWindow.priorYear || "Prior year"))}</span><b class="money">${escapeHtml(formatSeasonalityMetric("amount", sameWindow.previous.amount))}</b></div>
+            <div><span>Trips</span><b class="trips">${escapeHtml(`${Math.round(Number(sameWindow.current?.trips) || 0)} vs ${Math.round(Number(sameWindow.previous?.trips) || 0)}`)}</b></div>
+            <div><span>Pounds</span><b class="lbsBlue">${escapeHtml(`${to2(Number(sameWindow.current?.lbs) || 0)} vs ${to2(Number(sameWindow.previous?.lbs) || 0)} lbs`)}</b></div>
+          </div>
+        </div>`;
+    const bestWindowBody = bestWindowInsight.suppressed
+      ? `<div class="muted small">${escapeHtml(bestWindowInsight.reason || "Best seasonal window unlocks after more repeat history builds.")}</div>`
+      : `
+        <div class="reportsSeasonalityEyebrow">${escapeHtml(bestWindowInsight.metricLabel || "Best month-of-year by average amount")}</div>
+        <div class="reportsSeasonalityValue money">${escapeHtml(bestWindowInsight.monthLabel || "")}</div>
+        <div class="reportsSeasonalitySub">${escapeHtml(bestWindowInsight.summary || "")}</div>
+        <div class="reportsSeasonalityMeta">
+          <span class="money">${escapeHtml(formatSeasonalityMetric("amount", bestWindowInsight.amount))}</span>
+          <span>avg amount</span>
+          <span>•</span>
+          <span class="trips">${escapeHtml(`${to2(Number(bestWindowInsight.trips) || 0)} avg trips/year`)}</span>
+        </div>`;
+    const monthTable = monthRowsAllYears.length
+      ? `<div class="reportsSeasonalityTableWrap">
+          <table class="reportsSeasonalityTable">
+            <thead>
+              <tr><th>Month</th><th>Across years</th><th>Avg amount</th><th>Trips</th></tr>
+            </thead>
+            <tbody>
+              ${monthRowsAllYears.map((row)=> `
+                <tr>
+                  <td><b>${escapeHtml(row.monthLabel)}</b><div class="reportsSeasonalityTableHint">${escapeHtml(`${row.monthLabel} across all years`)}</div></td>
+                  <td>${escapeHtml(`${row.contributingYears} years`)}</td>
+                  <td class="money">${escapeHtml(formatSeasonalityMetric("amount", row.averageMonthlyAmount))}</td>
+                  <td class="trips">${escapeHtml(`${Math.round(Number(row.trips) || 0)}`)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>`
+      : `<div class="muted small">Add at least two months of dated trips to unlock a seasonality table.</div>`;
+    const chartBlock = seasonalityFoundation.chartModel
+      ? `<div class="reportsSeasonalityChartBlock">
+          <b>Average amount by month-of-year</b>
+          <div class="reportsSeasonalitySub">Month-by-month seasonal pattern across all matching years.</div>
+          <canvas class="chart" id="c_seasonality_amount" height="210"></canvas>
+        </div>`
+      : "";
+    return reportsSection({
+      title: "Seasonality",
+      intro: "Season-aware reads use exact dates across all matching years, while the aligned card keeps the year-over-year window explicit.",
+      body: `<div class="reportsSeasonalityGrid">
+        <div class="card reportsSeasonalityCard">
+          <div class="reportsSeasonalityEyebrow">Aligned same-window</div>
+          ${sameWindowBody}
+        </div>
+        <div class="card reportsSeasonalityCard">
+          ${bestWindowBody}
+        </div>
+      </div>
+      <div class="card reportsSeasonalityCard reportsSeasonalityCard--table">
+        <div class="reportsSeasonalityEyebrow">Month-of-year performance</div>
+        <div class="reportsSeasonalitySub">Use rows like “March across all years” to see repeat timing, not just one calendar month.</div>
+        ${monthTable}
+        ${chartBlock}
+      </div>`,
+      extraClass: "reportsSection--seasonality"
+    });
+  };
 
   const renderMainModeSection = ()=> {
     if(mode === "charts"){
@@ -1192,6 +1291,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           extraClass: "reportsSection--highlights"
         })}
 
+        ${renderSeasonalitySection()}
+
         ${renderMainModeSection()}`}
       </div>`
     })}
@@ -1300,7 +1401,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         });
       };
     }
-    scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline);
+    scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, { seasonalityChart: seasonalityFoundation?.chartModel || null });
   }
 }
 
