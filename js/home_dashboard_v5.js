@@ -17,7 +17,9 @@ export function createHomeDashboardRenderer({
   showToast,
   tipMsg,
   exportBackup,
-  renderHomeMetricDetail
+  renderHomeMetricDetail,
+  getInstallSurfaceModel,
+  runInstallAction
 }) {
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
@@ -165,6 +167,22 @@ export function createHomeDashboardRenderer({
     }, new Map());
     const strongestArea = Array.from(areaRollup.values())
       .sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null;
+    const installModel = typeof getInstallSurfaceModel === "function" ? getInstallSurfaceModel() : null;
+    const showInstallCard = shouldShowBeginnerCard && installModel && !installModel.isInstalled;
+    const installCardHTML = showInstallCard ? `
+      <section class="homeSection homeInstallSection">
+        <div class="noticeBand homeInstallBand" role="status" aria-live="polite">
+          <div class="noticeTitle">Best experience: install the app</div>
+          <div class="muted small noticeBody">${escapeHtml(installModel.statusHint || "Use the installed app when you want a steadier Home Screen shortcut and clearer app-vs-browser status.")}</div>
+          <div class="muted small noticeBody mt8">${escapeHtml(installModel.stepsLine || "Open Settings later if you need install steps again.")}</div>
+          <div class="row mt10 noticeActions">
+            ${installModel.showAction ? `<button class="btn" id="homeInstallAction" type="button" ${installModel.actionEnabled ? '' : 'disabled'}>${escapeHtml(installModel.actionLabel)}</button>` : ``}
+            <button class="btn" id="homeInstallHelp" type="button">Install help</button>
+          </div>
+        </div>
+      </section>
+    ` : ``;
+
     const homeBeginnerCardHTML = shouldShowBeginnerCard ? `
       <section class="homeSection homeBeginnerSection">
         <div class="homeBeginnerCard" role="status" aria-live="polite">
@@ -183,6 +201,7 @@ export function createHomeDashboardRenderer({
           </div>
         </div>
       </section>
+      ${installCardHTML}
     ` : ``;
 
     const lastSavedTripHtml = newestSavedTrip
@@ -484,6 +503,25 @@ export function createHomeDashboardRenderer({
         state.helpJump = "newtrip";
         state.view = "help";
         state.lastAction = "nav:help";
+        saveState();
+        render();
+      };
+    }
+    const btnHomeInstallAction = document.getElementById("homeInstallAction");
+    if (btnHomeInstallAction) {
+      btnHomeInstallAction.onclick = async () => {
+        if (typeof runInstallAction !== "function") return;
+        const result = await runInstallAction();
+        if (result?.message) showToast(result.message);
+        renderHome();
+      };
+    }
+    const btnHomeInstallHelp = document.getElementById("homeInstallHelp");
+    if (btnHomeInstallHelp) {
+      btnHomeInstallHelp.onclick = () => {
+        state.helpJump = "install";
+        state.view = "help";
+        state.lastAction = "nav:help-install";
         saveState();
         render();
       };

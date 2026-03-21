@@ -51,7 +51,9 @@ export function createSettingsScreenOrchestrator({
   restoreDeletedTrip,
   permanentlyDeleteDeletedTrip,
   clearDeletedTripsBin,
-  showToast
+  showToast,
+  getInstallSurfaceModel,
+  runInstallAction
 }) {
   function renderSettings(opts = {}) {
     const state = getState();
@@ -156,6 +158,31 @@ export function createSettingsScreenOrchestrator({
             <div class="muted small">Practical guidance for install, offline use, and backup safety.</div>
           </div>
           <button class="btn settingsInlineBtn" id="openHelp">View Help</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settingsGroupBlock">
+      <div class="settingsGroupLabel">Install App</div>
+      <div class="card settingsSectionCard settingsGroupedCard">
+        <div class="settingsRow settingsRow--split">
+          <div>
+            <div class="settingsRowTitle settingsMiniTitle">App mode</div>
+            <div class="muted small">Best experience: install the app so it opens from your Home Screen and feels more dependable at the shore.</div>
+          </div>
+          <span class="settingsValuePill" id="installModePill">Checking…</span>
+        </div>
+        <div class="settingsRow settingsRow--status">
+          <div id="installModeLine" class="settingsUpdateStatus">Checking how Bank the Catch is running…</div>
+          <div class="muted settingsBodyTiny" id="installStatusHint"></div>
+        </div>
+        <div class="settingsRow settingsRow--action settingsInstallActions">
+          <button class="btn primary settingsInlineBtn" id="installActionBtn" type="button">Install app</button>
+          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">View install help</button>
+        </div>
+        <div class="settingsRow settingsRow--minor">
+          <div class="hint" id="installWhyLine"></div>
+          <div class="muted small mt8" id="installStepsLine"></div>
         </div>
       </div>
     </div>
@@ -282,6 +309,45 @@ export function createSettingsScreenOrchestrator({
     document.getElementById("openHelp").onclick = () => {
       pushView(state, "help");
     };
+
+    const installModel = typeof getInstallSurfaceModel === "function"
+      ? getInstallSurfaceModel()
+      : null;
+    const installModePill = document.getElementById("installModePill");
+    const installModeLine = document.getElementById("installModeLine");
+    const installStatusHint = document.getElementById("installStatusHint");
+    const installWhyLine = document.getElementById("installWhyLine");
+    const installStepsLine = document.getElementById("installStepsLine");
+    const installActionBtn = document.getElementById("installActionBtn");
+    const installHelpBtn = document.getElementById("installHelpBtn");
+
+    if (installModel) {
+      if (installModePill) installModePill.textContent = installModel.statusPill;
+      if (installModeLine) installModeLine.textContent = installModel.statusLine;
+      if (installStatusHint) installStatusHint.textContent = installModel.statusHint;
+      if (installWhyLine) installWhyLine.innerHTML = `<b>${escapeSettingsHtml(installModel.whyTitle)}</b> ${escapeSettingsHtml(installModel.whyBody)}`;
+      if (installStepsLine) installStepsLine.textContent = installModel.stepsLine;
+      if (installActionBtn) {
+        installActionBtn.textContent = installModel.actionLabel;
+        installActionBtn.disabled = !installModel.actionEnabled;
+        installActionBtn.hidden = !installModel.showAction;
+        installActionBtn.onclick = async () => {
+          if (typeof runInstallAction !== "function") return;
+          const result = await runInstallAction();
+          if (result?.message) showToast(result.message);
+          renderSettings();
+        };
+      }
+      if (installHelpBtn) {
+        installHelpBtn.onclick = () => {
+          state.helpJump = "install";
+          state.view = "help";
+          state.lastAction = "nav:help-install";
+          saveState();
+          render();
+        };
+      }
+    }
 
     updateUpdateRow();
     try {

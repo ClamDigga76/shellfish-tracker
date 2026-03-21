@@ -1,4 +1,4 @@
-export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildVersion, schemaVersion, isStandalone, hasSWController }) {
+export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildVersion, schemaVersion, isStandalone, hasSWController, installModel }) {
   return `
     ${renderPageHeader("help")}
 
@@ -13,6 +13,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
         <button class="chip" type="button" data-helpjump="settings">Settings</button>
         <button class="chip" type="button" data-helpjump="newtrip">New Trip</button>
         <button class="chip" type="button" data-helpjump="backups">Backup & Restore</button>
+        <button class="chip" type="button" data-helpjump="install">Install app</button>
       </div>
     </div>
 
@@ -116,12 +117,34 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
     </div>
 
     <div class="card">
+      <b id="help_jump_install" class="helpSectionTitle">Install app</b>
+      <div class="sep"></div>
+      <div class="muted helpSectionLead">
+        <div><b>Current mode:</b> ${escapeHtml(String(installModel?.statusPill || (isStandalone ? "Installed" : "Browser")))}</div>
+        <div style="margin-top:8px">${escapeHtml(String(installModel?.statusLine || "Bank the Catch can run in your browser or as an installed Home Screen app."))}</div>
+        <div style="margin-top:8px"><b>iPhone/iPad Safari</b></div>
+        <ol style="margin:8px 0 0 18px">
+          <li>Open Bank the Catch in <b>Safari</b>.</li>
+          <li>Tap <b>Share</b> (square with arrow).</li>
+          <li>Choose <b>Add to Home Screen</b>, then tap <b>Add</b>.</li>
+        </ol>
+        <div style="margin-top:8px"><b>Android Chrome</b></div>
+        <ol style="margin:8px 0 0 18px">
+          <li>Open Bank the Catch in <b>Chrome</b>.</li>
+          <li>Use Chrome’s install prompt or tap the menu.</li>
+          <li>Choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</li>
+        </ol>
+        <div style="margin-top:8px"><b>Tip:</b> If Settings says <b>Browser</b>, you are not in the installed app yet. Use the Home Screen icon after install.</div>
+      </div>
+    </div>
+
+    <div class="card">
       <b class="helpSectionTitle">Updates & troubleshooting</b>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <ul style="margin:0 0 0 18px">
           <li>If the app looks stale, open <b>Settings</b> and use <b>Load latest update</b>.</li>
-          <li>For install help: iPhone/iPad → Safari Share → <b>Add to Home Screen</b>; Android → Chrome menu → <b>Install app</b>.</li>
+          <li>Use <b>Settings → Install App</b> to see whether you are in Browser or Installed app mode and follow the right install steps.</li>
           <li>If behavior seems off after an update, reload once and recheck in Help/Settings status lines.</li>
         </ul>
       </div>
