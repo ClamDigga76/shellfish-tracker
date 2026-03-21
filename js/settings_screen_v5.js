@@ -15,6 +15,7 @@ export function createSettingsScreenOrchestrator({
   pushView,
   updateUpdateRow,
   updateBuildInfo,
+  updateBackupHealthWarning,
   updateLastBackupLine,
   updateRestoreRollbackLine,
   exportBackup,
@@ -106,6 +107,7 @@ export function createSettingsScreenOrchestrator({
           <span class="settingsValuePill">Freshness</span>
         </div>
         <div class="settingsRow settingsRow--status">
+          <div id="backupHealthLane" class="settingsBackupHealth" hidden aria-live="polite" aria-hidden="true"></div>
           <div class="muted small" id="lastBackupLine"></div>
         </div>
         <div class="settingsRow settingsRow--action settingsBackupRow">
@@ -226,6 +228,7 @@ export function createSettingsScreenOrchestrator({
     } catch (_) {}
 
     try {
+      updateBackupHealthWarning();
       updateLastBackupLine();
       updateRestoreRollbackLine();
       const btnDl = document.getElementById("downloadBackup");
