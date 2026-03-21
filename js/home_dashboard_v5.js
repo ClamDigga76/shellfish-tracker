@@ -217,9 +217,19 @@ export function createHomeDashboardRenderer({
       if (homeOverviewTone === "down") return "Recent catches are below last month levels.";
       return "Recent catches are holding steady month to month.";
     })();
-    const homeOverviewRangeLabel = currentMonth
-      ? `${currentMonth.monthKey}${previousMonth ? ` vs ${previousMonth.monthKey}` : ""}`
-      : "Current filter";
+    const homeFilterLabel = (() => {
+      if (f === "MONTH") return "This Month";
+      if (f === "LAST_MONTH") return "Last Month";
+      if (f === "7D") return "Last 7 Days";
+      if (f === "30D") return "Last 30 Days";
+      if (f === "RANGE") {
+        const from = parseReportDateToISO(hf.from || "") || "—";
+        const to = parseReportDateToISO(hf.to || "") || "—";
+        return `${from} → ${to}`;
+      }
+      return "YTD";
+    })();
+    const homeOverviewRangeLabel = homeFilterLabel;
     getApp().innerHTML = `
       ${renderPageHeader("home")}
 
