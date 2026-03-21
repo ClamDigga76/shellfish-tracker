@@ -396,19 +396,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.homeSmartSummary{
-  margin:var(--card-body-gap) 0 0;
-  padding:11px 13px 11px 26px;
-  border-radius:12px;
-  border:1px dashed var(--line);
-  background:rgba(8,12,20,.28);
-  display:grid;
-  gap:7px;
-  font-size:13px;
-  line-height:1.4;
-}
-.homeSmartSummary b{font-weight:850}
-.homeSmartSummaryFallback{
+.homeLastTripFallback{
   margin-top:var(--card-body-gap);
   border-radius:12px;
   border:1px dashed var(--line);
@@ -442,22 +430,96 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   background:linear-gradient(180deg, rgba(47,109,246,.16) 0%, rgba(20,29,47,.66) 62%, rgba(10,15,24,.52) 100%);
   box-shadow:0 12px 28px rgba(0,0,0,.18);
 }
-.homeScreenShell .homeSmartSummaryShell{
+.homeScreenShell .homeLastTripShell{
   padding:12px 14px;
   border-radius:16px;
   border:1px solid rgba(255,255,255,.08);
   background:rgba(255,255,255,.03);
   box-shadow:none;
 }
-.homeScreenShell .homeSmartSummary,
-.homeScreenShell .homeSmartSummaryFallback{
+.homeScreenShell .homeLastTripFallback{
   margin-top:0;
   border:none;
   background:none;
   padding:0;
 }
-.homeScreenShell .homeSmartSummary{
-  padding-left:20px;
+.homeLastTripCard{
+  display:grid;
+  gap:12px;
+}
+.homeLastTripTopline{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.homeLastTripEyebrow{
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  font-weight:860;
+  color:var(--text-muted-strong);
+}
+.homeLastTripDate{
+  margin-top:4px;
+  font-size:18px;
+  line-height:1.2;
+  font-weight:860;
+}
+.homeLastTripAmount{
+  font-size:20px;
+  line-height:1.1;
+  font-weight:900;
+  color:var(--money);
+  text-align:right;
+  white-space:nowrap;
+}
+.homeLastTripMetaRow,
+.homeLastTripMetricRow{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:10px;
+}
+.homeLastTripMeta,
+.homeLastTripMetric{
+  min-width:0;
+  padding:11px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.035);
+  display:grid;
+  gap:4px;
+}
+.homeLastTripMetaLabel,
+.homeLastTripMetricLabel{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--text-muted-strong);
+}
+.homeLastTripMetaValue,
+.homeLastTripMetricValue{
+  min-width:0;
+  font-size:14px;
+  line-height:1.3;
+  font-weight:820;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.homeLastTripMetricValue{
+  font-size:16px;
+}
+@media (max-width:380px){
+  .homeLastTripTopline{
+    flex-direction:column;
+  }
+  .homeLastTripAmount{
+    text-align:left;
+  }
+  .homeLastTripMetaRow,
+  .homeLastTripMetricRow{
+    grid-template-columns:minmax(0,1fr);
+  }
 }
 .kpiGroupLabel{
   margin:var(--card-title-gap) 0 var(--card-body-gap);

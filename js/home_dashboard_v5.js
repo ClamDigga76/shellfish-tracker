@@ -152,9 +152,6 @@ export function createHomeDashboardRenderer({
     const strongestDealer = dealers.length
       ? dealers.slice().sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0]
       : null;
-    const bestAvgDealer = dealers
-      .filter((item) => item.pounds > 0)
-      .sort((a, b) => (b.amount / b.pounds) - (a.amount / a.pounds))[0] || null;
     const areaRollup = trips.reduce((map, trip) => {
       const areaName = String(trip?.area || "").trim() || "Area not set";
       const next = map.get(areaName) || { area: areaName, trips: 0, amount: 0, pounds: 0 };
@@ -166,21 +163,47 @@ export function createHomeDashboardRenderer({
     }, new Map());
     const strongestArea = Array.from(areaRollup.values())
       .sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null;
-    const smartSummaryLines = [];
-    if (strongestDealer) {
-      smartSummaryLines.push(`<li><b>Top dealer:</b> ${escapeHtml(strongestDealer.dealer)} at ${formatMoney(strongestDealer.amount)} from ${round2(strongestDealer.pounds)} lbs.</li>`);
-    }
-    if (bestAvgDealer) {
-      const avg = bestAvgDealer.amount / bestAvgDealer.pounds;
-      smartSummaryLines.push(`<li><b>Best average:</b> ${escapeHtml(bestAvgDealer.dealer)} at ${formatMoney(avg)}/lb in this range.</li>`);
-    }
-    if (newestSavedTrip) {
-      const latestDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "latest trip";
-      smartSummaryLines.push(`<li><b>Latest trip:</b> ${latestDate} • ${formatMoney(Number(newestSavedTrip.amount) || 0)} on ${round2(Number(newestSavedTrip.pounds) || 0)} lbs.</li>`);
-    }
-    const smartSummaryHtml = smartSummaryLines.length
-      ? `<ul class="homeSmartSummary">${smartSummaryLines.join("")}</ul>`
-      : `<div class="emptyState compact homeSmartSummaryFallback"><div class="emptyStateTitle">Insights waiting on trips</div><div class="emptyStateBody">Add a trip or widen the range to unlock quick Home insights.</div></div>`;
+    const lastSavedTripHtml = newestSavedTrip
+      ? (() => {
+        const latestDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "Date not set";
+        const latestDealer = String(newestSavedTrip.dealer || "").trim() || "Dealer not set";
+        const latestArea = String(newestSavedTrip.area || "").trim() || "Area not set";
+        const latestPounds = Number(newestSavedTrip.pounds) || 0;
+        const latestAmount = Number(newestSavedTrip.amount) || 0;
+        const latestAvgPpl = latestPounds > 0 ? (latestAmount / latestPounds) : null;
+        return `
+          <div class="homeLastTripCard" aria-label="Last saved trip snapshot">
+            <div class="homeLastTripTopline">
+              <div>
+                <div class="homeLastTripEyebrow">Last Saved Trip</div>
+                <div class="homeLastTripDate">${escapeHtml(latestDate)}</div>
+              </div>
+              <div class="homeLastTripAmount">${formatMoney(latestAmount)}</div>
+            </div>
+            <div class="homeLastTripMetaRow">
+              <div class="homeLastTripMeta">
+                <span class="homeLastTripMetaLabel">Dealer</span>
+                <span class="homeLastTripMetaValue">${escapeHtml(latestDealer)}</span>
+              </div>
+              <div class="homeLastTripMeta">
+                <span class="homeLastTripMetaLabel">Area</span>
+                <span class="homeLastTripMetaValue">${escapeHtml(latestArea)}</span>
+              </div>
+            </div>
+            <div class="homeLastTripMetricRow">
+              <div class="homeLastTripMetric">
+                <span class="homeLastTripMetricLabel">Pounds</span>
+                <span class="homeLastTripMetricValue lbsBlue">${round2(latestPounds)} lbs</span>
+              </div>
+              <div class="homeLastTripMetric">
+                <span class="homeLastTripMetricLabel">Average</span>
+                <span class="homeLastTripMetricValue ppl">${latestAvgPpl === null ? "—" : `${formatMoney(round2(latestAvgPpl))}/lb`}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      })()
+      : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No saved trip yet</div><div class="emptyStateBody">Save your first trip or widen the range to show the latest trip snapshot here.</div></div>`;
 
     const monthTotals = trips.reduce((map, trip) => {
       const iso = parseReportDateToISO(trip?.dateISO || "");
@@ -304,8 +327,8 @@ export function createHomeDashboardRenderer({
           </div>
         </section>
 
-        <section class="homeSection homeSmartSummaryShell">
-          ${smartSummaryHtml}
+        <section class="homeSection homeLastTripShell">
+          ${lastSavedTripHtml}
         </section>
       </div>
 
