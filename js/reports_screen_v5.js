@@ -599,7 +599,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     normalizeDealerDisplay
   });
 
-  const renderSummaryAverageLine = (row)=> `Avg amount / trip ${formatMoney(to2(row.amountPerTrip))} • Avg pounds / trip ${to2(row.poundsPerTrip)} lbs`;
+  const renderSummaryAverageLine = (row)=> `<span class="muted">Avg / Trip</span> <span class="money">${formatMoney(to2(row.amountPerTrip))}</span> • <span class="lbsBlue">${to2(row.poundsPerTrip)} lbs</span>`;
 
   const renderAggList = (rows, emptyMsg)=>{
     if(!rows.length) return `
