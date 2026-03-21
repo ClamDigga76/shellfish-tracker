@@ -666,6 +666,16 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     return baseline ? baseline.value : null;
   };
 
+  const formatHLDeltaValue = (metric, deltaValue)=>{
+    const absDelta = Math.abs(Number(deltaValue) || 0);
+    const sign = deltaValue > 0 ? "+" : "-";
+    if(!(absDelta > 0)) return "";
+    if(metric === "lbs") return `${sign}${to2(absDelta)} lbs`;
+    if(metric === "amount") return `${sign}${formatMoney(to2(absDelta))}`;
+    if(metric === "ppl") return `${sign}${formatMoney(to2(absDelta))}/lb`;
+    return `${sign}${to2(absDelta)}`;
+  };
+
   const renderHLItem = (label, t, metric, direction)=>{
     if(!t) return `<div class="muted small">—</div>`;
     const lbsNum = Number(t?.pounds)||0;
@@ -685,17 +695,22 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     }
     const currentValue = getTripMetricValue(t, metric);
     const baselineValue = selectRecordBaseline(metric, direction, t);
+    const deltaValue = currentValue - (Number(baselineValue) || 0);
     const deltaRatio = (baselineValue && baselineValue > 0)
-      ? ((currentValue - baselineValue) / baselineValue)
+      ? (deltaValue / baselineValue)
       : null;
     const hasCompare = Number.isFinite(deltaRatio) && Math.abs(deltaRatio) >= 0.005;
     const deltaPct = hasCompare ? Math.round(Math.abs(deltaRatio) * 1000) / 10 : 0;
+    const rawDeltaText = hasCompare ? formatHLDeltaValue(metric, deltaValue) : "";
     const compareWord = hasCompare
       ? (deltaRatio > 0 ? "higher" : "lower")
       : "";
     const compareTone = hasCompare
       ? (deltaRatio > 0 ? "up" : "down")
       : "steady";
+    const compareText = hasCompare
+      ? `${rawDeltaText} • ${deltaPct}% ${compareWord} vs previous record`
+      : "";
     const recordModel = resolveTripCardModel(t, {
       metaOverride: formatDateDMY(t?.dateISO || "") || "—"
     });
@@ -704,7 +719,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         <div class="hlTopRow hlTopRow--stacked">
           <div class="hlHdr">${escapeHtml(label)}</div>
           <div class="hlValue ${metricClass}">${escapeHtml(metricText)}</div>
-          ${hasCompare ? `<div class="hlDelta tone-${compareTone}">${deltaPct}% ${compareWord} vs previous record</div>` : ""}
+          ${hasCompare ? `<div class="hlDelta tone-${compareTone}">${escapeHtml(compareText)}</div>` : ""}
         </div>
         <div class="hlTripCardWrap">
           <div class="hlTripCardHdr">Record trip</div>
