@@ -657,3 +657,11 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .swUpdateBanner{position:fixed;left:12px;right:12px;bottom:calc(var(--tabbar-total-h) + 18px);z-index:9999;display:none;max-width:min(560px,calc(100vw - 24px));width:calc(100vw - 24px);margin:0 auto;overflow-x:hidden}
 .swUpdateBannerMessage{margin-top:6px;line-height:1.35;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 .swUpdateBannerActions{margin-top:10px;gap:10px;max-width:100%}
+
+
+.settingsDeletedList{display:grid;gap:10px;padding:0 14px 14px}
+.settingsDeletedItem{border:1px solid var(--line);border-radius:16px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.025) 100%);display:grid;gap:10px}
+.settingsDeletedMeta{display:grid;gap:4px;min-width:0}
+.settingsDeletedTitle{font-size:15px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+.settingsDeletedActions{display:flex;flex-wrap:wrap;gap:8px}
+.settingsDeletedActions .btn{flex:1;min-width:132px}

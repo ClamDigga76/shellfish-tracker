@@ -44,6 +44,7 @@ const QUICK_CHIP_LONG_PRESS_MS = 500;
 const DEFAULT_TRIP_SPECIES = "Soft-shell Clams";
 const QUICK_CHIP_MOVE_CANCEL_PX = 10;
 const SCHEMA_VERSION = 1;
+const DELETED_TRIPS_LIMIT = 25;
 const {
   normalizeTripRow,
   normalizeTrip,
@@ -366,6 +367,7 @@ function cloneUndoValue(v){
 function applyUndoSnapshot(snapshot){
   const snap = snapshot || {};
   state.trips = Array.isArray(snap.trips) ? cloneUndoValue(snap.trips) : [];
+  state.deletedTrips = Array.isArray(snap.deletedTrips) ? cloneUndoValue(snap.deletedTrips) : [];
   if(Object.prototype.hasOwnProperty.call(snap, "editId")) state.editId = snap.editId;
   else delete state.editId;
   if(Object.prototype.hasOwnProperty.call(snap, "draft")) state.draft = cloneUndoValue(snap.draft);
@@ -1125,6 +1127,63 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
 }
 
 
+function ensureDeletedTripsState(){
+  if(!Array.isArray(state.deletedTrips)) state.deletedTrips = [];
+  state.deletedTrips = state.deletedTrips.filter((entry)=> entry && typeof entry === "object" && entry.trip && typeof entry.trip === "object");
+  return state.deletedTrips;
+}
+
+function buildDeletedTripRecord(trip){
+  const normalized = normalizeTrip(trip);
+  if(!normalized) return null;
+  return {
+    id: uid("deleted_trip"),
+    trip: normalized,
+    tripId: String(normalized.id || ""),
+    deletedAt: new Date().toISOString()
+  };
+}
+
+function addTripToDeletedBin(trip){
+  const record = buildDeletedTripRecord(trip);
+  if(!record) return null;
+  const deletedTrips = ensureDeletedTripsState();
+  deletedTrips.unshift(record);
+  if(deletedTrips.length > DELETED_TRIPS_LIMIT) deletedTrips.length = DELETED_TRIPS_LIMIT;
+  return record;
+}
+
+function restoreDeletedTrip(deletedEntryId){
+  const deletedTrips = ensureDeletedTripsState();
+  const entryId = String(deletedEntryId || "");
+  const entryIndex = deletedTrips.findIndex((entry)=> String(entry?.id || "") === entryId);
+  if(entryIndex < 0) return { ok:false, reason:"missing" };
+  const entry = deletedTrips[entryIndex];
+  const restoredTrip = normalizeTrip(entry.trip);
+  if(!restoredTrip) return { ok:false, reason:"invalid" };
+  const trips = Array.isArray(state.trips) ? state.trips : [];
+  if(trips.some((trip)=> String(trip?.id || "") === String(restoredTrip.id || ""))){
+    restoredTrip.id = uid("t");
+  }
+  state.trips = [restoredTrip, ...trips];
+  state.deletedTrips = deletedTrips.filter((entry)=> String(entry?.id || "") !== entryId);
+  return { ok:true, trip: restoredTrip, idChanged: String(entry?.tripId || "") !== String(restoredTrip.id || "") };
+}
+
+function permanentlyDeleteDeletedTrip(deletedEntryId){
+  const deletedTrips = ensureDeletedTripsState();
+  const entryId = String(deletedEntryId || "");
+  const startLen = deletedTrips.length;
+  state.deletedTrips = deletedTrips.filter((entry)=> String(entry?.id || "") !== entryId);
+  return startLen !== state.deletedTrips.length;
+}
+
+function clearDeletedTripsBin(){
+  const count = ensureDeletedTripsState().length;
+  state.deletedTrips = [];
+  return count;
+}
+
 migrateLegacyStateIfNeeded(localStorage);
 let state = migrateStateIfNeeded(loadState(), {
   normalizeTrip,
@@ -1561,7 +1620,8 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
   renderHome,
   buildTripFormInputs,
   buildNewTripSaveSnapshot,
-  buildTripProvenanceSummary
+  buildTripProvenanceSummary,
+  addTripToDeletedBin
 });
 
 
@@ -1640,6 +1700,11 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   openReplaceSafetyBackupModal: () => openReplaceSafetyBackupModal(),
   importBackupFromFile: (file, options) => importBackupFromFile(file, options),
   restoreFromRollbackSnapshot: () => restoreFromRollbackSnapshot(),
+  saveState: () => saveState(),
+  openConfirmModal: (options) => openConfirmModal(options),
+  restoreDeletedTrip: (deletedEntryId) => restoreDeletedTrip(deletedEntryId),
+  permanentlyDeleteDeletedTrip: (deletedEntryId) => permanentlyDeleteDeletedTrip(deletedEntryId),
+  clearDeletedTripsBin: () => clearDeletedTripsBin(),
   applyThemeMode: () => applyThemeMode(),
   render: () => render(),
   openRestoreErrorModal: (error) => openRestoreErrorModal(error),

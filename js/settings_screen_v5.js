@@ -1,3 +1,21 @@
+function escapeSettingsHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatDeletedStamp(value) {
+  const iso = String(value || "").trim();
+  if (!iso) return "recently";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "recently";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function createSettingsScreenOrchestrator({
   getState,
   getApp,
@@ -27,6 +45,11 @@ export function createSettingsScreenOrchestrator({
   render,
   openRestoreErrorModal,
   restoreFromRollbackSnapshot,
+  saveState,
+  openConfirmModal,
+  restoreDeletedTrip,
+  permanentlyDeleteDeletedTrip,
+  clearDeletedTripsBin,
   showToast
 }) {
   function renderSettings(opts = {}) {
@@ -37,6 +60,46 @@ export function createSettingsScreenOrchestrator({
 
     const s = state.settings || (state.settings = {});
     const listMode = String(s.listMode || "areas").toLowerCase();
+    const deletedTrips = Array.isArray(state.deletedTrips) ? state.deletedTrips : [];
+    const deletedTripsHtml = deletedTrips.length ? `
+        <div class="settingsRow settingsRow--split settingsRow--minor">
+          <div>
+            <div class="settingsRowTitle">Recently Deleted</div>
+            <div class="muted small">Deleted trips stay here until you restore or clear them.</div>
+          </div>
+          <span class="settingsValuePill">${deletedTrips.length}</span>
+        </div>
+        <div class="settingsDeletedList" id="deletedTripsList">
+          ${deletedTrips.map((entry) => {
+            const trip = entry?.trip || {};
+            const dateLabel = String(trip.dateISO || "").trim() ? trip.dateISO : "No date";
+            const dealerLabel = String(trip.dealer || "").trim() || "Unknown dealer";
+            const areaLabel = String(trip.area || "").trim() || "No area";
+            const poundsLabel = Number.isFinite(Number(trip.pounds)) && Number(trip.pounds) > 0 ? `${Number(trip.pounds)} lbs` : "";
+            const deletedLabel = String(entry?.deletedAt || "").trim() || "";
+            return `
+              <div class="settingsDeletedItem">
+                <div class="settingsDeletedMeta">
+                  <div class="settingsDeletedTitle">${escapeSettingsHtml(dealerLabel)}</div>
+                  <div class="muted small">${escapeSettingsHtml(dateLabel)} • ${escapeSettingsHtml(areaLabel)}${poundsLabel ? ` • ${escapeSettingsHtml(poundsLabel)}` : ""}</div>
+                  <div class="muted settingsBodyTiny">Deleted ${escapeSettingsHtml(formatDeletedStamp(deletedLabel))}</div>
+                </div>
+                <div class="settingsDeletedActions">
+                  <button class="btn settingsInlineBtn" type="button" data-restore-trip="${escapeSettingsHtml(String(entry?.id || ""))}">Restore</button>
+                  <button class="btn danger settingsInlineBtn" type="button" data-delete-forever="${escapeSettingsHtml(String(entry?.id || ""))}">Delete forever</button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <div class="settingsRow settingsRow--action">
+          <button class="btn danger settingsFlexBtn" id="clearDeletedTrips">Clear all permanently</button>
+        </div>
+      ` : `
+        <div class="settingsRow settingsRow--minor">
+          <div class="muted small">Recently Deleted is empty.</div>
+        </div>
+      `;
 
     getApp().innerHTML = `
     ${renderPageHeader("settings")}
@@ -125,6 +188,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--action">
           <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Restore pre-restore snapshot</button>
         </div>
+        ${deletedTripsHtml}
       </div>
     </div>
 
@@ -316,6 +380,56 @@ export function createSettingsScreenOrchestrator({
             showToast("Could not restore Bank the Catch backup");
             await openRestoreErrorModal(e);
           }
+        };
+      }
+    } catch (_) {}
+
+    try {
+      document.querySelectorAll("[data-restore-trip]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const result = restoreDeletedTrip(btn.getAttribute("data-restore-trip"));
+          if (!result?.ok) {
+            showToast("Could not restore that trip");
+            return;
+          }
+          saveState();
+          render();
+          showToast(result.idChanged ? "Trip restored with a new ID" : "Trip restored");
+        });
+      });
+      document.querySelectorAll("[data-delete-forever]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const ok = await openConfirmModal({
+            title: "Delete Forever",
+            message: "Permanently remove this deleted trip? This cannot be undone.",
+            confirmLabel: "Delete Forever",
+            cancelLabel: "Cancel"
+          });
+          if (!ok) return;
+          const removed = permanentlyDeleteDeletedTrip(btn.getAttribute("data-delete-forever"));
+          if (!removed) {
+            showToast("Could not remove that deleted trip");
+            return;
+          }
+          saveState();
+          render();
+          showToast("Deleted trip removed forever");
+        });
+      });
+      const clearDeletedTripsBtn = document.getElementById("clearDeletedTrips");
+      if (clearDeletedTripsBtn) {
+        clearDeletedTripsBtn.onclick = async () => {
+          const ok = await openConfirmModal({
+            title: "Clear Recently Deleted",
+            message: "Permanently remove all deleted trips from Recently Deleted?",
+            confirmLabel: "Clear All",
+            cancelLabel: "Cancel"
+          });
+          if (!ok) return;
+          const cleared = clearDeletedTripsBin();
+          saveState();
+          render();
+          showToast(cleared > 0 ? "Recently Deleted cleared" : "Recently Deleted was already empty");
         };
       }
     } catch (_) {}

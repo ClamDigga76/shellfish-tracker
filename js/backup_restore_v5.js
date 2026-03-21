@@ -51,6 +51,7 @@ export function createBackupRestoreSubsystem(deps){
     const trips = Array.isArray(safeState.trips) ? safeState.trips : [];
     const areas = Array.isArray(safeState.areas) ? safeState.areas : [];
     const dealers = Array.isArray(safeState.dealers) ? safeState.dealers : [];
+    const deletedTrips = Array.isArray(safeState.deletedTrips) ? safeState.deletedTrips : [];
     return {
       app: "Bank the Catch",
       schema: SCHEMA_VERSION, // legacy
@@ -62,12 +63,14 @@ export function createBackupRestoreSubsystem(deps){
         tripCount: trips.length,
         areaCount: areas.length,
         dealerCount: dealers.length,
+        deletedTripCount: deletedTrips.length,
         createdBy: "Bank the Catch"
       },
       data: {
         trips,
         areas,
         dealers,
+        deletedTrips,
         settings: (safeState.settings && typeof safeState.settings === "object") ? safeState.settings : {}
       }
     };
@@ -131,7 +134,8 @@ export function createBackupRestoreSubsystem(deps){
       schemaVersion: Number(snap.schemaVersion || SCHEMA_VERSION || 0) || 0,
       tripCount: trips.length,
       areaCount: areas.length,
-      dealerCount: dealers.length
+      dealerCount: dealers.length,
+      deletedTripCount: Array.isArray(payload.deletedTrips) ? payload.deletedTrips.length : 0
     };
   }
 
@@ -163,6 +167,7 @@ export function createBackupRestoreSubsystem(deps){
         trips: __cloneData(Array.isArray(payload?.trips) ? payload.trips : []),
         areas: __cloneData(Array.isArray(payload?.areas) ? payload.areas : []),
         dealers: __cloneData(Array.isArray(payload?.dealers) ? payload.dealers : []),
+        deletedTrips: __cloneData(Array.isArray(payload?.deletedTrips) ? payload.deletedTrips : []),
         settings: __cloneData((payload?.settings && typeof payload.settings === "object") ? payload.settings : {})
       }
     };
@@ -181,6 +186,7 @@ export function createBackupRestoreSubsystem(deps){
     state.trips = __cloneData(Array.isArray(payload.trips) ? payload.trips : []);
     state.areas = __cloneData(Array.isArray(payload.areas) ? payload.areas : []);
     state.dealers = __cloneData(Array.isArray(payload.dealers) ? payload.dealers : []);
+    state.deletedTrips = __cloneData(Array.isArray(payload.deletedTrips) ? payload.deletedTrips : []);
     state.settings = nextSettings;
     ensureAreas();
     ensureDealers();
@@ -360,8 +366,9 @@ export function createBackupRestoreSubsystem(deps){
     const areas = Array.isArray(data.areas) ? data.areas : [];
     const dealers = Array.isArray(data.dealers) ? data.dealers : [];
     const settings = (data.settings && typeof data.settings === "object") ? data.settings : {};
+    const deletedTrips = Array.isArray(data.deletedTrips) ? data.deletedTrips : [];
 
-    const normalized = { schemaVersion, appVersion, exportedAt, backupMeta, data:{ trips, areas, dealers, settings } };
+    const normalized = { schemaVersion, appVersion, exportedAt, backupMeta, data:{ trips, areas, dealers, deletedTrips, settings } };
     const { errors, warnings } = validateNormalizedBackupPayload(normalized);
     return { ok: errors.length === 0, errors, warnings, normalized };
   }
@@ -383,6 +390,7 @@ export function createBackupRestoreSubsystem(deps){
     if(!Array.isArray(data.areas)) errors.push("Backup areas must be an array.");
     if(data.settings && typeof data.settings !== "object") errors.push("Backup settings must be an object.");
     if(!Array.isArray(data.dealers)) errors.push("Backup dealers must be an array.");
+    if(!Array.isArray(data.deletedTrips)) errors.push("Backup deleted trips must be an array.");
 
     if(normalized.schemaVersion <= 0) warnings.push("Backup schema version is missing; restore will use compatibility mode.");
     if(!String(normalized.appVersion || "").trim()) warnings.push("Backup build/version is missing.");
@@ -490,7 +498,7 @@ export function createBackupRestoreSubsystem(deps){
         warnings.push("Legacy backup shape detected (top-level data). Import will continue in compatibility mode.");
       }
 
-      const expectedKeys = ["trips", "areas", "dealers", "settings"];
+      const expectedKeys = ["trips", "areas", "dealers", "deletedTrips", "settings"];
       for(const key of expectedKeys){
         if(!(key in data)) warnings.push(`Missing key: data.${key} (using safe default).`);
       }
@@ -508,7 +516,8 @@ export function createBackupRestoreSubsystem(deps){
         counts: {
           trips: Array.isArray(normalized?.data?.trips) ? normalized.data.trips.length : 0,
           areas: Array.isArray(normalized?.data?.areas) ? normalized.data.areas.length : 0,
-          dealers: Array.isArray(normalized?.data?.dealers) ? normalized.data.dealers.length : 0
+          dealers: Array.isArray(normalized?.data?.dealers) ? normalized.data.dealers.length : 0,
+          deletedTrips: Array.isArray(normalized?.data?.deletedTrips) ? normalized.data.deletedTrips.length : 0
         },
         metadata: {
           exportedAt: String(normalized?.exportedAt || ""),
@@ -562,8 +571,9 @@ export function createBackupRestoreSubsystem(deps){
             <div class="row" style="justify-content:space-between"><span class="muted">Trips</span><b>${escapeHtml(String(counts.trips || 0))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Areas</span><b>${escapeHtml(String(counts.areas || 0))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Dealers</span><b>${escapeHtml(String(counts.dealers || 0))}</b></div>
+            <div class="row" style="justify-content:space-between"><span class="muted">Recently deleted</span><b>${escapeHtml(String(counts.deletedTrips || 0))}</b></div>
           </div>
-          <div class="muted small" style="margin-top:8px">This restore reads trips and list entries (areas/dealers) from this file.</div>
+          <div class="muted small" style="margin-top:8px">This restore reads trips, recently deleted trips, and list entries (areas/dealers) from this file.</div>
           <div class="sep" style="margin:10px 0"></div>
           <div class="muted small">Metadata</div>
           <div class="mt8" style="display:grid;gap:6px">
@@ -764,10 +774,12 @@ export function createBackupRestoreSubsystem(deps){
     const areasIn = normalized.data.areas;
     const dealersIn = normalized.data.dealers;
     const settingsIn = normalized.data.settings;
+    const deletedTripsIn = normalized.data.deletedTrips;
 
     const importedTrips = tripsIn.map((trip)=>normalizeTripForImport(trip, { mode, fileName: String(parsed?.fileName || file?.name || "") })).filter(t=>t.dateISO || t.dealer || t.amount || t.pounds);
     const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
     const importedDealers = dealersIn.map(d=>String(d||"").trim()).filter(Boolean);
+    const importedDeletedTrips = Array.isArray(deletedTripsIn) ? __cloneData(deletedTripsIn) : [];
 
     capturePreRestoreRollbackSnapshot({
       mode: replace ? "replace" : "merge",
@@ -805,6 +817,7 @@ export function createBackupRestoreSubsystem(deps){
     state.trips = nextTrips;
     state.areas = nextAreas;
     state.dealers = nextDealers;
+    state.deletedTrips = replace ? importedDeletedTrips : (Array.isArray(state.deletedTrips) ? [...state.deletedTrips, ...importedDeletedTrips] : importedDeletedTrips);
 
     const existingSettings = (state.settings && typeof state.settings === "object") ? { ...state.settings } : {};
     if(includeSettings){

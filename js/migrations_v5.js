@@ -48,6 +48,19 @@ export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, th
     if (!Array.isArray(st.trips)) st.trips = [];
     st.trips = st.trips.map(normalizeTrip).filter(Boolean);
 
+    if (!Array.isArray(st.deletedTrips)) st.deletedTrips = [];
+    st.deletedTrips = st.deletedTrips.map((entry) => {
+      if (!entry || typeof entry !== "object") return null;
+      const trip = normalizeTrip(entry.trip);
+      if (!trip) return null;
+      return {
+        id: String(entry.id || trip.id || ""),
+        trip,
+        tripId: String(entry.tripId || trip.id || ""),
+        deletedAt: String(entry.deletedAt || "")
+      };
+    }).filter(Boolean);
+
     if (!st.homeFilter || typeof st.homeFilter !== "object") {
       st.homeFilter = { mode: "YTD", from: "", to: "" };
     }
@@ -96,6 +109,7 @@ export function loadStateWithLegacyFallback(storage = localStorage, ensureNavSta
     navStack: [],
     tripsFilter: { mode: "ALL", from: "", to: "" },
     reportsFilter: { mode: "YTD", from: "", to: "" },
+    deletedTrips: [],
   });
 
   try {
@@ -118,6 +132,7 @@ export function loadStateWithLegacyFallback(storage = localStorage, ensureNavSta
       navStack: Array.isArray(p?.navStack) ? p.navStack : [],
       tripsFilter: (p?.tripsFilter && typeof p.tripsFilter === "object") ? p.tripsFilter : { mode: "ALL", from: "", to: "" },
       reportsFilter: (p?.reportsFilter && typeof p.reportsFilter === "object") ? p.reportsFilter : { mode: "YTD", from: "", to: "" },
+      deletedTrips: Array.isArray(p?.deletedTrips) ? p.deletedTrips : [],
     });
   } catch {
     return fallback;
