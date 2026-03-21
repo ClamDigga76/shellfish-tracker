@@ -11,7 +11,7 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
     const dealerKey = canonicalDealerGroupKey(dealerRaw) || "(unspecified)";
     const areaResolved = typeof resolveTripArea === "function" ? resolveTripArea(t) : null;
     const area = (areaResolved?.canonicalName || (t?.area || "").toString().trim()) || "(Unspecified)";
-    const areaKey = (areaResolved?.areaId || area).toLowerCase();
+    const areaKey = area.toLowerCase();
 
     const lbs = Number(t?.pounds) || 0;
     const amt = Number(t?.amount) || 0;
