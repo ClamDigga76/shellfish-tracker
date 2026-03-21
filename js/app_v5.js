@@ -8,35 +8,85 @@ if (moduleV && bootV && moduleV !== bootV) {
 
 window.__SHELLFISH_APP_STARTED = false;
 
-import { uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY as formatDateLegacyDMY, computePPL, parseMDYToISO as parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable , isValidISODate } from "./utils_v5.js";
-import { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme } from "./settings.js";
-import { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback } from "./migrations_v5.js";
-import { ensureNavState, createNavigator } from "./navigation_v5.js";
-import { drawReportsCharts } from "./reports_charts_v5.js";
-import { buildReportsAggregationState } from "./reports_aggregation_v5.js";
-import { createQuickChipHelpers } from "./quick_chips_v5.js";
-import { createReportsFilterHelpers } from "./reports_filters_v5.js";
-import { createSettingsListManagement } from "./settings_list_management_v5.js";
-import { createBackupRestoreSubsystem } from "./backup_restore_v5.js";
-import { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled, appendTripHistoryEvent, ensureTripProvenanceShape } from "./trip_shared_engine_v5.js";
-import { createTripCardRenderHelpers, normalizeDealerDisplay } from "./trip_cards_v5.js";
-import { renderHelpViewHTML, renderAboutViewHTML } from "./help_about_render_v5.js";
-import { renderTripEntryForm } from "./trip_form_render_v5.js";
-import { createHomeDashboardRenderer } from "./home_dashboard_v5.js";
-import { createSettingsScreenOrchestrator } from "./settings_screen_v5.js";
-import { createReportsScreenRenderer } from "./reports_screen_v5.js";
-import { createFeedbackSeam } from "./feedback_seam_v5.js";
-import { createTripScreenOrchestrator } from "./trip_screen_orchestrator_v5.js";
-import { buildTripFormInputs, buildNewTripSaveSnapshot } from "./trip_flow_save_seam_v5.js";
-import { createRootStateSaveSeam } from "./root_state_save_seam_v5.js";
-import { createUpdateRuntimeStatusSeam } from "./update_runtime_status_v5.js";
-import { createDiagnosticsFatalSeam } from "./diagnostics_fatal_v5.js";
-import { createRuntimeOrchestrationSeam, renderViewDispatch, startRuntimeRender } from "./runtime_orchestration_seam_v5.js";
-import {
-  renderPageHeader as renderPageHeaderShell,
-  bindHeaderHelpButtons as bindHeaderHelpButtonsShell,
-  renderTabBar as renderTabBarShell
-} from "./app_shell_v5.js";
+const APP_IMPORT_VERSION = String(window.APP_VERSION || moduleV || "");
+
+function getVersionedModuleHref(relPath){
+  const url = new URL(relPath, import.meta.url);
+  if(APP_IMPORT_VERSION) url.searchParams.set("v", APP_IMPORT_VERSION);
+  return url.href;
+}
+
+const STARTUP_MODULE_PATHS = [
+  "./utils_v5.js",
+  "./settings.js",
+  "./migrations_v5.js",
+  "./navigation_v5.js",
+  "./reports_charts_v5.js",
+  "./reports_aggregation_v5.js",
+  "./quick_chips_v5.js",
+  "./reports_filters_v5.js",
+  "./settings_list_management_v5.js",
+  "./backup_restore_v5.js",
+  "./trip_shared_engine_v5.js",
+  "./trip_cards_v5.js",
+  "./help_about_render_v5.js",
+  "./trip_form_render_v5.js",
+  "./home_dashboard_v5.js",
+  "./settings_screen_v5.js",
+  "./reports_screen_v5.js",
+  "./feedback_seam_v5.js",
+  "./trip_screen_orchestrator_v5.js",
+  "./trip_flow_save_seam_v5.js",
+  "./root_state_save_seam_v5.js",
+  "./update_runtime_status_v5.js",
+  "./diagnostics_fatal_v5.js",
+  "./runtime_orchestration_seam_v5.js",
+  "./app_shell_v5.js"
+];
+const STARTUP_MODULE_URLS = STARTUP_MODULE_PATHS.map(getVersionedModuleHref);
+
+async function importVersionedModule(relPath){
+  return import(getVersionedModuleHref(relPath));
+}
+
+try {
+  window.__SHELLFISH_STARTUP_IMPORTS__ = [...STARTUP_MODULE_URLS];
+  window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {};
+  window.__BOOT_DIAG__.startupModuleUrls = [...STARTUP_MODULE_URLS];
+} catch (_) {}
+
+const [{ uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable , isValidISODate },
+  { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme },
+  { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback },
+  { ensureNavState, createNavigator },
+  { drawReportsCharts },
+  { buildReportsAggregationState },
+  { createQuickChipHelpers },
+  { createReportsFilterHelpers },
+  { createSettingsListManagement },
+  { createBackupRestoreSubsystem },
+  { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled, appendTripHistoryEvent, ensureTripProvenanceShape },
+  { createTripCardRenderHelpers, normalizeDealerDisplay },
+  { renderHelpViewHTML, renderAboutViewHTML },
+  { renderTripEntryForm },
+  { createHomeDashboardRenderer },
+  { createSettingsScreenOrchestrator },
+  { createReportsScreenRenderer },
+  { createFeedbackSeam },
+  { createTripScreenOrchestrator },
+  { buildTripFormInputs, buildNewTripSaveSnapshot },
+  { createRootStateSaveSeam },
+  { createUpdateRuntimeStatusSeam },
+  { createDiagnosticsFatalSeam },
+  { createRuntimeOrchestrationSeam, renderViewDispatch, startRuntimeRender },
+  {
+    renderPageHeader: renderPageHeaderShell,
+    bindHeaderHelpButtons: bindHeaderHelpButtonsShell,
+    renderTabBar: renderTabBarShell
+  }
+] = await Promise.all([
+  ...STARTUP_MODULE_PATHS.map(importVersionedModule)
+]);
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;

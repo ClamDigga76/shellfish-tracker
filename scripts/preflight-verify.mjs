@@ -119,15 +119,21 @@ const requiredFiles = [
 ];
 
 if (appJs) {
-  appStartupImports = Array.from(
-    appJs.matchAll(/import\s+[^;]*?from\s+"(\.\/[^"?]+\.js)";/g),
-    (match) => match[1],
-  );
+  const startupPathsMatch = appJs.match(/const STARTUP_MODULE_PATHS = \[(.*?)\];/s);
+  if (!startupPathsMatch) {
+    fail("app startup module path list", "STARTUP_MODULE_PATHS is missing");
+  } else {
+    appStartupImports = Array.from(startupPathsMatch[1].matchAll(/"(\.\/[^"?]+\.js)"/g), (match) => match[1]);
+    if (appStartupImports.length === 0) {
+      fail("app startup module path list", "no startup modules found");
+    } else {
+      pass("app startup module path list", `${appStartupImports.length} modules`);
+    }
+  }
 
   for (const rel of appStartupImports) {
     const relPath = `js/${rel.slice(2)}`;
-    if (requiredFiles.includes(relPath)) continue;
-    requiredFiles.push(relPath);
+    if (!requiredFiles.includes(relPath)) requiredFiles.push(relPath);
   }
 }
 
@@ -197,6 +203,15 @@ if (swJs) {
       fail(`service worker core reference: ${ref}`);
     }
   }
+
+  for (const rel of appStartupImports) {
+    const swRef = `"./js/${rel.slice(2)}?v="+SW_V`;
+    if (swJs.includes(swRef)) {
+      pass(`service worker startup parity: ${rel}`);
+    } else {
+      fail(`service worker startup parity: ${rel}`, `missing ${swRef}`);
+    }
+  }
 }
 
 if (bootstrapJs && appJs) {
@@ -204,6 +219,30 @@ if (bootstrapJs && appJs) {
     pass("bootstrap startup parity: imports APP_URL");
   } else {
     fail("bootstrap startup parity: imports APP_URL");
+  }
+
+  if (appJs.includes("const STARTUP_MODULE_URLS = STARTUP_MODULE_PATHS.map(getVersionedModuleHref);")) {
+    pass("app startup modules derive versioned URLs");
+  } else {
+    fail("app startup modules derive versioned URLs");
+  }
+
+  if (appJs.includes("return import(getVersionedModuleHref(relPath));")) {
+    pass("app versioned module loader uses versioned href");
+  } else {
+    fail("app versioned module loader uses versioned href");
+  }
+
+  if (appJs.includes("...STARTUP_MODULE_PATHS.map(importVersionedModule)")) {
+    pass("app startup loads use versioned module list");
+  } else {
+    fail("app startup loads use versioned module list");
+  }
+
+  if (appJs.includes("window.__SHELLFISH_STARTUP_IMPORTS__ = [...STARTUP_MODULE_URLS];")) {
+    pass("app exposes startup module diagnostics");
+  } else {
+    fail("app exposes startup module diagnostics");
   }
 
   for (const rel of appStartupImports) {
@@ -235,6 +274,18 @@ if (runtimeStatusJs) {
     pass("settings build badge uses displayBuildVersion");
   } else {
     fail("settings build badge uses displayBuildVersion");
+  }
+
+  if (runtimeStatusJs.includes("async function getRuntimeVersionDiagnostics()")) {
+    pass("settings runtime diagnostics helper present");
+  } else {
+    fail("settings runtime diagnostics helper present");
+  }
+
+  if (runtimeStatusJs.includes("Version guardrail: warning") && runtimeStatusJs.includes("Version guardrail: aligned")) {
+    pass("settings version guardrail messaging present");
+  } else {
+    fail("settings version guardrail messaging present");
   }
 }
 
