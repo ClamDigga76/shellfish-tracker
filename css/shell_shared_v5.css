@@ -305,6 +305,12 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .settingsSelectWrap{max-width:220px;margin-left:auto}
 .settingsUpdateStatus{font-size:15px;font-weight:800;line-height:1.2}
 .settingsBodyTiny{margin-top:2px;font-size:11px;line-height:1.35}
+
+.settingsBackupHealth{display:grid;gap:4px;padding:10px 12px;border-radius:12px;border:1px solid transparent;font-size:12px;line-height:1.4;font-weight:700}
+.settingsBackupHealth[hidden]{display:none!important}
+.settingsBackupHealth--warning{background:rgba(255,179,71,.14);border-color:rgba(255,179,71,.34);color:#ffd39a}
+.settingsBackupHealth--stale{background:rgba(255,107,107,.12);border-color:rgba(255,107,107,.28);color:#ffd1d1}
+.settingsBackupHealth--healthy,.settingsBackupHealth--quiet{background:transparent;border-color:transparent;color:var(--text-muted-strong)}
 .settingsInlineBtn{font-size:12px;padding:8px 11px;min-width:0;white-space:nowrap}
 .settingsInlineMsg{display:none;margin-top:0}
 .settingsDetails{margin:0}

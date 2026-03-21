@@ -209,6 +209,71 @@ export function createBackupRestoreSubsystem(deps){
     el.textContent = `Temporary rollback snapshot ready: ${stamp} before ${modeLabel}${filePart} (${meta.tripCount} trips, ${meta.areaCount} areas, ${meta.dealerCount} dealers).`;
   }
 
+  function getBackupHealthState(){
+    const safeState = getState();
+    const tripCount = Array.isArray(safeState?.trips) ? safeState.trips.length : 0;
+    const meta = __getLastBackupMeta();
+    const backedUpTripCount = Number(meta?.tripCount);
+    const hasBackup = !!meta;
+    const hasTrips = tripCount > 0;
+    const backupCoversCurrentTrips = hasBackup && Number.isFinite(backedUpTripCount) && backedUpTripCount >= tripCount;
+
+    if(!hasTrips){
+      return {
+        tone: "quiet",
+        code: "quiet-no-trips",
+        visible: false,
+        currentTripCount: tripCount,
+        backedUpTripCount: Number.isFinite(backedUpTripCount) ? backedUpTripCount : 0,
+        message: ""
+      };
+    }
+
+    if(!hasBackup){
+      return {
+        tone: "warning",
+        code: "missing-backup",
+        visible: true,
+        currentTripCount: tripCount,
+        backedUpTripCount: 0,
+        message: `Backup recommended: this device has ${tripCount} saved trip${tripCount === 1 ? "" : "s"}, but no backup yet.`
+      };
+    }
+
+    if(!backupCoversCurrentTrips){
+      const safeBackedUpTrips = Number.isFinite(backedUpTripCount) ? Math.max(0, backedUpTripCount) : 0;
+      const tripsAhead = Math.max(1, tripCount - safeBackedUpTrips);
+      return {
+        tone: "stale",
+        code: "backup-stale",
+        visible: true,
+        currentTripCount: tripCount,
+        backedUpTripCount: safeBackedUpTrips,
+        message: `Backup may be outdated: this device has ${tripCount} saved trips, but the latest backup only covers ${safeBackedUpTrips}. ${tripsAhead} newer trip${tripsAhead === 1 ? "" : "s"} may not be protected.`
+      };
+    }
+
+    return {
+      tone: "healthy",
+      code: "backup-current",
+      visible: false,
+      currentTripCount: tripCount,
+      backedUpTripCount,
+      message: ""
+    };
+  }
+
+  function updateBackupHealthWarning(){
+    const lane = document.getElementById("backupHealthLane");
+    if(!lane) return getBackupHealthState();
+    const health = getBackupHealthState();
+    lane.hidden = !health.visible;
+    lane.className = `settingsBackupHealth settingsBackupHealth--${health.tone}`;
+    lane.textContent = health.visible ? health.message : "";
+    lane.setAttribute("aria-hidden", health.visible ? "false" : "true");
+    return health;
+  }
+
   function updateLastBackupLine(){
     const el = document.getElementById("lastBackupLine");
     if(!el) return;
@@ -266,6 +331,7 @@ export function createBackupRestoreSubsystem(deps){
       if(canShareFiles && navigator?.share){
         await navigator.share({ files: [file] });
         try{ updateLastBackupLine(); }catch(_){ }
+        try{ updateBackupHealthWarning(); }catch(_){ }
         return { ok:true, method:"share", filename: fname, tripCount };
       }
     }catch(_){ }
@@ -273,6 +339,7 @@ export function createBackupRestoreSubsystem(deps){
     try{
       downloadBackupPayload(payload, fname);
       try{ updateLastBackupLine(); }catch(_){ }
+      try{ updateBackupHealthWarning(); }catch(_){ }
       return { ok:true, method:"download", filename: fname, tripCount };
     }catch(e){
       return { ok:false, error: e };
@@ -768,6 +835,8 @@ export function createBackupRestoreSubsystem(deps){
 
   return {
     buildBackupPayloadFromState,
+    getBackupHealthState,
+    updateBackupHealthWarning,
     updateLastBackupLine,
     getRestoreRollbackSnapshotMeta,
     updateRestoreRollbackLine,

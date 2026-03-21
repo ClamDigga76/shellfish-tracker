@@ -486,6 +486,7 @@ const { renderTripCatchCard } = createTripCardRenderHelpers({
 
 const {
   buildBackupPayloadFromState,
+  updateBackupHealthWarning,
   updateLastBackupLine,
   getRestoreRollbackSnapshotMeta,
   updateRestoreRollbackLine,
@@ -1630,6 +1631,7 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   pushView,
   updateUpdateRow: () => updateRuntimeStatus.updateUpdateRow(),
   updateBuildInfo: () => updateRuntimeStatus.updateBuildInfo(),
+  updateBackupHealthWarning: () => updateBackupHealthWarning(),
   updateLastBackupLine: () => updateLastBackupLine(),
   updateRestoreRollbackLine: () => updateRestoreRollbackLine(),
   exportBackup: () => exportBackup(),
