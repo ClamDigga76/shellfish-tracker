@@ -354,6 +354,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   ensureReportsFilter();
 
   const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
+  const hasSavedTrips = tripsAll.length > 0;
   const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
   const fMode = String(rf.mode || "YTD").toUpperCase();
   const mode = state.reportsMode || "tables"; // "charts" | "tables"
@@ -500,18 +501,34 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     </div>
   `;
 
-  const renderNoResultsState = ()=> `
-    <div class="emptyState">
-      <div class="emptyStateTitle">${fMode==="RANGE" && !hasValidRange ? "Choose a valid date range" : "No trips in this range"}</div>
-      <div class="emptyStateBody">${fMode==="RANGE" && !hasValidRange
-        ? "Set both dates, then tap Apply to load this report."
-        : "No saved trips match this filter yet. Add a trip to unlock dealer, area, and monthly summaries."}</div>
-      <div class="emptyStateAction">
-        <button class="btn good" id="reportsEmptyPrimary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
-        <button class="btn" id="reportsEmptySecondary" type="button">${fMode==="RANGE" && !hasValidRange ? "Open Help" : "Switch to All Time"}</button>
+  const renderNoResultsState = ()=> {
+    const invalidRange = fMode === "RANGE" && !hasValidRange;
+    const beginnerEmpty = !hasSavedTrips;
+    const title = invalidRange
+      ? "Choose a valid date range"
+      : (beginnerEmpty ? "Reports unlock after your first trip" : "No trips in this range");
+    const body = invalidRange
+      ? "Set both dates, then tap Apply to load this report."
+      : (beginnerEmpty
+        ? "Start with one saved trip. Home will show your first snapshot right away, and Reports becomes more useful as you add enough trips to compare dealers, areas, and months."
+        : "No saved trips match this filter yet. Add a trip or widen the range to bring dealer, area, and monthly summaries back in view.");
+    const followup = invalidRange
+      ? ""
+      : (beginnerEmpty
+        ? '<div class="emptyStateFollowup">Next best step: save your first trip, then come back here after a few trips for stronger trends.</div>'
+        : '<div class="emptyStateFollowup">Tip: switch to All Time when you want the widest reports baseline.</div>');
+    return `
+      <div class="emptyState ${beginnerEmpty ? "emptyStateBeginner" : ""}">
+        <div class="emptyStateTitle">${title}</div>
+        <div class="emptyStateBody">${body}</div>
+        ${followup}
+        <div class="emptyStateAction">
+          <button class="btn good" id="reportsEmptyPrimary" type="button">${invalidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
+          <button class="btn" id="reportsEmptySecondary" type="button">${invalidRange || beginnerEmpty ? "Open Help" : "Switch to All Time"}</button>
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  };
 
   if(!trips.length){
     getApp().innerHTML = `
@@ -565,7 +582,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const reportsEmptySecondary = document.getElementById("reportsEmptySecondary");
     if (reportsEmptySecondary) {
       reportsEmptySecondary.onclick = () => {
-        if (fMode === "RANGE" && !hasValidRange) {
+        if ((fMode === "RANGE" && !hasValidRange) || !hasSavedTrips) {
           state.helpJump = "reports";
           state.view = "help";
           saveState();
