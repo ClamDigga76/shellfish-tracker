@@ -79,6 +79,8 @@ export function createHomeDashboardRenderer({
     const totalAmount = trips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
     const totalLbs = trips.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
     const avgPpl = totalLbs > 0 ? computePPL(totalLbs, totalAmount) : null;
+    const avgAmountPerTrip = trips.length ? (totalAmount / trips.length) : null;
+    const avgPoundsPerTrip = trips.length ? (totalLbs / trips.length) : null;
 
     const lbsVal = round2(totalLbs);
     const lbsStr = (Number.isFinite(lbsVal) && Math.abs(lbsVal % 1) < 1e-9) ? String(Math.trunc(lbsVal)) : String(lbsVal);
@@ -272,12 +274,12 @@ export function createHomeDashboardRenderer({
           <div class="reportsHeroSub">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips • Home summary</div>
           <div class="reportsHeroGrid">
             <div class="reportsHeroStat">
-              <div class="reportsHeroLabel">Total amount</div>
-              <div class="reportsHeroValue money">${formatMoney(totalAmount)}</div>
+              <div class="reportsHeroLabel">Average amount / trip</div>
+              <div class="reportsHeroValue money">${avgAmountPerTrip === null ? "—" : formatMoney(round2(avgAmountPerTrip))}</div>
             </div>
             <div class="reportsHeroStat">
-              <div class="reportsHeroLabel">Total pounds</div>
-              <div class="reportsHeroValue lbsBlue">${lbsStr} lbs</div>
+              <div class="reportsHeroLabel">Average pounds / trip</div>
+              <div class="reportsHeroValue lbsBlue">${avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)} lbs`}</div>
             </div>
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Top dealer</div>
