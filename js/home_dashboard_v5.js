@@ -94,6 +94,8 @@ export function createHomeDashboardRenderer({
     const isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (window.navigator && window.navigator.standalone === true);
     const pwaNoteDismissed = !!s.pwaStorageNoteDismissed;
     const showPwaStorageNote = isStandalone && !pwaNoteDismissed;
+    const hasSavedTrips = tripsAll.length > 0;
+    const shouldShowBeginnerCard = !hasSavedTrips && !s.onboardingHomeDismissed;
     const pwaStorageNoteHTML = showPwaStorageNote ? `
       <div class="noticeBand" role="status" aria-live="polite">
         <div class="noticeTitle">Installed app check</div>
@@ -163,6 +165,26 @@ export function createHomeDashboardRenderer({
     }, new Map());
     const strongestArea = Array.from(areaRollup.values())
       .sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null;
+    const homeBeginnerCardHTML = shouldShowBeginnerCard ? `
+      <section class="homeSection homeBeginnerSection">
+        <div class="homeBeginnerCard" role="status" aria-live="polite">
+          <div class="homeBeginnerEyebrow">Start here</div>
+          <div class="homeBeginnerTitle">Save one trip to unlock your Home snapshot.</div>
+          <div class="homeBeginnerBody">Start with New Trip, then come back here for totals, your latest trip, and a clearer Reports path after more trips are saved.</div>
+          <div class="homeBeginnerSteps" aria-label="Beginner next steps">
+            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">1</span><span>Save your first trip.</span></div>
+            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">2</span><span>Check Home for your latest snapshot.</span></div>
+            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">3</span><span>Use Reports after you have enough trips to compare.</span></div>
+          </div>
+          <div class="row mt10 noticeActions homeBeginnerActions">
+            <button class="btn primary" id="homeBeginnerPrimary" type="button">＋ New Trip</button>
+            <button class="btn" id="homeBeginnerHelp" type="button">Quick start help</button>
+            <button class="btn btn-ghost homeBeginnerDismiss" id="homeBeginnerDismiss" type="button">Dismiss</button>
+          </div>
+        </div>
+      </section>
+    ` : ``;
+
     const lastSavedTripHtml = newestSavedTrip
       ? (() => {
         const latestDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "Date not set";
@@ -203,7 +225,7 @@ export function createHomeDashboardRenderer({
           </div>
         `;
       })()
-      : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No saved trip yet</div><div class="emptyStateBody">Save your first trip or widen the range to show the latest trip snapshot here.</div></div>`;
+      : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No saved trip yet</div><div class="emptyStateBody">Save your first trip to show your latest trip here. After that, widen the range if you need an older snapshot.</div></div>`;
 
     const monthTotals = trips.reduce((map, trip) => {
       const iso = parseReportDateToISO(trip?.dateISO || "");
@@ -257,6 +279,8 @@ export function createHomeDashboardRenderer({
       ${renderPageHeader("home")}
 
       <div class="card dashCard homeScreenShell">
+        ${homeBeginnerCardHTML}
+
         <section class="homeSection homeFilterSection">
           <div class="homeFilterStack">
             <div class="segWrap timeframeUnifiedControl" role="group" aria-label="Home timeframe filter">
@@ -443,6 +467,35 @@ export function createHomeDashboardRenderer({
         state.lastAction = "nav:help";
         saveState();
         render();
+      };
+    }
+    const btnHomeBeginnerPrimary = document.getElementById("homeBeginnerPrimary");
+    if (btnHomeBeginnerPrimary) {
+      btnHomeBeginnerPrimary.onclick = () => {
+        state.view = "new";
+        state.lastAction = "nav:new";
+        saveState();
+        render();
+      };
+    }
+    const btnHomeBeginnerHelp = document.getElementById("homeBeginnerHelp");
+    if (btnHomeBeginnerHelp) {
+      btnHomeBeginnerHelp.onclick = () => {
+        state.helpJump = "newtrip";
+        state.view = "help";
+        state.lastAction = "nav:help";
+        saveState();
+        render();
+      };
+    }
+    const btnHomeBeginnerDismiss = document.getElementById("homeBeginnerDismiss");
+    if (btnHomeBeginnerDismiss) {
+      btnHomeBeginnerDismiss.onclick = () => {
+        const settings = state.settings || (state.settings = {});
+        settings.onboardingHomeDismissed = true;
+        state.lastAction = "homeOnboarding:dismiss";
+        saveState();
+        renderHome();
       };
     }
 

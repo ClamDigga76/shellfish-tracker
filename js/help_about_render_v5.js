@@ -20,11 +20,11 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b class="helpSectionTitle">Quick start</b>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
-        <div><b>Start with one trip</b>, then use Home for snapshots and Reports for trends.</div>
+        <div><b>Start with one trip</b>, then use Home for your first snapshot and Reports after you have enough trips to compare.</div>
         <ol style="margin:8px 0 0 18px">
           <li>Open <b>New Trip</b> and save your first entry.</li>
-          <li>Check <b>Home</b> for totals, latest trip, and range context.</li>
-          <li>Open <b>Reports</b> when you need deeper date-range summaries.</li>
+          <li>Check <b>Home</b> for totals, your latest trip, and the next best step.</li>
+          <li>Open <b>Reports</b> after more trips are saved for clearer dealer, area, and monthly trends.</li>
         </ol>
       </div>
     </div>
@@ -35,6 +35,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> quick status checks before or after a trip.</div>
         <ul style="margin:8px 0 0 18px">
+          <li>If you are brand new, Home points you to <b>New Trip</b> first.</li>
           <li>Totals and trend cards follow your selected range.</li>
           <li>If stats look light, widen the range first.</li>
         </ul>
@@ -75,9 +76,9 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> date-range trends by dealer, area, and month.</div>
         <ol style="margin:8px 0 0 18px">
+          <li>Start here after your first trip, and expect stronger insights after a few saved trips.</li>
           <li>Pick a date window.</li>
-          <li>Add optional dealer/area filters.</li>
-          <li>Switch between charts and table views.</li>
+          <li>Add optional dealer/area filters, then switch between charts and table views.</li>
         </ol>
       </div>
     </div>

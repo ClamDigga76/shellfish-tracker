@@ -835,3 +835,71 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .settingsDeletedTitle{font-size:15px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
 .settingsDeletedActions{display:flex;flex-wrap:wrap;gap:8px}
 .settingsDeletedActions .btn{flex:1;min-width:132px}
+
+
+.homeBeginnerCard{
+  padding:16px;
+  border-radius:16px;
+  border:1px solid rgba(126,169,255,.34);
+  background:linear-gradient(180deg, rgba(47,109,246,.18) 0%, rgba(255,255,255,.05) 100%);
+  box-shadow:0 12px 28px rgba(8,15,36,.22);
+}
+.homeBeginnerEyebrow{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--lbsBlue);
+}
+.homeBeginnerTitle{
+  margin-top:8px;
+  font-size:20px;
+  font-weight:850;
+  line-height:1.2;
+}
+.homeBeginnerBody{
+  margin-top:8px;
+  color:var(--text-muted-strong);
+  line-height:1.5;
+}
+.homeBeginnerSteps{
+  display:grid;
+  gap:8px;
+  margin-top:12px;
+}
+.homeBeginnerStep{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  color:var(--text-muted-strong);
+}
+.homeBeginnerStepNum{
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 22px;
+  font-size:12px;
+  font-weight:900;
+  color:#fff;
+  background:rgba(47,109,246,.92);
+}
+.homeBeginnerActions .btn{flex:1 1 150px}
+.homeBeginnerDismiss{flex:1 1 100%; min-height:42px}
+.emptyStateFollowup{
+  margin-top:10px;
+  color:var(--text-muted-strong);
+  font-size:13px;
+  line-height:1.45;
+}
+.emptyStateBeginner{
+  border-color:rgba(126,169,255,.28);
+  background:linear-gradient(180deg, rgba(47,109,246,.12) 0%, rgba(255,255,255,.04) 100%);
+}
+:root[data-theme="light"] .homeBeginnerCard,
+:root[data-theme="light"] .emptyStateBeginner{
+  border-color:rgba(47,109,246,.22);
+  background:linear-gradient(180deg, rgba(47,109,246,.10) 0%, rgba(255,255,255,.92) 100%);
+}
