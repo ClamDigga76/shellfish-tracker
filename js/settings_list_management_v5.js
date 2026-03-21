@@ -6,6 +6,11 @@ export function createSettingsListManagement(deps){
     getApp,
     ensureAreas,
     ensureDealers,
+    syncAreaState,
+    addCanonicalArea,
+    mergeAreas,
+    countTripsForArea,
+    deleteArea,
     normalizeKey,
     escapeHtml,
     showToast,
@@ -21,12 +26,27 @@ export function createSettingsListManagement(deps){
     if(!Array.isArray(state.areas)) state.areas = [];
     if(!Array.isArray(state.dealers)) state.dealers = [];
 
-    const areaRows2 = state.areas.length ? state.areas.map((a, i)=>`
-      <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
-        <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(a)}</b></div>
-        <button class="smallbtn danger" data-del-area="${i}" type="button">Delete</button>
-      </div>
-    `).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No areas yet</div><div class="emptyStateBody">Add your first area below so New Trip choices are ready.</div></div>`;
+    const areaRegistry = syncAreaState();
+    const areaRecords = Array.isArray(areaRegistry?.records) ? areaRegistry.records : [];
+    const areaRows2 = areaRecords.length ? areaRecords.map((record)=>{
+      const usageCount = countTripsForArea(record.id);
+      const mergeOptions = areaRecords
+        .filter((item)=>item.id !== record.id)
+        .map((item)=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`)
+        .join("");
+      return `
+      <div class="card" style="margin-top:10px;padding:12px">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px">
+          <div style="min-width:0;flex:1">
+            <div class="pill" style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(record.name)}</b></div>
+            <div class="muted small" style="margin-top:6px">${usageCount} trip(s) resolve here${record.parentId ? ` • parent ${escapeHtml(record.parentId)}` : ""}</div>
+            ${record.aliases?.length ? `<div class="muted small" style="margin-top:6px">Aliases: ${record.aliases.map((alias)=>`<span class="pill" style="margin-right:6px">${escapeHtml(alias)}</span>`).join("")}</div>` : `<div class="muted small" style="margin-top:6px">No aliases yet</div>`}
+          </div>
+          <button class="smallbtn danger" data-del-area-id="${escapeHtml(record.id)}" type="button">Delete</button>
+        </div>
+        ${mergeOptions ? `<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px"><select class="select" data-merge-target="${escapeHtml(record.id)}" style="flex:1;min-width:170px"><option value="">Merge into…</option>${mergeOptions}</select><button class="smallbtn" data-merge-area-id="${escapeHtml(record.id)}" type="button">Merge</button></div>` : `<div class="muted small" style="margin-top:8px">No other canonical area available to merge into.</div>`}
+      </div>`;
+    }).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No areas yet</div><div class="emptyStateBody">Add your first area below so New Trip choices are ready.</div></div>`;
 
     const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
@@ -144,11 +164,8 @@ export function createSettingsListManagement(deps){
           if(!raw){ showToast("Enter an area first"); elNewArea?.focus(); return; }
           if(raw.length > 40){ showToast("Keep it under 40 chars"); elNewArea?.focus(); return; }
           ensureAreas();
-          const key = normalizeKey(raw);
-          const exists = state.areas.some((a)=>normalizeKey(String(a || "")) === key);
-          if(exists){ showToast("That area already exists"); return; }
-          state.areas.push(raw);
-          ensureAreas();
+          const result = addCanonicalArea(raw);
+          if(!result?.record || result.created === false){ showToast("That area already exists"); return; }
           saveState();
           refreshListMgmt("areas", true);
           showToast("Area added");
@@ -172,23 +189,38 @@ export function createSettingsListManagement(deps){
         };
       }
 
-      (getApp()?.querySelectorAll("button[data-del-area]") || []).forEach((btn)=>{
+      (getApp()?.querySelectorAll("button[data-del-area-id]") || []).forEach((btn)=>{
         btn.onclick = ()=>{
-          const i = Number(btn.getAttribute("data-del-area"));
-          if(!Number.isFinite(i) || i < 0) return;
-          const name = String(state.areas?.[i] || "");
-          const inUseCount = countTripsUsingValue("area", name);
-          if(inUseCount > 0){
-            alert(`Can't delete area \"${name}\" yet. ${inUseCount} trip(s) still use it.`);
-            showToast("Area is used by saved trips");
+          const areaId = String(btn.getAttribute("data-del-area-id") || "");
+          const tripCount = countTripsForArea(areaId);
+          if(tripCount > 0){
+            alert(`Can't delete this canonical area yet. ${tripCount} trip(s) still resolve to it.`);
+            showToast("Merge or move trips before deleting");
             return;
           }
-          if(!confirm(`Delete area "${name}"?`)) return;
-          state.areas.splice(i, 1);
-          ensureAreas();
+          if(!confirm("Delete this canonical area?")) return;
+          const result = deleteArea(areaId);
+          if(!result?.ok){
+            showToast(result?.reason === "has-aliases" ? "Remove aliases by merging first" : "Area can't be deleted yet");
+            return;
+          }
           saveState();
           refreshListMgmt("areas", true);
           showToast("Area deleted");
+        };
+      });
+
+      (getApp()?.querySelectorAll("button[data-merge-area-id]") || []).forEach((btn)=>{
+        btn.onclick = ()=>{
+          const sourceId = String(btn.getAttribute("data-merge-area-id") || "");
+          const select = document.querySelector(`select[data-merge-target="${sourceId}"]`);
+          const targetId = String(select?.value || "");
+          if(!targetId){ showToast("Choose a merge target first"); return; }
+          const result = mergeAreas(sourceId, targetId);
+          if(!result?.ok){ showToast("Area merge failed"); return; }
+          saveState();
+          refreshListMgmt("areas", true);
+          showToast(`Merged into ${result.target?.name || "target area"}`);
         };
       });
 
@@ -231,7 +263,7 @@ export function createSettingsListManagement(deps){
     document.getElementById("resetData").onclick = ()=>{
       const typed = prompt('Type DELETE to permanently erase ALL trips and lists on this device.');
       if(typed !== "DELETE") { showToast("Erase canceled"); return; }
-      setState({ trips: [], areas: [], dealers: [], filter: "YTD", view: "home", settings: {} });
+      setState({ trips: [], areas: [], areaRegistry: { version: 1, records: [] }, dealers: [], filter: "YTD", view: "home", settings: {} });
       saveState();
       showToast("All data erased");
       render();

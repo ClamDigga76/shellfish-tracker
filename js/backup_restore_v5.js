@@ -4,6 +4,9 @@ export function createBackupRestoreSubsystem(deps){
     saveState,
     ensureAreas,
     ensureDealers,
+    syncAreaState,
+    canonicalizeTripArea,
+    resolveAreaValue,
     SCHEMA_VERSION,
     APP_VERSION,
     VERSION,
@@ -52,6 +55,7 @@ export function createBackupRestoreSubsystem(deps){
     const areas = Array.isArray(safeState.areas) ? safeState.areas : [];
     const dealers = Array.isArray(safeState.dealers) ? safeState.dealers : [];
     const deletedTrips = Array.isArray(safeState.deletedTrips) ? safeState.deletedTrips : [];
+    const areaRegistry = (safeState.areaRegistry && typeof safeState.areaRegistry === "object") ? safeState.areaRegistry : { version: 1, records: [] };
     return {
       app: "Bank the Catch",
       schema: SCHEMA_VERSION, // legacy
@@ -71,6 +75,7 @@ export function createBackupRestoreSubsystem(deps){
         areas,
         dealers,
         deletedTrips,
+        areaRegistry,
         settings: (safeState.settings && typeof safeState.settings === "object") ? safeState.settings : {}
       }
     };
@@ -168,6 +173,7 @@ export function createBackupRestoreSubsystem(deps){
         areas: __cloneData(Array.isArray(payload?.areas) ? payload.areas : []),
         dealers: __cloneData(Array.isArray(payload?.dealers) ? payload.dealers : []),
         deletedTrips: __cloneData(Array.isArray(payload?.deletedTrips) ? payload.deletedTrips : []),
+        areaRegistry: __cloneData((payload?.areaRegistry && typeof payload.areaRegistry === "object") ? payload.areaRegistry : { version: 1, records: [] }),
         settings: __cloneData((payload?.settings && typeof payload.settings === "object") ? payload.settings : {})
       }
     };
@@ -187,7 +193,10 @@ export function createBackupRestoreSubsystem(deps){
     state.areas = __cloneData(Array.isArray(payload.areas) ? payload.areas : []);
     state.dealers = __cloneData(Array.isArray(payload.dealers) ? payload.dealers : []);
     state.deletedTrips = __cloneData(Array.isArray(payload.deletedTrips) ? payload.deletedTrips : []);
+    state.areaRegistry = __cloneData((payload.areaRegistry && typeof payload.areaRegistry === "object") ? payload.areaRegistry : { version: 1, records: [] });
     state.settings = nextSettings;
+    syncAreaState();
+    state.trips = Array.isArray(state.trips) ? state.trips.map((trip)=>canonicalizeTripArea(trip, state.areaRegistry)) : [];
     ensureAreas();
     ensureDealers();
     saveState();
@@ -367,8 +376,9 @@ export function createBackupRestoreSubsystem(deps){
     const dealers = Array.isArray(data.dealers) ? data.dealers : [];
     const settings = (data.settings && typeof data.settings === "object") ? data.settings : {};
     const deletedTrips = Array.isArray(data.deletedTrips) ? data.deletedTrips : [];
+    const areaRegistry = (data.areaRegistry && typeof data.areaRegistry === "object") ? data.areaRegistry : { version: 1, records: [] };
 
-    const normalized = { schemaVersion, appVersion, exportedAt, backupMeta, data:{ trips, areas, dealers, deletedTrips, settings } };
+    const normalized = { schemaVersion, appVersion, exportedAt, backupMeta, data:{ trips, areas, dealers, deletedTrips, areaRegistry, settings } };
     const { errors, warnings } = validateNormalizedBackupPayload(normalized);
     return { ok: errors.length === 0, errors, warnings, normalized };
   }
@@ -828,11 +838,13 @@ export function createBackupRestoreSubsystem(deps){
     const dealersIn = normalized.data.dealers;
     const settingsIn = normalized.data.settings;
     const deletedTripsIn = normalized.data.deletedTrips;
+    const areaRegistryIn = normalized.data.areaRegistry;
 
     const importedTrips = tripsIn.map((trip)=>normalizeTripForImport(trip, { mode, fileName: String(parsed?.fileName || file?.name || "") })).filter(t=>t.dateISO || t.dealer || t.amount || t.pounds);
     const importedAreas = areasIn.map(a=>String(a||"").trim()).filter(Boolean);
     const importedDealers = dealersIn.map(d=>String(d||"").trim()).filter(Boolean);
     const importedDeletedTrips = Array.isArray(deletedTripsIn) ? __cloneData(deletedTripsIn) : [];
+    const importedAreaRegistry = (areaRegistryIn && typeof areaRegistryIn === "object") ? __cloneData(areaRegistryIn) : { version: 1, records: [] };
 
     capturePreRestoreRollbackSnapshot({
       mode: replace ? "replace" : "merge",
@@ -873,6 +885,9 @@ export function createBackupRestoreSubsystem(deps){
     state.areas = nextAreas;
     state.dealers = nextDealers;
     state.deletedTrips = replace ? importedDeletedTrips : (Array.isArray(state.deletedTrips) ? [...state.deletedTrips, ...importedDeletedTrips] : importedDeletedTrips);
+    state.areaRegistry = replace ? importedAreaRegistry : ((state.areaRegistry && typeof state.areaRegistry === "object") ? state.areaRegistry : importedAreaRegistry);
+    syncAreaState();
+    state.trips = Array.isArray(state.trips) ? state.trips.map((trip)=>canonicalizeTripArea(trip, state.areaRegistry)) : [];
 
     const existingSettings = (state.settings && typeof state.settings === "object") ? { ...state.settings } : {};
     if(includeSettings){
