@@ -79,6 +79,7 @@ export function createRootStateSaveSeam({
         navStack: [],
         tripsFilter: { mode: "ALL", from: "", to: "" },
         reportsFilter: { mode: "YTD", from: "", to: "" },
+        deletedTrips: [],
       });
       safeState.__safeMode = true;
       return safeState;

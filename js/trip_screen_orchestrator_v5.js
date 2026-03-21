@@ -149,7 +149,8 @@ export function createTripScreenOrchestrator({
   renderHome,
   buildTripFormInputs,
   buildNewTripSaveSnapshot,
-  buildTripProvenanceSummary
+  buildTripProvenanceSummary,
+  addTripToDeletedBin
 }) {
 function renderNewTrip(){
   ensureAreas();
@@ -1407,23 +1408,25 @@ function renderEditTrip(){
     clearPendingTripUndo();
     const ok = await openConfirmModal({
       title: "Delete Trip",
-      message: "Delete this trip?",
+      message: "Move this trip to Recently Deleted? You can restore it later from Settings.",
       confirmLabel: "Delete",
       cancelLabel: "Cancel"
     });
     if(!ok) return;
     const undoSnapshot = {
       trips,
+      deletedTrips: Array.isArray(state.deletedTrips) ? [...state.deletedTrips] : [],
       view: state.view
     };
     if(Object.prototype.hasOwnProperty.call(state, "editId")) undoSnapshot.editId = state.editId;
     if(Object.prototype.hasOwnProperty.call(state, "draft")) undoSnapshot.draft = state.draft;
     if(Object.prototype.hasOwnProperty.call(state, "reviewDraft")) undoSnapshot.reviewDraft = state.reviewDraft;
+    addTripToDeletedBin(t);
     state.trips = trips.filter(x => String(x?.id||"") !== id);
     delete state.editId;
     saveState();
     goBack(state);
-    showUndoToast({ message: "Deleted", snapshot: undoSnapshot });
+    showUndoToast({ message: "Moved to Recently Deleted", snapshot: undoSnapshot });
   };
 }
 
