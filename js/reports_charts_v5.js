@@ -385,6 +385,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return;
   }
 
+  const seasonalityChart = options?.seasonalityChart;
+  if(seasonalityChart && document.getElementById("c_seasonality_amount")){
+    drawMetricDetailChart("c_seasonality_amount", seasonalityChart, seasonalityChart.metricKey || "amount");
+  }
+
   const tripsTimeline = Array.isArray(tripsOrTimeline) && tripsOrTimeline[0]?.shortLabel
     ? tripsOrTimeline
     : buildTripsTimeline(Array.isArray(tripsOrTimeline) ? tripsOrTimeline : []);
