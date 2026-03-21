@@ -119,7 +119,7 @@ export function createTripDataEngine({ uid, isValidISODate }) {
     const pounds = Number(t?.pounds ?? t?.lbs ?? 0);
     const amount = Number(t?.amount ?? t?.total ?? 0);
 
-    return {
+    const nextTrip = {
       ...t,
       dateISO,
       invalidDateQuarantined: Boolean(t?.invalidDateQuarantined) || invalidDateQuarantined,
@@ -127,10 +127,11 @@ export function createTripDataEngine({ uid, isValidISODate }) {
       amount: Number.isFinite(amount) ? amount : 0,
       dealer: String(t?.dealer || "").trim(),
       area: String(t?.area || "").trim(),
-      areaId: String(t?.areaId || "").trim(),
       species: String(t?.species || DEFAULT_SPECIES).trim() || DEFAULT_SPECIES,
       notes: String(t?.notes || "")
     };
+    delete nextTrip.areaId;
+    return nextTrip;
   }
 
   function normalizeTrip(t) {
