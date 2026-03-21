@@ -1,12 +1,12 @@
 # AGENTS.md — Bank the Catch / VibeCoder 3.5
 
-This repo uses a one-change-at-a-time workflow for **Bank the Catch** (Shellfish Tracker PWA).
+This project uses a one-change-at-a-time workflow for **Bank the Catch** (Shellfish Tracker PWA).
 
 ## Mission
 Ship small, safe, reviewable patches with fewer regressions.
 
 ## Core rule
-This file is the main operational source of truth for normal patch work in this repo.
+This file is the main operational source of truth for normal patch work in this project.
 
 Use helper docs when useful, but do not depend on them to understand the default workflow.
 
@@ -32,11 +32,11 @@ Bank the Catch is a mobile-first shellfish tracking PWA with high sensitivity ar
 These files support the workflow, but do not outrank this file:
 
 - `START-HERE.md`
+- `PROJECT-INSTRUCTION-BLOCK.md`
 - `PARKING-LOT-GUIDE.md`
 - `patch-prompt-style.md`
 - `codex-app-style.md`
 - `testing-checklist.md`
-- `REGRESSION-HOTSPOTS.md`
 
 ## Default workflow
 Use this sequence for normal patch work:
@@ -62,7 +62,7 @@ Do not turn one patch into multiple meaningful changes unless the user clearly w
 - Do not mix Web and desktop styles in the same patch response.
 
 ## Patch classes
-There are two patch classes in this repo.
+There are two patch classes in this project.
 
 ### A) Runtime-facing app patch
 A runtime-facing app patch changes shipped app behavior, UI, runtime code, boot flow, app-loaded assets, or user-visible build/version output.
@@ -80,6 +80,7 @@ A project-files patch changes project guidance or support files but does not cha
 Examples:
 - `AGENTS.md`
 - `START-HERE.md`
+- `PROJECT-INSTRUCTION-BLOCK.md`
 - `PARKING-LOT-GUIDE.md`
 - templates
 - instruction docs
@@ -97,7 +98,7 @@ Use for normal user-facing behavior/UI/runtime changes.
 - require `npm run check:repo` and runtime preflight verify
 
 ### 2) Runtime correction/hotfix patch
-Use when the immediately previous runtime patch introduced a real break (for example, boot/runtime regressions).
+Use when the immediately previous runtime patch introduced a real break, such as a boot/runtime regression.
 
 - prioritize restoring stability over feature scope
 - keep scope tighter than a normal runtime feature patch
@@ -214,21 +215,26 @@ For normal runtime-facing app patch work, output in this order:
 
 1. Goal
 2. Now → Change → Better
-3. Repro (3 steps, only if bug)
-4. Done when (3 checks)
-5. Not in this patch (2 bullets)
+3. Repro (only when this is a bug, regression, or visible trust seam)
+4. Done when
+5. Not in this patch
 6. Files edited
 7. Repo connection recommendation
 8. Codex Task Prompt
-9. Commit message (50 chars or less)
+9. Commit message
 10. Changelog
 11. Rollback rope: `If bad: revert the PR.`
 
 Rules:
 - For runtime-facing app patches, always include **Now → Change → Better**.
+- Use **Repro** when it helps anchor a visible problem or regression.
+- Make **Done when** concrete and easy to verify.
+- Make **Not in this patch** explicit so scope does not drift.
 - Always list **Files edited** before the **Codex Task Prompt**.
+- **Files edited** may use sublabels such as **Most likely**, **Possibly**, and **Only if needed** when that makes the patch slice clearer.
 - Always output the **Codex Task Prompt** in its own clean copy/paste block.
-- Commit message does not need its own copy/paste block.
+- The **Codex Task Prompt** should usually include: Goal, live repo finding when relevant, required behavior, non-goals, implementation guidance, likely files, validation, required checks, and report-back requirements.
+- Commit message should be short and action-oriented. It does not need its own copy/paste block unless the user asks.
 
 ## Repo connection recommendation rule
 Always include a repo connection recommendation:
@@ -256,83 +262,3 @@ If the patch is project-files/docs/workflow only:
 - do not force runtime preflight
 
 If a stable smoke check exists for touched behavior, run it too.
-
-## Test output order
-For runtime-facing app patches, present checks in this order when relevant:
-
-1. repo checks
-2. stable smoke checks
-3. human test loop
-
-## Testing mindset
-Default test mindset:
-
-- iPhone Safari
-- iPhone standalone PWA
-- Android Chrome when available
-- quick reopen/reload sanity checks
-
-Use extra caution for:
-
-- service worker
-- versioning
-- install/update
-- storage/schema/data changes
-- boot flow
-- new/edit/save flows
-
-## Parking Lot behavior
-Use the user’s current working Parking Lot as the live list of waiting ideas.
-
-Rules:
-- pull one main item at a time by default
-- keep extra ideas out of the active patch
-- add side ideas to the Parking Lot instead of mixing them into the patch
-- do not remove an item until the user confirms the patch worked
-- while a patch is in progress, do not print the full Parking Lot unless asked
-- after the user confirms a patch worked:
-  - remove that item from the working Parking Lot
-  - show the updated Parking Lot
-  - recommend the next best item with a short why
-
-## Recommendation rules
-When choosing the next patch, prefer:
-
-- high user value
-- low regression risk
-- small/local diff
-- iPhone PWA safety
-- Android Chrome safety
-- native-feeling mobile UI
-- release-safe choices for future store-wrapper / app-store direction
-
-## Native UI defaults
-Prefer native controls where practical:
-
-- `<input type="date">`
-- `<input type="time">`
-- `<select>`
-- `inputmode="decimal"`
-- `inputmode="numeric"`
-
-Add small guardrails that reduce Android risk.
-
-## Project-files mode
-If the task is building or editing project files, docs, templates, workflow files, or instruction files:
-
-- do not force a runtime patch slice unless the user asks for one
-- do not force a runtime version bump
-- output the requested file contents cleanly
-
-## Shorthand commands
-Treat these as valid:
-- `Do 8`
-- `Pull 11`
-- `Recommend next`
-- `Desktop 5`
-
-Interpret the number as the user’s current Parking Lot item number.
-
-## Operating principle
-Ship one clean fish at a time.
-Do not turn one patch into three patches.

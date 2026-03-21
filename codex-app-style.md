@@ -17,6 +17,11 @@ Do not use this file for normal Web Codex/browser sandbox patch flow.
 ## Core rule
 Desktop/local instructions should stay practical and branch-aware, but still follow the same one-change patch discipline.
 
+## Source-of-truth reminder
+`AGENTS.md` is the operational source of truth.
+
+Use this file as the helper style for desktop/local repo work, not as a competing rule set.
+
 ## Desktop/local workflow shape
 Use this pattern:
 
@@ -41,17 +46,65 @@ When branch guidance is relevant, prefer practical language like:
 Do not force worktrees unless the user explicitly wants them.
 
 ## Prompt shape
-Desktop/local prompts should still include:
+Desktop/local prompts should still follow the same Bank the Catch patch slice structure:
 
+1. Goal
+2. Now → Change → Better
+3. Repro (if this is a bug, regression, or visible trust seam)
+4. Done when
+5. Not in this patch
+6. Files edited
+7. Repo connection recommendation
+8. Codex Task Prompt
+9. Commit message
+10. Changelog
+11. Rollback rope
+
+Inside the **Codex Task Prompt**, prefer the same concrete structure used in Web Codex work:
 - Goal
-- Now → Change → Better
-- Scope rules
-- Files to edit
-- Repo connection recommendation
-- Done when
-- Not in this patch
-- Repo checks
-- Output requirements
+- Live repo finding
+- Required behavior
+- Non-goals
+- Implementation guidance
+- Likely files
+- Possibly / Only if needed
+- Validation
+- Required checks
+- Report back with
+
+## Earned patch sub-types (lightweight)
+Use these only when they help shape the prompt more accurately.
+
+For the full operational rules, follow `AGENTS.md`.
+
+### 1) Standard runtime patch
+Use for normal user-facing behavior, UI, runtime, or shipped-app changes.
+
+Prompt reminders:
+- include required build/version bump +1
+- keep version-chain files aligned
+- require `npm run check:repo`
+- require `node scripts/preflight-verify.mjs --expect-version=<new version>`
+- if a stable smoke check exists for touched behavior, run it too
+
+### 2) Runtime correction / hotfix patch
+Use when the immediately previous runtime patch introduced a real break.
+
+Prompt reminders:
+- prioritize restoring stability over expanding scope
+- keep the patch tighter than a normal runtime feature patch
+- include **Repro** when applicable
+- if runtime-facing, still require version bump +1 and runtime preflight
+- prefer the smallest safe repair
+
+### 3) Project-files / workflow support patch
+Use for repo/process/docs/helper-file updates that do not change shipped runtime app behavior.
+
+Prompt reminders:
+- do **not** do a runtime version bump
+- do **not** force runtime preflight unless clearly needed
+- run repo-side checks relevant to touched files
+- keep changes operational and lightweight
 
 ## Repo connection recommendation
 Always include whether the GitHub/repo connection is recommended and why:
@@ -87,8 +140,10 @@ Do not casually mix local branch/desktop workflow with:
 ## Output reminders
 For runtime-facing app patches:
 - always include **Now → Change → Better**
+- include **Repro** when relevant
 - always list **Files edited** before the **Codex Task Prompt**
 - always output the **Codex Task Prompt** in its own clean copy/paste block
+- keep **Not in this patch** explicit so the local diff stays focused
 
 ## Final reminder
 Desktop/local mode changes the environment, not the discipline.

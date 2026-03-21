@@ -14,13 +14,12 @@ For normal work, use this order:
 3. the specific helper file for the task
 
 ## File roles
-- `AGENTS.md` = operational law (including earned patch sub-type guidance)
+- `AGENTS.md` = operational law
+- `PROJECT-INSTRUCTION-BLOCK.md` = portable project instruction wrapper for this ChatGPT project
 - `PARKING-LOT-GUIDE.md` = Parking Lot behavior
 - `patch-prompt-style.md` = Web Codex patch prompt style
 - `codex-app-style.md` = desktop/local prompt style
 - `testing-checklist.md` = post-patch test loop
-- `REGRESSION-HOTSPOTS.md` = high-risk file/flow caution map before patching
-- `STORE-WRAPPER-READINESS.md` = wrapper/app-store prep baseline and known blockers
 
 ## Default mode
 Default to **Web Codex / browser sandbox** workflow unless the task clearly requires desktop/local repo flow.
@@ -36,12 +35,26 @@ Changes shipped app behavior, UI, runtime code, boot flow, app-loaded assets, or
 ### Project-files / docs / workflow patch
 Changes instructions, templates, helper docs, workflow files, or project support files without changing shipped runtime app behavior.
 
+## Earned patch sub-types
+`AGENTS.md` now carries the lightweight earned patch subtype guidance.
+
+Use `AGENTS.md` as the source of truth for:
+- standard runtime patch
+- runtime correction/hotfix patch
+- repo/workflow support patch
+
+Do not treat this file as a second rule source.
+
 ## Important output reminders
 For runtime-facing app patches:
+- always include **Goal**
 - always include **Now → Change → Better**
+- include **Repro** when there is a bug, regression, or visible trust seam
+- include **Done when** and **Not in this patch**
 - always list **Files edited** before the **Codex Task Prompt**
 - always output the **Codex Task Prompt** in its own clean copy/paste block
 - always include a **Repo connection recommendation**
+- end with **Commit message**, **Changelog**, and **Rollback rope**
 
 ## Important version rule
 Only **runtime-facing app patches** require a build/version bump +1.
