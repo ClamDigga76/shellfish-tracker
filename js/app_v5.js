@@ -371,8 +371,102 @@ function getDisplayMode(){
   }
 }
 
+let deferredInstallPrompt = null;
+window.addEventListener("beforeinstallprompt", (event) => {
+  try {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+  } catch (_) {}
+});
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+});
 
+function getInstallPlatform(){
+  const ua = String(navigator.userAgent || "");
+  const vendor = String(navigator.vendor || "");
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+  const isSafari = /Safari/i.test(ua) && !/CriOS|Chrome|Chromium|Edg|FxiOS/i.test(ua) && /Apple/i.test(vendor || ua);
+  const isChrome = /Chrome|CriOS/i.test(ua) && !/Edg|OPR|SamsungBrowser/i.test(ua);
+  if (isIOS) return isSafari ? "ios-safari" : "ios";
+  if (isAndroid) return isChrome ? "android-chrome" : "android";
+  if (isChrome) return "chrome";
+  return "other";
+}
 
+function getInstallSurfaceModel(){
+  const mode = getDisplayMode();
+  const platform = getInstallPlatform();
+  const installSupported = !!deferredInstallPrompt;
+  const isInstalled = mode === "standalone";
+  const isIOS = platform === "ios-safari" || platform === "ios";
+  const isAndroidChrome = platform === "android-chrome";
+  const statusPill = isInstalled ? "Installed" : "Browser";
+  const statusLine = isInstalled
+    ? "Bank the Catch is already running as your installed app."
+    : "Bank the Catch is currently running in a browser tab.";
+  const statusHint = isInstalled
+    ? "Open it from your Home Screen to stay in installed app mode."
+    : (installSupported
+      ? "Install it for a quicker Home Screen launch and a clearer app-vs-browser experience."
+      : isIOS
+        ? "Install from Safari to add Bank the Catch to your Home Screen."
+        : isAndroidChrome
+          ? "Use Chrome’s install path to add Bank the Catch to your Home Screen."
+          : "Install support depends on your browser. Safari on iPhone/iPad and Chrome on Android are the best paths.");
+  const whyTitle = isInstalled ? "Already installed." : "Why install?";
+  const whyBody = isInstalled
+    ? "This mode is easier to recognize at launch and is the best place to keep your Bank the Catch trips."
+    : "Installing puts Bank the Catch on your Home Screen and helps reduce confusion between browser use and installed-app use.";
+  const stepsLine = isInstalled
+    ? "If you also used Safari or Chrome before, compare there and create a backup if you need to move older trips over."
+    : isIOS
+      ? "iPhone/iPad: open in Safari → Share → Add to Home Screen → Add."
+      : isAndroidChrome
+        ? (installSupported
+          ? "Android Chrome: use Install app below, or Chrome menu → Install app / Add to Home screen."
+          : "Android Chrome: Chrome menu → Install app or Add to Home screen.")
+        : "Manual steps: use Safari on iPhone/iPad or Chrome on Android for the clearest install path.";
+  const actionLabel = isInstalled ? "Installed on this device" : (installSupported ? "Install app" : "Manual steps only");
+  return {
+    mode,
+    platform,
+    isInstalled,
+    installSupported,
+    statusPill,
+    statusLine,
+    statusHint,
+    whyTitle,
+    whyBody,
+    stepsLine,
+    actionLabel,
+    actionEnabled: !isInstalled && installSupported,
+    showAction: true
+  };
+}
+
+async function runInstallAction(){
+  const model = getInstallSurfaceModel();
+  if (model.isInstalled) {
+    return { ok: true, message: "Already running the installed app" };
+  }
+  if (!model.installSupported || !deferredInstallPrompt) {
+    return { ok: false, message: model.stepsLine };
+  }
+  try {
+    const promptEvent = deferredInstallPrompt;
+    deferredInstallPrompt = null;
+    await promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
+    if (choice?.outcome === "accepted") {
+      return { ok: true, message: "Install accepted — look for the Home Screen icon" };
+    }
+    return { ok: false, message: "Install cancelled — you can still install later from Settings" };
+  } catch (_) {
+    return { ok: false, message: model.stepsLine };
+  }
+}
 
 const feedback = createFeedbackSeam({
   escapeHtml,
@@ -1608,7 +1702,9 @@ const { renderHome } = createHomeDashboardRenderer({
   showToast,
   tipMsg: typeof tipMsg !== "undefined" ? tipMsg : undefined,
   exportBackup,
-  renderHomeMetricDetail: () => renderHomeMetricDetail()
+  renderHomeMetricDetail: () => renderHomeMetricDetail(),
+  getInstallSurfaceModel: () => getInstallSurfaceModel(),
+  runInstallAction: () => runInstallAction()
 });
 
 const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrchestrator({
@@ -1763,7 +1859,9 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   render: () => render(),
   openRestoreErrorModal: (error) => openRestoreErrorModal(error),
   openRestoreResultModal: (result) => openRestoreResultModal(result),
-  showToast: (msg) => showToast(msg)
+  showToast: (msg) => showToast(msg),
+  getInstallSurfaceModel: () => getInstallSurfaceModel(),
+  runInstallAction: () => runInstallAction()
 });
 
 
@@ -1774,7 +1872,8 @@ function renderHelp(){
     displayBuildVersion: DISPLAY_BUILD_VERSION,
     schemaVersion: state.schemaVersion || state.schema || "",
     isStandalone: window.matchMedia("(display-mode: standalone)").matches,
-    hasSWController: !!(navigator.serviceWorker && navigator.serviceWorker.controller)
+    hasSWController: !!(navigator.serviceWorker && navigator.serviceWorker.controller),
+    installModel: getInstallSurfaceModel()
   });
 
   getApp().scrollTop = 0;
