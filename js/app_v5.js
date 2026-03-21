@@ -127,6 +127,11 @@ let onThemeMediaChange = null;
 let topLevelTransitionToken = 0;
 let topLevelTransitionOutTimer = 0;
 let topLevelTransitionCleanupTimer = 0;
+let needsBootStateSave = false;
+
+function markNeedsBootStateSave(){
+  needsBootStateSave = true;
+}
 
 function getThemeMode(){
   const s = state?.settings || {};
@@ -1379,7 +1384,7 @@ if(Array.isArray(state.trips)) {
     if(String(trip?.area || "").trim() !== String(n.area || "").trim() || String(trip?.areaId || "") !== String(n.areaId || "")) changed = true;
     return n;
   }).filter(Boolean);
-  if(changed) saveState();
+  if(changed) markNeedsBootStateSave();
 }
 if(rootStateSaveSeam.wasEmergencyDraftRecoveredOnBoot()){
   try{ showToast("Recovered your unsaved trip draft"); }catch(_){ }
@@ -1395,6 +1400,7 @@ const {
   saveState
 } = rootStateSaveSeam.createStateSaveFlow({ getState: ()=> state });
 
+if(needsBootStateSave) saveState();
 
 const {
   renderTopAreaChips,
