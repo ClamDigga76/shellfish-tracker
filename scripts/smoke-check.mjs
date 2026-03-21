@@ -122,11 +122,20 @@ if (homeSource) {
 }
 
 if (appSource) {
-  checkIncludesAny(appSource, 'home renderer import wired', ['from "./home_dashboard_v5.js"', "from './home_dashboard_v5.js'"]);
+  checkIncludesAny(appSource, 'home renderer import wired', [
+    'from "./home_dashboard_v5.js"',
+    "from './home_dashboard_v5.js'",
+    '"./home_dashboard_v5.js"',
+  ]);
   checkIncludes(appSource, 'home renderer created', 'const { renderHome } = createHomeDashboardRenderer({');
   checkPattern(appSource, 'trips screen render function exists', /function\s+renderAllTrips\s*\(/, 'function renderAllTrips(...)');
-  checkIncludesAny(appSource, 'settings renderer import wired', ['from "./settings_screen_v5.js"', "from './settings_screen_v5.js'"]);
+  checkIncludesAny(appSource, 'settings renderer import wired', [
+    'from "./settings_screen_v5.js"',
+    "from './settings_screen_v5.js'",
+    '"./settings_screen_v5.js"',
+  ]);
   checkIncludes(appSource, 'settings renderer created', 'const { renderSettings } = createSettingsScreenOrchestrator({');
+  checkIncludes(appSource, 'startup module list versioned loader present', 'const STARTUP_MODULE_URLS = STARTUP_MODULE_PATHS.map(getVersionedModuleHref);');
 }
 
 if (shellSource) {

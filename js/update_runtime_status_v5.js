@@ -50,6 +50,66 @@ export function createUpdateRuntimeStatusSeam({
     locationRef.reload();
   }
 
+  function parseBuildDigits(value){
+    const match = String(value || "").match(/(\d+)$/);
+    return match ? match[1] : "";
+  }
+
+  async function getRuntimeVersionDiagnostics(){
+    const buildDigits = parseBuildDigits(displayBuildVersion);
+    const details = {
+      buildDigits,
+      swController: false,
+      swScriptVersion: "",
+      cacheVersions: [],
+      startupModuleVersions: []
+    };
+
+    try{
+      if("serviceWorker" in navigatorRef){
+        const reg = await navigatorRef.serviceWorker.getRegistration();
+        details.swController = !!navigatorRef.serviceWorker.controller;
+        const swUrl = reg?.active?.scriptURL || reg?.waiting?.scriptURL || reg?.installing?.scriptURL || "";
+        const swMatch = swUrl.match(/[?&]v=(\d+)/);
+        details.swScriptVersion = swMatch ? swMatch[1] : "";
+      }
+    }catch(_){ }
+
+    try{
+      if(windowRef.caches && cachesRef.keys){
+        const keys = await cachesRef.keys();
+        details.cacheVersions = keys
+          .filter(k=>String(k).startsWith("shellfish-tracker-"))
+          .map(k=>{
+            const m = String(k).match(/-v(\d+)$/);
+            return m ? m[1] : "";
+          })
+          .filter(Boolean);
+      }
+    }catch(_){ }
+
+    try{
+      const startupModules = Array.isArray(windowRef.__SHELLFISH_STARTUP_IMPORTS__)
+        ? windowRef.__SHELLFISH_STARTUP_IMPORTS__
+        : [];
+      details.startupModuleVersions = startupModules
+        .map(url=>{
+          const match = String(url || "").match(/[?&]v=(\d+)/);
+          return match ? match[1] : "";
+        })
+        .filter(Boolean);
+    }catch(_){ }
+
+    details.hasVersionSkew = Boolean(
+      (details.swScriptVersion && buildDigits && details.swScriptVersion !== buildDigits) ||
+      details.cacheVersions.some(v=>buildDigits && v !== buildDigits) ||
+      details.startupModuleVersions.some(v=>buildDigits && v !== buildDigits) ||
+      (buildDigits && details.startupModuleVersions.length > 0 && !details.swController)
+    );
+
+    return details;
+  }
+
   async function updateBuildInfo(){
     const detailsEl = documentRef.getElementById("buildInfoDetails");
     const versionEl = documentRef.getElementById("updateVersionLine");
@@ -71,11 +131,13 @@ export function createUpdateRuntimeStatusSeam({
     const standalone = (windowRef.matchMedia && windowRef.matchMedia("(display-mode: standalone)").matches) || (navigatorRef.standalone === true);
     parts.push(`Standalone: ${standalone ? "yes" : "no"}`);
 
+    const runtimeDiag = await getRuntimeVersionDiagnostics();
+
     let swLine = "SW: unsupported";
     try{
       if("serviceWorker" in navigatorRef){
         const reg = await navigatorRef.serviceWorker.getRegistration();
-        const ctrl = !!navigatorRef.serviceWorker.controller;
+        const ctrl = runtimeDiag.swController;
         const url = reg?.active?.scriptURL || reg?.waiting?.scriptURL || reg?.installing?.scriptURL || "";
         swLine = `SW: ${ctrl ? "controller" : "no-controller"}${url ? " | " + url.split("/").slice(-1)[0] : ""}`;
       }
@@ -89,6 +151,32 @@ export function createUpdateRuntimeStatusSeam({
         parts.push(`Caches: ${ours.length ? ours.join(", ") : "(none)"}`);
       }
     }catch(_){ }
+
+    if(runtimeDiag.startupModuleVersions.length){
+      const uniqueStartupVersions = [...new Set(runtimeDiag.startupModuleVersions)];
+      parts.push(`Startup modules: ${uniqueStartupVersions.map(v=>`v${v}`).join(", ")}`);
+    }
+
+    if(runtimeDiag.hasVersionSkew){
+      const warningParts = [];
+      if(runtimeDiag.swScriptVersion && runtimeDiag.buildDigits && runtimeDiag.swScriptVersion !== runtimeDiag.buildDigits){
+        warningParts.push(`SW script v${runtimeDiag.swScriptVersion}`);
+      }
+      const cacheMismatchVersions = [...new Set(runtimeDiag.cacheVersions.filter(v=>runtimeDiag.buildDigits && v !== runtimeDiag.buildDigits))];
+      if(cacheMismatchVersions.length){
+        warningParts.push(`cache ${cacheMismatchVersions.map(v=>`v${v}`).join(", ")}`);
+      }
+      const startupMismatchVersions = [...new Set(runtimeDiag.startupModuleVersions.filter(v=>runtimeDiag.buildDigits && v !== runtimeDiag.buildDigits))];
+      if(startupMismatchVersions.length){
+        warningParts.push(`startup modules ${startupMismatchVersions.map(v=>`v${v}`).join(", ")}`);
+      }
+      if(runtimeDiag.buildDigits && runtimeDiag.startupModuleVersions.length && !runtimeDiag.swController){
+        warningParts.push("installed app has no SW controller");
+      }
+      parts.push(`Version guardrail: warning${warningParts.length ? " • " + warningParts.join(" • ") : ""}`);
+    }else if(runtimeDiag.buildDigits){
+      parts.push(`Version guardrail: aligned to v${runtimeDiag.buildDigits}`);
+    }
 
     try{
       if(navigatorRef.storage && navigatorRef.storage.estimate){
