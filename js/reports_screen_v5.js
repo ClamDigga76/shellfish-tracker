@@ -599,6 +599,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     normalizeDealerDisplay
   });
 
+  const renderSummaryAverageLine = (row)=> `Avg amount / trip ${formatMoney(to2(row.amountPerTrip))} • Avg pounds / trip ${to2(row.poundsPerTrip)} lbs`;
+
   const renderAggList = (rows, emptyMsg)=>{
     if(!rows.length) return `
       <div class="emptyState compact">
@@ -611,7 +613,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           <div>
             <div class="tname">${escapeHtml(r.name)}</div>
             <div class="tsub">${r.trips} trips • ${r.fishingDays || 0} days • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
-            <div class="tsub">${formatMoney(to2(r.amountPerTrip))}/trip • ${to2(r.poundsPerTrip)} lbs/trip • ${formatMoney(to2(r.amountPerDay))}/day • ${to2(r.poundsPerDay)} lbs/day</div>
+            <div class="tsub">${renderSummaryAverageLine(r)}</div>
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
@@ -629,7 +631,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           <div>
             <div class="tname">${escapeHtml(r.label)}</div>
             <div class="tsub">${r.trips} trips • ${r.fishingDays || 0} days • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
-            <div class="tsub">${formatMoney(to2(r.amountPerTrip))}/trip • ${to2(r.poundsPerTrip)} lbs/trip • ${formatMoney(to2(r.amountPerDay))}/day • ${to2(r.poundsPerDay)} lbs/day</div>
+            <div class="tsub">${renderSummaryAverageLine(r)}</div>
           </div>
           <div class="tright">
             <div><b class="money">${formatMoney(r.amt)}</b></div>
