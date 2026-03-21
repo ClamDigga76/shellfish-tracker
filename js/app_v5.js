@@ -498,6 +498,7 @@ const {
   openRestorePreviewModal,
   openReplaceSafetyBackupModal,
   openRestoreErrorModal,
+  openRestoreResultModal,
   importBackupFromFile,
   restoreFromRollbackSnapshot
 } = createBackupRestoreSubsystem({
@@ -1708,6 +1709,7 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   applyThemeMode: () => applyThemeMode(),
   render: () => render(),
   openRestoreErrorModal: (error) => openRestoreErrorModal(error),
+  openRestoreResultModal: (result) => openRestoreResultModal(result),
   showToast: (msg) => showToast(msg)
 });
 

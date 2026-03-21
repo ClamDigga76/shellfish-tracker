@@ -318,6 +318,18 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .settingsBuildInfo{white-space:pre-wrap;margin-top:6px}
 .settingsBackupRow{gap:10px;align-items:center;grid-template-columns:1fr 1fr}
 .settingsFlexBtn{flex:1}
+
+.restorePreviewWarning{display:grid;gap:8px;margin-top:12px;padding:12px;border-radius:14px;border:1px solid rgba(255,179,71,.34);background:linear-gradient(180deg, rgba(255,179,71,.16) 0%, rgba(255,179,71,.08) 100%);color:#ffe2ba}
+.restorePreviewWarning--strong{border-color:rgba(255,107,107,.42);background:linear-gradient(180deg, rgba(255,107,107,.18) 0%, rgba(255,107,107,.10) 100%);color:#ffd6d6;box-shadow:0 8px 20px rgba(120,24,24,.12)}
+.restorePreviewWarningTitle{font-size:13px;font-weight:860;line-height:1.2;letter-spacing:.01em}
+.restorePreviewWarningBody,.restorePreviewWarningHint{font-size:12px;line-height:1.45;color:inherit}
+.restorePreviewWarningList{margin:0;padding-left:18px;display:grid;gap:5px;font-size:12px;line-height:1.45}
+.restoreResultPanel{display:grid;gap:12px}
+.restoreResultLead{font-size:13px;line-height:1.5;color:var(--text-muted-strong)}
+.restoreResultGrid{display:grid;gap:8px}
+.restoreResultMetric{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.restoreResultMetricLabel{font-size:12px;line-height:1.35;color:var(--text-muted-strong)}
+.restoreResultNotes{display:grid;gap:7px;padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--line);font-size:12px;line-height:1.45;color:var(--text-muted-strong)}
 .hiddenInput{display:none}
 .settingsStackedSegBtn{display:flex;flex-direction:column;align-items:center;line-height:1.05}
 .settingsSoonNote{margin-top:2px;opacity:.85}

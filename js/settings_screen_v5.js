@@ -44,6 +44,7 @@ export function createSettingsScreenOrchestrator({
   applyThemeMode,
   render,
   openRestoreErrorModal,
+  openRestoreResultModal,
   restoreFromRollbackSnapshot,
   saveState,
   openConfirmModal,
@@ -370,9 +371,13 @@ export function createSettingsScreenOrchestrator({
               includeSettings: options.includeSettings
             });
 
-            const n = Number(result?.tripsAdded);
             const modeLabel = result?.mode === "replace" ? "Replace" : "Merge";
-            showToast(Number.isFinite(n) ? `Bank the Catch backup restored (${n} trips, ${modeLabel})` : `Bank the Catch backup restored (${modeLabel})`);
+            const tripsAdded = Number(result?.tripsAdded || 0);
+            const tripsSkipped = Number(result?.tripsSkippedDuplicates || 0);
+            showToast(result?.mode === "merge"
+              ? `Restore complete: ${tripsAdded} trips added, ${tripsSkipped} likely duplicates skipped (${modeLabel})`
+              : `Restore complete: ${tripsAdded} trips restored (${modeLabel})`);
+            await openRestoreResultModal(result);
             updateRestoreRollbackLine();
             applyThemeMode();
             render();

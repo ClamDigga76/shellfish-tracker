@@ -542,6 +542,58 @@ export function createBackupRestoreSubsystem(deps){
     return `${day} ${hh}:${mm}`;
   }
 
+  function __pluralize(count, singular, plural=`${singular}s`){
+    const n = Number(count) || 0;
+    return `${n} ${n === 1 ? singular : plural}`;
+  }
+
+  function __buildRestoreSummaryHtml(result){
+    const mode = String(result?.mode || "merge");
+    const tripsAdded = Number(result?.tripsAdded || 0);
+    const tripsSkipped = Number(result?.tripsSkippedDuplicates || 0);
+    const deletedTripsInFile = Number(result?.deletedTripsInFile || 0);
+    const deletedTripsImported = Number(result?.deletedTripsImported || 0);
+    const areasAdded = Number(result?.areasAdded || 0);
+    const dealersAdded = Number(result?.dealersAdded || 0);
+    const settingsApplied = !!result?.settingsApplied;
+    const settingsAvailable = !!result?.settingsInFile;
+    const countsHtml = mode === "replace"
+      ? `
+        <div class="restoreResultMetric"><span class="restoreResultMetricLabel">Trips restored</span><b>${escapeHtml(String(tripsAdded))}</b></div>
+        <div class="restoreResultMetric"><span class="restoreResultMetricLabel">Areas restored</span><b>${escapeHtml(String(result?.areasInFile || 0))}</b></div>
+        <div class="restoreResultMetric"><span class="restoreResultMetricLabel">Dealers restored</span><b>${escapeHtml(String(result?.dealersInFile || 0))}</b></div>
+      `
+      : `
+        <div class="restoreResultMetric"><span class="restoreResultMetricLabel">Trips added</span><b>${escapeHtml(String(tripsAdded))}</b></div>
+        <div class="restoreResultMetric"><span class="restoreResultMetricLabel">Likely duplicates skipped</span><b>${escapeHtml(String(tripsSkipped))}</b></div>
+        <div class="restoreResultMetric"><span class="restoreResultMetricLabel">New areas added</span><b>${escapeHtml(String(areasAdded))}</b></div>
+        <div class="restoreResultMetric"><span class="restoreResultMetricLabel">New dealers added</span><b>${escapeHtml(String(dealersAdded))}</b></div>
+      `;
+
+    const settingsLine = settingsApplied
+      ? 'Settings from this backup were applied on this device.'
+      : (settingsAvailable
+          ? 'Settings were left unchanged on this device.'
+          : 'This backup file did not include settings to apply.');
+
+    const deletedLine = deletedTripsInFile > 0
+      ? (mode === "replace"
+          ? `${__pluralize(deletedTripsImported, 'recently deleted item')} restored to Recently Deleted.`
+          : `${__pluralize(deletedTripsImported, 'recently deleted item')} merged into Recently Deleted.`)
+      : 'No Recently Deleted items were included in this backup.';
+
+    return `
+      <div class="restoreResultPanel">
+        <div class="restoreResultLead">${escapeHtml(mode === "replace" ? 'Replace finished. This device now reflects the backup file you reviewed.' : 'Merge finished. Current device data stayed in place and only new backup content was added.')}</div>
+        <div class="restoreResultGrid">${countsHtml}</div>
+        <div class="restoreResultNotes">
+          <div>${escapeHtml(settingsLine)}</div>
+          <div>${escapeHtml(deletedLine)}</div>
+        </div>
+      </div>
+    `;
+  }
+
   function openRestorePreviewModal(preview){
     return new Promise((resolve)=>{
       const uidBase = uid("restorePreview");
@@ -552,8 +604,9 @@ export function createBackupRestoreSubsystem(deps){
       const cancelId = `${uidBase}_cancel`;
       const continueId = `${uidBase}_continue`;
 
-      const warningHtml = (preview.warnings && preview.warnings.length)
-        ? `<div class="modalErr" style="display:block;margin-top:10px"><b>Review before restoring</b><ul style="margin:8px 0 0 16px;padding:0">${preview.warnings.map(w=>`<li>${escapeHtml(String(w || ""))}</li>`).join("")}</ul></div>`
+      const warningCount = Array.isArray(preview.warnings) ? preview.warnings.length : 0;
+      const warningHtml = warningCount
+        ? `<div class="restorePreviewWarning ${warningCount >= 2 ? "restorePreviewWarning--strong" : ""}" role="status" aria-live="polite"><div class="restorePreviewWarningTitle">Review carefully before restoring</div><div class="restorePreviewWarningBody">${warningCount === 1 ? "This file can still be restored, but one part of it needs extra attention." : `This file can still be restored, but ${escapeHtml(String(warningCount))} parts of it need extra attention.`}</div><ul class="restorePreviewWarningList">${preview.warnings.map(w=>`<li>${escapeHtml(String(w || ""))}</li>`).join("")}</ul><div class="restorePreviewWarningHint">If anything looks unfamiliar, stop here and confirm the file source before continuing.</div></div>`
         : `<div class="muted small mt10">No restore warnings found. File shape looks complete.</div>`;
 
       const counts = preview.counts || {};
@@ -788,6 +841,8 @@ export function createBackupRestoreSubsystem(deps){
     });
 
     const nextTrips = replace ? [] : (Array.isArray(state.trips) ? [...state.trips] : []);
+    const existingAreas = replace ? [] : (Array.isArray(state.areas) ? state.areas.map((value)=>String(value || "").trim()).filter(Boolean) : []);
+    const existingDealers = replace ? [] : (Array.isArray(state.dealers) ? state.dealers.map((value)=>String(value || "").trim()).filter(Boolean) : []);
     const seen = new Set(nextTrips.map(t=> normalizeKey(`${t?.dateISO||""}|${t?.dealer||""}|${t?.area||""}|${to2(Number(t?.pounds)||0)}|${to2(Number(t?.amount)||0)}`)));
 
     let added = 0;
@@ -835,15 +890,51 @@ export function createBackupRestoreSubsystem(deps){
     ensureDealers();
     saveState();
 
+    const tripsSkippedDuplicates = replace ? 0 : Math.max(0, importedTrips.length - added);
+    const settingsInFile = !!(settingsIn && typeof settingsIn === "object" && Object.keys(settingsIn).length);
+
     return {
       mode: replace ? "replace" : "merge",
       includeSettings,
+      settingsInFile,
+      settingsApplied: includeSettings && settingsInFile,
+      fileName: String(parsed?.fileName || file?.name || ""),
       tripsInFile: importedTrips.length,
       tripsAdded: replace ? importedTrips.length : added,
+      tripsSkippedDuplicates,
       areasInFile: importedAreas.length,
+      areasAdded: replace ? importedAreas.length : importedAreas.filter((value)=> !existingAreas.includes(value)).length,
       dealersInFile: importedDealers.length,
+      dealersAdded: replace ? importedDealers.length : importedDealers.filter((value)=> !existingDealers.includes(value)).length,
+      deletedTripsInFile: importedDeletedTrips.length,
+      deletedTripsImported: importedDeletedTrips.length,
       warnings: normalizedResult?.warnings || []
     };
+  }
+
+  function openRestoreResultModal(result){
+    return new Promise((resolve)=>{
+      const uidBase = uid("restoreResult");
+      const okId = `${uidBase}_ok`;
+      const title = String(result?.mode || "merge") === "replace" ? "Restore complete" : "Merge complete";
+      const summaryHtml = __buildRestoreSummaryHtml(result);
+      openModal({
+        title,
+        backdropClose: false,
+        escClose: false,
+        showCloseButton: false,
+        position: "center",
+        html: `
+          ${summaryHtml}
+          <div class="modalActions" style="margin-top:12px">
+            <button class="btn primary" id="${okId}" type="button">OK</button>
+          </div>
+        `,
+        onOpen: ()=>{
+          document.getElementById(okId)?.addEventListener("click", ()=>{ closeModal(); resolve(); });
+        }
+      });
+    });
   }
 
   return {
@@ -859,6 +950,7 @@ export function createBackupRestoreSubsystem(deps){
     openRestorePreviewModal,
     openReplaceSafetyBackupModal,
     openRestoreErrorModal,
+    openRestoreResultModal,
     importBackupFromFile,
     restoreFromRollbackSnapshot
   };
