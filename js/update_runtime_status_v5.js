@@ -21,13 +21,13 @@ export function createUpdateRuntimeStatusSeam({
     const statusEl = documentRef.getElementById("updateBigStatus");
     const btnCheck = documentRef.getElementById("updatePrimary");
     try{
-      if(statusEl) statusEl.textContent = swUpdateReady ? "Loading update…" : "Loading latest build…";
+      if(statusEl) statusEl.textContent = swUpdateReady ? "Loading latest version…" : "Reloading latest version…";
       if(btnCheck) btnCheck.disabled = true;
-      if(statusEl) statusEl.textContent = "Reloading app now…";
+      if(statusEl) statusEl.textContent = "Reloading now…";
       await forceRefreshApp();
     }catch(_){
       try{
-        if(statusEl) statusEl.textContent = "Reloading app now…";
+        if(statusEl) statusEl.textContent = "Reloading now…";
         await forceRefreshApp();
       }catch(__){}
     }finally{
@@ -117,10 +117,10 @@ export function createUpdateRuntimeStatusSeam({
     try{
       if(versionEl){
         const standalone = (windowRef.matchMedia && windowRef.matchMedia("(display-mode: standalone)").matches) || (navigatorRef.standalone === true);
-        versionEl.textContent = `Current build: ${displayBuildVersion}${standalone ? " • Installed app mode" : " • Browser mode"}`;
+        versionEl.textContent = `Version ${displayBuildVersion}${standalone ? " • Installed app" : " • Browser"}`;
       }
     }catch(_){
-      try{ if(versionEl) versionEl.textContent = `Current build: ${displayBuildVersion}`; }catch(__){}
+      try{ if(versionEl) versionEl.textContent = `Version ${displayBuildVersion}`; }catch(__){}
     }
 
     if(!detailsEl) return;
@@ -173,9 +173,9 @@ export function createUpdateRuntimeStatusSeam({
       if(runtimeDiag.buildDigits && runtimeDiag.startupModuleVersions.length && !runtimeDiag.swController){
         warningParts.push("installed app has no SW controller");
       }
-      parts.push(`Version guardrail: warning${warningParts.length ? " • " + warningParts.join(" • ") : ""}`);
+      parts.push(`Version check: warning${warningParts.length ? " • " + warningParts.join(" • ") : ""}`);
     }else if(runtimeDiag.buildDigits){
-      parts.push(`Version guardrail: aligned to v${runtimeDiag.buildDigits}`);
+      parts.push(`Version check: aligned to v${runtimeDiag.buildDigits}`);
     }
 
     try{
@@ -200,12 +200,12 @@ export function createUpdateRuntimeStatusSeam({
     if(inlineMsg) inlineMsg.style.display = "none";
 
     if(swUpdateReady){
-      statusEl.textContent = "Update ready • Tap Load latest update to switch builds";
-      btnPrimary.textContent = "Load latest update";
+      statusEl.textContent = "Latest version ready • Tap to reload";
+      btnPrimary.textContent = "Reload latest version";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     }else{
-      statusEl.textContent = "Build status: Up to date";
-      btnPrimary.textContent = "Load latest update";
+      statusEl.textContent = "Up to date";
+      btnPrimary.textContent = "Reload latest version";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     }
   }

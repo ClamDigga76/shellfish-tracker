@@ -68,7 +68,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Recently Deleted</div>
-            <div class="muted small">Deleted trips stay here until you restore or clear them.</div>
+            <div class="muted small">Restore a deleted trip here, or clear it for good.</div>
           </div>
           <span class="settingsValuePill">${deletedTrips.length}</span>
         </div>
@@ -100,7 +100,7 @@ export function createSettingsScreenOrchestrator({
         </div>
       ` : `
         <div class="settingsRow settingsRow--minor">
-          <div class="muted small">Recently Deleted is empty.</div>
+          <div class="muted small">No deleted trips waiting here.</div>
         </div>
       `;
 
@@ -113,7 +113,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Theme</div>
-            <div class="muted small">Choose how app appearance is applied.</div>
+            <div class="muted small">Pick how the app looks.</div>
           </div>
           <span class="settingsValuePill">Mode</span>
         </div>
@@ -136,28 +136,28 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">Updates</div>
-            <div class="muted small">Check status and switch to the newest build safely.</div>
+            <div class="muted small">See if you are current, then reload the latest version if needed.</div>
           </div>
           <span class="settingsValuePill">Status</span>
         </div>
         <div class="settingsRow settingsRow--status">
-          <div id="updateBigStatus" class="settingsUpdateStatus">Checking for updates…</div>
+          <div id="updateBigStatus" class="settingsUpdateStatus">Checking version…</div>
           <div class="muted settingsBodyTiny" id="updateVersionLine"></div>
         </div>
         <div class="settingsRow settingsRow--action">
-          <button class="btn settingsInlineBtn" id="updatePrimary">Load latest update</button>
+          <button class="btn settingsInlineBtn" id="updatePrimary">Reload latest version</button>
           <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
         <details class="settingsDetails settingsRow">
-          <summary class="muted settingsBodyTiny">Diagnostics details</summary>
+          <summary class="muted settingsBodyTiny">Technical details</summary>
           <div class="muted settingsBodyTiny settingsBuildInfo" id="buildInfoDetails"></div>
         </details>
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Help</div>
-            <div class="muted small">Practical guidance for install, offline use, and backup safety.</div>
+            <div class="muted small">Install steps, offline tips, and backup guidance.</div>
           </div>
-          <button class="btn settingsInlineBtn" id="openHelp">View Help</button>
+          <button class="btn settingsInlineBtn" id="openHelp">Open Help</button>
         </div>
       </div>
     </div>
@@ -168,17 +168,17 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">App mode</div>
-            <div class="muted small">Best experience: install the app so it opens from your Home Screen and feels more dependable at the shore.</div>
+            <div class="muted small">Install it for quicker opening and a steadier shore-day experience.</div>
           </div>
           <span class="settingsValuePill" id="installModePill">Checking…</span>
         </div>
         <div class="settingsRow settingsRow--status">
-          <div id="installModeLine" class="settingsUpdateStatus">Checking how Bank the Catch is running…</div>
+          <div id="installModeLine" class="settingsUpdateStatus">Checking how the app is opening…</div>
           <div class="muted settingsBodyTiny" id="installStatusHint"></div>
         </div>
         <div class="settingsRow settingsRow--action settingsInstallActions">
           <button class="btn primary settingsInlineBtn" id="installActionBtn" type="button">Install app</button>
-          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">View install help</button>
+          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">Install help</button>
         </div>
         <div class="settingsRow settingsRow--minor">
           <div class="hint" id="installWhyLine"></div>
@@ -193,7 +193,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Backup & Restore</div>
-            <div class="muted small">Create or restore backups with a preview and clear warnings before changes are applied.</div>
+            <div class="muted small">Back up before big changes, then restore with a preview when needed.</div>
           </div>
           <span class="settingsValuePill">Freshness</span>
         </div>
@@ -207,14 +207,14 @@ export function createSettingsScreenOrchestrator({
           <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="hint"><b>Recommended:</b> create a fresh backup before major updates, restore actions (especially Replace), or bulk edits.</div>
-          <div class="muted small mt8">After creating a backup, move it to <b>iCloud Drive</b> (iPhone Files) or <b>Google Drive</b> (Android) and keep one older copy too.</div>
+          <div class="hint"><b>Recommended:</b> make a fresh backup before major updates, Replace restore, or bulk edits.</div>
+          <div class="muted small mt8">Save one copy to <b>iCloud Drive</b> or <b>Google Drive</b>, and keep one older backup too.</div>
         </div>
         <div class="settingsRow settingsRow--status">
           <div class="muted small" id="restoreRollbackLine"></div>
         </div>
         <div class="settingsRow settingsRow--action">
-          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Restore pre-restore snapshot</button>
+          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Undo last restore</button>
         </div>
         ${deletedTripsHtml}
       </div>
@@ -226,7 +226,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">List Management</div>
-            <div class="muted small">Manage the lists used in New Trip and Edit Trip.</div>
+            <div class="muted small">Edit the lists used in New Trip and Edit Trip.</div>
           </div>
           <span class="settingsValuePill">Edit</span>
         </div>
@@ -253,7 +253,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Build</div>
-            <div class="muted small">Version currently running on this device.</div>
+            <div class="muted small">Version running on this device.</div>
           </div>
           <span class="settingsValuePill">${displayBuildVersion}</span>
         </div>
@@ -262,13 +262,13 @@ export function createSettingsScreenOrchestrator({
         </div>
         <div class="settingsRow settingsRow--minor">
           <div class="muted small">Created by <b>Jeremy Wood</b></div>
-          <div class="muted small mt6">Support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+          <div class="muted small mt6">Support email: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
           <div class="muted small mt8">© 2026 Jeremy Wood. All rights reserved.</div>
         </div>
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Legal & Trust</div>
-            <div class="muted small">Review terms, privacy details, and open-source license info.</div>
+            <div class="muted small">Terms, privacy, and open-source details.</div>
           </div>
           <span class="settingsValuePill">Info</span>
         </div>
@@ -285,7 +285,7 @@ export function createSettingsScreenOrchestrator({
     <div class="settingsGroupBlock">
       <div class="settingsGroupLabel">Advanced</div>
       <details class="card settingsSectionCard settingsGroupedCard settingsAdvancedCard" id="advancedBox">
-        <summary class="settingsAdvancedSummary">Diagnostics and reset</summary>
+        <summary class="settingsAdvancedSummary">Advanced diagnostics and reset</summary>
         <div class="settingsRow settingsRow--action mt10">
           <div class="row gap10 wrap">
             <button class="btn" id="copyDebug">Copy diagnostics</button>
@@ -293,7 +293,7 @@ export function createSettingsScreenOrchestrator({
           </div>
         </div>
         <div class="settingsRow settingsRow--danger">
-          <div class="muted small"><b>Danger zone:</b> Erase removes all trips and lists stored on this device. Create a backup first.</div>
+          <div class="muted small"><b>Danger zone:</b> Erase removes all trips and lists on this device. Create a backup first.</div>
           <div class="row mt10">
             <button class="btn danger" id="resetData">Erase All Data</button>
           </div>

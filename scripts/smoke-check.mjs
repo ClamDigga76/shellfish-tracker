@@ -179,8 +179,8 @@ if (reportsScreenSource) {
 
 if (updateStatusSource) {
   checkIncludes(updateStatusSource, 'runtime update seam export exists', 'export function createUpdateRuntimeStatusSeam({');
-  checkIncludes(updateStatusSource, 'runtime update ready status marker present', 'Update ready • Tap Load latest update to switch builds');
-  checkIncludes(updateStatusSource, 'runtime current build marker present', 'Current build: ${displayBuildVersion}');
+  checkIncludes(updateStatusSource, 'runtime update ready status marker present', 'Latest version ready • Tap to reload');
+  checkIncludes(updateStatusSource, 'runtime current build marker present', 'Version ${displayBuildVersion}');
   checkIncludes(updateStatusSource, 'runtime build badge marker present', 'App ${displayBuildVersion}');
 }
 

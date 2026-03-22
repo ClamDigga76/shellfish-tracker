@@ -88,9 +88,9 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_settings" class="helpSectionTitle">Settings</b>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
-        <div><b>Use it for:</b> updates, lists, backups, and diagnostics.</div>
+        <div><b>Use it for:</b> quick updates, lists, backups, and deeper diagnostics when needed.</div>
         <ul style="margin:8px 0 0 18px">
-          <li><b>Updates:</b> check build status and load latest update safely.</li>
+          <li><b>Updates:</b> see if you are up to date and reload the latest version when needed.</li>
           <li><b>List Management:</b> maintain Dealers and Areas.</li>
           <li><b>Backup & Restore:</b> export and recover your trip data.</li>
         </ul>
@@ -143,8 +143,8 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <ul style="margin:0 0 0 18px">
-          <li>If the app looks stale, open <b>Settings</b> and use <b>Load latest update</b>.</li>
-          <li>Use <b>Settings → Install App</b> to see whether you are in Browser or Installed app mode and follow the right install steps.</li>
+          <li>If the app looks stale, open <b>Settings</b> and use <b>Reload latest version</b>.</li>
+          <li>Use <b>Settings → Install App</b> to see whether you are in Browser or Installed app mode, then follow the matching steps.</li>
           <li>If behavior seems off after an update, reload once and recheck in Help/Settings status lines.</li>
         </ul>
       </div>
