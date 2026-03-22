@@ -33,19 +33,19 @@ export function createReportsHighlightsSeam(deps){
     const tripTone = compareToneForRatio(period.current?.amountPerTrip, period.previous?.amountPerTrip);
     const dayTone = compareToneForRatio(period.current?.amountPerDay, period.previous?.amountPerDay);
     if(!pounds || !ppl || pounds.suppressed || ppl.suppressed){
-      return "compared with the prior period.";
+      return "compared with the earlier period.";
     }
-    if(pounds.compareTone === "up" && ppl.compareTone === "up") return "as both pounds and $/lb moved up.";
-    if(pounds.compareTone === "down" && ppl.compareTone === "down") return "as lighter pounds and softer $/lb stacked together.";
+    if(pounds.compareTone === "up" && ppl.compareTone === "up") return "with both pounds and $/lb up.";
+    if(pounds.compareTone === "down" && ppl.compareTone === "down") return "with lighter pounds and a softer $/lb.";
     if(pounds.compareTone === "up" && ppl.compareTone === "down") return "$ grew on heavier pounds even with a softer rate.";
-    if(pounds.compareTone === "down" && ppl.compareTone === "up") return "$ shifted on stronger $/lb despite lighter pounds.";
+    if(pounds.compareTone === "down" && ppl.compareTone === "up") return "$ changed on stronger $/lb despite lighter pounds.";
     if(pounds.compareTone === "steady" && ppl.compareTone === "up") return "mostly because $/lb improved.";
     if(pounds.compareTone === "steady" && ppl.compareTone === "down") return "mostly because $/lb eased.";
     if(pounds.compareTone === "up" && ppl.compareTone === "steady") return "mostly because pounds increased.";
     if(pounds.compareTone === "down" && ppl.compareTone === "steady") return "mostly because pounds fell.";
-    if(tripTone === "up" && dayTone === "up") return "while both $ per trip and $ per fishing day improved.";
-    if(tripTone === "down" && dayTone === "down") return "while both $ per trip and $ per fishing day softened.";
-    return "with pounds and pricing staying fairly close.";
+    if(tripTone === "up" && dayTone === "up") return "with both $ per trip and $ per fishing day up.";
+    if(tripTone === "down" && dayTone === "down") return "with both $ per trip and $ per fishing day softer.";
+    return "with pounds and pricing staying close.";
   }
 
   function buildTripsDriverText(compare){
@@ -65,7 +65,7 @@ export function createReportsHighlightsSeam(deps){
   function buildPoundsDriverText(compare){
     const trips = compare?.metrics?.trips;
     if(!trips || trips.suppressed){
-      return "compared with the prior period.";
+      return "compared with the earlier period.";
     }
     const period = compare?.period || {};
     const currentRate = safeNum(period.current?.poundsPerTrip);
@@ -77,9 +77,9 @@ export function createReportsHighlightsSeam(deps){
       : (currentRate < previousRate * 0.95 ? "down" : "steady");
     const dayTone = compareToneForRatio(currentDayRate, previousDayRate);
 
-    if(trips.compareTone === "up" && productivityTone === "up") return "with both trip count and pounds per trip rising.";
-    if(trips.compareTone === "down" && productivityTone === "down") return "as fewer trips also produced less per trip.";
-    if(trips.compareTone === "up" && productivityTone === "down") return "because extra trips offset softer pounds per trip.";
+    if(trips.compareTone === "up" && productivityTone === "up") return "with more trips and more pounds per trip.";
+    if(trips.compareTone === "down" && productivityTone === "down") return "with fewer trips and less per trip.";
+    if(trips.compareTone === "up" && productivityTone === "down") return "because more trips offset softer pounds per trip.";
     if(trips.compareTone === "down" && productivityTone === "up") return "because stronger pounds per trip partly covered fewer trips.";
     if(trips.compareTone === "up") return "mostly on more trips.";
     if(trips.compareTone === "down") return "mostly on fewer trips.";
@@ -94,10 +94,10 @@ export function createReportsHighlightsSeam(deps){
     const pounds = compare?.metrics?.pounds;
     const amount = compare?.metrics?.amount;
     if(!pounds || !amount || pounds.suppressed || amount.suppressed){
-      return "compared with the prior period.";
+      return "compared with the earlier period.";
     }
     if(amount.compareTone === "up" && pounds.compareTone !== "up") return "even without heavier pounds.";
-    if(amount.compareTone === "down" && pounds.compareTone !== "down") return "even though pounds did not grow.";
+    if(amount.compareTone === "down" && pounds.compareTone !== "down") return "even without lighter pounds.";
     if(amount.compareTone === "up" && pounds.compareTone === "up") return "while both sales and pounds climbed.";
     if(amount.compareTone === "down" && pounds.compareTone === "down") return "while both sales and pounds softened.";
     return "relative to how much weight moved.";
@@ -126,18 +126,18 @@ export function createReportsHighlightsSeam(deps){
       ? " • early read"
       : (payload?.confidenceLabel === "weak" ? " • light read" : "");
     if(payload.metricKey === "trips"){
-      return `${buildTripsDriverText(compare)} • ${windowText}${trustText}`;
+      return `${buildTripsDriverText(compare)} • matched against ${windowText}${trustText}`;
     }
     if(payload.metricKey === "amount"){
-      return `${buildAmountDriverText(compare).replace(/\.$/, "")} • ${windowText}${trustText}`;
+      return `${buildAmountDriverText(compare).replace(/\.$/, "")} • matched against ${windowText}${trustText}`;
     }
     if(payload.metricKey === "pounds"){
-      return `${buildPoundsDriverText(compare).replace(/\.$/, "")} • ${windowText}${trustText}`;
+      return `${buildPoundsDriverText(compare).replace(/\.$/, "")} • matched against ${windowText}${trustText}`;
     }
     if(payload.metricKey === "ppl"){
-      return `${buildPplDriverText(compare).replace(/\.$/, "")} • ${windowText}${trustText}`;
+      return `${buildPplDriverText(compare).replace(/\.$/, "")} • matched against ${windowText}${trustText}`;
     }
-    return `${buildPeriodLabel(period)} • ${windowText}${trustText}`;
+    return `${buildPeriodLabel(period)} • compared on ${windowText}${trustText}`;
   }
 
   function buildLeaderSummary({ label, entity, totalAmount, noun }){
@@ -183,11 +183,11 @@ export function createReportsHighlightsSeam(deps){
     const leaderChange = payload?.leaderChange || {};
     let headline = `${payload.entityName} held close to ${previousLabel}.`;
     if(leaderChange.changed && leaderChange.currentLeader?.name === payload.entityName){
-      headline = `${payload.entityName} took the ${noun} lead from ${leaderChange.previousLeader?.name || previousLabel}.`;
+      headline = `${payload.entityName} moved into the ${noun} lead ahead of ${leaderChange.previousLeader?.name || previousLabel}.`;
     }else if(payload.compareTone === "up"){
-      headline = `${payload.entityName} out-earned its ${previousLabel} window${share >= 45 ? " and drove much of the gain" : ""}.`;
+      headline = `${payload.entityName} earned more than in ${previousLabel}${share >= 45 ? " and drove much of the gain" : ""}.`;
     }else if(payload.compareTone === "down"){
-      headline = `${payload.entityName} cooled versus ${previousLabel}${share >= 45 ? ", which pulled on the overall result" : ""}.`;
+      headline = `${payload.entityName} came in below ${previousLabel}${share >= 45 ? ", which pulled on the overall result" : ""}.`;
     }
     const value = payload.percentValid ? signedPctText(payload.deltaPct) : signedMoneyText(payload.deltaValue);
     const statusBits = [`${currentLabel} ${payload.currentTrips || 0} trips`, `${previousLabel} ${payload.previousTrips || 0} trips`];
@@ -216,7 +216,7 @@ export function createReportsHighlightsSeam(deps){
       return topGainer || topDecliner;
     })();
     if(!best) return null;
-    const headline = `${best.name} ${best.compareTone === "down" ? "fell back most" : "gained the most"} versus the prior window.`;
+    const headline = `${best.name} ${best.compareTone === "down" ? "fell back the most" : "gained the most"} compared with the earlier period.`;
     const value = best.deltaPct != null ? signedPctText(best.deltaPct) : signedMoneyText(best.deltaValue);
     return {
       type: "summary",
@@ -225,7 +225,7 @@ export function createReportsHighlightsSeam(deps){
       value,
       valueClass: "money",
       statusTone: best.compareTone,
-      statusText: `${formatMoney(to2(best.currentAmount))} now vs ${formatMoney(to2(best.previousAmount))} before • ${best.confidenceLabel || "light"} read`
+      statusText: `${formatMoney(to2(best.currentAmount))} now vs ${formatMoney(to2(best.previousAmount))} before • ${best.confidenceLabel === "early" ? "early read" : ((best.confidenceLabel || "weak") === "weak" ? "light read" : "strong read")}`
     };
   }
 
@@ -234,7 +234,7 @@ export function createReportsHighlightsSeam(deps){
     return {
       type: "summary",
       label: `${noun[0].toUpperCase()}${noun.slice(1)} lead change`,
-      headline: `${leaderChange.currentLeader.name} replaced ${leaderChange.previousLeader.name} as the top ${noun}.`,
+      headline: `${leaderChange.currentLeader.name} replaced ${leaderChange.previousLeader.name} at the top ${noun} spot.`,
       value: `${Math.round(safeNum(leaderChange.currentLeader.currentSharePct))}%`,
       valueClass: "money",
       statusTone: "up",
@@ -322,9 +322,9 @@ export function createReportsHighlightsSeam(deps){
       const isDown = (arr)=> arr[2] < arr[1] && arr[1] < arr[0];
       if(isUp(lbs)) return { headline: "Pounds have climbed for three months.", tone: "up" };
       if(isDown(lbs)) return { headline: "Pounds have softened for three months.", tone: "down" };
-      if(isUp(tripsVals)) return { headline: "Trips are trending up across recent months.", tone: "up" };
-      if(isDown(tripsVals)) return { headline: "Trips are trending down across recent months.", tone: "down" };
-      return { headline: "No strong rolling trend yet in this range.", tone: "steady" };
+      if(isUp(tripsVals)) return { headline: "Trips have climbed across the last three months.", tone: "up" };
+      if(isDown(tripsVals)) return { headline: "Trips have eased across the last three months.", tone: "down" };
+      return { headline: "No clear three-month trend yet in this range.", tone: "steady" };
     })();
 
     const dealerShare = totalDealerAmount > 0 ? Math.round((safeNum(topDealer?.amt) / totalDealerAmount) * 100) : 0;
@@ -358,7 +358,7 @@ export function createReportsHighlightsSeam(deps){
         headline: "Comparison held back for fairness.",
         value: "Suppressed",
         statusTone: "steady",
-        statusText: compare.period.reason || compare.period.explanation || "Low-data baseline"
+        statusText: compare.period.reason || compare.period.explanation || "Not enough data yet"
       } : null
     ].filter(Boolean);
 

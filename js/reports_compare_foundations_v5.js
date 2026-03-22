@@ -27,7 +27,7 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
   const priorKey = String(priorMonth.monthKey || "");
   const monthAdjacent = isPriorMonth(latestKey, priorKey);
   if(!monthAdjacent){
-    const reason = "Comparison suppressed: missing adjacent prior month.";
+    const reason = "Compare held back because the previous month is missing.";
     const period = buildSuppressedPeriod({
       reason,
       suppressionCode: "non-adjacent-months",
@@ -117,7 +117,7 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
       minUniqueDays: 2,
       requiredBaselineText: "at least 10 lbs in each period",
       baselineOk: current.lbs >= 10 && previous.lbs >= 10,
-      baselineReason: `Suppressed: average $/lb needs at least 10 lbs in each period (now ${toWholeOrTwo(current.lbs)} lbs, before ${toWholeOrTwo(previous.lbs)} lbs).`
+      baselineReason: `Average $/lb is held back until each period has at least 10 lbs (now ${toWholeOrTwo(current.lbs)} lbs, before ${toWholeOrTwo(previous.lbs)} lbs).`
     }),
     trips: buildMetricComparePayload({
       metricKey: "trips",
@@ -210,9 +210,9 @@ function buildMetricComparePayload({ metricKey, label, currentValue, previousVal
     baselineRatio: minBaseline > 0 ? Math.min(cur, prev) / minBaseline : 1
   });
   const reason = !period?.comparable
-    ? (period.reason || `Suppressed: need at least ${minTrips} trips and ${minUniqueDays} fishing days in each period.`)
+    ? (period.reason || `Compare held back until each period has at least ${minTrips} trips and ${minUniqueDays} fishing days.`)
     : (!hasBaseline
-      ? (baselineReason || `Suppressed: ${label} needs a stronger baseline${requiredBaselineText ? ` (${requiredBaselineText})` : ""}.`)
+      ? (baselineReason || `${label} is held back until the baseline is stronger${requiredBaselineText ? ` (${requiredBaselineText})` : ""}.`)
       : "");
 
   return {
@@ -226,7 +226,7 @@ function buildMetricComparePayload({ metricKey, label, currentValue, previousVal
     suppressed: !canCompare,
     reason,
     explanation: canCompare
-      ? `${label} changed from ${period?.previousLabel || "the prior period"} to ${period?.currentLabel || "the current period"}. ${confidenceLabelFromScore(supportScore) === "strong" ? "Support is solid in both periods." : (confidenceLabelFromScore(supportScore) === "early" ? "Read as an early signal while the sample builds." : "Support is lighter, so read this carefully.")}`
+      ? `${label} is compared with ${period?.previousLabel || "the earlier period"} and ${period?.currentLabel || "the current period"}. ${confidenceLabelFromScore(supportScore) === "strong" ? "Both periods have enough data for a steadier read." : (confidenceLabelFromScore(supportScore) === "early" ? "Treat this as an early read while more trips build." : "This is a lighter read, so keep the sample size in mind.")}`
       : reason,
     suppressionCode: !canCompare
       ? (!period?.comparable ? (period.suppressionCode || "period-low-data") : "baseline-too-weak")
@@ -279,7 +279,7 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
         confidence: "none",
         confidenceLabel: "suppressed",
         suppressionCode: "entity-baseline-too-sparse",
-        reason: `${capitalize(entityType)} compare suppressed: no ${entityType} has at least ${minEntityTrips} trips in both periods and ${formatAmountFloor(minBaselineAmount)} in the earlier period.${entityName ? ` Closest candidate: ${entityName} (${curTrips}/${prevTrips} trips, ${formatAmountFloor(prevAmount)} earlier).` : ""}`
+        reason: `No ${entityType} compare yet: no ${entityType} has at least ${minEntityTrips} trips in both periods and ${formatAmountFloor(minBaselineAmount)} in the earlier period.${entityName ? ` Closest option: ${entityName} (${curTrips}/${prevTrips} trips, ${formatAmountFloor(prevAmount)} earlier).` : ""}`
       }),
       leaders: buildLeadersPayload(movement),
       movement: buildMovementPayload(movement),
@@ -299,7 +299,7 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
     minTrips: minEntityTrips,
     minUniqueDays: 1,
     baselineOk: viable.previous.amount >= minBaselineAmount,
-    baselineReason: `${capitalize(entityType)} compare suppressed: ${viable.name} needs at least ${formatAmountFloor(minBaselineAmount)} in the earlier period for a fair % compare.`
+    baselineReason: `${capitalize(entityType)} compare is held back: ${viable.name} needs at least ${formatAmountFloor(minBaselineAmount)} in the earlier period for a fair % compare.`
   });
 
   return {
@@ -477,7 +477,7 @@ function buildEntityExplanation({ entityType, viable, movement }){
   const leaderChange = buildLeaderChangePayload(movement);
   const shareShift = buildShareShiftPayload(movement);
   const parts = [
-    `${viable.name} was picked as the fairest ${entityType} compare target because it has support in both periods.`
+    `${viable.name} is the best ${entityType} to compare because it has enough support in both periods.`
   ];
   if(leaderChange.changed && leaderChange.currentLeader && leaderChange.previousLeader){
     parts.push(`${leaderChange.currentLeader.name} took the lead from ${leaderChange.previousLeader.name}.`);
@@ -535,10 +535,10 @@ function buildPeriodSupport({ current, previous }){
     suppressionCode: comparable ? "" : "period-low-data",
     reason: comparable
       ? ""
-      : `Comparison suppressed: ${joinReasonList(deficits)}. Need at least 2 trips and 2 unique days in each period.`,
+      : `Comparison held back for fairness: ${joinReasonList(deficits)}. Need at least 2 trips and 2 fishing days in each period.`,
     explanation: comparable
-      ? `${confidenceLabelFromScore(score) === "strong" ? "Strong" : (confidenceLabelFromScore(score) === "early" ? "Early" : "Weak")} fair-window compare using ${currentTrips} vs ${previousTrips} trips across ${currentDays} vs ${previousDays} fishing days.`
-      : `Suppressed because ${joinReasonList(deficits)}.`,
+      ? `${confidenceLabelFromScore(score) === "strong" ? "Steadier" : (confidenceLabelFromScore(score) === "early" ? "Early" : "Light")} read using ${currentTrips} vs ${previousTrips} trips across ${currentDays} vs ${previousDays} fishing days in the same part of each month.`
+      : `Held back because ${joinReasonList(deficits)}.`,
     summary: {
       currentTrips,
       previousTrips,
@@ -605,7 +605,7 @@ function buildMetricDetailCompareChart({ labels, currentValue, previousValue, me
   return {
     chartType: "compare-bars",
     metricKey,
-    basisLabel: String(basisLabel || (labels?.length ? `Reports fair compare window • ${labels.join(" vs ")}` : "Reports fair compare window")),
+    basisLabel: String(basisLabel || (labels?.length ? `Matched compare window • ${labels.join(" vs ")}` : "Matched compare window")),
     labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Current", "Previous"],
     values: [safeNum(currentValue), safeNum(previousValue)]
   };
@@ -617,7 +617,7 @@ function buildMetricDetailAmountTrendChart({ period, monthRows, trips }){
   return {
     chartType: "time-series",
     metricKey: "amount",
-    basisLabel: dayLimit ? `Amount trend • days 1-${dayLimit} in each month` : "Amount trend across the range",
+    basisLabel: dayLimit ? `Amount trend • same days in each month (days 1-${dayLimit})` : "Amount trend across the range",
     labels: trendRows.map((row)=> row.label),
     values: trendRows.map((row)=> row.value),
     compareLabels: [String(period?.currentLabel || "Current"), String(period?.previousLabel || "Previous")],
