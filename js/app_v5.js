@@ -1428,7 +1428,7 @@ if(rootStateSaveSeam.wasEmergencyDraftRecoveredOnBoot()){
   try{ showToast("Recovered your unsaved trip draft"); }catch(_){ }
 }
 if(SAFE_MODE_ACTIVE){
-  try{ showToast("Safe Mode is on. Loaded a temporary clean state."); }catch(_){ }
+  try{ showToast("Recovery Mode is on. Loaded a temporary clean session."); }catch(_){ }
 }
 bindRuntimeBootHandlers();
 const {

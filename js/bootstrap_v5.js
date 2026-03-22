@@ -16,7 +16,7 @@ window.__SHELLFISH_SAFE_MODE__ =
     }
   })();
 /**
- * Shellfish Tracker v5 bootstrap
+ * Bank the Catch v5 bootstrap
  *
  * Responsibilities:
  * - Verify critical assets are reachable (helps catch bad deploys / broken caches)
@@ -96,7 +96,7 @@ async function __assertAssetExists(path) {
   }
 }
 
-function detectShellfishStateKey() {
+function detectLegacyStateKey() {
   const canonical = "shellfish-state";
   try {
     if (localStorage.getItem(canonical)) return canonical;
@@ -245,7 +245,7 @@ window.__showModuleError = function (err) {
 
         if (diag.storage.localStorage) {
           try {
-            const lsKey = detectShellfishStateKey();
+            const lsKey = detectLegacyStateKey();
             diag.stateKeyUsed = lsKey;
             const raw = localStorage.getItem(lsKey);
             if (raw) {
@@ -299,12 +299,12 @@ window.__showModuleError = function (err) {
           </details>
 
           <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
-            <button class="btn" id="copyErr">Copy debug</button>
+            <button class="btn" id="copyErr">Copy diagnostics</button>
             <button class="btn good" id="reload">Reload</button>
-            <button class="btn" id="safeMode">Start Safe Mode</button>
+            <button class="btn" id="safeMode">Open Recovery Mode</button>
             <button class="btn" id="resetCache">Reset Cache</button>
           </div>
-          <div class="muted small" style="margin-top:8px">Safe Mode starts with temporary clean state for this session and does not erase trips.</div>
+          <div class="muted small" style="margin-top:8px">Recovery Mode starts with a temporary clean session and does not erase trips.</div>
         </div>
       `;
 
@@ -315,10 +315,10 @@ window.__showModuleError = function (err) {
             const payload = copyBtn.dataset.payload || msg;
             await navigator.clipboard.writeText(payload);
             copyBtn.textContent = "Copied";
-            setTimeout(() => (copyBtn.textContent = "Copy debug"), 900);
+            setTimeout(() => (copyBtn.textContent = "Copy diagnostics"), 900);
           } catch (_) {
             copyBtn.textContent = "Copy failed";
-            setTimeout(() => (copyBtn.textContent = "Copy debug"), 1200);
+            setTimeout(() => (copyBtn.textContent = "Copy diagnostics"), 1200);
           }
         };
       }

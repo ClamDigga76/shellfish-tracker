@@ -148,7 +148,15 @@ export function createUpdateRuntimeStatusSeam({
       if(windowRef.caches && cachesRef.keys){
         const keys = await cachesRef.keys();
         const ours = keys.filter(k=>String(k).startsWith("shellfish-tracker-"));
-        parts.push(`Caches: ${ours.length ? ours.join(", ") : "(none)"}`);
+        const currentCache = ours.find(k=>String(k).endsWith(`-v${runtimeDiag.buildDigits}`)) || "";
+        const legacyCaches = ours.filter(k=>k !== currentCache);
+        parts.push(`App cache: ${currentCache ? `v${parseBuildDigits(currentCache)}` : (ours.length ? "detected" : "(none)")}`);
+        if(legacyCaches.length){
+          parts.push(`Legacy caches detected: ${legacyCaches.map(k=>`v${parseBuildDigits(k)}`).filter(Boolean).join(", ")}`);
+        }
+        if(ours.length){
+          parts.push(`Cache keys (internal): ${ours.join(", ")}`);
+        }
       }
     }catch(_){ }
 
@@ -164,7 +172,7 @@ export function createUpdateRuntimeStatusSeam({
       }
       const cacheMismatchVersions = [...new Set(runtimeDiag.cacheVersions.filter(v=>runtimeDiag.buildDigits && v !== runtimeDiag.buildDigits))];
       if(cacheMismatchVersions.length){
-        warningParts.push(`cache ${cacheMismatchVersions.map(v=>`v${v}`).join(", ")}`);
+        warningParts.push(`app cache ${cacheMismatchVersions.map(v=>`v${v}`).join(", ")}`);
       }
       const startupMismatchVersions = [...new Set(runtimeDiag.startupModuleVersions.filter(v=>runtimeDiag.buildDigits && v !== runtimeDiag.buildDigits))];
       if(startupMismatchVersions.length){
@@ -228,10 +236,10 @@ export function createUpdateRuntimeStatusSeam({
     try{
       if(windowRef.caches && cachesRef.keys){
         const keys = await cachesRef.keys();
-        const k = keys.find(x=>String(x||"").startsWith("shellfish-tracker-")) || "";
-        if(k){
-          const m = String(k).match(/-v(\d+)$/);
-          if(m) parts.push(`Cache v${m[1]}`);
+        const currentKey = keys.find(x=>String(x||"").startsWith(`shellfish-tracker-v${displayBuildVersion.replace(/^v?5\./, "")}`)) || keys.find(x=>String(x||"").startsWith("shellfish-tracker-")) || "";
+        if(currentKey){
+          const m = String(currentKey).match(/-v(\d+)$/);
+          if(m) parts.push(`App cache v${m[1]}`);
         }
       }
     }catch{}

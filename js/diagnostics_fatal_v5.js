@@ -138,7 +138,7 @@ export function createDiagnosticsFatalSeam({
         <div class="muted small" style="white-space:pre-wrap">${escapeHtml(errText)}</div>
 
         <div class="row mt12 gap10 wrap">
-          <button class="btn" id="fatalCopy">Copy debug</button>
+          <button class="btn" id="fatalCopy">Copy diagnostics</button>
           <button class="btn good" id="fatalReload">Reload</button>
           <button class="btn" id="fatalResetCache">Reset cache</button>
         </div>
@@ -166,7 +166,7 @@ export function createDiagnosticsFatalSeam({
     };
 
     const btnCopy = documentRef.getElementById("fatalCopy");
-    if(btnCopy) btnCopy.onclick = ()=> { void copyTextWithFeedback(dump, "Debug copied"); };
+    if(btnCopy) btnCopy.onclick = ()=> { void copyTextWithFeedback(dump, "Diagnostics copied"); };
 
     const btnReload = documentRef.getElementById("fatalReload");
     if(btnReload) btnReload.onclick = ()=> locationRef.reload();
