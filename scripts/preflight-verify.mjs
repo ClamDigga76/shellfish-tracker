@@ -264,7 +264,7 @@ if (appJs) {
 }
 
 if (runtimeStatusJs) {
-  if (runtimeStatusJs.includes("Current build: ${displayBuildVersion}")) {
+  if (runtimeStatusJs.includes("Version ${displayBuildVersion}")) {
     pass("settings update status shows displayBuildVersion");
   } else {
     fail("settings update status shows displayBuildVersion");
@@ -282,7 +282,7 @@ if (runtimeStatusJs) {
     fail("settings runtime diagnostics helper present");
   }
 
-  if (runtimeStatusJs.includes("Version guardrail: warning") && runtimeStatusJs.includes("Version guardrail: aligned")) {
+  if (runtimeStatusJs.includes("Version check: warning") && runtimeStatusJs.includes("Version check: aligned")) {
     pass("settings version guardrail messaging present");
   } else {
     fail("settings version guardrail messaging present");
