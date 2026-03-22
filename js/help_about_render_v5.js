@@ -147,7 +147,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <ul style="margin:0 0 0 18px">
-          <li>If the app looks stale, open <b>Settings</b> and use <b>Reload latest version</b>.</li>
+          <li>If the app looks stale, open <b>Settings</b> and first use <b>Reload latest version</b>. If the status warns about mismatch or stale cache risk, use <b>Reset cache &amp; reload</b>.</li>
           <li>Use <b>Settings → Install App</b> to check whether you are in Browser or Installed mode, then use this Help section for the matching steps.</li>
           <li>If behavior seems off after an update, reload once, then reopen Help or Settings and recheck the status lines.</li>
           <li>For support, email <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</li>

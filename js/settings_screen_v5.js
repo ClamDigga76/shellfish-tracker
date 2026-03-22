@@ -136,7 +136,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">Updates</div>
-            <div class="muted small">See if you are current, then reload the latest version if needed.</div>
+            <div class="muted small">See whether you are current, ready to update, or need cache recovery.</div>
           </div>
           <span class="settingsValuePill">Status</span>
         </div>

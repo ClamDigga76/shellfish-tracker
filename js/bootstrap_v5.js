@@ -300,11 +300,11 @@ window.__showModuleError = function (err) {
 
           <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
             <button class="btn" id="copyErr">Copy diagnostics</button>
-            <button class="btn good" id="reload">Reload</button>
+            <button class="btn good" id="reload">Reload now</button>
             <button class="btn" id="safeMode">Open Recovery Mode</button>
-            <button class="btn" id="resetCache">Reset Cache</button>
+            <button class="btn" id="resetCache">Reset Cache & Reload</button>
           </div>
-          <div class="muted small" style="margin-top:8px">Recovery Mode starts with a temporary clean session and does not erase trips.</div>
+          <div class="muted small" style="margin-top:8px">Reload now tries the latest hosted build. Reset Cache & Reload is the stronger recovery step when files look stale or mismatched. Recovery Mode starts with a temporary clean session and does not erase trips.</div>
         </div>
       `;
 
@@ -427,6 +427,7 @@ async function registerServiceWorker() {
     const showBanner = () => {
       if (!banner) return;
       banner.style.display = "block";
+      banner.dataset.state = "ready";
       if (!__swUpdateReadyNotified) {
         __swUpdateReadyNotified = true;
         try {
@@ -438,6 +439,7 @@ async function registerServiceWorker() {
     const hideBanner = () => {
       if (!banner) return;
       banner.style.display = "none";
+      delete banner.dataset.state;
     };
 
     if (btnDismiss) btnDismiss.onclick = hideBanner;

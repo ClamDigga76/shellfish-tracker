@@ -112,12 +112,16 @@ self.addEventListener("fetch", (event) => {
       try {
         const net = await fetch(req, { cache: "no-store" });
         if (net && net.ok) {
+          const previousIndex = await cache.match("./index.html");
           await cache.put("./index.html", net.clone());
+          if (previousIndex && previousIndex.url && previousIndex.url !== net.url) {
+            try { await cache.delete(previousIndex.url); } catch (_) {}
+          }
           return net;
         }
       } catch (_) {}
       const cached = await cache.match("./index.html");
-      return cached || fetch(req);
+      return cached || fetch(req, { cache: "no-store" });
     }
 
     // JS: network-first with strict guards to avoid caching HTML.
