@@ -93,5 +93,8 @@ When the patch touches runtime behavior or UI, try to verify:
 - no obvious broken tap target
 - no unexpected scroll/tap issue
 
+## Release-candidate note
+When a build is in release-candidate status, run the normal post-patch loop here and record the full device/mode pass ledger in `docs/release-candidate-pwa-validation-matrix.md`.
+
 ## Final rule
 Do not remove a Parking Lot item until the user confirms the patch worked.
