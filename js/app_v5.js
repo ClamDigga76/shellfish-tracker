@@ -467,25 +467,25 @@ function getInstallSurfaceModel(){
   const statusHint = isInstalled
     ? "Open it from your Home Screen to stay in installed app mode."
     : (installSupported
-      ? "Install it for a quicker Home Screen launch and a clearer app-vs-browser experience."
+      ? "Use Install app for a quicker Home Screen launch, or open Help for the full steps."
       : isIOS
-        ? "Install from Safari to add Bank the Catch to your Home Screen."
+        ? "Open Help for Safari install steps, then add Bank the Catch to your Home Screen."
         : isAndroidChrome
-          ? "Use Chrome’s install path to add Bank the Catch to your Home Screen."
-          : "Install support depends on your browser. Safari on iPhone/iPad and Chrome on Android are the best paths.");
+          ? "Open Help for Chrome install steps, then add Bank the Catch to your Home Screen."
+          : "Open Help for manual install paths. Safari on iPhone/iPad and Chrome on Android are the clearest options.");
   const whyTitle = isInstalled ? "Already installed." : "Why install?";
   const whyBody = isInstalled
-    ? "This mode is easier to recognize at launch and is the best place to keep your Bank the Catch trips."
-    : "Installing puts Bank the Catch on your Home Screen and helps reduce confusion between browser use and installed-app use.";
+    ? "Open it from your Home Screen when you want the clearest installed-app experience."
+    : "Installing adds a Home Screen launch and makes it easier to stay in the same app mode.";
   const stepsLine = isInstalled
-    ? "If you also used Safari or Chrome before, compare there and create a backup if you need to move older trips over."
+    ? "If you used Safari or Chrome before installing, compare there and create a backup if older trips are missing."
     : isIOS
       ? "iPhone/iPad: open in Safari → Share → Add to Home Screen → Add."
       : isAndroidChrome
         ? (installSupported
-          ? "Android Chrome: use Install app below, or Chrome menu → Install app / Add to Home screen."
+          ? "Android Chrome: use Install app below, or open Help for the Chrome menu path."
           : "Android Chrome: Chrome menu → Install app or Add to Home screen.")
-        : "Manual steps: use Safari on iPhone/iPad or Chrome on Android for the clearest install path.";
+        : "Manual steps live in Help. Safari on iPhone/iPad or Chrome on Android are the clearest paths.";
   const actionLabel = isInstalled ? "Installed on this device" : (installSupported ? "Install app" : "Manual steps only");
   return {
     mode,

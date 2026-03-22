@@ -155,7 +155,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Help</div>
-            <div class="muted small">Install steps, offline tips, and backup guidance.</div>
+            <div class="muted small">Install help, support, and backup guidance live in Help.</div>
           </div>
           <button class="btn settingsInlineBtn" id="openHelp">Open Help</button>
         </div>
@@ -168,7 +168,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">App mode</div>
-            <div class="muted small">Install it for quicker opening and a steadier shore-day experience.</div>
+            <div class="muted small">See your current app mode, install when available, or open Help for steps.</div>
           </div>
           <span class="settingsValuePill" id="installModePill">Checking…</span>
         </div>
@@ -261,8 +261,9 @@ export function createSettingsScreenOrchestrator({
           <div id="buildBadge" class="muted small"></div>
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="muted small">Created by <b>Jeremy Wood</b></div>
-          <div class="muted small mt6">Support email: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+          <div class="muted small">Bank the Catch • Created by <b>Jeremy Wood</b></div>
+          <div class="muted small mt6">Support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+          <div class="muted small mt6">Need install or backup help? Open <b>Help</b>.</div>
           <div class="muted small mt8">© 2026 Jeremy Wood. All rights reserved.</div>
         </div>
         <div class="settingsRow settingsRow--split settingsRow--minor">
