@@ -1,4 +1,4 @@
-/* Shellfish Tracker Service Worker (v-param driven)
+/* Bank the Catch service worker (v-param driven)
    Goal: prevent mixed-cache deploys and the "Unexpected keyword 'class'" failure
    caused when HTML is served in place of JS.
 */
@@ -84,7 +84,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     // Delete old caches
     const keys = await caches.keys();
-    // Purge any prior Shellfish Tracker caches, keep only the current build cache.
+    // Purge prior app caches that use the legacy shellfish-tracker prefix; keep only the current build cache.
     await Promise.all(keys.map((k) => (k.startsWith("shellfish-tracker-v") && k !== CACHE_NAME) ? caches.delete(k) : Promise.resolve()));
 
     await self.clients.claim();
