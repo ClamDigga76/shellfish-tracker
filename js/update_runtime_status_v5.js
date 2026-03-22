@@ -10,6 +10,13 @@ export function createUpdateRuntimeStatusSeam({
 }){
   let swUpdateReady = false;
 
+  function getIsStandalone(){
+    return Boolean(
+      (windowRef.matchMedia && windowRef.matchMedia("(display-mode: standalone)").matches) ||
+      (navigatorRef.standalone === true)
+    );
+  }
+
   function markSwUpdateReady(){
     swUpdateReady = true;
     try {
@@ -17,18 +24,18 @@ export function createUpdateRuntimeStatusSeam({
     } catch (_) {}
   }
 
-  async function swCheckNow(){
+  async function swCheckNow(options = {}){
+    const { hardReset = false } = options;
     const statusEl = documentRef.getElementById("updateBigStatus");
     const btnCheck = documentRef.getElementById("updatePrimary");
     try{
-      if(statusEl) statusEl.textContent = swUpdateReady ? "Loading latest version…" : "Reloading latest version…";
+      if(statusEl) statusEl.textContent = hardReset ? "Resetting cache and reloading…" : (swUpdateReady ? "Loading latest version…" : "Checking for the latest build…");
       if(btnCheck) btnCheck.disabled = true;
-      if(statusEl) statusEl.textContent = "Reloading now…";
-      await forceRefreshApp();
+      await forceRefreshApp({ hardReset });
     }catch(_){
       try{
-        if(statusEl) statusEl.textContent = "Reloading now…";
-        await forceRefreshApp();
+        if(statusEl) statusEl.textContent = hardReset ? "Resetting cache and reloading…" : "Reloading now…";
+        await forceRefreshApp({ hardReset: true });
       }catch(__){}
     }finally{
       if(btnCheck) btnCheck.disabled = false;
@@ -36,13 +43,27 @@ export function createUpdateRuntimeStatusSeam({
     }
   }
 
-  async function forceRefreshApp(){
+  async function forceRefreshApp(options = {}){
+    const { hardReset = false } = options;
     try{
       if("serviceWorker" in navigatorRef){
         const regs = await navigatorRef.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r=>r.unregister()));
+        if(swUpdateReady && !hardReset){
+          await Promise.all(regs.map(async (reg)=>{
+            try{
+              await reg.update();
+              if(reg.waiting){
+                reg.waiting.postMessage({ type: "SKIP_WAITING" });
+              }
+            }catch(_){ }
+          }));
+        }else if(hardReset){
+          await Promise.all(regs.map(r=>r.unregister()));
+        }else{
+          await Promise.all(regs.map(r=>r.update?.()));
+        }
       }
-      if(windowRef.caches && cachesRef.keys){
+      if(hardReset && windowRef.caches && cachesRef.keys){
         const keys = await cachesRef.keys();
         await Promise.all(keys.map(k=>cachesRef.delete(k)));
       }
@@ -59,19 +80,25 @@ export function createUpdateRuntimeStatusSeam({
     const buildDigits = parseBuildDigits(displayBuildVersion);
     const details = {
       buildDigits,
+      standalone: getIsStandalone(),
       swController: false,
       swScriptVersion: "",
+      swWaitingVersion: "",
       cacheVersions: [],
-      startupModuleVersions: []
+      startupModuleVersions: [],
+      lastBootError: ""
     };
 
     try{
       if("serviceWorker" in navigatorRef){
         const reg = await navigatorRef.serviceWorker.getRegistration();
         details.swController = !!navigatorRef.serviceWorker.controller;
-        const swUrl = reg?.active?.scriptURL || reg?.waiting?.scriptURL || reg?.installing?.scriptURL || "";
+        const swUrl = reg?.active?.scriptURL || reg?.installing?.scriptURL || "";
         const swMatch = swUrl.match(/[?&]v=(\d+)/);
         details.swScriptVersion = swMatch ? swMatch[1] : "";
+        const waitingUrl = reg?.waiting?.scriptURL || "";
+        const waitingMatch = waitingUrl.match(/[?&]v=(\d+)/);
+        details.swWaitingVersion = waitingMatch ? waitingMatch[1] : "";
       }
     }catch(_){ }
 
@@ -100,11 +127,26 @@ export function createUpdateRuntimeStatusSeam({
         .filter(Boolean);
     }catch(_){ }
 
+    try{
+      details.lastBootError = String(windowRef.__BOOT_DIAG__?.lastBootError?.message || "");
+    }catch(_){ }
+
     details.hasVersionSkew = Boolean(
       (details.swScriptVersion && buildDigits && details.swScriptVersion !== buildDigits) ||
       details.cacheVersions.some(v=>buildDigits && v !== buildDigits) ||
       details.startupModuleVersions.some(v=>buildDigits && v !== buildDigits) ||
       (buildDigits && details.startupModuleVersions.length > 0 && !details.swController)
+    );
+    details.installedAppLikelyLagging = Boolean(
+      details.standalone && (
+        (!details.swController && details.startupModuleVersions.length > 0) ||
+        (details.swScriptVersion && buildDigits && details.swScriptVersion !== buildDigits) ||
+        (details.swWaitingVersion && buildDigits && details.swWaitingVersion !== buildDigits)
+      )
+    );
+    details.needsHardReset = Boolean(
+      details.hasVersionSkew ||
+      /reset cache|stale required asset|wrong required asset|unexpected js payload|corrupted js response|empty js response|incomplete js response/i.test(details.lastBootError)
     );
 
     return details;
@@ -116,7 +158,7 @@ export function createUpdateRuntimeStatusSeam({
 
     try{
       if(versionEl){
-        const standalone = (windowRef.matchMedia && windowRef.matchMedia("(display-mode: standalone)").matches) || (navigatorRef.standalone === true);
+        const standalone = getIsStandalone();
         versionEl.textContent = `Version ${displayBuildVersion}${standalone ? " • Installed app" : " • Browser"}`;
       }
     }catch(_){
@@ -128,7 +170,7 @@ export function createUpdateRuntimeStatusSeam({
     const parts = [];
     parts.push(`App: ${displayBuildVersion} (schema ${getSchemaVersion()})`);
 
-    const standalone = (windowRef.matchMedia && windowRef.matchMedia("(display-mode: standalone)").matches) || (navigatorRef.standalone === true);
+    const standalone = getIsStandalone();
     parts.push(`Standalone: ${standalone ? "yes" : "no"}`);
 
     const runtimeDiag = await getRuntimeVersionDiagnostics();
@@ -138,8 +180,11 @@ export function createUpdateRuntimeStatusSeam({
       if("serviceWorker" in navigatorRef){
         const reg = await navigatorRef.serviceWorker.getRegistration();
         const ctrl = runtimeDiag.swController;
-        const url = reg?.active?.scriptURL || reg?.waiting?.scriptURL || reg?.installing?.scriptURL || "";
+        const url = reg?.active?.scriptURL || reg?.installing?.scriptURL || "";
         swLine = `SW: ${ctrl ? "controller" : "no-controller"}${url ? " | " + url.split("/").slice(-1)[0] : ""}`;
+        if(reg?.waiting){
+          swLine += ` | waiting ${runtimeDiag.swWaitingVersion ? `v${runtimeDiag.swWaitingVersion}` : "build"}`;
+        }
       }
     }catch(_){ }
     parts.push(swLine);
@@ -186,6 +231,16 @@ export function createUpdateRuntimeStatusSeam({
       parts.push(`Version check: aligned to v${runtimeDiag.buildDigits}`);
     }
 
+    if(runtimeDiag.installedAppLikelyLagging){
+      parts.push("Installed app note: this Home Screen app may still be behind the browser copy. Reopen it after loading the latest version.");
+    }
+    if(runtimeDiag.needsHardReset){
+      parts.push("Recovery note: if reload does not clear the warning, use Reset Cache to force a clean runtime copy.");
+    }
+    if(runtimeDiag.lastBootError){
+      parts.push(`Last boot warning: ${runtimeDiag.lastBootError}`);
+    }
+
     try{
       if(navigatorRef.storage && navigatorRef.storage.estimate){
         const est = await navigatorRef.storage.estimate();
@@ -199,23 +254,50 @@ export function createUpdateRuntimeStatusSeam({
     detailsEl.textContent = parts.join("\n");
   }
 
-  function updateUpdateRow(){
+  async function updateUpdateRow(){
     const statusEl = documentRef.getElementById("updateBigStatus");
     const btnPrimary = documentRef.getElementById("updatePrimary");
     const inlineMsg = documentRef.getElementById("updateInlineMsg");
     if(!statusEl || !btnPrimary) return;
 
-    if(inlineMsg) inlineMsg.style.display = "none";
+    if(inlineMsg){
+      inlineMsg.style.display = "block";
+      inlineMsg.textContent = "";
+    }
+
+    let runtimeDiag = null;
+    try{
+      runtimeDiag = await getRuntimeVersionDiagnostics();
+    }catch(_){ }
 
     if(swUpdateReady){
-      statusEl.textContent = "Latest version ready • Tap to reload";
-      btnPrimary.textContent = "Reload latest version";
+      statusEl.textContent = "Latest version ready • Safe to load now";
+      btnPrimary.textContent = "Load latest version";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-    }else{
-      statusEl.textContent = "Up to date";
-      btnPrimary.textContent = "Reload latest version";
-      btnPrimary.onclick = async ()=>{ await swCheckNow(); };
+      if(inlineMsg) inlineMsg.textContent = "A newer build is already waiting on this device.";
+      return;
     }
+
+    if(runtimeDiag?.needsHardReset){
+      statusEl.textContent = "Version mismatch or stale cache risk detected";
+      btnPrimary.textContent = "Reset cache & reload";
+      btnPrimary.onclick = async ()=>{ await swCheckNow({ hardReset: true }); };
+      if(inlineMsg) inlineMsg.textContent = "Use this when reload alone is not clearing old files or broken startup assets.";
+      return;
+    }
+
+    if(runtimeDiag?.installedAppLikelyLagging){
+      statusEl.textContent = "Installed app may be behind browser mode";
+      btnPrimary.textContent = "Reload latest version";
+      btnPrimary.onclick = async ()=>{ await swCheckNow(); };
+      if(inlineMsg) inlineMsg.textContent = "After reloading, close and reopen the Home Screen app once.";
+      return;
+    }
+
+    statusEl.textContent = "Up to date";
+    btnPrimary.textContent = "Reload latest version";
+    btnPrimary.onclick = async ()=>{ await swCheckNow(); };
+    if(inlineMsg) inlineMsg.textContent = "Use this after a release if the app still looks older than expected.";
   }
 
   async function updateBuildBadge(){
