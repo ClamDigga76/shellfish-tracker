@@ -20,6 +20,7 @@ export function renderTripEntryForm({
   poundsValue,
   amountValue,
   notesValue,
+  rateValue,
   primaryActionLabel,
   secondaryActionLabel,
   secondaryActionId,
@@ -67,16 +68,16 @@ export function renderTripEntryForm({
               </div>
             </div>
             <div class="field">
-              <label class="fieldLabel overline" for="${escapeHtml(amountId)}">AMOUNT</label>
+              <label class="fieldLabel overline" for="${escapeHtml(amountId)}">AMOUNT PAID</label>
               <div class="inputWrap inputWrap--prefix">
                 <span class="moneyPrefix moneyGreen" aria-hidden="true">$</span>
-                <input class="input inputWithPrefix" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountValue ?? ""))}" required min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+                <input class="input inputWithPrefix tripDerivedMetric" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountValue ?? ""))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly aria-readonly="true" />
               </div>
             </div>
             <div class="field">
-              <label class="fieldLabel overline" for="${escapeHtml(rateId)}">$/LB</label>
+              <label class="fieldLabel overline" for="${escapeHtml(rateId)}">PAY RATE</label>
               <div class="inputWrap inputWrap--rate">
-                <input class="input" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                <input class="input" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(rateValue ?? computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
               </div>
             </div>
           </div>

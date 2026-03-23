@@ -118,13 +118,16 @@ export function createTripDataEngine({ uid, isValidISODate }) {
 
     const pounds = Number(t?.pounds ?? t?.lbs ?? 0);
     const amount = Number(t?.amount ?? t?.total ?? 0);
+    const payRate = deriveTripPayRate(t);
+    const resolvedAmount = Number.isFinite(amount) && amount > 0 ? amount : ((Number.isFinite(pounds) && pounds > 0 && Number.isFinite(payRate) && payRate > 0) ? pounds * payRate : 0);
 
     const nextTrip = {
       ...t,
       dateISO,
       invalidDateQuarantined: Boolean(t?.invalidDateQuarantined) || invalidDateQuarantined,
       pounds: Number.isFinite(pounds) ? pounds : 0,
-      amount: Number.isFinite(amount) ? amount : 0,
+      amount: Number.isFinite(resolvedAmount) ? resolvedAmount : 0,
+      payRate: Number.isFinite(payRate) ? payRate : 0,
       dealer: String(t?.dealer || "").trim(),
       area: String(t?.area || "").trim(),
       species: String(t?.species || DEFAULT_SPECIES).trim() || DEFAULT_SPECIES,
@@ -171,9 +174,9 @@ export function createTripDataEngine({ uid, isValidISODate }) {
       if (!String(t.dealer || "").trim()) errs.push("Dealer");
       if (!isValidAreaValue(t.area)) errs.push("Area");
       const lbs = Number(t.pounds);
-      const amt = Number(t.amount);
+      const rate = Number(t.payRate);
       if (!(Number.isFinite(lbs) && lbs > 0)) errs.push("Pounds");
-      if (!(Number.isFinite(amt) && amt > 0)) errs.push("Amount");
+      if (!(Number.isFinite(rate) && rate > 0)) errs.push("Pay Rate");
     }
     return errs;
   }
@@ -251,110 +254,76 @@ export function createTripDraftSaveEngine({ saveState, getEmergencyDraftPayload,
 }
 
 
-export function createTripMetricSyncEngine({ parseNum, parseMoney, computePPL, syncTargets }) {
-  const FIELD_KEYS = ["pounds", "amount", "rate"];
-  let syncingMetric = false;
-  let lockPair = null;
-  let lastUserMetric = "";
+function deriveTripPayRate(trip) {
+  const explicitRate = Number(trip?.payRate ?? trip?.rate ?? trip?.pricePerPound ?? 0);
+  if (Number.isFinite(explicitRate) && explicitRate > 0) return explicitRate;
+  const pounds = Number(trip?.pounds ?? trip?.lbs ?? 0);
+  const amount = Number(trip?.amount ?? trip?.total ?? 0);
+  if (Number.isFinite(pounds) && pounds > 0 && Number.isFinite(amount) && amount > 0) {
+    return amount / pounds;
+  }
+  return 0;
+}
 
-  const getFieldValue = (field)=> {
-    if(field === "amount") return parseMoney(syncTargets.amount?.value);
+export function createTripMetricSyncEngine({ parseNum, parseMoney, syncTargets }) {
+  let syncingMetric = false;
+
+  const getFieldValue = (field) => {
+    if (field === "amount") return parseMoney(syncTargets.amount?.value);
     return parseNum(syncTargets[field]?.value);
   };
-
-  const isMeaningful = (value)=> Number.isFinite(value) && value > 0;
-  const setMetricValue = (field, value, decimals = 2)=> {
+  const setMetricValue = (field, value, decimals = 2) => {
     const el = syncTargets[field];
-    if(!el || !Number.isFinite(value)) return;
+    if (!el) return;
+    if (!(Number.isFinite(value) && value > 0)) {
+      el.value = "";
+      return;
+    }
     el.value = Number(value).toFixed(decimals);
-  };
-  const getMeaningfulFields = ()=> FIELD_KEYS.filter((field)=> isMeaningful(getFieldValue(field)));
-  const chooseCompanionField = (editedField)=> {
-    if(!Array.isArray(lockPair) || lockPair.length !== 2) return "";
-    const candidates = lockPair.filter((field)=> field !== editedField && isMeaningful(getFieldValue(field)));
-    if(!candidates.length) return "";
-    if(candidates.includes(lastUserMetric)) return lastUserMetric;
-    return candidates[0];
-  };
-  const normalizeLockPair = ()=> {
-    const meaningful = getMeaningfulFields();
-    if(meaningful.length < 2){
-      lockPair = null;
-      return;
-    }
-    if(meaningful.length === 2){
-      lockPair = [...meaningful];
-      return;
-    }
-    if(Array.isArray(lockPair) && lockPair.length === 2 && lockPair.every((field)=> meaningful.includes(field))){
-      return;
-    }
-    lockPair = ["pounds", "amount"];
   };
 
   function updateDerivedField() {
-    if(syncingMetric) return;
+    if (syncingMetric) return;
     syncingMetric = true;
     try {
-      normalizeLockPair();
-      if(!Array.isArray(lockPair) || lockPair.length !== 2) return;
       const pounds = getFieldValue("pounds");
-      const amount = getFieldValue("amount");
       const rate = getFieldValue("rate");
-      if(lockPair.includes("pounds") && lockPair.includes("amount")){
-        if(isMeaningful(pounds) && isMeaningful(amount)) setMetricValue("rate", computePPL(pounds, amount), 2);
-        return;
-      }
-      if(lockPair.includes("pounds") && lockPair.includes("rate")){
-        if(isMeaningful(pounds) && isMeaningful(rate)) setMetricValue("amount", pounds * rate, 2);
-        return;
-      }
-      if(lockPair.includes("amount") && lockPair.includes("rate")){
-        if(isMeaningful(amount) && isMeaningful(rate)) setMetricValue("pounds", amount / rate, 2);
+      if (Number.isFinite(pounds) && pounds > 0 && Number.isFinite(rate) && rate > 0) {
+        setMetricValue("amount", pounds * rate, 2);
+      } else {
+        setMetricValue("amount", 0, 2);
       }
     } finally {
       syncingMetric = false;
     }
   }
 
-  function onUserEdit(field) {
-    if(syncingMetric) return;
-    lastUserMetric = field;
-    normalizeLockPair();
-    const meaningful = getMeaningfulFields();
-    if(meaningful.length < 2) return;
-    if(meaningful.length === 2){
-      lockPair = [...meaningful];
-      return;
-    }
-    if(Array.isArray(lockPair) && !lockPair.includes(field)){
-      const companion = chooseCompanionField(field);
-      if(companion) lockPair = [companion, field];
-    }
+  function onUserEdit() {
+    if (syncingMetric) return;
   }
 
   return {
     updateDerivedField,
     onUserEdit,
-    getLockPair: ()=> Array.isArray(lockPair) ? [...lockPair] : []
+    getLockPair: () => ["pounds", "rate"]
   };
 }
 
-export function computeTripSaveEnabled({ dealer, area, poundsInput, amountInput, parseNum, parseMoney, isValidAreaValue }) {
+export function computeTripSaveEnabled({ dealer, area, poundsInput, rateInput, parseNum, parseMoney, isValidAreaValue }) {
   const dealerOk = !!String(dealer || "").trim();
   const areaOk = isValidAreaValue(area);
   const pounds = parseNum(poundsInput);
-  const amount = parseMoney(amountInput);
+  const rate = parseMoney(rateInput);
   const poundsOk = Number.isFinite(pounds) && pounds > 0;
-  const amountOk = Number.isFinite(amount) && amount > 0;
+  const rateOk = Number.isFinite(rate) && rate > 0;
 
   return {
     dealerOk,
     areaOk,
     pounds,
-    amount,
+    rate,
     poundsOk,
-    amountOk,
-    enabled: dealerOk && areaOk && poundsOk && amountOk
+    rateOk,
+    enabled: dealerOk && areaOk && poundsOk && rateOk
   };
 }

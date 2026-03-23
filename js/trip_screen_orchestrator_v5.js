@@ -1,89 +1,42 @@
-function createTripMetricSyncEngine({ parseNum, parseMoney, computePPL, syncTargets }) {
-  const FIELD_KEYS = ["pounds", "amount", "rate"];
+function createTripMetricSyncEngine({ parseNum, parseMoney, syncTargets }) {
   let syncingMetric = false;
-  let lockPair = null;
-  let lastUserMetric = "";
 
   const getFieldValue = (field) => {
     if (field === "amount") return parseMoney(syncTargets.amount?.value);
     return parseNum(syncTargets[field]?.value);
   };
 
-  const isMeaningful = (value) => Number.isFinite(value) && value > 0;
   const setMetricValue = (field, value, decimals = 2) => {
     const el = syncTargets[field];
-    if (!el || !Number.isFinite(value)) return;
+    if (!el) return;
+    if (!(Number.isFinite(value) && value > 0)) {
+      el.value = "";
+      return;
+    }
     el.value = Number(value).toFixed(decimals);
-  };
-  const getMeaningfulFields = () => FIELD_KEYS.filter((field) => isMeaningful(getFieldValue(field)));
-  const chooseCompanionField = (editedField) => {
-    if (!Array.isArray(lockPair) || lockPair.length !== 2) return "";
-    const candidates = lockPair.filter((field) => field !== editedField && isMeaningful(getFieldValue(field)));
-    if (!candidates.length) return "";
-    if (candidates.includes(lastUserMetric)) return lastUserMetric;
-    return candidates[0];
-  };
-  const normalizeLockPair = () => {
-    const meaningful = getMeaningfulFields();
-    if (meaningful.length < 2) {
-      lockPair = null;
-      return;
-    }
-    if (meaningful.length === 2) {
-      lockPair = [...meaningful];
-      return;
-    }
-    if (Array.isArray(lockPair) && lockPair.length === 2 && lockPair.every((field) => meaningful.includes(field))) {
-      return;
-    }
-    lockPair = ["pounds", "amount"];
   };
 
   function updateDerivedField() {
     if (syncingMetric) return;
     syncingMetric = true;
     try {
-      normalizeLockPair();
-      if (!Array.isArray(lockPair) || lockPair.length !== 2) return;
       const pounds = getFieldValue("pounds");
-      const amount = getFieldValue("amount");
       const rate = getFieldValue("rate");
-      if (lockPair.includes("pounds") && lockPair.includes("amount")) {
-        if (isMeaningful(pounds) && isMeaningful(amount)) setMetricValue("rate", computePPL(pounds, amount), 2);
-        return;
-      }
-      if (lockPair.includes("pounds") && lockPair.includes("rate")) {
-        if (isMeaningful(pounds) && isMeaningful(rate)) setMetricValue("amount", pounds * rate, 2);
-        return;
-      }
-      if (lockPair.includes("amount") && lockPair.includes("rate")) {
-        if (isMeaningful(amount) && isMeaningful(rate)) setMetricValue("pounds", amount / rate, 2);
-      }
+      if (Number.isFinite(pounds) && pounds > 0 && Number.isFinite(rate) && rate > 0) setMetricValue("amount", pounds * rate, 2);
+      else setMetricValue("amount", 0, 2);
     } finally {
       syncingMetric = false;
     }
   }
 
-  function onUserEdit(field) {
+  function onUserEdit() {
     if (syncingMetric) return;
-    lastUserMetric = field;
-    normalizeLockPair();
-    const meaningful = getMeaningfulFields();
-    if (meaningful.length < 2) return;
-    if (meaningful.length === 2) {
-      lockPair = [...meaningful];
-      return;
-    }
-    if (Array.isArray(lockPair) && !lockPair.includes(field)) {
-      const companion = chooseCompanionField(field);
-      if (companion) lockPair = [companion, field];
-    }
   }
 
   return {
     updateDerivedField,
     onUserEdit,
-    getLockPair: () => (Array.isArray(lockPair) ? [...lockPair] : [])
+    getLockPair: () => ["pounds", "rate"]
   };
 }
 
@@ -159,8 +112,9 @@ function renderNewTrip(){
   const areaAddSentinel = "__add_new_area__";
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
-  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", area:"", species: DEFAULT_TRIP_SPECIES, notes:"" };
+  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", rate:"", area:"", species: DEFAULT_TRIP_SPECIES, notes:"" };
   const amountVal = String(draft.amount ?? "");
+  const rateVal = String(draft.rate ?? "");
   draft.species = String(draft.species || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
   draft.notes = String(draft.notes || "");
 
@@ -198,6 +152,7 @@ const newTripFormHtml = renderTripEntryForm({
       topAreaChipsHtml: renderTopAreaChips(topAreas, draft.area, "topAreas"),
       poundsValue: draft.pounds,
       amountValue: amountVal,
+      rateValue: rateVal,
       notesValue: draft.notes,
       primaryActionLabel: "Save Trip",
       secondaryActionLabel: "Cancel",
@@ -321,15 +276,15 @@ const newTripFormHtml = renderTripEntryForm({
       dealer: elDealer?.value,
       area: elArea?.value,
       poundsInput: elPounds?.value,
-      amountInput: elAmount?.value,
+      rateInput: elRate?.value,
       parseNum,
       parseMoney,
       isValidAreaValue
     });
 
     if(elPounds) elPounds.classList.toggle("lbsBlue", ready.poundsOk);
-    if(elAmount) elAmount.classList.toggle("money", ready.amountOk);
-    if(elRate) elRate.classList.toggle("ppl", parseNum(elRate.value) > 0);
+    if(elAmount) elAmount.classList.toggle("money", Number(parseMoney(elAmount.value)) > 0);
+    if(elRate) elRate.classList.toggle("ppl", ready.rateOk);
 
     const btn = document.getElementById("saveTrip");
     if(btn){
@@ -357,25 +312,6 @@ const newTripFormHtml = renderTripEntryForm({
     });
     elPounds.addEventListener("blur", ()=>{
       if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
-      updateSaveEnabled();
-      updateRateLine();
-    });
-  }
-
-  if(elAmount && !elAmount.__boundNumeric){
-    elAmount.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elAmount, ["0","0.0","0.00"]);
-    elAmount.addEventListener("pointerdown", prime);
-    elAmount.addEventListener("focus", prime);
-    elAmount.addEventListener("input", ()=>{
-      metricSync.onUserEdit("amount");
-      const s = sanitizeDecimalInput(elAmount.value);
-      if(s !== elAmount.value) elAmount.value = s;
-      updateSaveEnabled();
-      updateRateLine();
-    });
-    elAmount.addEventListener("blur", ()=>{
-      normalizeAmountOnBlur(elAmount);
       updateSaveEnabled();
       updateRateLine();
     });
@@ -414,6 +350,7 @@ const newTripFormHtml = renderTripEntryForm({
         rawDealer: elDealer?.value,
         rawPounds: elPounds?.value,
         rawAmount: elAmount?.value,
+        rawRate: elRate?.value,
         rawArea: elArea?.value,
         rawSpecies: elSpecies?.value,
         rawNotes: elNotes?.value,
@@ -454,13 +391,6 @@ const newTripFormHtml = renderTripEntryForm({
     newTripForm.addEventListener("submit", (e)=>{
       e.preventDefault();
       onSaveTrip();
-    });
-  }
-  if(elAmount && elArea){
-    elAmount.addEventListener("keydown", (e)=>{
-      if(e.key !== "Enter") return;
-      e.preventDefault();
-      elArea.focus();
     });
   }
   if(elArea){
@@ -504,7 +434,7 @@ const btnClear = document.getElementById("clearDraft");
     }
   });
   const { persistDraft, persistDraftInput, applyDraftValue } = createDraftHelpers();
-  [elDate, elDealer, elPounds, elAmount, elSpecies, elNotes].forEach(el=>{
+  [elDate, elDealer, elPounds, elAmount, elRate, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", persistDraftInput);
     el.addEventListener("change", persistDraft);
@@ -988,6 +918,7 @@ if(elDealerLive){
         dealer: elDealer.value,
         pounds: elPounds.value,
         amount: elAmount.value,
+        rate: elRate.value,
         area: elArea.value,
         species: DEFAULT_TRIP_SPECIES
       }
@@ -1030,6 +961,7 @@ function renderEditTrip(){
     dealer: t.dealer || "",
     pounds: String(t.pounds ?? ""),
     amount: String(t.amount ?? ""),
+    rate: String(t.payRate ?? ((Number(t.pounds) > 0 && Number(t.amount) > 0) ? (Number(t.amount) / Number(t.pounds)).toFixed(2) : "")),
     area: t.area || "",
     species: t.species || DEFAULT_TRIP_SPECIES,
     notes: String(t.notes || "")
@@ -1038,6 +970,7 @@ function renderEditTrip(){
   const dealerAddSentinel = "__add_new_dealer__";
   const areaAddSentinel = "__add_new_area__";
   const amountDispE = displayAmount(t.amount);
+  const rateDispE = String(draft.rate ?? "");
 
   const topAreasE = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
   const topDealersE = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
@@ -1077,6 +1010,7 @@ function renderEditTrip(){
       topAreaChipsHtml: renderTopAreaChips(topAreasE, draft.area, "topAreasE"),
       poundsValue: draft.pounds,
       amountValue: amountDispE,
+      rateValue: rateDispE,
       notesValue: draft.notes,
       primaryActionLabel: "Save Changes",
       secondaryActionLabel: "Cancel",
@@ -1284,14 +1218,14 @@ function renderEditTrip(){
         dealer: (String(elDealer?.value || "") === dealerAddSentinel) ? "" : elDealer?.value,
         area: elArea?.value,
         poundsInput: elPounds?.value,
-        amountInput: elAmount?.value,
+        rateInput: elRate?.value,
         parseNum,
         parseMoney,
         isValidAreaValue
       });
       if(elPounds) elPounds.classList.toggle("lbsBlue", ready.poundsOk);
-      if(elAmount) elAmount.classList.toggle("money", ready.amountOk);
-      if(elRate) elRate.classList.toggle("ppl", parseNum(elRate.value) > 0);
+      if(elAmount) elAmount.classList.toggle("money", Number(parseMoney(elAmount.value)) > 0);
+      if(elRate) elRate.classList.toggle("ppl", ready.rateOk);
       const btn = document.getElementById("saveEdit");
       if(btn){
         const enabled = ready.enabled;
@@ -1325,25 +1259,6 @@ function renderEditTrip(){
     });
   }
 
-  if(elAmount && !elAmount.__boundNumeric){
-    elAmount.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elAmount, ["0","0.","0.0","0.00"]);
-    elAmount.addEventListener("pointerdown", prime);
-    elAmount.addEventListener("focus", prime);
-    elAmount.addEventListener("input", ()=>{
-      metricSync.onUserEdit("amount");
-      const s = sanitizeDecimalInput(elAmount.value);
-      if(s !== elAmount.value) elAmount.value = s;
-      updateSaveEnabled();
-      updateRateLine();
-    });
-    elAmount.addEventListener("blur", ()=>{
-      normalizeAmountOnBlur(elAmount);
-      updateSaveEnabled();
-      updateRateLine();
-    });
-  }
-
   if(elRate && !elRate.__boundNumeric){
     elRate.__boundNumeric = true;
     const prime = ()=>primeNumericField(elRate, ["0","0.0","0.00"]);
@@ -1365,7 +1280,7 @@ function renderEditTrip(){
     });
   }
 
-  [elDate, elDealer, elPounds, elAmount, elArea, elSpecies, elNotes].forEach(el=>{
+  [elDate, elDealer, elPounds, elArea, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", ()=>{ updateSaveEnabled(); updateRateLine(); });
     el.addEventListener("change", ()=>{ updateSaveEnabled(); updateRateLine(); });
@@ -1382,6 +1297,7 @@ function renderEditTrip(){
         dealer: elDealer.value,
         pounds: elPounds.value,
         amount: elAmount.value,
+        rate: elRate.value,
         area: elArea.value,
         species: elSpecies?.value || draft.species || DEFAULT_TRIP_SPECIES,
         notes: (elNotes?.value ?? draft.notes ?? ""),
@@ -1389,13 +1305,6 @@ function renderEditTrip(){
       })
     });
   });
-  if(elAmount && elArea){
-    elAmount.addEventListener("keydown", (e)=>{
-      if(e.key !== "Enter") return;
-      e.preventDefault();
-      elArea.focus();
-    });
-  }
   if(elArea && editTripForm){
     elArea.addEventListener("keydown", (e)=>{
       if(e.key !== "Enter") return;
