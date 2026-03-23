@@ -767,13 +767,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const renderChartsSection = ()=>{
     const latestMonth = monthRows[monthRows.length - 1] || null;
     const priorMonth = monthRows.length > 1 ? monthRows[monthRows.length - 2] : null;
-    const pplPeak = monthRows.reduce((best,r)=> (Number(r?.avg)||0) > (Number(best?.avg)||0) ? r : best, monthRows[0] || null);
-    const dealerPeak = dealerRows[0] || null;
-    const lbsPeak = monthRows.reduce((best,r)=> (Number(r?.lbs)||0) > (Number(best?.lbs)||0) ? r : best, monthRows[0] || null);
-    const tripsLatest = tripsTimeline[tripsTimeline.length - 1] || null;
-    const tripsPrior = tripsTimeline.length > 1 ? tripsTimeline[tripsTimeline.length - 2] : null;
-    const tripsPeak = tripsTimeline.reduce((best,r)=> (Number(r?.count)||0) > (Number(best?.count)||0) ? r : best, tripsTimeline[0] || null);
-    const tripsTotal = tripsTimeline.reduce((sum,r)=> sum + (Number(r?.count)||0), 0);
+    const amountPeak = monthRows.reduce((best,r)=> (Number(r?.amt)||0) > (Number(best?.amt)||0) ? r : best, monthRows[0] || null);
+    const amountPerTripPeak = monthRows.reduce((best,r)=> (Number(r?.amountPerTrip)||0) > (Number(best?.amountPerTrip)||0) ? r : best, monthRows[0] || null);
 
     const trendTone = (delta, epsilon = 0.02)=>{
       if(Math.abs(delta) <= epsilon) return "steady";
@@ -794,54 +789,40 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       return { text: "Holding steady", tone };
     };
 
-    const buildTripsTakeaway = ()=>{
-      const latest = Number(tripsLatest?.count) || 0;
-      const prior = Number(tripsPrior?.count) || 0;
-      if(!tripsPrior) return { text: "Baseline month set", tone: "steady" };
-      if(latest === prior) return { text: "Trips unchanged month to month", tone: "steady" };
-      return latest > prior
-        ? { text: "Trips up vs prior month", tone: "up" }
-        : { text: "Trips down vs prior month", tone: "down" };
-    };
-
-    const pplTakeaway = buildMonthTakeaway("avg");
-    const lbsTakeaway = buildMonthTakeaway("lbs");
-    const tripsTakeaway = buildTripsTakeaway();
-    const dealerTakeaway = dealerPeak ? { text: "Top dealer stands out in this range", tone: "up" } : { text: "Dealer mix still building", tone: "steady" };
+    const amountTakeaway = buildMonthTakeaway("amt");
+    const amountPerTripTakeaway = buildMonthTakeaway("amountPerTrip");
+    const dealerRatePeak = dealerRows
+      .filter((row)=> (Number(row?.lbs) || 0) > 0 && (Number(row?.avg) || 0) > 0)
+      .reduce((best, row)=> (!best || (Number(row.avg) || 0) > (Number(best.avg) || 0) ? row : best), null);
+    const dealerTakeaway = dealerRatePeak
+      ? { text: "Pay-rate leaders stand out", tone: "up" }
+      : { text: "Buyer pay rates still building", tone: "steady" };
 
     return [
       renderChartCard({
-        takeaway: pplTakeaway,
-        title: "Avg $/lb by Month",
-        subhead: "Month-by-month trend for the selected range",
-        hero: `<span class="rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</span>`,
-        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span>`,
-        canvasId: "c_ppl"
+        takeaway: amountTakeaway,
+        title: "Monthly Total Amount",
+        subhead: "Month-by-month payout trend for the selected range",
+        hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amt)) : "—"}</span>`,
+        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="money">${amountPeak ? formatMoney(to2(amountPeak.amt)) : "—"}</span>`,
+        canvasId: "c_amount_monthly"
       }),
       renderChartCard({
         takeaway: dealerTakeaway,
-        title: "Dealer Amount (Top)",
-        subhead: "Top dealers by total amount in this range",
-        hero: `<span class="money">${dealerPeak ? formatMoney(to2(dealerPeak.amt)) : "—"}</span>`,
-        context: `Leading dealer this range • ${dealerPeak ? escapeHtml(String(dealerPeak.name || "—")) : "—"}`,
-        canvasId: "c_dealer",
+        title: "Dealer Avg $/lb",
+        subhead: "Buyer pay rates across this active range",
+        hero: `<span class="rate ppl">${dealerRatePeak ? `${formatMoney(to2(dealerRatePeak.avg))}/lb` : "—"}</span>`,
+        context: `Highest pay-rate dealer this range • ${dealerRatePeak ? escapeHtml(String(dealerRatePeak.name || "—")) : "—"}`,
+        canvasId: "c_dealer_rate",
         height: 220
       }),
       renderChartCard({
-        takeaway: lbsTakeaway,
-        title: "Monthly Pounds",
-        subhead: "Month-by-month pounds landed in this range",
-        hero: `<span class="lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</span>`,
-        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
-        canvasId: "c_lbs"
-      }),
-      renderChartCard({
-        takeaway: tripsTakeaway,
-        title: "Trips over time",
-        subhead: "Trip count by month for this same range",
-        hero: `<span class="trips">${tripsLatest ? tripsLatest.count : "—"}</span>`,
-        context: `Latest ${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"} • Range high <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
-        canvasId: "c_trips"
+        takeaway: amountPerTripTakeaway,
+        title: "Monthly Amount per Trip",
+        subhead: "Average payout value per trip by month",
+        hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amountPerTrip)) : "—"}</span>`,
+        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
+        canvasId: "c_amount_per_trip"
       })
     ].join("");
   };

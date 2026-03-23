@@ -1,5 +1,3 @@
-import { buildTripsTimeline } from "./reports_aggregation_v5.js";
-
 const chartAnimationState = new Map();
 
 export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, options = {}){
@@ -390,29 +388,32 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     drawMetricDetailChart("c_seasonality_amount", seasonalityChart, seasonalityChart.metricKey || "amount");
   }
 
-  const tripsTimeline = Array.isArray(tripsOrTimeline) && tripsOrTimeline[0]?.shortLabel
-    ? tripsOrTimeline
-    : buildTripsTimeline(Array.isArray(tripsOrTimeline) ? tripsOrTimeline : []);
-  const pplValues = monthRows.map((r)=> Number(r.avg) || 0);
-  drawLineChart("c_ppl", pplValues, monthRows.map((r)=> r.label));
+  const amountValues = monthRows.map((r)=> Number(r.amt) || 0);
+  drawLineChart("c_amount_monthly", amountValues, monthRows.map((r)=> r.label), {
+    color: palette.money,
+    yFormatter: formatCompactMoney,
+    topLabel: formatShortMoney
+  });
 
-  const topDealers = dealerRows.slice(0,8);
+  const dealerRateRows = dealerRows
+    .filter((r)=> (Number(r.lbs) || 0) > 0 && (Number(r.avg) || 0) > 0)
+    .slice(0,8);
   drawBarChart(
-    "c_dealer",
-    topDealers.map((r)=> Number(r.amt) || 0),
-    topDealers.map((r)=> normalizeDealerLabel(r.name || "")),
-    palette.money,
-    formatCompactMoney,
-    formatShortMoney(Math.max(...topDealers.map((r)=> Number(r.amt) || 0), 0)),
+    "c_dealer_rate",
+    dealerRateRows.map((r)=> Number(r.avg) || 0),
+    dealerRateRows.map((r)=> normalizeDealerLabel(r.name || "")),
+    palette.ppl,
+    formatShortMoney,
+    formatShortMoney(Math.max(...dealerRateRows.map((r)=> Number(r.avg) || 0), 0)),
     {
       minBarWidth: 8,
       barPad: (frame)=> frame.compact ? 3 : 4,
       customLabels: ({ ctx, frame, geom, barW, canvasHeight })=>{
         ctx.fillStyle = palette.label;
         ctx.font = frame.tickFont;
-        const labelStep = Math.max(1, Math.ceil(topDealers.length / (frame.compact ? 5 : 7)));
-        topDealers.forEach((r,i)=>{
-          if(i % labelStep !== 0 && i !== topDealers.length - 1) return;
+        const labelStep = Math.max(1, Math.ceil(dealerRateRows.length / (frame.compact ? 5 : 7)));
+        dealerRateRows.forEach((r,i)=>{
+          if(i % labelStep !== 0 && i !== dealerRateRows.length - 1) return;
           const maxLabelW = Math.max(18, barW - 1);
           const base = normalizeDealerLabel(r.name || "");
           const lab = fitLabel(ctx, base, maxLabelW);
@@ -424,16 +425,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     }
   );
 
-  const lbsValues = monthRows.map((r)=> Number(r.lbs) || 0);
-  drawBarChart("c_lbs", lbsValues, monthRows.map((r)=> r.label), palette.lbs, formatCompactCount, String(Math.round(Math.max(...lbsValues, 0))), {
+  const amountPerTripValues = monthRows.map((r)=> Number(r.amountPerTrip) || 0);
+  drawBarChart("c_amount_per_trip", amountPerTripValues, monthRows.map((r)=> r.label), palette.trips, formatCompactMoney, formatShortMoney(Math.max(...amountPerTripValues, 0)), {
     minBarWidth: 4,
     barPad: (frame)=> frame.compact ? 0.8 : 1.2
   });
 
-  const tripValues = tripsTimeline.map((r)=> Number(r.count) || 0);
-  drawBarChart("c_trips", tripValues, tripsTimeline.map((r)=> r.shortLabel), palette.trips, formatCompactCount, String(Math.round(Math.max(...tripValues, 1))), {
-    minBarWidth: 4,
-    minTop: 1,
-    barPad: (frame)=> frame.compact ? 0.8 : 1.2
-  });
+
 }
