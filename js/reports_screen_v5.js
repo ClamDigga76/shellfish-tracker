@@ -358,7 +358,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const hasSavedTrips = tripsAll.length > 0;
   const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
   const fMode = String(rf.mode || "YTD").toUpperCase();
-  const mode = state.reportsMode || "tables"; // "charts" | "tables"
+  const reportsSectionKey = String(state.reportsSection || "insights").toLowerCase();
   const activeMetricDetail = String(state.reportsMetricDetail || "").toLowerCase();
   const metricDetailContext = state.reportsMetricDetailContext && typeof state.reportsMetricDetailContext === "object"
     ? state.reportsMetricDetailContext
@@ -437,7 +437,15 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     : applyUnifiedTripFilter(tripsAll, seasonalityUnified).rows;
 
   const chip = (key,label) => `<button class="chip segBtn ${fMode===key?'on is-selected':''}" data-rf="${key}" type="button">${label}</button>`;
-  const seg = (key,label) => `<button class="chip ${mode===key?'on':''}" data-m="${key}">${label}</button>`;
+  const REPORTS_SECTION_ITEMS = [
+    { key: "insights", label: "Insights", intro: "Range insights and highlights for this active filter." },
+    { key: "charts", label: "Charts", intro: "Trend charts for a quick visual scan of this same range." },
+    { key: "seasonality", label: "Seasonality", intro: "See repeat timing across months and matching date windows." },
+    { key: "records", label: "Records", intro: "Jump straight to high and low trip records for this range." },
+    { key: "detail", label: "Detail", intro: "Dealer, area, and monthly summary rows for this range." }
+  ];
+  const activeReportsSection = REPORTS_SECTION_ITEMS.some((item)=> item.key === reportsSectionKey) ? reportsSectionKey : "insights";
+  const renderReportsSectionChip = (item)=> `<button class="chip reportsSectionChip ${activeReportsSection===item.key?'on is-selected':''}" data-reports-section="${item.key}" type="button" role="tab" aria-selected="${activeReportsSection===item.key ? 'true' : 'false'}">${item.label}</button>`;
 
   const advOpen = !!rf.adv;
   const advPanel = renderReportsAdvancedPanel({
@@ -473,7 +481,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const detailChartContextClass = isHomeMetricDetail ? "homeMetricChartContext" : "reportsMetricChartContext";
   const detailInsightClass = isHomeMetricDetail ? "homeMetricInsight" : "reportsMetricInsight";
 
-  const renderReportsTopShell = ({ includeModeToggle = true, body = "", shellMode = "overview" } = {})=> `
+  const renderReportsTopShell = ({ body = "", shellMode = "overview" } = {})=> `
     <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
         <b>Reports</b>
@@ -487,15 +495,17 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         ${chip("ALL","All Time")}
       </div>
 
-      <div class="row ${includeModeToggle ? "repCtlRow" : ""}" style="justify-content:${includeModeToggle ? "space-between" : "flex-end"};align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
+      <div class="row repCtlRow" style="justify-content:flex-end;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
         <button class="btn repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
-        ${includeModeToggle ? `
-          <div class="row" style="gap:8px;margin-top:0">
-            ${seg("charts","Charts")}
-            ${seg("tables","Tables")}
-          </div>
-        ` : ""}
       </div>
+
+      <section class="reportsNavShell" aria-label="Reports sections">
+        <div class="reportsNavLabel">Jump to</div>
+        <div class="reportsSectionSwitch" role="tablist" aria-label="Reports sections">
+          ${REPORTS_SECTION_ITEMS.map((item)=> renderReportsSectionChip(item)).join("")}
+        </div>
+        <div class="reportsSectionIntro">${escapeHtml((REPORTS_SECTION_ITEMS.find((item)=> item.key === activeReportsSection) || REPORTS_SECTION_ITEMS[0]).intro)}</div>
+      </section>
 
       ${advPanel}
       ${body}
@@ -535,7 +545,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     getApp().innerHTML = `
       ${renderPageHeader("reports")}
 
-      ${renderReportsTopShell({ includeModeToggle: false, body: renderNoResultsState() })}
+      ${renderReportsTopShell({ body: renderNoResultsState() })}
     `;
     getApp().scrollTop = 0;
 
@@ -1002,28 +1012,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     });
   };
 
-  const renderMainModeSection = ()=> {
-    if(mode === "charts"){
-      return `${reportsSection({
-        title: "Charts",
-        intro: "Quick mobile-read charts for trend scanning; switch to tables for exact rows.",
-        body: `<div class="reportsChartsStack">${renderChartsSection()}</div>`,
-        extraClass: "reportsSection--charts"
-      })}
-      ${reportsSection({
-        title: "Deeper detail",
-        intro: "Need line-item breakdowns? Open table mode for dealer, area, and monthly rows.",
-        body: `<div class="reportsDetailHint"><button class="btn" type="button" id="reportsSwitchToTables">Open table detail</button></div>`,
-        extraClass: "reportsSection--detail"
-      })}`;
-    }
-    return reportsSection({
-      title: "Deeper detail",
-      intro: "Dealer, area, and high/low summaries for this same range.",
-      body: `<div class="reportsTablesStack">${renderTablesSection()}</div>`,
-      extraClass: "reportsSection--detail"
-    });
-  };
+  const renderChartsBlock = ()=> reportsSection({
+    title: "Charts",
+    intro: "Quick mobile-read charts for trend scanning in this same active range.",
+    body: `<div class="reportsChartsStack">${renderChartsSection()}</div>`,
+    extraClass: "reportsSection--charts"
+  });
 
   const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
   const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
@@ -1293,40 +1287,68 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     </div>
   `;
 
-  const renderTablesSection = ()=>{
-    const highLowBody = `
-      ${renderHLItem("Most Pounds", maxLbs, "lbs", "max")}
+  const highLowBody = `
+    ${renderHLItem("Most Pounds", maxLbs, "lbs", "max")}
+    <div class="sep"></div>
+
+    ${renderHLItem("Least Pounds", minLbs, "lbs", "min")}
+    <div class="sep"></div>
+
+    ${renderHLItem("Highest Amount", maxAmt, "amount", "max")}
+    <div class="sep"></div>
+
+    ${renderHLItem("Lowest Amount", minAmt, "amount", "min")}
+    <div class="sep"></div>
+
+    ${pplRows.length ? `
+      ${renderHLItem("Highest $/lb", maxPpl, "ppl", "max")}
       <div class="sep"></div>
 
-      ${renderHLItem("Least Pounds", minLbs, "lbs", "min")}
-      <div class="sep"></div>
+      ${renderHLItem("Lowest $/lb", minPpl, "ppl", "min")}
+    ` : `
+      <div class="emptyState compact">
+        <div class="emptyStateTitle">$/lb insights pending</div>
+        <div class="emptyStateBody">Add trips that include both pounds and amount to unlock this view.</div>
+      </div>`}
+  `;
 
-      ${renderHLItem("Highest Amount", maxAmt, "amount", "max")}
-      <div class="sep"></div>
+  const renderRecordsBlock = ()=> reportsSection({
+    title: "Records",
+    intro: "High and low trip records for pounds, amount, and when available $/lb.",
+    body: `<div class="reportsTablesStack">${renderTableCard("High / Low Summary", highLowBody)}</div>`,
+    extraClass: "reportsSection--records"
+  });
 
-      ${renderHLItem("Lowest Amount", minAmt, "amount", "min")}
-      <div class="sep"></div>
-
-      ${pplRows.length ? `
-        ${renderHLItem("Highest $/lb", maxPpl, "ppl", "max")}
-        <div class="sep"></div>
-
-        ${renderHLItem("Lowest $/lb", minPpl, "ppl", "min")}
-      ` : `
-        <div class="emptyState compact">
-          <div class="emptyStateTitle">$/lb insights pending</div>
-          <div class="emptyStateBody">Add trips that include both pounds and amount to unlock this view.</div>
-        </div>`}
-    `;
-    return [
+  const renderDetailBlock = ()=> reportsSection({
+    title: "Detail",
+    intro: "Dealer, area, and monthly summary rows for this active range.",
+    body: `<div class="reportsTablesStack">${[
       renderTableCard("Dealer Summary", renderAggList(dealerRows, "Add a trip in this range to populate dealer totals.")),
       renderTableCard("Area Summary", renderAggList(areaRows, "Add a trip in this range to populate area totals.")),
-      renderTableCard("Monthly Totals", renderMonthList()),
-      renderTableCard("High / Low Summary", highLowBody)
-    ].join("");
+      renderTableCard("Monthly Totals", renderMonthList())
+    ].join("")}</div>`,
+    extraClass: "reportsSection--detail"
+  });
+
+  const renderActiveReportsSection = ()=> {
+    if(activeReportsSection === "charts") return renderChartsBlock();
+    if(activeReportsSection === "seasonality") return renderSeasonalitySection() || reportsSection({
+      title: "Seasonality",
+      intro: "Seasonality unlocks once enough dated history exists across months and years.",
+      body: `<div class="reportsHighlightsEmpty"><div class="muted small">Add more dated trips across multiple months to unlock seasonality reads.</div></div>`,
+      extraClass: "reportsSection--seasonality"
+    });
+    if(activeReportsSection === "records") return renderRecordsBlock();
+    if(activeReportsSection === "detail") return renderDetailBlock();
+    return reportsSection({
+      title: "Insights",
+      intro: "Analysis takeaways from this date range.",
+      body: highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights will appear as more trips are added.</div></div>`,
+      extraClass: "reportsSection--highlights"
+    });
   };
 
-  const reportsBodyView = activeMetricDetail ? "metric-detail" : mode;
+  const reportsBodyView = activeMetricDetail ? "metric-detail" : activeReportsSection;
   getApp().innerHTML = homeMetricOnly ? `
     ${renderPageHeader("home")}
 
@@ -1339,16 +1361,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ${renderReportsTopShell({
       shellMode: activeMetricDetail ? "detail" : "overview",
       body: `<div id="reportsTransitionRoot" class="reportsTransitionRoot" data-reports-view="${escapeHtml(reportsBodyView)}">
-        ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : `${reportsSection({
-          title: "Highlights",
-          intro: "Analysis takeaways from this date range.",
-          body: highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights will appear as more trips are added.</div></div>`,
-          extraClass: "reportsSection--highlights"
-        })}
-
-        ${renderSeasonalitySection()}
-
-        ${renderMainModeSection()}`}
+        ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : renderActiveReportsSection()}
       </div>`
     })}
   `;
@@ -1365,13 +1378,14 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     };
   });
 
-  // mode chips
-  getApp().querySelectorAll(".chip[data-m]").forEach(btn=>{
+  // section switcher
+  getApp().querySelectorAll(".chip[data-reports-section]").forEach(btn=>{
     btn.onclick = ()=>{
-      const key = btn.getAttribute("data-m");
+      const key = String(btn.getAttribute("data-reports-section") || "insights").toLowerCase();
+      if(key === activeReportsSection) return;
       runReportsTransition({
         mutate: ()=>{
-          state.reportsMode = key;
+          state.reportsSection = key;
           saveState();
         }
       });
@@ -1444,18 +1458,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   invalidateReportsChartSchedule();
 
-  if(mode === "charts"){
-    const reportsSwitchToTables = document.getElementById("reportsSwitchToTables");
-    if(reportsSwitchToTables){
-      reportsSwitchToTables.onclick = ()=>{
-        runReportsTransition({
-          mutate: ()=>{
-            state.reportsMode = "tables";
-            saveState();
-          }
-        });
-      };
-    }
+  if(activeReportsSection === "charts"){
+    scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, {});
+    return;
+  }
+
+  if(activeReportsSection === "seasonality"){
     scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, { seasonalityChart: seasonalityFoundation?.chartModel || null });
   }
 }

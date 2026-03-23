@@ -174,6 +174,12 @@
 .reportsMetricChartBlock,.homeMetricChartBlock{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07)}
 .reportsMetricInsight,.homeMetricInsight{margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.07)}
 
+.reportsNavShell{margin-top:14px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03)}
+.reportsNavLabel{font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:#9ea8bc}
+.reportsSectionSwitch{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:10px 1px 2px}
+.reportsSectionSwitch::-webkit-scrollbar{display:none}
+.reportsSectionChip{flex:0 0 auto;min-width:max-content}
+.reportsSectionIntro{margin-top:9px;font-size:12px;line-height:1.4;color:var(--text-muted-strong);font-weight:650}
 .reportsSection{margin-bottom:var(--card-stack-gap)}
 .reportsSectionHead{margin:0 0 10px}
 .reportsSectionHead h2{margin:0;font-size:17px;line-height:1.2;letter-spacing:.2px}
@@ -190,6 +196,8 @@
 
 @media (max-width:430px){
   .reportsPercentEmphasis{padding:.07em .4em;font-size:1.04em}
+  .reportsNavShell{margin-top:12px;padding:11px 10px}
+  .reportsSectionSwitch{gap:7px;padding-top:9px}
   .reportsMetricCompareText .reportsPercentEmphasis,.homeMetricCompareText .reportsPercentEmphasis{font-size:1.08em}
   .reportsTopShell{padding-bottom:16px}
   .reportsChartsStack,.reportsTablesStack{gap:14px}
@@ -250,6 +258,8 @@
 :root[data-theme="light"] .reportsMiniPreviewBar.muted .reportsMiniPreviewFill,
 :root[data-theme="light"] .reportsCompareBarTrack.muted span{background:rgba(128,143,170,.34);}
 :root[data-theme="light"] .reportsPercentEmphasis{color:#13203a;background:rgba(47,109,246,.12);box-shadow:inset 0 0 0 1px rgba(47,109,246,.12);}
+:root[data-theme="light"] .reportsNavShell{border-color:rgba(37,53,92,.12);background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,246,255,.88));}
+:root[data-theme="light"] .reportsNavLabel{color:rgba(24,35,59,.62);}
 :root[data-theme="light"] .reportsHeroCard{background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(237,243,255,.94));border-color:rgba(37,53,92,.14);box-shadow:0 12px 26px rgba(28,46,89,.10);}
 :root[data-theme="light"] .reportsHeroStat{border-color:rgba(37,53,92,.12);background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(241,246,255,.82));}
 :root[data-theme="light"] .reportsHeroStat--tap:hover{border-color:rgba(47,109,246,.32);background:rgba(47,109,246,.08);}
