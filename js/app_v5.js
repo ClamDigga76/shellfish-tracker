@@ -623,7 +623,7 @@ function iconSvg(name){
 
 function hasUnsavedDraft(){
   const d = state?.draft || {};
-  return !!(d.date || d.dealer || d.area || d.pounds || d.amount);
+  return !!(d.date || d.dealer || d.area || d.pounds || d.amount || d.rate);
 }
 
 
@@ -1208,7 +1208,9 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   const dateISO = parseUsDateToISODate(String(inputs?.date||""));
   const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
   const poundsNum = parseNum(inputs?.pounds);
-  const amountNum = parseMoney(inputs?.amount);
+  const rawAmountNum = parseMoney(inputs?.amount);
+  const rateNum = parseMoney(inputs?.rate) || (Number.isFinite(poundsNum) && poundsNum > 0 && Number.isFinite(rawAmountNum) && rawAmountNum > 0 ? rawAmountNum / poundsNum : 0);
+  const amountNum = rawAmountNum || (Number.isFinite(poundsNum) && poundsNum > 0 && Number.isFinite(rateNum) && rateNum > 0 ? poundsNum * rateNum : 0);
   ensureAreas();
   const rawArea = String(inputs?.area||"").trim();
   const areaCreate = addArea(rawArea);
@@ -1221,7 +1223,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   if(!dealer) errs.push("Dealer");
   if(!isValidAreaValue(area)) errs.push("Area");
   if(!(poundsNum > 0)) errs.push("Pounds");
-  if(!(amountNum > 0)) errs.push("Amount");
+  if(!(rateNum > 0)) errs.push("Pay Rate");
   if(errs.length){
     announce(`Error: Missing/invalid: ${errs.join(", ")}`, "assertive");
     alert("Missing/invalid: " + errs.join(", "));
@@ -1248,7 +1250,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
     id = uid();
   }
 
-  const candidate = { dateISO, dealer, pounds: to2(poundsNum), amount: to2(amountNum), area };
+  const candidate = { dateISO, dealer, pounds: to2(poundsNum), amount: to2(amountNum), payRate: to2(rateNum), area };
   const dup = findDuplicateTrip(candidate, isEdit ? id : "");
   if(dup){
     const recentLabel = dup === getTripsNewestFirst(Array.isArray(state.trips) ? state.trips : [])[0]
@@ -1274,6 +1276,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
     dealer,
     pounds: to2(poundsNum),
     amount: to2(amountNum),
+    payRate: to2(rateNum),
     area,
     species,
     notes

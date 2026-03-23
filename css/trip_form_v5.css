@@ -120,4 +120,6 @@ body[data-view="edit"] .chip-selector{
 .inputWrap--prefix .inputWithPrefix{padding-left:34px;padding-right:12px;text-overflow:ellipsis;overflow:hidden}
 .inputWrap--rate .input{padding-left:12px;padding-right:12px;text-overflow:ellipsis;overflow:hidden}
 .moneyGreen{color:var(--good)!important}
+.tripDerivedMetric{background:rgba(255,255,255,.035);color:var(--muted);font-weight:700;cursor:default}
+.tripDerivedMetric:focus{outline-color:transparent;box-shadow:none}
 .btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}

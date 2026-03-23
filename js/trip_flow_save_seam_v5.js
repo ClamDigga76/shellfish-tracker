@@ -3,6 +3,7 @@ export function buildTripFormInputs({
   dealer = "",
   pounds = "",
   amount = "",
+  rate = "",
   area = "",
   species = "",
   notes = "",
@@ -13,6 +14,7 @@ export function buildTripFormInputs({
     dealer,
     pounds,
     amount,
+    rate,
     area,
     species: species || defaultSpecies,
     notes
@@ -24,6 +26,7 @@ export function buildNewTripSaveSnapshot({
   rawDealer,
   rawPounds,
   rawAmount,
+  rawRate,
   rawArea,
   rawSpecies,
   rawNotes,
@@ -43,6 +46,7 @@ export function buildNewTripSaveSnapshot({
     dealer: normalizeDealerDisplay(String(rawDealer || "").trim()),
     pounds: parseNum(rawPounds),
     amount: parseMoney(rawAmount),
+    rate: parseMoney(rawRate),
     area: String(rawArea || "").trim(),
     species: String(rawSpecies || defaultSpecies).trim() || defaultSpecies,
     notes: String(rawNotes || "").trim(),
@@ -54,6 +58,8 @@ export function buildNewTripSaveSnapshot({
     dealer: inputs.dealer,
     pounds: inputs.pounds,
     amount: inputs.amount,
+    rate: inputs.rate,
+    payRate: inputs.rate,
     area: inputs.area,
     species: inputs.species,
     notes: inputs.notes
@@ -64,6 +70,7 @@ export function buildNewTripSaveSnapshot({
     inputs.dealer ||
     (inputs.pounds > 0) ||
     (inputs.amount > 0) ||
+    (inputs.rate > 0) ||
     inputs.area ||
     inputs.notes
   );
