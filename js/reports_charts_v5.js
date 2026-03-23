@@ -395,6 +395,43 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     topLabel: formatShortMoney
   });
 
+  const pplValues = monthRows.map((r)=> Number(r.avg) || 0);
+  drawLineChart("c_ppl", pplValues, monthRows.map((r)=> r.label), {
+    color: palette.ppl,
+    yFormatter: formatShortMoney,
+    topLabel: formatShortMoney
+  });
+
+  const dealerAmountRows = dealerRows.slice(0,8);
+  if(document.getElementById("c_dealer")){
+    drawBarChart(
+      "c_dealer",
+      dealerAmountRows.map((r)=> Number(r.amt) || 0),
+      dealerAmountRows.map((r)=> normalizeDealerLabel(r.name || "")),
+      palette.money,
+      formatCompactMoney,
+      formatShortMoney(Math.max(...dealerAmountRows.map((r)=> Number(r.amt) || 0), 0)),
+      {
+        minBarWidth: 8,
+        barPad: (frame)=> frame.compact ? 3 : 4,
+        customLabels: ({ ctx, frame, geom, barW, canvasHeight })=>{
+          ctx.fillStyle = palette.label;
+          ctx.font = frame.tickFont;
+          const labelStep = Math.max(1, Math.ceil(dealerAmountRows.length / (frame.compact ? 5 : 7)));
+          dealerAmountRows.forEach((r,i)=>{
+            if(i % labelStep !== 0 && i !== dealerAmountRows.length - 1) return;
+            const maxLabelW = Math.max(18, barW - 1);
+            const base = normalizeDealerLabel(r.name || "");
+            const lab = fitLabel(ctx, base, maxLabelW);
+            const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
+            const x = Math.max(2, tx);
+            ctx.fillText(lab, x, canvasHeight-10);
+          });
+        }
+      }
+    );
+  }
+
   const dealerRateRows = dealerRows
     .filter((r)=> (Number(r.lbs) || 0) > 0 && (Number(r.avg) || 0) > 0)
     .slice(0,8);
@@ -431,5 +468,17 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     barPad: (frame)=> frame.compact ? 0.8 : 1.2
   });
 
+  const lbsValues = monthRows.map((r)=> Number(r.lbs) || 0);
+  drawBarChart("c_lbs", lbsValues, monthRows.map((r)=> r.label), palette.lbs, formatCompactCount, `${Math.round(Math.max(...lbsValues, 0))}`, {
+    minBarWidth: 4,
+    barPad: (frame)=> frame.compact ? 0.8 : 1.2
+  });
+
+  const tripValues = tripsOrTimeline.map((r)=> Number(r.count) || 0);
+  drawBarChart("c_trips", tripValues, tripsOrTimeline.map((r)=> r.shortLabel || r.label || ""), palette.trips, formatCompactCount, `${Math.round(Math.max(...tripValues, 1))}`, {
+    minTop: 1,
+    minBarWidth: 4,
+    barPad: (frame)=> frame.compact ? 0.8 : 1.2
+  });
 
 }
