@@ -561,82 +561,42 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   background:none;
   padding:0;
 }
-.homeLastTripCard{
-  display:grid;
-  gap:12px;
+.homeLastTripHeader{
+  margin:0 0 8px;
 }
-.homeLastTripTopline{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
+.homeScreenShell .homeLastTripCardSurface{
+  margin:0;
+  border-radius:14px;
 }
-.homeLastTripEyebrow{
-  font-size:11px;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  font-weight:860;
-  color:var(--text-muted-strong);
-}
-.homeLastTripDate{
-  margin-top:4px;
-  font-size:18px;
-  line-height:1.2;
-  font-weight:860;
-}
-.homeLastTripAmount{
-  font-size:20px;
-  line-height:1.1;
-  font-weight:900;
-  color:var(--money);
-  text-align:right;
-  white-space:nowrap;
-}
-.homeLastTripMetaRow,
-.homeLastTripMetricRow{
-  display:grid;
-  grid-template-columns:repeat(2, minmax(0,1fr));
+.homeScreenShell .homeLastTripCardSurface.tripCardCompact .tripCardGrid{
   gap:10px;
 }
-.homeLastTripMeta,
-.homeLastTripMetric{
-  min-width:0;
-  padding:11px 12px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.035);
-  display:grid;
-  gap:4px;
+.homeScreenShell .homeLastTripCardSurface .tripCardHeadline{
+  font-size:15px;
 }
-.homeLastTripMetaLabel,
-.homeLastTripMetricLabel{
-  font-size:11px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--text-muted-strong);
+.homeScreenShell .homeLastTripCardSurface .tripCardMain{
+  font-size:19px;
 }
-.homeLastTripMetaValue,
-.homeLastTripMetricValue{
-  min-width:0;
+.homeScreenShell .homeLastTripCardSurface .tripCardHeadlineDealer{
   font-size:14px;
-  line-height:1.3;
-  font-weight:820;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  margin-top:4px;
 }
-.homeLastTripMetricValue{
-  font-size:16px;
+.homeScreenShell .homeLastTripCardSurface .tripCardLowerLeft{
+  margin-top:8px;
+}
+.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip{
+  font-size:12px;
+}
+.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip .metricValue{
+  font-size:1.28em;
 }
 @media (max-width:380px){
-  .homeLastTripTopline{
-    flex-direction:column;
-  }
-  .homeLastTripAmount{
-    text-align:left;
-  }
-  .homeLastTripMetaRow,
-  .homeLastTripMetricRow{
+  .homeScreenShell .homeLastTripCardSurface .tripCardGrid{
     grid-template-columns:minmax(0,1fr);
+  }
+  .homeScreenShell .homeLastTripCardSurface .tripCardMetricsCol{
+    align-items:flex-start;
+    gap:4px;
   }
 }
 .kpiGroupLabel{

@@ -19,7 +19,8 @@ export function createHomeDashboardRenderer({
   exportBackup,
   renderHomeMetricDetail,
   getInstallSurfaceModel,
-  runInstallAction
+  runInstallAction,
+  renderTripCatchCard
 }) {
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
@@ -206,42 +207,22 @@ export function createHomeDashboardRenderer({
 
     const lastSavedTripHtml = newestSavedTrip
       ? (() => {
-        const latestDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "Date not set";
-        const latestDealer = String(newestSavedTrip.dealer || "").trim() || "Dealer not set";
-        const latestArea = String(newestSavedTrip.area || "").trim() || "Area not set";
-        const latestPounds = Number(newestSavedTrip.pounds) || 0;
-        const latestAmount = Number(newestSavedTrip.amount) || 0;
-        const latestAvgPpl = latestPounds > 0 ? (latestAmount / latestPounds) : null;
+        const fallbackDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "Date not set";
+        if (typeof renderTripCatchCard !== "function") {
+          return `
+            <div class="emptyState compact homeLastTripFallback">
+              <div class="emptyStateTitle">Last Saved Trip</div>
+              <div class="emptyStateBody">Latest saved trip: ${escapeHtml(fallbackDate)}.</div>
+            </div>
+          `;
+        }
         return `
-          <div class="homeLastTripCard" aria-label="Last saved trip snapshot">
-            <div class="homeLastTripTopline">
-              <div>
-                <div class="homeLastTripEyebrow">Last Saved Trip</div>
-                <div class="homeLastTripDate">${escapeHtml(latestDate)}</div>
-              </div>
-              <div class="homeLastTripAmount">${formatMoney(latestAmount)}</div>
-            </div>
-            <div class="homeLastTripMetaRow">
-              <div class="homeLastTripMeta">
-                <span class="homeLastTripMetaLabel">Dealer</span>
-                <span class="homeLastTripMetaValue">${escapeHtml(latestDealer)}</span>
-              </div>
-              <div class="homeLastTripMeta">
-                <span class="homeLastTripMetaLabel">Area</span>
-                <span class="homeLastTripMetaValue">${escapeHtml(latestArea)}</span>
-              </div>
-            </div>
-            <div class="homeLastTripMetricRow">
-              <div class="homeLastTripMetric">
-                <span class="homeLastTripMetricLabel">Pounds</span>
-                <span class="homeLastTripMetricValue lbsBlue">${round2(latestPounds)} lbs</span>
-              </div>
-              <div class="homeLastTripMetric">
-                <span class="homeLastTripMetricLabel">Average</span>
-                <span class="homeLastTripMetricValue ppl">${latestAvgPpl === null ? "—" : `${formatMoney(round2(latestAvgPpl))}/lb`}</span>
-              </div>
-            </div>
-          </div>
+          <div class="homeLastTripHeader reportsHeroEyebrow">Last Saved Trip</div>
+          ${renderTripCatchCard(newestSavedTrip, {
+            interactive: false,
+            compact: true,
+            extraClass: "tripsBrowseCard homeLastTripCardSurface"
+          })}
         `;
       })()
       : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No saved trip yet</div><div class="emptyStateBody">Save your first trip to show your latest trip here. After that, widen the range if you need an older snapshot.</div></div>`;
