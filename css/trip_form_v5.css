@@ -131,20 +131,21 @@ body[data-view="edit"] .chip-selector{
 .actionsNew .btnRow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .actionsNew .btnRow2 .btn{width:100%}
 
-/* New/Edit Trip action dock polish: keep CTA row visually anchored above tabbar */
-:root{--trip-action-dock-h:64px}
+/* New/Edit Trip action dock: attach to bottom nav zone (out of normal form flow) */
+:root{--trip-action-dock-h:72px}
 body[data-view="new"] main#app,
 body[data-view="edit"] main#app{padding-bottom:calc(var(--tabbar-total-h) + var(--trip-action-dock-h) + 12px)}
 body[data-view="new"] .trip-action-dock,
 body[data-view="edit"] .trip-action-dock{
-  position:sticky;
-  left:auto;
-  right:auto;
+  position:fixed;
+  left:50%;
+  width:min(430px, 100vw);
+  transform:translateX(-50%);
   bottom:var(--tabbar-total-h);
-  z-index:3;
+  z-index:9997;
   pointer-events:none;
-  margin-top:8px;
-  padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));
+  margin-top:0;
+  padding:8px 10px;
 }
 body[data-view="new"] .tripActionBar,
 body[data-view="edit"] .tripActionBar{
