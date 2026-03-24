@@ -47,11 +47,11 @@ body[data-view="edit"] .chip-selector{
 
 .tripMetricsRow{
   display:grid;
-  grid-template-columns:minmax(0,1.04fr) 8px minmax(0,.94fr) 8px minmax(0,1.02fr);
-  column-gap:5px;
+  grid-template-columns:minmax(0,1fr) 10px minmax(0,.84fr) 10px minmax(0,1.08fr);
+  column-gap:4px;
   row-gap:0;
   align-items:end;
-  padding:10px 8px 9px;
+  padding:10px 6px 9px;
   border:1px solid rgba(47,109,246,.28);
   border-radius:14px;
   background:linear-gradient(180deg, rgba(47,109,246,.13) 0%, rgba(47,109,246,.05) 48%, rgba(255,255,255,.03) 100%);
@@ -59,12 +59,12 @@ body[data-view="edit"] .chip-selector{
 }
 .tripMetricsRow .field{min-width:0}
 .tripMetricsRow .fieldLabel{font-size:11px;letter-spacing:.06em;text-align:center}
-.tripMetricsRow .input{padding-left:8px;padding-right:8px}
+.tripMetricsRow .input{padding-left:7px;padding-right:7px}
 .tripMetricsRow #rateValue,
 .tripMetricsRow #rateValueEdit{font-weight:800;color:var(--ppl);background:var(--ppl-bg)}
 .tripMetricField{display:flex;flex-direction:column;align-items:stretch;min-width:0}
 .tripMetricLabel{margin:0 0 6px;line-height:1.1;text-align:center;white-space:nowrap}
-.tripMetricLabel--pounds{color:var(--lbs)}
+.tripMetricLabel--pounds{color:var(--lbsBlue)}
 .tripMetricLabel--price{color:var(--ppl)}
 .tripMetricLabel--amount{color:var(--good)}
 .tripMetricSymbol{
@@ -75,7 +75,7 @@ body[data-view="edit"] .chip-selector{
   font-size:12px;
   font-weight:700;
   opacity:.48;
-  padding-bottom:13px;
+  padding-bottom:11px;
   user-select:none;
 }
 .rate{color:var(--muted);font-weight:700}
@@ -143,23 +143,23 @@ body[data-view="edit"] .chip-selector{
 }
 .inputWrap .unitSuffix{right:12px;max-width:calc(100% - 16px)}
 .inputWrap .moneyPrefix{left:12px;max-width:calc(100% - 16px)}
-.inputWrap--suffix .inputWithSuffix{padding-right:52px;text-overflow:ellipsis;overflow:hidden}
-.inputWrap--prefix .inputWithPrefix{padding-left:34px;padding-right:12px;text-overflow:ellipsis;overflow:hidden}
+.inputWrap--suffix .inputWithSuffix{padding-right:44px;text-overflow:ellipsis;overflow:hidden}
+.inputWrap--prefix .inputWithPrefix{padding-left:28px;padding-right:10px;text-overflow:ellipsis;overflow:hidden}
 .inputWrap--rate .input{padding-left:12px;padding-right:12px;text-overflow:ellipsis;overflow:hidden}
 .moneyGreen{color:var(--good)!important}
 .btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}
 
 @media (max-width:420px){
   .tripMetricsRow{
-    grid-template-columns:minmax(0,1.06fr) 7px minmax(0,.92fr) 7px minmax(0,1.02fr);
-    column-gap:4px;
-    padding:10px 7px 8px;
+    grid-template-columns:minmax(0,1fr) 8px minmax(0,.78fr) 8px minmax(0,1.05fr);
+    column-gap:3px;
+    padding:9px 5px 8px;
   }
-  .tripMetricSymbol{font-size:11px;padding-bottom:12px;opacity:.44}
+  .tripMetricSymbol{font-size:11px;padding-bottom:10px;opacity:.44}
   .tripMetricsRow .fieldLabel{font-size:10px;letter-spacing:.05em}
-  .tripMetricsRow .input{padding-left:7px;padding-right:7px}
+  .tripMetricsRow .input{padding-left:6px;padding-right:6px}
   .inputWrap .unitSuffix,
   .inputWrap .moneyPrefix{font-size:11px}
-  .inputWrap--suffix .inputWithSuffix{padding-right:46px}
-  .inputWrap--prefix .inputWithPrefix{padding-left:30px;padding-right:10px}
+  .inputWrap--suffix .inputWithSuffix{padding-right:40px}
+  .inputWrap--prefix .inputWithPrefix{padding-left:26px;padding-right:9px}
 }
