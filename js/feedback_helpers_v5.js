@@ -112,7 +112,6 @@ export function createFeedbackHelpers({
     if(!el) return;
     clearTimeout(toastTimer);
     clearTimeout(toastCleanupTimer);
-    clearCelebration();
     el.classList.remove("show");
     el.textContent = "";
   }
@@ -241,13 +240,32 @@ export function createFeedbackHelpers({
     }catch{}
   }
 
+  function clearLegacyMilestoneToastState(){
+    const toastEl = document.getElementById("toast");
+    if(!toastEl) return;
+    const hasLegacyMilestoneClass =
+      toastEl.classList.contains("milestoneToast") ||
+      toastEl.classList.contains("toastMilestone") ||
+      toastEl.classList.contains("toast--milestone");
+    const hasLegacyMilestoneNodes = !!toastEl.querySelector(
+      ".milestoneTitle, .milestoneDetail, .milestoneDismiss, .celebrationTitle, .celebrationDetail"
+    );
+    const toastText = String(toastEl.textContent || "").trim();
+    const looksLikeMilestoneText = /(milestone|record|all[- ]?time|new high)/i.test(toastText);
+    const hasToastAction = !!toastEl.querySelector(".toastAction");
+    if(!hasLegacyMilestoneClass && !hasLegacyMilestoneNodes && !(looksLikeMilestoneText && !hasToastAction)) return;
+    resetToastState(toastEl);
+    toastEl.classList.remove("milestoneToast", "toastMilestone", "toast--milestone");
+  }
+
   function showMilestoneToast({ headline = "", detail = "", okLabel = "OK", durationMs = 0 } = {}){
     try{
-      const toastEl = document.getElementById("toast");
       const root = document.getElementById("celebrationRoot");
-      if(!root || !toastEl) return;
-      hideToast(toastEl, { immediate: true });
+      if(!root) return;
+      const toastEl = document.getElementById("toast");
+      if(toastEl) hideToast(toastEl, { immediate: true });
       clearCelebration();
+      clearLegacyMilestoneToastState();
       celebrationFocusReturn = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
       const panel = document.createElement("div");
@@ -312,6 +330,7 @@ export function createFeedbackHelpers({
       try{ celebrationFocusReturn.focus({ preventScroll: true }); }catch(_){ }
     }
     celebrationFocusReturn = null;
+    clearLegacyMilestoneToastState();
   }
 
   function isStandaloneMode(){
