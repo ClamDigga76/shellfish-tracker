@@ -45,12 +45,37 @@ body[data-view="edit"] .chip-selector{
 .datePillWrap.is-empty > input[type="date"]::-webkit-datetime-edit{color:transparent}
 .datePillWrap.is-empty > input[type="date"]::-webkit-calendar-picker-indicator{opacity:.95}
 
-.tripMetricsRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:10px 10px 8px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02)}
+.tripMetricsRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 16px minmax(0,1fr) 16px minmax(0,1fr);
+  gap:8px;
+  align-items:end;
+  padding:12px 10px 10px;
+  border:1px solid rgba(47,109,246,.28);
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(47,109,246,.13) 0%, rgba(47,109,246,.05) 48%, rgba(255,255,255,.03) 100%);
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+}
 .tripMetricsRow .field{min-width:0}
-.tripMetricsRow .fieldLabel{font-size:13px;letter-spacing:.08em}
+.tripMetricsRow .fieldLabel{font-size:12px;letter-spacing:.08em}
 .tripMetricsRow .input{padding-left:10px;padding-right:10px}
 .tripMetricsRow #rateValue,
 .tripMetricsRow #rateValueEdit{font-weight:800;color:var(--ppl);background:var(--ppl-bg)}
+.tripMetricField{display:flex;flex-direction:column}
+.tripMetricLabel{margin-bottom:6px}
+.tripMetricLabel--pounds{color:var(--brand)}
+.tripMetricLabel--price{color:var(--warn)}
+.tripMetricLabel--amount{color:var(--good)}
+.tripMetricSymbol{
+  align-self:center;
+  justify-self:center;
+  color:var(--muted);
+  font-size:14px;
+  font-weight:800;
+  opacity:.65;
+  transform:translateY(14px);
+  user-select:none;
+}
 .rate{color:var(--muted);font-weight:700}
 .rate.ppl{color:var(--ppl)!important;font-weight:800}
 
@@ -120,6 +145,10 @@ body[data-view="edit"] .chip-selector{
 .inputWrap--prefix .inputWithPrefix{padding-left:34px;padding-right:12px;text-overflow:ellipsis;overflow:hidden}
 .inputWrap--rate .input{padding-left:12px;padding-right:12px;text-overflow:ellipsis;overflow:hidden}
 .moneyGreen{color:var(--good)!important}
-.tripDerivedMetric{background:rgba(255,255,255,.035);color:var(--muted);font-weight:700;cursor:default}
-.tripDerivedMetric:focus{outline-color:transparent;box-shadow:none}
 .btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}
+
+@media (max-width:420px){
+  .tripMetricsRow{grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) 14px minmax(0,1fr);gap:6px}
+  .tripMetricSymbol{font-size:13px;transform:translateY(13px)}
+  .tripMetricsRow .fieldLabel{font-size:11px}
+}
