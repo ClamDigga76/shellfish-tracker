@@ -537,6 +537,7 @@ const {
   announce,
   showToast,
   showMilestoneToast,
+  clearMilestoneCelebration,
   maybeOfferInstallAfterFirstSave,
   confirmSaveModal,
   copyTextWithFeedback,
@@ -2021,7 +2022,8 @@ function render(){
     },
     onRedirectToNew: ()=>{ state.view = "new"; saveState(); renderNewTrip(); },
     renderTabBar,
-    bindHeaderHelpButtons
+    bindHeaderHelpButtons,
+    onBeforeTopLevelViewChange: ()=>{ clearMilestoneCelebration(); }
   });
 }
 
