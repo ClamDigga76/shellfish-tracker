@@ -9,6 +9,7 @@ export function createFeedbackHelpers({
   let toastShowFrame = 0;
   let celebrationTimer = null;
   let ariaLiveTimer = null;
+  let ariaLiveClearTimer = null;
   let celebrationViewportCleanup = null;
   let celebrationLayoutFrame = 0;
   let celebrationFocusReturn = null;
@@ -220,10 +221,18 @@ export function createFeedbackHelpers({
       if(!el) return;
       const nextMode = (mode === "assertive") ? "assertive" : "polite";
       const text = String(msg || "").trim();
+      if(!text){
+        el.textContent = "";
+        return;
+      }
       el.setAttribute("aria-live", nextMode);
       el.textContent = "";
       clearTimeout(ariaLiveTimer);
-      ariaLiveTimer = setTimeout(()=>{ el.textContent = text; }, 30);
+      clearTimeout(ariaLiveClearTimer);
+      ariaLiveTimer = setTimeout(()=>{
+        el.textContent = text;
+        ariaLiveClearTimer = setTimeout(()=>{ el.textContent = ""; }, 1600);
+      }, 30);
     }catch{}
   }
 
