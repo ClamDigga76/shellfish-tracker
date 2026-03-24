@@ -134,11 +134,11 @@ body[data-view="edit"] .chip-selector{
 /* New/Edit Trip action dock: single-owner bottom overlay above tab bar */
 :root{
   --trip-action-dock-h:72px;
-  --trip-action-dock-gap:12px;
 }
 body[data-view="new"] main#app,
 body[data-view="edit"] main#app{
-  padding-bottom:calc(var(--tabbar-total-h) + var(--trip-action-dock-h) + var(--trip-action-dock-gap));
+  --bottom-overlay-h:var(--trip-action-dock-h);
+  --bottom-overlay-gap:12px;
 }
 body[data-view="new"] .trip-action-dock,
 body[data-view="edit"] .trip-action-dock{
