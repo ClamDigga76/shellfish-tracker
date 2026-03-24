@@ -647,6 +647,12 @@ function renderTabBar(activeView){
     activeView,
     escapeHtml,
     hasUnsavedDraft,
+    confirmUnsavedLeave: ()=>openConfirmModal({
+      title: "Leave this screen?",
+      message: "Your unsaved trip entry may be lost.",
+      confirmLabel: "Leave",
+      cancelLabel: "Stay"
+    }),
     onNavigate: (next)=>{
       navigateTopLevelView(next);
     }

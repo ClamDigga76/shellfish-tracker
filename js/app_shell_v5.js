@@ -87,7 +87,8 @@ export function renderTabBar({
   activeView,
   escapeHtml,
   hasUnsavedDraft,
-  onNavigate
+  onNavigate,
+  confirmUnsavedLeave
 }){
   const host = document.getElementById("tabbar");
   if(!host) return;
@@ -105,10 +106,16 @@ export function renderTabBar({
   }).join("");
 
   host.querySelectorAll("[data-tab]").forEach(btn => {
-    btn.onclick = () => {
+    btn.onclick = async () => {
       const next = btn.getAttribute("data-tab") || "home";
       if((activeView === "new" || activeView === "edit") && hasUnsavedDraft()){
-        if(!confirm("Leave this screen? Your unsaved trip entry may be lost.")) return;
+        const canLeave = (typeof confirmUnsavedLeave === "function")
+          ? await confirmUnsavedLeave({
+            activeView,
+            next
+          })
+          : confirm("Leave this screen? Your unsaved trip entry may be lost.");
+        if(!canLeave) return;
       }
       onNavigate(next);
     };
