@@ -1,5 +1,6 @@
 function createTripMetricSyncEngine({ parseNum, parseMoney, syncTargets }) {
   let syncingMetric = false;
+  let lockPair = ["pounds", "rate"];
 
   const getFieldValue = (field) => {
     if (field === "amount") return parseMoney(syncTargets.amount?.value);
@@ -22,6 +23,12 @@ function createTripMetricSyncEngine({ parseNum, parseMoney, syncTargets }) {
     try {
       const pounds = getFieldValue("pounds");
       const rate = getFieldValue("rate");
+      const amount = getFieldValue("amount");
+      if (lockPair[0] === "pounds" && lockPair[1] === "amount") {
+        if (Number.isFinite(pounds) && pounds > 0 && Number.isFinite(amount) && amount > 0) setMetricValue("rate", amount / pounds, 2);
+        else setMetricValue("rate", 0, 2);
+        return;
+      }
       if (Number.isFinite(pounds) && pounds > 0 && Number.isFinite(rate) && rate > 0) setMetricValue("amount", pounds * rate, 2);
       else setMetricValue("amount", 0, 2);
     } finally {
@@ -29,14 +36,16 @@ function createTripMetricSyncEngine({ parseNum, parseMoney, syncTargets }) {
     }
   }
 
-  function onUserEdit() {
+  function onUserEdit(field) {
     if (syncingMetric) return;
+    if (field === "amount") lockPair = ["pounds", "amount"];
+    if (field === "rate") lockPair = ["pounds", "rate"];
   }
 
   return {
     updateDerivedField,
     onUserEdit,
-    getLockPair: () => ["pounds", "rate"]
+    getLockPair: () => [...lockPair]
   };
 }
 
@@ -333,6 +342,26 @@ const newTripFormHtml = renderTripEntryForm({
       if(String(elRate.value||"").endsWith(".")) elRate.value = String(elRate.value).slice(0, -1);
       const rate = parseNum(elRate.value);
       if(rate > 0) elRate.value = rate.toFixed(2);
+      updateRateLine();
+      updateSaveEnabled();
+    });
+  }
+
+  if(elAmount && !elAmount.__boundNumeric){
+    elAmount.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elAmount, ["0","0.0","0.00"]);
+    elAmount.addEventListener("pointerdown", prime);
+    elAmount.addEventListener("focus", prime);
+    elAmount.addEventListener("input", ()=>{
+      metricSync.onUserEdit("amount");
+      const s = sanitizeDecimalInput(elAmount.value);
+      if(s !== elAmount.value) elAmount.value = s;
+      updateRateLine();
+      updateSaveEnabled();
+    });
+    elAmount.addEventListener("blur", ()=>{
+      if(String(elAmount.value||"").endsWith(".")) elAmount.value = String(elAmount.value).slice(0, -1);
+      normalizeAmountOnBlur(elAmount);
       updateRateLine();
       updateSaveEnabled();
     });
@@ -1280,7 +1309,27 @@ function renderEditTrip(){
     });
   }
 
-  [elDate, elDealer, elPounds, elArea, elSpecies, elNotes].forEach(el=>{
+  if(elAmount && !elAmount.__boundNumeric){
+    elAmount.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elAmount, ["0","0.0","0.00"]);
+    elAmount.addEventListener("pointerdown", prime);
+    elAmount.addEventListener("focus", prime);
+    elAmount.addEventListener("input", ()=>{
+      metricSync.onUserEdit("amount");
+      const s = sanitizeDecimalInput(elAmount.value);
+      if(s !== elAmount.value) elAmount.value = s;
+      updateRateLine();
+      updateSaveEnabled();
+    });
+    elAmount.addEventListener("blur", ()=>{
+      if(String(elAmount.value||"").endsWith(".")) elAmount.value = String(elAmount.value).slice(0, -1);
+      normalizeAmountOnBlur(elAmount);
+      updateRateLine();
+      updateSaveEnabled();
+    });
+  }
+
+  [elDate, elDealer, elPounds, elAmount, elArea, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", ()=>{ updateSaveEnabled(); updateRateLine(); });
     el.addEventListener("change", ()=>{ updateSaveEnabled(); updateRateLine(); });
