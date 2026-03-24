@@ -59,6 +59,8 @@
   --safeBottom:env(safe-area-inset-bottom);
   --tabbar-safe:max(0px, var(--safeBottom));
   --tabbar-total-h:calc(var(--tabbar-h) + var(--tabbar-safe));
+  --bottom-overlay-h:0px;
+  --bottom-overlay-gap:10px;
   --section-gap:16px;
   --section-gap-tight:13px;
   --card-stack-gap:16px;
@@ -239,7 +241,7 @@ main{padding:14px 14px 18px}
 .input,.select,.textarea{width:100%;padding:12px 12px;border-radius:14px;border:1px solid var(--border);background:var(--glass2);color:var(--text);font-weight:700}
 .textarea{min-height:110px;resize:vertical;font-weight:600}
 .phone{display:flex;flex-direction:column}
-main#app{flex:1;min-height:0;min-width:0;max-width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-total-h) + 10px);transform:translate3d(0,0,0)}
+main#app{flex:1;min-height:0;min-width:0;max-width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tabbar-total-h) + var(--bottom-overlay-h) + var(--bottom-overlay-gap))}
 main#app.screenTransitionActive{will-change:opacity,transform;backface-visibility:hidden}
 main#app.screenTransitionOut{opacity:0;transform:translate3d(0,8px,0) scale(.992);transition:opacity .09s ease-out,transform .09s ease-out}
 main#app.screenTransitionIn{opacity:1;transform:translate3d(0,0,0) scale(1);animation:screenTransitionIn .17s cubic-bezier(.22,.61,.36,1)}
