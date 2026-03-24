@@ -1781,7 +1781,8 @@ const { renderHome } = createHomeDashboardRenderer({
   exportBackup,
   renderHomeMetricDetail: () => renderHomeMetricDetail(),
   getInstallSurfaceModel: () => getInstallSurfaceModel(),
-  runInstallAction: () => runInstallAction()
+  runInstallAction: () => runInstallAction(),
+  renderTripCatchCard
 });
 
 const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrchestrator({
