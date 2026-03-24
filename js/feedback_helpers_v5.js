@@ -110,10 +110,26 @@ export function createFeedbackHelpers({
 
   function finalizeToastCleanup(el){
     if(!el) return;
-    clearTimeout(toastTimer);
-    clearTimeout(toastCleanupTimer);
+    clearToastTimers();
     el.classList.remove("show");
     el.textContent = "";
+  }
+
+  function clearToastTimers(){
+    clearTimeout(toastTimer);
+    clearTimeout(toastCleanupTimer);
+    toastTimer = null;
+    toastCleanupTimer = null;
+  }
+
+  function hardResetToastShell(el){
+    if(!el) return;
+    clearToastTimers();
+    el.classList.remove("show", "milestoneToast", "toastMilestone", "toast--milestone");
+    try{ el.replaceChildren(); }catch(_){ el.textContent = ""; }
+    el.removeAttribute("role");
+    el.removeAttribute("aria-live");
+    el.removeAttribute("aria-atomic");
   }
 
   function resetToastState(el){
@@ -123,8 +139,7 @@ export function createFeedbackHelpers({
 
   function hideToast(el, { immediate = false } = {}){
     if(!el) return;
-    clearTimeout(toastTimer);
-    clearTimeout(toastCleanupTimer);
+    clearToastTimers();
     if(immediate){
       finalizeToastCleanup(el);
       return;
@@ -254,8 +269,7 @@ export function createFeedbackHelpers({
     const looksLikeMilestoneText = /(milestone|record|all[- ]?time|new high)/i.test(toastText);
     const hasToastAction = !!toastEl.querySelector(".toastAction");
     if(!hasLegacyMilestoneClass && !hasLegacyMilestoneNodes && !(looksLikeMilestoneText && !hasToastAction)) return;
-    resetToastState(toastEl);
-    toastEl.classList.remove("milestoneToast", "toastMilestone", "toast--milestone");
+    hardResetToastShell(toastEl);
   }
 
   function showMilestoneToast({ headline = "", detail = "", okLabel = "OK", durationMs = 0 } = {}){
@@ -263,7 +277,7 @@ export function createFeedbackHelpers({
       const root = document.getElementById("celebrationRoot");
       if(!root) return;
       const toastEl = document.getElementById("toast");
-      if(toastEl) hideToast(toastEl, { immediate: true });
+      if(toastEl) hardResetToastShell(toastEl);
       clearCelebration();
       clearLegacyMilestoneToastState();
       celebrationFocusReturn = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -330,6 +344,8 @@ export function createFeedbackHelpers({
       try{ celebrationFocusReturn.focus({ preventScroll: true }); }catch(_){ }
     }
     celebrationFocusReturn = null;
+    const toastEl = document.getElementById("toast");
+    if(toastEl) hardResetToastShell(toastEl);
     clearLegacyMilestoneToastState();
   }
 
