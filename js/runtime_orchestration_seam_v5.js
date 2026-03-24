@@ -44,24 +44,32 @@ export function renderViewDispatch({
   renderers,
   onRedirectToNew,
   renderTabBar,
-  bindHeaderHelpButtons
+  bindHeaderHelpButtons,
+  onBeforeTopLevelViewChange
 }){
   if(!state.view) state.view = "home";
+  const nextView = String(state.view || "home");
+  const prevView = String(renderViewDispatch._lastView || "");
 
-  try{ document.body.dataset.view = String(state.view || ""); }catch(_){ }
+  if(prevView && prevView !== nextView){
+    try{ onBeforeTopLevelViewChange?.({ fromView: prevView, toView: nextView }); }catch(_){ }
+  }
 
-  if(state.view === "settings") renderers.renderSettings();
-  else if(state.view === "new") renderers.renderNewTrip();
-  else if(state.view === "review") onRedirectToNew();
-  else if(state.view === "edit") renderers.renderEditTrip();
-  else if(state.view === "reports") renderers.renderReports();
-  else if(state.view === "help") renderers.renderHelp();
-  else if(state.view === "all_trips") renderers.renderAllTrips();
-  else if(state.view === "about") renderers.renderAbout();
+  try{ document.body.dataset.view = nextView; }catch(_){ }
+
+  if(nextView === "settings") renderers.renderSettings();
+  else if(nextView === "new") renderers.renderNewTrip();
+  else if(nextView === "review") onRedirectToNew();
+  else if(nextView === "edit") renderers.renderEditTrip();
+  else if(nextView === "reports") renderers.renderReports();
+  else if(nextView === "help") renderers.renderHelp();
+  else if(nextView === "all_trips") renderers.renderAllTrips();
+  else if(nextView === "about") renderers.renderAbout();
   else renderers.renderHome();
 
-  renderTabBar(state.view);
+  renderTabBar(nextView);
   bindHeaderHelpButtons();
+  renderViewDispatch._lastView = nextView;
 }
 
 export function startRuntimeRender({ render, getBootPill, displayBuildVersion, showFatal }){

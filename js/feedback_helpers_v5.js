@@ -6,9 +6,11 @@ export function createFeedbackHelpers({
 }){
   let toastTimer = null;
   let toastCleanupTimer = null;
+  let celebrationTimer = null;
   let ariaLiveTimer = null;
-  let milestoneViewportCleanup = null;
-  let milestoneLayoutFrame = 0;
+  let celebrationViewportCleanup = null;
+  let celebrationLayoutFrame = 0;
+  let celebrationFocusReturn = null;
   const TOAST_EXIT_MS = 260;
   const MODAL_EXIT_MS = 220;
 
@@ -31,14 +33,14 @@ export function createFeedbackHelpers({
     ]
   };
 
-  function clearMilestoneToastViewport(el){
-    if(milestoneViewportCleanup){
-      try{ milestoneViewportCleanup(); }catch(_){ }
-      milestoneViewportCleanup = null;
+  function clearCelebrationViewport(el){
+    if(celebrationViewportCleanup){
+      try{ celebrationViewportCleanup(); }catch(_){ }
+      celebrationViewportCleanup = null;
     }
-    if(milestoneLayoutFrame){
-      try{ cancelAnimationFrame(milestoneLayoutFrame); }catch(_){ }
-      milestoneLayoutFrame = 0;
+    if(celebrationLayoutFrame){
+      try{ cancelAnimationFrame(celebrationLayoutFrame); }catch(_){ }
+      celebrationLayoutFrame = 0;
     }
     if(!el) return;
     el.style.left = "";
@@ -50,16 +52,16 @@ export function createFeedbackHelpers({
     try{ el.scrollTop = 0; }catch(_){ }
   }
 
-  function bindMilestoneToastViewport(el){
-    clearMilestoneToastViewport(el);
+  function bindCelebrationViewport(el){
+    clearCelebrationViewport(el);
     if(!el || typeof window === "undefined") return;
 
     const clamp = (value, min, max)=>Math.min(Math.max(value, min), max);
     const scheduleLayout = ()=>{
-      if(milestoneLayoutFrame) return;
-      milestoneLayoutFrame = requestAnimationFrame(()=>{
-        milestoneLayoutFrame = 0;
-        if(!el.classList.contains("toastMilestone")) return;
+      if(celebrationLayoutFrame) return;
+      celebrationLayoutFrame = requestAnimationFrame(()=>{
+        celebrationLayoutFrame = 0;
+        if(!el.isConnected) return;
         const vv = window.visualViewport;
         const viewportWidth = Math.max(0, vv?.width || window.innerWidth || document.documentElement.clientWidth || 0);
         const viewportHeight = Math.max(0, vv?.height || window.innerHeight || document.documentElement.clientHeight || 0);
@@ -95,7 +97,7 @@ export function createFeedbackHelpers({
     }
     window.addEventListener("resize", scheduleLayout);
     window.addEventListener("orientationchange", scheduleLayout);
-    milestoneViewportCleanup = ()=>{
+    celebrationViewportCleanup = ()=>{
       if(vv && vv.removeEventListener){
         vv.removeEventListener("resize", scheduleLayout);
         vv.removeEventListener("scroll", scheduleLayout);
@@ -110,8 +112,8 @@ export function createFeedbackHelpers({
     if(!el) return;
     clearTimeout(toastTimer);
     clearTimeout(toastCleanupTimer);
-    clearMilestoneToastViewport(el);
-    el.classList.remove("show", "toastMilestone");
+    clearCelebration();
+    el.classList.remove("show");
     el.textContent = "";
   }
 
@@ -199,7 +201,6 @@ export function createFeedbackHelpers({
     try{
       const el = document.getElementById("toast");
       if(!el) return;
-      el.classList.remove("toastMilestone");
       const text = String(msg||"");
       const actionLabel = String(opts?.actionLabel || "").trim();
       const onAction = (typeof opts?.onAction === "function") ? opts.onAction : null;
@@ -242,44 +243,75 @@ export function createFeedbackHelpers({
 
   function showMilestoneToast({ headline = "", detail = "", okLabel = "OK", durationMs = 0 } = {}){
     try{
-      const el = document.getElementById("toast");
-      if(!el) return;
-      resetToastState(el);
-      el.classList.add("toastMilestone");
+      const toastEl = document.getElementById("toast");
+      const root = document.getElementById("celebrationRoot");
+      if(!root || !toastEl) return;
+      hideToast(toastEl, { immediate: true });
+      clearCelebration();
+      celebrationFocusReturn = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+      const panel = document.createElement("div");
+      panel.className = "celebrationPanel card";
+      panel.setAttribute("role", "dialog");
+      panel.setAttribute("aria-modal", "true");
 
       const content = document.createElement("div");
-      content.className = "toastMilestoneContent";
+      content.className = "celebrationContent";
 
       const titleNode = document.createElement("div");
-      titleNode.className = "toastMilestoneTitle";
+      titleNode.className = "celebrationTitle";
       titleNode.textContent = String(headline || "Milestone reached");
       content.appendChild(titleNode);
 
       if(String(detail || "").trim()){
         const detailNode = document.createElement("div");
-        detailNode.className = "toastMilestoneDetail";
+        detailNode.className = "celebrationDetail";
         detailNode.textContent = String(detail || "").trim();
         content.appendChild(detailNode);
       }
 
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "toastAction";
+      btn.className = "celebrationAction";
       btn.textContent = String(okLabel || "OK");
       btn.addEventListener("click", ()=>{
-        hideToast(el);
+        clearCelebration();
       }, { once: true });
 
-      el.appendChild(content);
-      el.appendChild(btn);
-      bindMilestoneToastViewport(el);
+      panel.appendChild(content);
+      panel.appendChild(btn);
+      root.textContent = "";
+      root.appendChild(panel);
+      root.classList.remove("hidden");
+      root.setAttribute("aria-hidden", "false");
+      bindCelebrationViewport(panel);
       announce(titleNode.textContent, "polite");
       triggerHaptic("medium");
-      showToastElement(el);
+      requestAnimationFrame(()=>{
+        root.classList.add("show");
+        try{ btn.focus({ preventScroll: true }); }catch(_){ }
+      });
       if(Number.isFinite(durationMs) && durationMs > 0){
-        toastTimer = setTimeout(()=>{ hideToast(el); }, durationMs);
+        celebrationTimer = setTimeout(()=>{ clearCelebration(); }, durationMs);
       }
     }catch{}
+  }
+
+  function clearCelebration({ restoreFocus = true } = {}){
+    const root = document.getElementById("celebrationRoot");
+    const panel = root?.querySelector(".celebrationPanel");
+    clearTimeout(celebrationTimer);
+    celebrationTimer = null;
+    clearCelebrationViewport(panel);
+    if(!root) return;
+    root.classList.remove("show");
+    root.classList.add("hidden");
+    root.setAttribute("aria-hidden", "true");
+    root.textContent = "";
+    if(restoreFocus && celebrationFocusReturn && document.contains(celebrationFocusReturn)){
+      try{ celebrationFocusReturn.focus({ preventScroll: true }); }catch(_){ }
+    }
+    celebrationFocusReturn = null;
   }
 
   function isStandaloneMode(){
@@ -486,6 +518,7 @@ export function createFeedbackHelpers({
     announce,
     showToast,
     showMilestoneToast,
+    clearMilestoneCelebration: ()=>clearCelebration({ restoreFocus: false }),
     maybeOfferInstallAfterFirstSave,
     confirmSaveModal,
     copyTextWithFeedback,
