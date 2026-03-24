@@ -1,5 +1,6 @@
 const DEFAULT_SPECIES = "Soft-shell Clams";
 const TRIP_HISTORY_LIMIT = 12;
+export const AREA_NOT_RECORDED = "Area Not Recorded";
 
 function isValidISODateTime(value) {
   const s = String(value || "").trim();
@@ -163,7 +164,10 @@ export function createTripDataEngine({ uid, isValidISODate }) {
 
   function isValidAreaValue(v) {
     const area = String(v || "").trim();
-    return !!area && area !== "__add_new_area__";
+    if (!area) return false;
+    if (area === "__add_new_area__") return false;
+    if (area === AREA_NOT_RECORDED) return true;
+    return true;
   }
 
   function validateTrip(t) {

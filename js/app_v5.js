@@ -67,7 +67,7 @@ const [{ uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY: forma
   { createReportsFilterHelpers },
   { createSettingsListManagement },
   { createBackupRestoreSubsystem },
-  { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled, appendTripHistoryEvent, ensureTripProvenanceShape },
+  { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled, appendTripHistoryEvent, ensureTripProvenanceShape, AREA_NOT_RECORDED },
   { createTripCardRenderHelpers, normalizeDealerDisplay },
   { renderHelpViewHTML, renderAboutViewHTML },
   { renderTripEntryForm },
@@ -124,7 +124,7 @@ function syncAreaState(nextState = state){
   const source = (nextState && typeof nextState === "object") ? nextState : state;
   if(!Array.isArray(source.areas)) source.areas = [];
   const tripAreas = Array.isArray(source.trips) ? source.trips.map((trip)=> String(trip?.area || "").trim()) : [];
-  source.areas = uniqueSorted([...source.areas, ...tripAreas]);
+  source.areas = uniqueSorted([...source.areas, ...tripAreas, AREA_NOT_RECORDED]);
   if(source && typeof source === "object" && Object.prototype.hasOwnProperty.call(source, "areaRegistry")) delete source.areaRegistry;
   return source.areas;
 }
@@ -150,6 +150,7 @@ function countTripsForArea(areaName){
 function deleteArea(areaName){
   const key = normalizeKey(areaName);
   if(!key) return { ok: false, reason: "invalid-area" };
+  if(key === normalizeKey(AREA_NOT_RECORDED)) return { ok: false, reason: "protected" };
   if(countTripsForArea(areaName) > 0) return { ok: false, reason: "in-use" };
   const nextAreas = (Array.isArray(state.areas) ? state.areas : []).filter((area)=> normalizeKey(area) !== key);
   if(nextAreas.length === (Array.isArray(state.areas) ? state.areas : []).length) return { ok: false, reason: "missing" };
