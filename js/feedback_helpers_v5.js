@@ -6,6 +6,7 @@ export function createFeedbackHelpers({
 }){
   let toastTimer = null;
   let toastCleanupTimer = null;
+  let toastShowFrame = 0;
   let celebrationTimer = null;
   let ariaLiveTimer = null;
   let celebrationViewportCleanup = null;
@@ -118,6 +119,10 @@ export function createFeedbackHelpers({
   function clearToastTimers(){
     clearTimeout(toastTimer);
     clearTimeout(toastCleanupTimer);
+    if(toastShowFrame){
+      try{ cancelAnimationFrame(toastShowFrame); }catch(_){ }
+      toastShowFrame = 0;
+    }
     toastTimer = null;
     toastCleanupTimer = null;
   }
@@ -152,7 +157,18 @@ export function createFeedbackHelpers({
 
   function showToastElement(el){
     if(!el) return;
-    requestAnimationFrame(()=>{ el.classList.add("show"); });
+    clearTimeout(toastTimer);
+    clearTimeout(toastCleanupTimer);
+    toastTimer = null;
+    toastCleanupTimer = null;
+    if(toastShowFrame){
+      try{ cancelAnimationFrame(toastShowFrame); }catch(_){ }
+      toastShowFrame = 0;
+    }
+    toastShowFrame = requestAnimationFrame(()=>{
+      toastShowFrame = 0;
+      el.classList.add("show");
+    });
   }
 
   function animateModalOverlayIn(el){
