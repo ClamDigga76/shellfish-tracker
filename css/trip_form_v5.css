@@ -137,11 +137,18 @@ body[data-view="new"] main#app,
 body[data-view="edit"] main#app{padding-bottom:calc(var(--tabbar-total-h) + var(--trip-action-dock-h) + 12px)}
 body[data-view="new"] .trip-action-dock,
 body[data-view="edit"] .trip-action-dock{
+  position:sticky;
+  left:auto;
+  right:auto;
   bottom:var(--tabbar-total-h);
-  padding:6px 10px 6px;
+  z-index:3;
+  pointer-events:none;
+  margin-top:8px;
+  padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));
 }
 body[data-view="new"] .tripActionBar,
 body[data-view="edit"] .tripActionBar{
+  pointer-events:auto;
   border:1px solid rgba(255,255,255,.14);
   border-radius:16px;
   background:linear-gradient(180deg, rgba(15,23,42,.72) 0%, rgba(15,23,42,.52) 100%);
