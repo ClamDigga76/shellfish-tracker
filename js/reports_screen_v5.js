@@ -483,31 +483,37 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderReportsTopShell = ({ body = "", shellMode = "overview" } = {})=> `
     <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
-      <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+      <div class="reportsTopHeader">
         <b>Reports</b>
         <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
 
-      <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
-        ${chip("YTD","YTD")}
-        ${chip("THIS_MONTH","This Month")}
-        ${chip("LAST_MONTH","Last Month")}
-        ${chip("ALL","All Time")}
+      <section class="reportsTimeframeShell" aria-label="Reports timeframe controls">
+        <div class="reportsTopLabel">Timeframe</div>
+        <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
+          ${chip("YTD","YTD")}
+          ${chip("THIS_MONTH","This Month")}
+          ${chip("LAST_MONTH","Last Month")}
+          ${chip("ALL","All Time")}
+        </div>
+      </section>
+
+      <div class="repCtlRow">
+        <button class="btn repAdvToggle" type="button">${advOpen ? "Hide advanced filters" : "Advanced filters"}</button>
       </div>
 
-      <div class="row repCtlRow" style="justify-content:flex-end;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
-        <button class="btn repAdvToggle" type="button">${advOpen ? "Hide" : "Advanced"}</button>
+      <div class="reportsAdvancedShell" aria-label="Reports advanced filters">
+        ${advPanel}
       </div>
 
       <section class="reportsNavShell" aria-label="Reports sections">
-        <div class="reportsNavLabel">Jump to</div>
+        <div class="reportsNavLabel">Section tabs</div>
         <div class="reportsSectionSwitch" role="tablist" aria-label="Reports sections">
           ${REPORTS_SECTION_ITEMS.map((item)=> renderReportsSectionChip(item)).join("")}
         </div>
         <div class="reportsSectionIntro">${escapeHtml((REPORTS_SECTION_ITEMS.find((item)=> item.key === activeReportsSection) || REPORTS_SECTION_ITEMS[0]).intro)}</div>
       </section>
 
-      ${advPanel}
       ${body}
     </div>
   `;
