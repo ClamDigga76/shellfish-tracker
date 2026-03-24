@@ -131,10 +131,15 @@ body[data-view="edit"] .chip-selector{
 .actionsNew .btnRow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .actionsNew .btnRow2 .btn{width:100%}
 
-/* New/Edit Trip action dock: attach to bottom nav zone (out of normal form flow) */
-:root{--trip-action-dock-h:72px}
+/* New/Edit Trip action dock: single-owner bottom overlay above tab bar */
+:root{
+  --trip-action-dock-h:72px;
+  --trip-action-dock-gap:12px;
+}
 body[data-view="new"] main#app,
-body[data-view="edit"] main#app{padding-bottom:calc(var(--tabbar-total-h) + var(--trip-action-dock-h) + 12px)}
+body[data-view="edit"] main#app{
+  padding-bottom:calc(var(--tabbar-total-h) + var(--trip-action-dock-h) + var(--trip-action-dock-gap));
+}
 body[data-view="new"] .trip-action-dock,
 body[data-view="edit"] .trip-action-dock{
   position:fixed;
@@ -156,6 +161,10 @@ body[data-view="edit"] .tripActionBar{
   box-shadow:0 10px 20px rgba(0,0,0,.2);
   padding:8px;
 }
+body[data-view="new"] .tripActionRow,
+body[data-view="edit"] .tripActionRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body[data-view="new"] .tripActionRow.tripActionRow--three,
+body[data-view="edit"] .tripActionRow.tripActionRow--three{grid-template-columns:1fr 1fr 1fr}
 
 /* New Trip: suffix units + save disabled */
 .inputWrap{position:relative;min-width:0;overflow:hidden}

@@ -599,27 +599,3 @@ header{padding:14px 18px 12px}
 .tripCardMain{font-size:18px}
 .tripCardMetricsCol{margin-top:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-wrap:nowrap}
 .tripCardMetricChip{font-size:14px;padding:6px 10px}
-
-/* v274: New Trip/Edit Trip fixed actions above tabbar */
-:root{--trip-action-dock-h:56px}
-body[data-view="new"] main#app,
-body[data-view="edit"] main#app{padding-bottom:calc(var(--tabbar-total-h) + var(--trip-action-dock-h) + 20px)}
-.trip-action-dock{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:var(--tabbar-total-h);
-  z-index:9997;
-  pointer-events:none;
-  padding:8px 10px 8px;
-}
-.tripActionBar{
-  max-width:720px;
-  margin:0 auto;
-  pointer-events:auto;
-  padding:0;
-  background:linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,.35) 100%);
-}
-.tripActionRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tripActionRow.tripActionRow--three{grid-template-columns:1fr 1fr 1fr}
-
