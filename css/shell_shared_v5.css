@@ -379,10 +379,9 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   box-shadow:0 10px 24px rgba(0,0,0,.2);
 }
 .tripsBrowseCard .tripCardGrid{gap:14px}
-.tripsBrowseCard .tripCardHeadline,
-.tripsBrowseCard .tripCardMain,
-.tripsBrowseCard .tripCardHeadlineDealer,
-.tripsBrowseCard .tripCardSpecies{font-size:16px;line-height:1.2}
+.tripsBrowseCard :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies),
+.reportsRecordTripCard :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies),
+.homeScreenShell .homeLastTripCardSurface :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies){font-size:16px;line-height:1.2}
 .tripsBrowseCard .tripCardHeadline{color:var(--text-muted-strong);font-weight:700}
 .tripsBrowseCard .tripCardDate{font-weight:840}
 .tripsBrowseCard .tripCardMain{color:var(--text);font-weight:700}
@@ -390,19 +389,17 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripsBrowseCard .tripCardLowerLeft{display:grid;gap:4px;margin-top:10px}
 .tripsBrowseCard .tripCardSpecies{font-weight:760;color:var(--text)}
 .tripsBrowseCard .tripCardNotes{font-size:12px;line-height:1.35;color:var(--text-muted-strong)}
-.tripsBrowseCard .tripCardMetricChip{font-size:16px;padding:7px 0}
-.tripsBrowseCard .tripCardMetricChip .metricValue{font-size:1.75em}
-.reportsRecordTripCard .tripCardHeadline,
-.reportsRecordTripCard .tripCardMain,
-.reportsRecordTripCard .tripCardHeadlineDealer,
-.reportsRecordTripCard .tripCardSpecies{font-size:16px;line-height:1.2}
+.tripsBrowseCard .tripCardMetricChip,
+.reportsRecordTripCard .tripCardMetricChip,
+.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip{font-size:20px;padding:8px 0}
+.tripsBrowseCard .tripCardMetricChip .metricValue,
+.reportsRecordTripCard .tripCardMetricChip .metricValue,
+.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip .metricValue{font-size:2.2em}
 .reportsRecordTripCard .tripCardHeadline{color:var(--text-muted-strong);font-weight:700}
 .reportsRecordTripCard .tripCardDate{font-weight:840}
 .reportsRecordTripCard .tripCardMain,
 .reportsRecordTripCard .tripCardHeadlineDealer,
 .reportsRecordTripCard .tripCardSpecies{color:var(--text)}
-.reportsRecordTripCard .tripCardMetricChip{font-size:16px;padding:7px 0}
-.reportsRecordTripCard .tripCardMetricChip .metricValue{font-size:1.75em}
 .tripsEmptyState{padding:15px 14px}
 
 .emptyState{
