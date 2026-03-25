@@ -416,6 +416,8 @@ export function createHomeDashboardRenderer({
             contextText: `Home • Range ${launchedRangeLabel} • ${trips.length} trips`
           }
         };
+        state.reportsMetricDetail = "";
+        state.reportsMetricDetailContext = null;
         state.view = "home";
         saveState();
         render();
