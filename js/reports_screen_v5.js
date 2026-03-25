@@ -354,6 +354,16 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const state = getState();
   ensureReportsFilter();
 
+  if (!homeMetricOnly) {
+    const hasStaleHomeDetail = String(state.homeMetricDetail || "").trim()
+      || (state.homeMetricDetailContext && typeof state.homeMetricDetailContext === "object");
+    if (hasStaleHomeDetail) {
+      state.homeMetricDetail = "";
+      state.homeMetricDetailContext = null;
+      saveState();
+    }
+  }
+
   const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
   const hasSavedTrips = tripsAll.length > 0;
   const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
@@ -1420,6 +1430,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         mutate: ()=>{
           state.reportsMetricDetail = String(btn.getAttribute("data-metric-detail") || "").toLowerCase();
           state.reportsMetricDetailContext = { source: "reports" };
+          state.homeMetricDetail = "";
+          state.homeMetricDetailContext = null;
           saveState();
         }
       });
