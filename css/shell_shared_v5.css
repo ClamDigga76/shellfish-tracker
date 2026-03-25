@@ -412,10 +412,10 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .homeScreenShell .homeLastTripCardSurface .tripCardNotes{font-size:13px;line-height:1.38;color:var(--text-muted-strong)}
 .tripsBrowseCard .tripCardMetricChip,
 .reportsRecordTripCard .tripCardMetricChip,
-.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip{font-size:22px;padding:9px 0}
+.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip{font-size:23px;padding:9px 0}
 .tripsBrowseCard .tripCardMetricChip .metricValue,
 .reportsRecordTripCard .tripCardMetricChip .metricValue,
-.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip .metricValue{font-size:2.25em}
+.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip .metricValue{font-size:2.4em}
 .tripsEmptyState{padding:15px 14px}
 
 .emptyState{
