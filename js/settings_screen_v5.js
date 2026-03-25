@@ -284,12 +284,15 @@ export function createSettingsScreenOrchestrator({
     <div class="settingsGroupBlock">
       <div class="settingsGroupLabel">Advanced</div>
       <details class="card settingsSectionCard settingsGroupedCard settingsAdvancedCard" id="advancedBox">
-        <summary class="settingsAdvancedSummary">Advanced diagnostics and reset</summary>
+        <summary class="settingsAdvancedSummary">Advanced support diagnostics and reset</summary>
         <div class="settingsRow settingsRow--action mt10">
           <div class="row gap10 wrap">
-            <button class="btn" id="copyDebug">Copy diagnostics</button>
+            <button class="btn" id="copyDebug">Copy support diagnostics</button>
             <button class="btn" id="refreshApp">Reload app safely</button>
           </div>
+        </div>
+        <div class="settingsRow settingsRow--minor">
+          <div class="muted small">Copy this support bundle and include what happened right before the issue.</div>
         </div>
         <div class="settingsRow settingsRow--danger">
           <div class="muted small"><b>Danger zone:</b> Erase removes all trips and lists on this device. Create a backup first.</div>
