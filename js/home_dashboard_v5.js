@@ -210,18 +210,14 @@ export function createHomeDashboardRenderer({
         if (typeof renderTripCatchCard !== "function") {
           return `
             <div class="emptyState compact homeLastTripFallback">
-              <div class="emptyStateTitle">Last Saved Trip</div>
-              <div class="emptyStateBody">Latest saved trip: ${escapeHtml(fallbackDate)}.</div>
+              <div class="emptyStateTitle">Latest saved trip: ${escapeHtml(fallbackDate)}.</div>
             </div>
           `;
         }
-        return `
-          <div class="homeLastTripHeader reportsHeroEyebrow">Last Saved Trip</div>
-          ${renderTripCatchCard(newestSavedTrip, {
-            interactive: false,
-            extraClass: "homeLastTripCardSurface"
-          })}
-        `;
+        return renderTripCatchCard(newestSavedTrip, {
+          interactive: false,
+          extraClass: "tripsBrowseCard"
+        });
       })()
       : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No saved trip yet</div><div class="emptyStateBody">Save your first trip to show your latest trip here.</div></div>`;
 
@@ -350,6 +346,7 @@ export function createHomeDashboardRenderer({
         </section>
 
         <section class="homeSection homeLastTripShell">
+          <div class="homeLastTripHeader reportsHeroEyebrow">Last Saved Trip</div>
           ${lastSavedTripHtml}
         </section>
       </div>
