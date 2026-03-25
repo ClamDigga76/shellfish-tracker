@@ -90,9 +90,9 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> quick actions and status checks.</div>
         <ul style="margin:8px 0 0 18px">
-          <li><b>Updates:</b> check status and reload the latest version when needed.</li>
-          <li><b>Install App:</b> see whether you are in Browser or Installed mode, then jump here for full steps.</li>
-          <li><b>Backup & Restore:</b> run the action there, then use this Help page when you need the how-to.</li>
+          <li><b>Updates:</b> check status, then run <b>Reload latest version</b> or <b>Reset cache &amp; reload</b> when prompted.</li>
+          <li><b>Install App:</b> confirm Browser vs Installed mode and run install actions.</li>
+          <li><b>Backup & Restore:</b> create or restore backups.</li>
           <li><b>List Management:</b> maintain Dealers and Areas.</li>
         </ul>
       </div>
@@ -102,19 +102,19 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b id="help_jump_backups" class="helpSectionTitle">Backup & Restore guidance</b>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
-        <div><b>Create backup:</b></div>
+        <div><b>Create backup</b></div>
         <ol style="margin:8px 0 0 18px">
           <li>Open Settings → <b>Backup & Restore</b>.</li>
           <li>Tap <b>Create Backup</b>.</li>
-          <li>Store one copy in iCloud Drive or Google Drive, and keep one older backup too.</li>
+          <li>Keep one current copy and one older copy in iCloud Drive or Google Drive.</li>
         </ol>
-        <div style="margin-top:8px"><b>Restore backup:</b></div>
+        <div style="margin-top:8px"><b>Restore backup</b></div>
         <ol style="margin:8px 0 0 18px">
-          <li>Open <b>Restore Backup</b>.</li>
+          <li>In Settings, tap <b>Restore Backup</b>.</li>
           <li>Review preview details before confirming.</li>
           <li>Choose <b>Merge</b> or <b>Replace</b>.</li>
         </ol>
-        <div style="margin-top:8px"><b>Practical tip:</b> If you switch phones, browsers, or app mode, create a fresh backup first.</div>
+        <div style="margin-top:8px"><b>Tip:</b> Before switching phones, browsers, or app mode, create a fresh backup first.</div>
       </div>
     </div>
 
@@ -124,7 +124,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Current mode:</b> ${escapeHtml(String(installModel?.statusPill || (isStandalone ? "Installed" : "Browser")))}</div>
         <div style="margin-top:8px">${escapeHtml(String(installModel?.statusLine || "Bank the Catch can run in your browser or as an installed Home Screen app."))}</div>
-        <div style="margin-top:8px">Settings shows your current mode. Help is the full install guide.</div>
+        <div style="margin-top:8px">Settings is the status/action view. This section is the full install guide.</div>
         <div style="margin-top:8px"><b>iPhone/iPad Safari</b></div>
         <ol style="margin:8px 0 0 18px">
           <li>Open Bank the Catch in <b>Safari</b>.</li>
@@ -137,8 +137,8 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>Use Chrome’s install prompt or tap the menu.</li>
           <li>Choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</li>
         </ol>
-        <div style="margin-top:8px"><b>Tip:</b> If Settings says <b>Browser</b>, you are not in the installed app yet. After install, open Bank the Catch from the Home Screen icon.</div>
-        <div style="margin-top:8px"><b>Need more help?</b> Use support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</div>
+        <div style="margin-top:8px"><b>Tip:</b> If Settings says <b>Browser</b>, open the Home Screen icon after install to enter installed mode.</div>
+        <div style="margin-top:8px"><b>Need help?</b> Email <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</div>
       </div>
     </div>
 
@@ -147,9 +147,9 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <ul style="margin:0 0 0 18px">
-          <li>If the app looks stale, open <b>Settings</b> and first use <b>Reload latest version</b>. If the status warns about mismatch or stale cache risk, use <b>Reset cache &amp; reload</b>.</li>
-          <li>Use <b>Settings → Install App</b> to check whether you are in Browser or Installed mode, then use this Help section for the matching steps.</li>
-          <li>If behavior seems off after an update, reload once, then reopen Help or Settings and recheck the status lines.</li>
+          <li>If the app looks stale, open <b>Settings</b> and run <b>Reload latest version</b>. If prompted, run <b>Reset cache &amp; reload</b>.</li>
+          <li>Use <b>Settings → Install App</b> to confirm your mode, then follow the install steps above if needed.</li>
+          <li>If behavior still seems off after updating, reopen the app and recheck Settings status lines.</li>
           <li>For support, email <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</li>
         </ul>
       </div>
@@ -186,6 +186,7 @@ export function renderAboutViewHTML({ renderPageHeader, displayBuildVersion }) {
       <div class="muted small">Build: <b>${displayBuildVersion}</b></div>
       <div class="muted small" style="margin-top:8px">Bank the Catch is a mobile-first shellfish tracking app.</div>
       <div class="muted small" style="margin-top:6px">Support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+      <div class="muted small" style="margin-top:6px">For install and backup walkthroughs, use Help.</div>
       <div class="muted small" style="margin-top:6px">Legal: <a class="settingsEmail" href="legal/terms.html">Terms</a> • <a class="settingsEmail" href="legal/privacy.html">Privacy</a> • <a class="settingsEmail" href="legal/license.html">License</a></div>
       <div class="row mt12">
         <button class="btn" id="copyDebug">Copy diagnostics info</button>
