@@ -120,9 +120,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--field">
           <div class="selectRowWrap settingsSelectWrap">
             <select id="themeMode" class="select" aria-label="Theme">
-              <option value="${themeModeSystem}">System (default)</option>
-              <option value="${themeModeLight}">Light</option>
-              <option value="${themeModeDark}">Dark</option>
+              <option value="${themeModeDark}">Dark (temporary only mode)</option>
             </select>
             <span class="chev" aria-hidden="true">▾</span>
           </div>
