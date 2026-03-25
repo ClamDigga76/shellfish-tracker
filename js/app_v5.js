@@ -251,10 +251,17 @@ function shouldAnimateTopLevelScreenChange(fromView, toView){
   return fromKey !== toKey && isTopLevelTransitionView(fromKey) && isTopLevelTransitionView(toKey) && supportsTopLevelTransition();
 }
 
+function clearHomeMetricDetailState(){
+  state.homeMetricDetail = "";
+  state.homeMetricDetailContext = null;
+}
+
 function navigateTopLevelView(nextView){
   const currentView = String(state.view || "home");
   const nextKey = String(nextView || "home");
+  const leavingHome = currentView === "home" && nextKey !== "home";
   if(!shouldAnimateTopLevelScreenChange(currentView, nextKey)){
+    if(leavingHome) clearHomeMetricDetailState();
     state.view = nextKey;
     saveState();
     render();
@@ -263,6 +270,7 @@ function navigateTopLevelView(nextView){
 
   const app = getApp();
   if(!app){
+    if(leavingHome) clearHomeMetricDetailState();
     state.view = nextKey;
     saveState();
     render();
@@ -276,6 +284,7 @@ function navigateTopLevelView(nextView){
 
   topLevelTransitionOutTimer = window.setTimeout(()=>{
     if(transitionToken !== topLevelTransitionToken) return;
+    if(leavingHome) clearHomeMetricDetailState();
     state.view = nextKey;
     saveState();
     render();

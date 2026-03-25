@@ -359,13 +359,19 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
   const fMode = String(rf.mode || "YTD").toUpperCase();
   const reportsSectionKey = String(state.reportsSection || "insights").toLowerCase();
-  const activeMetricDetail = String(state.reportsMetricDetail || "").toLowerCase();
-  const metricDetailContext = state.reportsMetricDetailContext && typeof state.reportsMetricDetailContext === "object"
+  const reportsMetricDetail = String(state.reportsMetricDetail || "").toLowerCase();
+  const reportsMetricDetailContext = state.reportsMetricDetailContext && typeof state.reportsMetricDetailContext === "object"
     ? state.reportsMetricDetailContext
     : null;
-  const isHomeMetricDetail = metricDetailContext?.source === "home";
+  const homeMetricDetail = String(state.homeMetricDetail || "").toLowerCase();
+  const homeMetricDetailContext = state.homeMetricDetailContext && typeof state.homeMetricDetailContext === "object"
+    ? state.homeMetricDetailContext
+    : null;
+  const isHomeMetricDetail = !!homeMetricOnly;
+  const activeMetricDetail = isHomeMetricDetail ? homeMetricDetail : reportsMetricDetail;
+  const metricDetailContext = isHomeMetricDetail ? homeMetricDetailContext : reportsMetricDetailContext;
 
-  if (homeMetricOnly && !isHomeMetricDetail) {
+  if (homeMetricOnly && !activeMetricDetail) {
     renderApp();
     return;
   }
@@ -1426,8 +1432,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       if(isHomeMetricDetail){
         runReportsTransition({
           mutate: ()=>{
-            state.reportsMetricDetail = "";
-            state.reportsMetricDetailContext = null;
+            state.homeMetricDetail = "";
+            state.homeMetricDetailContext = null;
             state.view = "home";
             saveState();
           },

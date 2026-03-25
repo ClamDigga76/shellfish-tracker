@@ -65,10 +65,9 @@ export function createHomeDashboardRenderer({
   }
 
   function renderHome() {
-    const isHomeMetricDetail = state.reportsMetricDetailContext
-      && typeof state.reportsMetricDetailContext === "object"
-      && state.reportsMetricDetailContext.source === "home"
-      && String(state.reportsMetricDetail || "").trim();
+    const isHomeMetricDetail = state.homeMetricDetailContext
+      && typeof state.homeMetricDetailContext === "object"
+      && String(state.homeMetricDetail || "").trim();
     if (isHomeMetricDetail && typeof renderHomeMetricDetail === "function") {
       renderHomeMetricDetail();
       return;
@@ -408,9 +407,8 @@ export function createHomeDashboardRenderer({
               : (launchedHomeFilter.mode === "7D" ? "Last 7 Days"
                 : (launchedHomeFilter.mode === "30D" ? "Last 30 Days"
                   : "YTD"))));
-        state.reportsMetricDetail = metricKey;
-        state.reportsMetricDetailContext = {
-          source: "home",
+        state.homeMetricDetail = metricKey;
+        state.homeMetricDetailContext = {
           homeFilter: launchedHomeFilter,
           homeScope: {
             rangeLabel: launchedRangeLabel,
