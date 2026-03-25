@@ -802,7 +802,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         </div>
         <div class="hlTripCardWrap">
           <div class="hlTripCardHdr">Record trip</div>
-          ${renderTripCardHTML(recordModel, { compact: true, extraClass: "tripsBrowseCard reportsRecordTripCard" })}
+          ${renderTripCardHTML(recordModel, { compact: true, extraClass: "reportsRecordTripCard" })}
         </div>
       </div>
     `;
