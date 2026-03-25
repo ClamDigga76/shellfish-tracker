@@ -45,7 +45,6 @@
 .reportsRecordTripCard .tripCardGrid{gap:12px}
 .reportsRecordTripCard .tripCardHeadline{color:var(--text-muted-strong)}
 .reportsRecordTripCard .tripCardHeadlineDealer{color:var(--text)}
-.reportsRecordTripCard .tripCardMain{font-size:20px}
 .reportsRecordTripCard .tripCardSpecies{color:var(--text)}
 .reportsRecordTripCard .tripCardMetricsCol{align-self:center}
 .hlDelta{max-width:100%;font-size:13px;line-height:1.4;font-weight:820;letter-spacing:.01em;color:var(--neutral);text-align:center;text-wrap:pretty}
