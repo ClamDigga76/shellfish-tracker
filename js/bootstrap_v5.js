@@ -429,11 +429,22 @@ async function registerServiceWorker() {
     let __swUpdateReadyNotified = false;
     const btnApply = document.getElementById("swUpdateApply");
     const btnDismiss = document.getElementById("swUpdateDismiss");
+    const bannerMsg = banner?.querySelector?.(".swUpdateBannerMessage");
+
+    const emitSwUpdateState = (state) => {
+      try {
+        window.dispatchEvent(new CustomEvent("sw-update-state", { detail: { state: String(state || ""), version: APP_VERSION } }));
+      } catch (_) {}
+    };
 
     const showBanner = () => {
       if (!banner) return;
       banner.style.display = "block";
       banner.dataset.state = "ready";
+      if (bannerMsg) {
+        bannerMsg.textContent = `Build v5.${APP_VERSION} is ready on this device. Load it now to avoid staying on an older runtime.`;
+      }
+      emitSwUpdateState("ready");
       if (!__swUpdateReadyNotified) {
         __swUpdateReadyNotified = true;
         try {
@@ -448,10 +459,14 @@ async function registerServiceWorker() {
       delete banner.dataset.state;
     };
 
-    if (btnDismiss) btnDismiss.onclick = hideBanner;
+    if (btnDismiss) btnDismiss.onclick = () => {
+      emitSwUpdateState("dismissed");
+      hideBanner();
+    };
 
     if (btnApply) {
       btnApply.onclick = async () => {
+        emitSwUpdateState("applying");
         try {
           if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
         } catch (_) {}
@@ -461,6 +476,7 @@ async function registerServiceWorker() {
         navigator.serviceWorker.addEventListener("controllerchange", () => {
           if (reloaded) return;
           reloaded = true;
+          emitSwUpdateState("controller-changed");
           location.reload();
         });
       };

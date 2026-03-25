@@ -9,6 +9,63 @@ export function createUpdateRuntimeStatusSeam({
   cachesRef = caches
 }){
   let swUpdateReady = false;
+  let lastSwUpdateSignal = "";
+
+  const UPDATE_SIGNAL_SESSION_KEY = "shellfish-update-signal-v1";
+  const UPDATE_ATTEMPT_SESSION_KEY = "shellfish-update-attempt-v1";
+
+  function getStoredUpdateAttempt(){
+    try{
+      const raw = sessionStorage.getItem(UPDATE_ATTEMPT_SESSION_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(!parsed || typeof parsed !== "object") return null;
+      const at = Number(parsed.at || 0);
+      if(!Number.isFinite(at) || at <= 0) return null;
+      // Keep this short-lived: this is only for immediate "did reload help?" trust messaging.
+      if((Date.now() - at) > 10 * 60 * 1000) return null;
+      return {
+        at,
+        mode: String(parsed.mode || ""),
+        requestedBuild: String(parsed.requestedBuild || "")
+      };
+    }catch(_){
+      return null;
+    }
+  }
+
+  function noteUpdateAttempt(mode){
+    try{
+      const payload = {
+        at: Date.now(),
+        mode: String(mode || "reload"),
+        requestedBuild: String(displayBuildVersion || "")
+      };
+      sessionStorage.setItem(UPDATE_ATTEMPT_SESSION_KEY, JSON.stringify(payload));
+    }catch(_){ }
+  }
+
+  function setLastSwUpdateSignal(value){
+    lastSwUpdateSignal = String(value || "");
+    try{
+      sessionStorage.setItem(UPDATE_SIGNAL_SESSION_KEY, lastSwUpdateSignal);
+    }catch(_){ }
+  }
+
+  try{
+    lastSwUpdateSignal = String(sessionStorage.getItem(UPDATE_SIGNAL_SESSION_KEY) || "");
+  }catch(_){ }
+
+  try{
+    windowRef.addEventListener("sw-update-state", (ev)=>{
+      const state = String(ev?.detail?.state || "");
+      if(!state) return;
+      setLastSwUpdateSignal(state);
+      if(getIsSettingsView()){
+        try{ updateUpdateRow(); }catch(_){ }
+      }
+    });
+  }catch(_){ }
 
   function getIsStandalone(){
     return Boolean(
@@ -45,6 +102,7 @@ export function createUpdateRuntimeStatusSeam({
 
   async function forceRefreshApp(options = {}){
     const { hardReset = false } = options;
+    noteUpdateAttempt(hardReset ? "hard-reset" : "reload");
     try{
       if("serviceWorker" in navigatorRef){
         const regs = await navigatorRef.serviceWorker.getRegistrations();
@@ -279,25 +337,36 @@ export function createUpdateRuntimeStatusSeam({
     }
 
     if(runtimeDiag?.needsHardReset){
-      statusEl.textContent = "Version mismatch or stale cache risk detected";
+      statusEl.textContent = "Could not confirm latest build on this device";
       btnPrimary.textContent = "Reset cache & reload";
       btnPrimary.onclick = async ()=>{ await swCheckNow({ hardReset: true }); };
-      if(inlineMsg) inlineMsg.textContent = "Use this when reload alone is not clearing old files or broken startup assets.";
+      if(inlineMsg) inlineMsg.textContent = "Reset Cache uses a clean runtime fetch when this app still looks stale after reload.";
       return;
     }
 
     if(runtimeDiag?.installedAppLikelyLagging){
-      statusEl.textContent = "Installed app may be behind browser mode";
+      statusEl.textContent = "Installed app may still be on an older build";
       btnPrimary.textContent = "Reload latest version";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-      if(inlineMsg) inlineMsg.textContent = "After reloading, close and reopen the Home Screen app once.";
+      if(inlineMsg) inlineMsg.textContent = "Reload, then fully close and reopen the Home Screen app to pick up the latest files.";
       return;
     }
 
-    statusEl.textContent = "Up to date";
+    const recentAttempt = getStoredUpdateAttempt();
+    statusEl.textContent = "Up to date on this device";
     btnPrimary.textContent = "Reload latest version";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-    if(inlineMsg) inlineMsg.textContent = "Use this after a release if the app still looks older than expected.";
+    if(inlineMsg){
+      if(recentAttempt){
+        inlineMsg.textContent = `Latest build confirmed (${displayBuildVersion}) after ${recentAttempt.mode === "hard-reset" ? "Reset Cache" : "reload"}.`;
+      }else if(lastSwUpdateSignal === "dismissed"){
+        inlineMsg.textContent = "You can load the latest build any time from here if you previously chose Not now.";
+      }else if(lastSwUpdateSignal === "applying"){
+        inlineMsg.textContent = "Update was requested. If this still looks old, run Reload latest version once.";
+      }else{
+        inlineMsg.textContent = "Use this after a release if the app still looks older than expected.";
+      }
+    }
   }
 
   async function updateBuildBadge(){
