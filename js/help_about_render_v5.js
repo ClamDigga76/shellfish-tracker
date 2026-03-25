@@ -156,12 +156,12 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
     </div>
 
     <div class="card">
-      <b>Build details</b>
+      <b>Support details</b>
       <div class="sep"></div>
       <div class="muted small" style="line-height:1.6">
-        <div>App: <b>${escapeHtml(String(displayBuildVersion))}</b> (schema ${escapeHtml(String(schemaVersion || ""))})</div>
-        <div>Standalone: <b>${isStandalone ? "yes" : "no"}</b></div>
-        <div>SW controller: <b>${hasSWController ? "yes" : "no"}</b></div>
+        <div>App version: <b>${escapeHtml(String(displayBuildVersion))}</b> (data format ${escapeHtml(String(schemaVersion || ""))})</div>
+        <div>Installed mode: <b>${isStandalone ? "yes" : "no"}</b></div>
+        <div>Offline update control active: <b>${hasSWController ? "yes" : "no"}</b></div>
       </div>
     </div>
   `;
@@ -189,7 +189,7 @@ export function renderAboutViewHTML({ renderPageHeader, displayBuildVersion }) {
       <div class="muted small" style="margin-top:6px">For install and backup walkthroughs, use Help.</div>
       <div class="muted small" style="margin-top:6px">Legal: <a class="settingsEmail" href="legal/terms.html">Terms</a> • <a class="settingsEmail" href="legal/privacy.html">Privacy</a> • <a class="settingsEmail" href="legal/license.html">License</a></div>
       <div class="row mt12">
-        <button class="btn" id="copyDebug">Copy diagnostics info</button>
+        <button class="btn" id="copyDebug">Copy support details</button>
         <button class="btn" id="feedback">Send Feedback</button>
       </div>
     </div>
