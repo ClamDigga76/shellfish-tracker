@@ -220,7 +220,7 @@ export function createHomeDashboardRenderer({
           ${renderTripCatchCard(newestSavedTrip, {
             interactive: false,
             compact: true,
-            extraClass: "tripsBrowseCard homeLastTripCardSurface"
+            extraClass: "homeLastTripCardSurface"
           })}
         `;
       })()
