@@ -24,6 +24,7 @@ export const STARTUP_MODULE_PATHS = [
   "./update_runtime_status_v5.js",
   "./diagnostics_fatal_v5.js",
   "./runtime_orchestration_seam_v5.js",
+  "./top_level_navigation_transition_seam_v5.js",
   "./app_shell_v5.js"
 ];
 
