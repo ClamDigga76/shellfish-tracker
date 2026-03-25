@@ -13,8 +13,10 @@ export function createFeedbackHelpers({
   let celebrationViewportCleanup = null;
   let celebrationLayoutFrame = 0;
   let celebrationFocusReturn = null;
+  let celebrationKeydownHandler = null;
+  let dialogIdSeed = 0;
   const TOAST_EXIT_MS = 260;
-  const MODAL_EXIT_MS = 220;
+  const MODAL_EXIT_MS = 240;
 
   const LS_INSTALL_PROMPTED = "btc-install_prompted_v1";
   let deferredInstallPrompt = null;
@@ -189,6 +191,54 @@ export function createFeedbackHelpers({
     }, MODAL_EXIT_MS);
   }
 
+  function buildDialogIds(prefix = "dialog"){
+    dialogIdSeed += 1;
+    return {
+      titleId: `${prefix}_title_${dialogIdSeed}`,
+      bodyId: `${prefix}_body_${dialogIdSeed}`
+    };
+  }
+
+  function getFocusableElements(root){
+    if(!root) return [];
+    return Array.from(root.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter((el)=> el instanceof HTMLElement && !el.hasAttribute("disabled") && !el.getAttribute("aria-hidden"));
+  }
+
+  function trapDialogFocus(dialog, event){
+    if(!dialog) return;
+    if(event.key !== "Tab") return;
+    const focusables = getFocusableElements(dialog);
+    if(!focusables.length){
+      event.preventDefault();
+      try{ dialog.focus({ preventScroll: true }); }catch(_){ }
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    if(event.shiftKey && active === first){
+      event.preventDefault();
+      try{ last.focus({ preventScroll: true }); }catch(_){ }
+      return;
+    }
+    if(!event.shiftKey && active === last){
+      event.preventDefault();
+      try{ first.focus({ preventScroll: true }); }catch(_){ }
+    }
+  }
+
+  function restoreFocus(opener){
+    if(opener && document.contains(opener)){
+      try{
+        opener.focus({ preventScroll: true });
+        return;
+      }catch(_){ }
+    }
+    try{ focusFirstFocusable(document.getElementById("app")); }catch(_){ }
+  }
+
   function supportsHaptics(){
     try{ return typeof navigator !== "undefined" && typeof navigator.vibrate === "function"; }catch(_){ return false; }
   }
@@ -309,22 +359,28 @@ export function createFeedbackHelpers({
 
       const panel = document.createElement("div");
       panel.className = "celebrationPanel card";
+      panel.tabIndex = -1;
       panel.setAttribute("role", "dialog");
       panel.setAttribute("aria-modal", "true");
+      const ids = buildDialogIds("celebrate");
 
       const content = document.createElement("div");
       content.className = "celebrationContent";
 
       const titleNode = document.createElement("div");
       titleNode.className = "celebrationTitle";
+      titleNode.id = ids.titleId;
       titleNode.textContent = String(headline || "Milestone reached");
       content.appendChild(titleNode);
+      panel.setAttribute("aria-labelledby", ids.titleId);
 
       if(String(detail || "").trim()){
         const detailNode = document.createElement("div");
         detailNode.className = "celebrationDetail";
+        detailNode.id = ids.bodyId;
         detailNode.textContent = String(detail || "").trim();
         content.appendChild(detailNode);
+        panel.setAttribute("aria-describedby", ids.bodyId);
       }
 
       const btn = document.createElement("button");
@@ -339,10 +395,26 @@ export function createFeedbackHelpers({
       panel.appendChild(btn);
       root.textContent = "";
       root.appendChild(panel);
+      if(celebrationKeydownHandler){
+        root.removeEventListener("keydown", celebrationKeydownHandler);
+        celebrationKeydownHandler = null;
+      }
+      celebrationKeydownHandler = (event)=>{
+        if(event.key === "Escape"){
+          event.preventDefault();
+          clearCelebration();
+          return;
+        }
+        trapDialogFocus(panel, event);
+      };
+      root.addEventListener("keydown", celebrationKeydownHandler);
       root.classList.remove("hidden");
       root.setAttribute("aria-hidden", "false");
       bindCelebrationViewport(panel);
-      announce(titleNode.textContent, "polite");
+      const spokenMilestone = String(detail || "").trim()
+        ? `${titleNode.textContent}. ${String(detail || "").trim()}`
+        : titleNode.textContent;
+      announce(spokenMilestone, "polite");
       triggerHaptic("medium");
       requestAnimationFrame(()=>{
         root.classList.add("show");
@@ -364,9 +436,13 @@ export function createFeedbackHelpers({
     root.classList.remove("show");
     root.classList.add("hidden");
     root.setAttribute("aria-hidden", "true");
+    if(celebrationKeydownHandler){
+      root.removeEventListener("keydown", celebrationKeydownHandler);
+      celebrationKeydownHandler = null;
+    }
     root.textContent = "";
-    if(restoreFocus && celebrationFocusReturn && document.contains(celebrationFocusReturn)){
-      try{ celebrationFocusReturn.focus({ preventScroll: true }); }catch(_){ }
+    if(restoreFocus){
+      restoreFocus(celebrationFocusReturn);
     }
     celebrationFocusReturn = null;
     const toastEl = document.getElementById("toast");
@@ -401,18 +477,21 @@ export function createFeedbackHelpers({
   function installModal({ title, body, primaryText="Install", onPrimary }){
     return new Promise((resolve)=>{
       const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      const ids = buildDialogIds("install");
       const el = document.createElement("div");
       el.className = "modalOverlay";
       el.innerHTML = `
-        <div class="modalCard card" role="dialog" aria-modal="true">
-          <b>${escapeHtml(title||"Install")}</b>
-          ${body ? `<div class="muted small mt8 lh135 preWrap">${escapeHtml(body)}</div>` : ""}
+        <div class="modalCard card" role="dialog" aria-modal="true" aria-labelledby="${ids.titleId}" ${body ? `aria-describedby="${ids.bodyId}"` : ""}>
+          <b id="${ids.titleId}">${escapeHtml(title||"Install")}</b>
+          ${body ? `<div id="${ids.bodyId}" class="muted small mt8 lh135 preWrap">${escapeHtml(body)}</div>` : ""}
           <div class="row mt14 gap10 jcEnd wrap">
             <button class="btn" id="im_cancel" type="button">Not now</button>
             <button class="btn primary" id="im_yes" type="button">${escapeHtml(primaryText)}</button>
           </div>
         </div>
       `;
+      const dialog = el.querySelector(".modalCard");
+      if(dialog instanceof HTMLElement) dialog.tabIndex = -1;
 
       let settled = false;
       const cleanup = (v)=>{
@@ -420,12 +499,11 @@ export function createFeedbackHelpers({
         settled = true;
         el.removeEventListener("pointerdown", onBackdrop);
         el.removeEventListener("click", onBackdrop);
+        el.removeEventListener("keydown", onKeydown);
         animateModalOverlayOut(el, ()=>{
           unlockBodyScroll(el);
           try{ el.remove(); }catch(_){ }
-          if(opener && document.contains(opener)){
-            try{ opener.focus({ preventScroll: true }); }catch(_){ }
-          }
+          restoreFocus(opener);
           resolve(v);
         });
       };
@@ -439,10 +517,19 @@ export function createFeedbackHelpers({
 
       el.addEventListener("pointerdown", onBackdrop);
       el.addEventListener("click", onBackdrop);
+      const onKeydown = (event)=>{
+        if(event.key === "Escape"){
+          event.preventDefault();
+          cleanup(false);
+          return;
+        }
+        trapDialogFocus(dialog, event);
+      };
+      el.addEventListener("keydown", onKeydown);
       document.body.appendChild(el);
       lockBodyScroll(el);
       animateModalOverlayIn(el);
-      focusFirstFocusable(el.querySelector(".modalCard"));
+      focusFirstFocusable(dialog);
 
       el.querySelector("#im_cancel")?.addEventListener("click", ()=>cleanup(false));
       el.querySelector("#im_yes")?.addEventListener("click", async ()=>{
@@ -500,18 +587,21 @@ export function createFeedbackHelpers({
   function confirmSaveModal({ title="Save this trip?", body="" } = {}){
     return new Promise((resolve)=>{
       const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      const ids = buildDialogIds("confirm");
       const el = document.createElement("div");
       el.className = "modalOverlay";
       el.innerHTML = `
-        <div class="modalCard card" role="dialog" aria-modal="true">
-          <b>${escapeHtml(title)}</b>
-          ${body ? `<div class="muted small mt8 preWrap">${escapeHtml(body)}</div>` : ""}
+        <div class="modalCard card" role="dialog" aria-modal="true" aria-labelledby="${ids.titleId}" ${body ? `aria-describedby="${ids.bodyId}"` : ""}>
+          <b id="${ids.titleId}">${escapeHtml(title)}</b>
+          ${body ? `<div id="${ids.bodyId}" class="muted small mt8 preWrap">${escapeHtml(body)}</div>` : ""}
           <div class="row mt14 gap10 jcEnd">
             <button class="btn" id="m_cancel" type="button">Cancel</button>
             <button class="btn primary" id="m_yes" type="button">Yes, Save</button>
           </div>
         </div>
       `;
+      const dialog = el.querySelector(".modalCard");
+      if(dialog instanceof HTMLElement) dialog.tabIndex = -1;
 
       let settled = false;
       const cleanup = (v)=>{
@@ -519,12 +609,11 @@ export function createFeedbackHelpers({
         settled = true;
         el.removeEventListener("pointerdown", onBackdrop);
         el.removeEventListener("click", onBackdrop);
+        el.removeEventListener("keydown", onKeydown);
         animateModalOverlayOut(el, ()=>{
           unlockBodyScroll(el);
           try{ el.remove(); }catch(_){ }
-          if(opener && document.contains(opener)){
-            try{ opener.focus({ preventScroll: true }); }catch(_){ }
-          }
+          restoreFocus(opener);
           resolve(v);
         });
       };
@@ -538,10 +627,19 @@ export function createFeedbackHelpers({
 
       el.addEventListener("pointerdown", onBackdrop);
       el.addEventListener("click", onBackdrop);
+      const onKeydown = (event)=>{
+        if(event.key === "Escape"){
+          event.preventDefault();
+          cleanup(false);
+          return;
+        }
+        trapDialogFocus(dialog, event);
+      };
+      el.addEventListener("keydown", onKeydown);
       document.body.appendChild(el);
       lockBodyScroll(el);
       animateModalOverlayIn(el);
-      focusFirstFocusable(el.querySelector(".modalCard"));
+      focusFirstFocusable(dialog);
 
       el.querySelector("#m_cancel")?.addEventListener("click", ()=>cleanup(false));
       el.querySelector("#m_yes")?.addEventListener("click", ()=>{

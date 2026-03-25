@@ -293,10 +293,11 @@ export function createReportsScreenRenderer(deps){
     ? reportsHighlights.renderHighlightsStrip
     : (()=>"");
 
-  const REPORTS_TRANSITION_MS = 150;
+  const REPORTS_TRANSITION_MS = 180;
   let reportsTransitionTimer = null;
   let reportsChartRenderToken = 0;
   let reportsChartScheduleRafId = 0;
+  let pendingReportsAnnouncement = "";
 
   function invalidateReportsChartSchedule(){
     reportsChartRenderToken += 1;
@@ -324,6 +325,28 @@ export function createReportsScreenRenderer(deps){
         root.classList.add("is-ready");
       });
     });
+  }
+
+  function queueReportsAnnouncement(message){
+    const text = String(message || "").trim();
+    if(!text) return;
+    pendingReportsAnnouncement = text;
+  }
+
+  function flushReportsAnnouncement(){
+    const text = String(pendingReportsAnnouncement || "").trim();
+    if(!text) return;
+    pendingReportsAnnouncement = "";
+    try{
+      const live = document.getElementById("ariaLive");
+      if(!live) return;
+      live.setAttribute("aria-live", "polite");
+      live.textContent = "";
+      setTimeout(()=>{
+        live.textContent = text;
+        setTimeout(()=>{ live.textContent = ""; }, 1800);
+      }, 40);
+    }catch(_){ }
   }
 
   function runReportsTransition({ mutate, renderNext = () => renderReportsScreen(), homeMetricOnly = false } = {}){
@@ -461,7 +484,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     { key: "detail", label: "Detail", intro: "Dealer, area, and monthly summary rows for this range." }
   ];
   const activeReportsSection = REPORTS_SECTION_ITEMS.some((item)=> item.key === reportsSectionKey) ? reportsSectionKey : "insights";
-  const renderReportsSectionChip = (item)=> `<button class="chip reportsSectionChip ${activeReportsSection===item.key?'on is-selected':''}" data-reports-section="${item.key}" type="button" role="tab" aria-selected="${activeReportsSection===item.key ? 'true' : 'false'}">${item.label}</button>`;
+  const renderReportsSectionChip = (item)=> `<button class="chip reportsSectionChip ${activeReportsSection===item.key?'on is-selected':''}" data-reports-section="${item.key}" type="button" role="tab" id="reports-tab-${item.key}" aria-controls="reportsTransitionRoot" aria-selected="${activeReportsSection===item.key ? 'true' : 'false'}" tabindex="${activeReportsSection===item.key ? "0" : "-1"}">${item.label}</button>`;
 
   const advOpen = !!rf.adv;
   const advPanel = renderReportsAdvancedPanel({
@@ -1382,7 +1405,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
     ${renderReportsTopShell({
       shellMode: activeMetricDetail ? "detail" : "overview",
-      body: `<div id="reportsTransitionRoot" class="reportsTransitionRoot" data-reports-view="${escapeHtml(reportsBodyView)}">
+      body: `<div id="reportsTransitionRoot" class="reportsTransitionRoot" data-reports-view="${escapeHtml(reportsBodyView)}" role="tabpanel" aria-labelledby="reports-tab-${escapeHtml(activeReportsSection)}" tabindex="-1">
         ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : renderActiveReportsSection()}
       </div>`
     })}
@@ -1390,6 +1413,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   getApp().scrollTop = 0;
   animateReportsShellEnter(document.getElementById("reportsTransitionRoot"));
+  flushReportsAnnouncement();
 
   // range chips
   getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
@@ -1405,6 +1429,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     btn.onclick = ()=>{
       const key = String(btn.getAttribute("data-reports-section") || "insights").toLowerCase();
       if(key === activeReportsSection) return;
+      const section = REPORTS_SECTION_ITEMS.find((item)=> item.key === key);
+      queueReportsAnnouncement(`Reports section ${section?.label || "updated"}.`);
       runReportsTransition({
         mutate: ()=>{
           state.reportsSection = key;
@@ -1412,6 +1438,25 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         }
       });
     };
+  });
+  getApp().querySelectorAll(".chip[data-reports-section]").forEach((btn)=>{
+    btn.addEventListener("keydown", (event)=>{
+      const tabs = Array.from(getApp().querySelectorAll(".chip[data-reports-section]"));
+      const currentIdx = tabs.indexOf(btn);
+      if(currentIdx === -1) return;
+      if(event.key === "ArrowRight" || event.key === "ArrowLeft"){
+        event.preventDefault();
+        const direction = event.key === "ArrowRight" ? 1 : -1;
+        const nextIdx = (currentIdx + direction + tabs.length) % tabs.length;
+        tabs[nextIdx]?.focus();
+        return;
+      }
+      if(event.key === "Home" || event.key === "End"){
+        event.preventDefault();
+        const target = event.key === "Home" ? tabs[0] : tabs[tabs.length - 1];
+        target?.focus();
+      }
+    });
   });
 
   bindReportsAdvancedPanel({
@@ -1426,6 +1471,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const metricDetailButtons = getApp().querySelectorAll("[data-metric-detail]");
   metricDetailButtons.forEach((btn)=>{
     btn.onclick = ()=>{
+      const metricName = String(btn.getAttribute("data-metric-detail") || "metric").toLowerCase();
+      queueReportsAnnouncement(`Opened ${metricName} detail.`);
       runReportsTransition({
         mutate: ()=>{
           state.reportsMetricDetail = String(btn.getAttribute("data-metric-detail") || "").toLowerCase();
@@ -1442,6 +1489,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   if(reportsMetricBack){
     reportsMetricBack.onclick = ()=>{
       if(isHomeMetricDetail){
+        queueReportsAnnouncement("Returned to Home from metric detail.");
         runReportsTransition({
           mutate: ()=>{
             state.homeMetricDetail = "";
@@ -1453,6 +1501,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         });
         return;
       }
+      queueReportsAnnouncement("Returned to reports overview.");
       runReportsTransition({
         mutate: ()=>{
           state.reportsMetricDetail = "";
