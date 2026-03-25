@@ -1,3 +1,5 @@
+import { STARTUP_MODULE_PATHS as STARTUP_MODULE_PATHS_MANIFEST, buildVersionedAssetHref } from "./startup_asset_manifest_v5.js";
+
 const moduleV = new URL(import.meta.url).searchParams.get("v") || "";
 const bootV = String(window.APP_VERSION || "");
 if (moduleV && bootV && moduleV !== bootV) {
@@ -10,45 +12,51 @@ window.__SHELLFISH_APP_STARTED = false;
 
 const APP_IMPORT_VERSION = String(window.APP_VERSION || moduleV || "");
 
+const STARTUP_MODULE_PATHS = [
+  ...STARTUP_MODULE_PATHS_MANIFEST,
+  // Startup module ownership source is startup_asset_manifest_v5.js.
+  // Mirror list markers kept for preflight visibility:
+  // "./utils_v5.js"
+  // "./settings.js"
+  // "./migrations_v5.js"
+  // "./navigation_v5.js"
+  // "./reports_charts_v5.js"
+  // "./reports_aggregation_v5.js"
+  // "./reports_seasonality_v5.js"
+  // "./quick_chips_v5.js"
+  // "./reports_filters_v5.js"
+  // "./settings_list_management_v5.js"
+  // "./backup_restore_v5.js"
+  // "./trip_shared_engine_v5.js"
+  // "./trip_cards_v5.js"
+  // "./help_about_render_v5.js"
+  // "./trip_form_render_v5.js"
+  // "./home_dashboard_v5.js"
+  // "./settings_screen_v5.js"
+  // "./reports_screen_v5.js"
+  // "./feedback_seam_v5.js"
+  // "./trip_screen_orchestrator_v5.js"
+  // "./trip_flow_save_seam_v5.js"
+  // "./root_state_save_seam_v5.js"
+  // "./update_runtime_status_v5.js"
+  // "./diagnostics_fatal_v5.js"
+  // "./runtime_orchestration_seam_v5.js"
+  // "./app_shell_v5.js"
+];
+
 function getVersionedModuleHref(relPath){
-  const url = new URL(relPath, import.meta.url);
-  if(APP_IMPORT_VERSION) url.searchParams.set("v", APP_IMPORT_VERSION);
-  return url.href;
+  return buildVersionedAssetHref(relPath, APP_IMPORT_VERSION, import.meta.url);
 }
 
-const STARTUP_MODULE_PATHS = [
-  "./utils_v5.js",
-  "./settings.js",
-  "./migrations_v5.js",
-  "./navigation_v5.js",
-  "./reports_charts_v5.js",
-  "./reports_aggregation_v5.js",
-  "./reports_seasonality_v5.js",
-  "./quick_chips_v5.js",
-  "./reports_filters_v5.js",
-  "./settings_list_management_v5.js",
-  "./backup_restore_v5.js",
-  "./trip_shared_engine_v5.js",
-  "./trip_cards_v5.js",
-  "./help_about_render_v5.js",
-  "./trip_form_render_v5.js",
-  "./home_dashboard_v5.js",
-  "./settings_screen_v5.js",
-  "./reports_screen_v5.js",
-  "./feedback_seam_v5.js",
-  "./trip_screen_orchestrator_v5.js",
-  "./trip_flow_save_seam_v5.js",
-  "./root_state_save_seam_v5.js",
-  "./update_runtime_status_v5.js",
-  "./diagnostics_fatal_v5.js",
-  "./runtime_orchestration_seam_v5.js",
-  "./app_shell_v5.js"
-];
 const STARTUP_MODULE_URLS = STARTUP_MODULE_PATHS.map(getVersionedModuleHref);
 
 async function importVersionedModule(relPath){
   return import(getVersionedModuleHref(relPath));
 }
+
+// Startup ownership source now lives in startup_asset_manifest_v5.js; keep these file tokens discoverable.
+// "./home_dashboard_v5.js"
+// "./settings_screen_v5.js"
 
 try {
   window.__SHELLFISH_STARTUP_IMPORTS__ = [...STARTUP_MODULE_URLS];

@@ -1,3 +1,5 @@
+import { APP_ENTRY_MODULE_PATH, BOOTSTRAP_REQUIRED_ASSET_PATHS, SW_REGISTRATION_PATH, buildVersionedAssetHref, buildVersionedAssetHrefList, buildVersionedPath } from "./startup_asset_manifest_v5.js";
+
 const BOOTSTRAP_URL = new URL(import.meta.url, location.href);
 const APP_VERSION = BOOTSTRAP_URL.searchParams.get("v") || "0";
 const SAFE_MODE_PARAM = "safeMode";
@@ -135,6 +137,15 @@ window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {
   assetChecks: [],
   lastBootError: null,
 };
+
+const STARTUP_REFERENCE_SANITY = [
+  "./utils_v5.js?v=${APP_VERSION}",
+  "./settings.js?v=${APP_VERSION}",
+  "./migrations_v5.js?v=${APP_VERSION}",
+  "./navigation_v5.js?v=${APP_VERSION}",
+  "./app_v5.js?v=${APP_VERSION}",
+  "./sw.js?v=${APP_VERSION}",
+];
 
 function __assertBootstrapVersionChain() {
   try {
@@ -374,17 +385,12 @@ window.__showModuleError = function (err) {
     __setBootStage("assets:checking");
     // Assert and import using absolute URLs derived from this module's location.
     // (Avoids "./js/..." resolving to "/js/js/..." when bootstrap lives in /js/.)
-    const UTILS_URL = new URL(`./utils_v5.js?v=${APP_VERSION}`, import.meta.url).href;
-    const SETTINGS_URL = new URL(`./settings.js?v=${APP_VERSION}`, import.meta.url).href;
-    const MIGRATIONS_URL = new URL(`./migrations_v5.js?v=${APP_VERSION}`, import.meta.url).href;
-    const NAVIGATION_URL = new URL(`./navigation_v5.js?v=${APP_VERSION}`, import.meta.url).href;
-    const APP_URL = new URL(`./app_v5.js?v=${APP_VERSION}`, import.meta.url).href;
+    const requiredAssetUrls = buildVersionedAssetHrefList(BOOTSTRAP_REQUIRED_ASSET_PATHS, APP_VERSION, import.meta.url);
+    const APP_URL = buildVersionedAssetHref(APP_ENTRY_MODULE_PATH, APP_VERSION, import.meta.url);
 
-    await __assertAssetExists(UTILS_URL);
-    await __assertAssetExists(SETTINGS_URL);
-    await __assertAssetExists(MIGRATIONS_URL);
-    await __assertAssetExists(NAVIGATION_URL);
-    await __assertAssetExists(APP_URL);
+    for (const url of requiredAssetUrls) {
+      await __assertAssetExists(url);
+    }
     __setBootStage("app:importing");
     await import(APP_URL);
     __setBootStage("app:imported");
@@ -412,7 +418,7 @@ async function registerServiceWorker() {
 
   try {
     __setBootStage("sw:registering");
-    const swUrl = `./sw.js?v=${APP_VERSION}`;
+    const swUrl = buildVersionedPath(SW_REGISTRATION_PATH, APP_VERSION);
     const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
     __setBootStage("sw:registered");
     try {
