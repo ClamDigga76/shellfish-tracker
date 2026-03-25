@@ -136,7 +136,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">Updates</div>
-            <div class="muted small">See whether you are current, ready to update, or need cache recovery.</div>
+            <div class="muted small">Quick status and update actions.</div>
           </div>
           <span class="settingsValuePill">Status</span>
         </div>
@@ -155,7 +155,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Help</div>
-            <div class="muted small">Install help, support, and backup guidance live in Help.</div>
+            <div class="muted small">Install, backup, and support how-to lives in Help.</div>
           </div>
           <button class="btn settingsInlineBtn" id="openHelp">Open Help</button>
         </div>
@@ -168,7 +168,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">App mode</div>
-            <div class="muted small">See your current app mode, install when available, or open Help for steps.</div>
+            <div class="muted small">Check mode and run install actions.</div>
           </div>
           <span class="settingsValuePill" id="installModePill">Checking…</span>
         </div>
@@ -193,7 +193,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Backup & Restore</div>
-            <div class="muted small">Back up before big changes, then restore with a preview when needed.</div>
+            <div class="muted small">Create a backup, then restore from preview when needed.</div>
           </div>
           <span class="settingsValuePill">Freshness</span>
         </div>
@@ -207,8 +207,8 @@ export function createSettingsScreenOrchestrator({
           <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="hint"><b>Recommended:</b> make a fresh backup before major updates, Replace restore, or bulk edits.</div>
-          <div class="muted small mt8">Save one copy to <b>iCloud Drive</b> or <b>Google Drive</b>, and keep one older backup too.</div>
+          <div class="hint"><b>Recommended:</b> create a fresh backup before major updates or Replace restore.</div>
+          <div class="muted small mt8">Keep one current copy and one older copy in iCloud Drive or Google Drive.</div>
         </div>
         <div class="settingsRow settingsRow--status">
           <div class="muted small" id="restoreRollbackLine"></div>
@@ -263,7 +263,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--minor">
           <div class="muted small">Bank the Catch • Created by <b>Jeremy Wood</b></div>
           <div class="muted small mt6">Support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
-          <div class="muted small mt6">Need install or backup help? Open <b>Help</b>.</div>
+          <div class="muted small mt6">Need setup or recovery help? Open <b>Help</b>.</div>
           <div class="muted small mt8">© 2026 Jeremy Wood. All rights reserved.</div>
         </div>
         <div class="settingsRow settingsRow--split settingsRow--minor">
