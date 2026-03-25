@@ -16,7 +16,7 @@ export function createDiagnosticsFatalSeam({
   const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
   const LEGACY_LAST_ERROR_AT_KEY = "SHELLFISH_LAST_ERROR_AT";
 
-  function getDebugInfo(){
+  function buildSupportBundle({ heading = "Bank the Catch Support Diagnostics", fatalErrorText = "" } = {}){
     const state = getState();
     const appName = "Bank the Catch";
     const trips = Array.isArray(state?.trips) ? state.trips.length : 0;
@@ -34,6 +34,7 @@ export function createDiagnosticsFatalSeam({
       : (windowRef.navigator && windowRef.navigator.standalone === true ? "ios-standalone" : "browser-tab");
     const bootStage = windowRef.__BOOT_DIAG__?.stage ? String(windowRef.__BOOT_DIAG__.stage) : "";
     const appStarted = windowRef.__SHELLFISH_APP_STARTED ? "true" : "false";
+    const route = `${locationRef.pathname || "/"}${locationRef.hash || ""}`;
 
     let lsChars = 0;
     try{
@@ -51,32 +52,60 @@ export function createDiagnosticsFatalSeam({
     const lb = settings.lastBackupAt ? new Date(settings.lastBackupAt).toISOString() : "";
     const lbCount = (settings.lastBackupTripCount ?? "");
     const snooze = settings.backupSnoozeUntil ? new Date(settings.backupSnoozeUntil).toISOString() : "";
+    const generatedAt = new Date().toISOString();
 
-    return [
-      `${appName} ${displayBuildVersion} (schema ${getSchemaVersion()})`,
-      `Build: ${displayBuildVersion}`,
-      view ? `View: ${view}` : "",
-      locationRef.hash ? `Route: ${locationRef.hash}` : "",
-      `DisplayMode: ${dm}`,
-      `InstallMode: ${installMode}`,
-      `StandaloneFlag: ${isStandalone ? "true" : "false"}`,
-      `AppStarted: ${appStarted}`,
-      bootStage ? `BootStage: ${bootStage}` : "",
-      `ServiceWorker: ${swCtrl}`,
-      swScript ? `SWScript: ${swScript}` : "",
-      `LocalStorageChars: ${lsChars}`,
-      `UserAgent: ${navigatorRef.userAgent}`,
-      navigatorRef.platform ? `Platform: ${navigatorRef.platform}` : "",
-      `Trips: ${trips}`,
-      `Areas: ${areas}`,
-      last ? `LastAction: ${last}` : "",
-      lb ? `LastBackupAt: ${lb}` : "",
-      (lbCount!=="") ? `LastBackupTripCount: ${lbCount}` : "",
-      snooze ? `BackupSnoozeUntil: ${snooze}` : "",
-      lastErrAt ? `LastErrorAt: ${lastErrAt}` : "",
-      lastErr ? `LastError: ${lastErr}` : "",
-      `Time: ${new Date().toISOString()}`
-    ].filter(Boolean).join("\n");
+    const lines = [];
+    lines.push(heading);
+    lines.push(`Generated: ${generatedAt}`);
+    lines.push("Privacy: counts and runtime metadata only. No trip rows, names, notes, or location details.");
+    lines.push("");
+    lines.push("[App]");
+    lines.push(`Name: ${appName}`);
+    lines.push(`Build: ${displayBuildVersion}`);
+    lines.push(`Schema: ${getSchemaVersion()}`);
+    lines.push("");
+    lines.push("[Startup]");
+    lines.push(`AppStarted: ${appStarted}`);
+    lines.push(`BootStage: ${bootStage || "(unknown)"}`);
+    lines.push(`DisplayMode: ${dm}`);
+    lines.push(`InstallMode: ${installMode}`);
+    lines.push(`StandaloneFlag: ${isStandalone ? "true" : "false"}`);
+    lines.push("");
+    lines.push("[Runtime]");
+    lines.push(`View: ${view || "(none)"}`);
+    lines.push(`Route: ${route}`);
+    lines.push(`LastAction: ${last || "(none)"}`);
+    lines.push(`Time: ${generatedAt}`);
+    lines.push("");
+    lines.push("[Service Worker / Cache]");
+    lines.push(`ServiceWorkerController: ${swCtrl}`);
+    lines.push(`ServiceWorkerScript: ${swScript || "(none)"}`);
+    lines.push("");
+    lines.push("[Storage + Recovery]");
+    lines.push(`TripsCount: ${trips}`);
+    lines.push(`AreasCount: ${areas}`);
+    lines.push(`LocalStorageChars: ${lsChars}`);
+    if(lb) lines.push(`LastBackupAt: ${lb}`);
+    if(lbCount !== "") lines.push(`LastBackupTripCount: ${lbCount}`);
+    if(snooze) lines.push(`BackupSnoozeUntil: ${snooze}`);
+    if(lastErrAt) lines.push(`LastErrorAt: ${lastErrAt}`);
+    if(lastErr) lines.push(`LastErrorSummary: ${lastErr}`);
+    lines.push("");
+    lines.push("[Device]");
+    lines.push(`UserAgent: ${navigatorRef.userAgent}`);
+    if(navigatorRef.platform) lines.push(`Platform: ${navigatorRef.platform}`);
+
+    if(fatalErrorText){
+      lines.push("");
+      lines.push("[Fatal Error]");
+      lines.push(fatalErrorText);
+    }
+
+    return lines.filter(Boolean).join("\n");
+  }
+
+  function getDebugInfo(){
+    return buildSupportBundle();
   }
 
   function setBootError(msg){
@@ -116,18 +145,10 @@ export function createDiagnosticsFatalSeam({
       pill.title = errText;
     }
 
-    const isStandalone = (windowRef.matchMedia && windowRef.matchMedia("(display-mode: standalone)").matches) || (windowRef.navigator && windowRef.navigator.standalone === true);
-    const swCtrl = (navigatorRef.serviceWorker && navigatorRef.serviceWorker.controller) ? "yes" : "no";
-
-    const dump = [
-      `App: ${displayBuildVersion} (schema ${getSchemaVersion()})`,
-      `URL: ${locationRef.href}`,
-      `UA: ${navigatorRef.userAgent}`,
-      `Standalone: ${isStandalone ? "yes" : "no"}`,
-      `SW controller: ${swCtrl}`,
-      "",
-      errText
-    ].join("\n");
+    const dump = buildSupportBundle({
+      heading: "Bank the Catch Fatal Support Diagnostics",
+      fatalErrorText: errText
+    });
 
     if(!appEl) return;
 
@@ -138,7 +159,7 @@ export function createDiagnosticsFatalSeam({
         <div class="muted small" style="white-space:pre-wrap">${escapeHtml(errText)}</div>
 
         <div class="row mt12 gap10 wrap">
-          <button class="btn" id="fatalCopy">Copy diagnostics</button>
+          <button class="btn" id="fatalCopy">Copy support diagnostics</button>
           <button class="btn good" id="fatalReload">Reload</button>
           <button class="btn" id="fatalResetCache">Reset cache</button>
         </div>
@@ -166,7 +187,7 @@ export function createDiagnosticsFatalSeam({
     };
 
     const btnCopy = documentRef.getElementById("fatalCopy");
-    if(btnCopy) btnCopy.onclick = ()=> { void copyTextWithFeedback(dump, "Diagnostics copied"); };
+    if(btnCopy) btnCopy.onclick = ()=> { void copyTextWithFeedback(dump, "Support diagnostics copied"); };
 
     const btnReload = documentRef.getElementById("fatalReload");
     if(btnReload) btnReload.onclick = ()=> locationRef.reload();

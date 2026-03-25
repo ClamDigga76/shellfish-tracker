@@ -231,7 +231,7 @@ export function createSettingsListManagement(deps){
     }catch(_){ }
 
     document.getElementById("copyDebug").onclick = async ()=>{
-      await copyTextWithFeedback(getDebugInfo(), "Debug copied");
+      await copyTextWithFeedback(getDebugInfo(), "Support diagnostics copied");
     };
 
     document.getElementById("refreshApp").onclick = async ()=>{
