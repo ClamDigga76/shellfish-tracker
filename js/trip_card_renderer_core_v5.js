@@ -44,7 +44,7 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, for
       <${tag} class="trip triprow catchCard${compactClass} ${escapeHtml(extraClass)}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
         <div class="tripCardGrid">
           <div>
-            <div class="catchHead tripCardHeadline">${escapeHtml(model.dateText)}</div>
+            <div class="catchHead tripCardHeadline tripCardDate">${escapeHtml(model.dateText)}</div>
             <div class="catchMain tripCardMain">${escapeHtml(model.area)}</div>
             <div class="catchHead tripCardHeadline tripCardHeadlineDealer">${escapeHtml(model.dealer)}</div>
             <div class="tripCardLowerLeft">

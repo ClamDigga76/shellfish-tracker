@@ -379,14 +379,30 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   box-shadow:0 10px 24px rgba(0,0,0,.2);
 }
 .tripsBrowseCard .tripCardGrid{gap:14px}
-.tripsBrowseCard .tripCardHeadline{font-size:16px;line-height:1.25;color:var(--text-muted-strong)}
-.tripsBrowseCard .tripCardMain{font-size:21px;line-height:1.14}
-.tripsBrowseCard .tripCardHeadlineDealer{font-size:15px;margin-top:6px;color:var(--text)}
+.tripsBrowseCard .tripCardHeadline,
+.tripsBrowseCard .tripCardMain,
+.tripsBrowseCard .tripCardHeadlineDealer,
+.tripsBrowseCard .tripCardSpecies{font-size:16px;line-height:1.2}
+.tripsBrowseCard .tripCardHeadline{color:var(--text-muted-strong);font-weight:700}
+.tripsBrowseCard .tripCardDate{font-weight:840}
+.tripsBrowseCard .tripCardMain{color:var(--text);font-weight:700}
+.tripsBrowseCard .tripCardHeadlineDealer{margin-top:6px;color:var(--text)}
 .tripsBrowseCard .tripCardLowerLeft{display:grid;gap:4px;margin-top:10px}
-.tripsBrowseCard .tripCardSpecies{font-size:14px;line-height:1.2;font-weight:760;color:var(--text)}
+.tripsBrowseCard .tripCardSpecies{font-weight:760;color:var(--text)}
 .tripsBrowseCard .tripCardNotes{font-size:12px;line-height:1.35;color:var(--text-muted-strong)}
-.tripsBrowseCard .tripCardMetricChip{font-size:13px;padding:7px 0}
-.tripsBrowseCard .tripCardMetricChip .metricValue{font-size:1.4em}
+.tripsBrowseCard .tripCardMetricChip{font-size:16px;padding:7px 0}
+.tripsBrowseCard .tripCardMetricChip .metricValue{font-size:1.75em}
+.reportsRecordTripCard .tripCardHeadline,
+.reportsRecordTripCard .tripCardMain,
+.reportsRecordTripCard .tripCardHeadlineDealer,
+.reportsRecordTripCard .tripCardSpecies{font-size:16px;line-height:1.2}
+.reportsRecordTripCard .tripCardHeadline{color:var(--text-muted-strong);font-weight:700}
+.reportsRecordTripCard .tripCardDate{font-weight:840}
+.reportsRecordTripCard .tripCardMain,
+.reportsRecordTripCard .tripCardHeadlineDealer,
+.reportsRecordTripCard .tripCardSpecies{color:var(--text)}
+.reportsRecordTripCard .tripCardMetricChip{font-size:16px;padding:7px 0}
+.reportsRecordTripCard .tripCardMetricChip .metricValue{font-size:1.75em}
 .tripsEmptyState{padding:15px 14px}
 
 .emptyState{
@@ -600,24 +616,11 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .homeScreenShell .homeLastTripCardSurface.tripCardCompact .tripCardGrid{
   gap:10px;
 }
-.homeScreenShell .homeLastTripCardSurface .tripCardHeadline{
-  font-size:15px;
-}
-.homeScreenShell .homeLastTripCardSurface .tripCardMain{
-  font-size:19px;
-}
 .homeScreenShell .homeLastTripCardSurface .tripCardHeadlineDealer{
-  font-size:14px;
   margin-top:4px;
 }
 .homeScreenShell .homeLastTripCardSurface .tripCardLowerLeft{
   margin-top:8px;
-}
-.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip{
-  font-size:12px;
-}
-.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip .metricValue{
-  font-size:1.28em;
 }
 @media (max-width:380px){
   .homeScreenShell .homeLastTripCardSurface .tripCardGrid{
