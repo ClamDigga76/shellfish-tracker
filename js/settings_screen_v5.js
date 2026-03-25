@@ -53,8 +53,23 @@ export function createSettingsScreenOrchestrator({
   clearDeletedTripsBin,
   showToast,
   getInstallSurfaceModel,
-  runInstallAction
+  runInstallAction,
+  getReleaseValidationSnapshot,
+  formatReleaseValidationLedger,
+  copyTextWithFeedback
 }) {
+  function normalizeLedgerStatus(value) {
+    const raw = String(value || "").toLowerCase();
+    if (raw === "pass" || raw === "fail" || raw === "not-run") return raw;
+    return "not-run";
+  }
+
+  function releaseStatusLabel(value) {
+    if (value === "pass") return "Pass";
+    if (value === "fail") return "Fail";
+    return "Not run";
+  }
+
   function renderSettings(opts = {}) {
     const state = getState();
 
@@ -291,6 +306,85 @@ export function createSettingsScreenOrchestrator({
             <button class="btn" id="refreshApp">Reload app safely</button>
           </div>
         </div>
+        <div class="settingsRow settingsRow--split settingsRow--minor">
+          <div>
+            <div class="settingsRowTitle">Release-trial validation</div>
+            <div class="muted small">Track browser/install/update/reopen/recovery checks for this release candidate.</div>
+          </div>
+          <span class="settingsValuePill" id="releaseValidationBuild">${displayBuildVersion}</span>
+        </div>
+        <div class="settingsRow settingsRow--status">
+          <div id="releaseValidationSummary" class="settingsUpdateStatus">Preparing release snapshot…</div>
+          <div class="muted settingsBodyTiny" id="releaseValidationStamp"></div>
+        </div>
+        <div class="settingsRow settingsRow--field">
+          <div id="releaseValidationSignals" class="muted settingsBodyTiny"></div>
+        </div>
+        <div class="settingsRow settingsRow--field">
+          <label class="muted small" for="releaseCheckBrowser">Browser mode opens current release</label>
+          <div class="selectRowWrap settingsSelectWrap mt6">
+            <select id="releaseCheckBrowser" class="select" aria-label="Browser mode validation">
+              <option value="not-run">Not run</option>
+              <option value="pass">Pass</option>
+              <option value="fail">Fail</option>
+            </select>
+            <span class="chev" aria-hidden="true">▾</span>
+          </div>
+        </div>
+        <div class="settingsRow settingsRow--field">
+          <label class="muted small" for="releaseCheckInstalled">Installed mode opens current release</label>
+          <div class="selectRowWrap settingsSelectWrap mt6">
+            <select id="releaseCheckInstalled" class="select" aria-label="Installed mode validation">
+              <option value="not-run">Not run</option>
+              <option value="pass">Pass</option>
+              <option value="fail">Fail</option>
+            </select>
+            <span class="chev" aria-hidden="true">▾</span>
+          </div>
+        </div>
+        <div class="settingsRow settingsRow--field">
+          <label class="muted small" for="releaseCheckUpdate">Update pickup after reload</label>
+          <div class="selectRowWrap settingsSelectWrap mt6">
+            <select id="releaseCheckUpdate" class="select" aria-label="Update pickup validation">
+              <option value="not-run">Not run</option>
+              <option value="pass">Pass</option>
+              <option value="fail">Fail</option>
+            </select>
+            <span class="chev" aria-hidden="true">▾</span>
+          </div>
+        </div>
+        <div class="settingsRow settingsRow--field">
+          <label class="muted small" for="releaseCheckReopen">Reopen keeps expected build</label>
+          <div class="selectRowWrap settingsSelectWrap mt6">
+            <select id="releaseCheckReopen" class="select" aria-label="Reopen validation">
+              <option value="not-run">Not run</option>
+              <option value="pass">Pass</option>
+              <option value="fail">Fail</option>
+            </select>
+            <span class="chev" aria-hidden="true">▾</span>
+          </div>
+        </div>
+        <div class="settingsRow settingsRow--field">
+          <label class="muted small" for="releaseCheckRecovery">Recovery/reset trust flow</label>
+          <div class="selectRowWrap settingsSelectWrap mt6">
+            <select id="releaseCheckRecovery" class="select" aria-label="Recovery validation">
+              <option value="not-run">Not run</option>
+              <option value="pass">Pass</option>
+              <option value="fail">Fail</option>
+            </select>
+            <span class="chev" aria-hidden="true">▾</span>
+          </div>
+        </div>
+        <div class="settingsRow settingsRow--field">
+          <label class="muted small" for="releaseValidationNotes">Release trial notes (optional)</label>
+          <textarea id="releaseValidationNotes" class="input mt6" rows="3" placeholder="Example: iPhone standalone reopened twice and stayed on v438."></textarea>
+        </div>
+        <div class="settingsRow settingsRow--action">
+          <div class="row gap10 wrap">
+            <button class="btn" id="refreshReleaseSnapshot">Refresh snapshot</button>
+            <button class="btn" id="copyReleaseLedger">Copy release ledger</button>
+          </div>
+        </div>
         <div class="settingsRow settingsRow--minor">
           <div class="muted small">Copy this support bundle and include what happened right before the issue.</div>
         </div>
@@ -355,6 +449,121 @@ export function createSettingsScreenOrchestrator({
     try {
       updateBuildInfo();
     } catch (_) {}
+
+    let latestReleaseSnapshot = null;
+    const releaseSummaryEl = document.getElementById("releaseValidationSummary");
+    const releaseStampEl = document.getElementById("releaseValidationStamp");
+    const releaseSignalsEl = document.getElementById("releaseValidationSignals");
+    const releaseNotesEl = document.getElementById("releaseValidationNotes");
+    const releaseInputs = {
+      browser_mode: document.getElementById("releaseCheckBrowser"),
+      installed_mode: document.getElementById("releaseCheckInstalled"),
+      update_pickup: document.getElementById("releaseCheckUpdate"),
+      reopen_behavior: document.getElementById("releaseCheckReopen"),
+      recovery_reset: document.getElementById("releaseCheckRecovery")
+    };
+
+    function readReleaseSelections() {
+      const out = {};
+      Object.entries(releaseInputs).forEach(([key, input]) => {
+        out[key] = normalizeLedgerStatus(input?.value || "not-run");
+      });
+      return out;
+    }
+
+    function syncReleaseValidationSummary() {
+      if (!releaseSummaryEl) return;
+      const picks = Object.values(readReleaseSelections());
+      const passCount = picks.filter((v) => v === "pass").length;
+      const failCount = picks.filter((v) => v === "fail").length;
+      const notRunCount = picks.length - passCount - failCount;
+      let status = `${passCount}/${picks.length} checks marked Pass`;
+      if (failCount > 0) status += ` • ${failCount} Fail`;
+      if (notRunCount > 0) status += ` • ${notRunCount} Not run`;
+      if (latestReleaseSnapshot?.summary?.updateAligned === false) status += " • Version alignment warning";
+      if (latestReleaseSnapshot?.summary?.recoveryReady) status += " • Recovery signal present";
+      releaseSummaryEl.textContent = status;
+    }
+
+    async function hydrateReleaseValidationSurface() {
+      if (typeof getReleaseValidationSnapshot !== "function") {
+        if (releaseSummaryEl) releaseSummaryEl.textContent = "Release snapshot unavailable in this build";
+        return;
+      }
+      try {
+        const snapshot = await getReleaseValidationSnapshot();
+        latestReleaseSnapshot = snapshot;
+        if (releaseSignalsEl) {
+          releaseSignalsEl.textContent = Array.isArray(snapshot.signalLines) ? snapshot.signalLines.join("\n") : "";
+        }
+        if (releaseStampEl) {
+          const stamp = snapshot?.at ? new Date(snapshot.at) : null;
+          const stampLabel = stamp && !Number.isNaN(stamp.getTime()) ? stamp.toLocaleString() : "Unknown time";
+          releaseStampEl.textContent = `Snapshot captured ${stampLabel}`;
+        }
+        const checkMap = Array.isArray(snapshot?.checks)
+          ? Object.fromEntries(snapshot.checks.map((check) => [check.key, normalizeLedgerStatus(check.suggested)]))
+          : {};
+        Object.entries(releaseInputs).forEach(([key, input]) => {
+          if (!input) return;
+          input.value = normalizeLedgerStatus(checkMap[key] || input.value || "not-run");
+        });
+        syncReleaseValidationSummary();
+      } catch (_) {
+        if (releaseSummaryEl) releaseSummaryEl.textContent = "Could not capture release snapshot";
+      }
+    }
+
+    Object.values(releaseInputs).forEach((input) => {
+      if (!input) return;
+      input.onchange = () => syncReleaseValidationSummary();
+    });
+
+    const refreshReleaseSnapshotBtn = document.getElementById("refreshReleaseSnapshot");
+    if (refreshReleaseSnapshotBtn) {
+      refreshReleaseSnapshotBtn.onclick = async () => {
+        await hydrateReleaseValidationSurface();
+        showToast("Release snapshot refreshed");
+      };
+    }
+
+    const copyReleaseLedgerBtn = document.getElementById("copyReleaseLedger");
+    if (copyReleaseLedgerBtn) {
+      copyReleaseLedgerBtn.onclick = async () => {
+        const selections = readReleaseSelections();
+        const notes = releaseNotesEl?.value || "";
+        let ledgerText = "";
+        if (typeof formatReleaseValidationLedger === "function") {
+          ledgerText = formatReleaseValidationLedger(latestReleaseSnapshot, selections, notes);
+        } else {
+          const lines = [
+            `Build ${displayBuildVersion} release validation`,
+            `Browser mode: ${releaseStatusLabel(selections.browser_mode)}`,
+            `Installed mode: ${releaseStatusLabel(selections.installed_mode)}`,
+            `Update pickup: ${releaseStatusLabel(selections.update_pickup)}`,
+            `Reopen behavior: ${releaseStatusLabel(selections.reopen_behavior)}`,
+            `Recovery/reset: ${releaseStatusLabel(selections.recovery_reset)}`
+          ];
+          if (String(notes || "").trim()) lines.push(`Notes: ${String(notes).trim()}`);
+          ledgerText = lines.join("\n");
+        }
+        let copied = false;
+        try {
+          if (typeof copyTextWithFeedback === "function") {
+            copied = await copyTextWithFeedback(ledgerText);
+          }
+        } catch (_) {}
+        if (!copied) {
+          try {
+            await navigator.clipboard.writeText(ledgerText);
+            copied = true;
+          } catch (_) {}
+        }
+        showToast(copied ? "Release ledger copied" : "Could not copy release ledger");
+      };
+    }
+
+    hydrateReleaseValidationSurface();
 
     try {
       settingsListManagement.bindListMgmtHandlers();

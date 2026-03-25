@@ -134,6 +134,17 @@ export function createUpdateRuntimeStatusSeam({
     return match ? match[1] : "";
   }
 
+  function asPassFailLabel(value){
+    return value ? "Pass" : "Fail";
+  }
+
+  function formatLedgerStamp(dateValue){
+    const d = dateValue instanceof Date ? dateValue : new Date(dateValue || Date.now());
+    if(Number.isNaN(d.getTime())) return "";
+    const pad = (n)=>String(n).padStart(2, "0");
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+  }
+
   async function getRuntimeVersionDiagnostics(){
     const buildDigits = parseBuildDigits(displayBuildVersion);
     const details = {
@@ -398,10 +409,91 @@ export function createUpdateRuntimeStatusSeam({
     el.textContent = parts.join(" • ");
   }
 
+  async function getReleaseValidationSnapshot(){
+    const runtimeDiag = await getRuntimeVersionDiagnostics();
+    const buildDigits = runtimeDiag.buildDigits || parseBuildDigits(displayBuildVersion);
+    const updateReady = Boolean(swUpdateReady || runtimeDiag.swWaitingVersion);
+    const updateAligned = Boolean(!runtimeDiag.hasVersionSkew && runtimeDiag.swController);
+    const reopenReady = Boolean(!runtimeDiag.installedAppLikelyLagging && !runtimeDiag.hasVersionSkew);
+    const recoveryReady = Boolean(runtimeDiag.needsHardReset || runtimeDiag.lastBootError);
+    const cacheLine = runtimeDiag.cacheVersions.length
+      ? [...new Set(runtimeDiag.cacheVersions)].map(v=>`v${v}`).join(", ")
+      : "(none)";
+    const startupLine = runtimeDiag.startupModuleVersions.length
+      ? [...new Set(runtimeDiag.startupModuleVersions)].map(v=>`v${v}`).join(", ")
+      : "(none)";
+    const waitingLine = runtimeDiag.swWaitingVersion ? `v${runtimeDiag.swWaitingVersion}` : "none";
+
+    const checks = [
+      { key: "browser_mode", label: "Browser mode opens current release", suggested: "not-run" },
+      { key: "installed_mode", label: "Installed app opens current release", suggested: runtimeDiag.standalone ? asPassFailLabel(updateAligned).toLowerCase() : "not-run" },
+      { key: "update_pickup", label: "Update pickup after reload", suggested: asPassFailLabel(updateAligned).toLowerCase() },
+      { key: "reopen_behavior", label: "Reopen keeps expected build", suggested: asPassFailLabel(reopenReady).toLowerCase() },
+      { key: "recovery_reset", label: "Recovery/reset trust flow", suggested: recoveryReady ? "not-run" : "pass" }
+    ];
+
+    const signalLines = [
+      `Build target: ${displayBuildVersion}${buildDigits ? ` (digits ${buildDigits})` : ""}`,
+      `Mode: ${runtimeDiag.standalone ? "Installed app (standalone)" : "Browser/tab mode"}`,
+      `SW controller: ${runtimeDiag.swController ? "yes" : "no"}`,
+      `SW waiting update: ${waitingLine}`,
+      `Cache versions: ${cacheLine}`,
+      `Startup module versions: ${startupLine}`,
+      `Version skew detected: ${runtimeDiag.hasVersionSkew ? "yes" : "no"}`,
+      `Installed-app lag likely: ${runtimeDiag.installedAppLikelyLagging ? "yes" : "no"}`,
+      `Hard reset suggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`
+    ];
+
+    return {
+      at: new Date().toISOString(),
+      buildVersion: String(displayBuildVersion || ""),
+      runtimeDiag,
+      checks,
+      signalLines,
+      summary: {
+        updateReady,
+        updateAligned,
+        reopenReady,
+        recoveryReady
+      }
+    };
+  }
+
+  function formatReleaseValidationLedger(snapshot, selectedResults = {}, notes = ""){
+    const snap = snapshot && typeof snapshot === "object" ? snapshot : {};
+    const checks = Array.isArray(snap.checks) ? snap.checks : [];
+    const lines = [];
+    lines.push(`Bank the Catch release validation ledger`);
+    lines.push(`Build: ${String(snap.buildVersion || displayBuildVersion || "")}`);
+    lines.push(`Snapshot: ${formatLedgerStamp(snap.at) || "(unknown)"}`);
+    lines.push("");
+    lines.push("Signal snapshot:");
+    (Array.isArray(snap.signalLines) ? snap.signalLines : []).forEach((line)=>{
+      lines.push(`- ${line}`);
+    });
+    lines.push("");
+    lines.push("Pass ledger:");
+    checks.forEach((check, idx)=>{
+      const raw = String(selectedResults[check.key] || check.suggested || "not-run").toLowerCase();
+      const status = raw === "pass" ? "PASS" : (raw === "fail" ? "FAIL" : "NOT RUN");
+      lines.push(`${idx + 1}. ${check.label}: ${status}`);
+    });
+    const extraNotes = String(notes || "").trim();
+    if(extraNotes){
+      lines.push("");
+      lines.push("Notes:");
+      lines.push(extraNotes);
+    }
+    return lines.join("\n");
+  }
+
   return {
     markSwUpdateReady,
     swCheckNow,
     forceRefreshApp,
+    getRuntimeVersionDiagnostics,
+    getReleaseValidationSnapshot,
+    formatReleaseValidationLedger,
     updateBuildInfo,
     updateUpdateRow,
     updateBuildBadge
