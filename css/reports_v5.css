@@ -1,8 +1,8 @@
-.reportsTransitionRoot{opacity:0;transform:translateY(8px) scale(.995);transform-origin:top center;transition:opacity .16s ease,transform .18s ease;will-change:opacity,transform}
+.reportsTransitionRoot{opacity:0;transform:translateY(8px) scale(.995);transform-origin:top center;transition:opacity calc(var(--motion-duration-screen, 180ms) * .9) var(--motion-ease-soft, ease),transform var(--motion-duration-screen, 180ms) var(--motion-ease-standard, cubic-bezier(.22,.61,.36,1));will-change:opacity,transform}
 .reportsTransitionRoot.is-ready{opacity:1;transform:translateY(0) scale(1)}
 .reportsTransitionRoot.is-leaving{opacity:0;transform:translateY(-6px) scale(.992);pointer-events:none}
 .reportsTransitionRoot--detail{margin-top:0}
-.chart{transition:opacity .18s ease,transform .18s ease;transform-origin:center bottom}
+.chart{transition:opacity var(--motion-duration-screen, 180ms) var(--motion-ease-soft, ease),transform var(--motion-duration-screen, 180ms) var(--motion-ease-standard, cubic-bezier(.22,.61,.36,1));transform-origin:center bottom}
 @media (prefers-reduced-motion: reduce){
   .reportsTransitionRoot,.chart{transition:none;transform:none;opacity:1}
 }
