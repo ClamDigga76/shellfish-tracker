@@ -1681,7 +1681,7 @@ function renderAllTrips(){
     : `
       <div class="emptyState tripsEmptyState">
         <div class="emptyStateTitle">No trips in this Trips view</div>
-        <div class="emptyStateBody">Try a wider range, clear dealer/area filters, or add a trip to get this list moving again.</div>
+        <div class="emptyStateBody">No trips match this view yet. Add a trip, or clear filters if needed.</div>
         <div class="emptyStateAction">
           <button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>
           <button class="btn" id="tripsEmptyReset" type="button">Clear filters</button>

@@ -541,15 +541,15 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       ? "Choose a valid date range"
       : (beginnerEmpty ? "Reports unlock after your first trip" : "No trips in this range");
     const body = invalidRange
-      ? "Set both dates, then tap Apply to load this report."
+      ? "Set both dates, then tap Apply."
       : (beginnerEmpty
-        ? "Start with one saved trip. Home will show your first snapshot right away, and Reports becomes more useful as you add enough trips to compare dealers, areas, and months."
-        : "No saved trips match this filter yet. Add a trip or widen the range to bring dealer, area, and monthly summaries back in view.");
+        ? "Save your first trip to unlock Reports."
+        : "No trips match this filter yet. Add a trip or switch to All Time.");
     const followup = invalidRange
       ? ""
       : (beginnerEmpty
-        ? '<div class="emptyStateFollowup">Next best step: save your first trip, then come back here after a few trips for stronger trends.</div>'
-        : '<div class="emptyStateFollowup">Tip: switch to All Time when you want the widest reports baseline.</div>');
+        ? '<div class="emptyStateFollowup">Next best step: save your first trip.</div>'
+        : '<div class="emptyStateFollowup">Tip: switch to All Time for your widest baseline.</div>');
     return `
       <div class="emptyState ${beginnerEmpty ? "emptyStateBeginner" : ""}">
         <div class="emptyStateTitle">${title}</div>
