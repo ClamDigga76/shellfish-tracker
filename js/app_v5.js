@@ -1895,7 +1895,10 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   openRestoreResultModal: (result) => openRestoreResultModal(result),
   showToast: (msg) => showToast(msg),
   getInstallSurfaceModel: () => getInstallSurfaceModel(),
-  runInstallAction: () => runInstallAction()
+  runInstallAction: () => runInstallAction(),
+  getReleaseValidationSnapshot: () => updateRuntimeStatus.getReleaseValidationSnapshot(),
+  formatReleaseValidationLedger: (snapshot, selectedResults, notes) => updateRuntimeStatus.formatReleaseValidationLedger(snapshot, selectedResults, notes),
+  copyTextWithFeedback: (text) => copyTextWithFeedback(text)
 });
 
 
