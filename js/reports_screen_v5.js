@@ -522,7 +522,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderReportsTopShell = ({ body = "", shellMode = "overview" } = {})=> `
     <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
-      <div class="reportsTopHeader">
+      <div class="reportsTopHeader cardHeaderRow">
         <b>Reports</b>
         <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
@@ -537,8 +537,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         </div>
       </section>
 
-      <div class="repCtlRow">
-        <button class="btn repAdvToggle" type="button">${advOpen ? "Hide advanced filters" : "Advanced filters"}</button>
+      <div class="repCtlRow cardActionRow">
+        <button class="btn btn-ghost affordanceBtn repAdvToggle" type="button">${advOpen ? "Hide advanced filters" : "Advanced filters"}</button>
       </div>
 
       <div class="reportsAdvancedShell" aria-label="Reports advanced filters">
@@ -578,9 +578,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         <div class="emptyStateTitle">${title}</div>
         <div class="emptyStateBody">${body}</div>
         ${followup}
-        <div class="emptyStateAction">
-          <button class="btn good" id="reportsEmptyPrimary" type="button">${invalidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
-          <button class="btn" id="reportsEmptySecondary" type="button">${invalidRange || beginnerEmpty ? "Open Help" : "Switch to All Time"}</button>
+        <div class="emptyStateAction cardActionRow">
+          <button class="btn primary" id="reportsEmptyPrimary" type="button">${invalidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
+          <button class="btn btn-ghost" id="reportsEmptySecondary" type="button">${invalidRange || beginnerEmpty ? "Open Help" : "Switch to All Time"}</button>
         </div>
       </div>
     `;
@@ -1174,7 +1174,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     return `
     <section class="${detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
       <div class="${detailCardClass}">
-        <button class="btn ${detailBackClass}" type="button" id="reportsMetricBack">${detailBackLabel}</button>
+        <button class="btn btn-ghost affordanceBtn ${detailBackClass}" type="button" id="reportsMetricBack">${detailBackLabel}</button>
         <div class="${detailEyebrowClass}">${escapeHtml(detailEyebrow)}</div>
         <h2 class="${detailTitleClass}">${escapeHtml(isHomeMetricDetail ? meta.homeTitle : meta.title)}</h2>
         <div class="${detailContextClass}">${escapeHtml(detailContext)}</div>
