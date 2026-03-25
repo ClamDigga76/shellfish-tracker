@@ -219,7 +219,6 @@ export function createHomeDashboardRenderer({
           <div class="homeLastTripHeader reportsHeroEyebrow">Last Saved Trip</div>
           ${renderTripCatchCard(newestSavedTrip, {
             interactive: false,
-            compact: true,
             extraClass: "homeLastTripCardSurface"
           })}
         `;
