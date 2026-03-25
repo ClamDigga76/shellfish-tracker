@@ -153,7 +153,6 @@
 }
 :root[data-theme="light"] .tripsBrowseCard,
 :root[data-theme="light"] .reportsRecordTripCard,
-:root[data-theme="light"] .homeScreenShell .homeLastTripCardSurface,
 :root[data-theme="light"] .emptyState,
 :root[data-theme="light"] .settingsDeletedItem,
 :root[data-theme="light"] .restoreResultMetric,
@@ -374,8 +373,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripsBrowseList{display:grid;gap:var(--card-stack-gap)}
 .tripsBrowseList .trip + .trip{margin-top:0}
 .tripsBrowseCard,
-.reportsRecordTripCard,
-.homeScreenShell .homeLastTripCardSurface{
+.reportsRecordTripCard{
   margin:0;
   padding:16px 16px;
   border:1px solid var(--border);
@@ -384,38 +382,27 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   box-shadow:0 12px 28px rgba(0,0,0,.22);
 }
 .tripsBrowseCard .tripCardGrid,
-.reportsRecordTripCard .tripCardGrid,
-.homeScreenShell .homeLastTripCardSurface .tripCardGrid{gap:15px}
+.reportsRecordTripCard .tripCardGrid{gap:15px}
 .tripsBrowseCard :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies),
-.reportsRecordTripCard :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies),
-.homeScreenShell .homeLastTripCardSurface :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies){font-size:17px;line-height:1.22}
+.reportsRecordTripCard :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies){font-size:17px;line-height:1.22}
 .tripsBrowseCard .tripCardHeadline,
-.reportsRecordTripCard .tripCardHeadline,
-.homeScreenShell .homeLastTripCardSurface .tripCardHeadline{color:var(--text-muted-strong);font-weight:700}
+.reportsRecordTripCard .tripCardHeadline{color:var(--text-muted-strong);font-weight:700}
 .tripsBrowseCard .tripCardDate,
-.reportsRecordTripCard .tripCardDate,
-.homeScreenShell .homeLastTripCardSurface .tripCardDate{font-weight:840}
+.reportsRecordTripCard .tripCardDate{font-weight:840}
 .tripsBrowseCard .tripCardMain,
-.reportsRecordTripCard .tripCardMain,
-.homeScreenShell .homeLastTripCardSurface .tripCardMain{color:var(--text);font-weight:700}
+.reportsRecordTripCard .tripCardMain{color:var(--text);font-weight:700}
 .tripsBrowseCard .tripCardHeadlineDealer,
-.reportsRecordTripCard .tripCardHeadlineDealer,
-.homeScreenShell .homeLastTripCardSurface .tripCardHeadlineDealer{margin-top:7px;color:var(--text)}
+.reportsRecordTripCard .tripCardHeadlineDealer{margin-top:7px;color:var(--text)}
 .tripsBrowseCard .tripCardLowerLeft,
-.reportsRecordTripCard .tripCardLowerLeft,
-.homeScreenShell .homeLastTripCardSurface .tripCardLowerLeft{display:grid;gap:5px;margin-top:12px}
+.reportsRecordTripCard .tripCardLowerLeft{display:grid;gap:5px;margin-top:12px}
 .tripsBrowseCard .tripCardSpecies,
-.reportsRecordTripCard .tripCardSpecies,
-.homeScreenShell .homeLastTripCardSurface .tripCardSpecies{font-weight:760;color:var(--text)}
+.reportsRecordTripCard .tripCardSpecies{font-weight:760;color:var(--text)}
 .tripsBrowseCard .tripCardNotes,
-.reportsRecordTripCard .tripCardNotes,
-.homeScreenShell .homeLastTripCardSurface .tripCardNotes{font-size:13px;line-height:1.38;color:var(--text-muted-strong)}
+.reportsRecordTripCard .tripCardNotes{font-size:13px;line-height:1.38;color:var(--text-muted-strong)}
 .tripsBrowseCard .tripCardMetricChip,
-.reportsRecordTripCard .tripCardMetricChip,
-.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip{font-size:23px;padding:9px 0}
+.reportsRecordTripCard .tripCardMetricChip{font-size:23px;padding:9px 0}
 .tripsBrowseCard .tripCardMetricChip .metricValue,
-.reportsRecordTripCard .tripCardMetricChip .metricValue,
-.homeScreenShell .homeLastTripCardSurface .tripCardMetricChip .metricValue{font-size:2.4em}
+.reportsRecordTripCard .tripCardMetricChip .metricValue{font-size:2.4em}
 .tripsEmptyState{padding:15px 14px}
 
 .emptyState{
@@ -612,16 +599,6 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   background:none;
   box-shadow:none;
   min-width:0;
-}
-.homeScreenShell .homeLastTripCardSurface{
-  width:100%;
-  min-width:0;
-}
-.homeScreenShell .homeLastTripCardSurface .tripCardGrid > :first-child{
-  min-width:0;
-}
-.homeScreenShell .homeLastTripCardSurface .tripCardMetricsCol{
-  flex:0 0 auto;
 }
 .homeScreenShell .homeLastTripFallback{
   margin-top:0;
