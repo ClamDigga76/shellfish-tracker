@@ -389,8 +389,8 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripCardStandard .tripCardDealer,
 .tripCardStandard .tripCardSpecies{font-size:15px;line-height:1.2;font-weight:560;color:var(--text-muted-strong)}
 .tripCardStandard .tripCardNotes{font-size:13px;line-height:1.38;font-weight:500;color:var(--muted)}
-.tripCardStandard .tripCardMetricChip{font-size:58px;padding:6px 0;line-height:1}
-.tripCardStandard .tripCardMetricChip .metricValue{font-size:5.4em;line-height:.8;font-weight:900}
+.tripCardStandard .tripCardMetricChip{font-size:82px;padding:6px 0;line-height:1}
+.tripCardStandard .tripCardMetricChip .metricValue{font-size:6em;line-height:.8;font-weight:900}
 .tripsEmptyState{padding:15px 14px}
 
 .emptyState{
