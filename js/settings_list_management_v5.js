@@ -10,6 +10,7 @@ export function createSettingsListManagement(deps){
     addArea,
     countTripsForArea,
     deleteArea,
+    protectedAreaName = "Area Not Recorded",
     normalizeKey,
     escapeHtml,
     showToast,
@@ -18,6 +19,13 @@ export function createSettingsListManagement(deps){
     forceRefreshApp,
     render
   } = deps;
+  const PROTECTED_AREA_NAME = String(protectedAreaName || "Area Not Recorded").trim();
+  const PROTECTED_AREA_KEY = normalizeKey(PROTECTED_AREA_NAME);
+
+  function isProtectedAreaName(rawAreaName){
+    const areaKey = normalizeKey(String(rawAreaName || "").trim());
+    return !!(areaKey && areaKey === PROTECTED_AREA_KEY);
+  }
 
   function renderListMgmtPanel(mode){
     const state = getState();
@@ -26,7 +34,8 @@ export function createSettingsListManagement(deps){
     if(!Array.isArray(state.dealers)) state.dealers = [];
 
     const areaValues = Array.isArray(syncAreaState()) ? syncAreaState() : [];
-    const areaRows2 = areaValues.length ? areaValues.map((areaName)=>`
+    const editableAreaValues = areaValues.filter((areaName)=> !isProtectedAreaName(areaName));
+    const areaRows2 = editableAreaValues.length ? editableAreaValues.map((areaName)=>`
       <div class="row" style="justify-content:space-between;align-items:center;gap:10px;margin-top:10px">
         <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(areaName)}</b></div>
         <div class="row" style="gap:8px;flex-wrap:wrap;justify-content:flex-end">
@@ -75,6 +84,7 @@ export function createSettingsListManagement(deps){
     const oldKey = normalizeKey(oldName);
     const newKey = normalizeKey(newName);
     if(!oldKey || !newKey) return { ok: false, reason: "invalid" };
+    if(oldKey === PROTECTED_AREA_KEY || newKey === PROTECTED_AREA_KEY) return { ok: false, reason: "protected" };
     if(oldKey === newKey) return { ok: false, reason: "same" };
 
     ensureAreas();
@@ -219,6 +229,10 @@ export function createSettingsListManagement(deps){
             showToast("Area rename failed");
             return;
           }
+          if(isProtectedAreaName(areaName)){
+            showToast("Area is protected");
+            return;
+          }
           const typed = prompt(`Rename area "${areaName}" to:`, areaName);
           if(typed == null) return;
           const nextName = String(typed || "").trim();
@@ -232,6 +246,10 @@ export function createSettingsListManagement(deps){
           }
           const result = renameAreaInState(areaName, nextName);
           if(!result?.ok){
+            if(result?.reason === "protected"){
+              showToast("Area is protected");
+              return;
+            }
             if(result?.reason === "same"){
               showToast("Area name is unchanged");
               return;
@@ -252,6 +270,10 @@ export function createSettingsListManagement(deps){
       (getApp()?.querySelectorAll("button[data-del-area-name]") || []).forEach((btn)=>{
         btn.onclick = ()=>{
           const areaName = String(btn.getAttribute("data-del-area-name") || "");
+          if(isProtectedAreaName(areaName)){
+            showToast("Area is protected");
+            return;
+          }
           const tripCount = countTripsForArea(areaName);
           if(tripCount > 0){
             alert(`Can't delete area "${areaName}" yet. ${tripCount} trip(s) still use it.`);
@@ -261,6 +283,10 @@ export function createSettingsListManagement(deps){
           if(!confirm(`Delete area "${areaName}"?`)) return;
           const result = deleteArea(areaName);
           if(!result?.ok){
+            if(result?.reason === "protected"){
+              showToast("Area is protected");
+              return;
+            }
             showToast("Area can't be deleted yet");
             return;
           }
