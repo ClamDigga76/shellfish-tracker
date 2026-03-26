@@ -438,6 +438,10 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 
 /* Settings grouped-list polish (P3) */
 .settingsGroupBlock{margin-bottom:var(--card-stack-gap)}
+.settingsJumpNavCard{margin-bottom:var(--card-stack-gap);padding:9px 10px}
+.settingsJumpNavRow{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.settingsJumpNavRow::-webkit-scrollbar{display:none}
+.settingsJumpChip{white-space:nowrap;flex:0 0 auto}
 .settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px var(--card-title-gap)}
 .settingsSectionCard.settingsGroupedCard{margin-bottom:0;padding:0;overflow:hidden}
 .settingsRow{padding:13px var(--card-pad-x)}

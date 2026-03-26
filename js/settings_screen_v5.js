@@ -119,10 +119,26 @@ export function createSettingsScreenOrchestrator({
         </div>
       `;
 
+    const settingsJumpTargets = [
+      { id: "settingsAppearance", label: "Appearance" },
+      { id: "settingsUpdatesSupport", label: "Updates" },
+      { id: "settingsInstallApp", label: "Install" },
+      { id: "settingsSafetyRecovery", label: "Safety" },
+      { id: "settingsDataLists", label: "Data Lists" },
+      { id: "settingsAbout", label: "About" },
+      { id: "settingsAdvanced", label: "Advanced" }
+    ];
+
     getApp().innerHTML = `
     ${renderPageHeader("settings")}
 
-    <div class="settingsGroupBlock">
+    <div class="settingsJumpNavCard card" aria-label="Settings section quick links">
+      <div class="settingsJumpNavRow" role="navigation" aria-label="Jump to section">
+        ${settingsJumpTargets.map((target) => `<button class="chip settingsJumpChip" type="button" data-settings-jump="${target.id}">${target.label}</button>`).join("")}
+      </div>
+    </div>
+
+    <div class="settingsGroupBlock" id="settingsAppearance">
       <div class="settingsGroupLabel">Appearance</div>
       <div class="card settingsSectionCard settingsGroupedCard">
         <div class="settingsRow settingsRow--split">
@@ -143,7 +159,7 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
-    <div class="settingsGroupBlock">
+    <div class="settingsGroupBlock" id="settingsUpdatesSupport">
       <div class="settingsGroupLabel">Updates & Support</div>
       <div class="card settingsSectionCard settingsGroupedCard">
         <div class="settingsRow settingsRow--split">
@@ -175,7 +191,7 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
-    <div class="settingsGroupBlock">
+    <div class="settingsGroupBlock" id="settingsInstallApp">
       <div class="settingsGroupLabel">Install App</div>
       <div class="card settingsSectionCard settingsGroupedCard">
         <div class="settingsRow settingsRow--split">
@@ -200,7 +216,7 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
-    <div class="settingsGroupBlock">
+    <div class="settingsGroupBlock" id="settingsSafetyRecovery">
       <div class="settingsGroupLabel">Safety & Recovery</div>
       <div class="card settingsSectionCard settingsGroupedCard">
         <div class="settingsRow settingsRow--split">
@@ -233,7 +249,7 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
-    <div class="settingsGroupBlock">
+    <div class="settingsGroupBlock" id="settingsDataLists">
       <div class="settingsGroupLabel">Data Lists</div>
       <div class="card settingsSectionCard settingsGroupedCard">
         <div class="settingsRow settingsRow--split">
@@ -260,7 +276,7 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
-    <div class="settingsGroupBlock">
+    <div class="settingsGroupBlock" id="settingsAbout">
       <div class="settingsGroupLabel">About</div>
       <div class="card settingsSectionCard settingsGroupedCard">
         <div class="settingsRow settingsRow--split">
@@ -296,7 +312,7 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
-    <div class="settingsGroupBlock">
+    <div class="settingsGroupBlock" id="settingsAdvanced">
       <div class="settingsGroupLabel">Advanced</div>
       <details class="card settingsSectionCard settingsGroupedCard settingsAdvancedCard" id="advancedBox">
         <summary class="settingsAdvancedSummary">Advanced support diagnostics and reset</summary>
@@ -401,6 +417,17 @@ export function createSettingsScreenOrchestrator({
     bindThemeControls();
 
     bindNavHandlers(state);
+
+    const jumpButtons = Array.from(document.querySelectorAll("[data-settings-jump]"));
+    jumpButtons.forEach((button) => {
+      button.onclick = () => {
+        const targetId = String(button.getAttribute("data-settings-jump") || "").trim();
+        if (!targetId) return;
+        const targetEl = document.getElementById(targetId);
+        if (!targetEl) return;
+        targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+    });
 
     document.getElementById("openHelp").onclick = () => {
       pushView(state, "help");
