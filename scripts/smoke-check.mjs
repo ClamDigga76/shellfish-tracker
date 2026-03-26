@@ -109,10 +109,25 @@ if (appSource) {
 if (runtimeOrchestrationSource) {
   checkIncludes(runtimeOrchestrationSource, 'boot startup marker finalized', 'window.__SHELLFISH_APP_STARTED = true;');
   checkPattern(runtimeOrchestrationSource, 'boot home default render', /if\s*\(\s*!state\.view\s*\)\s*state\.view\s*=\s*["']home["']\s*;/, 'state.view defaults to "home"');
-  checkPattern(runtimeOrchestrationSource, 'boot all_trips route wired', /state\.view\s*===\s*["']all_trips["']\s*\)\s*renderers\.renderAllTrips\(/, 'dispatcher branch for all_trips');
+  checkPattern(
+    runtimeOrchestrationSource,
+    'boot all_trips route wired',
+    /(state\.view|nextView)\s*===\s*["']all_trips["']\s*\)\s*renderers\.renderAllTrips\(/,
+    'dispatcher branch for all_trips'
+  );
   checkPattern(runtimeOrchestrationSource, 'home route reachable from dispatcher', /else\s+renderers\.renderHome\s*\(/, 'dispatcher fallback to renderHome(...)');
-  checkPattern(runtimeOrchestrationSource, 'settings route reachable from dispatcher', /state\.view\s*===\s*["']settings["']\s*\)\s*renderers\.renderSettings\(/, 'dispatcher branch for settings');
-  checkPattern(runtimeOrchestrationSource, 'new trip route reachable from dispatcher', /state\.view\s*===\s*["']new["']\s*\)\s*renderers\.renderNewTrip\(/, 'dispatcher branch for new');
+  checkPattern(
+    runtimeOrchestrationSource,
+    'settings route reachable from dispatcher',
+    /(state\.view|nextView)\s*===\s*["']settings["']\s*\)\s*renderers\.renderSettings\(/,
+    'dispatcher branch for settings'
+  );
+  checkPattern(
+    runtimeOrchestrationSource,
+    'new trip route reachable from dispatcher',
+    /(state\.view|nextView)\s*===\s*["']new["']\s*\)\s*renderers\.renderNewTrip\(/,
+    'dispatcher branch for new'
+  );
 }
 
 if (homeSource) {

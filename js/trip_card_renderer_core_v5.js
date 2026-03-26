@@ -39,7 +39,7 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, for
     const modeClass = interactive ? "tripCardInteractive" : "tripCardReadOnly";
 
     return `
-      <${tag} class="trip triprow tripCardStandard ${modeClass}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
+      <${tag} class="trip triprow catchCard tripCardStandard ${modeClass}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
         <div class="tripCardGrid">
           <div>
             <div class="catchHead tripCardHeadline tripCardDate">${escapeHtml(model.dateText)}</div>
