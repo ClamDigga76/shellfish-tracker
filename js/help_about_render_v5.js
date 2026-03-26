@@ -5,7 +5,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
     <div class="card">
       <b style="font-size:1.05rem">Help hub</b>
       <div class="sep"></div>
-      <div class="muted small" style="line-height:1.5">Jump to the section you need. Help is the main place for install, support, and backup guidance.</div>
+      <div class="muted small" style="line-height:1.5">Jump to what you need. Help is the main place for install steps, support, and backup walkthroughs.</div>
       <div class="helpHubNav" style="margin-top:10px">
         <button class="chip" type="button" data-helpjump="home">Home</button>
         <button class="chip" type="button" data-helpjump="trips">Trips</button>
@@ -124,7 +124,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Current mode:</b> ${escapeHtml(String(installModel?.statusPill || (isStandalone ? "Installed" : "Browser")))}</div>
         <div style="margin-top:8px">${escapeHtml(String(installModel?.statusLine || "Bank the Catch can run in your browser or as an installed Home Screen app."))}</div>
-        <div style="margin-top:8px">Settings is the status/action view. This section is the full install guide.</div>
+        <div style="margin-top:8px">Settings gives quick mode and action status. This section has the full install steps.</div>
         <div style="margin-top:8px"><b>iPhone/iPad Safari</b></div>
         <ol style="margin:8px 0 0 18px">
           <li>Open Bank the Catch in <b>Safari</b>.</li>
@@ -148,8 +148,8 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <ul style="margin:0 0 0 18px">
           <li>If the app looks stale, open <b>Settings</b> and run <b>Reload latest version</b>. If prompted, run <b>Reset cache &amp; reload</b>.</li>
-          <li>Use <b>Settings → Install App</b> to confirm your mode, then follow the install steps above if needed.</li>
-          <li>If behavior still seems off after updating, reopen the app and recheck Settings status lines.</li>
+          <li>Use <b>Settings → Install App</b> for a quick mode check, then follow the install steps above when needed.</li>
+          <li>If things still seem off after updating, reopen the app and check the Settings status lines again.</li>
           <li>For support, email <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</li>
         </ul>
       </div>
@@ -186,7 +186,7 @@ export function renderAboutViewHTML({ renderPageHeader, displayBuildVersion }) {
       <div class="muted small">Build: <b>${displayBuildVersion}</b></div>
       <div class="muted small" style="margin-top:8px">Bank the Catch is a mobile-first shellfish tracking app.</div>
       <div class="muted small" style="margin-top:6px">Support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
-      <div class="muted small" style="margin-top:6px">For install and backup walkthroughs, use Help.</div>
+      <div class="muted small" style="margin-top:6px">Install and backup walkthroughs live in Help.</div>
       <div class="muted small" style="margin-top:6px">Legal: <a class="settingsEmail" href="legal/terms.html">Terms</a> • <a class="settingsEmail" href="legal/privacy.html">Privacy</a> • <a class="settingsEmail" href="legal/license.html">License</a></div>
       <div class="row mt12">
         <button class="btn" id="copyDebug">Copy support details</button>
