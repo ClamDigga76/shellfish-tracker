@@ -27,15 +27,11 @@ export function createSettingsListManagement(deps){
 
     const areaValues = Array.isArray(syncAreaState()) ? syncAreaState() : [];
     const areaRows2 = areaValues.length ? areaValues.map((areaName)=>`
-      <div class="card" style="margin-top:10px;padding:12px">
-        <div class="row" style="justify-content:space-between;align-items:center;gap:10px">
-          <div style="min-width:0;flex:1">
-            <div class="pill" style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(areaName)}</b></div>
-          </div>
-          <div class="row" style="gap:8px;flex-wrap:wrap;justify-content:flex-end">
-            <button class="smallbtn" data-rename-area-name="${escapeHtml(areaName)}" type="button">Rename</button>
-            <button class="smallbtn danger" data-del-area-name="${escapeHtml(areaName)}" type="button">Delete</button>
-          </div>
+      <div class="row" style="justify-content:space-between;align-items:center;gap:10px;margin-top:10px">
+        <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(areaName)}</b></div>
+        <div class="row" style="gap:8px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="smallbtn" data-rename-area-name="${escapeHtml(areaName)}" type="button">Rename</button>
+          <button class="smallbtn danger" data-del-area-name="${escapeHtml(areaName)}" type="button">Delete</button>
         </div>
       </div>`).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No areas yet</div><div class="emptyStateBody">Add your first area below so New Trip choices are ready.</div></div>`;
 
@@ -57,7 +53,7 @@ export function createSettingsListManagement(deps){
     ` : `
       <div style="margin-top:12px">
         <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-          <input class="input" id="newArea" placeholder="Add area (ex: 19/626)" autocomplete="off" enterkeyhint="done" style="flex:1;min-width:180px" />
+          <input class="input" id="newArea" placeholder="Add area (ex: The Cove)" autocomplete="off" enterkeyhint="done" style="flex:1;min-width:180px" />
           <button class="btn primary" id="addArea" type="button">Add</button>
         </div>
         ${areaRows2}
