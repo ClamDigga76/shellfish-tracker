@@ -1,4 +1,4 @@
-# PARKING-LOT-GUIDE.md — VibeCoder 3.5
+# PARKING-LOT-GUIDE.md — VibeCoder 4.0
 
 ## Purpose
 The Parking Lot is the live waiting list for ideas that are **not** in the current active patch.
@@ -20,13 +20,6 @@ Add these to the Parking Lot instead of mixing them into the current patch:
 - nice-to-have UI ideas
 - audits and investigations not needed for the current patch
 - anything risky that should be isolated
-
-## What does not belong in the Parking Lot
-Do not add:
-- the current primary patch item
-- already completed and confirmed work
-- random notes with no action value
-- duplicate items that mean the same thing
 
 ## Pull rule
 By default, pull **one main item** from the Parking Lot at a time.
@@ -54,37 +47,6 @@ After the user confirms the patch worked:
 4. include whether GitHub/repo connection is recommended for that next patch
 
 Do not remove an item before the user confirms success.
-
-## Recommendation rule
-When recommending the next item, prefer:
-
-- high user value
-- low regression risk
-- small/local diff
-- iPhone PWA safety
-- Android Chrome safety
-- native-feeling mobile UX
-- release-safe choices
-
-## Wording style
-Keep Parking Lot items short and specific.
-
-Good:
-- Remove inner card shell on Edit Trip layout
-- Add Reports empty state card
-- Extract Settings orchestration seam
-
-Weak:
-- Make app better
-- Improve UI
-- Clean things up
-
-## Good Parking Lot item shape
-A solid item usually names:
-
-- the screen or subsystem
-- the exact problem or improvement
-- the intended direction
 
 ## Operating reminder
 The Parking Lot is not the patch.

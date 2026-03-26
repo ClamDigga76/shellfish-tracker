@@ -1,9 +1,9 @@
-# START-HERE.md — VibeCoder 3.5
+# START-HERE.md — VibeCoder 4.0
 
 ## Purpose
-This file is the quick map for the Bank the Catch workflow system.
+This file is the quick map for the Bank the Catch workflow-doc set.
 
-Use it to find the right file fast.
+Use it to find the correct helper file quickly.
 Do not treat this file as stronger than `AGENTS.md`.
 
 ## Read order
@@ -14,8 +14,9 @@ For normal work, use this order:
 3. the specific helper file for the task
 
 ## File roles
-- `AGENTS.md` = operational law
-- `PROJECT-INSTRUCTION-BLOCK.md` = portable project instruction wrapper for this ChatGPT project
+- `AGENTS.md` = operational law (primary)
+- `PROJECT-INSTRUCTION-BLOCK.md` = wrapper/adaptation block for this project package
+- `RUNTIME-PULL-LOCK.md` = runtime re-sync and live-lock guardrails
 - `PARKING-LOT-GUIDE.md` = Parking Lot behavior
 - `patch-prompt-style.md` = Web Codex patch prompt style
 - `codex-app-style.md` = desktop/local prompt style
@@ -35,58 +36,15 @@ Changes shipped app behavior, UI, runtime code, boot flow, app-loaded assets, or
 ### Project-files / docs / workflow patch
 Changes instructions, templates, helper docs, workflow files, or project support files without changing shipped runtime app behavior.
 
-## Earned patch sub-types
-`AGENTS.md` now carries the lightweight earned patch subtype guidance.
+## Refresh meaning
+In this workflow-doc set, **Refresh** means project-state re-sync of docs/instructions.
 
-Use `AGENTS.md` as the source of truth for:
-- standard runtime patch
-- runtime correction/hotfix patch
-- repo/workflow support patch
+Refresh does **not** mean automatic runtime re-check or forced live repo/runtime operations.
 
-Do not treat this file as a second rule source.
-
-## Important output reminders
-For runtime-facing app patches:
-- always include **Goal**
-- always include **Now → Change → Better**
-- include **Repro** when there is a bug, regression, or visible trust seam
-- include **Done when** and **Not in this patch**
-- always list **Files edited** before the **Codex Task Prompt**
-- always output the **Codex Task Prompt** in its own clean copy/paste block
-- always include a **Repo connection recommendation**
-- end with **Commit message**, **Changelog**, and **Rollback rope**
-
-## Important version rule
-Only **runtime-facing app patches** require a build/version bump +1.
-
-Project-files / docs / workflow patches do **not** require a runtime version bump.
-
-## Quick command examples
-Valid shorthand includes:
-- `Pull 22`
-- `Do 8`
-- `Recommend next`
-- `Desktop 5`
-
-Interpret the number from the user’s current working Parking Lot.
-
-## Safety reminders
-Do not casually mix normal UI work with:
-- service worker changes
-- cache logic
-- storage/schema
-- migrations
-- install/update flow changes
-
-Keep risky work isolated.
-
-## Clean removal reminder
-“Clean removal” means:
-- remove UI
-- remove handlers
-- remove dead code
-- remove layout gaps
-- preserve behavior elsewhere
+## Important reminders
+- Keep helper docs subordinate and non-competing.
+- Keep runtime live-lock guidance in `RUNTIME-PULL-LOCK.md`.
+- Keep `PROJECT-INSTRUCTION-BLOCK.md` as wrapper/adaptation text, not as a second law file.
 
 ## Final reminder
 If there is a conflict, `AGENTS.md` wins.
