@@ -586,22 +586,46 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   box-shadow:0 12px 28px rgba(0,0,0,.18);
 }
 .homeScreenShell .homeLastTripShell{
-  padding:0;
-  border:none;
-  background:none;
-  box-shadow:none;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(126,200,255,.24);
+  background:linear-gradient(180deg, rgba(20,29,47,.58) 0%, rgba(10,15,24,.4) 100%);
+  box-shadow:0 10px 24px rgba(0,0,0,.16);
   min-width:0;
 }
 .homeScreenShell .homeLastTripFallback{
   margin-top:0;
 }
 .homeLastTripCardWrap{
-  margin-top:0;
+  margin-top:10px;
   min-width:0;
 }
 .homeLastTripHeader{
-  margin:0 0 8px;
-  padding-inline:2px;
+  margin:0;
+  padding-inline:0;
+}
+.homeLastTripHeaderRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.homeLastTripRangePill{
+  font-size:11px;
+  line-height:1.2;
+  letter-spacing:.04em;
+  color:var(--text-muted-strong);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;
+  padding:4px 8px;
+  background:rgba(8,12,20,.36);
+  white-space:nowrap;
+}
+.homeLastTripContext{
+  margin-top:6px;
+  color:var(--text-muted);
+  font-size:12px;
+  line-height:1.35;
 }
 .kpiGroupLabel{
   margin:var(--card-title-gap) 0 var(--card-body-gap);
