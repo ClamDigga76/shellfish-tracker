@@ -3,16 +3,16 @@ import { createReportsHighlightsSeam } from "./reports_highlights_v5.js";
 import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.js";
 
 const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
-  fairWindowLabel: "Visible Home months",
+  fairWindowLabel: "Visible Home month view",
   compareModel: "home-full-month",
-  compareModelLabel: "Month comparison",
-  supportLabel: "Visible Home months",
+  compareModelLabel: "Month view",
+  supportLabel: "Visible Home month view",
   support: "Using the latest two visible Home months.",
   explanation: "",
-  missingReason: "Need at least two visible months in this Home range for month-to-month detail.",
+  missingReason: "Add one more visible month to unlock month-to-month detail.",
   missingSuppressionCode: "missing-home-months",
-  missingExplanation: "Add another visible month to compare month to month in Home.",
-  metricExplanation: (label)=> `${label} uses the same visible Home month comparison as the chart and values.`
+  missingExplanation: "Show one more month in Home, then this comparison will appear.",
+  metricExplanation: (label)=> `${label} uses the same month pair shown in the chart and values.`
 });
 
 function buildHomeMetricDetailFoundation({ monthRows }){
@@ -127,7 +127,7 @@ function buildHomeMetricPayloads(period){
       previousValue: previous.ppl,
       period,
       suppressed: !(current.lbs > 0 && previous.lbs > 0),
-      reason: "Need pounds in both visible Home months to compare average $/lb."
+      reason: "Add pounds in both visible Home months to compare average $/lb."
     })
   };
 }
@@ -170,7 +170,7 @@ function buildMetricDetailPrimaryBasisMap({ period, metrics, detailCharts, sourc
   const safePeriod = period && typeof period === "object" ? period : {};
   const safeMetrics = metrics && typeof metrics === "object" ? metrics : {};
   const safeCharts = detailCharts && typeof detailCharts === "object" ? detailCharts : {};
-  const defaultBasisLabel = String(safePeriod.supportLabel || safePeriod.support || safePeriod.fairWindowLabel || (source === "home" ? "Visible Home months" : "Comparable date window"));
+  const defaultBasisLabel = String(safePeriod.supportLabel || safePeriod.support || safePeriod.fairWindowLabel || (source === "home" ? "Visible Home month view" : "Matched date range"));
   const currentLabel = String(safePeriod.currentLabel || "Current");
   const previousLabel = String(safePeriod.previousLabel || "Previous");
 
@@ -207,7 +207,7 @@ function buildHomeDetailCharts({ monthRows, period }){
   const amountTrendChart = {
     chartType: "time-series",
     metricKey: "amount",
-    basisLabel: "Visible Home months",
+    basisLabel: "Visible Home month view",
     labels: safeMonths.map((row)=> String(row?.label || row?.monthKey || "")),
     values: safeMonths.map((row)=> Number(row?.amt) || 0)
   };
@@ -224,7 +224,7 @@ function buildHomeCompareBarChart({ labels, metricKey, currentValue, previousVal
   return {
     chartType: "compare-bars",
     metricKey,
-    basisLabel: String(labels?.length ? labels.join(" vs ") : "Visible Home months"),
+    basisLabel: String(labels?.length ? labels.join(" vs ") : "Visible Home month view"),
     labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Current month", "Previous month"],
     values: [Number(currentValue) || 0, Number(previousValue) || 0]
   };
@@ -471,8 +471,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const chip = (key,label) => `<button class="chip segBtn ${fMode===key?'on is-selected':''}" data-rf="${key}" type="button">${label}</button>`;
   const REPORTS_SECTION_ITEMS = [
     { key: "insights", label: "Insights", intro: "Range insights and highlights for this active filter." },
-    { key: "charts", label: "Charts", intro: "Trend charts for a quick visual scan of this same range." },
-    { key: "seasonality", label: "Seasonality", intro: "See repeat timing across months and matching date windows." },
+    { key: "charts", label: "Charts", intro: "Trend charts for a quick visual scan of this range." },
+    { key: "seasonality", label: "Seasonality", intro: "See repeat timing across months and matched dates." },
     { key: "records", label: "Records", intro: "Jump straight to high and low trip records for this range." },
     { key: "detail", label: "Detail", intro: "Dealer, area, and monthly summary rows for this range." }
   ];
@@ -565,7 +565,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       ? ""
       : (beginnerEmpty
         ? '<div class="emptyStateFollowup">Next best step: save your first trip.</div>'
-        : '<div class="emptyStateFollowup">Tip: switch to All Time for your widest baseline.</div>');
+        : '<div class="emptyStateFollowup">Tip: switch to All Time for your widest view.</div>');
     return `
       <div class="emptyState ${beginnerEmpty ? "emptyStateBeginner" : ""}">
         <div class="emptyStateTitle">${title}</div>
@@ -974,12 +974,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const sameWindow = seasonalityFoundation.sameWindow || {};
     const bestWindowInsight = seasonalityFoundation.bestWindowInsight || {};
     const sameWindowBody = sameWindow.suppressed
-      ? `<div class="muted small">${escapeHtml(sameWindow.reason || "This year-over-year card unlocks after more history builds.")}</div>`
+      ? `<div class="muted small">${escapeHtml(sameWindow.reason || "This year-over-year card appears after more history builds.")}</div>`
       : `
         <div class="reportsSeasonalityValue money">${escapeHtml(formatSeasonalityMetric("amount", sameWindow.current.amount))}</div>
         <div class="reportsSeasonalitySub">${escapeHtml(sameWindow.label || "")}</div>
         <div class="reportsMetricCompare tone-${escapeHtml(sameWindow.tone === "up" ? "up" : (sameWindow.tone === "down" ? "down" : "steady"))}">
-          <div class="reportsMetricCompareText">${escapeHtml(sameWindow.supportStrong ? "This year is ahead for the same part of the month." : "This same part-of-month read is live, but it is still a light read.")}</div>
+          <div class="reportsMetricCompareText">${escapeHtml(sameWindow.supportStrong ? "This year is ahead for the same part of the month." : "This same part-of-month view is available, but still early.")}</div>
           <div class="reportsMetricCompareRows">
             <div><span>${escapeHtml(String(sameWindow.current?.label || sameWindow.currentYear || "Current year"))}</span><b class="money">${escapeHtml(formatSeasonalityMetric("amount", sameWindow.current.amount))}</b></div>
             <div><span>${escapeHtml(String(sameWindow.previous?.label || sameWindow.priorYear || "Prior year"))}</span><b class="money">${escapeHtml(formatSeasonalityMetric("amount", sameWindow.previous.amount))}</b></div>
@@ -988,7 +988,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           </div>
         </div>`;
     const bestWindowBody = bestWindowInsight.suppressed
-      ? `<div class="muted small">${escapeHtml(bestWindowInsight.reason || "Best seasonal window unlocks after more repeat history builds.")}</div>`
+      ? `<div class="muted small">${escapeHtml(bestWindowInsight.reason || "Best seasonal window appears after more repeat history builds.")}</div>`
       : `
         <div class="reportsSeasonalityEyebrow">${escapeHtml(bestWindowInsight.metricLabel || "Best month-of-year by average amount")}</div>
         <div class="reportsSeasonalityValue money">${escapeHtml(bestWindowInsight.monthLabel || "")}</div>
@@ -1027,7 +1027,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       : "";
     return reportsSection({
       title: "Seasonality",
-      intro: "Season-aware reads use exact dates across matching years, while the first card keeps the year-over-year date window clear.",
+      intro: "Seasonality uses matched dates across years, while the first card keeps the year-over-year view clear.",
       body: `<div class="reportsSeasonalityGrid">
         <div class="card reportsSeasonalityCard">
           <div class="reportsSeasonalityEyebrow">Same part of the month</div>
@@ -1049,7 +1049,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderChartsBlock = ()=> reportsSection({
     title: "Charts",
-    intro: "Quick mobile-read charts for trend scanning in this same active range.",
+    intro: "Quick mobile-read charts for trend scanning in this active range.",
     body: `<div class="reportsChartsStack">${renderChartsSection()}</div>`,
     extraClass: "reportsSection--charts"
   });
@@ -1069,7 +1069,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const buildMetricCompareSummary = (metricKey, payload)=>{
     if(compareFoundation.period?.suppressed || !payload || payload.suppressed){
-      const reason = payload?.reason || compareFoundation.period?.reason || "Comparison appears automatically once both periods have enough trips.";
+      const reason = payload?.reason || compareFoundation.period?.reason || "This comparison appears once both periods have enough trips.";
       return {
         tone: "steady",
         text: reason,
@@ -1117,19 +1117,19 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         return `${isHomeMetricDetail ? "Trip count held close" : `${currentLabel} matched ${previousLabel} on trip count`}, with pounds per trip ${productivityTone === "up" ? "improving" : (productivityTone === "down" ? "slipping" : "holding steady")}${poundsPerDayTone === "steady" ? "." : ` and pounds per fishing day ${poundsPerDayTone === "up" ? "improving" : "slipping"}.`}`;
       },
       pounds: ()=> {
-        if(tone === "up") return `${homePrefix}${isHomeMetricDetail ? "Pounds rose." : `landed more pounds than ${previousLabel} in the same date window.`} ${tripsPayload?.compareTone === "up" ? "More trips helped drive the gain." : (productivityTone === "up" ? "The gain came from stronger pounds per trip." : "Trip count stayed close while pounds climbed.")} ${poundsPerDayTone === "up" ? "Pounds per fishing day improved too." : ""}`.trim();
-        if(tone === "down") return `${homePrefix}${isHomeMetricDetail ? "Pounds fell." : `landed fewer pounds than ${previousLabel} in the same date window.`} ${tripsPayload?.compareTone === "down" ? "Fewer trips were part of the drop." : (productivityTone === "down" ? "Average pounds per trip also declined." : "Trip count stayed close while pounds fell.")} ${poundsPerDayTone === "down" ? "Pounds per fishing day also declined." : ""}`.trim();
+        if(tone === "up") return `${homePrefix}${isHomeMetricDetail ? "Pounds rose." : `landed more pounds than ${previousLabel} in this matched range.`} ${tripsPayload?.compareTone === "up" ? "More trips helped drive the gain." : (productivityTone === "up" ? "The gain came from stronger pounds per trip." : "Trip count stayed close while pounds climbed.")} ${poundsPerDayTone === "up" ? "Pounds per fishing day improved too." : ""}`.trim();
+        if(tone === "down") return `${homePrefix}${isHomeMetricDetail ? "Pounds fell." : `landed fewer pounds than ${previousLabel} in this matched range.`} ${tripsPayload?.compareTone === "down" ? "Fewer trips were part of the drop." : (productivityTone === "down" ? "Average pounds per trip also declined." : "Trip count stayed close while pounds fell.")} ${poundsPerDayTone === "down" ? "Pounds per fishing day also declined." : ""}`.trim();
         return `${isHomeMetricDetail ? "Pounds held close" : `${currentLabel} held close to ${previousLabel} on pounds`}, with ${productivityTone === "up" ? "better" : (productivityTone === "down" ? "softer" : "steady")} pounds per trip${poundsPerDayTone === "steady" ? "." : ` and pounds per fishing day ${poundsPerDayTone === "up" ? "up" : "down"}.`}`;
       },
       amount: ()=> {
-        if(tone === "up") return `${homePrefix}${isHomeMetricDetail ? "Amount rose." : `earned more than ${previousLabel} in the same date window.`} ${poundsPayload?.compareTone === "up" && pplPayload?.compareTone === "up" ? "Both pounds and $/lb moved up." : (poundsPayload?.compareTone === "up" ? "Heavier pounds carried most of the gain." : (pplPayload?.compareTone === "up" ? "Stronger $/lb did most of the lifting." : "Volume and rate both stayed fairly close."))} ${amountPerTripTone === "up" ? "Amount per trip improved." : ""} ${amountPerDayTone === "up" ? "Amount per fishing day improved too." : ""}`.trim();
-        if(tone === "down") return `${homePrefix}${isHomeMetricDetail ? "Amount fell." : `earned less than ${previousLabel} in the same date window.`} ${poundsPayload?.compareTone === "down" && pplPayload?.compareTone === "down" ? "Lighter pounds and softer $/lb both contributed." : (poundsPayload?.compareTone === "down" ? "The drop came mostly from lighter pounds." : (pplPayload?.compareTone === "down" ? "Softer $/lb did most of the damage." : "Volume and rate both stayed fairly close."))} ${amountPerTripTone === "down" ? "Amount per trip also softened." : ""} ${amountPerDayTone === "down" ? "Amount per fishing day softened too." : ""}`.trim();
-        return `${isHomeMetricDetail ? "Amount held close." : `${currentLabel} stayed close to ${previousLabel} on amount in the same date window,`} ${isHomeMetricDetail ? `Pounds were ${poundsPayload?.compareTone === "up" ? "up" : (poundsPayload?.compareTone === "down" ? "down" : "steady")} and $/lb was ${pplPayload?.compareTone === "up" ? "up" : (pplPayload?.compareTone === "down" ? "down" : "steady")}.` : `while pounds were ${poundsPayload?.compareTone === "up" ? "up" : (poundsPayload?.compareTone === "down" ? "down" : "steady")} and $/lb was ${pplPayload?.compareTone === "up" ? "up" : (pplPayload?.compareTone === "down" ? "down" : "steady")}.`} ${amountPerTripTone === "steady" ? "Amount per trip stayed close." : `Amount per trip moved ${amountPerTripTone}.`} ${amountPerDayTone === "steady" ? "Amount per fishing day stayed close." : `Amount per fishing day moved ${amountPerDayTone}.`}`.trim();
+        if(tone === "up") return `${homePrefix}${isHomeMetricDetail ? "Amount rose." : `earned more than ${previousLabel} in this matched range.`} ${poundsPayload?.compareTone === "up" && pplPayload?.compareTone === "up" ? "Both pounds and $/lb moved up." : (poundsPayload?.compareTone === "up" ? "Heavier pounds carried most of the gain." : (pplPayload?.compareTone === "up" ? "Stronger $/lb did most of the lifting." : "Volume and rate both stayed fairly close."))} ${amountPerTripTone === "up" ? "Amount per trip improved." : ""} ${amountPerDayTone === "up" ? "Amount per fishing day improved too." : ""}`.trim();
+        if(tone === "down") return `${homePrefix}${isHomeMetricDetail ? "Amount fell." : `earned less than ${previousLabel} in this matched range.`} ${poundsPayload?.compareTone === "down" && pplPayload?.compareTone === "down" ? "Lighter pounds and softer $/lb both contributed." : (poundsPayload?.compareTone === "down" ? "The drop came mostly from lighter pounds." : (pplPayload?.compareTone === "down" ? "Softer $/lb did most of the damage." : "Volume and rate both stayed fairly close."))} ${amountPerTripTone === "down" ? "Amount per trip also softened." : ""} ${amountPerDayTone === "down" ? "Amount per fishing day softened too." : ""}`.trim();
+        return `${isHomeMetricDetail ? "Amount held close." : `${currentLabel} stayed close to ${previousLabel} on amount in this matched range,`} ${isHomeMetricDetail ? `Pounds were ${poundsPayload?.compareTone === "up" ? "up" : (poundsPayload?.compareTone === "down" ? "down" : "steady")} and $/lb was ${pplPayload?.compareTone === "up" ? "up" : (pplPayload?.compareTone === "down" ? "down" : "steady")}.` : `while pounds were ${poundsPayload?.compareTone === "up" ? "up" : (poundsPayload?.compareTone === "down" ? "down" : "steady")} and $/lb was ${pplPayload?.compareTone === "up" ? "up" : (pplPayload?.compareTone === "down" ? "down" : "steady")}.`} ${amountPerTripTone === "steady" ? "Amount per trip stayed close." : `Amount per trip moved ${amountPerTripTone}.`} ${amountPerDayTone === "steady" ? "Amount per fishing day stayed close." : `Amount per fishing day moved ${amountPerDayTone}.`}`.trim();
       },
       ppl: ()=> {
         if(tone === "up") return `${isHomeMetricDetail ? "Average $/lb improved" : `${currentLabel} improved average $/lb over ${previousLabel}`}${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "down" ? "That happened even with lighter pounds." : (isHomeMetricDetail ? "Pricing strengthened." : "Pricing strengthened versus the prior period.")}`;
         if(tone === "down") return `${isHomeMetricDetail ? "Average $/lb softened" : `${currentLabel} came in below ${previousLabel} on average $/lb`}${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "up" ? "Heavier pounds did not fully offset the softer rate." : (isHomeMetricDetail ? "Pricing softened." : "Pricing softened versus the prior period.")}`;
-        return `${isHomeMetricDetail ? "Average $/lb held close." : `${currentLabel} held close to ${previousLabel} on average $/lb in the same date window,`} ${isHomeMetricDetail ? `Amount was ${amountPayload?.compareTone === "up" ? "still up" : (amountPayload?.compareTone === "down" ? "still down" : "also holding steady")}.` : `with amount ${amountPayload?.compareTone === "up" ? "still up" : (amountPayload?.compareTone === "down" ? "still down" : "also holding steady")}.`}`;
+        return `${isHomeMetricDetail ? "Average $/lb held close." : `${currentLabel} held close to ${previousLabel} on average $/lb in this matched range,`} ${isHomeMetricDetail ? `Amount was ${amountPayload?.compareTone === "up" ? "still up" : (amountPayload?.compareTone === "down" ? "still down" : "also holding steady")}.` : `with amount ${amountPayload?.compareTone === "up" ? "still up" : (amountPayload?.compareTone === "down" ? "still down" : "also holding steady")}.`}`;
       }
     };
     const summaryText = (summaryBuilders[metricKey] || summaryBuilders.amount)();
@@ -1156,7 +1156,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const compareContractLabel = compareFoundation.period?.compareModelLabel || "Comparison";
     const compareContractBasis = compareFoundation.period?.currentLabel && compareFoundation.period?.previousLabel
       ? `${compareFoundation.period.currentLabel} vs ${compareFoundation.period.previousLabel}`
-      : (meta.primaryBasis?.basisLabel || compareFoundation.period?.supportLabel || compareFoundation.period?.support || compareFoundation.period?.fairWindowLabel || "Comparable date window");
+      : (meta.primaryBasis?.basisLabel || compareFoundation.period?.supportLabel || compareFoundation.period?.support || compareFoundation.period?.fairWindowLabel || "Matched date range");
     const compareContractText = (!isHomeMetricDetail || compareFoundation.period?.suppressed || compareSummary.tone === "steady")
       ? (compareFoundation.period?.explanation || "")
       : "";
@@ -1172,7 +1172,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         <div class="${detailHeroWrapClass}">
           <div class="${detailHeroLabelClass}">${escapeHtml(isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
           <div class="${detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
-          <div class="${detailChartContextClass}">Compared period • ${escapeHtml(compareContractBasis)}</div>
+          <div class="${detailChartContextClass}">Compared range • ${escapeHtml(compareContractBasis)}</div>
         </div>
 
         <div class="${detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
@@ -1223,58 +1223,58 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         title: "Trips breakdown",
         homeTitle: "Trips",
         eyebrow: "Metric breakdown",
-        heroLabel: "Trips in current comparison period",
+        heroLabel: "Trips in current range",
         homeHeroLabel: "Trips in latest visible Home month",
         heroValue: formatHeroFromPrimaryBasis("trips", primaryBasis),
         heroClass: "trips",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Trips for this comparison",
+        chartTitle: "Trips for this range",
         homeChartTitle: "Trips",
-        chartContext: primaryChart?.basisLabel || "Trips within this same date window",
+        chartContext: primaryChart?.basisLabel || "Trips in this matched date range",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_trips",
-        insight: "Use this view to compare the current period with the earlier one using the same date window.",
+        insight: "Use this view to compare the current range with the earlier matched range.",
         homeInsight: "Use the compare card and chart together for the cleanest trip-count read."
       },
       pounds: {
         title: "Pounds breakdown",
         homeTitle: "Pounds",
         eyebrow: "Metric breakdown",
-        heroLabel: "Pounds in current comparison period",
+        heroLabel: "Pounds in current range",
         homeHeroLabel: "Pounds in latest visible Home month",
         heroValue: formatHeroFromPrimaryBasis("pounds", primaryBasis),
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Pounds for this comparison",
+        chartTitle: "Pounds for this range",
         homeChartTitle: "Pounds",
-        chartContext: primaryChart?.basisLabel || "Pounds within this same date window",
+        chartContext: primaryChart?.basisLabel || "Pounds in this matched date range",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_lbs",
-        insight: "Use this view to compare pounds in one date window so the headline, compare rows, and chart stay aligned.",
+        insight: "Use this view to compare pounds in one matched range so the headline, compare rows, and chart stay aligned.",
         homeInsight: "Use the compare card and chart together to judge pound movement."
       },
       amount: {
         title: "Amount breakdown",
         homeTitle: "Amount",
         eyebrow: "Metric breakdown",
-        heroLabel: "Amount in current comparison period",
+        heroLabel: "Amount in current range",
         homeHeroLabel: "Amount in latest visible Home month",
         heroValue: formatHeroFromPrimaryBasis("amount", primaryBasis),
         heroClass: "money",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Amount for this comparison",
+        chartTitle: "Amount for this range",
         homeChartTitle: "Amount",
-        chartContext: primaryChart?.basisLabel || "Amount within this same date window",
+        chartContext: primaryChart?.basisLabel || "Amount in this matched date range",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_amount_detail",
         secondaryCharts: [
           detailCharts.amountTrend ? {
             title: "Amount trend across the range",
             context: isHomeMetricDetail
-              ? "Extra context • visible Home months in this active filter"
+              ? "Extra context • visible Home months in this filter"
               : "Extra context • full months in this active Reports range",
             canvasId: "c_amount_trend",
             chartModel: detailCharts.amountTrend,
@@ -1286,25 +1286,25 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
             canvasId: "c_dealer"
           }
         ],
-        insight: "Read the main amount comparison first, then use the trend and dealer mix for added context.",
+        insight: "Read the main amount view first, then use the trend and dealer mix for added context.",
         homeInsight: "Read the main comparison first, then use trend and dealer mix for added context."
       },
       ppl: {
         title: "$/lb breakdown",
         homeTitle: "Avg $/lb",
         eyebrow: "Metric breakdown",
-        heroLabel: "Average $/lb in current comparison period",
+        heroLabel: "Average $/lb in current range",
         homeHeroLabel: "Average $/lb in latest visible Home month",
         heroValue: formatHeroFromPrimaryBasis("ppl", primaryBasis),
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "$/lb for this comparison",
+        chartTitle: "$/lb for this range",
         homeChartTitle: "Avg $/lb",
-        chartContext: primaryChart?.basisLabel || "$/lb within this same date window",
+        chartContext: primaryChart?.basisLabel || "$/lb in this matched date range",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_ppl",
-        insight: "Use this view to compare $/lb in one date window without mixing in full-range averages.",
+        insight: "Use this view to compare $/lb in one matched range without mixing in full-range averages.",
         homeInsight: "Use the compare card and chart together to judge pricing."
       }
     };
