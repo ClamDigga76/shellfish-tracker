@@ -49,11 +49,12 @@
 .reportsTopShell--detail{padding-top:0}
 .reportsTopHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:0}
 .reportsTopLabel{font-size:11px;font-weight:850;letter-spacing:.11em;text-transform:uppercase;color:#9ea8bc}
+.reportsShellRow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.reportsShellRow--topline{margin-bottom:8px}
 .reportsTimeframeShell{margin-top:14px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03)}
-.reportsTimeframeControl{margin-top:10px;margin-bottom:0}
-.repCtlRow{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
-.repAdvToggle{min-width:164px}
-.reportsAdvancedShell{margin-top:10px}
+.reportsTimeframeControl{margin-top:0;margin-bottom:0}
+.repAdvToggle{min-width:0;padding-inline:12px}
+.reportsAdvancedShell{margin-top:8px}
 .reportsAdvancedShell .sep{margin-top:0}
 .reportsHighlightsCard{padding:2px 0 0;background:transparent;border:0;border-radius:0;box-shadow:none}
 .reportsHighlightsHdr{font-size:11px;font-weight:860;letter-spacing:.14em;text-transform:uppercase;color:#9da3b1;margin-bottom:12px}
@@ -192,14 +193,15 @@
 
 .reportsNavShell{margin-top:14px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03)}
 .reportsNavLabel{font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:#9ea8bc}
-.reportsSectionSwitch{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:10px 1px 2px}
+.reportsSectionSwitch{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 1px 2px}
 .reportsSectionSwitch::-webkit-scrollbar{display:none}
 .reportsSectionChip{flex:0 0 auto;min-width:max-content;min-height:40px;padding:9px 13px}
 .reportsSectionChip small{display:block;margin-top:2px;font-size:10px;line-height:1.15;font-weight:760;letter-spacing:.05em;text-transform:uppercase;opacity:.78}
-.reportsSectionIntro{margin-top:9px;font-size:12px;line-height:1.4;color:var(--text-muted-strong);font-weight:650}
-.reportsSectionMap{margin-top:8px;display:grid;gap:4px;font-size:11px;line-height:1.35;color:#aab2c3}
+.reportsSectionIntro{margin-top:8px;font-size:12px;line-height:1.4;color:var(--text-muted-strong);font-weight:650}
+.reportsSectionMap{margin-top:6px;display:grid;gap:2px;font-size:11px;line-height:1.35;color:#aab2c3}
 .reportsSectionMap b{color:#dee5f5}
-.reportsSectionMapActive{margin-top:2px}
+.reportsSectionMapActive{font-size:11px;line-height:1.35;color:#d5dded;font-weight:740}
+.reportsSectionMapActive b{color:#f3f7ff}
 .reportsSection{margin-bottom:var(--card-stack-gap)}
 .reportsSectionHead{margin:0 0 10px}
 .reportsSectionHead h2{margin:0;font-size:17px;line-height:1.2;letter-spacing:.2px}
@@ -218,11 +220,11 @@
   .reportsPercentEmphasis{padding:.07em .4em;font-size:1.04em}
   .reportsTopHeader{align-items:flex-start}
   .reportsTimeframeShell,.reportsNavShell{margin-top:12px;padding:11px 10px}
-  .reportsSectionSwitch{gap:7px;padding-top:9px}
+  .reportsShellRow--topline{margin-bottom:7px}
+  .reportsSectionSwitch{gap:7px;padding-top:7px}
   .reportsSectionChip{min-height:38px;padding:8px 12px}
-  .repCtlRow{margin-top:10px}
   .repAdvToggle{width:100%}
-  .reportsAdvancedShell{margin-top:9px}
+  .reportsAdvancedShell{margin-top:8px}
   .reportsMetricCompareText .reportsPercentEmphasis,.homeMetricCompareText .reportsPercentEmphasis{font-size:1.08em}
   .reportsTopShell{padding-bottom:16px}
   .reportsChartsStack,.reportsTablesStack{gap:14px}
