@@ -1,4 +1,4 @@
-# AGENTS.md — Bank the Catch / VibeCoder 3.5
+# AGENTS.md — Bank the Catch / VibeCoder 4.0
 
 This project uses a one-change-at-a-time workflow for **Bank the Catch** (Shellfish Tracker PWA).
 
@@ -8,7 +8,7 @@ Ship small, safe, reviewable patches with fewer regressions.
 ## Core rule
 This file is the main operational source of truth for normal patch work in this project.
 
-Use helper docs when useful, but do not depend on them to understand the default workflow.
+Helper docs are support tools only. They must not compete with or override this file.
 
 ## Instruction priority
 If instructions conflict, use this order:
@@ -33,6 +33,7 @@ These files support the workflow, but do not outrank this file:
 
 - `START-HERE.md`
 - `PROJECT-INSTRUCTION-BLOCK.md`
+- `RUNTIME-PULL-LOCK.md`
 - `PARKING-LOT-GUIDE.md`
 - `patch-prompt-style.md`
 - `codex-app-style.md`
@@ -81,6 +82,7 @@ Examples:
 - `AGENTS.md`
 - `START-HERE.md`
 - `PROJECT-INSTRUCTION-BLOCK.md`
+- `RUNTIME-PULL-LOCK.md`
 - `PARKING-LOT-GUIDE.md`
 - templates
 - instruction docs
@@ -121,30 +123,6 @@ Use for smoke-track, repo-support, hotspot notes, and workflow/doc guidance upda
 - Keep risky work isolated.
 - Preserve current behavior unless the requested change is behavioral.
 
-## Safe bundling rules
-Bundling is allowed only when all are true:
-
-- same screen or tightly related behavior
-- low regression risk
-- small/local diff
-- no storage/schema/service-worker expansion
-- no hidden second feature
-
-Do not casually bundle:
-- service worker work
-- caching work
-- install/update flow work
-- storage/schema work
-- migrations
-- version-system fixes beyond required alignment
-- refactors mixed with UI changes unless explicitly requested
-
-## User-controlled Git flow
-- Do not auto-commit.
-- Do not auto-create a PR.
-- The user clicks **Commit** manually.
-- The user clicks **Create PR** manually.
-
 ## Safety locks
 Do not modify these unless the user explicitly asks:
 
@@ -163,32 +141,10 @@ Only **runtime-facing app patches** require a build/version bump +1.
 
 Project-files / docs / workflow patches do **not** require a runtime build/version bump.
 
-## Version chain guard
-Bank the Catch uses a locked version chain.
+## Runtime live-lock placement
+Runtime re-sync and live-lock anti-drift guardrails belong in `RUNTIME-PULL-LOCK.md`.
 
-For any required runtime build/version bump, treat these as one aligned system:
-
-- `index.html` bootstrap/script query version
-- bootstrap/runtime version source
-- app/runtime version check
-- service worker version
-- cache name/version
-- Settings/build display version
-
-Do not update only one version reference.
-
-Do not ship a runtime patch if version values can drift from one another.
-
-Preferred rule:
-- there should be one shared source of truth for app version
-- all other version consumers should read from that source
-
-## Version exception to safety lock
-A normal patch must not change service worker/caching behavior unless explicitly requested.
-
-Exception:
-- if a runtime patch requires a build/version bump, version-alignment edits are allowed only as needed to keep bootstrap, runtime, service worker, cache key, and Settings version aligned
-- this does not allow unrelated service worker or cache logic changes
+Keep this file focused on baseline operating law.
 
 ## Clean removal definition
 “Clean removal” means:
@@ -224,32 +180,6 @@ For normal runtime-facing app patch work, output in this order:
 9. Commit message
 10. Changelog
 11. Rollback rope: `If bad: revert the PR.`
-
-Rules:
-- For runtime-facing app patches, always include **Now → Change → Better**.
-- Use **Repro** when it helps anchor a visible problem or regression.
-- Make **Done when** concrete and easy to verify.
-- Make **Not in this patch** explicit so scope does not drift.
-- Always list **Files edited** before the **Codex Task Prompt**.
-- **Files edited** may use sublabels such as **Most likely**, **Possibly**, and **Only if needed** when that makes the patch slice clearer.
-- Always output the **Codex Task Prompt** in its own clean copy/paste block.
-- The **Codex Task Prompt** should usually include: Goal, live repo finding when relevant, required behavior, non-goals, implementation guidance, likely files, validation, required checks, and report-back requirements.
-- Commit message should be short and action-oriented. It does not need its own copy/paste block unless the user asks.
-
-## Repo connection recommendation rule
-Always include a repo connection recommendation:
-
-- when a runtime patch slice is pulled
-- when recommending the next patch
-
-Use this format:
-
-- Use GitHub/repo connection: Yes/No
-- Why: <one short reason>
-
-Recommend **Yes** when current repo state, recent patch history, version-chain state, or exact file context would materially improve the patch.
-
-Recommend **No** when the patch is simple, isolated, and already fully specified.
 
 ## Repo-check rules
 For runtime-facing app patches, require:
