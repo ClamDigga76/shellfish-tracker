@@ -151,8 +151,7 @@
   background:linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(228,237,255,.92) 100%);
   box-shadow:inset 0 0 0 1px rgba(47,109,246,.14), inset 0 1px 0 rgba(255,255,255,.9), 0 8px 18px rgba(47,109,246,.12);
 }
-:root[data-theme="light"] .tripsBrowseCard,
-:root[data-theme="light"] .reportsRecordTripCard,
+:root[data-theme="light"] .tripCardStandard,
 :root[data-theme="light"] .emptyState,
 :root[data-theme="light"] .settingsDeletedItem,
 :root[data-theme="light"] .restoreResultMetric,
@@ -372,37 +371,27 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripsFiltersTitle{font-size:17px;font-weight:860;line-height:1.2;margin-top:2px}
 .tripsBrowseList{display:grid;gap:var(--card-stack-gap)}
 .tripsBrowseList .trip + .trip{margin-top:0}
-.tripsBrowseCard,
-.reportsRecordTripCard{
+.tripCardStandard{
   margin:0;
   padding:16px 16px;
   border:1px solid var(--border);
   border-radius:19px;
   background:linear-gradient(180deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.035) 100%);
   box-shadow:0 12px 28px rgba(0,0,0,.22);
+  text-align:left;
 }
-.tripsBrowseCard .tripCardGrid,
-.reportsRecordTripCard .tripCardGrid{gap:15px}
-.tripsBrowseCard :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies),
-.reportsRecordTripCard :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies){font-size:17px;line-height:1.22}
-.tripsBrowseCard .tripCardHeadline,
-.reportsRecordTripCard .tripCardHeadline{color:var(--text-muted-strong);font-weight:700}
-.tripsBrowseCard .tripCardDate,
-.reportsRecordTripCard .tripCardDate{font-weight:840}
-.tripsBrowseCard .tripCardMain,
-.reportsRecordTripCard .tripCardMain{color:var(--text);font-weight:700}
-.tripsBrowseCard .tripCardHeadlineDealer,
-.reportsRecordTripCard .tripCardHeadlineDealer{margin-top:7px;color:var(--text)}
-.tripsBrowseCard .tripCardLowerLeft,
-.reportsRecordTripCard .tripCardLowerLeft{display:grid;gap:5px;margin-top:12px}
-.tripsBrowseCard .tripCardSpecies,
-.reportsRecordTripCard .tripCardSpecies{font-weight:760;color:var(--text)}
-.tripsBrowseCard .tripCardNotes,
-.reportsRecordTripCard .tripCardNotes{font-size:13px;line-height:1.38;color:var(--text-muted-strong)}
-.tripsBrowseCard .tripCardMetricChip,
-.reportsRecordTripCard .tripCardMetricChip{font-size:23px;padding:9px 0}
-.tripsBrowseCard .tripCardMetricChip .metricValue,
-.reportsRecordTripCard .tripCardMetricChip .metricValue{font-size:2.4em}
+.tripCardStandard.tripCardReadOnly{pointer-events:none}
+.tripCardStandard .tripCardGrid{gap:15px}
+.tripCardStandard :is(.tripCardDate,.tripCardMain,.tripCardHeadlineDealer,.tripCardSpecies){font-size:17px;line-height:1.22}
+.tripCardStandard .tripCardHeadline{color:var(--text-muted-strong);font-weight:700}
+.tripCardStandard .tripCardDate{font-weight:840}
+.tripCardStandard .tripCardMain{color:var(--text);font-weight:700}
+.tripCardStandard .tripCardHeadlineDealer{margin-top:7px;color:var(--text)}
+.tripCardStandard .tripCardLowerLeft{display:grid;gap:5px;margin-top:12px}
+.tripCardStandard .tripCardSpecies{font-weight:760;color:var(--text)}
+.tripCardStandard .tripCardNotes{font-size:13px;line-height:1.38;color:var(--text-muted-strong)}
+.tripCardStandard .tripCardMetricChip{font-size:23px;padding:9px 0}
+.tripCardStandard .tripCardMetricChip .metricValue{font-size:2.4em}
 .tripsEmptyState{padding:15px 14px}
 
 .emptyState{
@@ -602,9 +591,10 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .homeScreenShell .homeLastTripFallback{
   margin-top:0;
-  border:none;
-  background:none;
-  padding:0;
+}
+.homeLastTripCardWrap{
+  margin-top:0;
+  min-width:0;
 }
 .homeLastTripHeader{
   margin:0 0 8px;

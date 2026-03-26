@@ -640,7 +640,7 @@ function exportTrips(trips, label, startISO="", endISO=""){
   exportTripsWithLabel(trips, String(label||"ALL").toUpperCase(), startISO, endISO);
 }
 
-const { renderTripCatchCard } = createTripCardRenderHelpers({
+const { renderStandardReadOnlyTripCard, renderStandardInteractiveTripCard } = createTripCardRenderHelpers({
   formatDateDMY,
   to2,
   computePPL,
@@ -1609,7 +1609,7 @@ function renderAllTrips(){
   `;
 
   const rows = sorted.length
-    ? sorted.map(t=> renderTripCatchCard(t, { interactive:true, extraClass:"tripsBrowseCard" })).join("")
+    ? sorted.map(t=> renderStandardInteractiveTripCard(t)).join("")
     : `
       <div class="emptyState tripsEmptyState">
         <div class="emptyStateTitle">No trips in this Trips view</div>
@@ -1732,7 +1732,7 @@ const { renderHome } = createHomeDashboardRenderer({
   renderHomeMetricDetail: () => renderHomeMetricDetail(),
   getInstallSurfaceModel: () => getInstallSurfaceModel(),
   runInstallAction: () => runInstallAction(),
-  renderTripCatchCard
+  renderStandardReadOnlyTripCard
 });
 
 const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrchestrator({
@@ -1834,6 +1834,7 @@ const { renderReports, renderHomeMetricDetail } = createReportsScreenRenderer({
   to2,
   drawReportsCharts,
   computePPL,
+  renderStandardReadOnlyTripCard,
   renderApp: () => render()
 });
 

@@ -1,7 +1,6 @@
 import { createReportsAdvancedPanelSeam } from "./reports_advanced_panel_v5.js";
 import { createReportsHighlightsSeam } from "./reports_highlights_v5.js";
 import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.js";
-import { createTripCardRendererCore } from "./trip_card_renderer_core_v5.js";
 
 const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
   fairWindowLabel: "Visible Home months",
@@ -261,6 +260,7 @@ export function createReportsScreenRenderer(deps){
     formatMoney,
     to2,
     drawReportsCharts,
+    renderStandardReadOnlyTripCard,
     renderApp
   } = deps;
 
@@ -281,13 +281,6 @@ export function createReportsScreenRenderer(deps){
     escapeHtml,
     formatMoney,
     to2
-  });
-  const { resolveTripCardModel, renderTripCardHTML } = createTripCardRendererCore({
-    formatDateDMY,
-    to2,
-    computePPL: (lbs, amt)=> (Number(lbs) > 0 && Number(amt) > 0) ? (Number(amt) / Number(lbs)) : 0,
-    formatMoney,
-    escapeHtml
   });
   const renderReportsHighlightsStrip = typeof reportsHighlights?.renderHighlightsStrip === "function"
     ? reportsHighlights.renderHighlightsStrip
@@ -790,9 +783,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const compareText = hasCompare
       ? `${rawDeltaText} • ${deltaPct}% ${compareWord} vs previous record`
       : "";
-    const recordModel = resolveTripCardModel(t, {
-      metaOverride: formatDateDMY(t?.dateISO || "") || "—"
-    });
     return `
       <div class="hlStatCard">
         <div class="hlTopRow hlTopRow--stacked">
@@ -802,7 +792,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         </div>
         <div class="hlTripCardWrap">
           <div class="hlTripCardHdr">Record trip</div>
-          ${renderTripCardHTML(recordModel, { extraClass: "reportsRecordTripCard" })}
+          ${typeof renderStandardReadOnlyTripCard === "function" ? renderStandardReadOnlyTripCard(t) : ""}
         </div>
       </div>
     `;
