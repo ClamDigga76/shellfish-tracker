@@ -40,7 +40,7 @@
 .hlTrip{margin-bottom:0}
 .hlTripCardWrap{margin-top:12px}
 .hlTripCardHdr{font-size:10px;line-height:1.2;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:#9ea8bc;margin:0 0 6px 2px}
-.reportsRecordTripCard{width:100%;text-align:left;pointer-events:none}
+.hlTripCardWrap .tripCardStandard{width:100%}
 .hlDelta{max-width:100%;font-size:13px;line-height:1.4;font-weight:820;letter-spacing:.01em;color:var(--neutral);text-align:center;text-wrap:pretty}
 .hlDelta.tone-up{color:var(--good)}
 .hlDelta.tone-down{color:var(--bad)}
@@ -215,8 +215,8 @@
 
 
 /* v355 overflow guardrail pass */
-.hlTripCardWrap,.reportsRecordTripCard,.reportsHighlightsCard,.reportsHighlightItem,.chartCard,.reportsHeroCard,.reportsHeroStat,.reportsMetricDetailCard,.reportsMetricHeroWrap,.reportsMetricCompare,.homeMetricDetailCard,.homeMetricHeroWrap,.homeMetricCompare,.reportsTopShell,.reportsHighlightsEmpty,.reportsDetailHint{min-width:0;max-width:100%}
-.reportsRecordTripCard .tripCardHeadline,.reportsRecordTripCard .tripCardMain,.reportsRecordTripCard .tripCardHeadlineDealer,.reportsRecordTripCard .tripCardSpecies,.reportsRecordTripCard .tripCardNotes,.reportsHighlightHeadline,.reportsCompareRow,.chartTitle,.chartSubhead,.chartContext,.reportsHeroHeadline,.reportsHeroSub,.reportsMetricTitle,.reportsMetricContext,.reportsMetricChartContext,.reportsMetricInsight,.homeMetricTitle,.homeMetricContext,.homeMetricChartContext,.homeMetricInsight,.reportsHeroMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+.hlTripCardWrap,.reportsHighlightsCard,.reportsHighlightItem,.chartCard,.reportsHeroCard,.reportsHeroStat,.reportsMetricDetailCard,.reportsMetricHeroWrap,.reportsMetricCompare,.homeMetricDetailCard,.homeMetricHeroWrap,.homeMetricCompare,.reportsTopShell,.reportsHighlightsEmpty,.reportsDetailHint{min-width:0;max-width:100%}
+.hlTripCardWrap .tripCardHeadline,.hlTripCardWrap .tripCardMain,.hlTripCardWrap .tripCardHeadlineDealer,.hlTripCardWrap .tripCardSpecies,.hlTripCardWrap .tripCardNotes,.reportsHighlightHeadline,.reportsCompareRow,.chartTitle,.chartSubhead,.chartContext,.reportsHeroHeadline,.reportsHeroSub,.reportsMetricTitle,.reportsMetricContext,.reportsMetricChartContext,.reportsMetricInsight,.homeMetricTitle,.homeMetricContext,.homeMetricChartContext,.homeMetricInsight,.reportsHeroMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 .reportsHighlightMetricRow,.reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{min-width:0;max-width:100%}
 .reportsHighlightMetricRow{flex-wrap:wrap}
 .reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{flex-wrap:wrap}

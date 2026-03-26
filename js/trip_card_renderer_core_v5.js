@@ -30,18 +30,16 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, for
 
   function renderTripCardHTML(model, opts = {}){
     const {
-      interactive = false,
-      compact = false,
-      extraClass = ""
+      interactive = false
     } = opts;
     const tag = interactive ? "button" : "div";
     const role = interactive ? "button" : "group";
     const tab = interactive ? "0" : "-1";
     const idAttr = interactive ? ` data-id="${escapeHtml(model.id)}"` : "";
-    const compactClass = compact ? " tripCardCompact" : "";
+    const modeClass = interactive ? "tripCardInteractive" : "tripCardReadOnly";
 
     return `
-      <${tag} class="trip triprow catchCard${compactClass} ${escapeHtml(extraClass)}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
+      <${tag} class="trip triprow tripCardStandard ${modeClass}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
         <div class="tripCardGrid">
           <div>
             <div class="catchHead tripCardHeadline tripCardDate">${escapeHtml(model.dateText)}</div>
@@ -61,6 +59,7 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, for
       </${tag}>
     `;
   }
+
 
   return {
     resolveTripCardModel,

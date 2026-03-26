@@ -26,12 +26,26 @@ export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, fo
     escapeHtml
   });
 
-  function renderTripCatchCard(t, opts = {}){
+  function renderStandardReadOnlyTripCard(t, opts = {}){
     const model = resolveTripCardModel(t, opts);
-    return renderTripCardHTML(model, opts);
+    return renderTripCardHTML(model, { interactive: false });
+  }
+
+  function renderStandardInteractiveTripCard(t, opts = {}){
+    const model = resolveTripCardModel(t, opts);
+    return renderTripCardHTML(model, { interactive: true });
+  }
+
+  // Legacy alias while callers migrate to explicit shared APIs.
+  function renderTripCatchCard(t, opts = {}){
+    return opts?.interactive
+      ? renderStandardInteractiveTripCard(t, opts)
+      : renderStandardReadOnlyTripCard(t, opts);
   }
 
   return {
+    renderStandardReadOnlyTripCard,
+    renderStandardInteractiveTripCard,
     renderTripCatchCard
   };
 }
