@@ -26,19 +26,18 @@ export function createSettingsListManagement(deps){
     if(!Array.isArray(state.dealers)) state.dealers = [];
 
     const areaValues = Array.isArray(syncAreaState()) ? syncAreaState() : [];
-    const areaRows2 = areaValues.length ? areaValues.map((areaName)=>{
-      const usageCount = countTripsForArea(areaName);
-      return `
+    const areaRows2 = areaValues.length ? areaValues.map((areaName)=>`
       <div class="card" style="margin-top:10px;padding:12px">
         <div class="row" style="justify-content:space-between;align-items:center;gap:10px">
           <div style="min-width:0;flex:1">
             <div class="pill" style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(areaName)}</b></div>
-            <div class="muted small" style="margin-top:6px">${usageCount} trip(s) use this area</div>
           </div>
-          <button class="smallbtn danger" data-del-area-name="${escapeHtml(areaName)}" type="button">Delete</button>
+          <div class="row" style="gap:8px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="smallbtn" data-rename-area-name="${escapeHtml(areaName)}" type="button">Rename</button>
+            <button class="smallbtn danger" data-del-area-name="${escapeHtml(areaName)}" type="button">Delete</button>
+          </div>
         </div>
-      </div>`;
-    }).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No areas yet</div><div class="emptyStateBody">Add your first area below so New Trip choices are ready.</div></div>`;
+      </div>`).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No areas yet</div><div class="emptyStateBody">Add your first area below so New Trip choices are ready.</div></div>`;
 
     const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
@@ -68,6 +67,42 @@ export function createSettingsListManagement(deps){
 
   function getScroller(){
     return document.scrollingElement || document.documentElement || document.body;
+  }
+
+
+  function renameAreaInState(oldAreaName, nextAreaName){
+    const state = getState();
+    const oldName = String(oldAreaName || "").trim();
+    const newName = String(nextAreaName || "").trim();
+    if(!oldName || !newName) return { ok: false, reason: "invalid" };
+
+    const oldKey = normalizeKey(oldName);
+    const newKey = normalizeKey(newName);
+    if(!oldKey || !newKey) return { ok: false, reason: "invalid" };
+    if(oldKey === newKey) return { ok: false, reason: "same" };
+
+    ensureAreas();
+    const areas = Array.isArray(state.areas) ? state.areas : [];
+    const oldIndex = areas.findIndex((area)=> normalizeKey(String(area || "")) === oldKey);
+    if(oldIndex < 0) return { ok: false, reason: "missing" };
+    const duplicate = areas.some((area, idx)=> idx !== oldIndex && normalizeKey(String(area || "")) === newKey);
+    if(duplicate) return { ok: false, reason: "duplicate" };
+
+    const canonicalOldName = String(areas[oldIndex] || oldName).trim();
+    areas[oldIndex] = newName;
+
+    const trips = Array.isArray(state.trips) ? state.trips : [];
+    let updatedTrips = 0;
+    for(let i = 0; i < trips.length; i += 1){
+      const trip = trips[i];
+      const tripArea = String(trip?.area || "").trim();
+      if(!tripArea) continue;
+      if(normalizeKey(tripArea) !== oldKey) continue;
+      trips[i] = { ...trip, area: newName };
+      updatedTrips += 1;
+    }
+
+    return { ok: true, from: canonicalOldName, to: newName, updatedTrips };
   }
 
   function countTripsUsingValue(kind, rawValue){
@@ -180,6 +215,43 @@ export function createSettingsListManagement(deps){
           showToast("Dealer added");
         };
       }
+
+      (getApp()?.querySelectorAll("button[data-rename-area-name]") || []).forEach((btn)=>{
+        btn.onclick = ()=>{
+          const areaName = String(btn.getAttribute("data-rename-area-name") || "").trim();
+          if(!areaName){
+            showToast("Area rename failed");
+            return;
+          }
+          const typed = prompt(`Rename area "${areaName}" to:`, areaName);
+          if(typed == null) return;
+          const nextName = String(typed || "").trim();
+          if(!nextName){
+            showToast("Enter an area name");
+            return;
+          }
+          if(nextName.length > 40){
+            showToast("Keep it under 40 chars");
+            return;
+          }
+          const result = renameAreaInState(areaName, nextName);
+          if(!result?.ok){
+            if(result?.reason === "same"){
+              showToast("Area name is unchanged");
+              return;
+            }
+            if(result?.reason === "duplicate"){
+              showToast("That area already exists");
+              return;
+            }
+            showToast("Area rename failed");
+            return;
+          }
+          saveState();
+          refreshListMgmt("areas", true);
+          showToast(`Area renamed • Updated ${result.updatedTrips} trip(s)`);
+        };
+      });
 
       (getApp()?.querySelectorAll("button[data-del-area-name]") || []).forEach((btn)=>{
         btn.onclick = ()=>{
