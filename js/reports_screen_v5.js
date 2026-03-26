@@ -384,6 +384,24 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const hasSavedTrips = tripsAll.length > 0;
   const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
   const fMode = String(rf.mode || "YTD").toUpperCase();
+  const REPORTS_PRIMARY_FILTER_ITEMS = [
+    { key: "YTD", label: "YTD" },
+    { key: "THIS_MONTH", label: "This Month" },
+    { key: "LAST_MONTH", label: "Last Month" },
+    { key: "90D", label: "Last 3 Months" },
+    { key: "ALL", label: "All Time" },
+    { key: "ADVANCED", label: "Advanced" }
+  ];
+  const REPORTS_PRESET_MODES = REPORTS_PRIMARY_FILTER_ITEMS
+    .filter((item)=> item.key !== "ADVANCED")
+    .map((item)=> item.key);
+  const hasReportsCustomConstraints = !!parseReportDateToISO(rf.from)
+    || !!parseReportDateToISO(rf.to)
+    || !!String(rf.dealer || "").trim()
+    || !!String(rf.area || "").trim();
+  const isPresetExactMatch = REPORTS_PRESET_MODES.includes(fMode) && !hasReportsCustomConstraints;
+  const isAdvancedActive = !!rf.adv || !isPresetExactMatch;
+  const activePrimaryFilterKey = isAdvancedActive ? "ADVANCED" : fMode;
   const reportsSectionKey = String(state.reportsSection || "insights").toLowerCase();
   const reportsMetricDetail = String(state.reportsMetricDetail || "").toLowerCase();
   const reportsMetricDetailContext = state.reportsMetricDetailContext && typeof state.reportsMetricDetailContext === "object"
@@ -468,7 +486,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ? homeScope.trips
     : applyUnifiedTripFilter(tripsAll, seasonalityUnified).rows;
 
-  const chip = (key,label) => `<button class="chip segBtn ${fMode===key?'on is-selected':''}" data-rf="${key}" type="button">${label}</button>`;
+  const chip = ({ key, label })=> `<button class="chip segBtn reportsPrimaryFilterChip ${activePrimaryFilterKey===key?'on is-selected':''}" data-rf="${key}" type="button" role="tab" aria-selected="${activePrimaryFilterKey===key ? "true" : "false"}">${label}</button>`;
   const REPORTS_SECTION_ITEMS = [
     { key: "insights", label: "Insights", modeLabel: "Overview", intro: "Range insights and highlights for this active filter." },
     { key: "charts", label: "Charts", modeLabel: "Overview", intro: "Trend charts for a quick visual scan of this range." },
@@ -483,9 +501,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     <small>${item.modeLabel}</small>
   </button>`;
 
-  const advOpen = !!rf.adv;
+  const advOpen = isAdvancedActive;
   const advPanel = renderReportsAdvancedPanel({
-    reportsFilter: rf,
+    reportsFilter: { ...rf, adv: advOpen },
     dealers: state.dealers,
     areas: state.areas
   });
@@ -499,8 +517,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       ? (hasValidRange ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}` : "Set dates")
       : (fMode === "THIS_MONTH" ? "This Month"
         : (fMode === "LAST_MONTH" ? "Last Month"
-          : (fMode === "ALL" ? "All Time"
-            : "YTD")));
+          : (fMode === "90D" ? "Last 3 Months"
+            : (fMode === "ALL" ? "All Time"
+            : "YTD"))));
   const detailSurfaceClass = isHomeMetricDetail ? "homeMetricDetail" : "reportsMetricDetail";
   const detailCardClass = isHomeMetricDetail ? "homeMetricDetailCard" : "reportsMetricDetailCard";
   const detailBackClass = isHomeMetricDetail ? "homeMetricBackBtn" : "reportsMetricBackBtn";
@@ -526,14 +545,10 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
       <section class="reportsTimeframeShell" aria-label="Reports timeframe controls">
         <div class="reportsShellRow reportsShellRow--topline">
-          <div class="reportsTopLabel">Timeframe</div>
-          <button class="btn btn-ghost affordanceBtn repAdvToggle" type="button">${advOpen ? "Hide advanced filters" : "Advanced filters"}</button>
+          <div class="reportsTopLabel">Primary filter</div>
         </div>
-        <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
-          ${chip("YTD","YTD")}
-          ${chip("THIS_MONTH","This Month")}
-          ${chip("LAST_MONTH","Last Month")}
-          ${chip("ALL","All Time")}
+        <div class="segWrap timeframeUnifiedControl reportsTimeframeControl reportsPrimaryFilterBar" role="tablist" aria-label="Reports primary filter">
+          ${REPORTS_PRIMARY_FILTER_ITEMS.map((item)=> chip(item)).join("")}
         </div>
       </section>
 
@@ -598,10 +613,17 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     getApp().scrollTop = 0;
 
     // quick range buttons
-    getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
+    getApp().querySelectorAll(".chip[data-rf]").forEach((btn)=>{
       btn.onclick = ()=>{
         const key = String(btn.getAttribute("data-rf")||"YTD").toUpperCase();
+        if(key === "ADVANCED"){
+          state.reportsFilter.adv = true;
+          saveState();
+          renderReportsScreen();
+          return;
+        }
         state.reportsFilter.mode = key;
+        state.reportsFilter.adv = false;
         if(key !== "RANGE"){
           state.reportsFilter.from = "";
           state.reportsFilter.to = "";
@@ -1498,9 +1520,21 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   flushReportsAnnouncement();
 
   // range chips
-  getApp().querySelectorAll(".chip[data-rf]").forEach(btn=>{
+  getApp().querySelectorAll(".chip[data-rf]").forEach((btn)=>{
     btn.onclick = ()=>{
-      state.reportsFilter.mode = String(btn.getAttribute("data-rf")||"YTD");
+      const key = String(btn.getAttribute("data-rf")||"YTD").toUpperCase();
+      if(key === "ADVANCED"){
+        state.reportsFilter.adv = true;
+        saveState();
+        renderReportsScreen();
+        return;
+      }
+      state.reportsFilter.mode = key;
+      state.reportsFilter.adv = false;
+      if(key !== "RANGE"){
+        state.reportsFilter.from = "";
+        state.reportsFilter.to = "";
+      }
       saveState();
       renderReportsScreen();
     };
