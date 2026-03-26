@@ -382,13 +382,13 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .tripCardStandard.tripCardReadOnly{pointer-events:none}
 .tripCardStandard .tripCardGrid{gap:15px}
-.tripCardStandard .tripCardHeadline{color:var(--text-muted-strong);font-weight:700}
+.tripCardStandard .tripCardLeftStack{display:grid;gap:1px;align-content:start}
+.tripCardStandard .tripCardTextRow{margin:0}
 .tripCardStandard .tripCardDate{font-size:18px;line-height:1.18;font-weight:900;color:var(--text)}
-.tripCardStandard .tripCardMain,
-.tripCardStandard .tripCardHeadlineDealer,
-.tripCardStandard .tripCardSpecies{font-size:15px;line-height:1.2;font-weight:560;color:var(--text-muted-strong);margin:0}
-.tripCardStandard .tripCardLowerLeft{display:grid;gap:0;margin-top:0;padding-top:0}
-.tripCardStandard .tripCardNotes{font-size:13px;line-height:1.38;color:var(--text-muted-strong)}
+.tripCardStandard .tripCardArea,
+.tripCardStandard .tripCardDealer,
+.tripCardStandard .tripCardSpecies{font-size:15px;line-height:1.2;font-weight:560;color:var(--text-muted-strong)}
+.tripCardStandard .tripCardNotes{font-size:13px;line-height:1.38;font-weight:500;color:var(--muted)}
 .tripCardStandard .tripCardMetricChip{font-size:58px;padding:6px 0;line-height:1}
 .tripCardStandard .tripCardMetricChip .metricValue{font-size:5.4em;line-height:.8;font-weight:900}
 .tripsEmptyState{padding:15px 14px}

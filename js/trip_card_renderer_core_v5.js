@@ -41,14 +41,12 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, for
     return `
       <${tag} class="trip triprow catchCard tripCardStandard ${modeClass}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
         <div class="tripCardGrid">
-          <div>
-            <div class="catchHead tripCardHeadline tripCardDate">${escapeHtml(model.dateText)}</div>
-            <div class="catchMain tripCardMain">${escapeHtml(model.area)}</div>
-            <div class="catchHead tripCardHeadline tripCardHeadlineDealer">${escapeHtml(model.dealer)}</div>
-            <div class="tripCardLowerLeft">
-              <div class="tripCardSpecies" title="Species">${escapeHtml(model.species)}</div>
-              ${model.notesPreview ? `<div class="tripCardNotes" title="Notes">${escapeHtml(model.notesPreview)}</div>` : ""}
-            </div>
+          <div class="tripCardLeftStack">
+            <div class="tripCardTextRow tripCardDate">${escapeHtml(model.dateText)}</div>
+            <div class="tripCardTextRow tripCardArea">${escapeHtml(model.area)}</div>
+            <div class="tripCardTextRow tripCardDealer">${escapeHtml(model.dealer)}</div>
+            <div class="tripCardTextRow tripCardSpecies" title="Species">${escapeHtml(model.species)}</div>
+            ${model.notesPreview ? `<div class="tripCardTextRow tripCardNotes" title="Notes">${escapeHtml(model.notesPreview)}</div>` : ""}
           </div>
           <div class="catchFoot tripCardMetricsCol">
             <span class="catchMetric tripCardMetricChip lbsBlue"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
