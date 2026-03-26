@@ -43,15 +43,15 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, for
         <div class="tripCardGrid">
           <div class="tripCardLeftStack">
             <div class="tripCardTextRow tripCardDate">${escapeHtml(model.dateText)}</div>
-            <div class="tripCardTextRow tripCardArea">${escapeHtml(model.area)}</div>
             <div class="tripCardTextRow tripCardDealer">${escapeHtml(model.dealer)}</div>
+            <div class="tripCardTextRow tripCardArea">${escapeHtml(model.area)}</div>
             <div class="tripCardTextRow tripCardSpecies" title="Species">${escapeHtml(model.species)}</div>
             ${model.notesPreview ? `<div class="tripCardTextRow tripCardNotes" title="Notes">${escapeHtml(model.notesPreview)}</div>` : ""}
           </div>
           <div class="catchFoot tripCardMetricsCol">
+            <span class="catchMetric tripCardMetricChip money"><b class="metricValue money">${model.amountText}</b></span>
             <span class="catchMetric tripCardMetricChip lbsBlue"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
             <span class="catchMetric tripCardMetricChip"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
-            <span class="catchMetric tripCardMetricChip money"><b class="metricValue money">${model.amountText}</b></span>
           </div>
         </div>
       </${tag}>
