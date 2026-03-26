@@ -1850,6 +1850,7 @@ const settingsListManagement = createSettingsListManagement({
   addArea: (rawName) => addArea(rawName),
   countTripsForArea: (areaName) => countTripsForArea(areaName),
   deleteArea: (areaName) => deleteArea(areaName),
+  protectedAreaName: AREA_NOT_RECORDED,
   normalizeKey,
   escapeHtml,
   showToast: feedback.showToast,
