@@ -525,7 +525,10 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       </div>
 
       <section class="reportsTimeframeShell" aria-label="Reports timeframe controls">
-        <div class="reportsTopLabel">Timeframe</div>
+        <div class="reportsShellRow reportsShellRow--topline">
+          <div class="reportsTopLabel">Timeframe</div>
+          <button class="btn btn-ghost affordanceBtn repAdvToggle" type="button">${advOpen ? "Hide advanced filters" : "Advanced filters"}</button>
+        </div>
         <div class="segWrap timeframeUnifiedControl reportsTimeframeControl" role="group" aria-label="Reports timeframe filter">
           ${chip("YTD","YTD")}
           ${chip("THIS_MONTH","This Month")}
@@ -534,24 +537,22 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         </div>
       </section>
 
-      <div class="repCtlRow cardActionRow">
-        <button class="btn btn-ghost affordanceBtn repAdvToggle" type="button">${advOpen ? "Hide advanced filters" : "Advanced filters"}</button>
-      </div>
-
       <div class="reportsAdvancedShell" aria-label="Reports advanced filters">
         ${advPanel}
       </div>
 
       <section class="reportsNavShell" aria-label="Reports sections">
-        <div class="reportsNavLabel">Section tabs</div>
+        <div class="reportsShellRow reportsShellRow--topline">
+          <div class="reportsNavLabel">Section tabs</div>
+          <div class="reportsSectionMapActive" aria-live="polite">Now viewing: <b>${escapeHtml(activeReportsItem.label)}</b> (${escapeHtml(activeReportsItem.modeLabel)})</div>
+        </div>
         <div class="reportsSectionSwitch" role="tablist" aria-label="Reports sections">
           ${REPORTS_SECTION_ITEMS.map((item)=> renderReportsSectionChip(item)).join("")}
         </div>
         <div class="reportsSectionIntro">${escapeHtml(activeReportsItem.intro)}</div>
-        <div class="reportsSectionMap" aria-live="polite">
+        <div class="reportsSectionMap" aria-label="Reports section map">
           <span><b>Overview:</b> Insights, Charts, Seasonality</span>
           <span><b>Detail tables:</b> Records, Detail</span>
-          <span class="reportsSectionMapActive">Now viewing: <b>${escapeHtml(activeReportsItem.label)}</b> (${escapeHtml(activeReportsItem.modeLabel)})</span>
         </div>
       </section>
 
