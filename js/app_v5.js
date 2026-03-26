@@ -405,21 +405,21 @@ function getInstallSurfaceModel(){
   const isAndroidChrome = platform === "android-chrome";
   const statusPill = isInstalled ? "Installed" : "Browser";
   const statusLine = isInstalled
-    ? "Bank the Catch is already running as your installed app."
-    : "Bank the Catch is currently running in a browser tab.";
+    ? "You’re running Bank the Catch as the installed app."
+    : "You’re running Bank the Catch in a browser tab.";
   const statusHint = isInstalled
-    ? "Open it from your Home Screen to stay in installed app mode."
+    ? "Open it from your Home Screen when you want installed mode."
     : (installSupported
-      ? "Use Install app for a quicker Home Screen launch, or open Help for the full steps."
+      ? "Tap Install app for quick setup, or open Help for full step-by-step guidance."
       : isIOS
-        ? "Open Help for Safari install steps, then add Bank the Catch to your Home Screen."
+        ? "Open Help for Safari steps, then add Bank the Catch to your Home Screen."
         : isAndroidChrome
-          ? "Open Help for Chrome install steps, then add Bank the Catch to your Home Screen."
-          : "Open Help for manual install paths. Safari on iPhone/iPad and Chrome on Android are the clearest options.");
-  const whyTitle = isInstalled ? "Already installed." : "Why install?";
+          ? "Open Help for Chrome steps, then add Bank the Catch to your Home Screen."
+          : "Open Help for manual install steps. Safari on iPhone/iPad and Chrome on Android are the clearest paths.");
+  const whyTitle = isInstalled ? "Installed and ready." : "Why install?";
   const whyBody = isInstalled
-    ? "Open it from your Home Screen when you want the clearest installed-app experience."
-    : "Installing adds a Home Screen launch and makes it easier to stay in the same app mode.";
+    ? "Use the Home Screen icon to keep opening the app in installed mode."
+    : "Installing adds a Home Screen launch and helps you stay in the same app mode.";
   const stepsLine = isInstalled
     ? "If you used Safari or Chrome before installing, compare there and create a backup if older trips are missing."
     : isIOS

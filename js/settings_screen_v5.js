@@ -181,17 +181,17 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">App mode</div>
-            <div class="muted small">Check mode and run install actions.</div>
+            <div class="muted small">Quick mode check and install actions.</div>
           </div>
           <span class="settingsValuePill" id="installModePill">Checking…</span>
         </div>
         <div class="settingsRow settingsRow--status">
-          <div id="installModeLine" class="settingsUpdateStatus">Checking how the app is opening…</div>
+          <div id="installModeLine" class="settingsUpdateStatus">Checking app mode…</div>
           <div class="muted settingsBodyTiny" id="installStatusHint"></div>
         </div>
         <div class="settingsRow settingsRow--action settingsInstallActions">
           <button class="btn primary settingsInlineBtn" id="installActionBtn" type="button">Install app</button>
-          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">Install help</button>
+          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">Open full install help</button>
         </div>
         <div class="settingsRow settingsRow--minor">
           <div class="hint" id="installWhyLine"></div>
