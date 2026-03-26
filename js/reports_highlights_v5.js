@@ -377,9 +377,10 @@ export function createReportsHighlightsSeam(deps){
     return `
       <div class="reportsHighlightsCard">
         <div class="reportsHighlightsHdr">Range insights</div>
+        <div class="reportsHighlightsGuide">Overview first. Tap cards with <b>View breakdown</b> to open metric detail.</div>
         <div class="reportsHighlightsGrid">
           ${highlights.map(item=>`
-            <div class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare" : "summary"}">
+            <${item.type === "compare" ? "button" : "div"} class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare reportsHighlightItem--drilldown" : "summary"}" ${item.type === "compare" ? `type="button" data-metric-detail="${escapeHtml(item.metricKey)}" aria-label="View ${escapeHtml(item.label)} breakdown"` : ""}>
               <div class="reportsHighlightLabel">${escapeHtml(item.label)}</div>
               <div class="reportsHighlightHeadline">${renderPercentEmphasisText(item.headline)}</div>
               ${item.type === "compare" ? `
@@ -401,13 +402,14 @@ export function createReportsHighlightsSeam(deps){
                     <div class="reportsCompareBarTrack muted"><span style="width:${item.bPct}%"></span></div>
                   </div>
                 </div>
+                <div class="reportsHighlightAction" aria-hidden="true">View breakdown →</div>
               ` : `
                 <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
                   <div class="reportsHighlightValue ${item.valueClass || ""}">${renderPercentEmphasisText(item.value)}</div>
                 </div>
                 <div class="reportsCompareRow tone-${escapeHtml(item.statusTone)}">${renderPercentEmphasisText(item.statusText)}</div>
               `}
-            </div>
+            </${item.type === "compare" ? "button" : "div"}>
           `).join("")}
         </div>
       </div>
@@ -422,6 +424,7 @@ export function createReportsHighlightsSeam(deps){
 
     return {
       type: "compare",
+      metricKey: payload.metricKey,
       label: payload.label,
       headline: buildMetricHeadline({ payload, headlineLabel, compare, period }),
       value: formatter(cur),

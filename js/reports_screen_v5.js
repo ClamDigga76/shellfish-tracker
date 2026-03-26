@@ -470,14 +470,18 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const chip = (key,label) => `<button class="chip segBtn ${fMode===key?'on is-selected':''}" data-rf="${key}" type="button">${label}</button>`;
   const REPORTS_SECTION_ITEMS = [
-    { key: "insights", label: "Insights", intro: "Range insights and highlights for this active filter." },
-    { key: "charts", label: "Charts", intro: "Trend charts for a quick visual scan of this range." },
-    { key: "seasonality", label: "Seasonality", intro: "See repeat timing across months and matched dates." },
-    { key: "records", label: "Records", intro: "Jump straight to high and low trip records for this range." },
-    { key: "detail", label: "Detail", intro: "Dealer, area, and monthly summary rows for this range." }
+    { key: "insights", label: "Insights", modeLabel: "Overview", intro: "Range insights and highlights for this active filter." },
+    { key: "charts", label: "Charts", modeLabel: "Overview", intro: "Trend charts for a quick visual scan of this range." },
+    { key: "seasonality", label: "Seasonality", modeLabel: "Overview", intro: "See repeat timing across months and matched dates." },
+    { key: "records", label: "Records", modeLabel: "Detail tables", intro: "Jump straight to high and low trip records for this range." },
+    { key: "detail", label: "Detail", modeLabel: "Detail tables", intro: "Dealer, area, and monthly summary rows for this range." }
   ];
   const activeReportsSection = REPORTS_SECTION_ITEMS.some((item)=> item.key === reportsSectionKey) ? reportsSectionKey : "insights";
-  const renderReportsSectionChip = (item)=> `<button class="chip reportsSectionChip ${activeReportsSection===item.key?'on is-selected':''}" data-reports-section="${item.key}" type="button" role="tab" id="reports-tab-${item.key}" aria-controls="reportsTransitionRoot" aria-selected="${activeReportsSection===item.key ? 'true' : 'false'}" tabindex="${activeReportsSection===item.key ? "0" : "-1"}">${item.label}</button>`;
+  const activeReportsItem = REPORTS_SECTION_ITEMS.find((item)=> item.key === activeReportsSection) || REPORTS_SECTION_ITEMS[0];
+  const renderReportsSectionChip = (item)=> `<button class="chip reportsSectionChip ${activeReportsSection===item.key?'on is-selected':''}" data-reports-section="${item.key}" type="button" role="tab" id="reports-tab-${item.key}" aria-controls="reportsTransitionRoot" aria-selected="${activeReportsSection===item.key ? 'true' : 'false'}" tabindex="${activeReportsSection===item.key ? "0" : "-1"}">
+    <span>${item.label}</span>
+    <small>${item.modeLabel}</small>
+  </button>`;
 
   const advOpen = !!rf.adv;
   const advPanel = renderReportsAdvancedPanel({
@@ -543,7 +547,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         <div class="reportsSectionSwitch" role="tablist" aria-label="Reports sections">
           ${REPORTS_SECTION_ITEMS.map((item)=> renderReportsSectionChip(item)).join("")}
         </div>
-        <div class="reportsSectionIntro">${escapeHtml((REPORTS_SECTION_ITEMS.find((item)=> item.key === activeReportsSection) || REPORTS_SECTION_ITEMS[0]).intro)}</div>
+        <div class="reportsSectionIntro">${escapeHtml(activeReportsItem.intro)}</div>
+        <div class="reportsSectionMap" aria-live="polite">
+          <span><b>Overview:</b> Insights, Charts, Seasonality</span>
+          <span><b>Detail tables:</b> Records, Detail</span>
+          <span class="reportsSectionMapActive">Now viewing: <b>${escapeHtml(activeReportsItem.label)}</b> (${escapeHtml(activeReportsItem.modeLabel)})</span>
+        </div>
       </section>
 
       ${body}
