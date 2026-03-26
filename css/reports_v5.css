@@ -164,6 +164,15 @@
 .homeMetricCompareRows > div b{font-size:13px;color:#ffffff}
 .homeMetricChartBlock{margin-top:13px}
 .homeMetricChartContext{margin-top:4px;font-size:12px;line-height:1.35;color:#c5def6;font-weight:700}
+.homeMetricRecordContext{margin-top:14px;padding:2px 0 0 14px;border-left:2px solid rgba(126,200,255,.3)}
+.homeMetricRecordTitle{font-size:12px;font-weight:830;letter-spacing:.03em;color:#d9eeff}
+.homeMetricRecordRows{margin-top:8px;display:grid;gap:8px}
+.homeMetricRecordRow{padding-bottom:8px;border-bottom:1px solid rgba(126,200,255,.14)}
+.homeMetricRecordRow:last-child{padding-bottom:0;border-bottom:0}
+.homeMetricRecordTop{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#d7ecff}
+.homeMetricRecordTop b{font-size:12px;color:#f8fbff}
+.homeMetricRecordTop span{font-size:13px;font-weight:840;color:#fff}
+.homeMetricRecordMeta{margin-top:3px;font-size:12px;line-height:1.35;color:#bfdaf2}
 .homeMetricInsight{margin-top:12px;padding-top:11px;border-top:1px solid rgba(126,200,255,.18);font-size:13px;line-height:1.4;color:#d7ebff}
 .reportsHeroLabel{font-size:10px;font-weight:860;letter-spacing:.11em;text-transform:uppercase;color:#9ea8bc}
 .reportsHeroValue{margin-top:5px;font-size:20px;line-height:1.1;font-weight:850;letter-spacing:.12px;color:#f2f5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -172,6 +181,7 @@
 .reportsMetricCompare,.homeMetricCompare{margin-top:14px;padding:2px 0 0 14px;border-radius:0;border:0;border-left:2px solid rgba(174,184,205,.26);background:transparent}
 .reportsMetricCompare.tone-up,.homeMetricCompare.tone-up{border-left-color:rgba(46,160,67,.54);background:transparent}
 .reportsMetricCompare.tone-down,.homeMetricCompare.tone-down{border-left-color:rgba(255,77,79,.5);background:transparent}
+.homeMetricRecordContext{border-radius:0;border:0;border-left:2px solid rgba(126,200,255,.36);background:transparent}
 .reportsMetricChartBlock,.homeMetricChartBlock{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07)}
 .reportsMetricInsight,.homeMetricInsight{margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.07)}
 
@@ -220,6 +230,7 @@
 .reportsHighlightMetricRow,.reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{min-width:0;max-width:100%}
 .reportsHighlightMetricRow{flex-wrap:wrap}
 .reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{flex-wrap:wrap}
+.homeMetricRecordTop,.homeMetricRecordMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 .reportsHighlightValue,.reportsMiniPreview,.reportsCompareMeta > span,.reportsCompareMeta > b,.reportsMetricCompareRows > div > span,.reportsMetricCompareRows > div > b,.homeMetricCompareRows > div > span,.homeMetricCompareRows > div > b{min-width:0;max-width:100%}
 .reportsHighlightValue,.reportsMetricHeroValue,.homeMetricHeroValue{overflow-wrap:anywhere;word-break:break-word}
 .chartCard .chart,.reportsHeroGrid,.reportsHighlightsGrid,.reportsCompareBars,.reportsMetricCompareRows,.homeMetricCompareRows{min-width:0;max-width:100%}
@@ -274,6 +285,7 @@
 :root[data-theme="light"] .homeMetricHeroWrap{border-top-color:rgba(37,53,92,.14);}
 :root[data-theme="light"] .reportsMetricCompare,
 :root[data-theme="light"] .homeMetricCompare{border-left-color:rgba(37,53,92,.28);}
+:root[data-theme="light"] .homeMetricRecordContext{border-left-color:rgba(37,53,92,.28);}
 :root[data-theme="light"] .reportsMetricChartBlock,
 :root[data-theme="light"] .homeMetricChartBlock,
 :root[data-theme="light"] .reportsMetricInsight,

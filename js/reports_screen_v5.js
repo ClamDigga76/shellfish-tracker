@@ -1067,6 +1067,85 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     return `${to2(safeValue)}`;
   };
 
+  const formatHomeRecordMetricValue = (metric, trip)=>{
+    if(!trip) return "—";
+    const lbsNum = Number(trip?.pounds) || 0;
+    const amtNum = Number(trip?.amount) || 0;
+    if(metric === "lbs") return `${to2(lbsNum)} lbs`;
+    if(metric === "amount") return formatMoney(to2(amtNum));
+    if(metric === "ppl"){
+      const value = (lbsNum > 0 && amtNum > 0) ? (amtNum / lbsNum) : 0;
+      return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
+    }
+    return "—";
+  };
+
+  const findMetricRecordTrip = (metric, direction = "max")=>{
+    const sourceTrips = recordPools?.[metric]?.[direction] || trips;
+    const ordered = sourceTrips
+      .map((trip)=> ({ trip, value: getTripMetricValue(trip, metric) }))
+      .filter((row)=> Number.isFinite(row.value) && row.value > 0)
+      .sort((a,b)=> direction === "max" ? (b.value - a.value) : (a.value - b.value));
+    return ordered[0]?.trip || null;
+  };
+
+  const renderHomeRecordRow = ({ label, metric, trip })=>{
+    if(!trip){
+      return `
+        <div class="homeMetricRecordRow">
+          <div class="homeMetricRecordTop">
+            <b>${escapeHtml(label)}</b>
+            <span>—</span>
+          </div>
+          <div class="homeMetricRecordMeta">No matching record yet in this Home filter.</div>
+        </div>
+      `;
+    }
+    const dateText = formatReportDateValue(trip?.date) || "Date not set";
+    const dealerText = String(trip?.dealer || "Unknown dealer");
+    const areaText = String(resolveTripArea(trip) || "Unknown area");
+    return `
+      <div class="homeMetricRecordRow">
+        <div class="homeMetricRecordTop">
+          <b>${escapeHtml(label)}</b>
+          <span>${escapeHtml(formatHomeRecordMetricValue(metric, trip))}</span>
+        </div>
+        <div class="homeMetricRecordMeta">${escapeHtml(dateText)} • ${escapeHtml(dealerText)} • ${escapeHtml(areaText)}</div>
+      </div>
+    `;
+  };
+
+  const renderHomeMetricRecordContext = (metricKey)=>{
+    const entriesByMetric = {
+      pounds: [
+        { label: "High pounds trip", metric: "lbs", trip: findMetricRecordTrip("lbs", "max") },
+        { label: "Low pounds trip", metric: "lbs", trip: findMetricRecordTrip("lbs", "min") }
+      ],
+      amount: [
+        { label: "High amount trip", metric: "amount", trip: findMetricRecordTrip("amount", "max") },
+        { label: "Low amount trip", metric: "amount", trip: findMetricRecordTrip("amount", "min") }
+      ],
+      ppl: [
+        { label: "High $/lb trip", metric: "ppl", trip: findMetricRecordTrip("ppl", "max") },
+        { label: "Low $/lb trip", metric: "ppl", trip: findMetricRecordTrip("ppl", "min") }
+      ],
+      trips: [
+        { label: "Most pounds trip", metric: "lbs", trip: findMetricRecordTrip("lbs", "max") },
+        { label: "Highest amount trip", metric: "amount", trip: findMetricRecordTrip("amount", "max") }
+      ]
+    };
+    const entries = entriesByMetric[metricKey] || [];
+    if(!entries.length) return "";
+    return `
+      <div class="homeMetricRecordContext" aria-label="Home metric records context">
+        <div class="homeMetricRecordTitle">Record context in this Home filter</div>
+        <div class="homeMetricRecordRows">
+          ${entries.map((entry)=> renderHomeRecordRow(entry)).join("")}
+        </div>
+      </div>
+    `;
+  };
+
   const buildMetricCompareSummary = (metricKey, payload)=>{
     if(compareFoundation.period?.suppressed || !payload || payload.suppressed){
       const reason = payload?.reason || compareFoundation.period?.reason || "This comparison appears once both periods have enough trips.";
@@ -1144,7 +1223,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     };
   };
 
-  const renderMetricDetailSection = ({ meta, compareSummary })=> {
+  const renderMetricDetailSection = ({ meta, compareSummary, homeRecordsContext = "" })=> {
     const detailBackLabel = isHomeMetricDetail ? "← Home KPIs" : "← Back to reports";
     const detailEyebrow = isHomeMetricDetail ? "Home insight" : meta.eyebrow;
     const detailContext = isHomeMetricDetail
@@ -1184,6 +1263,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           <div class="${detailChartContextClass}"><b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
           ${compareContractText ? `<div class="${detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
         </div>
+
+        ${homeRecordsContext}
 
         <div class="${detailChartClass}">
           <b>${escapeHtml(detailChartTitle)}</b>
@@ -1311,7 +1392,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const meta = detailMeta[metricKey];
     if(!meta) return "";
     const compareSummary = buildMetricCompareSummary(metricKey, meta.comparePayload);
-    return renderMetricDetailSection({ meta, compareSummary });
+    const homeRecordsContext = isHomeMetricDetail ? renderHomeMetricRecordContext(metricKey) : "";
+    return renderMetricDetailSection({ meta, compareSummary, homeRecordsContext });
   };
 
   const renderTableCard = (title, body)=> `
