@@ -204,6 +204,18 @@ export function createHomeDashboardRenderer({
       ${installCardHTML}
     ` : ``;
 
+    const lastSavedTripContextHtml = newestSavedTrip
+      ? (() => {
+        const tripDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "Date not set";
+        const tripDealer = String(newestSavedTrip.dealer || "").trim();
+        const tripArea = String(newestSavedTrip.area || "").trim();
+        const contextParts = [tripDate];
+        if (tripDealer) contextParts.push(tripDealer);
+        if (tripArea) contextParts.push(tripArea);
+        return `<div class="homeLastTripContext">${escapeHtml(contextParts.join(" • "))}</div>`;
+      })()
+      : `<div class="homeLastTripContext">Save your first trip to populate this Home snapshot section.</div>`;
+
     const lastSavedTripHtml = newestSavedTrip
       ? (() => {
         const fallbackDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "Date not set";
@@ -343,7 +355,11 @@ export function createHomeDashboardRenderer({
         </section>
 
         <section class="homeSection homeLastTripShell">
-          <div class="homeLastTripHeader reportsHeroEyebrow">Last Saved Trip</div>
+          <div class="homeLastTripHeaderRow">
+            <div class="homeLastTripHeader reportsHeroEyebrow">Last Saved Trip</div>
+            <div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>
+          </div>
+          ${lastSavedTripContextHtml}
           ${lastSavedTripHtml}
         </section>
       </div>
