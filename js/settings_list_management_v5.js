@@ -342,7 +342,7 @@ export function createSettingsListManagement(deps){
     }catch(_){ }
 
     document.getElementById("copyDebug").onclick = async ()=>{
-      await copyTextWithFeedback(getDebugInfo(), "Support diagnostics copied");
+      await copyTextWithFeedback(getDebugInfo(), "Support bundle copied");
     };
 
     document.getElementById("refreshApp").onclick = async ()=>{

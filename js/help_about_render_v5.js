@@ -189,7 +189,7 @@ export function renderAboutViewHTML({ renderPageHeader, displayBuildVersion }) {
       <div class="muted small" style="margin-top:6px">Install and backup walkthroughs live in Help.</div>
       <div class="muted small" style="margin-top:6px">Legal: <a class="settingsEmail" href="legal/terms.html">Terms</a> • <a class="settingsEmail" href="legal/privacy.html">Privacy</a> • <a class="settingsEmail" href="legal/license.html">License</a></div>
       <div class="row mt12">
-        <button class="btn" id="copyDebug">Copy support details</button>
+        <button class="btn" id="copyDebug">Copy support bundle</button>
         <button class="btn" id="feedback">Send Feedback</button>
       </div>
     </div>
