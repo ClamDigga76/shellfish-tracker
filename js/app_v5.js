@@ -1194,7 +1194,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   if(!(rateNum > 0)) errs.push("Pay Rate");
   if(errs.length){
     announce(`Error: Missing/invalid: ${errs.join(", ")}`, "assertive");
-    alert("Missing/invalid: " + errs.join(", "));
+    showToast("Missing/invalid: " + errs.join(", "), { haptic: "none" });
     return false;
   }
 
@@ -1208,7 +1208,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
     existing = trips.find(t => String(t?.id||"") === id) || null;
     if(!existing){
       announce("Error: Trip not found. Returning home.", "assertive");
-      alert("Trip not found. Returning home.");
+      showToast("Trip not found. Returning home.", { haptic: "none" });
       state.view = nextView;
       saveState();
       render();
@@ -1267,7 +1267,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   const vErrs = validateTrip(tripNorm);
   if(vErrs.length){
     announce(`Error: Missing/invalid: ${vErrs.join(", ")}`, "assertive");
-    alert("Missing/invalid: " + vErrs.join(", "));
+    showToast("Missing/invalid: " + vErrs.join(", "), { haptic: "none" });
     return false;
   }
 
@@ -1872,6 +1872,7 @@ const settingsListManagement = createSettingsListManagement({
   normalizeKey,
   escapeHtml,
   showToast: feedback.showToast,
+  openConfirmModal: (options) => openConfirmModal(options),
   copyTextWithFeedback: feedback.copyTextWithFeedback,
   getDebugInfo: () => getDebugInfo(),
   forceRefreshApp: () => updateRuntimeStatus.forceRefreshApp(),
