@@ -29,6 +29,7 @@ export function createReportsAdvancedPanelSeam(deps){
     ).join("");
 
     return `
+      <div id="reportsAdvancedInlinePanel" class="reportsAdvancedInlinePanel">
       <div class="sep"></div>
       <div class="grid2">
         <div class="field">
@@ -53,6 +54,7 @@ export function createReportsAdvancedPanelSeam(deps){
       <div class="row" style="justify-content:flex-end;gap:10px;margin-top:10px">
         <button class="btn" id="repAdvReset" type="button">Reset</button>
         <button class="btn primary" id="repAdvApply" type="button">Apply</button>
+      </div>
       </div>
     `;
   }

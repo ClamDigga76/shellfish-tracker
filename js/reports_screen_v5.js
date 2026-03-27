@@ -384,24 +384,21 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const hasSavedTrips = tripsAll.length > 0;
   const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
   const fMode = String(rf.mode || "YTD").toUpperCase();
-  const REPORTS_PRIMARY_FILTER_ITEMS = [
+  const REPORTS_PRESET_FILTER_ITEMS = [
     { key: "YTD", label: "YTD" },
     { key: "THIS_MONTH", label: "This Month" },
     { key: "LAST_MONTH", label: "Last Month" },
     { key: "90D", label: "Last 3 Months" },
-    { key: "ALL", label: "All Time" },
-    { key: "ADVANCED", label: "Advanced" }
+    { key: "ALL", label: "All Time" }
   ];
-  const REPORTS_PRESET_MODES = REPORTS_PRIMARY_FILTER_ITEMS
-    .filter((item)=> item.key !== "ADVANCED")
-    .map((item)=> item.key);
+  const REPORTS_PRESET_MODES = REPORTS_PRESET_FILTER_ITEMS.map((item)=> item.key);
   const hasReportsCustomConstraints = !!parseReportDateToISO(rf.from)
     || !!parseReportDateToISO(rf.to)
     || !!String(rf.dealer || "").trim()
     || !!String(rf.area || "").trim();
   const isPresetExactMatch = REPORTS_PRESET_MODES.includes(fMode) && !hasReportsCustomConstraints;
   const isAdvancedActive = !!rf.adv || !isPresetExactMatch;
-  const activePrimaryFilterKey = isAdvancedActive ? "ADVANCED" : fMode;
+  const activePresetFilterKey = isPresetExactMatch ? fMode : "";
   const reportsSectionKey = String(state.reportsSection || "insights").toLowerCase();
   const reportsMetricDetail = String(state.reportsMetricDetail || "").toLowerCase();
   const reportsMetricDetailContext = state.reportsMetricDetailContext && typeof state.reportsMetricDetailContext === "object"
@@ -486,7 +483,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ? homeScope.trips
     : applyUnifiedTripFilter(tripsAll, seasonalityUnified).rows;
 
-  const chip = ({ key, label })=> `<button class="chip segBtn reportsPrimaryFilterChip ${activePrimaryFilterKey===key?'on is-selected':''}" data-rf="${key}" type="button" role="tab" aria-selected="${activePrimaryFilterKey===key ? "true" : "false"}">${label}</button>`;
+  const chip = ({ key, label })=> `<button class="chip segBtn reportsPrimaryFilterChip ${activePresetFilterKey===key?'on is-selected':''}" data-rf="${key}" type="button" role="tab" aria-selected="${activePresetFilterKey===key ? "true" : "false"}">${label}</button>`;
   const REPORTS_SECTION_ITEMS = [
     { key: "insights", label: "Insights", modeLabel: "Overview", intro: "Range insights and highlights for this active filter." },
     { key: "charts", label: "Charts", modeLabel: "Overview", intro: "Trend charts for a quick visual scan of this range." },
@@ -545,14 +542,18 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
       <section class="reportsTimeframeShell" aria-label="Reports timeframe controls">
         <div class="reportsShellRow reportsShellRow--topline">
-          <div class="reportsTopLabel">Primary filter</div>
+          <div class="reportsTopLabel">Quick range</div>
         </div>
-        <div class="segWrap timeframeUnifiedControl reportsTimeframeControl reportsPrimaryFilterBar" role="tablist" aria-label="Reports primary filter">
-          ${REPORTS_PRIMARY_FILTER_ITEMS.map((item)=> chip(item)).join("")}
+        <div class="segWrap timeframeUnifiedControl reportsTimeframeControl reportsPrimaryFilterBar" role="tablist" aria-label="Reports quick range filters">
+          ${REPORTS_PRESET_FILTER_ITEMS.map((item)=> chip(item)).join("")}
         </div>
       </section>
 
       <div class="reportsAdvancedShell" aria-label="Reports advanced filters">
+        <button class="chip segBtn repAdvToggle reportsAdvancedDisclosure ${isAdvancedActive ? "on is-selected" : ""}" type="button" aria-expanded="${advOpen ? "true" : "false"}" aria-controls="reportsAdvancedInlinePanel">
+          <span class="reportsAdvancedDisclosureTitle">Advanced</span>
+          <span class="reportsAdvancedDisclosureState">${isPresetExactMatch ? "Custom filters" : "Custom active"}</span>
+        </button>
         ${advPanel}
       </div>
 
@@ -608,10 +609,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const normalizedKey = String(key || "YTD").toUpperCase();
     if(!state.reportsFilter || typeof state.reportsFilter !== "object"){
       state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
-    }
-    if(normalizedKey === "ADVANCED"){
-      state.reportsFilter.adv = true;
-      return;
     }
     state.reportsFilter.mode = normalizedKey;
     state.reportsFilter.adv = false;
