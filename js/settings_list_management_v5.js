@@ -14,6 +14,7 @@ export function createSettingsListManagement(deps){
     normalizeKey,
     escapeHtml,
     showToast,
+    openConfirmModal,
     copyTextWithFeedback,
     getDebugInfo,
     forceRefreshApp,
@@ -268,7 +269,7 @@ export function createSettingsListManagement(deps){
       });
 
       (getApp()?.querySelectorAll("button[data-del-area-name]") || []).forEach((btn)=>{
-        btn.onclick = ()=>{
+        btn.onclick = async ()=>{
           const areaName = String(btn.getAttribute("data-del-area-name") || "");
           if(isProtectedAreaName(areaName)){
             showToast("Area is protected");
@@ -276,11 +277,19 @@ export function createSettingsListManagement(deps){
           }
           const tripCount = countTripsForArea(areaName);
           if(tripCount > 0){
-            alert(`Can't delete area "${areaName}" yet. ${tripCount} trip(s) still use it.`);
+            showToast(`Can't delete area "${areaName}" yet. ${tripCount} trip(s) still use it.`, { haptic: "none" });
             showToast("Area is used by saved trips");
             return;
           }
-          if(!confirm(`Delete area "${areaName}"?`)) return;
+          const okToDelete = typeof openConfirmModal === "function"
+            ? await openConfirmModal({
+              title: "Delete area?",
+              message: `Delete area "${areaName}"?`,
+              confirmLabel: "Delete",
+              cancelLabel: "Cancel"
+            })
+            : confirm(`Delete area "${areaName}"?`);
+          if(!okToDelete) return;
           const result = deleteArea(areaName);
           if(!result?.ok){
             if(result?.reason === "protected"){
@@ -297,17 +306,25 @@ export function createSettingsListManagement(deps){
       });
 
       (getApp()?.querySelectorAll("button[data-del-dealer]") || []).forEach((btn)=>{
-        btn.onclick = ()=>{
+        btn.onclick = async ()=>{
           const i = Number(btn.getAttribute("data-del-dealer"));
           if(!Number.isFinite(i) || i < 0) return;
           const name = String(state.dealers?.[i] || "");
           const inUseCount = countTripsUsingValue("dealer", name);
           if(inUseCount > 0){
-            alert(`Can't delete dealer \"${name}\" yet. ${inUseCount} trip(s) still use it.`);
+            showToast(`Can't delete dealer "${name}" yet. ${inUseCount} trip(s) still use it.`, { haptic: "none" });
             showToast("Dealer is used by saved trips");
             return;
           }
-          if(!confirm(`Delete dealer "${name}"?`)) return;
+          const okToDelete = typeof openConfirmModal === "function"
+            ? await openConfirmModal({
+              title: "Delete dealer?",
+              message: `Delete dealer "${name}"?`,
+              confirmLabel: "Delete",
+              cancelLabel: "Cancel"
+            })
+            : confirm(`Delete dealer "${name}"?`);
+          if(!okToDelete) return;
           state.dealers.splice(i, 1);
           ensureDealers();
           saveState();
