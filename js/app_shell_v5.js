@@ -28,13 +28,16 @@ export function renderPageHeader(viewKey, { escapeHtml }){
     about: "About"
   };
   const headerTitle = titleByView[viewKey] || "Bank the Catch";
-  const titleMaxWidth = showHelp ? "calc(100% - 48px)" : "100%";
   return `
     <div class="pageHeader">
-      <div style="display:flex;align-items:center;justify-content:center;min-width:0;max-width:${titleMaxWidth};width:100%">
-        <h2 class="phTitle" style="line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(headerTitle)}</h2>
+      <span class="phActionStub" aria-hidden="true"></span>
+      <div class="phTitleSlot">
+        <h2 class="phTitle">${escapeHtml(headerTitle)}</h2>
       </div>
-      ${showHelp ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">?</button>` : ``}
+      ${showHelp
+        ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">${helpIconSvg()}</button>`
+        : `<span class="phActionStub" aria-hidden="true"></span>`
+      }
     </div>
   `;
 }
@@ -81,6 +84,14 @@ function iconSvg(name){
     </svg>`;
   }
   return "";
+}
+
+function helpIconSvg(){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="8.5"></circle>
+    <path d="M9.6 9.4a2.7 2.7 0 0 1 4.7 1.8c0 1.8-2.3 2.3-2.3 4"></path>
+    <path d="M12 17h.01"></path>
+  </svg>`;
 }
 
 export function renderTabBar({
