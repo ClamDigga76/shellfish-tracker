@@ -65,7 +65,7 @@ try {
   window.__BOOT_DIAG__.startupModuleUrls = [...STARTUP_MODULE_URLS];
 } catch (_) {}
 
-const [{ uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable , isValidISODate },
+const [{ uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable , isValidISODate },
   { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme },
   { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback },
   { ensureNavState, createNavigator },
@@ -645,6 +645,7 @@ const { renderStandardReadOnlyTripCard, renderStandardInteractiveTripCard } = cr
   to2,
   computePPL,
   resolveTripPayRate,
+  deriveTripSettlement,
   formatMoney,
   escapeHtml
 });
@@ -1168,8 +1169,16 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
   const dealer = normalizeDealerDisplay(String(inputs?.dealer||"").trim());
   const poundsNum = parseNum(inputs?.pounds);
   const rawAmountNum = parseMoney(inputs?.amount);
+  const rawWrittenCheckAmountNum = parseMoney(inputs?.writtenCheckAmount);
   const rateNum = parseMoney(inputs?.rate) || (Number.isFinite(poundsNum) && poundsNum > 0 && Number.isFinite(rawAmountNum) && rawAmountNum > 0 ? rawAmountNum / poundsNum : 0);
-  const amountNum = rawAmountNum || (Number.isFinite(poundsNum) && poundsNum > 0 && Number.isFinite(rateNum) && rateNum > 0 ? poundsNum * rateNum : 0);
+  const calculatedAmountNum = (Number.isFinite(poundsNum) && poundsNum > 0 && Number.isFinite(rateNum) && rateNum > 0)
+    ? poundsNum * rateNum
+    : rawAmountNum;
+  const settlement = deriveTripSettlement({
+    amount: calculatedAmountNum,
+    writtenCheckAmount: rawWrittenCheckAmountNum
+  });
+  const amountNum = settlement.calculatedAmount;
   ensureAreas();
   const rawArea = String(inputs?.area||"").trim();
   const areaCreate = addArea(rawArea);
@@ -1235,6 +1244,10 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
     dealer,
     pounds: to2(poundsNum),
     amount: to2(amountNum),
+    calculatedAmount: to2(settlement.calculatedAmount),
+    writtenCheckAmount: to2(settlement.writtenCheckAmount),
+    dealerAdjustment: to2(settlement.dealerAdjustment),
+    adjustmentClass: settlement.adjustmentClass,
     payRate: to2(rateNum),
     area,
     species,
@@ -1760,6 +1773,7 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
   parseNum,
   parseMoney,
   formatMoney,
+  deriveTripSettlement,
   computePPL,
   openModal,
   closeModal,

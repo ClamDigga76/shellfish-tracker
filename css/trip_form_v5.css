@@ -83,6 +83,40 @@ body[data-view="edit"] .chip-selector{
   padding-bottom:11px;
   user-select:none;
 }
+.tripSettlementReveal{
+  margin-top:8px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-weight:700;
+  font-size:12px;
+  text-decoration:underline;
+  text-underline-offset:2px;
+  padding:4px 2px 0;
+}
+.tripSettlementPanel{
+  display:none;
+  margin-top:10px;
+  padding:10px;
+  border:1px dashed rgba(255,255,255,.18);
+  border-radius:10px;
+  background:rgba(255,255,255,.03);
+}
+.tripSettlementPanel.is-open{display:block}
+.tripSettlementSummary{
+  margin-top:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  color:var(--muted);
+  font-size:12px;
+}
+.tripSettlementHint{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+}
 .rate{color:var(--muted);font-weight:700}
 .rate.ppl{color:var(--ppl)!important;font-weight:800}
 

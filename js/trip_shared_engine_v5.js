@@ -1,4 +1,4 @@
-import { resolveTripPayRate } from "./utils_v5.js";
+import { deriveTripSettlement, resolveTripPayRate } from "./utils_v5.js";
 
 const DEFAULT_SPECIES = "Soft-shell Clams";
 const TRIP_HISTORY_LIMIT = 12;
@@ -123,6 +123,10 @@ export function createTripDataEngine({ uid, isValidISODate }) {
     const amount = Number(t?.amount ?? t?.total ?? 0);
     const payRate = deriveTripPayRate(t);
     const resolvedAmount = Number.isFinite(amount) && amount > 0 ? amount : ((Number.isFinite(pounds) && pounds > 0 && Number.isFinite(payRate) && payRate > 0) ? pounds * payRate : 0);
+    const settlement = deriveTripSettlement({
+      amount: resolvedAmount,
+      writtenCheckAmount: Number(t?.writtenCheckAmount)
+    });
 
     const nextTrip = {
       ...t,
@@ -130,6 +134,10 @@ export function createTripDataEngine({ uid, isValidISODate }) {
       invalidDateQuarantined: Boolean(t?.invalidDateQuarantined) || invalidDateQuarantined,
       pounds: Number.isFinite(pounds) ? pounds : 0,
       amount: Number.isFinite(resolvedAmount) ? resolvedAmount : 0,
+      calculatedAmount: Number.isFinite(settlement.calculatedAmount) ? settlement.calculatedAmount : 0,
+      writtenCheckAmount: Number.isFinite(settlement.writtenCheckAmount) ? settlement.writtenCheckAmount : 0,
+      dealerAdjustment: Number.isFinite(settlement.dealerAdjustment) ? settlement.dealerAdjustment : 0,
+      adjustmentClass: String(settlement.adjustmentClass || "none"),
       payRate: Number.isFinite(payRate) ? payRate : 0,
       dealer: String(t?.dealer || "").trim(),
       area: String(t?.area || "").trim(),

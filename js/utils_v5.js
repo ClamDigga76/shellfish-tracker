@@ -186,6 +186,43 @@ export function resolveTripPayRate(trip){
   return 0;
 }
 
+export function deriveTripSettlement(trip, opts = {}){
+  const threshold = Number.isFinite(Number(opts.roundingThreshold))
+    ? Math.max(0, Number(opts.roundingThreshold))
+    : 1;
+  const calculatedAmountRaw = Number(trip?.calculatedAmount ?? trip?.amount ?? trip?.total ?? 0);
+  const calculatedAmount = Number.isFinite(calculatedAmountRaw) ? to2(calculatedAmountRaw) : 0;
+  const writtenRaw = Number(trip?.writtenCheckAmount);
+  const writtenProvided = Number.isFinite(writtenRaw) && writtenRaw > 0;
+  const writtenCheckAmount = writtenProvided ? to2(writtenRaw) : calculatedAmount;
+  const dealerAdjustment = to2(writtenCheckAmount - calculatedAmount);
+  const hasDifference = Math.abs(dealerAdjustment) >= 0.005;
+  const wholeDollar = Math.abs(writtenCheckAmount - Math.round(writtenCheckAmount)) < 0.0001;
+  const likelyRounded = hasDifference && wholeDollar && Math.abs(dealerAdjustment) <= threshold;
+
+  let adjustmentClass = "none";
+  if(hasDifference && likelyRounded) adjustmentClass = dealerAdjustment > 0 ? "rounded_up" : "rounded_down";
+  else if(hasDifference) adjustmentClass = "manual_adjustment";
+
+  const adjustmentLabelByClass = {
+    none: "none",
+    rounded_up: "rounded up",
+    rounded_down: "rounded down",
+    manual_adjustment: "manual adjustment"
+  };
+
+  return {
+    calculatedAmount,
+    writtenCheckAmount,
+    writtenProvided,
+    dealerAdjustment,
+    hasDifference,
+    likelyRounded,
+    adjustmentClass,
+    adjustmentLabel: adjustmentLabelByClass[adjustmentClass] || "none"
+  };
+}
+
 export function formatMoney(n){
   try{
     return new Intl.NumberFormat(undefined, {
