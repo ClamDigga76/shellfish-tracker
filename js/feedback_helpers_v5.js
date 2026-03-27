@@ -15,6 +15,9 @@ export function createFeedbackHelpers({
   let celebrationFocusReturn = null;
   let celebrationKeydownHandler = null;
   let dialogIdSeed = 0;
+  let lastAnnouncementText = "";
+  let lastAnnouncementMode = "polite";
+  let lastAnnouncementAt = 0;
   const TOAST_EXIT_MS = 260;
   const MODAL_EXIT_MS = 240;
 
@@ -275,6 +278,13 @@ export function createFeedbackHelpers({
         el.textContent = "";
         return;
       }
+      const now = Date.now();
+      if(text === lastAnnouncementText && nextMode === lastAnnouncementMode && (now - lastAnnouncementAt) < 900){
+        return;
+      }
+      lastAnnouncementText = text;
+      lastAnnouncementMode = nextMode;
+      lastAnnouncementAt = now;
       el.setAttribute("aria-live", nextMode);
       el.textContent = "";
       clearTimeout(ariaLiveTimer);

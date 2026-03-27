@@ -305,6 +305,7 @@ export function createReportsScreenRenderer(deps){
   let reportsChartRenderToken = 0;
   let reportsChartScheduleRafId = 0;
   let pendingReportsAnnouncement = "";
+  let reportsFocusIntent = null;
 
   function invalidateReportsChartSchedule(){
     reportsChartRenderToken += 1;
@@ -354,6 +355,43 @@ export function createReportsScreenRenderer(deps){
         setTimeout(()=>{ live.textContent = ""; }, 1800);
       }, 40);
     }catch(_){ }
+  }
+
+  function queueReportsFocusIntent(intent){
+    if(!intent || typeof intent !== "object"){
+      reportsFocusIntent = null;
+      return;
+    }
+    reportsFocusIntent = intent;
+  }
+
+  function applyReportsFocusIntent(root){
+    const intent = reportsFocusIntent;
+    reportsFocusIntent = null;
+    if(!intent || !root) return;
+    const safeFocus = (target)=>{
+      if(!(target instanceof HTMLElement)) return false;
+      try{
+        target.focus({ preventScroll: true });
+        return true;
+      }catch(_){
+        return false;
+      }
+    };
+    if(intent.type === "section-tab"){
+      const tab = root.querySelector(`.chip[data-reports-section="${intent.key}"]`);
+      if(safeFocus(tab)) return;
+    }
+    if(intent.type === "metric-button"){
+      const metricBtn = root.querySelector(`[data-metric-detail="${intent.metricKey}"]`);
+      if(safeFocus(metricBtn)) return;
+    }
+    if(intent.type === "metric-back"){
+      const backBtn = root.querySelector("#reportsMetricBack");
+      if(safeFocus(backBtn)) return;
+    }
+    const panel = root.querySelector("#reportsTransitionRoot");
+    safeFocus(panel);
   }
 
   function runReportsTransition({ mutate, renderNext = () => renderReportsScreen(), homeMetricOnly = false } = {}){
@@ -1539,6 +1577,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   getApp().scrollTop = 0;
   animateReportsShellEnter(document.getElementById("reportsTransitionRoot"));
   flushReportsAnnouncement();
+  applyReportsFocusIntent(getApp());
 
   // range chips
   getApp().querySelectorAll(".chip[data-rf]").forEach((btn)=>{
@@ -1557,6 +1596,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       if(key === activeReportsSection) return;
       const section = REPORTS_SECTION_ITEMS.find((item)=> item.key === key);
       queueReportsAnnouncement(`Reports section ${section?.label || "updated"}.`);
+      queueReportsFocusIntent({ type: "section-tab", key });
       runReportsTransition({
         mutate: ()=>{
           state.reportsSection = key;
@@ -1574,13 +1614,21 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         event.preventDefault();
         const direction = event.key === "ArrowRight" ? 1 : -1;
         const nextIdx = (currentIdx + direction + tabs.length) % tabs.length;
-        tabs[nextIdx]?.focus();
+        const nextTab = tabs[nextIdx];
+        nextTab?.focus();
+        nextTab?.click();
         return;
       }
       if(event.key === "Home" || event.key === "End"){
         event.preventDefault();
         const target = event.key === "Home" ? tabs[0] : tabs[tabs.length - 1];
         target?.focus();
+        target?.click();
+        return;
+      }
+      if(event.key === "Enter" || event.key === " "){
+        event.preventDefault();
+        btn.click();
       }
     });
   });
@@ -1599,6 +1647,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     btn.onclick = ()=>{
       const metricName = String(btn.getAttribute("data-metric-detail") || "metric").toLowerCase();
       queueReportsAnnouncement(`Opened ${metricName} detail.`);
+      queueReportsFocusIntent({ type: "metric-back" });
       runReportsTransition({
         mutate: ()=>{
           state.reportsMetricDetail = String(btn.getAttribute("data-metric-detail") || "").toLowerCase();
@@ -1628,6 +1677,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         return;
       }
       queueReportsAnnouncement("Returned to reports overview.");
+      queueReportsFocusIntent({ type: "metric-button", metricKey: activeMetricDetail });
       runReportsTransition({
         mutate: ()=>{
           state.reportsMetricDetail = "";

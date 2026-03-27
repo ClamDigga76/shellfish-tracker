@@ -45,7 +45,8 @@ export function renderViewDispatch({
   onRedirectToNew,
   renderTabBar,
   bindHeaderHelpButtons,
-  onBeforeTopLevelViewChange
+  onBeforeTopLevelViewChange,
+  onAfterTopLevelViewChange
 }){
   if(!state.view) state.view = "home";
   const nextView = String(state.view || "home");
@@ -69,6 +70,9 @@ export function renderViewDispatch({
 
   renderTabBar(nextView);
   bindHeaderHelpButtons();
+  if(prevView && prevView !== nextView){
+    try{ onAfterTopLevelViewChange?.({ fromView: prevView, toView: nextView }); }catch(_){ }
+  }
   renderViewDispatch._lastView = nextView;
 }
 
