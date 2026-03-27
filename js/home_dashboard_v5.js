@@ -4,6 +4,7 @@ export function createHomeDashboardRenderer({
   buildUnifiedFilterFromHomeFilter,
   applyUnifiedTripFilter,
   computePPL,
+  resolveTripPayRate,
   round2,
   getTripsNewestFirst,
   renderPageHeader,
@@ -80,7 +81,13 @@ export function createHomeDashboardRenderer({
     const trips = applyUnifiedTripFilter(tripsAll, unified).rows;
     const totalAmount = trips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
     const totalLbs = trips.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
-    const avgPpl = totalLbs > 0 ? computePPL(totalLbs, totalAmount) : null;
+    const weightedRateTotal = trips.reduce((sum, trip) => {
+      const lbs = Number(trip?.pounds) || 0;
+      if (!(lbs > 0)) return sum;
+      const rate = typeof resolveTripPayRate === "function" ? resolveTripPayRate(trip) : computePPL(lbs, Number(trip?.amount) || 0);
+      return (Number.isFinite(rate) && rate > 0) ? (sum + (rate * lbs)) : sum;
+    }, 0);
+    const avgPpl = totalLbs > 0 ? (weightedRateTotal / totalLbs) : null;
     const avgAmountPerTrip = trips.length ? (totalAmount / trips.length) : null;
     const avgPoundsPerTrip = trips.length ? (totalLbs / trips.length) : null;
 

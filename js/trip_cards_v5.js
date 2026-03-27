@@ -17,11 +17,12 @@ export function normalizeDealerDisplay(name){
   }).join(" ");
 }
 
-export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, formatMoney, escapeHtml }){
+export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, resolveTripPayRate, formatMoney, escapeHtml }){
   const { resolveTripCardModel, renderTripCardHTML } = createTripCardRendererCore({
     formatDateDMY,
     to2,
     computePPL,
+    resolveTripPayRate,
     formatMoney,
     escapeHtml
   });

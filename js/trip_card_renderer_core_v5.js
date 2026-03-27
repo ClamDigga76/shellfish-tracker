@@ -1,4 +1,4 @@
-export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, formatMoney, escapeHtml }){
+export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, resolveTripPayRate, formatMoney, escapeHtml }){
   function resolveTripCardModel(t, opts = {}){
     const {
       valueOverride = "",
@@ -13,7 +13,7 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, for
     const notesPreview = notesRaw ? (notesRaw.length > 56 ? `${notesRaw.slice(0, 56)}…` : notesRaw) : "";
     const lbs = to2(Number(t?.pounds) || 0);
     const amt = to2(Number(t?.amount) || 0);
-    const ppl = computePPL(lbs, amt);
+    const ppl = typeof resolveTripPayRate === "function" ? resolveTripPayRate(t) : computePPL(lbs, amt);
 
     return {
       id: String(t?.id || ""),

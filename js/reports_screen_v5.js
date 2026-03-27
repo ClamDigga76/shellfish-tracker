@@ -97,7 +97,7 @@ function summarizeHomeMonthRow(row){
     trips,
     lbs: pounds,
     amount,
-    ppl: pounds > 0 ? amount / pounds : 0,
+    ppl: pounds > 0 ? (Number(row?.avg) || 0) : 0,
     uniqueDays,
     amountPerTrip: trips > 0 ? amount / trips : 0,
     poundsPerTrip: trips > 0 ? pounds / trips : 0,
@@ -257,6 +257,7 @@ export function createReportsScreenRenderer(deps){
     buildReportsSeasonalityFoundation,
     canonicalDealerGroupKey,
     normalizeDealerDisplay,
+    resolveTripPayRate,
     formatMoney,
     to2,
     drawReportsCharts,
@@ -754,7 +755,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const amtNum = Number(trip?.amount) || 0;
     if(metric === "lbs") return lbsNum;
     if(metric === "amount") return amtNum;
-    if(metric === "ppl") return (lbsNum > 0 && amtNum > 0) ? (amtNum / lbsNum) : 0;
+    if(metric === "ppl") return typeof resolveTripPayRate === "function"
+      ? resolveTripPayRate(trip)
+      : ((lbsNum > 0 && amtNum > 0) ? (amtNum / lbsNum) : 0);
     return 0;
   };
 
@@ -787,7 +790,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     if(!t) return `<div class="muted small">—</div>`;
     const lbsNum = Number(t?.pounds)||0;
     const amtNum = Number(t?.amount)||0;
-    const ppl = (lbsNum>0 && amtNum>0) ? (amtNum/lbsNum) : 0;
+    const ppl = getTripMetricValue(t, "ppl");
     let metricText = "—";
     let metricClass = "";
     if(metric === "lbs"){
