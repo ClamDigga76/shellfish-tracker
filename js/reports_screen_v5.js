@@ -900,12 +900,30 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const dealerAmountTakeaway = dealerAmountPeak
       ? { text: "Top dealer still leads this range", tone: "up" }
       : { text: "Dealer mix still building", tone: "steady" };
+    const primaryMetricPairing = (metricLabel)=> `Primary chart for ${metricLabel} metric`;
+    const supportingMetricPairing = (metricLabel)=> `Supporting chart for ${metricLabel} metric`;
 
     return [
       renderChartCard({
+        takeaway: tripsTakeaway,
+        title: "Trips over time",
+        subhead: `${primaryMetricPairing("Trips")} • Trip count by month for this same range`,
+        hero: `<span class="trips">${tripsLatest ? tripsLatest.count : "—"}</span>`,
+        context: `Latest ${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"} • Range high <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
+        canvasId: "c_trips"
+      }),
+      renderChartCard({
+        takeaway: lbsTakeaway,
+        title: "Monthly Pounds",
+        subhead: `${primaryMetricPairing("Pounds")} • Month-by-month pounds landed in this range`,
+        hero: `<span class="lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</span>`,
+        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
+        canvasId: "c_lbs"
+      }),
+      renderChartCard({
         takeaway: amountTakeaway,
         title: "Monthly Total Amount",
-        subhead: "Month-by-month payout trend for the selected range",
+        subhead: `${primaryMetricPairing("Amount")} • Month-by-month payout trend for this selected range`,
         hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amt)) : "—"}</span>`,
         context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="money">${amountPeak ? formatMoney(to2(amountPeak.amt)) : "—"}</span>`,
         canvasId: "c_amount_monthly"
@@ -913,15 +931,23 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       renderChartCard({
         takeaway: pplTakeaway,
         title: "Avg $/lb by Month",
-        subhead: "Month-by-month pay-rate trend for the selected range",
+        subhead: `${primaryMetricPairing("Avg $/lb")} • Month-by-month pay-rate trend for this selected range`,
         hero: `<span class="rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</span>`,
         context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span>`,
         canvasId: "c_ppl"
       }),
       renderChartCard({
+        takeaway: amountPerTripTakeaway,
+        title: "Monthly Amount per Trip",
+        subhead: `${supportingMetricPairing("Amount")} • Average payout value per trip by month`,
+        hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amountPerTrip)) : "—"}</span>`,
+        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
+        canvasId: "c_amount_per_trip"
+      }),
+      renderChartCard({
         takeaway: dealerRateTakeaway,
         title: "Dealer Avg $/lb",
-        subhead: "Buyer pay rates across this active range",
+        subhead: `${supportingMetricPairing("Avg $/lb")} • Buyer pay rates across this active range`,
         hero: `<span class="rate ppl">${dealerRatePeak ? `${formatMoney(to2(dealerRatePeak.avg))}/lb` : "—"}</span>`,
         context: `Highest pay-rate dealer this range • ${dealerRatePeak ? escapeHtml(String(dealerRatePeak.name || "—")) : "—"}`,
         canvasId: "c_dealer_rate",
@@ -930,35 +956,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       renderChartCard({
         takeaway: dealerAmountTakeaway,
         title: "Dealer Amount",
-        subhead: "Top dealers by total amount in this range",
+        subhead: `${supportingMetricPairing("Amount")} • Top dealers by total amount in this range`,
         hero: `<span class="money">${dealerAmountPeak ? formatMoney(to2(dealerAmountPeak.amt)) : "—"}</span>`,
         context: `Leading dealer this range • ${dealerAmountPeak ? escapeHtml(String(dealerAmountPeak.name || "—")) : "—"}`,
         canvasId: "c_dealer",
         height: 220
-      }),
-      renderChartCard({
-        takeaway: amountPerTripTakeaway,
-        title: "Monthly Amount per Trip",
-        subhead: "Average payout value per trip by month",
-        hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amountPerTrip)) : "—"}</span>`,
-        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
-        canvasId: "c_amount_per_trip"
-      }),
-      renderChartCard({
-        takeaway: lbsTakeaway,
-        title: "Monthly Pounds",
-        subhead: "Month-by-month pounds landed in this range",
-        hero: `<span class="lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</span>`,
-        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
-        canvasId: "c_lbs"
-      }),
-      renderChartCard({
-        takeaway: tripsTakeaway,
-        title: "Trips over time",
-        subhead: "Trip count by month for this same range",
-        hero: `<span class="trips">${tripsLatest ? tripsLatest.count : "—"}</span>`,
-        context: `Latest ${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"} • Range high <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
-        canvasId: "c_trips"
       })
     ].join("");
   };
@@ -1345,12 +1347,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         heroClass: "trips",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Trips for this range",
+        chartTitle: "Primary chart for Trips: matched range compare",
         homeChartTitle: "Trips",
         chartContext: primaryChart?.basisLabel || "Trips in this matched date range",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_trips",
-        insight: "Use this view to compare the current range with the earlier matched range.",
+        insight: "Use this primary Trips chart first, then compare rows to confirm movement in the same matched range.",
         homeInsight: "Use the compare card and chart together for the cleanest trip-count read."
       },
       pounds: {
@@ -1363,12 +1365,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Pounds for this range",
+        chartTitle: "Primary chart for Pounds: matched range compare",
         homeChartTitle: "Pounds",
         chartContext: primaryChart?.basisLabel || "Pounds in this matched date range",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_lbs",
-        insight: "Use this view to compare pounds in one matched range so the headline, compare rows, and chart stay aligned.",
+        insight: "Use this primary Pounds chart first so the headline, compare rows, and visual stay aligned in one matched range.",
         homeInsight: "Use the compare card and chart together to judge pound movement."
       },
       amount: {
@@ -1381,14 +1383,14 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         heroClass: "money",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Amount for this range",
+        chartTitle: "Primary chart for Amount: matched range compare",
         homeChartTitle: "Amount",
         chartContext: primaryChart?.basisLabel || "Amount in this matched date range",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_amount_detail",
         secondaryCharts: [
           detailCharts.amountTrend ? {
-            title: "Amount trend across the range",
+            title: "Supporting chart for Amount: trend across range",
             context: isHomeMetricDetail
               ? "Extra context • visible Home months in this filter"
               : "Extra context • full months in this active Reports range",
@@ -1397,12 +1399,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
             metricKey: "amount"
           } : null,
           {
-            title: "Dealer mix",
+            title: "Supporting chart for Amount: dealer mix",
             context: "Extra context for this same active filter range",
             canvasId: "c_dealer"
           }
         ],
-        insight: "Read the main amount view first, then use the trend and dealer mix for added context.",
+        insight: "Read the primary Amount chart first, then use the supporting trend and dealer mix charts for context.",
         homeInsight: "Read the main comparison first, then use trend and dealer mix for added context."
       },
       ppl: {
@@ -1415,12 +1417,12 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "$/lb for this range",
+        chartTitle: "Primary chart for Avg $/lb: matched range compare",
         homeChartTitle: "Avg $/lb",
         chartContext: primaryChart?.basisLabel || "$/lb in this matched date range",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_ppl",
-        insight: "Use this view to compare $/lb in one matched range without mixing in full-range averages.",
+        insight: "Use this primary Avg $/lb chart first to compare matched ranges without mixing in full-range averages.",
         homeInsight: "Use the compare card and chart together to judge pricing."
       }
     };
