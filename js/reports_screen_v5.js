@@ -903,65 +903,65 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const dealerAmountTakeaway = dealerAmountPeak
       ? { text: "Top dealer still leads this range", tone: "up" }
       : { text: "Dealer mix still building", tone: "steady" };
-    const primaryMetricPairing = (metricLabel)=> `Primary chart for ${metricLabel} metric`;
-    const supportingMetricPairing = (metricLabel)=> `Supporting chart for ${metricLabel} metric`;
+    const primaryMetricPairing = (metricLabel)=> `Primary • ${metricLabel}`;
+    const supportingMetricPairing = (metricLabel)=> `Supporting • ${metricLabel}`;
 
     return [
       renderChartCard({
         takeaway: tripsTakeaway,
         title: "Trips over time",
-        subhead: `${primaryMetricPairing("Trips")} • Trip count by month for this same range`,
+        subhead: `${primaryMetricPairing("Trips")} • Monthly trip count`,
         hero: `<span class="trips">${tripsLatest ? tripsLatest.count : "—"}</span>`,
-        context: `Latest ${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"} • Range high <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
+        context: `Latest <span class="chartContextValue">${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"}</span> • High <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
         canvasId: "c_trips"
       }),
       renderChartCard({
         takeaway: lbsTakeaway,
         title: "Monthly Pounds",
-        subhead: `${primaryMetricPairing("Pounds")} • Month-by-month pounds landed in this range`,
+        subhead: `${primaryMetricPairing("Pounds")} • Pounds by month`,
         hero: `<span class="lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</span>`,
-        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
+        context: `Latest <span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "month"}</span> • High <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
         canvasId: "c_lbs"
       }),
       renderChartCard({
         takeaway: amountTakeaway,
         title: "Monthly Total Amount",
-        subhead: `${primaryMetricPairing("Amount")} • Month-by-month payout trend for this selected range`,
+        subhead: `${primaryMetricPairing("Amount")} • Total payout by month`,
         hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amt)) : "—"}</span>`,
-        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="money">${amountPeak ? formatMoney(to2(amountPeak.amt)) : "—"}</span>`,
+        context: `Latest <span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "month"}</span> • High <span class="money">${amountPeak ? formatMoney(to2(amountPeak.amt)) : "—"}</span>`,
         canvasId: "c_amount_monthly"
       }),
       renderChartCard({
         takeaway: pplTakeaway,
         title: "Avg $/lb by Month",
-        subhead: `${primaryMetricPairing("Avg $/lb")} • Month-by-month pay-rate trend for this selected range`,
+        subhead: `${primaryMetricPairing("Avg $/lb")} • Pay rate by month`,
         hero: `<span class="rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</span>`,
-        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span>`,
+        context: `Latest <span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "month"}</span> • High <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span>`,
         canvasId: "c_ppl"
       }),
       renderChartCard({
         takeaway: amountPerTripTakeaway,
         title: "Monthly Amount per Trip",
-        subhead: `${supportingMetricPairing("Amount")} • Average payout value per trip by month`,
+        subhead: `${supportingMetricPairing("Amount")} • Average payout per trip`,
         hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amountPerTrip)) : "—"}</span>`,
-        context: `Latest ${latestMonth ? escapeHtml(latestMonth.label) : "month"} • Range high <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
+        context: `Latest <span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "month"}</span> • High <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
         canvasId: "c_amount_per_trip"
       }),
       renderChartCard({
         takeaway: dealerRateTakeaway,
         title: "Dealer Avg $/lb",
-        subhead: `${supportingMetricPairing("Avg $/lb")} • Buyer pay rates across this active range`,
+        subhead: `${supportingMetricPairing("Avg $/lb")} • Dealer pay rates`,
         hero: `<span class="rate ppl">${dealerRatePeak ? `${formatMoney(to2(dealerRatePeak.avg))}/lb` : "—"}</span>`,
-        context: `Highest pay-rate dealer this range • ${dealerRatePeak ? escapeHtml(String(dealerRatePeak.name || "—")) : "—"}`,
+        context: `Top pay-rate dealer • <span class="chartContextValue">${dealerRatePeak ? escapeHtml(String(dealerRatePeak.name || "—")) : "—"}</span>`,
         canvasId: "c_dealer_rate",
         height: 220
       }),
       renderChartCard({
         takeaway: dealerAmountTakeaway,
         title: "Dealer Amount",
-        subhead: `${supportingMetricPairing("Amount")} • Top dealers by total amount in this range`,
+        subhead: `${supportingMetricPairing("Amount")} • Total payout by dealer`,
         hero: `<span class="money">${dealerAmountPeak ? formatMoney(to2(dealerAmountPeak.amt)) : "—"}</span>`,
-        context: `Leading dealer this range • ${dealerAmountPeak ? escapeHtml(String(dealerAmountPeak.name || "—")) : "—"}`,
+        context: `Leading dealer • <span class="chartContextValue">${dealerAmountPeak ? escapeHtml(String(dealerAmountPeak.name || "—")) : "—"}</span>`,
         canvasId: "c_dealer",
         height: 220
       })

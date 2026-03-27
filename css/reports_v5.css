@@ -129,20 +129,21 @@
 .chartCard .chart{margin-top:10px}
 
 
-.chartCard{padding:14px 0 18px;background:transparent;border:0;border-radius:0;box-shadow:none;border-top:0}
-.chartTakeaway{display:inline-flex;align-items:center;min-height:22px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;background:rgba(190,196,210,.14);color:#cfd5e2}
+.chartCard{padding:10px 0 14px;background:transparent;border:0;border-radius:0;box-shadow:none;border-top:0}
+.chartTakeaway{display:inline-flex;align-items:center;min-height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:830;letter-spacing:.07em;text-transform:uppercase;background:rgba(190,196,210,.11);color:#c7cfdd}
 .chartTakeaway.tone-up{background:rgba(46,160,67,.16);color:var(--good)}
 .chartTakeaway.tone-down{background:rgba(255,77,79,.15);color:var(--bad)}
 .chartTakeaway.tone-steady{background:rgba(174,184,205,.16);color:var(--neutral)}
-.chartTitle{margin-top:10px;margin-bottom:0;font-size:19px;line-height:1.2;font-weight:860;letter-spacing:.16px;color:#f3f6ff}
-.chartSubhead{margin-top:3px;font-size:11px;line-height:1.3;color:#9ea9bd;font-weight:760;letter-spacing:.02em}
-.chartHero{margin-top:8px;font-size:35px;line-height:1.01;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums;color:#fff}
-.chartContext{margin-top:5px;font-size:12px;line-height:1.35;color:#aeb7c8;font-weight:700}
-.chartCard .chart{display:block;margin-top:14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.022),rgba(255,255,255,.012));border-color:rgba(255,255,255,.06)}
+.chartTitle{margin-top:8px;margin-bottom:0;font-size:18px;line-height:1.2;font-weight:840;letter-spacing:.12px;color:#f3f6ff}
+.chartSubhead{margin-top:2px;font-size:10px;line-height:1.25;color:#99a5bb;font-weight:700;letter-spacing:.01em}
+.chartHero{margin-top:6px;font-size:35px;line-height:1.01;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums;color:#fff}
+.chartContext{margin-top:4px;font-size:11px;line-height:1.32;color:#a8b3c6;font-weight:640}
+.chartContextValue{font-weight:760;color:#d6ddeb}
+.chartCard .chart{display:block;margin-top:12px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.018),rgba(255,255,255,.01));border-color:rgba(255,255,255,.045)}
 @media (max-width:430px){
-  .chartCard{padding:12px 0 15px}
-  .chartTakeaway{font-size:10px;padding:0 9px}
-  .chartTitle{font-size:17px;margin-top:9px}
+  .chartCard{padding:9px 0 12px}
+  .chartTakeaway{font-size:9px;padding:0 8px}
+  .chartTitle{font-size:17px;margin-top:8px}
   .chartSubhead{font-size:10px}
   .chartHero{font-size:31px}
   .chartContext{font-size:11px}
@@ -234,10 +235,10 @@
 .reportsSectionHead p{margin:6px 0 0;font-size:12px;line-height:1.4;color:var(--text-muted-strong);font-weight:650}
 .reportsSection .card:last-child{margin-bottom:0}
 .reportsSection--highlights .reportsHighlightsCard{margin-bottom:0}
-.reportsChartsStack,.reportsTablesStack{display:grid;gap:16px}
+.reportsChartsStack,.reportsTablesStack{display:grid;gap:12px}
 .reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:0}
 .reportsChartsStack .chartCard{position:relative}
-.reportsChartsStack .chartCard + .chartCard::before{content:"";position:absolute;left:0;right:0;top:-8px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,0))}
+.reportsChartsStack .chartCard + .chartCard::before{content:"";position:absolute;left:0;right:0;top:-6px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,255,255,0))}
 .reportsHighlightsEmpty,.reportsDetailHint{padding:14px 0 0;border-top:1px solid rgba(255,255,255,.07)}
 .reportsHighlightsEmpty{margin-top:4px}
 .reportsDetailHint .btn{width:100%}
