@@ -219,6 +219,7 @@ export function deriveTripSettlement(trip, opts = {}){
     hasDifference,
     likelyRounded,
     adjustmentClass,
+    adjustmentClassification: adjustmentClass,
     adjustmentLabel: adjustmentLabelByClass[adjustmentClass] || "none"
   };
 }

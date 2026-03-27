@@ -1248,6 +1248,7 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
     writtenCheckAmount: to2(settlement.writtenCheckAmount),
     dealerAdjustment: to2(settlement.dealerAdjustment),
     adjustmentClass: settlement.adjustmentClass,
+    adjustmentClassification: settlement.adjustmentClassification,
     payRate: to2(rateNum),
     area,
     species,
