@@ -451,6 +451,16 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .settingsJumpChip{white-space:nowrap;flex:0 0 auto}
 .settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px var(--card-title-gap)}
 .settingsSectionCard.settingsGroupedCard{margin-bottom:0;padding:0;overflow:hidden}
+.settingsAccordionCard{border-radius:16px}
+.settingsAccordionSummary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 13px;cursor:pointer;list-style:none;background:linear-gradient(180deg, rgba(255,255,255,.045) 0%, rgba(255,255,255,.02) 100%)}
+.settingsAccordionSummary::-webkit-details-marker{display:none}
+.settingsAccordionMeta{min-width:0;display:grid;gap:3px}
+.settingsAccordionSummary .settingsGroupLabel{margin:0}
+.settingsAccordionTitle{font-size:14px;font-weight:840;line-height:1.2}
+.settingsAccordionStatus{line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.settingsAccordionChevron{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--text-muted-strong);background:rgba(8,12,20,.3);transition:transform var(--motion-duration-fast) var(--motion-ease-standard), background var(--motion-duration-fast) var(--motion-ease-standard)}
+.settingsAccordionCard[open] .settingsAccordionChevron{transform:rotate(180deg);background:rgba(255,255,255,.08)}
+.settingsAccordionCard:not([open]) .settingsRow{display:none}
 .settingsRow{padding:13px var(--card-pad-x)}
 .settingsRow + .settingsRow{border-top:1px solid var(--line)}
 .settingsRow--split{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -494,8 +504,6 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .hiddenInput{display:none}
 .settingsStackedSegBtn{display:flex;flex-direction:column;align-items:center;line-height:1.05}
 .settingsSoonNote{margin-top:2px;opacity:.85}
-.settingsAdvancedSummary{cursor:pointer;padding:12px 13px;font-size:14px;font-weight:820;list-style:none}
-.settingsAdvancedSummary::-webkit-details-marker{display:none}
 .settingsSectionCard .muted.small{line-height:1.45}
 .settingsSectionCard .hint{line-height:1.4}
 .settingsAdvancedCard{margin-top:0}
@@ -503,6 +511,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 
 @media (max-width:380px){
   .settingsRow--split{align-items:flex-start;flex-direction:column}
+  .settingsAccordionStatus{white-space:normal}
   .settingsSelectWrap{max-width:none;margin-left:0}
   .settingsBackupRow{grid-template-columns:1fr}
   .settingsInstallActions{grid-template-columns:1fr}

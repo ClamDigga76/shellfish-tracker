@@ -119,6 +119,8 @@ export function createSettingsScreenOrchestrator({
         </div>
       `;
 
+    const areaCount = Array.isArray(state.areas) ? state.areas.length : 0;
+    const dealerCount = Array.isArray(state.dealers) ? state.dealers.length : 0;
     const settingsJumpTargets = [
       { id: "settingsAppearance", label: "Appearance" },
       { id: "settingsUpdatesSupport", label: "Updates" },
@@ -139,8 +141,15 @@ export function createSettingsScreenOrchestrator({
     </div>
 
     <div class="settingsGroupBlock" id="settingsAppearance">
-      <div class="settingsGroupLabel">Appearance</div>
-      <div class="card settingsSectionCard settingsGroupedCard">
+      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion open>
+        <summary class="settingsAccordionSummary">
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">Appearance</div>
+            <div class="settingsAccordionTitle">Theme</div>
+            <div class="muted small settingsAccordionStatus" id="appearanceSummaryLine">Theme mode controls</div>
+          </div>
+          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+        </summary>
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Theme</div>
@@ -156,12 +165,19 @@ export function createSettingsScreenOrchestrator({
             <span class="chev" aria-hidden="true">▾</span>
           </div>
         </div>
-      </div>
+      </details>
     </div>
 
     <div class="settingsGroupBlock" id="settingsUpdatesSupport">
-      <div class="settingsGroupLabel">Updates & Support</div>
-      <div class="card settingsSectionCard settingsGroupedCard">
+      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
+        <summary class="settingsAccordionSummary">
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">Updates & Support</div>
+            <div class="settingsAccordionTitle">Update status + support access</div>
+            <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Checking version status…</div>
+          </div>
+          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+        </summary>
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">Updates</div>
@@ -188,12 +204,19 @@ export function createSettingsScreenOrchestrator({
           </div>
           <button class="btn settingsInlineBtn" id="openHelp">Open Help</button>
         </div>
-      </div>
+      </details>
     </div>
 
     <div class="settingsGroupBlock" id="settingsInstallApp">
-      <div class="settingsGroupLabel">Install App</div>
-      <div class="card settingsSectionCard settingsGroupedCard">
+      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
+        <summary class="settingsAccordionSummary">
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">Install App</div>
+            <div class="settingsAccordionTitle">Install and mode readiness</div>
+            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Checking install state…</div>
+          </div>
+          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+        </summary>
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">App mode</div>
@@ -213,12 +236,19 @@ export function createSettingsScreenOrchestrator({
           <div class="hint" id="installWhyLine"></div>
           <div class="muted small mt8" id="installStepsLine"></div>
         </div>
-      </div>
+      </details>
     </div>
 
     <div class="settingsGroupBlock" id="settingsSafetyRecovery">
-      <div class="settingsGroupLabel">Safety & Recovery</div>
-      <div class="card settingsSectionCard settingsGroupedCard">
+      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
+        <summary class="settingsAccordionSummary">
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">Safety & Recovery</div>
+            <div class="settingsAccordionTitle">Backup, restore, and deleted trips</div>
+            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Backup freshness and recovery actions</div>
+          </div>
+          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+        </summary>
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Backup & Restore</div>
@@ -246,12 +276,19 @@ export function createSettingsScreenOrchestrator({
           <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Undo last restore</button>
         </div>
         ${deletedTripsHtml}
-      </div>
+      </details>
     </div>
 
     <div class="settingsGroupBlock" id="settingsDataLists">
-      <div class="settingsGroupLabel">Data Lists</div>
-      <div class="card settingsSectionCard settingsGroupedCard">
+      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
+        <summary class="settingsAccordionSummary">
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">Data Lists</div>
+            <div class="settingsAccordionTitle">Trip list management</div>
+            <div class="muted small settingsAccordionStatus" id="dataListsSummaryLine">${areaCount} areas • ${dealerCount} dealers</div>
+          </div>
+          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+        </summary>
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">List Management</div>
@@ -273,12 +310,19 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--field">
           <div id="listMgmtPanel">${settingsListManagement.renderListMgmtPanel(listMode)}</div>
         </div>
-      </div>
+      </details>
     </div>
 
     <div class="settingsGroupBlock" id="settingsAbout">
-      <div class="settingsGroupLabel">About</div>
-      <div class="card settingsSectionCard settingsGroupedCard">
+      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
+        <summary class="settingsAccordionSummary">
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">About</div>
+            <div class="settingsAccordionTitle">Build, support, and legal</div>
+            <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build ${displayBuildVersion}</div>
+          </div>
+          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+        </summary>
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Build</div>
@@ -309,13 +353,19 @@ export function createSettingsScreenOrchestrator({
             <button class="btn" id="openLicense">Open Source License</button>
           </div>
         </div>
-      </div>
+      </details>
     </div>
 
     <div class="settingsGroupBlock" id="settingsAdvanced">
-      <div class="settingsGroupLabel">Advanced</div>
-      <details class="card settingsSectionCard settingsGroupedCard settingsAdvancedCard" id="advancedBox">
-        <summary class="settingsAdvancedSummary">Advanced support diagnostics and reset</summary>
+      <details class="card settingsSectionCard settingsGroupedCard settingsAdvancedCard settingsAccordionCard" id="advancedBox" data-settings-accordion>
+        <summary class="settingsAccordionSummary">
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">Advanced</div>
+            <div class="settingsAccordionTitle">Diagnostics + release validation + reset</div>
+            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle, release checks, and recovery reset tools</div>
+          </div>
+          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+        </summary>
         <div class="settingsRow settingsRow--action mt10">
           <div class="row gap10 wrap">
             <button class="btn" id="copyDebug">Copy support bundle</button>
@@ -418,6 +468,17 @@ export function createSettingsScreenOrchestrator({
 
     bindNavHandlers(state);
 
+    const accordionEls = Array.from(document.querySelectorAll("[data-settings-accordion]"));
+    accordionEls.forEach((detailsEl) => {
+      detailsEl.addEventListener("toggle", () => {
+        if (!detailsEl.open) return;
+        accordionEls.forEach((otherEl) => {
+          if (otherEl === detailsEl) return;
+          otherEl.open = false;
+        });
+      });
+    });
+
     const jumpButtons = Array.from(document.querySelectorAll("[data-settings-jump]"));
     jumpButtons.forEach((button) => {
       button.onclick = () => {
@@ -425,6 +486,8 @@ export function createSettingsScreenOrchestrator({
         if (!targetId) return;
         const targetEl = document.getElementById(targetId);
         if (!targetEl) return;
+        const detailsEl = targetEl.querySelector("[data-settings-accordion]");
+        if (detailsEl) detailsEl.open = true;
         targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
       };
     });
@@ -443,11 +506,30 @@ export function createSettingsScreenOrchestrator({
     const installStepsLine = document.getElementById("installStepsLine");
     const installActionBtn = document.getElementById("installActionBtn");
     const installHelpBtn = document.getElementById("installHelpBtn");
+    const appearanceSummaryLine = document.getElementById("appearanceSummaryLine");
+    const updatesSummaryLine = document.getElementById("updatesSummaryLine");
+    const installSummaryLine = document.getElementById("installSummaryLine");
+    const safetySummaryLine = document.getElementById("safetySummaryLine");
+    const advancedSummaryLine = document.getElementById("advancedSummaryLine");
+
+    if (appearanceSummaryLine) {
+      appearanceSummaryLine.textContent = "Dark mode active (temporary only mode)";
+    }
+    if (updatesSummaryLine) {
+      updatesSummaryLine.textContent = "Checking version status…";
+    }
+    if (safetySummaryLine) {
+      safetySummaryLine.textContent = `Recently deleted: ${deletedTrips.length}`;
+    }
+    if (advancedSummaryLine) {
+      advancedSummaryLine.textContent = `Build ${displayBuildVersion} • Release checks not run`;
+    }
 
     if (installModel) {
       if (installModePill) installModePill.textContent = installModel.statusPill;
       if (installModeLine) installModeLine.textContent = installModel.statusLine;
       if (installStatusHint) installStatusHint.textContent = installModel.statusHint;
+      if (installSummaryLine) installSummaryLine.textContent = `${installModel.statusPill} • ${installModel.statusHint}`;
       if (installWhyLine) installWhyLine.innerHTML = `<b>${escapeSettingsHtml(installModel.whyTitle)}</b> ${escapeSettingsHtml(installModel.whyBody)}`;
       if (installStepsLine) installStepsLine.textContent = installModel.stepsLine;
       if (installActionBtn) {
@@ -473,6 +555,25 @@ export function createSettingsScreenOrchestrator({
     }
 
     updateUpdateRow();
+    const updateBigStatusEl = document.getElementById("updateBigStatus");
+    const updateVersionLineEl = document.getElementById("updateVersionLine");
+    if (updatesSummaryLine && updateBigStatusEl) {
+      const status = String(updateBigStatusEl.textContent || "").trim();
+      const versionMeta = String(updateVersionLineEl?.textContent || "").trim();
+      updatesSummaryLine.textContent = versionMeta ? `${status} • ${versionMeta}` : (status || "Update status available");
+    }
+    if (updatesSummaryLine && updateBigStatusEl) {
+      const syncUpdateSummaryLine = () => {
+        const status = String(updateBigStatusEl.textContent || "").trim();
+        const versionMeta = String(updateVersionLineEl?.textContent || "").trim();
+        updatesSummaryLine.textContent = versionMeta ? `${status} • ${versionMeta}` : (status || "Update status available");
+      };
+      const updateObserver = new MutationObserver(() => syncUpdateSummaryLine());
+      updateObserver.observe(updateBigStatusEl, { childList: true, characterData: true, subtree: true });
+      if (updateVersionLineEl) {
+        updateObserver.observe(updateVersionLineEl, { childList: true, characterData: true, subtree: true });
+      }
+    }
     try {
       updateBuildInfo();
     } catch (_) {}
@@ -510,6 +611,7 @@ export function createSettingsScreenOrchestrator({
       if (latestReleaseSnapshot?.summary?.updateAligned === false) status += " • Version alignment warning";
       if (latestReleaseSnapshot?.summary?.recoveryReady) status += " • Recovery signal present";
       releaseSummaryEl.textContent = status;
+      if (advancedSummaryLine) advancedSummaryLine.textContent = `Build ${displayBuildVersion} • ${status}`;
     }
 
     async function hydrateReleaseValidationSurface() {
@@ -600,6 +702,11 @@ export function createSettingsScreenOrchestrator({
       updateBackupHealthWarning();
       updateLastBackupLine();
       updateRestoreRollbackLine();
+      const lastBackupLineEl = document.getElementById("lastBackupLine");
+      if (safetySummaryLine && lastBackupLineEl) {
+        const backupText = String(lastBackupLineEl.textContent || "").trim() || "Backup status available";
+        safetySummaryLine.textContent = `${backupText} • Recently deleted: ${deletedTrips.length}`;
+      }
       const btnDl = document.getElementById("downloadBackup");
       const btnRs = document.getElementById("restoreBackup");
       const btnRollback = document.getElementById("restoreRollbackBtn");
