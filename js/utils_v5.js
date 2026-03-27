@@ -175,6 +175,17 @@ export function computePPL(pounds, amount){
   return p > 0 ? to2(a / p) : 0;
 }
 
+export function resolveTripPayRate(trip){
+  const explicitRate = Number(trip?.payRate ?? trip?.rate ?? trip?.pricePerPound ?? 0);
+  if(Number.isFinite(explicitRate) && explicitRate > 0) return explicitRate;
+  const pounds = Number(trip?.pounds ?? trip?.lbs ?? 0);
+  const amount = Number(trip?.amount ?? trip?.total ?? 0);
+  if(Number.isFinite(pounds) && pounds > 0 && Number.isFinite(amount) && amount > 0){
+    return amount / pounds;
+  }
+  return 0;
+}
+
 export function formatMoney(n){
   try{
     return new Intl.NumberFormat(undefined, {
@@ -261,7 +272,7 @@ export function toCSV(trips){
   const clean = (v) => String(v ?? "").replace(/[\r\n]+/g, " ").trim();
 
   for(const t of trips){
-    const ppl = computePPL(t.pounds, t.amount);
+    const ppl = resolveTripPayRate(t);
     const cells = [
       clean(formatISODateToDisplayDMY(t.dateISO)),
       clean(normalizeDealerForExport(t.dealer)),

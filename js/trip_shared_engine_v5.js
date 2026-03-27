@@ -1,3 +1,5 @@
+import { resolveTripPayRate } from "./utils_v5.js";
+
 const DEFAULT_SPECIES = "Soft-shell Clams";
 const TRIP_HISTORY_LIMIT = 12;
 export const AREA_NOT_RECORDED = "Area Not Recorded";
@@ -258,16 +260,7 @@ export function createTripDraftSaveEngine({ saveState, getEmergencyDraftPayload,
 }
 
 
-function deriveTripPayRate(trip) {
-  const explicitRate = Number(trip?.payRate ?? trip?.rate ?? trip?.pricePerPound ?? 0);
-  if (Number.isFinite(explicitRate) && explicitRate > 0) return explicitRate;
-  const pounds = Number(trip?.pounds ?? trip?.lbs ?? 0);
-  const amount = Number(trip?.amount ?? trip?.total ?? 0);
-  if (Number.isFinite(pounds) && pounds > 0 && Number.isFinite(amount) && amount > 0) {
-    return amount / pounds;
-  }
-  return 0;
-}
+const deriveTripPayRate = (trip) => resolveTripPayRate(trip);
 
 export function createTripMetricSyncEngine({ parseNum, parseMoney, syncTargets }) {
   let syncingMetric = false;

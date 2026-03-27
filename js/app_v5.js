@@ -65,7 +65,7 @@ try {
   window.__BOOT_DIAG__.startupModuleUrls = [...STARTUP_MODULE_URLS];
 } catch (_) {}
 
-const [{ uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable , isValidISODate },
+const [{ uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable , isValidISODate },
   { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme },
   { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback },
   { ensureNavState, createNavigator },
@@ -644,6 +644,7 @@ const { renderStandardReadOnlyTripCard, renderStandardInteractiveTripCard } = cr
   formatDateDMY,
   to2,
   computePPL,
+  resolveTripPayRate,
   formatMoney,
   escapeHtml
 });
@@ -1716,6 +1717,7 @@ const { renderHome } = createHomeDashboardRenderer({
   buildUnifiedFilterFromHomeFilter,
   applyUnifiedTripFilter,
   computePPL,
+  resolveTripPayRate,
   round2: to2,
   getTripsNewestFirst,
   renderPageHeader,
@@ -1830,6 +1832,7 @@ const { renderReports, renderHomeMetricDetail } = createReportsScreenRenderer({
   buildReportsSeasonalityFoundation,
   canonicalDealerGroupKey,
   normalizeDealerDisplay,
+  resolveTripPayRate,
   formatMoney,
   to2,
   drawReportsCharts,
