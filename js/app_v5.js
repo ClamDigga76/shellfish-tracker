@@ -1982,6 +1982,19 @@ function renderAbout(){
 }
 
 function render(){
+  const focusTopLevelLanding = ()=>{
+    const appRoot = getApp();
+    if(!appRoot) return;
+    const title = appRoot.querySelector(".phTitle");
+    if(title instanceof HTMLElement){
+      try{
+        title.focus({ preventScroll: true });
+        return;
+      }catch(_){ }
+    }
+    try{ focusFirstFocusable(appRoot); }catch(_){ }
+  };
+
   renderViewDispatch({
     state,
     renderers: {
@@ -1997,7 +2010,8 @@ function render(){
     onRedirectToNew: ()=>{ state.view = "new"; saveState(); renderNewTrip(); },
     renderTabBar,
     bindHeaderHelpButtons,
-    onBeforeTopLevelViewChange: ()=>{ clearMilestoneCelebration(); }
+    onBeforeTopLevelViewChange: ()=>{ clearMilestoneCelebration(); },
+    onAfterTopLevelViewChange: ()=>{ focusTopLevelLanding(); }
   });
 }
 
