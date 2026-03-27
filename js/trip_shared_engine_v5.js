@@ -138,6 +138,7 @@ export function createTripDataEngine({ uid, isValidISODate }) {
       writtenCheckAmount: Number.isFinite(settlement.writtenCheckAmount) ? settlement.writtenCheckAmount : 0,
       dealerAdjustment: Number.isFinite(settlement.dealerAdjustment) ? settlement.dealerAdjustment : 0,
       adjustmentClass: String(settlement.adjustmentClass || "none"),
+      adjustmentClassification: String(settlement.adjustmentClassification || settlement.adjustmentClass || "none"),
       payRate: Number.isFinite(payRate) ? payRate : 0,
       dealer: String(t?.dealer || "").trim(),
       area: String(t?.area || "").trim(),
