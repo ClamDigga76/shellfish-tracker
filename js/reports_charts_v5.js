@@ -1,6 +1,9 @@
 const chartAnimationState = new Map();
 
 export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, options = {}){
+  const monthRowsChronological = normalizeChronologicalRows(monthRows);
+  const tripsTimelineChronological = normalizeChronologicalRows(tripsOrTimeline);
+
   function setupCanvas(canvas){
     if(!canvas) return null;
     const dpr = window.devicePixelRatio || 1;
@@ -307,8 +310,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const metricKey = String(metricKeyOverride || chartModel?.metricKey || "").toLowerCase();
     if(!canvasId || !chartModel || !document.getElementById(canvasId)) return false;
     if(chartModel.chartType === "time-series"){
-      const values = Array.isArray(chartModel?.values) ? chartModel.values.map((v)=> Number(v) || 0) : [];
-      const labels = Array.isArray(chartModel?.labels) ? chartModel.labels.map((v)=> String(v || "")) : [];
+      const chronologicalSeries = normalizeChronologicalSeries({
+        monthKeys: Array.isArray(chartModel?.monthKeys) ? chartModel.monthKeys : [],
+        labels: Array.isArray(chartModel?.labels) ? chartModel.labels : [],
+        values: Array.isArray(chartModel?.values) ? chartModel.values : []
+      });
+      const values = chronologicalSeries.values.map((v)=> Number(v) || 0);
+      const labels = chronologicalSeries.labels.map((v)=> String(v || ""));
       const paletteSet = resolveMetricDetailPalette(metricKey || "amount");
       drawLineChart(canvasId, values, labels, { color: paletteSet.color, yFormatter: paletteSet.yFormatter, topLabel: paletteSet.topFormatter });
       return true;
@@ -388,15 +396,15 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     drawMetricDetailChart("c_seasonality_amount", seasonalityChart, seasonalityChart.metricKey || "amount");
   }
 
-  const amountValues = monthRows.map((r)=> Number(r.amt) || 0);
-  drawLineChart("c_amount_monthly", amountValues, monthRows.map((r)=> r.label), {
+  const amountValues = monthRowsChronological.map((r)=> Number(r.amt) || 0);
+  drawLineChart("c_amount_monthly", amountValues, monthRowsChronological.map((r)=> r.label), {
     color: palette.money,
     yFormatter: formatCompactMoney,
     topLabel: formatShortMoney
   });
 
-  const pplValues = monthRows.map((r)=> Number(r.avg) || 0);
-  drawLineChart("c_ppl", pplValues, monthRows.map((r)=> r.label), {
+  const pplValues = monthRowsChronological.map((r)=> Number(r.avg) || 0);
+  drawLineChart("c_ppl", pplValues, monthRowsChronological.map((r)=> r.label), {
     color: palette.ppl,
     yFormatter: formatShortMoney,
     topLabel: formatShortMoney
@@ -462,23 +470,68 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     }
   );
 
-  const amountPerTripValues = monthRows.map((r)=> Number(r.amountPerTrip) || 0);
-  drawBarChart("c_amount_per_trip", amountPerTripValues, monthRows.map((r)=> r.label), palette.trips, formatCompactMoney, formatShortMoney(Math.max(...amountPerTripValues, 0)), {
+  const amountPerTripValues = monthRowsChronological.map((r)=> Number(r.amountPerTrip) || 0);
+  drawBarChart("c_amount_per_trip", amountPerTripValues, monthRowsChronological.map((r)=> r.label), palette.trips, formatCompactMoney, formatShortMoney(Math.max(...amountPerTripValues, 0)), {
     minBarWidth: 4,
     barPad: (frame)=> frame.compact ? 0.8 : 1.2
   });
 
-  const lbsValues = monthRows.map((r)=> Number(r.lbs) || 0);
-  drawBarChart("c_lbs", lbsValues, monthRows.map((r)=> r.label), palette.lbs, formatCompactCount, `${Math.round(Math.max(...lbsValues, 0))}`, {
+  const lbsValues = monthRowsChronological.map((r)=> Number(r.lbs) || 0);
+  drawBarChart("c_lbs", lbsValues, monthRowsChronological.map((r)=> r.label), palette.lbs, formatCompactCount, `${Math.round(Math.max(...lbsValues, 0))}`, {
     minBarWidth: 4,
     barPad: (frame)=> frame.compact ? 0.8 : 1.2
   });
 
-  const tripValues = tripsOrTimeline.map((r)=> Number(r.count) || 0);
-  drawBarChart("c_trips", tripValues, tripsOrTimeline.map((r)=> r.shortLabel || r.label || ""), palette.trips, formatCompactCount, `${Math.round(Math.max(...tripValues, 1))}`, {
+  const tripValues = tripsTimelineChronological.map((r)=> Number(r.count) || 0);
+  drawBarChart("c_trips", tripValues, tripsTimelineChronological.map((r)=> r.shortLabel || r.label || ""), palette.trips, formatCompactCount, `${Math.round(Math.max(...tripValues, 1))}`, {
     minTop: 1,
     minBarWidth: 4,
     barPad: (frame)=> frame.compact ? 0.8 : 1.2
   });
 
+}
+
+function normalizeChronologicalRows(rows){
+  const list = Array.isArray(rows) ? rows.slice() : [];
+  return list.sort((a,b)=> {
+    const keyA = extractMonthKey(a);
+    const keyB = extractMonthKey(b);
+    if(keyA && keyB) return keyA.localeCompare(keyB);
+    if(keyA) return -1;
+    if(keyB) return 1;
+    return 0;
+  });
+}
+
+function normalizeChronologicalSeries({ monthKeys, labels, values }){
+  const safeLabels = Array.isArray(labels) ? labels : [];
+  const safeValues = Array.isArray(values) ? values : [];
+  const safeKeys = Array.isArray(monthKeys) ? monthKeys : [];
+  if(!(safeLabels.length && safeValues.length && safeKeys.length === safeLabels.length && safeValues.length === safeLabels.length)){
+    return {
+      labels: safeLabels.slice(),
+      values: safeValues.slice()
+    };
+  }
+  const tuples = safeKeys.map((key, index)=> ({
+    monthKey: normalizeMonthKey(key),
+    label: safeLabels[index],
+    value: safeValues[index]
+  }));
+  tuples.sort((a,b)=> a.monthKey.localeCompare(b.monthKey));
+  return {
+    labels: tuples.map((row)=> row.label),
+    values: tuples.map((row)=> row.value)
+  };
+}
+
+function extractMonthKey(row){
+  return normalizeMonthKey(row?.monthKey || row?.key || row?.dateISO || "");
+}
+
+function normalizeMonthKey(raw){
+  const value = String(raw || "").trim();
+  if(/^\d{4}-\d{2}$/.test(value)) return value;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(value)) return value.slice(0, 7);
+  return "";
 }

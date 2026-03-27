@@ -1,8 +1,8 @@
-import { buildEntityPeriodRows, buildMonthWindowValueSeries, summarizeTripsByMonthWindow } from "./reports_aggregation_v5.js";
+import { buildEntityPeriodRows, buildMonthWindowValueSeries, normalizeChronologicalRows, summarizeTripsByMonthWindow } from "./reports_aggregation_v5.js";
 
 export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows }){
   const safeTrips = Array.isArray(trips) ? trips : [];
-  const safeMonths = Array.isArray(monthRows) ? monthRows : [];
+  const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows : []);
   const latestMonth = safeMonths[safeMonths.length - 1] || null;
   const priorMonth = safeMonths[safeMonths.length - 2] || null;
 
@@ -587,8 +587,8 @@ function buildDetailCharts({ period, monthRows, trips }){
   const current = period?.current || null;
   const previous = period?.previous || null;
   const labels = [
-    String(period?.currentLabel || "Current"),
-    String(period?.previousLabel || "Previous")
+    String(period?.previousLabel || "Previous"),
+    String(period?.currentLabel || "Current")
   ];
   const amountTrend = buildMetricDetailAmountTrendChart({ period, monthRows, trips });
   return {
@@ -606,8 +606,8 @@ function buildMetricDetailCompareChart({ labels, currentValue, previousValue, me
     chartType: "compare-bars",
     metricKey,
     basisLabel: String(basisLabel || (labels?.length ? `Matched compare window • ${labels.join(" vs ")}` : "Matched compare window")),
-    labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Current", "Previous"],
-    values: [safeNum(currentValue), safeNum(previousValue)]
+    labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Previous", "Current"],
+    values: [safeNum(previousValue), safeNum(currentValue)]
   };
 }
 
@@ -618,6 +618,7 @@ function buildMetricDetailAmountTrendChart({ period, monthRows, trips }){
     chartType: "time-series",
     metricKey: "amount",
     basisLabel: dayLimit ? `Amount trend • same days in each month (days 1-${dayLimit})` : "Amount trend across the range",
+    monthKeys: trendRows.map((row)=> row.monthKey),
     labels: trendRows.map((row)=> row.label),
     values: trendRows.map((row)=> row.value),
     compareLabels: [String(period?.currentLabel || "Current"), String(period?.previousLabel || "Previous")],

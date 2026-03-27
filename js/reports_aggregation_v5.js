@@ -57,7 +57,7 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
     .map((x)=> finalizeAggregateRow(x))
     .sort((a,b)=> b.amt - a.amt);
 
-  const monthRows = Array.from(byMonth.entries())
+  const monthRows = normalizeChronologicalRows(Array.from(byMonth.entries())
     .sort((a,b)=> a[0].localeCompare(b[0]))
     .map(([monthKey, x])=>{
       const year = Number(monthKey.slice(0, 4));
@@ -70,7 +70,7 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
         label: `${dt.toLocaleString(undefined, { month: "short" })} ${year}`,
         ...finalizeAggregateRow(x)
       };
-    });
+    }));
 
   const maxLbs = pickExtremeTrip(safeTrips, (t)=> Number(t?.pounds) || 0, "max");
   const maxAmt = pickExtremeTrip(safeTrips, (t)=> Number(t?.amount) || 0, "max");
@@ -247,7 +247,7 @@ export function buildEntityPeriodRows({ trips, entityType, period }){
 }
 
 export function buildMonthWindowValueSeries({ monthRows, trips, dayLimit, metricKey = "amount" }){
-  return (Array.isArray(monthRows) ? monthRows : []).map((row)=>{
+  return normalizeChronologicalRows((Array.isArray(monthRows) ? monthRows : []).map((row)=>{
     const monthKey = String(row?.monthKey || "");
     const summary = dayLimit
       ? summarizeTripsByMonthWindow(trips, monthKey, dayLimit)
@@ -264,7 +264,7 @@ export function buildMonthWindowValueSeries({ monthRows, trips, dayLimit, metric
       label: String(row?.label || monthKey),
       value
     };
-  }).filter((row)=> row.monthKey);
+  }).filter((row)=> row.monthKey));
 }
 
 function finalizeEntityPeriodBucket(bucket){
@@ -283,7 +283,7 @@ export function buildTripsTimeline(rows){
     const key = iso.slice(0, 7);
     byKey.set(key, (byKey.get(key) || 0) + 1);
   });
-  return Array.from(byKey.entries())
+  return normalizeChronologicalRows(Array.from(byKey.entries())
     .sort((a,b)=> a[0].localeCompare(b[0]))
     .map(([key, count])=>{
       const year = Number(key.slice(0, 4));
@@ -295,5 +295,25 @@ export function buildTripsTimeline(rows){
         label: dt.toLocaleString(undefined, { month: "short" }),
         shortLabel: `${dt.toLocaleString(undefined, { month: "short" })} ${String(year).slice(-2)}`
       };
-    });
+    }));
+}
+
+export function normalizeChronologicalRows(rows){
+  const list = Array.isArray(rows) ? rows.slice() : [];
+  return list.sort((a,b)=> {
+    const keyA = resolveChronologyMonthKey(a);
+    const keyB = resolveChronologyMonthKey(b);
+    if(keyA && keyB) return keyA.localeCompare(keyB);
+    if(keyA) return -1;
+    if(keyB) return 1;
+    return 0;
+  });
+}
+
+function resolveChronologyMonthKey(row){
+  const monthKey = String(row?.monthKey || row?.key || "").trim();
+  if(/^\d{4}-\d{2}$/.test(monthKey)) return monthKey;
+  const iso = String(row?.dateISO || "").trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso.slice(0, 7);
+  return "";
 }

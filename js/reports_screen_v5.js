@@ -16,7 +16,7 @@ const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
 });
 
 function buildHomeMetricDetailFoundation({ monthRows }){
-  const safeMonths = Array.isArray(monthRows) ? monthRows.filter((row)=> row?.monthKey) : [];
+  const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows.filter((row)=> row?.monthKey) : []);
   const currentMonth = safeMonths[safeMonths.length - 1] || null;
   const previousMonth = safeMonths[safeMonths.length - 2] || null;
   const current = summarizeHomeMonthRow(currentMonth);
@@ -199,15 +199,16 @@ function buildMetricPrimaryBasis({ metricKey, metricPayload, primaryChart, perio
 }
 
 function buildHomeDetailCharts({ monthRows, period }){
-  const safeMonths = Array.isArray(monthRows) ? monthRows : [];
+  const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows : []);
   const labels = [
-    String(period?.currentLabel || "Current month"),
-    String(period?.previousLabel || "Previous month")
+    String(period?.previousLabel || "Previous month"),
+    String(period?.currentLabel || "Current month")
   ];
   const amountTrendChart = {
     chartType: "time-series",
     metricKey: "amount",
     basisLabel: "Visible Home month view",
+    monthKeys: safeMonths.map((row)=> String(row?.monthKey || "")),
     labels: safeMonths.map((row)=> String(row?.label || row?.monthKey || "")),
     values: safeMonths.map((row)=> Number(row?.amt) || 0)
   };
@@ -225,9 +226,21 @@ function buildHomeCompareBarChart({ labels, metricKey, currentValue, previousVal
     chartType: "compare-bars",
     metricKey,
     basisLabel: String(labels?.length ? labels.join(" vs ") : "Visible Home month view"),
-    labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Current month", "Previous month"],
-    values: [Number(currentValue) || 0, Number(previousValue) || 0]
+    labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Previous month", "Current month"],
+    values: [Number(previousValue) || 0, Number(currentValue) || 0]
   };
+}
+
+function normalizeChronologicalRows(rows){
+  const list = Array.isArray(rows) ? rows.slice() : [];
+  return list.sort((a,b)=> {
+    const keyA = String(a?.monthKey || a?.key || "").trim();
+    const keyB = String(b?.monthKey || b?.key || "").trim();
+    if(/^\d{4}-\d{2}$/.test(keyA) && /^\d{4}-\d{2}$/.test(keyB)) return keyA.localeCompare(keyB);
+    if(/^\d{4}-\d{2}$/.test(keyA)) return -1;
+    if(/^\d{4}-\d{2}$/.test(keyB)) return 1;
+    return 0;
+  });
 }
 
 function toneFromDelta(deltaPct, epsilonPct){
