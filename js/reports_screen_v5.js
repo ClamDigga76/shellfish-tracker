@@ -604,6 +604,23 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     `;
   };
 
+  const applyPrimaryReportsFilterSelection = (key)=>{
+    const normalizedKey = String(key || "YTD").toUpperCase();
+    if(!state.reportsFilter || typeof state.reportsFilter !== "object"){
+      state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
+    }
+    if(normalizedKey === "ADVANCED"){
+      state.reportsFilter.adv = true;
+      return;
+    }
+    state.reportsFilter.mode = normalizedKey;
+    state.reportsFilter.adv = false;
+    if(normalizedKey !== "RANGE"){
+      state.reportsFilter.from = "";
+      state.reportsFilter.to = "";
+    }
+  };
+
   if(!trips.length){
     getApp().innerHTML = `
       ${renderPageHeader("reports")}
@@ -615,19 +632,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     // quick range buttons
     getApp().querySelectorAll(".chip[data-rf]").forEach((btn)=>{
       btn.onclick = ()=>{
-        const key = String(btn.getAttribute("data-rf")||"YTD").toUpperCase();
-        if(key === "ADVANCED"){
-          state.reportsFilter.adv = true;
-          saveState();
-          renderReportsScreen();
-          return;
-        }
-        state.reportsFilter.mode = key;
-        state.reportsFilter.adv = false;
-        if(key !== "RANGE"){
-          state.reportsFilter.from = "";
-          state.reportsFilter.to = "";
-        }
+        const key = String(btn.getAttribute("data-rf")||"YTD");
+        applyPrimaryReportsFilterSelection(key);
         saveState();
         showToast("Filter updated");
         renderReportsScreen();
@@ -1522,19 +1528,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   // range chips
   getApp().querySelectorAll(".chip[data-rf]").forEach((btn)=>{
     btn.onclick = ()=>{
-      const key = String(btn.getAttribute("data-rf")||"YTD").toUpperCase();
-      if(key === "ADVANCED"){
-        state.reportsFilter.adv = true;
-        saveState();
-        renderReportsScreen();
-        return;
-      }
-      state.reportsFilter.mode = key;
-      state.reportsFilter.adv = false;
-      if(key !== "RANGE"){
-        state.reportsFilter.from = "";
-        state.reportsFilter.to = "";
-      }
+      const key = String(btn.getAttribute("data-rf")||"YTD");
+      applyPrimaryReportsFilterSelection(key);
       saveState();
       renderReportsScreen();
     };

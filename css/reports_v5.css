@@ -53,9 +53,20 @@
 .reportsShellRow--topline{margin-bottom:8px}
 .reportsTimeframeShell{margin-top:14px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03)}
 .reportsTimeframeControl{margin-top:0;margin-bottom:0}
-.reportsPrimaryFilterBar{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 1px 2px}
+.reportsTimeframeShell .timeframeUnifiedControl.reportsPrimaryFilterBar{
+  margin-top:0;
+  display:flex;
+  grid-template-columns:none;
+  gap:8px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  flex-wrap:nowrap;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  padding:8px 1px 2px;
+}
 .reportsPrimaryFilterBar::-webkit-scrollbar{display:none}
-.reportsPrimaryFilterChip{flex:0 0 auto;min-width:max-content;min-height:40px;padding:9px 13px}
+.reportsPrimaryFilterChip{flex:0 0 auto;width:auto;min-width:max-content;min-height:40px;padding:9px 13px}
 .repAdvToggle{min-width:0;padding-inline:12px}
 .reportsAdvancedShell{margin-top:8px}
 .reportsAdvancedShell .sep{margin-top:0}
@@ -224,7 +235,7 @@
   .reportsTopHeader{align-items:flex-start}
   .reportsTimeframeShell,.reportsNavShell{margin-top:12px;padding:11px 10px}
   .reportsShellRow--topline{margin-bottom:7px}
-  .reportsPrimaryFilterBar{gap:7px;padding-top:7px}
+  .reportsTimeframeShell .timeframeUnifiedControl.reportsPrimaryFilterBar{gap:7px;padding-top:7px}
   .reportsPrimaryFilterChip{min-height:38px;padding:8px 12px}
   .reportsSectionSwitch{gap:7px;padding-top:7px}
   .reportsSectionChip{min-height:38px;padding:8px 12px}
