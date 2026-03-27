@@ -17,6 +17,7 @@ export function createRuntimeOrchestrationSeam({
     displayBuildVersion,
     getSchemaVersion: () => getSchemaVersion(),
     getState,
+    getRuntimeSupportDiagnosticsText: () => updateRuntimeStatus.formatSupportDiagnosticsSection(),
     copyTextWithFeedback,
     escapeHtml
   });

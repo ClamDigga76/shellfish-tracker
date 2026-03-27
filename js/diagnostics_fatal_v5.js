@@ -2,6 +2,7 @@ export function createDiagnosticsFatalSeam({
   displayBuildVersion,
   getSchemaVersion,
   getState,
+  getRuntimeSupportDiagnosticsText = null,
   copyTextWithFeedback,
   escapeHtml,
   documentRef = document,
@@ -101,6 +102,16 @@ export function createDiagnosticsFatalSeam({
       lines.push(fatalErrorText);
     }
 
+    try{
+      const runtimeSupportBlock = (typeof getRuntimeSupportDiagnosticsText === "function")
+        ? String(getRuntimeSupportDiagnosticsText() || "").trim()
+        : "";
+      if(runtimeSupportBlock){
+        lines.push("");
+        lines.push(...runtimeSupportBlock.split("\n"));
+      }
+    }catch(_){ }
+
     return lines.filter(Boolean).join("\n");
   }
 
@@ -187,7 +198,7 @@ export function createDiagnosticsFatalSeam({
     };
 
     const btnCopy = documentRef.getElementById("fatalCopy");
-    if(btnCopy) btnCopy.onclick = ()=> { void copyTextWithFeedback(dump, "Support diagnostics copied"); };
+    if(btnCopy) btnCopy.onclick = ()=> { void copyTextWithFeedback(dump, "Support bundle copied"); };
 
     const btnReload = documentRef.getElementById("fatalReload");
     if(btnReload) btnReload.onclick = ()=> locationRef.reload();

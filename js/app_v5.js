@@ -1972,7 +1972,7 @@ function renderAbout(){
   document.getElementById("backSettings").onclick = ()=>{ state.view="settings"; state.lastAction="nav:settings"; saveState(); render(); };
 
   document.getElementById("copyDebug").onclick = async ()=>{
-    await copyTextWithFeedback(getDebugInfo(), "Debug info copied");
+    await copyTextWithFeedback(getDebugInfo(), "Support bundle copied");
   };
 
   document.getElementById("feedback").onclick = ()=>{

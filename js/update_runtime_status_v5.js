@@ -10,6 +10,8 @@ export function createUpdateRuntimeStatusSeam({
 }){
   let swUpdateReady = false;
   let lastSwUpdateSignal = "";
+  let lastRuntimeVersionDiagnostics = null;
+  let lastReleaseValidationSnapshot = null;
 
   const UPDATE_SIGNAL_SESSION_KEY = "shellfish-update-signal-v1";
   const UPDATE_ATTEMPT_SESSION_KEY = "shellfish-update-attempt-v1";
@@ -218,7 +220,94 @@ export function createUpdateRuntimeStatusSeam({
       /reset cache|stale required asset|wrong required asset|unexpected js payload|corrupted js response|empty js response|incomplete js response/i.test(details.lastBootError)
     );
 
+    try{
+      lastRuntimeVersionDiagnostics = {
+        ...details,
+        cacheVersions: Array.isArray(details.cacheVersions) ? [...details.cacheVersions] : [],
+        startupModuleVersions: Array.isArray(details.startupModuleVersions) ? [...details.startupModuleVersions] : []
+      };
+    }catch(_){ }
+
     return details;
+  }
+
+  function getSupportDiagnosticsSnapshot(){
+    const runtimeDiag = lastRuntimeVersionDiagnostics
+      ? {
+        ...lastRuntimeVersionDiagnostics,
+        cacheVersions: Array.isArray(lastRuntimeVersionDiagnostics.cacheVersions) ? [...lastRuntimeVersionDiagnostics.cacheVersions] : [],
+        startupModuleVersions: Array.isArray(lastRuntimeVersionDiagnostics.startupModuleVersions) ? [...lastRuntimeVersionDiagnostics.startupModuleVersions] : []
+      }
+      : null;
+    const recentAttempt = getStoredUpdateAttempt();
+    const releaseSnapshot = lastReleaseValidationSnapshot && typeof lastReleaseValidationSnapshot === "object"
+      ? {
+        at: String(lastReleaseValidationSnapshot.at || ""),
+        buildVersion: String(lastReleaseValidationSnapshot.buildVersion || ""),
+        summary: { ...(lastReleaseValidationSnapshot.summary || {}) }
+      }
+      : null;
+    return {
+      capturedAt: new Date().toISOString(),
+      buildVersion: String(displayBuildVersion || ""),
+      schemaVersion: String(getSchemaVersion() || ""),
+      swUpdateReady,
+      lastSwUpdateSignal: String(lastSwUpdateSignal || ""),
+      recentUpdateAttempt: recentAttempt ? { ...recentAttempt } : null,
+      runtimeDiag,
+      releaseSnapshot
+    };
+  }
+
+  function formatSupportDiagnosticsSection(snapshot = getSupportDiagnosticsSnapshot()){
+    const snap = snapshot && typeof snapshot === "object" ? snapshot : {};
+    const runtimeDiag = snap.runtimeDiag && typeof snap.runtimeDiag === "object" ? snap.runtimeDiag : {};
+    const releaseSummary = snap.releaseSnapshot?.summary || {};
+    const cacheVersions = Array.isArray(runtimeDiag.cacheVersions) ? [...new Set(runtimeDiag.cacheVersions)] : [];
+    const startupVersions = Array.isArray(runtimeDiag.startupModuleVersions) ? [...new Set(runtimeDiag.startupModuleVersions)] : [];
+    const lines = [];
+
+    lines.push("[Runtime + Update Diagnostics]");
+    lines.push(`BuildTarget: ${String(snap.buildVersion || displayBuildVersion || "(unknown)")}`);
+    lines.push(`Schema: ${String(snap.schemaVersion || getSchemaVersion() || "(unknown)")}`);
+    lines.push(`SupportSnapshotAt: ${String(snap.capturedAt || new Date().toISOString())}`);
+    lines.push(`UpdateReadySignal: ${snap.swUpdateReady ? "yes" : "no"}`);
+    lines.push(`LastUpdateSignal: ${String(snap.lastSwUpdateSignal || "(none)")}`);
+    if(snap.recentUpdateAttempt){
+      lines.push(`RecentUpdateAttempt: ${String(snap.recentUpdateAttempt.mode || "reload")} @ ${formatLedgerStamp(snap.recentUpdateAttempt.at) || "(unknown)"}`);
+      if(snap.recentUpdateAttempt.requestedBuild){
+        lines.push(`RecentAttemptBuild: ${String(snap.recentUpdateAttempt.requestedBuild)}`);
+      }
+    }
+
+    if(runtimeDiag && Object.keys(runtimeDiag).length){
+      lines.push(`RuntimeMode: ${runtimeDiag.standalone ? "installed-standalone" : "browser-tab"}`);
+      lines.push(`SWController: ${runtimeDiag.swController ? "yes" : "no"}`);
+      lines.push(`SWScriptVersion: ${runtimeDiag.swScriptVersion ? `v${runtimeDiag.swScriptVersion}` : "(none)"}`);
+      lines.push(`SWWaitingVersion: ${runtimeDiag.swWaitingVersion ? `v${runtimeDiag.swWaitingVersion}` : "(none)"}`);
+      lines.push(`CacheVersions: ${cacheVersions.length ? cacheVersions.map(v=>`v${v}`).join(", ") : "(none)"}`);
+      lines.push(`StartupModuleVersions: ${startupVersions.length ? startupVersions.map(v=>`v${v}`).join(", ") : "(none)"}`);
+      lines.push(`VersionSkewDetected: ${runtimeDiag.hasVersionSkew ? "yes" : "no"}`);
+      lines.push(`InstalledAppLikelyLagging: ${runtimeDiag.installedAppLikelyLagging ? "yes" : "no"}`);
+      lines.push(`HardResetSuggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`);
+      if(runtimeDiag.lastBootError) lines.push(`LastBootWarning: ${String(runtimeDiag.lastBootError)}`);
+    }else{
+      lines.push("RuntimeDiagnostics: not captured yet in this session");
+    }
+
+    if(snap.releaseSnapshot){
+      lines.push(`ReleaseSnapshotAt: ${formatLedgerStamp(snap.releaseSnapshot.at) || "(unknown)"}`);
+      if(snap.releaseSnapshot.buildVersion){
+        lines.push(`ReleaseSnapshotBuild: ${String(snap.releaseSnapshot.buildVersion)}`);
+      }
+      lines.push(`ReleaseUpdateAligned: ${releaseSummary.updateAligned ? "yes" : "no"}`);
+      lines.push(`ReleaseReopenReady: ${releaseSummary.reopenReady ? "yes" : "no"}`);
+      lines.push(`ReleaseRecoverySignal: ${releaseSummary.recoveryReady ? "yes" : "no"}`);
+    }else{
+      lines.push("ReleaseSnapshot: not captured yet in this session");
+    }
+
+    return lines.join("\n");
   }
 
   async function updateBuildInfo(){
@@ -444,7 +533,7 @@ export function createUpdateRuntimeStatusSeam({
       `Hard reset suggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`
     ];
 
-    return {
+    const snapshot = {
       at: new Date().toISOString(),
       buildVersion: String(displayBuildVersion || ""),
       runtimeDiag,
@@ -457,6 +546,15 @@ export function createUpdateRuntimeStatusSeam({
         recoveryReady
       }
     };
+    try{
+      lastReleaseValidationSnapshot = {
+        ...snapshot,
+        checks: Array.isArray(snapshot.checks) ? [...snapshot.checks] : [],
+        signalLines: Array.isArray(snapshot.signalLines) ? [...snapshot.signalLines] : [],
+        summary: { ...(snapshot.summary || {}) }
+      };
+    }catch(_){ }
+    return snapshot;
   }
 
   function formatReleaseValidationLedger(snapshot, selectedResults = {}, notes = ""){
@@ -492,6 +590,8 @@ export function createUpdateRuntimeStatusSeam({
     swCheckNow,
     forceRefreshApp,
     getRuntimeVersionDiagnostics,
+    getSupportDiagnosticsSnapshot,
+    formatSupportDiagnosticsSection,
     getReleaseValidationSnapshot,
     formatReleaseValidationLedger,
     updateBuildInfo,
