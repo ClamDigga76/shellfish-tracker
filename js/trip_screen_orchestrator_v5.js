@@ -72,6 +72,7 @@ export function createTripScreenOrchestrator({
   parseNum,
   parseMoney,
   formatMoney,
+  deriveTripSettlement,
   computePPL,
   openModal,
   closeModal,
@@ -121,11 +122,17 @@ function renderNewTrip(){
   const areaAddSentinel = "__add_new_area__";
   // Defaults
   const todayISO = new Date().toISOString().slice(0,10);
-  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", rate:"", area:"", species: DEFAULT_TRIP_SPECIES, notes:"" };
+  const draft = state.draft || { dateISO: todayISO, dealer:"", pounds:"", amount:"", writtenCheckAmount:"", rate:"", area:"", species: DEFAULT_TRIP_SPECIES, notes:"" };
   const amountVal = String(draft.amount ?? "");
   const rateVal = String(draft.rate ?? "");
+  const writtenCheckVal = String(draft.writtenCheckAmount ?? "");
+  const settlementExpanded = Boolean(draft.settlementExpanded) || Boolean(writtenCheckVal);
   draft.species = String(draft.species || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
   draft.notes = String(draft.notes || "");
+  const settlementPreview = deriveTripSettlement({
+    amount: parseMoney(draft.amount),
+    writtenCheckAmount: parseMoney(draft.writtenCheckAmount)
+  });
 
 
   // Recent (last 2) unique values from saved trips (ignores filters)
@@ -153,6 +160,14 @@ const newTripFormHtml = renderTripEntryForm({
       speciesId: "t_species",
       notesId: "t_notes",
       rateId: "rateValue",
+      settlementRevealId: "t_checkDiffToggle",
+      settlementExpanded,
+      writtenCheckAmountId: "t_written_check_amount",
+      writtenCheckAmountValue: writtenCheckVal,
+      settlementAdjustmentText: `${settlementPreview.dealerAdjustment >= 0 ? "+" : "-"}${formatMoney(Math.abs(settlementPreview.dealerAdjustment))}`,
+      settlementHintText: settlementPreview.adjustmentClass === "rounded_up"
+        ? "Likely rounded up."
+        : (settlementPreview.adjustmentClass === "rounded_down" ? "Likely rounded down." : ""),
       dateValue: String(draft.dateISO || isoToday()),
       dealerOptions,
       areaOptions,
@@ -188,6 +203,8 @@ const newTripFormHtml = renderTripEntryForm({
   const elSpecies = document.getElementById("t_species");
   const elNotes = document.getElementById("t_notes");
   const elRate = document.getElementById("rateValue");
+  const elWrittenCheckAmount = document.getElementById("t_written_check_amount");
+  const elSettlementToggle = document.getElementById("t_checkDiffToggle");
   bindDatePill("t_date");
 
   const metricSync = createTripMetricSyncEngine({
@@ -201,6 +218,37 @@ const newTripFormHtml = renderTripEntryForm({
     }
   });
   const updateRateLine = metricSync.updateDerivedField;
+  const updateSettlementLine = ()=>{
+    if(!elWrittenCheckAmount) return;
+    const settlement = deriveTripSettlement({
+      amount: parseMoney(elAmount?.value),
+      writtenCheckAmount: parseMoney(elWrittenCheckAmount.value)
+    });
+    const adjustmentEl = document.getElementById("t_written_check_amount_adjustment");
+    if(adjustmentEl){
+      adjustmentEl.textContent = `${settlement.dealerAdjustment >= 0 ? "+" : "-"}${formatMoney(Math.abs(settlement.dealerAdjustment))}`;
+    }
+    const hintEl = document.querySelector("#newTripForm .tripSettlementHint");
+    if(hintEl){
+      hintEl.textContent = settlement.adjustmentClass === "rounded_up"
+        ? "Likely rounded up."
+        : (settlement.adjustmentClass === "rounded_down" ? "Likely rounded down." : "");
+      hintEl.style.display = hintEl.textContent ? "block" : "none";
+    }
+  };
+  if(elSettlementToggle){
+    elSettlementToggle.addEventListener("click", ()=>{
+      const panel = document.querySelector("#newTripForm [data-settlement-panel]");
+      if(!panel) return;
+      const willOpen = !panel.classList.contains("is-open");
+      panel.classList.toggle("is-open", willOpen);
+      elSettlementToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      elSettlementToggle.textContent = willOpen ? "Hide check details" : "Check differs";
+      state.draft = { ...(state.draft || draft), settlementExpanded: willOpen };
+      saveDraft();
+      if(willOpen) elWrittenCheckAmount?.focus();
+    });
+  }
   const createQuickAddHandler = ()=> (kind, opts = {})=>{
     const isDealer = (kind==="dealer");
     const label = isDealer ? "Dealer" : "Area";
@@ -318,11 +366,13 @@ const newTripFormHtml = renderTripEntryForm({
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
       updateRateLine();
+      updateSettlementLine();
     });
     elPounds.addEventListener("blur", ()=>{
       if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
       updateSaveEnabled();
       updateRateLine();
+      updateSettlementLine();
     });
   }
 
@@ -337,6 +387,7 @@ const newTripFormHtml = renderTripEntryForm({
       if(s !== elRate.value) elRate.value = s;
       updateRateLine();
       updateSaveEnabled();
+      updateSettlementLine();
     });
     elRate.addEventListener("blur", ()=>{
       if(String(elRate.value||"").endsWith(".")) elRate.value = String(elRate.value).slice(0, -1);
@@ -344,6 +395,7 @@ const newTripFormHtml = renderTripEntryForm({
       if(rate > 0) elRate.value = rate.toFixed(2);
       updateRateLine();
       updateSaveEnabled();
+      updateSettlementLine();
     });
   }
 
@@ -358,12 +410,32 @@ const newTripFormHtml = renderTripEntryForm({
       if(s !== elAmount.value) elAmount.value = s;
       updateRateLine();
       updateSaveEnabled();
+      updateSettlementLine();
     });
     elAmount.addEventListener("blur", ()=>{
       if(String(elAmount.value||"").endsWith(".")) elAmount.value = String(elAmount.value).slice(0, -1);
       normalizeAmountOnBlur(elAmount);
       updateRateLine();
       updateSaveEnabled();
+      updateSettlementLine();
+    });
+  }
+  if(elWrittenCheckAmount && !elWrittenCheckAmount.__boundNumeric){
+    elWrittenCheckAmount.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elWrittenCheckAmount, ["0","0.0","0.00"]);
+    elWrittenCheckAmount.addEventListener("pointerdown", prime);
+    elWrittenCheckAmount.addEventListener("focus", prime);
+    elWrittenCheckAmount.addEventListener("input", ()=>{
+      const s = sanitizeDecimalInput(elWrittenCheckAmount.value);
+      if(s !== elWrittenCheckAmount.value) elWrittenCheckAmount.value = s;
+      updateSettlementLine();
+      saveDraft();
+    });
+    elWrittenCheckAmount.addEventListener("blur", ()=>{
+      if(String(elWrittenCheckAmount.value||"").endsWith(".")) elWrittenCheckAmount.value = String(elWrittenCheckAmount.value).slice(0, -1);
+      normalizeAmountOnBlur(elWrittenCheckAmount);
+      updateSettlementLine();
+      saveDraft();
     });
   }
 
@@ -379,6 +451,7 @@ const newTripFormHtml = renderTripEntryForm({
         rawDealer: elDealer?.value,
         rawPounds: elPounds?.value,
         rawAmount: elAmount?.value,
+        rawWrittenCheckAmount: elWrittenCheckAmount?.value,
         rawRate: elRate?.value,
         rawArea: elArea?.value,
         rawSpecies: elSpecies?.value,
@@ -463,7 +536,7 @@ const btnClear = document.getElementById("clearDraft");
     }
   });
   const { persistDraft, persistDraftInput, applyDraftValue } = createDraftHelpers();
-  [elDate, elDealer, elPounds, elAmount, elRate, elSpecies, elNotes].forEach(el=>{
+  [elDate, elDealer, elPounds, elAmount, elRate, elWrittenCheckAmount, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", persistDraftInput);
     el.addEventListener("change", persistDraft);
@@ -557,7 +630,8 @@ if(topDealerWrap && elDealer){
 
   // Initial state
   updateSaveEnabled();
-      updateRateLine();
+  updateRateLine();
+  updateSettlementLine();
 }
 
 
@@ -991,6 +1065,7 @@ function renderEditTrip(){
     pounds: String(t.pounds ?? ""),
     amount: String(t.amount ?? ""),
     rate: String(t.payRate ?? ((Number(t.pounds) > 0 && Number(t.amount) > 0) ? (Number(t.amount) / Number(t.pounds)).toFixed(2) : "")),
+    writtenCheckAmount: String(t.writtenCheckAmount ?? ""),
     area: t.area || "",
     species: t.species || DEFAULT_TRIP_SPECIES,
     notes: String(t.notes || "")
@@ -1000,6 +1075,11 @@ function renderEditTrip(){
   const areaAddSentinel = "__add_new_area__";
   const amountDispE = displayAmount(t.amount);
   const rateDispE = String(draft.rate ?? "");
+  const settlementPreviewE = deriveTripSettlement({
+    amount: Number(t.amount || 0),
+    writtenCheckAmount: Number(t.writtenCheckAmount || 0)
+  });
+  const settlementExpandedE = settlementPreviewE.hasDifference || Boolean(draft.writtenCheckAmount);
 
   const topAreasE = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
   const topDealersE = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
@@ -1031,6 +1111,14 @@ function renderEditTrip(){
       speciesId: "e_species",
       notesId: "e_notes",
       rateId: "rateValueEdit",
+      settlementRevealId: "e_checkDiffToggle",
+      settlementExpanded: settlementExpandedE,
+      writtenCheckAmountId: "e_written_check_amount",
+      writtenCheckAmountValue: draft.writtenCheckAmount,
+      settlementAdjustmentText: `${settlementPreviewE.dealerAdjustment >= 0 ? "+" : "-"}${formatMoney(Math.abs(settlementPreviewE.dealerAdjustment))}`,
+      settlementHintText: settlementPreviewE.adjustmentClass === "rounded_up"
+        ? "Likely rounded up."
+        : (settlementPreviewE.adjustmentClass === "rounded_down" ? "Likely rounded down." : ""),
       dateValue: draft.dateISO,
       dealerOptions,
       areaOptions,
@@ -1069,6 +1157,8 @@ function renderEditTrip(){
   const elSpecies = document.getElementById("e_species");
   const elNotes = document.getElementById("e_notes");
   const elRate = document.getElementById("rateValueEdit");
+  const elWrittenCheckAmount = document.getElementById("e_written_check_amount");
+  const elSettlementToggle = document.getElementById("e_checkDiffToggle");
   const topDealerWrapE = document.getElementById("topDealersE");
   const topAreaWrapE = document.getElementById("topAreasE");
 
@@ -1083,6 +1173,35 @@ function renderEditTrip(){
     }
   });
   const updateRateLine = metricSync.updateDerivedField;
+  const updateSettlementLine = ()=>{
+    if(!elWrittenCheckAmount) return;
+    const settlement = deriveTripSettlement({
+      amount: parseMoney(elAmount?.value),
+      writtenCheckAmount: parseMoney(elWrittenCheckAmount.value)
+    });
+    const adjustmentEl = document.getElementById("e_written_check_amount_adjustment");
+    if(adjustmentEl){
+      adjustmentEl.textContent = `${settlement.dealerAdjustment >= 0 ? "+" : "-"}${formatMoney(Math.abs(settlement.dealerAdjustment))}`;
+    }
+    const hintEl = document.querySelector("#editTripForm .tripSettlementHint");
+    if(hintEl){
+      hintEl.textContent = settlement.adjustmentClass === "rounded_up"
+        ? "Likely rounded up."
+        : (settlement.adjustmentClass === "rounded_down" ? "Likely rounded down." : "");
+      hintEl.style.display = hintEl.textContent ? "block" : "none";
+    }
+  };
+  if(elSettlementToggle){
+    elSettlementToggle.addEventListener("click", ()=>{
+      const panel = document.querySelector("#editTripForm [data-settlement-panel]");
+      if(!panel) return;
+      const willOpen = !panel.classList.contains("is-open");
+      panel.classList.toggle("is-open", willOpen);
+      elSettlementToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      elSettlementToggle.textContent = willOpen ? "Hide check details" : "Check differs";
+      if(willOpen) elWrittenCheckAmount?.focus();
+    });
+  }
 
   const openQuickAdd = (kind, opts = {})=>{
     const isDealer = (kind === "dealer");
@@ -1267,6 +1386,7 @@ function renderEditTrip(){
   };
   updateSaveEnabled();
   updateRateLine();
+  updateSettlementLine();
 
   // Big-number keypad + better formatting (match New Trip)
   if(elPounds && !elPounds.__boundNumeric){
@@ -1280,11 +1400,13 @@ function renderEditTrip(){
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
       updateRateLine();
+      updateSettlementLine();
     });
     elPounds.addEventListener("blur", ()=>{
       if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
       updateSaveEnabled();
       updateRateLine();
+      updateSettlementLine();
     });
   }
 
@@ -1299,6 +1421,7 @@ function renderEditTrip(){
       if(s !== elRate.value) elRate.value = s;
       updateRateLine();
       updateSaveEnabled();
+      updateSettlementLine();
     });
     elRate.addEventListener("blur", ()=>{
       if(String(elRate.value||"").endsWith(".")) elRate.value = String(elRate.value).slice(0, -1);
@@ -1306,6 +1429,7 @@ function renderEditTrip(){
       if(rate > 0) elRate.value = rate.toFixed(2);
       updateRateLine();
       updateSaveEnabled();
+      updateSettlementLine();
     });
   }
 
@@ -1320,19 +1444,39 @@ function renderEditTrip(){
       if(s !== elAmount.value) elAmount.value = s;
       updateRateLine();
       updateSaveEnabled();
+      updateSettlementLine();
     });
     elAmount.addEventListener("blur", ()=>{
       if(String(elAmount.value||"").endsWith(".")) elAmount.value = String(elAmount.value).slice(0, -1);
       normalizeAmountOnBlur(elAmount);
       updateRateLine();
       updateSaveEnabled();
+      updateSettlementLine();
+    });
+  }
+  if(elWrittenCheckAmount && !elWrittenCheckAmount.__boundNumeric){
+    elWrittenCheckAmount.__boundNumeric = true;
+    const prime = ()=>primeNumericField(elWrittenCheckAmount, ["0","0.0","0.00"]);
+    elWrittenCheckAmount.addEventListener("pointerdown", prime);
+    elWrittenCheckAmount.addEventListener("focus", prime);
+    elWrittenCheckAmount.addEventListener("input", ()=>{
+      const s = sanitizeDecimalInput(elWrittenCheckAmount.value);
+      if(s !== elWrittenCheckAmount.value) elWrittenCheckAmount.value = s;
+      updateSettlementLine();
+      updateSaveEnabled();
+    });
+    elWrittenCheckAmount.addEventListener("blur", ()=>{
+      if(String(elWrittenCheckAmount.value||"").endsWith(".")) elWrittenCheckAmount.value = String(elWrittenCheckAmount.value).slice(0, -1);
+      normalizeAmountOnBlur(elWrittenCheckAmount);
+      updateSettlementLine();
+      updateSaveEnabled();
     });
   }
 
-  [elDate, elDealer, elPounds, elAmount, elArea, elSpecies, elNotes].forEach(el=>{
+  [elDate, elDealer, elPounds, elAmount, elWrittenCheckAmount, elArea, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
-    el.addEventListener("input", ()=>{ updateSaveEnabled(); updateRateLine(); });
-    el.addEventListener("change", ()=>{ updateSaveEnabled(); updateRateLine(); });
+    el.addEventListener("input", ()=>{ updateSaveEnabled(); updateRateLine(); updateSettlementLine(); });
+    el.addEventListener("change", ()=>{ updateSaveEnabled(); updateRateLine(); updateSettlementLine(); });
   });
 
   const editTripForm = document.getElementById("editTripForm");
@@ -1346,6 +1490,7 @@ function renderEditTrip(){
         dealer: elDealer.value,
         pounds: elPounds.value,
         amount: elAmount.value,
+        writtenCheckAmount: elWrittenCheckAmount?.value || "",
         rate: elRate.value,
         area: elArea.value,
         species: elSpecies?.value || draft.species || DEFAULT_TRIP_SPECIES,

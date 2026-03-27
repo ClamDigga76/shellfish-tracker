@@ -1,4 +1,4 @@
-export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, resolveTripPayRate, formatMoney, escapeHtml }){
+export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, resolveTripPayRate, deriveTripSettlement, formatMoney, escapeHtml }){
   function resolveTripCardModel(t, opts = {}){
     const {
       valueOverride = "",
@@ -14,6 +14,15 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
     const lbs = to2(Number(t?.pounds) || 0);
     const amt = to2(Number(t?.amount) || 0);
     const ppl = typeof resolveTripPayRate === "function" ? resolveTripPayRate(t) : computePPL(lbs, amt);
+    const settlement = typeof deriveTripSettlement === "function"
+      ? deriveTripSettlement(t)
+      : { hasDifference: false, writtenCheckAmount: amt, dealerAdjustment: 0, adjustmentClass: "none" };
+    const settlementPrefix = settlement.adjustmentClass === "rounded_up" || settlement.adjustmentClass === "rounded_down"
+      ? "Rounded"
+      : "Adjustment";
+    const settlementText = settlement.hasDifference
+      ? `Check paid: ${formatMoney(settlement.writtenCheckAmount)} · ${settlementPrefix} ${settlement.dealerAdjustment >= 0 ? "+" : "-"}${formatMoney(Math.abs(settlement.dealerAdjustment))}`
+      : "";
 
     return {
       id: String(t?.id || ""),
@@ -24,7 +33,8 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
       notesPreview,
       lbs,
       amountText: formatMoney(amt),
-      valueText: valueOverride || `${formatMoney(ppl)}/lb`
+      valueText: valueOverride || `${formatMoney(ppl)}/lb`,
+      settlementText
     };
   }
 
@@ -52,6 +62,7 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
             <span class="catchMetric tripCardMetricChip money"><b class="metricValue money">${model.amountText}</b></span>
             <span class="catchMetric tripCardMetricChip lbsBlue"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
             <span class="catchMetric tripCardMetricChip"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
+            ${model.settlementText ? `<span class="tripCardSettlementSubtle">${escapeHtml(model.settlementText)}</span>` : ""}
           </div>
         </div>
       </${tag}>

@@ -391,6 +391,13 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripCardStandard .tripCardNotes{font-size:13px;line-height:1.38;font-weight:500;color:var(--muted)}
 .tripCardStandard .tripCardMetricChip{font-size:82px;padding:6px 0;line-height:1}
 .tripCardStandard .tripCardMetricChip .metricValue{font-size:6em;line-height:.8;font-weight:900}
+.tripCardStandard .tripCardSettlementSubtle{
+  font-size:11px;
+  line-height:1.3;
+  color:var(--muted);
+  text-align:right;
+  max-width:180px;
+}
 .tripsEmptyState{padding:15px 14px}
 
 .emptyState{

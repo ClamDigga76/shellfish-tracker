@@ -29,7 +29,13 @@ export function renderTripEntryForm({
   extraCardClass = "",
   dateIconHtml = "📅",
   showSpeciesField = true,
-  showNotesField = true
+  showNotesField = true,
+  settlementRevealId = "",
+  settlementExpanded = false,
+  writtenCheckAmountId = "",
+  writtenCheckAmountValue = "",
+  settlementAdjustmentText = "",
+  settlementHintText = ""
 }) {
   const isEdit = mode === "edit";
   const modeBanner = isEdit ? `
@@ -43,6 +49,25 @@ export function renderTripEntryForm({
   ` : "";
 
   const tertiaryButton = tertiaryActionLabel ? `<button class="btn danger" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : "";
+  const settlementToggle = settlementRevealId
+    ? `<button class="tripSettlementReveal" id="${escapeHtml(settlementRevealId)}" type="button" aria-expanded="${settlementExpanded ? "true" : "false"}">${settlementExpanded ? "Hide check details" : "Check differs"}</button>`
+    : "";
+  const settlementDetails = settlementRevealId && writtenCheckAmountId ? `
+    <div class="tripSettlementPanel${settlementExpanded ? " is-open" : ""}" data-settlement-panel>
+      <div class="field">
+        <label class="fieldLabel overline center" for="${escapeHtml(writtenCheckAmountId)}">WRITTEN CHECK AMOUNT</label>
+        <div class="inputWrap inputWrap--prefix">
+          <span class="moneyPrefix moneyGreen" aria-hidden="true">$</span>
+          <input class="input inputWithPrefix" id="${escapeHtml(writtenCheckAmountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(writtenCheckAmountValue ?? ""))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+        </div>
+      </div>
+      <div class="tripSettlementSummary">
+        <span>Dealer Adjustment</span>
+        <b id="${escapeHtml(writtenCheckAmountId)}_adjustment">${escapeHtml(String(settlementAdjustmentText || "$0.00"))}</b>
+      </div>
+      ${settlementHintText ? `<div class="tripSettlementHint">${escapeHtml(settlementHintText)}</div>` : ""}
+    </div>
+  ` : "";
 
   return `
     <div class="card formCard tripFormFoundation ${escapeHtml(extraCardClass)}">
@@ -83,6 +108,8 @@ export function renderTripEntryForm({
               </div>
             </div>
           </div>
+          ${settlementToggle}
+          ${settlementDetails}
         </section>
 
         ${showSpeciesField ? `
