@@ -6,6 +6,9 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
   const byDealer = new Map();
   const byArea = new Map();
   const byMonth = new Map();
+  const byWeek = new Map();
+  const bySeason = new Map();
+  const allTimePrice = createPriceRangeBucket();
 
   safeTrips.forEach((t)=>{
     const dealerRaw = (t?.dealer || "").toString();
@@ -46,7 +49,27 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
       monthAgg.rateWeightedLbsTotal += weightedRate;
       monthAgg._days.add(iso);
       byMonth.set(monthKey, monthAgg);
+
+      const weekKey = resolveIsoWeekKey(iso);
+      if(weekKey){
+        const weekAgg = byWeek.get(weekKey) || { weekKey, trips: 0, _days: new Set(), ...createPriceRangeBucket() };
+        weekAgg.trips += 1;
+        weekAgg._days.add(iso);
+        capturePriceRate(weekAgg, rate);
+        byWeek.set(weekKey, weekAgg);
+      }
+
+      const seasonKey = resolveSeasonKey(iso);
+      if(seasonKey){
+        const seasonAgg = bySeason.get(seasonKey) || { seasonKey, ...createPriceRangeBucket() };
+        capturePriceRate(seasonAgg, rate);
+        bySeason.set(seasonKey, seasonAgg);
+      }
     }
+
+    capturePriceRate(allTimePrice, rate);
+    capturePriceRate(dealerAgg, rate);
+    capturePriceRate(areaAgg, rate);
   });
 
   const dealerRows = Array.from(byDealer.values())
@@ -71,6 +94,31 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
         ...finalizeAggregateRow(x)
       };
     }));
+  const weeklyRangeRows = Array.from(byWeek.values())
+    .map((row)=> finalizePriceRangeRow(row))
+    .filter((row)=> row.sampleCount > 0)
+    .sort((a,b)=> String(a.weekKey || "").localeCompare(String(b.weekKey || "")));
+  const seasonalRangeRows = Array.from(bySeason.values())
+    .map((row)=> finalizePriceRangeRow(row))
+    .filter((row)=> row.sampleCount > 0)
+    .sort((a,b)=> {
+      const rankA = seasonSortRank(String(a?.seasonKey || ""));
+      const rankB = seasonSortRank(String(b?.seasonKey || ""));
+      return rankA - rankB;
+    });
+  const dealerRangeRows = dealerRows
+    .filter((row)=> (Number(row?.sampleCount) || 0) > 0)
+    .slice()
+    .sort((a,b)=> {
+      const spreadDiff = (Number(b?.spread) || 0) - (Number(a?.spread) || 0);
+      if(spreadDiff !== 0) return spreadDiff;
+      return (Number(b?.rateHigh) || 0) - (Number(a?.rateHigh) || 0);
+    });
+  const latestWeeklyRange = weeklyRangeRows[weeklyRangeRows.length - 1] || null;
+  const latestMonthlyRange = monthRows
+    .filter((row)=> (Number(row?.sampleCount) || 0) > 0)
+    .slice(-1)[0] || null;
+  const allTimeRange = finalizePriceRangeRow(allTimePrice);
 
   const maxLbs = pickExtremeTrip(safeTrips, (t)=> Number(t?.pounds) || 0, "max");
   const maxAmt = pickExtremeTrip(safeTrips, (t)=> Number(t?.amount) || 0, "max");
@@ -128,7 +176,16 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
     maxPpl,
     minPpl,
     tripsTimeline,
-    recordPools
+    recordPools,
+    priceRangeSummary: {
+      allTime: allTimeRange,
+      latestWeek: latestWeeklyRange,
+      latestMonth: latestMonthlyRange,
+      weeklyRangeRows,
+      monthlyRangeRows: monthRows.filter((row)=> (Number(row?.sampleCount) || 0) > 0),
+      seasonalRangeRows
+    },
+    dealerRangeRows
   };
 }
 
@@ -145,8 +202,71 @@ function finalizeAggregateRow(row){
     poundsPerTrip: trips > 0 ? lbs / trips : 0,
     amountPerTrip: trips > 0 ? amt / trips : 0,
     poundsPerDay: fishingDays > 0 ? lbs / fishingDays : 0,
-    amountPerDay: fishingDays > 0 ? amt / fishingDays : 0
+    amountPerDay: fishingDays > 0 ? amt / fishingDays : 0,
+    ...finalizePriceRangeRow(row)
   };
+}
+
+function createPriceRangeBucket(){
+  return {
+    rateLow: null,
+    rateHigh: null,
+    spread: 0,
+    sampleCount: 0
+  };
+}
+
+function capturePriceRate(target, rate){
+  if(!target || typeof target !== "object") return;
+  const safeRate = Number(rate);
+  if(!(safeRate > 0)) return;
+  target.sampleCount = (Number(target.sampleCount) || 0) + 1;
+  const low = Number(target.rateLow);
+  const high = Number(target.rateHigh);
+  target.rateLow = Number.isFinite(low) && low > 0 ? Math.min(low, safeRate) : safeRate;
+  target.rateHigh = Number.isFinite(high) && high > 0 ? Math.max(high, safeRate) : safeRate;
+  target.spread = Math.max(0, (Number(target.rateHigh) || 0) - (Number(target.rateLow) || 0));
+}
+
+function finalizePriceRangeRow(row){
+  const low = Number(row?.rateLow);
+  const high = Number(row?.rateHigh);
+  const hasRange = Number.isFinite(low) && Number.isFinite(high) && low > 0 && high > 0;
+  return {
+    rateLow: hasRange ? low : 0,
+    rateHigh: hasRange ? high : 0,
+    spread: hasRange ? Math.max(0, high - low) : 0,
+    sampleCount: Number(row?.sampleCount) || 0
+  };
+}
+
+function resolveIsoWeekKey(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ""))) return "";
+  const dt = new Date(`${iso}T00:00:00Z`);
+  if(Number.isNaN(dt.getTime())) return "";
+  const day = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - day);
+  const weekYear = dt.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(weekYear, 0, 1));
+  const week = Math.ceil((((dt - yearStart) / 86400000) + 1) / 7);
+  return `${weekYear}-W${String(week).padStart(2, "0")}`;
+}
+
+function resolveSeasonKey(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ""))) return "";
+  const month = Number(String(iso).slice(5, 7));
+  if(month >= 3 && month <= 5) return "Spring";
+  if(month >= 6 && month <= 8) return "Summer";
+  if(month >= 9 && month <= 11) return "Fall";
+  return "Winter";
+}
+
+function seasonSortRank(key){
+  if(key === "Spring") return 1;
+  if(key === "Summer") return 2;
+  if(key === "Fall") return 3;
+  if(key === "Winter") return 4;
+  return 99;
 }
 
 function pickExtremeTrip(rows, valueFromTrip, direction){
