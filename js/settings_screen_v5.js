@@ -1,3 +1,5 @@
+import { createSettingsSupportRecoverySeam } from "./settings_support_recovery_v5.js";
+
 function escapeSettingsHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -5,15 +7,6 @@ function escapeSettingsHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-function formatDeletedStamp(value) {
-  const iso = String(value || "").trim();
-  if (!iso) return "recently";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "recently";
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 export function createSettingsScreenOrchestrator({
@@ -58,17 +51,31 @@ export function createSettingsScreenOrchestrator({
   formatReleaseValidationLedger,
   copyTextWithFeedback
 }) {
-  function normalizeLedgerStatus(value) {
-    const raw = String(value || "").toLowerCase();
-    if (raw === "pass" || raw === "fail" || raw === "not-run") return raw;
-    return "not-run";
-  }
-
-  function releaseStatusLabel(value) {
-    if (value === "pass") return "Pass";
-    if (value === "fail") return "Fail";
-    return "Not run";
-  }
+  const supportRecoverySeam = createSettingsSupportRecoverySeam({
+    displayBuildVersion,
+    showToast,
+    render,
+    saveState,
+    applyThemeMode,
+    exportBackup,
+    parseBackupFileForRestore,
+    openRestorePreviewModal,
+    openReplaceSafetyBackupModal,
+    importBackupFromFile,
+    openRestoreErrorModal,
+    openRestoreResultModal,
+    restoreFromRollbackSnapshot,
+    updateBackupHealthWarning,
+    updateLastBackupLine,
+    updateRestoreRollbackLine,
+    restoreDeletedTrip,
+    permanentlyDeleteDeletedTrip,
+    clearDeletedTripsBin,
+    openConfirmModal,
+    getReleaseValidationSnapshot,
+    formatReleaseValidationLedger,
+    copyTextWithFeedback
+  });
 
   function renderSettings(opts = {}) {
     const state = getState();
@@ -79,45 +86,7 @@ export function createSettingsScreenOrchestrator({
     const s = state.settings || (state.settings = {});
     const listMode = String(s.listMode || "areas").toLowerCase();
     const deletedTrips = Array.isArray(state.deletedTrips) ? state.deletedTrips : [];
-    const deletedTripsHtml = deletedTrips.length ? `
-        <div class="settingsRow settingsRow--split settingsRow--minor">
-          <div>
-            <div class="settingsRowTitle">Recently Deleted</div>
-            <div class="muted small">Restore a deleted trip here, or clear it for good.</div>
-          </div>
-          <span class="settingsValuePill">${deletedTrips.length}</span>
-        </div>
-        <div class="settingsDeletedList" id="deletedTripsList">
-          ${deletedTrips.map((entry) => {
-            const trip = entry?.trip || {};
-            const dateLabel = String(trip.dateISO || "").trim() ? trip.dateISO : "No date";
-            const dealerLabel = String(trip.dealer || "").trim() || "Unknown dealer";
-            const areaLabel = String(trip.area || "").trim() || "No area";
-            const poundsLabel = Number.isFinite(Number(trip.pounds)) && Number(trip.pounds) > 0 ? `${Number(trip.pounds)} lbs` : "";
-            const deletedLabel = String(entry?.deletedAt || "").trim() || "";
-            return `
-              <div class="settingsDeletedItem">
-                <div class="settingsDeletedMeta">
-                  <div class="settingsDeletedTitle">${escapeSettingsHtml(dealerLabel)}</div>
-                  <div class="muted small">${escapeSettingsHtml(dateLabel)} • ${escapeSettingsHtml(areaLabel)}${poundsLabel ? ` • ${escapeSettingsHtml(poundsLabel)}` : ""}</div>
-                  <div class="muted settingsBodyTiny">Deleted ${escapeSettingsHtml(formatDeletedStamp(deletedLabel))}</div>
-                </div>
-                <div class="settingsDeletedActions">
-                  <button class="btn settingsInlineBtn" type="button" data-restore-trip="${escapeSettingsHtml(String(entry?.id || ""))}">Restore</button>
-                  <button class="btn danger settingsInlineBtn" type="button" data-delete-forever="${escapeSettingsHtml(String(entry?.id || ""))}">Delete forever</button>
-                </div>
-              </div>
-            `;
-          }).join("")}
-        </div>
-        <div class="settingsRow settingsRow--action">
-          <button class="btn danger settingsFlexBtn" id="clearDeletedTrips">Clear all permanently</button>
-        </div>
-      ` : `
-        <div class="settingsRow settingsRow--minor">
-          <div class="muted small">No deleted trips waiting here.</div>
-        </div>
-      `;
+    const deletedTripsHtml = supportRecoverySeam.buildDeletedTripsHtml(deletedTrips);
 
     const areaCount = Array.isArray(state.areas) ? state.areas.length : 0;
     const dealerCount = Array.isArray(state.dealers) ? state.dealers.length : 0;
@@ -578,119 +547,9 @@ export function createSettingsScreenOrchestrator({
       updateBuildInfo();
     } catch (_) {}
 
-    let latestReleaseSnapshot = null;
-    const releaseSummaryEl = document.getElementById("releaseValidationSummary");
-    const releaseStampEl = document.getElementById("releaseValidationStamp");
-    const releaseSignalsEl = document.getElementById("releaseValidationSignals");
-    const releaseNotesEl = document.getElementById("releaseValidationNotes");
-    const releaseInputs = {
-      browser_mode: document.getElementById("releaseCheckBrowser"),
-      installed_mode: document.getElementById("releaseCheckInstalled"),
-      update_pickup: document.getElementById("releaseCheckUpdate"),
-      reopen_behavior: document.getElementById("releaseCheckReopen"),
-      recovery_reset: document.getElementById("releaseCheckRecovery")
-    };
-
-    function readReleaseSelections() {
-      const out = {};
-      Object.entries(releaseInputs).forEach(([key, input]) => {
-        out[key] = normalizeLedgerStatus(input?.value || "not-run");
-      });
-      return out;
-    }
-
-    function syncReleaseValidationSummary() {
-      if (!releaseSummaryEl) return;
-      const picks = Object.values(readReleaseSelections());
-      const passCount = picks.filter((v) => v === "pass").length;
-      const failCount = picks.filter((v) => v === "fail").length;
-      const notRunCount = picks.length - passCount - failCount;
-      let status = `${passCount}/${picks.length} checks marked Pass`;
-      if (failCount > 0) status += ` • ${failCount} Fail`;
-      if (notRunCount > 0) status += ` • ${notRunCount} Not run`;
-      if (latestReleaseSnapshot?.summary?.updateAligned === false) status += " • Version alignment warning";
-      if (latestReleaseSnapshot?.summary?.recoveryReady) status += " • Recovery signal present";
-      releaseSummaryEl.textContent = status;
-      if (advancedSummaryLine) advancedSummaryLine.textContent = `Build ${displayBuildVersion} • ${status}`;
-    }
-
-    async function hydrateReleaseValidationSurface() {
-      if (typeof getReleaseValidationSnapshot !== "function") {
-        if (releaseSummaryEl) releaseSummaryEl.textContent = "Release snapshot unavailable in this build";
-        return;
-      }
-      try {
-        const snapshot = await getReleaseValidationSnapshot();
-        latestReleaseSnapshot = snapshot;
-        if (releaseSignalsEl) {
-          releaseSignalsEl.textContent = Array.isArray(snapshot.signalLines) ? snapshot.signalLines.join("\n") : "";
-        }
-        if (releaseStampEl) {
-          const stamp = snapshot?.at ? new Date(snapshot.at) : null;
-          const stampLabel = stamp && !Number.isNaN(stamp.getTime()) ? stamp.toLocaleString() : "Unknown time";
-          releaseStampEl.textContent = `Snapshot captured ${stampLabel}`;
-        }
-        const checkMap = Array.isArray(snapshot?.checks)
-          ? Object.fromEntries(snapshot.checks.map((check) => [check.key, normalizeLedgerStatus(check.suggested)]))
-          : {};
-        Object.entries(releaseInputs).forEach(([key, input]) => {
-          if (!input) return;
-          input.value = normalizeLedgerStatus(checkMap[key] || input.value || "not-run");
-        });
-        syncReleaseValidationSummary();
-      } catch (_) {
-        if (releaseSummaryEl) releaseSummaryEl.textContent = "Could not capture release snapshot";
-      }
-    }
-
-    Object.values(releaseInputs).forEach((input) => {
-      if (!input) return;
-      input.onchange = () => syncReleaseValidationSummary();
+    const { hydrateReleaseValidationSurface } = supportRecoverySeam.createReleaseValidationController({
+      advancedSummaryLine
     });
-
-    const refreshReleaseSnapshotBtn = document.getElementById("refreshReleaseSnapshot");
-    if (refreshReleaseSnapshotBtn) {
-      refreshReleaseSnapshotBtn.onclick = async () => {
-        await hydrateReleaseValidationSurface();
-        showToast("Release snapshot refreshed");
-      };
-    }
-
-    const copyReleaseLedgerBtn = document.getElementById("copyReleaseLedger");
-    if (copyReleaseLedgerBtn) {
-      copyReleaseLedgerBtn.onclick = async () => {
-        const selections = readReleaseSelections();
-        const notes = releaseNotesEl?.value || "";
-        let ledgerText = "";
-        if (typeof formatReleaseValidationLedger === "function") {
-          ledgerText = formatReleaseValidationLedger(latestReleaseSnapshot, selections, notes);
-        } else {
-          const lines = [
-            `Build ${displayBuildVersion} release validation`,
-            `Browser mode: ${releaseStatusLabel(selections.browser_mode)}`,
-            `Installed mode: ${releaseStatusLabel(selections.installed_mode)}`,
-            `Update pickup: ${releaseStatusLabel(selections.update_pickup)}`,
-            `Reopen behavior: ${releaseStatusLabel(selections.reopen_behavior)}`,
-            `Recovery/reset: ${releaseStatusLabel(selections.recovery_reset)}`
-          ];
-          if (String(notes || "").trim()) lines.push(`Notes: ${String(notes).trim()}`);
-          ledgerText = lines.join("\n");
-        }
-        let copied = false;
-        try {
-          if (typeof copyTextWithFeedback === "function") {
-            copied = await copyTextWithFeedback(ledgerText);
-          }
-        } catch (_) {}
-        if (!copied) {
-          try {
-            await navigator.clipboard.writeText(ledgerText);
-            copied = true;
-          } catch (_) {}
-        }
-        showToast(copied ? "Release ledger copied" : "Could not copy release ledger");
-      };
-    }
 
     hydrateReleaseValidationSurface();
 
@@ -698,157 +557,13 @@ export function createSettingsScreenOrchestrator({
       settingsListManagement.bindListMgmtHandlers();
     } catch (_) {}
 
-    try {
-      updateBackupHealthWarning();
-      updateLastBackupLine();
-      updateRestoreRollbackLine();
-      const lastBackupLineEl = document.getElementById("lastBackupLine");
-      if (safetySummaryLine && lastBackupLineEl) {
-        const backupText = String(lastBackupLineEl.textContent || "").trim() || "Backup status available";
-        safetySummaryLine.textContent = `${backupText} • Recently deleted: ${deletedTrips.length}`;
-      }
-      const btnDl = document.getElementById("downloadBackup");
-      const btnRs = document.getElementById("restoreBackup");
-      const btnRollback = document.getElementById("restoreRollbackBtn");
-      const inp = document.getElementById("backupFile");
+    supportRecoverySeam.bindBackupRestoreControls();
+    supportRecoverySeam.syncSafetySummaryLine({
+      safetySummaryLine,
+      deletedTripsCount: deletedTrips.length
+    });
 
-      if (btnDl) {
-        btnDl.onclick = async () => {
-          try {
-            const r = await exportBackup();
-            if (r?.ok) {
-              showToast(r.method === "share" ? "Bank the Catch backup ready to share" : "Bank the Catch backup saved");
-            } else {
-              showToast("Could not create Bank the Catch backup");
-            }
-          } catch (_) {
-            showToast("Could not create Bank the Catch backup");
-          }
-        };
-      }
-
-      if (btnRollback) {
-        btnRollback.onclick = async () => {
-          try {
-            const restored = await restoreFromRollbackSnapshot();
-            const modeLabel = restored?.mode === "replace" ? "Replace" : "Merge";
-            showToast(`Pre-restore snapshot restored (${modeLabel})`);
-            applyThemeMode();
-            render();
-          } catch (_) {
-            showToast("Could not restore pre-restore snapshot");
-          }
-        };
-      }
-
-      if (btnRs && inp) {
-        btnRs.onclick = () => {
-          try {
-            inp.value = "";
-          } catch (_) {}
-          try {
-            inp.click();
-          } catch (_) {}
-        };
-        inp.onchange = async () => {
-          const file = inp.files && inp.files[0];
-          try {
-            inp.value = "";
-          } catch (_) {}
-          if (!file) return;
-
-          try {
-            const preview = await parseBackupFileForRestore(file);
-            const options = await openRestorePreviewModal(preview);
-            if (!options) {
-              showToast("Restore cancelled");
-              return;
-            }
-
-            if (options.mode === "replace") {
-              const safetyChoice = await openReplaceSafetyBackupModal();
-              if (safetyChoice === "cancel") {
-                showToast("Restore cancelled");
-                return;
-              }
-              if (safetyChoice === "created") {
-                showToast("Bank the Catch safety backup created");
-              }
-            }
-
-            const result = await importBackupFromFile(file, {
-              parsedBackup: preview,
-              mode: options.mode,
-              includeSettings: options.includeSettings
-            });
-
-            const modeLabel = result?.mode === "replace" ? "Replace" : "Merge";
-            const tripsAdded = Number(result?.tripsAdded || 0);
-            const tripsSkipped = Number(result?.tripsSkippedDuplicates || 0);
-            showToast(result?.mode === "merge"
-              ? `Restore complete: ${tripsAdded} trips added, ${tripsSkipped} likely duplicates skipped (${modeLabel})`
-              : `Restore complete: ${tripsAdded} trips restored (${modeLabel})`);
-            await openRestoreResultModal(result);
-            updateRestoreRollbackLine();
-            applyThemeMode();
-            render();
-          } catch (e) {
-            showToast("Could not restore Bank the Catch backup");
-            await openRestoreErrorModal(e);
-          }
-        };
-      }
-    } catch (_) {}
-
-    try {
-      document.querySelectorAll("[data-restore-trip]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const result = restoreDeletedTrip(btn.getAttribute("data-restore-trip"));
-          if (!result?.ok) {
-            showToast("Could not restore that trip");
-            return;
-          }
-          saveState();
-          render();
-          showToast(result.idChanged ? "Trip restored with a new ID" : "Trip restored");
-        });
-      });
-      document.querySelectorAll("[data-delete-forever]").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const ok = await openConfirmModal({
-            title: "Delete Forever",
-            message: "Permanently remove this deleted trip? This cannot be undone.",
-            confirmLabel: "Delete Forever",
-            cancelLabel: "Cancel"
-          });
-          if (!ok) return;
-          const removed = permanentlyDeleteDeletedTrip(btn.getAttribute("data-delete-forever"));
-          if (!removed) {
-            showToast("Could not remove that deleted trip");
-            return;
-          }
-          saveState();
-          render();
-          showToast("Deleted trip removed forever");
-        });
-      });
-      const clearDeletedTripsBtn = document.getElementById("clearDeletedTrips");
-      if (clearDeletedTripsBtn) {
-        clearDeletedTripsBtn.onclick = async () => {
-          const ok = await openConfirmModal({
-            title: "Clear Recently Deleted",
-            message: "Permanently remove all deleted trips from Recently Deleted?",
-            confirmLabel: "Clear All",
-            cancelLabel: "Cancel"
-          });
-          if (!ok) return;
-          const cleared = clearDeletedTripsBin();
-          saveState();
-          render();
-          showToast(cleared > 0 ? "Recently Deleted cleared" : "Recently Deleted was already empty");
-        };
-      }
-    } catch (_) {}
+    supportRecoverySeam.bindDeletedTripRecoveryControls();
 
     document.getElementById("openTerms").onclick = () => {
       window.location.href = "legal/terms.html";
