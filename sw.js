@@ -43,6 +43,7 @@ const CORE = [
   "./js/diagnostics_fatal_v5.js?v="+SW_V,
   "./js/app_shell_v5.js?v="+SW_V,
   "./js/trip_flow_save_seam_v5.js?v="+SW_V,
+  "./js/unified_filters_seam_v5.js?v="+SW_V,
   "./js/root_state_save_seam_v5.js?v="+SW_V,
   "./js/runtime_orchestration_seam_v5.js?v="+SW_V,
   "./js/top_level_navigation_transition_seam_v5.js?v="+SW_V,
