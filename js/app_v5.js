@@ -37,6 +37,7 @@ const STARTUP_MODULE_PATHS = [
   // "./feedback_seam_v5.js"
   // "./trip_screen_orchestrator_v5.js"
   // "./trip_flow_save_seam_v5.js"
+  // "./unified_filters_seam_v5.js"
   // "./root_state_save_seam_v5.js"
   // "./update_runtime_status_v5.js"
   // "./diagnostics_fatal_v5.js"
@@ -86,6 +87,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { createFeedbackSeam },
   { createTripScreenOrchestrator },
   { buildTripFormInputs, buildNewTripSaveSnapshot },
+  { createUnifiedFiltersSeam },
   { createRootStateSaveSeam },
   { createUpdateRuntimeStatusSeam },
   { createDiagnosticsFatalSeam },
@@ -610,221 +612,27 @@ function ensureDealers(){
 }
 
 
-// ===========================
-// Patch 2B (v60): Unified Filters Engine (single source of truth)
-// Default: YTD. UI: filters live in Trips; Home/Reports show a badge.
-// Add-ons: C (Custom Range), E (Date normalization), F (Rounding rules)
-// ===========================
-function ensureUnifiedFilters(){
-  // Migrate legacy filters (homeFilter / tripsFilter / reportsFilter) into a single canonical filter object.
-  if(!state.filters || typeof state.filters !== "object") state.filters = {};
-  if(!state.filters.active || typeof state.filters.active !== "object"){
-    // Prefer legacy reports filter, then home, then trips.
-    const pick = state.reportsFilter || state.homeFilter || state.tripsFilter || (state.filter ? { mode: String(state.filter).toUpperCase(), from:"", to:"" } : { mode:"YTD", from:"", to:"" });
-    const legacyMode = String(pick?.mode || "YTD").toUpperCase();
+const unifiedFiltersSeam = createUnifiedFiltersSeam({
+  getState: ()=> state,
+  parseUsDateToISODate,
+  parseReportDateToISO: (...args)=> parseReportDateToISO(...args),
+  isoToday,
+  ensureAreas: ()=> ensureAreas(),
+  resolveAreaValue: (value)=> resolveAreaValue(value),
+  resolveTripArea: (trip)=> resolveTripArea(trip),
+  normalizeTripRow: (trip)=> normalizeTripRow(trip),
+  canonicalizeTripArea: (trip)=> canonicalizeTripArea(trip),
+  isValidISODate
+});
 
-    let range = "ytd";
-    let fromISO = "";
-    let toISO = "";
-
-    if(legacyMode === "ALL") range = "all";
-    else if(legacyMode === "YTD") range = "ytd";
-    else if(legacyMode === "MONTH") range = "mtd";
-    else if(legacyMode === "7D") range = "7d";
-    else if(legacyMode === "RANGE") {
-      range = "custom";
-      fromISO = parseUsDateToISODate(String(pick?.from||"")) || "";
-      toISO = parseUsDateToISODate(String(pick?.to||"")) || "";
-    }
-
-    state.filters.active = {
-      range,
-      fromISO,
-      toISO,
-      dealer: "all",
-      area: "all",
-      species: "all",
-      text: ""
-    };
-  }
-
-  const f = state.filters.active;
-
-  if(!f.range) f.range = "ytd"; // locked default
-  if(f.dealer == null) f.dealer = "all";
-  if(f.area == null) f.area = "all";
-  if(f.species == null) f.species = "all";
-  if(f.text == null) f.text = "";
-  if(f.fromISO == null) f.fromISO = "";
-  if(f.toISO == null) f.toISO = "";
-
-  // Guardrails for custom range
-  if(f.range === "custom"){
-    const now = isoToday();
-    const y = now.slice(0,4);
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(f.fromISO||""))) f.fromISO = `${y}-01-01`;
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(f.toISO||""))) f.toISO = now;
-    if(f.fromISO > f.toISO){
-      const tmp = f.fromISO; f.fromISO = f.toISO; f.toISO = tmp;
-    }
-  }
-}
-
-// Add-on C: resolve range (includes custom + guardrails)
-function resolveUnifiedRange(filter){
-  const now = isoToday();
-  const y = now.slice(0,4);
-
-  const backDays = (n)=>{
-    const d = new Date();
-    d.setDate(d.getDate() - n);
-    return d.toISOString().slice(0,10);
-  };
-
-  if(filter.range === "all") return { fromISO:"1900-01-01", toISO:now, label:"All Time" };
-  if(filter.range === "ytd") return { fromISO:`${y}-01-01`, toISO:now, label:"YTD" };
-  if(filter.range === "mtd") return { fromISO:`${y}-${String(new Date().getMonth()+1).padStart(2,"0")}-01`, toISO:now, label:"This Month" };
-  if(filter.range === "last_month"){
-    const d = new Date();
-    d.setDate(1);
-    d.setMonth(d.getMonth()-1);
-    const fromISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`;
-    const toISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()).padStart(2,"0")}`;
-    return { fromISO, toISO, label:"Last Month" };
-  }
-  if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"Last 7 Days" };
-  if(filter.range === "12m"){
-    const d = new Date();
-    d.setFullYear(d.getFullYear()-1);
-    return { fromISO:d.toISOString().slice(0,10), toISO:now, label:"Last 12 months" };
-  }
-  if(filter.range === "90d") return { fromISO:backDays(90), toISO:now, label:"Last 90 days" };
-  if(filter.range === "30d") return { fromISO:backDays(30), toISO:now, label:"Last 30 days" };
-  if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"Last 7 Days" };
-
-  // custom
-  let fromISO = String(filter.fromISO||"").slice(0,10);
-  let toISO = String(filter.toISO||"").slice(0,10);
-
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(fromISO)) fromISO = `${y}-01-01`;
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(toISO)) toISO = now;
-
-  if(fromISO > toISO){
-    const tmp = fromISO; fromISO = toISO; toISO = tmp;
-  }
-  return { fromISO, toISO, label: `${fromISO} → ${toISO}` };
-}
-
-// Add-on F: formatting rules (single source of truth)
-
-
-function buildUnifiedFilterLabel(filter, rangeLabel){
-  const parts = [rangeLabel];
-  if(filter.dealer && filter.dealer !== "all") parts.push(`Dealer: ${filter.dealer}`);
-  if(filter.area && filter.area !== "all") parts.push(`Area: ${resolveAreaValue(filter.area).canonicalName || filter.area}`);
-  if(filter.species && filter.species !== "all") parts.push(`Species: ${filter.species}`);
-  if(filter.text && String(filter.text).trim()) parts.push(`Search: "${String(filter.text).trim()}"`);
-  return parts.join(" • ");
-}
-
-function legacyModeToUnifiedRange(mode){
-  const m = String(mode || "").toUpperCase();
-  if(m === "ALL") return "all";
-  if(m === "YTD") return "ytd";
-  if(m === "MONTH" || m === "THIS_MONTH") return "mtd";
-  if(m === "LAST_MONTH") return "last_month";
-  if(m === "7D") return "7d";
-  if(m === "12M") return "12m";
-  if(m === "90D") return "90d";
-  if(m === "30D") return "30d";
-  if(m === "RANGE" || m === "CUSTOM") return "custom";
-  return "ytd";
-}
-
-function makeUnifiedFilter(partial){
-  const f = {
-    range: partial?.range || "ytd",
-    fromISO: partial?.fromISO || "",
-    toISO: partial?.toISO || "",
-    dealer: partial?.dealer || "all",
-    area: partial?.area || "all",
-    species: partial?.species || "all",
-    text: partial?.text || ""
-  };
-  const resolved = resolveUnifiedRange(f);
-  return { ...f, fromISO: resolved.fromISO, toISO: resolved.toISO };
-}
-
-function buildUnifiedFilterFromHomeFilter(hf){
-  return makeUnifiedFilter({
-    range: legacyModeToUnifiedRange(hf?.mode || "YTD"),
-    fromISO: parseReportDateToISO(hf?.from || "") || "",
-    toISO: parseReportDateToISO(hf?.to || "") || "",
-    dealer: "all",
-    area: "all"
-  });
-}
-
-function buildUnifiedFilterFromReportsFilter(rf){
-  const rawArea = rf?.area ? String(rf.area) : "all";
-  return makeUnifiedFilter({
-    range: legacyModeToUnifiedRange(rf?.mode || "YTD"),
-    fromISO: parseReportDateToISO(rf?.from || "") || "",
-    toISO: parseReportDateToISO(rf?.to || "") || "",
-    dealer: rf?.dealer ? String(rf.dealer) : "all",
-    area: rawArea
-  });
-}
-
-function applyUnifiedTripFilter(rawTrips, filter){
-  ensureAreas();
-  const trips = (rawTrips || []).map((trip)=> canonicalizeTripArea(normalizeTripRow(trip))).filter(Boolean);
-  const r = resolveUnifiedRange(filter);
-  const areaFilterId = filter.area && filter.area !== "all"
-    ? String(filter.area)
-    : "all";
-
-  let rows = trips.filter(t => isValidISODate(t.dateISO) && t.dateISO >= r.fromISO && t.dateISO <= r.toISO);
-
-  if(filter.dealer && filter.dealer !== "all") rows = rows.filter(t => t.dealer === filter.dealer);
-  if(areaFilterId && areaFilterId !== "all") rows = rows.filter(t => {
-    const resolved = resolveTripArea(t);
-    return resolved.canonicalName === areaFilterId;
-  });
-  if(filter.species && filter.species !== "all") rows = rows.filter(t => t.species === filter.species);
-
-  if(filter.text && String(filter.text).trim()){
-    const q = String(filter.text).trim().toLowerCase();
-    rows = rows.filter(t => {
-      const resolvedArea = resolveTripArea(t);
-      return (t.dealer||"").toLowerCase().includes(q) ||
-        (resolvedArea.canonicalName||t.area||"").toLowerCase().includes(q) ||
-        (t.species||"").toLowerCase().includes(q) ||
-        (t.notes||"").toLowerCase().includes(q);
-    });
-  }
-
-  const totalLbs = rows.reduce((a,t)=> a + (Number(t.pounds)||0), 0);
-  const totalAmount = rows.reduce((a,t)=> a + (Number(t.amount)||0), 0);
-
-  return {
-    rows,
-    stats: {
-      count: rows.length,
-      totalLbs,
-      totalAmount,
-      avgPPL: (totalLbs > 0 ? (totalAmount/totalLbs) : 0)
-    },
-    range: { fromISO:r.fromISO, toISO:r.toISO },
-    label: buildUnifiedFilterLabel(filter, r.label)
-  };
-}
-
-function getFilteredTrips(){
-  ensureUnifiedFilters();
-  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
-  return applyUnifiedTripFilter(tripsAll, state.filters.active);
-}
+const {
+  ensureUnifiedFilters,
+  resolveUnifiedRange,
+  buildUnifiedFilterFromHomeFilter,
+  buildUnifiedFilterFromReportsFilter,
+  applyUnifiedTripFilter,
+  getFilteredTrips
+} = unifiedFiltersSeam;
 
 function uniqueSorted(arr){
   return [...new Set((arr||[]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));

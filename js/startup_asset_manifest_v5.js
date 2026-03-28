@@ -20,6 +20,7 @@ export const STARTUP_MODULE_PATHS = [
   "./feedback_seam_v5.js",
   "./trip_screen_orchestrator_v5.js",
   "./trip_flow_save_seam_v5.js",
+  "./unified_filters_seam_v5.js",
   "./root_state_save_seam_v5.js",
   "./update_runtime_status_v5.js",
   "./diagnostics_fatal_v5.js",
