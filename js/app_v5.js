@@ -65,7 +65,7 @@ try {
   window.__BOOT_DIAG__.startupModuleUrls = [...STARTUP_MODULE_URLS];
 } catch (_) {}
 
-const [{ uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, openModal, closeModal, lockBodyScroll, unlockBodyScroll, focusFirstFocusable , isValidISODate },
+const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, isValidISODate },
   { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme },
   { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback },
   { ensureNavState, createNavigator },
@@ -95,9 +95,11 @@ const [{ uid, toCSV, downloadText, formatMoney, formatISODateToDisplayDMY: forma
     renderPageHeader: renderPageHeaderShell,
     bindHeaderHelpButtons: bindHeaderHelpButtonsShell,
     renderTabBar: renderTabBarShell
-  }
+  },
+  { downloadText, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, openModal, closeModal, attachLongPress }
 ] = await Promise.all([
-  ...STARTUP_MODULE_PATHS.map(importVersionedModule)
+  ...STARTUP_MODULE_PATHS.map(importVersionedModule),
+  importVersionedModule("./ui_browser_helpers_v5.js")
 ]);
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
