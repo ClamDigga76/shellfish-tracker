@@ -16,6 +16,8 @@ export function getActiveTabKey(view){
 export function renderPageHeader(viewKey, { escapeHtml }){
   const helpKey = (viewKey === "all_trips") ? "trips" : viewKey;
   const showHelp = (helpKey === "home" || helpKey === "trips" || helpKey === "reports" || helpKey === "settings");
+  const topLevelViews = new Set(["home", "all_trips", "reports", "settings"]);
+  const landingAttr = topLevelViews.has(viewKey) ? ' data-top-level-landing="true"' : "";
   const titleByView = {
     home: "Home",
     all_trips: "Trips",
@@ -32,7 +34,7 @@ export function renderPageHeader(viewKey, { escapeHtml }){
     <div class="pageHeader">
       <span class="phActionStub" aria-hidden="true"></span>
       <div class="phTitleSlot">
-        <h2 class="phTitle" tabindex="-1">${escapeHtml(headerTitle)}</h2>
+        <h2 class="phTitle" tabindex="-1"${landingAttr}>${escapeHtml(headerTitle)}</h2>
       </div>
       ${showHelp
         ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">${helpIconSvg()}</button>`

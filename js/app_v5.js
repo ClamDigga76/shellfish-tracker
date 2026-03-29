@@ -1668,10 +1668,23 @@ function render(){
   const focusTopLevelLanding = ()=>{
     const appRoot = getApp();
     if(!appRoot) return;
-    const title = appRoot.querySelector(".phTitle");
-    if(title instanceof HTMLElement){
+    const landingTarget = appRoot.querySelector("[data-top-level-landing='true'], .phTitle");
+    if(landingTarget instanceof HTMLElement){
       try{
-        title.focus({ preventScroll: true });
+        landingTarget.focus({ preventScroll: true });
+        return;
+      }catch(_){ }
+    }
+    const fallback = appRoot.querySelector("main h1, h1, h2, [role='heading']");
+    if(fallback instanceof HTMLElement && typeof fallback.focus === "function"){
+      const hadTabIndex = fallback.hasAttribute("tabindex");
+      if(!hadTabIndex) fallback.setAttribute("tabindex", "-1");
+      try{
+        fallback.focus({ preventScroll: true });
+        if(!hadTabIndex){
+          const removeTempTabIndex = ()=> fallback.removeAttribute("tabindex");
+          setTimeout(removeTempTabIndex, 0);
+        }
         return;
       }catch(_){ }
     }
