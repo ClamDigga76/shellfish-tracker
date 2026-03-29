@@ -1115,7 +1115,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   getApp().innerHTML = homeMetricOnly ? `
     ${renderPageHeader("home")}
 
-    <div id="reportsTransitionRoot" class="reportsTransitionRoot reportsTransitionRoot--detail" data-reports-view="${escapeHtml(reportsBodyView)}">
+    <div id="reportsTransitionRoot" class="reportsTransitionRoot reportsTransitionRoot--detail" data-reports-view="${escapeHtml(reportsBodyView)}" data-detail-mode="home">
       ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : ""}
     </div>
   ` : `
@@ -1123,7 +1123,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
     ${renderReportsTopShell({
       shellMode: activeMetricDetail ? "detail" : "overview",
-      body: `<div id="reportsTransitionRoot" class="reportsTransitionRoot" data-reports-view="${escapeHtml(reportsBodyView)}" role="tabpanel" aria-labelledby="reports-tab-${escapeHtml(activeReportsSection)}" tabindex="-1">
+      body: `<div id="reportsTransitionRoot" class="reportsTransitionRoot" data-reports-view="${escapeHtml(reportsBodyView)}" data-detail-mode="${activeMetricDetail ? "reports" : "overview"}" role="tabpanel" aria-labelledby="reports-tab-${escapeHtml(activeReportsSection)}" tabindex="-1">
         ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : renderActiveReportsSection()}
       </div>`
     })}
@@ -1201,7 +1201,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   metricDetailButtons.forEach((btn)=>{
     btn.onclick = ()=>{
       const metricName = String(btn.getAttribute("data-metric-detail") || "metric").toLowerCase();
-      queueReportsAnnouncement(`Opened ${metricName} detail.`);
+      queueReportsAnnouncement(`Opened ${metricName} metric detail in reports.`);
       queueReportsFocusIntent({ type: "metric-back" });
       runReportsTransition({
         mutate: ()=>{
