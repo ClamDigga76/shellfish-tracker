@@ -126,18 +126,18 @@ export function createReportsHighlightsSeam(deps){
       ? " • early read"
       : (payload?.confidenceLabel === "weak" ? " • light read" : "");
     if(payload.metricKey === "trips"){
-      return `${buildTripsDriverText(compare)} • matched against ${windowText}${trustText}`;
+      return `${buildTripsDriverText(compare)} • compared over ${windowText}${trustText}`;
     }
     if(payload.metricKey === "amount"){
-      return `${buildAmountDriverText(compare).replace(/\.$/, "")} • matched against ${windowText}${trustText}`;
+      return `${buildAmountDriverText(compare).replace(/\.$/, "")} • compared over ${windowText}${trustText}`;
     }
     if(payload.metricKey === "pounds"){
-      return `${buildPoundsDriverText(compare).replace(/\.$/, "")} • matched against ${windowText}${trustText}`;
+      return `${buildPoundsDriverText(compare).replace(/\.$/, "")} • compared over ${windowText}${trustText}`;
     }
     if(payload.metricKey === "ppl"){
-      return `${buildPplDriverText(compare).replace(/\.$/, "")} • matched against ${windowText}${trustText}`;
+      return `${buildPplDriverText(compare).replace(/\.$/, "")} • compared over ${windowText}${trustText}`;
     }
-    return `${buildPeriodLabel(period)} • compared on ${windowText}${trustText}`;
+    return `${buildPeriodLabel(period)} • compared over ${windowText}${trustText}`;
   }
 
   function buildLeaderSummary({ label, entity, totalAmount, noun }){
@@ -320,8 +320,8 @@ export function createReportsHighlightsSeam(deps){
       const tripsVals = recent.map((r)=> safeNum(r.trips));
       const isUp = (arr)=> arr[2] > arr[1] && arr[1] > arr[0];
       const isDown = (arr)=> arr[2] < arr[1] && arr[1] < arr[0];
-      if(isUp(lbs)) return { headline: "Pounds have climbed for three months.", tone: "up" };
-      if(isDown(lbs)) return { headline: "Pounds have softened for three months.", tone: "down" };
+      if(isUp(lbs)) return { headline: "Pounds have climbed for three straight months.", tone: "up" };
+      if(isDown(lbs)) return { headline: "Pounds have softened for three straight months.", tone: "down" };
       if(isUp(tripsVals)) return { headline: "Trips have climbed across the last three months.", tone: "up" };
       if(isDown(tripsVals)) return { headline: "Trips have eased across the last three months.", tone: "down" };
       return { headline: "No clear three-month trend yet in this range.", tone: "steady" };
@@ -355,7 +355,7 @@ export function createReportsHighlightsSeam(deps){
       compare.period?.suppressed ? {
         type: "summary",
         label: "Compare guardrail",
-        headline: "Comparison held back for fairness.",
+        headline: "Comparison paused to keep this read fair.",
         value: "Suppressed",
         statusTone: "steady",
         statusText: compare.period.reason || compare.period.explanation || "Not enough data yet"
@@ -377,7 +377,7 @@ export function createReportsHighlightsSeam(deps){
     return `
       <div class="reportsHighlightsCard">
         <div class="reportsHighlightsHdr">Range insights</div>
-        <div class="reportsHighlightsGuide">Overview first. Tap cards with <b>View breakdown</b> to open metric detail.</div>
+        <div class="reportsHighlightsGuide">Start here for the big picture. Tap <b>View breakdown</b> on any compare card for metric detail.</div>
         <div class="reportsHighlightsGrid">
           ${highlights.map(item=>`
             <${item.type === "compare" ? "button" : "div"} class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare reportsHighlightItem--drilldown" : "summary"}" ${item.type === "compare" ? `type="button" data-metric-detail="${escapeHtml(item.metricKey)}" aria-label="View ${escapeHtml(item.label)} breakdown"` : ""}>
@@ -402,7 +402,7 @@ export function createReportsHighlightsSeam(deps){
                     <div class="reportsCompareBarTrack muted"><span style="width:${item.bPct}%"></span></div>
                   </div>
                 </div>
-                <div class="reportsHighlightAction" aria-hidden="true">View breakdown →</div>
+                <div class="reportsHighlightAction" aria-hidden="true">Open metric detail →</div>
               ` : `
                 <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
                   <div class="reportsHighlightValue ${item.valueClass || ""}">${renderPercentEmphasisText(item.value)}</div>

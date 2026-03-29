@@ -291,11 +291,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const chip = ({ key, label })=> `<button class="chip segBtn reportsPrimaryFilterChip ${activePresetFilterKey===key?'on is-selected':''}" data-rf="${key}" type="button" role="tab" aria-selected="${activePresetFilterKey===key ? "true" : "false"}">${label}</button>`;
   const REPORTS_SECTION_ITEMS = [
-    { key: "insights", label: "Insights", modeLabel: "Overview", intro: "Range insights and highlights for this active filter." },
-    { key: "charts", label: "Charts", modeLabel: "Overview", intro: "Trend charts for a quick visual scan of this range." },
-    { key: "seasonality", label: "Seasonality", modeLabel: "Overview", intro: "See repeat timing across months and matched dates." },
-    { key: "records", label: "Records", modeLabel: "Detail tables", intro: "Jump straight to high and low trip records for this range." },
-    { key: "detail", label: "Detail", modeLabel: "Detail tables", intro: "Dealer, area, and monthly summary rows for this range." }
+    { key: "insights", label: "Insights", modeLabel: "Overview", intro: "Highlights and takeaways for your current filter." },
+    { key: "charts", label: "Charts", modeLabel: "Overview", intro: "Trend charts for a quick visual read of this range." },
+    { key: "seasonality", label: "Seasonality", modeLabel: "Overview", intro: "See repeat timing across months and matched windows." },
+    { key: "records", label: "Records", modeLabel: "Detail tables", intro: "Review high and low trip records for this range." },
+    { key: "detail", label: "Detail", modeLabel: "Detail tables", intro: "Dealer, area, and monthly summaries for this range." }
   ];
   const activeReportsSection = REPORTS_SECTION_ITEMS.some((item)=> item.key === reportsSectionKey) ? reportsSectionKey : "insights";
   const activeReportsItem = REPORTS_SECTION_ITEMS.find((item)=> item.key === activeReportsSection) || REPORTS_SECTION_ITEMS[0];
@@ -905,7 +905,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderChartsBlock = ()=> reportsSection({
     title: "Charts",
-    intro: "Quick mobile-read charts for trend scanning in this active range.",
+    intro: "Quick mobile-ready charts for scanning trend direction in this range.",
     body: `<div class="reportsChartsStack">${renderChartsSection()}</div>`,
     extraClass: "reportsSection--charts"
   });
@@ -989,8 +989,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     if(!Array.isArray(dealerRangeRows) || !dealerRangeRows.length){
       return `
         <div class="emptyState compact">
-          <div class="emptyStateTitle">Dealer range comparison pending</div>
-          <div class="emptyStateBody">Add priced trips across at least one dealer to unlock this table.</div>
+          <div class="emptyStateTitle">Dealer range comparison unavailable</div>
+          <div class="emptyStateBody">Add priced trips with dealer info to populate this table.</div>
         </div>
       `;
     }
@@ -1069,21 +1069,21 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       ${renderHLItem("Lowest $/lb", minPpl, "ppl", "min")}
     ` : `
       <div class="emptyState compact">
-        <div class="emptyStateTitle">$/lb insights pending</div>
-        <div class="emptyStateBody">Add trips that include both pounds and amount to unlock this view.</div>
+        <div class="emptyStateTitle">$/lb insights unavailable</div>
+        <div class="emptyStateBody">Add trips with both pounds and amount to populate this view.</div>
       </div>`}
   `;
 
   const renderRecordsBlock = ()=> reportsSection({
     title: "Records",
-    intro: "High and low trip records for pounds, amount, and when available $/lb.",
+    intro: "High and low trip records for pounds, amount, and (when available) $/lb.",
     body: `<div class="reportsTablesStack">${renderTableCard("High / Low Summary", highLowBody)}</div>`,
     extraClass: "reportsSection--records"
   });
 
   const renderDetailBlock = ()=> reportsSection({
     title: "Detail",
-    intro: "Dealer, area, and monthly summary rows for this active range.",
+    intro: "Dealer, area, and monthly summary tables for this active range.",
     body: `<div class="reportsTablesStack">${[
       renderTableCard("Dealer Summary", renderAggList(dealerRows, "Add a trip in this range to populate dealer totals.")),
       renderTableCard("Area Summary", renderAggList(areaRows, "Add a trip in this range to populate area totals.")),
@@ -1097,16 +1097,16 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     if(activeReportsSection === "charts") return renderChartsBlock();
     if(activeReportsSection === "seasonality") return renderSeasonalitySection() || reportsSection({
       title: "Seasonality",
-      intro: "Seasonality unlocks once enough dated history exists across months and years.",
-      body: `<div class="reportsHighlightsEmpty"><div class="muted small">Add more dated trips across multiple months to unlock seasonality reads.</div></div>`,
+      intro: "Seasonality appears once enough dated history exists across months and years.",
+      body: `<div class="reportsHighlightsEmpty"><div class="muted small">Add more dated trips across multiple months to reveal seasonality reads.</div></div>`,
       extraClass: "reportsSection--seasonality"
     });
     if(activeReportsSection === "records") return renderRecordsBlock();
     if(activeReportsSection === "detail") return renderDetailBlock();
     return reportsSection({
       title: "Insights",
-      intro: "Analysis takeaways from this date range.",
-      body: `${highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights will appear as more trips are added.</div></div>`}${renderPriceRangeMetricBlock()}`,
+      intro: "Top takeaways from this date range.",
+      body: `${highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights appear automatically as more trips are added.</div></div>`}${renderPriceRangeMetricBlock()}`,
       extraClass: "reportsSection--highlights"
     });
   };
