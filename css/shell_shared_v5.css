@@ -61,6 +61,8 @@
   --tabbar-total-h:calc(var(--tabbar-h) + var(--tabbar-safe));
   --bottom-overlay-h:0px;
   --bottom-overlay-gap:10px;
+  --shell-top-stack-gap:10px;
+  --shell-intro-gap:6px;
   --section-gap:16px;
   --section-gap-tight:13px;
   --card-stack-gap:16px;
@@ -371,6 +373,38 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripsFiltersTitle{font-size:17px;font-weight:860;line-height:1.2;margin-top:2px}
 .tripsBrowseList{display:grid;gap:var(--card-stack-gap)}
 .tripsBrowseList .trip + .trip{margin-top:0}
+.screenIntroStack{
+  display:grid;
+  gap:var(--shell-top-stack-gap);
+}
+.screenIntroBlock{
+  display:grid;
+  gap:var(--shell-intro-gap);
+  min-width:0;
+}
+.screenIntroEyebrow{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--text-muted-strong);
+}
+.screenIntroTitle{
+  font-size:17px;
+  font-weight:860;
+  line-height:1.2;
+}
+.screenIntroMeta,
+.screenIntroHelper{
+  color:var(--text-muted-strong);
+  font-size:12px;
+  line-height:1.4;
+}
+.screenIntroMeta{
+  font-weight:700;
+}
+.screenFirstCard{
+  margin-top:var(--section-gap-tight);
+}
 .tripCardStandard{
   margin:0;
   padding:16px 16px;
@@ -467,7 +501,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 
 /* Settings grouped-list polish (P3) */
 .settingsGroupBlock{margin-bottom:var(--card-stack-gap)}
-.settingsJumpNavCard{margin-bottom:var(--card-stack-gap);padding:9px 10px}
+.settingsJumpNavCard{margin-bottom:var(--section-gap-tight);padding:10px 11px}
 .settingsJumpNavRow{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .settingsJumpNavRow::-webkit-scrollbar{display:none}
 .settingsJumpChip{white-space:nowrap;flex:0 0 auto}
@@ -604,7 +638,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   cursor:default;
 }
 .homeScreenShell .homeSection{
-  margin-bottom:14px;
+  margin-bottom:var(--section-gap-tight);
 }
 .homeScreenShell .homeSection:last-child{
   margin-bottom:0;
@@ -615,6 +649,12 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   border:none;
   background:none;
   box-shadow:none;
+}
+.homeScreenShell .homeIntroSection{
+  margin-bottom:var(--shell-top-stack-gap);
+}
+.homeScreenShell .homeIntroBlock{
+  margin:0 2px;
 }
 .homeScreenShell .homeOverviewCard{
   padding:15px 15px 14px;

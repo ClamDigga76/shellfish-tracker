@@ -368,8 +368,13 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderReportsTopShell = ({ body = "", shellMode = "overview" } = {})=> `
     <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
-      <div class="reportsTopHeader cardHeaderRow">
-        <b>Reports</b>
+      <div class="reportsTopHeader cardHeaderRow screenIntroStack">
+        <div class="screenIntroBlock">
+          <div class="screenIntroEyebrow">Reports</div>
+          <div class="screenIntroTitle">Range analysis</div>
+          <div class="screenIntroMeta">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips</div>
+          <div class="screenIntroHelper">Pick a range, then move through Insights, Charts, and detail tables.</div>
+        </div>
         <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
 

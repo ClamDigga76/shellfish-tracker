@@ -1240,10 +1240,12 @@ function renderAllTrips(){
 
   const filtersCard = `
     <div class="card tripsFiltersCard tripsBrowseFiltersCard">
-      <div class="tripsFiltersTopRow">
-        <div>
-          <div class="tripsFiltersEyebrow">Trip history</div>
-          <div class="tripsFiltersTitle">Browse saved trips</div>
+      <div class="tripsFiltersTopRow screenIntroStack">
+        <div class="screenIntroBlock">
+          <div class="screenIntroEyebrow">Trips</div>
+          <div class="screenIntroTitle">Browse saved trips</div>
+          <div class="screenIntroMeta">Range ${escapeHtml(r.label)} • ${sorted.length} shown</div>
+          <div class="screenIntroHelper">Adjust filters, then open any trip card to edit details.</div>
         </div>
       </div>
       <div class="tripsFiltersGrid">
@@ -1320,9 +1322,9 @@ function renderAllTrips(){
   root.innerHTML = `
     ${renderPageHeader("all_trips")}
 
-    ${filtersCard}
-
-    <div style="height:10px"></div>
+    <div class="screenFirstCard">
+      ${filtersCard}
+    </div>
 
     <div class="triplist tripsBrowseList">
       ${rows}
