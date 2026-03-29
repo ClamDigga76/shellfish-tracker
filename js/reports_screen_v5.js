@@ -415,16 +415,16 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const beginnerEmpty = !hasSavedTrips;
     const title = invalidRange
       ? "Choose a valid date range"
-      : (beginnerEmpty ? "Reports unlock after your first trip" : "No trips in this range");
+      : (beginnerEmpty ? "Add a trip to start Reports" : "No trips in this range");
     const body = invalidRange
       ? "Set both dates, then tap Apply."
       : (beginnerEmpty
-        ? "Save your first trip to unlock Reports."
+        ? "Once one trip is saved, trend insights appear here."
         : "No trips match this filter yet. Add a trip or switch to All Time.");
     const followup = invalidRange
       ? ""
       : (beginnerEmpty
-        ? '<div class="emptyStateFollowup">Next best step: save your first trip.</div>'
+        ? '<div class="emptyStateFollowup">Next step: open New Trip.</div>'
         : '<div class="emptyStateFollowup">Tip: switch to All Time for your widest view.</div>');
     return `
       <div class="emptyState ${beginnerEmpty ? "emptyStateBeginner" : ""}">

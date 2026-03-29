@@ -21,11 +21,11 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b class="helpSectionTitle">Quick start</b>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
-        <div><b>Start with one trip</b>, then use Home for your first snapshot and Reports after you have enough trips to compare.</div>
+        <div><b>Log one trip first.</b> Home updates right away, and Reports gets more useful after a few trips.</div>
         <ol style="margin:8px 0 0 18px">
-          <li>Open <b>New Trip</b> and save your first entry.</li>
-          <li>Check <b>Home</b> for totals, your latest trip, and the next best step.</li>
-          <li>Open <b>Reports</b> after more trips are saved for clearer dealer, area, and monthly trends.</li>
+          <li>Open <b>New Trip</b> and save an entry.</li>
+          <li>Check <b>Home</b> for totals and your latest trip snapshot.</li>
+          <li>Use <b>Reports</b> when you want trend comparisons.</li>
         </ol>
       </div>
     </div>
@@ -36,7 +36,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> quick status checks before or after a trip.</div>
         <ul style="margin:8px 0 0 18px">
-          <li>If you are brand new, Home points you to <b>New Trip</b> first.</li>
+          <li>On first run, Home points you to <b>New Trip</b>.</li>
           <li>Totals and trend cards follow your selected range.</li>
           <li>If stats look light, widen the range first.</li>
         </ul>
@@ -67,7 +67,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>Choose <b>Dealer</b> and <b>Area</b>.</li>
           <li>Tap <b>Save Trip</b>.</li>
         </ol>
-        <div style="margin-top:8px"><b>Tip:</b> chips fill in after more saved trips. Use list pickers first if chips are empty.</div>
+        <div style="margin-top:8px"><b>Tip:</b> chips fill in as you save more trips. Use list pickers first if chips are empty.</div>
       </div>
     </div>
 
@@ -77,7 +77,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> date-range trends by dealer, area, and month.</div>
         <ol style="margin:8px 0 0 18px">
-          <li>Start here after your first trip, and expect stronger insights after a few saved trips.</li>
+          <li>Insights start after your first trip and improve as you log more.</li>
           <li>Pick a date window.</li>
           <li>Add optional dealer/area filters, then switch between charts and table views.</li>
         </ol>
