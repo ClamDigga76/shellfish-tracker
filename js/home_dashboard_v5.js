@@ -283,6 +283,15 @@ export function createHomeDashboardRenderer({
       <div class="card dashCard homeScreenShell">
         ${homeBeginnerCardHTML}
 
+        <section class="homeSection homeIntroSection">
+          <div class="screenIntroBlock homeIntroBlock">
+            <div class="screenIntroEyebrow">Home</div>
+            <div class="screenIntroTitle">Snapshot</div>
+            <div class="screenIntroMeta">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
+            <div class="screenIntroHelper">Use filters first, then scan metrics and your latest saved trip.</div>
+          </div>
+        </section>
+
         <section class="homeSection homeFilterSection">
           <div class="homeFilterStack">
             <div class="segWrap timeframeUnifiedControl" role="group" aria-label="Home timeframe filter">
