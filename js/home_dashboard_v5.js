@@ -194,12 +194,12 @@ export function createHomeDashboardRenderer({
       <section class="homeSection homeBeginnerSection">
         <div class="homeBeginnerCard" role="status" aria-live="polite">
           <div class="homeBeginnerEyebrow">Start here</div>
-          <div class="homeBeginnerTitle">Save one trip to unlock your Home snapshot.</div>
-          <div class="homeBeginnerBody">Save your first trip to start your Home snapshot.</div>
+          <div class="homeBeginnerTitle">Add one trip to unlock Home.</div>
+          <div class="homeBeginnerBody">Log a trip once, then Home starts filling in automatically.</div>
           <div class="homeBeginnerSteps" aria-label="Beginner next steps">
-            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">1</span><span>Save your first trip.</span></div>
-            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">2</span><span>Review your latest result on Home.</span></div>
-            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">3</span><span>Open Reports after a few trips.</span></div>
+            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">1</span><span>Add a trip in New Trip.</span></div>
+            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">2</span><span>Return to Home for your latest snapshot.</span></div>
+            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">3</span><span>Use Reports after a few more trips.</span></div>
           </div>
           <div class="row mt10 noticeActions homeBeginnerActions">
             <button class="btn primary" id="homeBeginnerPrimary" type="button">＋ New Trip</button>
@@ -213,7 +213,7 @@ export function createHomeDashboardRenderer({
 
     const lastSavedTripContextHtml = newestSavedTrip
       ? `<div class="homeLastTripContext">Read-only snapshot of your latest saved trip. Open Trips to edit details.</div>`
-      : `<div class="homeLastTripContext">Save your first trip to populate this Home snapshot section.</div>`;
+      : `<div class="homeLastTripContext">Your latest trip appears here after your first save.</div>`;
 
     const lastSavedTripHtml = newestSavedTrip
       ? (() => {
@@ -227,7 +227,7 @@ export function createHomeDashboardRenderer({
         }
         return `<div class="homeLastTripCardWrap">${renderStandardReadOnlyTripCard(newestSavedTrip)}</div>`;
       })()
-      : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No saved trip yet</div><div class="emptyStateBody">Save your first trip to show your latest trip here.</div></div>`;
+      : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No trip saved yet</div><div class="emptyStateBody">Save one trip to show your latest result here.</div></div>`;
 
     const monthTotals = trips.reduce((map, trip) => {
       const iso = parseReportDateToISO(trip?.dateISO || "");
