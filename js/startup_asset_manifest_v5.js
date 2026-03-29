@@ -30,6 +30,7 @@ export const STARTUP_MODULE_PATHS = [
 ];
 
 export const APP_ENTRY_MODULE_PATH = "./app_v5.js";
+
 export const BOOTSTRAP_REQUIRED_ASSET_PATHS = [
   "./utils_v5.js",
   "./settings.js",
@@ -38,7 +39,29 @@ export const BOOTSTRAP_REQUIRED_ASSET_PATHS = [
   APP_ENTRY_MODULE_PATH
 ];
 
+// Service worker core JS ownership is declared here, then mirrored in sw.js and
+// enforced by scripts/preflight-verify.mjs to prevent drift.
+export const SW_CORE_JS_PATHS = [
+  ...STARTUP_MODULE_PATHS,
+  "./reports_compare_foundations_v5.js",
+  "./reports_advanced_panel_v5.js",
+  "./reports_highlights_v5.js",
+  "./trip_card_renderer_core_v5.js",
+  APP_ENTRY_MODULE_PATH
+];
+
+// Runtime seam loaded at startup by app_v5.js but intentionally network-first,
+// so it is not pre-cached as SW core JS.
+export const SW_CORE_JS_EXCLUDED_PATHS = [
+  "./ui_browser_helpers_v5.js"
+];
+
 export const SW_REGISTRATION_PATH = "./sw.js";
+
+export function buildSwCoreVersionedAssetPath(path, version) {
+  const normalizedPath = String(path || "").replace(/^\.\//, "");
+  return buildVersionedPath(`./js/${normalizedPath}`, version);
+}
 
 export function buildVersionedAssetHref(path, version, baseUrl = import.meta.url) {
   const url = new URL(path, baseUrl);
