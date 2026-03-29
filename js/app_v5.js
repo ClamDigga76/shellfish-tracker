@@ -461,7 +461,8 @@ function renderTabBar(activeView){
       title: "Leave this screen?",
       message: "Your unsaved trip entry may be lost.",
       confirmLabel: "Leave",
-      cancelLabel: "Stay"
+      cancelLabel: "Stay",
+      confirmTone: "default"
     }),
     onNavigate: (next)=>{
       navigateTopLevelView(next);
@@ -797,7 +798,8 @@ function openConfirmModal({
   title = "Confirm",
   message = "Are you sure?",
   confirmLabel = "Yes",
-  cancelLabel = "Cancel"
+  cancelLabel = "Cancel",
+  confirmTone = "destructive"
 } = {}){
   return new Promise((resolve)=>{
     const confirmId = `confirmModalYes_${uid()}`;
@@ -810,6 +812,13 @@ function openConfirmModal({
       resolve(Boolean(result));
     };
 
+    const normalizedTone = String(confirmTone || "destructive").toLowerCase();
+    const confirmToneClass = normalizedTone === "destructive"
+      ? "danger"
+      : normalizedTone === "warning"
+        ? "warn"
+        : "";
+
     openModal({
       title,
       backdropClose: false,
@@ -820,7 +829,7 @@ function openConfirmModal({
         <div class="muted" style="white-space:pre-wrap;line-height:1.4">${escapeHtml(String(message||""))}</div>
         <div class="modalActions" style="margin-top:14px">
           <button class="btn" id="${cancelId}" type="button">${escapeHtml(String(cancelLabel||"Cancel"))}</button>
-          <button class="btn danger" id="${confirmId}" type="button">${escapeHtml(String(confirmLabel||"Yes"))}</button>
+          <button class="btn ${confirmToneClass}" id="${confirmId}" type="button">${escapeHtml(String(confirmLabel||"Yes"))}</button>
         </div>
       `,
       onOpen: ()=>{
@@ -903,7 +912,8 @@ async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" })
       title: "Possible Duplicate",
       message: msg,
       confirmLabel: isEdit ? "Save Changes" : "Save Anyway",
-      cancelLabel: "Cancel"
+      cancelLabel: "Cancel",
+      confirmTone: "default"
     });
     if(!ok) return false;
   }

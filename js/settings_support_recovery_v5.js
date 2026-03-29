@@ -119,12 +119,12 @@ export function createSettingsSupportRecoverySeam(deps) {
           try {
             const r = await exportBackup();
             if (r?.ok) {
-              showToast(r.method === "share" ? "Bank the Catch backup ready to share" : "Bank the Catch backup saved");
+              showToast(r.method === "share" ? "Backup ready to share" : "Backup saved");
             } else {
-              showToast("Could not create Bank the Catch backup");
+              showToast("Backup failed");
             }
           } catch (_) {
-            showToast("Could not create Bank the Catch backup");
+            showToast("Backup failed");
           }
         };
       }
@@ -134,11 +134,11 @@ export function createSettingsSupportRecoverySeam(deps) {
           try {
             const restored = await restoreFromRollbackSnapshot();
             const modeLabel = restored?.mode === "replace" ? "Replace" : "Merge";
-            showToast(`Pre-restore snapshot restored (${modeLabel})`);
+            showToast(`Rollback restored (${modeLabel})`);
             applyThemeMode();
             render();
           } catch (_) {
-            showToast("Could not restore pre-restore snapshot");
+            showToast("Rollback restore failed");
           }
         };
       }
@@ -163,18 +163,18 @@ export function createSettingsSupportRecoverySeam(deps) {
             const preview = await parseBackupFileForRestore(file);
             const options = await openRestorePreviewModal(preview);
             if (!options) {
-              showToast("Restore cancelled");
+              showToast("Restore canceled");
               return;
             }
 
             if (options.mode === "replace") {
               const safetyChoice = await openReplaceSafetyBackupModal();
               if (safetyChoice === "cancel") {
-                showToast("Restore cancelled");
+                showToast("Restore canceled");
                 return;
               }
               if (safetyChoice === "created") {
-                showToast("Bank the Catch safety backup created");
+                showToast("Safety backup created");
               }
             }
 
@@ -195,7 +195,7 @@ export function createSettingsSupportRecoverySeam(deps) {
             applyThemeMode();
             render();
           } catch (e) {
-            showToast("Could not restore Bank the Catch backup");
+            showToast("Restore failed");
             await openRestoreErrorModal(e);
           }
         };
@@ -209,12 +209,12 @@ export function createSettingsSupportRecoverySeam(deps) {
         btn.addEventListener("click", () => {
           const result = restoreDeletedTrip(btn.getAttribute("data-restore-trip"));
           if (!result?.ok) {
-            showToast("Could not restore that trip");
+            showToast("Trip restore failed");
             return;
           }
           saveState();
           render();
-          showToast(result.idChanged ? "Trip restored with a new ID" : "Trip restored");
+          showToast(result.idChanged ? "Trip restored (new ID assigned)" : "Trip restored");
         });
       });
       document.querySelectorAll("[data-delete-forever]").forEach((btn) => {
@@ -223,17 +223,18 @@ export function createSettingsSupportRecoverySeam(deps) {
             title: "Delete Forever",
             message: "Permanently remove this deleted trip? This cannot be undone.",
             confirmLabel: "Delete Forever",
-            cancelLabel: "Cancel"
+            cancelLabel: "Cancel",
+            confirmTone: "destructive"
           });
           if (!ok) return;
           const removed = permanentlyDeleteDeletedTrip(btn.getAttribute("data-delete-forever"));
           if (!removed) {
-            showToast("Could not remove that deleted trip");
+            showToast("Delete forever failed");
             return;
           }
           saveState();
           render();
-          showToast("Deleted trip removed forever");
+          showToast("Trip deleted forever");
         });
       });
       const clearDeletedTripsBtn = document.getElementById("clearDeletedTrips");
@@ -243,7 +244,8 @@ export function createSettingsSupportRecoverySeam(deps) {
             title: "Clear Recently Deleted",
             message: "Permanently remove all deleted trips from Recently Deleted?",
             confirmLabel: "Clear All",
-            cancelLabel: "Cancel"
+            cancelLabel: "Cancel",
+            confirmTone: "destructive"
           });
           if (!ok) return;
           const cleared = clearDeletedTripsBin();
