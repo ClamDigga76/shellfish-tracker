@@ -32,6 +32,7 @@ export function downloadText(filename, text){
 let overlayLockCount = 0;
 const overlayAllowTouchRoots = new Set();
 let touchMoveBlockerAttached = false;
+let modalA11yIdCounter = 0;
 
 const touchMoveBlocker = (e)=>{
   if(!overlayAllowTouchRoots.size) return;
@@ -70,7 +71,9 @@ export function unlockBodyScroll(allowTouchRoot){
 
 export function focusFirstFocusable(container){
   if(!container) return null;
-  const target = container.querySelector("[autofocus], input:not([type='hidden']):not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex='-1'])");
+  const target = container.querySelector(
+    "[autofocus], button:not([disabled]), [href], input:not([type='hidden']):not([disabled]), select:not([disabled]), textarea:not([disabled]), details>summary:first-of-type, [contenteditable='true'], [tabindex]:not([tabindex='-1'])"
+  );
   if(target && typeof target.focus === "function"){
     target.focus({ preventScroll: true });
     return target;
@@ -119,7 +122,7 @@ export function openModal({
   }
 
   root.innerHTML = `
-    <div class="modalSheet${isCenter ? " modalSheet--center" : ""}" style="${sheetStyle}" role="dialog" aria-modal="true">
+    <div class="modalSheet${isCenter ? " modalSheet--center" : ""}" style="${sheetStyle}" role="dialog" aria-modal="true" tabindex="-1">
       <div class="modalHdr">
         <div class="modalTitle">${escapeHtml(String(title||""))}</div>
         ${closeBtnHtml}
@@ -129,6 +132,20 @@ export function openModal({
   `;
 
   const sheet = root.querySelector(".modalSheet");
+  const modalTitle = root.querySelector(".modalTitle");
+  const modalBody = root.querySelector(".modalBody");
+  const modalIdSeed = `modalA11y_${Date.now()}_${++modalA11yIdCounter}`;
+  const modalTitleId = `${modalIdSeed}_title`;
+  const modalBodyId = `${modalIdSeed}_body`;
+  if(modalTitle){
+    modalTitle.id = modalTitleId;
+    if(sheet) sheet.setAttribute("aria-labelledby", modalTitleId);
+  }
+  if(modalBody){
+    modalBody.id = modalBodyId;
+    if(sheet) sheet.setAttribute("aria-describedby", modalBodyId);
+  }
+
   const close = ()=>closeModal();
 
   const closeFromBackdrop = (e)=>{
@@ -154,9 +171,35 @@ export function openModal({
       close();
     }
   };
+  const trapTabHandler = (e)=>{
+    if(e.key !== "Tab" || !sheet) return;
+    const nodes = Array.from(sheet.querySelectorAll(
+      "button:not([disabled]), [href], input:not([type='hidden']):not([disabled]), select:not([disabled]), textarea:not([disabled]), details>summary:first-of-type, [contenteditable='true'], [tabindex]:not([tabindex='-1'])"
+    )).filter((node)=> node instanceof HTMLElement && node.offsetParent !== null && !node.hasAttribute("hidden") && node.getAttribute("aria-hidden") !== "true");
+    if(!nodes.length){
+      e.preventDefault();
+      if(typeof sheet.focus === "function") sheet.focus({ preventScroll: true });
+      return;
+    }
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    const active = document.activeElement;
+    if(e.shiftKey){
+      if(active === first || !sheet.contains(active)){
+        e.preventDefault();
+        last.focus({ preventScroll: true });
+      }
+      return;
+    }
+    if(active === last || !sheet.contains(active)){
+      e.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  };
   if(escClose){
     window.addEventListener("keydown", escHandler);
   }
+  window.addEventListener("keydown", trapTabHandler);
 
   lockBodyScroll(root);
 
@@ -164,6 +207,7 @@ export function openModal({
     root,
     opener,
     escHandler: escClose ? escHandler : null,
+    trapTabHandler,
     backdropHandler: backdropClose ? closeFromBackdrop : null,
     closing: false
   };
@@ -188,6 +232,9 @@ export function closeModal({ immediate = false } = {}){
   }
   if(state?.escHandler){
     window.removeEventListener("keydown", state.escHandler);
+  }
+  if(state?.trapTabHandler){
+    window.removeEventListener("keydown", state.trapTabHandler);
   }
 
   const finalizeClose = ()=>{
