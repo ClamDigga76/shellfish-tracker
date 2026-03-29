@@ -436,9 +436,10 @@ export function createReportsMetricDetailSeam(deps){
     const compareContractBasis = viewModel.compareFoundation.period?.currentLabel && viewModel.compareFoundation.period?.previousLabel
       ? `${viewModel.compareFoundation.period.currentLabel} vs ${viewModel.compareFoundation.period.previousLabel}`
       : (meta.primaryBasis?.basisLabel || viewModel.compareFoundation.period?.supportLabel || viewModel.compareFoundation.period?.support || viewModel.compareFoundation.period?.fairWindowLabel || "Matched date range");
-    const compareContractText = (!viewModel.isHomeMetricDetail || viewModel.compareFoundation.period?.suppressed || compareSummary.tone === "steady")
+    const compareContractText = viewModel.compareFoundation.period?.suppressed
       ? (viewModel.compareFoundation.period?.explanation || "")
       : "";
+    const detailSectionLabel = viewModel.isHomeMetricDetail ? "Home metric detail" : "Reports metric detail";
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
     return `
     <section class="${viewModel.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
@@ -447,11 +448,14 @@ export function createReportsMetricDetailSeam(deps){
         <div class="${viewModel.detailEyebrowClass}">${escapeHtml(detailEyebrow)}</div>
         <h2 class="${viewModel.detailTitleClass}">${escapeHtml(viewModel.isHomeMetricDetail ? meta.homeTitle : meta.title)}</h2>
         <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
+        <div class="reportsMetricSectionRail" aria-hidden="true">
+          <span class="reportsMetricSectionPill">${escapeHtml(detailSectionLabel)}</span>
+          <span class="reportsMetricSectionPill">Compare basis • ${escapeHtml(compareContractBasis)}</span>
+        </div>
 
         <div class="${viewModel.detailHeroWrapClass}">
           <div class="${viewModel.detailHeroLabelClass}">${escapeHtml(viewModel.isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
           <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
-          <div class="${viewModel.detailChartContextClass}">Compare basis • ${escapeHtml(compareContractBasis)}</div>
         </div>
 
         <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
@@ -460,7 +464,7 @@ export function createReportsMetricDetailSeam(deps){
             <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
             <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
           </div>
-          <div class="${viewModel.detailChartContextClass}"><b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
+          <div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b></div>
           ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
         </div>
 
