@@ -212,15 +212,7 @@ export function createHomeDashboardRenderer({
     ` : ``;
 
     const lastSavedTripContextHtml = newestSavedTrip
-      ? (() => {
-        const tripDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "Date not set";
-        const tripDealer = String(newestSavedTrip.dealer || "").trim();
-        const tripArea = String(newestSavedTrip.area || "").trim();
-        const contextParts = [tripDate];
-        if (tripDealer) contextParts.push(tripDealer);
-        if (tripArea) contextParts.push(tripArea);
-        return `<div class="homeLastTripContext">${escapeHtml(contextParts.join(" • "))}</div>`;
-      })()
+      ? `<div class="homeLastTripContext">Read-only snapshot of your latest saved trip. Open Trips to edit details.</div>`
       : `<div class="homeLastTripContext">Save your first trip to populate this Home snapshot section.</div>`;
 
     const lastSavedTripHtml = newestSavedTrip
