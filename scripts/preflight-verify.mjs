@@ -2,6 +2,12 @@
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import {
+  STARTUP_MODULE_PATHS,
+  SW_CORE_JS_PATHS,
+  SW_CORE_JS_EXCLUDED_PATHS,
+  APP_ENTRY_MODULE_PATH,
+} from "../js/startup_asset_manifest_v5.js";
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -31,7 +37,6 @@ let bootstrapJs = "";
 let swJs = "";
 let appJs = "";
 let runtimeStatusJs = "";
-let appStartupImports = [];
 let canonicalVersion = "";
 
 try {
@@ -97,45 +102,14 @@ const requiredFiles = [
   "js/bootstrap_v5.js",
   "js/app_v5.js",
   "js/update_runtime_status_v5.js",
-  "js/utils_v5.js",
-  "js/settings.js",
-  "js/migrations_v5.js",
-  "js/navigation_v5.js",
-  "js/reports_charts_v5.js",
-  "js/quick_chips_v5.js",
-  "js/reports_filters_v5.js",
-  "js/settings_list_management_v5.js",
-  "js/reports_aggregation_v5.js",
-  "js/backup_restore_v5.js",
-  "js/trip_shared_engine_v5.js",
-  "js/trip_cards_v5.js",
-  "js/help_about_render_v5.js",
-  "js/trip_form_render_v5.js",
-  "js/home_dashboard_v5.js",
-  "js/settings_screen_v5.js",
-  "js/reports_screen_v5.js",
-  "js/feedback_seam_v5.js",
-  "js/app_shell_v5.js",
-];
-
-if (appJs) {
-  const startupPathsMatch = appJs.match(/const STARTUP_MODULE_PATHS = \[(.*?)\];/s);
-  if (!startupPathsMatch) {
-    fail("app startup module path list", "STARTUP_MODULE_PATHS is missing");
-  } else {
-    appStartupImports = Array.from(startupPathsMatch[1].matchAll(/"(\.\/[^"?]+\.js)"/g), (match) => match[1]);
-    if (appStartupImports.length === 0) {
-      fail("app startup module path list", "no startup modules found");
-    } else {
-      pass("app startup module path list", `${appStartupImports.length} modules`);
-    }
-  }
-
-  for (const rel of appStartupImports) {
-    const relPath = `js/${rel.slice(2)}`;
-    if (!requiredFiles.includes(relPath)) requiredFiles.push(relPath);
-  }
-}
+  "js/startup_asset_manifest_v5.js",
+  ...new Set([
+    ...STARTUP_MODULE_PATHS,
+    ...SW_CORE_JS_PATHS,
+    APP_ENTRY_MODULE_PATH,
+    ...SW_CORE_JS_EXCLUDED_PATHS,
+  ]).values(),
+].map((relPath) => relPath.startsWith("./") ? `js/${relPath.slice(2)}` : relPath);
 
 for (const relPath of requiredFiles) {
   if (existsSync(path.join(ROOT, relPath))) {
@@ -183,33 +157,45 @@ if (swJs) {
     fail("service worker cache version derived from SW_V");
   }
 
-  const swCoreRefs = [
-    "`./js/bootstrap_v5.js?v=${SW_V}`",
-    '"./js/utils_v5.js?v="+SW_V',
-    '"./js/settings.js?v="+SW_V',
-    '"./js/migrations_v5.js?v="+SW_V',
-    '"./js/navigation_v5.js?v="+SW_V',
-    '"./js/reports_charts_v5.js?v="+SW_V',
-    '"./js/quick_chips_v5.js?v="+SW_V',
-    '"./js/reports_filters_v5.js?v="+SW_V',
-    '"./js/settings_list_management_v5.js?v="+SW_V',
-    '"./js/app_v5.js?v="+SW_V',
-  ];
+  const swCoreMatch = swJs.match(/const CORE_JS_PATHS = \[(?<body>[\s\S]*?)\];/);
+  if (!swCoreMatch || !swCoreMatch.groups) {
+    fail("service worker core js ownership list", "CORE_JS_PATHS list is missing");
+  } else {
+    const swCorePaths = Array.from(swCoreMatch.groups.body.matchAll(/"(\.\/js\/[^"?]+\.js)"/g), (match) => match[1]);
+    const expectedSwCorePaths = SW_CORE_JS_PATHS.map((relPath) => `./js/${relPath.slice(2)}`);
 
-  for (const ref of swCoreRefs) {
-    if (swJs.includes(ref)) {
-      pass(`service worker core reference: ${ref}`);
+    if (swCorePaths.length === expectedSwCorePaths.length && swCorePaths.every((path, idx) => path === expectedSwCorePaths[idx])) {
+      pass("service worker core js parity with startup manifest", `${swCorePaths.length} entries`);
     } else {
-      fail(`service worker core reference: ${ref}`);
+      fail(
+        "service worker core js parity with startup manifest",
+        `expected [${expectedSwCorePaths.join(", ")}], found [${swCorePaths.join(", ")}]`
+      );
+    }
+
+    const swCoreVersionedMapMarker = "...CORE_JS_PATHS.map((path) => `${path}?v=${SW_V}`),";
+    if (swJs.includes(swCoreVersionedMapMarker)) {
+      pass("service worker versioned core js mapping");
+    } else {
+      fail("service worker versioned core js mapping");
     }
   }
 
-  for (const rel of appStartupImports) {
-    const swRef = `"./js/${rel.slice(2)}?v="+SW_V`;
-    if (swJs.includes(swRef)) {
-      pass(`service worker startup parity: ${rel}`);
+  for (const rel of SW_CORE_JS_PATHS) {
+    const swPath = `./js/${rel.slice(2)}`;
+    if (swJs.includes(`"${swPath}"`)) {
+      pass(`service worker core ownership includes: ${rel}`);
     } else {
-      fail(`service worker startup parity: ${rel}`, `missing ${swRef}`);
+      fail(`service worker core ownership includes: ${rel}`);
+    }
+  }
+
+  for (const rel of SW_CORE_JS_EXCLUDED_PATHS) {
+    const swPath = `./js/${rel.slice(2)}`;
+    if (!swJs.includes(swPath)) {
+      pass(`service worker core ownership excludes: ${rel}`);
+    } else {
+      fail(`service worker core ownership excludes: ${rel}`, `${swPath} is present in sw.js`);
     }
   }
 }
@@ -245,7 +231,7 @@ if (bootstrapJs && appJs) {
     fail("app exposes startup module diagnostics");
   }
 
-  for (const rel of appStartupImports) {
+  for (const rel of STARTUP_MODULE_PATHS) {
     const relPath = `js/${rel.slice(2)}`;
     if (existsSync(path.join(ROOT, relPath))) {
       pass(`startup module parity: ${rel}`);
