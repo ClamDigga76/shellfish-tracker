@@ -15,6 +15,26 @@ export function createUpdateRuntimeStatusSeam({
 
   const UPDATE_SIGNAL_SESSION_KEY = "shellfish-update-signal-v1";
   const UPDATE_ATTEMPT_SESSION_KEY = "shellfish-update-attempt-v1";
+  const LAST_GOOD_RUNTIME_KEY = String(windowRef.__SHELLFISH_LAST_GOOD_RUNTIME_KEY__ || "shellfish-last-good-runtime-v1");
+
+  function getLastGoodRuntimeConfirmation(){
+    try{
+      const raw = localStorage.getItem(LAST_GOOD_RUNTIME_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(!parsed || typeof parsed !== "object") return null;
+      const confirmedAt = new Date(parsed.confirmedAt || "");
+      const confirmedIso = Number.isNaN(confirmedAt.getTime()) ? "" : confirmedAt.toISOString();
+      return {
+        buildVersion: String(parsed.buildVersion || ""),
+        confirmedAt: confirmedIso,
+        mode: parsed.mode === "installed-standalone" ? "installed-standalone" : "browser",
+        swControllerPresent: parsed.swControllerPresent === true
+      };
+    }catch(_){
+      return null;
+    }
+  }
 
   function getStoredUpdateAttempt(){
     try{
@@ -254,6 +274,7 @@ export function createUpdateRuntimeStatusSeam({
       swUpdateReady,
       lastSwUpdateSignal: String(lastSwUpdateSignal || ""),
       recentUpdateAttempt: recentAttempt ? { ...recentAttempt } : null,
+      lastGoodRuntime: getLastGoodRuntimeConfirmation(),
       runtimeDiag,
       releaseSnapshot
     };
@@ -278,6 +299,13 @@ export function createUpdateRuntimeStatusSeam({
       if(snap.recentUpdateAttempt.requestedBuild){
         lines.push(`RecentAttemptBuild: ${String(snap.recentUpdateAttempt.requestedBuild)}`);
       }
+    }
+    if(snap.lastGoodRuntime){
+      lines.push(`LastGoodRuntime: ${String(snap.lastGoodRuntime.buildVersion || "(unknown)")} @ ${formatLedgerStamp(snap.lastGoodRuntime.confirmedAt) || "(unknown)"}`);
+      lines.push(`LastGoodRuntimeMode: ${snap.lastGoodRuntime.mode === "installed-standalone" ? "installed-standalone" : "browser"}`);
+      lines.push(`LastGoodRuntimeSWController: ${snap.lastGoodRuntime.swControllerPresent ? "yes" : "no"}`);
+    }else{
+      lines.push("LastGoodRuntime: not recorded yet on this device");
     }
 
     if(runtimeDiag && Object.keys(runtimeDiag).length){
@@ -453,12 +481,19 @@ export function createUpdateRuntimeStatusSeam({
     }
 
     const recentAttempt = getStoredUpdateAttempt();
+    const lastGoodRuntime = getLastGoodRuntimeConfirmation();
+    const lastGoodMatchesBuild = Boolean(lastGoodRuntime?.buildVersion && lastGoodRuntime.buildVersion === displayBuildVersion);
     statusEl.textContent = "Up to date on this device";
     btnPrimary.textContent = "Reload latest version";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     if(inlineMsg){
-      if(recentAttempt){
-        inlineMsg.textContent = `Latest build confirmed (${displayBuildVersion}) after ${recentAttempt.mode === "hard-reset" ? "Reset Cache" : "reload"}.`;
+      if(lastGoodMatchesBuild && recentAttempt){
+        inlineMsg.textContent = `Latest build confirmed on this device (${displayBuildVersion}) after ${recentAttempt.mode === "hard-reset" ? "Reset Cache" : "reload"} at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)}.`;
+      }else if(lastGoodMatchesBuild){
+        const modeLabel = lastGoodRuntime.mode === "installed-standalone" ? "installed app" : "browser tab";
+        inlineMsg.textContent = `Latest build confirmed on this device (${displayBuildVersion}) at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)} in ${modeLabel} mode.`;
+      }else if(recentAttempt){
+        inlineMsg.textContent = `Reload was requested after ${recentAttempt.mode === "hard-reset" ? "Reset Cache" : "reload"}. Run Reload latest version again if this still looks old.`;
       }else if(lastSwUpdateSignal === "dismissed"){
         inlineMsg.textContent = "You can load the latest build any time from here if you previously chose Not now.";
       }else if(lastSwUpdateSignal === "applying"){
@@ -503,7 +538,9 @@ export function createUpdateRuntimeStatusSeam({
     const buildDigits = runtimeDiag.buildDigits || parseBuildDigits(displayBuildVersion);
     const updateReady = Boolean(swUpdateReady || runtimeDiag.swWaitingVersion);
     const updateAligned = Boolean(!runtimeDiag.hasVersionSkew && runtimeDiag.swController);
-    const reopenReady = Boolean(!runtimeDiag.installedAppLikelyLagging && !runtimeDiag.hasVersionSkew);
+    const lastGoodRuntime = getLastGoodRuntimeConfirmation();
+    const hasLastGoodForBuild = Boolean(lastGoodRuntime?.buildVersion && lastGoodRuntime.buildVersion === String(displayBuildVersion || ""));
+    const reopenReady = Boolean(!runtimeDiag.installedAppLikelyLagging && !runtimeDiag.hasVersionSkew && hasLastGoodForBuild);
     const recoveryReady = Boolean(runtimeDiag.needsHardReset || runtimeDiag.lastBootError);
     const cacheLine = runtimeDiag.cacheVersions.length
       ? [...new Set(runtimeDiag.cacheVersions)].map(v=>`v${v}`).join(", ")
@@ -530,7 +567,9 @@ export function createUpdateRuntimeStatusSeam({
       `Startup module versions: ${startupLine}`,
       `Version skew detected: ${runtimeDiag.hasVersionSkew ? "yes" : "no"}`,
       `Installed-app lag likely: ${runtimeDiag.installedAppLikelyLagging ? "yes" : "no"}`,
-      `Hard reset suggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`
+      `Hard reset suggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`,
+      `Last-good runtime recorded for target build: ${hasLastGoodForBuild ? "yes" : "no"}`,
+      `Last-good runtime stamp: ${lastGoodRuntime?.confirmedAt ? formatLedgerStamp(lastGoodRuntime.confirmedAt) : "none"}`
     ];
 
     const snapshot = {

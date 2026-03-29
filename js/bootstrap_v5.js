@@ -4,6 +4,7 @@ const BOOTSTRAP_URL = new URL(import.meta.url, location.href);
 const APP_VERSION = BOOTSTRAP_URL.searchParams.get("v") || "0";
 const SAFE_MODE_PARAM = "safeMode";
 const SAFE_MODE_SESSION_KEY = "shellfish-safe-mode-session";
+const LAST_GOOD_RUNTIME_KEY = "shellfish-last-good-runtime-v1";
 
 // Single source of truth for build/version
 window.APP_VERSION = APP_VERSION;
@@ -130,6 +131,25 @@ const BOOT_BUILD = "v5";
 window.__SHELLFISH_BUILD__ = window.__SHELLFISH_BUILD__ || BOOT_BUILD;
 window.__SHELLFISH_BOOT_AT = Date.now();
 window.__SHELLFISH_APP_STARTED = Boolean(window.__SHELLFISH_APP_STARTED);
+window.__SHELLFISH_LAST_GOOD_RUNTIME_KEY__ = LAST_GOOD_RUNTIME_KEY;
+
+window.__recordLastGoodRuntimeConfirmation = function recordLastGoodRuntimeConfirmation() {
+  try {
+    const standalone =
+      (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    const payload = {
+      buildVersion: String(window.APP_BUILD || `v5.${APP_VERSION}`),
+      confirmedAt: new Date().toISOString(),
+      mode: standalone ? "installed-standalone" : "browser",
+      swControllerPresent: !!navigator.serviceWorker?.controller,
+    };
+    localStorage.setItem(LAST_GOOD_RUNTIME_KEY, JSON.stringify(payload));
+    window.__LAST_GOOD_RUNTIME_CONFIRMATION__ = payload;
+    return payload;
+  } catch (_) {
+    return null;
+  }
+};
 
 // Boot diagnostics (Copy Debug). Keep this small + structured; do NOT dump user data.
 window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {

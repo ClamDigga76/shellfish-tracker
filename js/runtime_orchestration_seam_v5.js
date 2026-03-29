@@ -194,6 +194,9 @@ export function startRuntimeRender({ render, getBootPill, displayBuildVersion, s
       bp.textContent = "OK";
       bp.title = `v ${displayBuildVersion}`;
     }
+    try{
+      window.__recordLastGoodRuntimeConfirmation?.();
+    }catch(_){ }
   }catch(err){
     showFatal(err);
   }
