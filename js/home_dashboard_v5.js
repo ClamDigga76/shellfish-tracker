@@ -184,7 +184,7 @@ export function createHomeDashboardRenderer({
           <div class="muted small noticeBody mt8">${escapeHtml(installModel.stepsLine || "Open Settings later if you need install steps again.")}</div>
           <div class="row mt10 noticeActions">
             ${installModel.showAction ? `<button class="btn" id="homeInstallAction" type="button" ${installModel.actionEnabled ? '' : 'disabled'}>${escapeHtml(installModel.actionLabel)}</button>` : ``}
-            <button class="btn" id="homeInstallHelp" type="button">Install help</button>
+            <button class="btn" id="homeInstallHelp" type="button">Open install help</button>
           </div>
         </div>
       </section>

@@ -142,7 +142,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Updates & Support</div>
-            <div class="settingsAccordionTitle">Update status + support access</div>
+            <div class="settingsAccordionTitle">Quick status + support actions</div>
             <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Checking version status…</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
@@ -150,7 +150,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">Updates</div>
-            <div class="muted small">Quick status and update actions.</div>
+            <div class="muted small">Quick build status and recovery actions.</div>
           </div>
           <span class="settingsValuePill">Status</span>
         </div>
@@ -159,7 +159,7 @@ export function createSettingsScreenOrchestrator({
           <div class="muted settingsBodyTiny" id="updateVersionLine"></div>
         </div>
         <div class="settingsRow settingsRow--action">
-          <button class="btn settingsInlineBtn" id="updatePrimary">Reload latest version</button>
+          <button class="btn settingsInlineBtn" id="updatePrimary">Reload latest build</button>
           <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
         <details class="settingsDetails settingsRow">
@@ -169,7 +169,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Help</div>
-            <div class="muted small">Install, backup, and support how-to lives in Help.</div>
+            <div class="muted small">Open full install, backup, update, and support walkthroughs.</div>
           </div>
           <button class="btn settingsInlineBtn" id="openHelp">Open Help</button>
         </div>
@@ -181,7 +181,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Install App</div>
-            <div class="settingsAccordionTitle">Install and mode readiness</div>
+            <div class="settingsAccordionTitle">Quick mode check + install path</div>
             <div class="muted small settingsAccordionStatus" id="installSummaryLine">Checking install state…</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
@@ -189,7 +189,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">App mode</div>
-            <div class="muted small">Quick mode check and install actions.</div>
+            <div class="muted small">Check Browser vs Installed mode, then run install actions.</div>
           </div>
           <span class="settingsValuePill" id="installModePill">Checking…</span>
         </div>
@@ -287,7 +287,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">About</div>
-            <div class="settingsAccordionTitle">Build, support, and legal</div>
+            <div class="settingsAccordionTitle">Version, support, and legal</div>
             <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build ${displayBuildVersion}</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
@@ -295,7 +295,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Build</div>
-            <div class="muted small">Version running on this device.</div>
+            <div class="muted small">Current build on this device.</div>
           </div>
           <span class="settingsValuePill">${displayBuildVersion}</span>
         </div>
@@ -330,7 +330,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Advanced</div>
-            <div class="settingsAccordionTitle">Diagnostics + release validation + reset</div>
+            <div class="settingsAccordionTitle">Diagnostics + release checks + reset</div>
             <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle, release checks, and recovery reset tools</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>

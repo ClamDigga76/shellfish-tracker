@@ -5,7 +5,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
     <div class="card">
       <b style="font-size:1.05rem">Help hub</b>
       <div class="sep"></div>
-      <div class="muted small" style="line-height:1.5">Jump to what you need. Help is the main place for install steps, support, and backup walkthroughs.</div>
+      <div class="muted small" style="line-height:1.5">Jump to what you need. Help is the full walkthrough for install, backup, updates, and support.</div>
       <div class="helpHubNav" style="margin-top:10px">
         <button class="chip" type="button" data-helpjump="home">Home</button>
         <button class="chip" type="button" data-helpjump="trips">Trips</button>
@@ -90,7 +90,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> quick actions and status checks.</div>
         <ul style="margin:8px 0 0 18px">
-          <li><b>Updates:</b> check status, then run <b>Reload latest version</b> or <b>Reset cache &amp; reload</b> when prompted.</li>
+          <li><b>Updates:</b> check status, then run <b>Reload latest build</b> or <b>Reset cache &amp; reload</b> when prompted.</li>
           <li><b>Install App:</b> confirm Browser vs Installed mode and run install actions.</li>
           <li><b>Backup & Restore:</b> create or restore backups.</li>
           <li><b>List Management:</b> maintain Dealers and Areas.</li>
@@ -124,7 +124,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Current mode:</b> ${escapeHtml(String(installModel?.statusPill || (isStandalone ? "Installed" : "Browser")))}</div>
         <div style="margin-top:8px">${escapeHtml(String(installModel?.statusLine || "Bank the Catch can run in your browser or as an installed Home Screen app."))}</div>
-        <div style="margin-top:8px">Settings gives quick mode and action status. This section has the full install steps.</div>
+        <div style="margin-top:8px">Settings gives quick mode + action status. This section has the full install steps.</div>
         <div style="margin-top:8px"><b>iPhone/iPad Safari</b></div>
         <ol style="margin:8px 0 0 18px">
           <li>Open Bank the Catch in <b>Safari</b>.</li>
@@ -137,7 +137,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>Use Chrome’s install prompt or tap the menu.</li>
           <li>Choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</li>
         </ol>
-        <div style="margin-top:8px"><b>Tip:</b> If Settings says <b>Browser</b>, open the Home Screen icon after install to enter installed mode.</div>
+        <div style="margin-top:8px"><b>Tip:</b> If Settings says <b>Browser</b>, open the Home Screen icon after install to switch into installed mode.</div>
         <div style="margin-top:8px"><b>Need help?</b> Email <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</div>
       </div>
     </div>
@@ -147,9 +147,9 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <ul style="margin:0 0 0 18px">
-          <li>If the app looks stale, open <b>Settings</b> and run <b>Reload latest version</b>. If prompted, run <b>Reset cache &amp; reload</b>.</li>
+          <li>If the app looks stale, open <b>Settings</b> and run <b>Reload latest build</b>. If prompted, run <b>Reset cache &amp; reload</b>.</li>
           <li>Use <b>Settings → Install App</b> for a quick mode check, then follow the install steps above when needed.</li>
-          <li>If things still seem off after updating, reopen the app and check the Settings status lines again.</li>
+          <li>If things still seem off after updating, reopen the app and check Settings status again.</li>
           <li>For support, email <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</li>
         </ul>
       </div>
