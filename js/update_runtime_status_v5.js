@@ -108,7 +108,7 @@ export function createUpdateRuntimeStatusSeam({
     const statusEl = documentRef.getElementById("updateBigStatus");
     const btnCheck = documentRef.getElementById("updatePrimary");
     try{
-      if(statusEl) statusEl.textContent = hardReset ? "Resetting cache and reloading…" : (swUpdateReady ? "Loading latest version…" : "Checking for the latest build…");
+      if(statusEl) statusEl.textContent = hardReset ? "Resetting cache and reloading…" : (swUpdateReady ? "Loading latest build…" : "Checking for the latest build…");
       if(btnCheck) btnCheck.disabled = true;
       await forceRefreshApp({ hardReset });
     }catch(_){
@@ -418,10 +418,10 @@ export function createUpdateRuntimeStatusSeam({
     }
 
     if(runtimeDiag.installedAppLikelyLagging){
-      parts.push("Installed app note: this Home Screen app may still be behind the browser copy. Reopen it after loading the latest version.");
+      parts.push("Installed app note: this Home Screen copy may be behind browser mode. Reopen it after loading the latest build.");
     }
     if(runtimeDiag.needsHardReset){
-      parts.push("Recovery note: if reload does not clear the warning, use Reset Cache to force a clean runtime copy.");
+      parts.push("Recovery note: if reload does not clear this, use Reset Cache for a clean runtime copy.");
     }
     if(runtimeDiag.lastBootError){
       parts.push(`Last boot warning: ${runtimeDiag.lastBootError}`);
@@ -457,26 +457,26 @@ export function createUpdateRuntimeStatusSeam({
     }catch(_){ }
 
     if(swUpdateReady){
-      statusEl.textContent = "Latest version ready • Safe to load now";
-      btnPrimary.textContent = "Load latest version";
+      statusEl.textContent = "Latest build ready • Safe to load";
+      btnPrimary.textContent = "Load latest build";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-      if(inlineMsg) inlineMsg.textContent = "A newer build is already waiting on this device.";
+      if(inlineMsg) inlineMsg.textContent = "A newer build is ready on this device.";
       return;
     }
 
     if(runtimeDiag?.needsHardReset){
-      statusEl.textContent = "Could not confirm latest build on this device";
+      statusEl.textContent = "Could not confirm latest build";
       btnPrimary.textContent = "Reset cache & reload";
       btnPrimary.onclick = async ()=>{ await swCheckNow({ hardReset: true }); };
-      if(inlineMsg) inlineMsg.textContent = "Reset Cache uses a clean runtime fetch when this app still looks stale after reload.";
+      if(inlineMsg) inlineMsg.textContent = "Use Reset Cache for a clean fetch if reload still looks stale.";
       return;
     }
 
     if(runtimeDiag?.installedAppLikelyLagging){
-      statusEl.textContent = "Installed app may still be on an older build";
-      btnPrimary.textContent = "Reload latest version";
+      statusEl.textContent = "Installed app may be on an older build";
+      btnPrimary.textContent = "Reload latest build";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-      if(inlineMsg) inlineMsg.textContent = "Reload, then fully close and reopen the Home Screen app to pick up the latest files.";
+      if(inlineMsg) inlineMsg.textContent = "Reload, then fully close and reopen the Home Screen app.";
       return;
     }
 
@@ -484,22 +484,22 @@ export function createUpdateRuntimeStatusSeam({
     const lastGoodRuntime = getLastGoodRuntimeConfirmation();
     const lastGoodMatchesBuild = Boolean(lastGoodRuntime?.buildVersion && lastGoodRuntime.buildVersion === displayBuildVersion);
     statusEl.textContent = "Up to date on this device";
-    btnPrimary.textContent = "Reload latest version";
+    btnPrimary.textContent = "Reload latest build";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     if(inlineMsg){
       if(lastGoodMatchesBuild && recentAttempt){
-        inlineMsg.textContent = `Latest build confirmed on this device (${displayBuildVersion}) after ${recentAttempt.mode === "hard-reset" ? "Reset Cache" : "reload"} at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)}.`;
+        inlineMsg.textContent = `Latest build confirmed here (${displayBuildVersion}) after ${recentAttempt.mode === "hard-reset" ? "Reset Cache" : "reload"} at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)}.`;
       }else if(lastGoodMatchesBuild){
         const modeLabel = lastGoodRuntime.mode === "installed-standalone" ? "installed app" : "browser tab";
-        inlineMsg.textContent = `Latest build confirmed on this device (${displayBuildVersion}) at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)} in ${modeLabel} mode.`;
+        inlineMsg.textContent = `Latest build confirmed here (${displayBuildVersion}) at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)} in ${modeLabel} mode.`;
       }else if(recentAttempt){
-        inlineMsg.textContent = `Reload was requested after ${recentAttempt.mode === "hard-reset" ? "Reset Cache" : "reload"}. Run Reload latest version again if this still looks old.`;
+        inlineMsg.textContent = `Reload was requested after ${recentAttempt.mode === "hard-reset" ? "Reset Cache" : "reload"}. Run Reload latest build again if this still looks old.`;
       }else if(lastSwUpdateSignal === "dismissed"){
-        inlineMsg.textContent = "You can load the latest build any time from here if you previously chose Not now.";
+        inlineMsg.textContent = "You can load the latest build here any time if you chose Not now.";
       }else if(lastSwUpdateSignal === "applying"){
-        inlineMsg.textContent = "Update was requested. If this still looks old, run Reload latest version once.";
+        inlineMsg.textContent = "Update was requested. If this still looks old, run Reload latest build once.";
       }else{
-        inlineMsg.textContent = "Use this after a release if the app still looks older than expected.";
+        inlineMsg.textContent = "Use this after a release if the app still looks old.";
       }
     }
   }

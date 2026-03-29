@@ -57,30 +57,30 @@ export function createRuntimeOrchestrationSeam({
     const isAndroidChrome = platform === "android-chrome";
     const statusPill = isInstalled ? "Installed" : "Browser";
     const statusLine = isInstalled
-      ? "You’re running Bank the Catch as the installed app."
-      : "You’re running Bank the Catch in a browser tab.";
+      ? "Running in installed app mode."
+      : "Running in browser mode.";
     const statusHint = isInstalled
-      ? "Open it from your Home Screen when you want installed mode."
+      ? "Open from your Home Screen to stay in installed mode."
       : (installSupported
-        ? "Tap Install app for quick setup, or open Help for full step-by-step guidance."
+        ? "Tap Install app for quick setup, or open Help for full steps."
         : isIOS
-          ? "Open Help for Safari steps, then add Bank the Catch to your Home Screen."
+          ? "Open Help for Safari steps, then add to Home Screen."
           : isAndroidChrome
-            ? "Open Help for Chrome steps, then add Bank the Catch to your Home Screen."
-            : "Open Help for manual install steps. Safari on iPhone/iPad and Chrome on Android are the clearest paths.");
-    const whyTitle = isInstalled ? "Installed and ready." : "Why install?";
+            ? "Open Help for Chrome steps, then add to Home Screen."
+            : "Open Help for manual install steps. Safari on iPhone/iPad and Chrome on Android are best.");
+    const whyTitle = isInstalled ? "Installed mode ready." : "Why install";
     const whyBody = isInstalled
-      ? "Use the Home Screen icon to keep opening the app in installed mode."
-      : "Installing adds a Home Screen launch and helps you stay in the same app mode.";
+      ? "Use the Home Screen icon to keep opening this installed copy."
+      : "Install adds a Home Screen launch and keeps app mode more consistent.";
     const stepsLine = isInstalled
       ? "If you used Safari or Chrome before installing, compare there and create a backup if older trips are missing."
       : isIOS
         ? "iPhone/iPad: open in Safari → Share → Add to Home Screen → Add."
         : isAndroidChrome
           ? (installSupported
-            ? "Android Chrome: use Install app below, or open Help for the Chrome menu path."
+            ? "Android Chrome: use Install app below, or open Help for menu steps."
             : "Android Chrome: Chrome menu → Install app or Add to Home screen.")
-          : "Manual steps live in Help. Safari on iPhone/iPad or Chrome on Android are the clearest paths.";
+          : "Manual steps are in Help. Safari on iPhone/iPad or Chrome on Android are best.";
     const actionLabel = isInstalled ? "Installed on this device" : (installSupported ? "Install app" : "Manual steps only");
     return {
       mode,
@@ -102,7 +102,7 @@ export function createRuntimeOrchestrationSeam({
   async function runInstallAction(){
     const model = getInstallSurfaceModel();
     if (model.isInstalled) {
-      return { ok: true, message: "Already running the installed app" };
+      return { ok: true, message: "Already running in installed mode." };
     }
     if (!model.installSupported || !deferredInstallPrompt) {
       return { ok: false, message: model.stepsLine };
@@ -113,9 +113,9 @@ export function createRuntimeOrchestrationSeam({
       await promptEvent.prompt();
       const choice = await promptEvent.userChoice;
       if (choice?.outcome === "accepted") {
-        return { ok: true, message: "Install accepted — look for the Home Screen icon" };
+        return { ok: true, message: "Install accepted. Open from the Home Screen icon." };
       }
-      return { ok: false, message: "Install cancelled — you can still install later from Settings" };
+      return { ok: false, message: "Install canceled. You can install later from Settings." };
     } catch (_) {
       return { ok: false, message: model.stepsLine };
     }
