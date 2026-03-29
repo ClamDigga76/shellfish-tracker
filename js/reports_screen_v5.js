@@ -303,6 +303,33 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     <span>${item.label}</span>
     <small>${item.modeLabel}</small>
   </button>`;
+  const activeFilterTokens = [];
+  const fromISO = parseReportDateToISO(rf.from);
+  const toISO = parseReportDateToISO(rf.to);
+  if(fromISO || toISO){
+    const fromLabel = fromISO ? formatDateDMY(fromISO) : "Start";
+    const toLabel = toISO ? formatDateDMY(toISO) : "End";
+    activeFilterTokens.push(`Date ${fromLabel} → ${toLabel}`);
+  }
+  const dealerFilter = String(rf.dealer || "").trim();
+  if(dealerFilter){
+    activeFilterTokens.push(`Dealer ${dealerFilter}`);
+  }
+  const areaFilter = String(rf.area || "").trim();
+  if(areaFilter){
+    activeFilterTokens.push(`Area ${areaFilter}`);
+  }
+  const activeFilterSummaryLabel = activeFilterTokens.length
+    ? `${activeFilterTokens.length} custom filter${activeFilterTokens.length === 1 ? "" : "s"} active`
+    : "No custom filters";
+  const renderActiveFilterSummary = activeFilterTokens.length
+    ? `
+      <div class="reportsActiveFilterSummary" aria-live="polite" aria-label="Active custom filters">
+        <div class="reportsActiveFilterSummaryTitle">Active custom filters</div>
+        <div class="reportsActiveFilterChipRow">${activeFilterTokens.map((token)=> `<span class="reportsActiveFilterChip">${escapeHtml(token)}</span>`).join("")}</div>
+      </div>
+    `
+    : "";
 
   const advOpen = isAdvancedActive;
   const advPanel = renderReportsAdvancedPanel({
@@ -358,8 +385,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       <div class="reportsAdvancedShell" aria-label="Reports advanced filters">
         <button class="chip segBtn repAdvToggle reportsAdvancedDisclosure ${isAdvancedActive ? "on is-selected" : ""}" type="button" aria-expanded="${advOpen ? "true" : "false"}" aria-controls="reportsAdvancedInlinePanel">
           <span class="reportsAdvancedDisclosureTitle">Advanced</span>
-          <span class="reportsAdvancedDisclosureState">${isPresetExactMatch ? "Custom filters" : "Custom active"}</span>
+          <span class="reportsAdvancedDisclosureState">${escapeHtml(activeFilterSummaryLabel)}</span>
         </button>
+        ${renderActiveFilterSummary}
         ${advPanel}
       </div>
 

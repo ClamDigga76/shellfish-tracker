@@ -30,31 +30,37 @@ export function createReportsAdvancedPanelSeam(deps){
 
     return `
       <div id="reportsAdvancedInlinePanel" class="reportsAdvancedInlinePanel">
-      <div class="sep"></div>
-      <div class="grid2">
-        <div class="field">
-          <div class="label">From</div>
-          <input class="input" id="repAdvFrom" type="date" value="${escapeHtml(advFromValue)}">
+        <div class="sep reportsAdvancedDivider"></div>
+        <div class="reportsAdvancedGroup">
+          <div class="reportsAdvancedGroupLabel">Date range</div>
+          <div class="grid2 reportsAdvancedGrid">
+            <div class="field">
+              <div class="label">From</div>
+              <input class="input" id="repAdvFrom" type="date" value="${escapeHtml(advFromValue)}">
+            </div>
+            <div class="field">
+              <div class="label">To</div>
+              <input class="input" id="repAdvTo" type="date" value="${escapeHtml(advToValue)}">
+            </div>
+          </div>
         </div>
-        <div class="field">
-          <div class="label">To</div>
-          <input class="input" id="repAdvTo" type="date" value="${escapeHtml(advToValue)}">
+        <div class="reportsAdvancedGroup">
+          <div class="reportsAdvancedGroupLabel">Trip context</div>
+          <div class="grid2 reportsAdvancedGrid">
+            <div class="field">
+              <div class="label">Dealer</div>
+              <select class="input" id="repAdvDealer">${dealerOpts}</select>
+            </div>
+            <div class="field">
+              <div class="label">Area</div>
+              <select class="input" id="repAdvArea">${areaOpts}</select>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="grid2" style="margin-top:10px">
-        <div class="field">
-          <div class="label">Dealer</div>
-          <select class="input" id="repAdvDealer">${dealerOpts}</select>
+        <div class="row reportsAdvancedActions">
+          <button class="btn" id="repAdvReset" type="button">Reset</button>
+          <button class="btn primary" id="repAdvApply" type="button">Apply</button>
         </div>
-        <div class="field">
-          <div class="label">Area</div>
-          <select class="input" id="repAdvArea">${areaOpts}</select>
-        </div>
-      </div>
-      <div class="row" style="justify-content:flex-end;gap:10px;margin-top:10px">
-        <button class="btn" id="repAdvReset" type="button">Reset</button>
-        <button class="btn primary" id="repAdvApply" type="button">Apply</button>
-      </div>
       </div>
     `;
   }
