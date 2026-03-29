@@ -382,21 +382,43 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .tripCardStandard.tripCardReadOnly{pointer-events:none}
 .tripCardStandard .tripCardGrid{gap:15px}
-.tripCardStandard .tripCardLeftStack{display:grid;gap:2px;align-content:start}
+.tripCardStandard .tripCardLeftStack{display:grid;gap:4px;align-content:start}
 .tripCardStandard .tripCardTextRow{margin:0}
-.tripCardStandard .tripCardDate{font-size:12px;line-height:1.25;font-weight:760;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted-strong)}
-.tripCardStandard .tripCardDealer{font-size:17px;line-height:1.18;font-weight:860;color:var(--text)}
+.tripCardStandard .tripCardDate{font-size:11px;line-height:1.3;font-weight:760;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted-strong)}
+.tripCardStandard .tripCardDealer{font-size:18px;line-height:1.18;font-weight:870;color:var(--text)}
 .tripCardStandard .tripCardArea,
-.tripCardStandard .tripCardSpecies{font-size:14px;line-height:1.24;font-weight:560;color:var(--text-muted-strong)}
-.tripCardStandard .tripCardNotes{font-size:13px;line-height:1.38;font-weight:500;color:var(--muted)}
-.tripCardStandard .tripCardMetricChip{font-size:82px;padding:6px 0;line-height:1}
-.tripCardStandard .tripCardMetricChip .metricValue{font-size:6em;line-height:.8;font-weight:900}
+.tripCardStandard .tripCardSpecies{font-size:13px;line-height:1.3;font-weight:610;color:var(--text-muted-strong)}
+.tripCardStandard .tripCardArea{font-size:14px;line-height:1.3;font-weight:650;color:var(--text-muted-strong)}
+.tripCardStandard .tripCardNotes{margin-top:2px;font-size:12px;line-height:1.4;font-weight:520;color:var(--muted)}
+.tripCardStandard .tripCardMetricsCol{
+  display:grid;
+  justify-items:end;
+  align-content:start;
+  gap:4px;
+  text-align:right;
+}
+.tripCardStandard .tripCardMetricChip{
+  display:block;
+  padding:0;
+  font-size:12px;
+  line-height:1.25;
+  letter-spacing:.01em;
+  font-weight:660;
+}
+.tripCardStandard .tripCardMetricChip .metricValue{
+  display:inline-block;
+  font-size:15px;
+  line-height:1.2;
+  font-weight:860;
+}
 .tripCardStandard .tripCardSettlementSubtle{
-  font-size:11px;
-  line-height:1.3;
+  margin-top:4px;
+  font-size:10px;
+  line-height:1.42;
   color:var(--muted);
   text-align:right;
-  max-width:180px;
+  max-width:196px;
+  opacity:.92;
 }
 .tripsEmptyState{padding:15px 14px}
 
@@ -602,10 +624,10 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   box-shadow:0 12px 28px rgba(0,0,0,.18);
 }
 .homeScreenShell .homeLastTripShell{
-  padding:14px;
+  padding:13px 14px 14px;
   border-radius:18px;
   border:1px solid rgba(126,200,255,.24);
-  background:linear-gradient(180deg, rgba(20,29,47,.58) 0%, rgba(10,15,24,.4) 100%);
+  background:linear-gradient(180deg, rgba(20,29,47,.54) 0%, rgba(10,15,24,.38) 100%);
   box-shadow:0 10px 24px rgba(0,0,0,.16);
   min-width:0;
 }
@@ -613,7 +635,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   margin-top:0;
 }
 .homeLastTripCardWrap{
-  margin-top:10px;
+  margin-top:8px;
   min-width:0;
 }
 .homeLastTripHeader{
@@ -622,9 +644,9 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 }
 .homeLastTripHeaderRow{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
-  gap:8px;
+  gap:10px;
 }
 .homeLastTripRangePill{
   font-size:11px;
@@ -638,10 +660,10 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   white-space:nowrap;
 }
 .homeLastTripContext{
-  margin-top:6px;
+  margin-top:7px;
   color:var(--text-muted);
-  font-size:12px;
-  line-height:1.35;
+  font-size:11px;
+  line-height:1.45;
 }
 .kpiGroupLabel{
   margin:var(--card-title-gap) 0 var(--card-body-gap);
