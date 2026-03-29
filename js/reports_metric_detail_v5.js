@@ -3,12 +3,12 @@ const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
   compareModel: "home-full-month",
   compareModelLabel: "Month view",
   supportLabel: "Visible Home month view",
-  support: "Using the latest two visible Home months.",
+  support: "Comparing the latest two visible Home months.",
   explanation: "",
-  missingReason: "Add one more visible month to unlock month-to-month detail.",
+  missingReason: "Show one more visible month to unlock month-to-month detail.",
   missingSuppressionCode: "missing-home-months",
-  missingExplanation: "Show one more month in Home, then this comparison will appear.",
-  metricExplanation: (label)=> `${label} uses the same month pair shown in the chart and values.`
+  missingExplanation: "Add one more visible Home month and this comparison will appear.",
+  metricExplanation: (label)=> `${label} uses the same month pair shown in the compare card and chart.`
 });
 
 function normalizeChronologicalRows(rows){
@@ -148,7 +148,7 @@ function buildHomeMetricPayloads(period){
       previousValue: previous.ppl,
       period,
       suppressed: !(current.lbs > 0 && previous.lbs > 0),
-      reason: "Add pounds in both visible Home months to compare average $/lb."
+      reason: "Log pounds in both visible Home months to compare average $/lb."
     })
   };
 }
@@ -297,7 +297,7 @@ export function createReportsMetricDetailSeam(deps){
             <b>${escapeHtml(label)}</b>
             <span>—</span>
           </div>
-          <div class="homeMetricRecordMeta">No matching record yet in this Home filter.</div>
+          <div class="homeMetricRecordMeta">No qualifying trip yet in this Home view.</div>
         </div>
       `;
     }
@@ -338,7 +338,7 @@ export function createReportsMetricDetailSeam(deps){
     if(!entries.length) return "";
     return `
       <div class="homeMetricRecordContext" aria-label="Home metric records context">
-        <div class="homeMetricRecordTitle">Record context in this Home filter</div>
+        <div class="homeMetricRecordTitle">Trip context in this Home view</div>
         <div class="homeMetricRecordRows">
           ${entries.map((entry)=> renderHomeRecordRow(entry)).join("")}
         </div>
@@ -451,7 +451,7 @@ export function createReportsMetricDetailSeam(deps){
         <div class="${viewModel.detailHeroWrapClass}">
           <div class="${viewModel.detailHeroLabelClass}">${escapeHtml(viewModel.isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
           <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
-          <div class="${viewModel.detailChartContextClass}">Compared range • ${escapeHtml(compareContractBasis)}</div>
+          <div class="${viewModel.detailChartContextClass}">Compare basis • ${escapeHtml(compareContractBasis)}</div>
         </div>
 
         <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
@@ -513,88 +513,88 @@ export function createReportsMetricDetailSeam(deps){
         title: "Trips breakdown",
         homeTitle: "Trips",
         eyebrow: "Metric breakdown",
-        heroLabel: "Trips in current range",
+        heroLabel: "Trips this range",
         homeHeroLabel: "Trips in latest visible Home month",
         heroValue: formatHeroFromPrimaryBasis("trips", primaryBasis),
         heroClass: "trips",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Primary chart for Trips: matched range compare",
+        chartTitle: "Trips comparison",
         homeChartTitle: "Trips",
-        chartContext: primaryChart?.basisLabel || "Trips in this matched date range",
+        chartContext: primaryChart?.basisLabel || "Matched range trip totals",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_trips",
-        insight: "Use this primary Trips chart first, then compare rows to confirm movement in the same matched range.",
-        homeInsight: "Use the compare card and chart together for the cleanest trip-count read."
+        insight: "Read this compare card with the chart to confirm trip movement in the same matched range.",
+        homeInsight: "Use the compare card and chart together for the clearest trip-count read."
       },
       pounds: {
         title: "Pounds breakdown",
         homeTitle: "Pounds",
         eyebrow: "Metric breakdown",
-        heroLabel: "Pounds in current range",
+        heroLabel: "Pounds this range",
         homeHeroLabel: "Pounds in latest visible Home month",
         heroValue: formatHeroFromPrimaryBasis("pounds", primaryBasis),
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Primary chart for Pounds: matched range compare",
+        chartTitle: "Pounds comparison",
         homeChartTitle: "Pounds",
-        chartContext: primaryChart?.basisLabel || "Pounds in this matched date range",
+        chartContext: primaryChart?.basisLabel || "Matched range pound totals",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_lbs",
-        insight: "Use this primary Pounds chart first so the headline, compare rows, and visual stay aligned in one matched range.",
+        insight: "Use this compare card and chart together so the headline and values stay aligned to one matched range.",
         homeInsight: "Use the compare card and chart together to judge pound movement."
       },
       amount: {
         title: "Amount breakdown",
         homeTitle: "Amount",
         eyebrow: "Metric breakdown",
-        heroLabel: "Amount in current range",
+        heroLabel: "Amount this range",
         homeHeroLabel: "Amount in latest visible Home month",
         heroValue: formatHeroFromPrimaryBasis("amount", primaryBasis),
         heroClass: "money",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Primary chart for Amount: matched range compare",
+        chartTitle: "Amount comparison",
         homeChartTitle: "Amount",
-        chartContext: primaryChart?.basisLabel || "Amount in this matched date range",
+        chartContext: primaryChart?.basisLabel || "Matched range amount totals",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_amount_detail",
         secondaryCharts: [
           detailCharts.amountTrend ? {
-            title: "Supporting chart for Amount: trend across range",
+            title: "Amount trend across this range",
             context: isHomeMetricDetail
-              ? "Extra context • visible Home months in this filter"
-              : "Extra context • full months in this active Reports range",
+              ? "Context • visible Home months in this filter"
+              : "Context • full months in this active Reports range",
             canvasId: "c_amount_trend",
             chartModel: detailCharts.amountTrend,
             metricKey: "amount"
           } : null,
           {
-            title: "Supporting chart for Amount: dealer mix",
-            context: "Extra context for this same active filter range",
+            title: "Amount by dealer mix",
+            context: "Context for this same active filter range",
             canvasId: "c_dealer"
           }
         ],
-        insight: "Read the primary Amount chart first, then use the supporting trend and dealer mix charts for context.",
+        insight: "Start with the compare chart, then use trend and dealer mix for added context.",
         homeInsight: "Read the main comparison first, then use trend and dealer mix for added context."
       },
       ppl: {
         title: "$/lb breakdown",
         homeTitle: "Avg $/lb",
         eyebrow: "Metric breakdown",
-        heroLabel: "Average $/lb in current range",
+        heroLabel: "Average $/lb this range",
         homeHeroLabel: "Average $/lb in latest visible Home month",
         heroValue: formatHeroFromPrimaryBasis("ppl", primaryBasis),
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Primary chart for Avg $/lb: matched range compare",
+        chartTitle: "Average $/lb comparison",
         homeChartTitle: "Avg $/lb",
-        chartContext: primaryChart?.basisLabel || "$/lb in this matched date range",
+        chartContext: primaryChart?.basisLabel || "Matched range average $/lb",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_ppl",
-        insight: "Use this primary Avg $/lb chart first to compare matched ranges without mixing in full-range averages.",
+        insight: "Use this compare card and chart to read matched-range pricing without mixing full-range averages.",
         homeInsight: "Use the compare card and chart together to judge pricing."
       }
     };
