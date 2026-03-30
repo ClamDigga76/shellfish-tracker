@@ -28,6 +28,12 @@ function releaseStatusLabel(value) {
   return "Not run";
 }
 
+function formatReleaseDraftStamp(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "Not saved yet";
+  return date.toLocaleString();
+}
+
 export function createSettingsSupportRecoverySeam(deps) {
   const {
     displayBuildVersion,
@@ -259,10 +265,17 @@ export function createSettingsSupportRecoverySeam(deps) {
 
   function createReleaseValidationController({ advancedSummaryLine }) {
     let latestReleaseSnapshot = null;
+    let draftStateRestored = false;
+    let staleDraftBuild = "";
+    let latestManualUpdatedAt = "";
     const releaseSummaryEl = document.getElementById("releaseValidationSummary");
     const releaseStampEl = document.getElementById("releaseValidationStamp");
+    const releaseManualStampEl = document.getElementById("releaseValidationManualStamp");
+    const releaseDraftNoticeEl = document.getElementById("releaseValidationDraftNotice");
     const releaseSignalsEl = document.getElementById("releaseValidationSignals");
     const releaseNotesEl = document.getElementById("releaseValidationNotes");
+    const releaseDraftBuildKey = "shellfish-release-validation-draft-build-v1";
+    const releaseDraftStateKey = `shellfish-release-validation-draft-v1:${displayBuildVersion}`;
     const releaseInputs = {
       browser_mode: document.getElementById("releaseCheckBrowser"),
       installed_mode: document.getElementById("releaseCheckInstalled"),
@@ -279,15 +292,63 @@ export function createSettingsSupportRecoverySeam(deps) {
       return out;
     }
 
+    function updateManualChecklistStampLine() {
+      if (!releaseManualStampEl) return;
+      releaseManualStampEl.textContent = `Manual checklist last updated: ${formatReleaseDraftStamp(latestManualUpdatedAt)}`;
+    }
+
+    function saveReleaseDraftState() {
+      const payload = {
+        buildVersion: String(displayBuildVersion || ""),
+        updatedAt: new Date().toISOString(),
+        selections: readReleaseSelections(),
+        notes: String(releaseNotesEl?.value || "")
+      };
+      latestManualUpdatedAt = payload.updatedAt;
+      updateManualChecklistStampLine();
+      try {
+        localStorage.setItem(releaseDraftStateKey, JSON.stringify(payload));
+        localStorage.setItem(releaseDraftBuildKey, String(displayBuildVersion || ""));
+      } catch (_) {}
+    }
+
+    function restoreReleaseDraftState() {
+      try {
+        const previousBuild = String(localStorage.getItem(releaseDraftBuildKey) || "").trim();
+        if (previousBuild && previousBuild !== String(displayBuildVersion || "")) {
+          staleDraftBuild = previousBuild;
+        }
+      } catch (_) {}
+      try {
+        localStorage.setItem(releaseDraftBuildKey, String(displayBuildVersion || ""));
+      } catch (_) {}
+      try {
+        const raw = localStorage.getItem(releaseDraftStateKey);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        const selections = parsed?.selections && typeof parsed.selections === "object" ? parsed.selections : {};
+        Object.entries(releaseInputs).forEach(([key, input]) => {
+          if (!input) return;
+          input.value = normalizeLedgerStatus(selections[key] || input.value || "not-run");
+        });
+        if (releaseNotesEl) releaseNotesEl.value = String(parsed?.notes || "");
+        latestManualUpdatedAt = String(parsed?.updatedAt || "");
+        draftStateRestored = true;
+      } catch (_) {}
+    }
+
     function syncReleaseValidationSummary() {
       if (!releaseSummaryEl) return;
       const picks = Object.values(readReleaseSelections());
       const passCount = picks.filter((v) => v === "pass").length;
       const failCount = picks.filter((v) => v === "fail").length;
       const notRunCount = picks.length - passCount - failCount;
-      let status = `${passCount}/${picks.length} checks marked Pass`;
+      const runCount = passCount + failCount;
+      let status = notRunCount === 0
+        ? `Checklist complete • ${runCount}/${picks.length} checks run`
+        : `Checklist in progress • ${notRunCount} remaining not run`;
+      status += ` • ${passCount} Pass`;
       if (failCount > 0) status += ` • ${failCount} Fail`;
-      if (notRunCount > 0) status += ` • ${notRunCount} Not run`;
       if (latestReleaseSnapshot?.summary?.updateAligned === false) status += " • Version alignment warning";
       if (latestReleaseSnapshot?.summary?.recoveryReady) status += " • Recovery attention signal";
       releaseSummaryEl.textContent = status;
@@ -310,23 +371,39 @@ export function createSettingsSupportRecoverySeam(deps) {
           const stampLabel = stamp && !Number.isNaN(stamp.getTime()) ? stamp.toLocaleString() : "Unknown time";
           releaseStampEl.textContent = `Snapshot captured ${stampLabel}`;
         }
-        const checkMap = Array.isArray(snapshot?.checks)
-          ? Object.fromEntries(snapshot.checks.map((check) => [check.key, normalizeLedgerStatus(check.suggested)]))
-          : {};
-        Object.entries(releaseInputs).forEach(([key, input]) => {
-          if (!input) return;
-          input.value = normalizeLedgerStatus(checkMap[key] || input.value || "not-run");
-        });
+        if (!draftStateRestored) {
+          const checkMap = Array.isArray(snapshot?.checks)
+            ? Object.fromEntries(snapshot.checks.map((check) => [check.key, normalizeLedgerStatus(check.suggested)]))
+            : {};
+          Object.entries(releaseInputs).forEach(([key, input]) => {
+            if (!input) return;
+            input.value = normalizeLedgerStatus(checkMap[key] || input.value || "not-run");
+          });
+        }
         syncReleaseValidationSummary();
       } catch (_) {
         if (releaseSummaryEl) releaseSummaryEl.textContent = "Could not capture release snapshot";
       }
     }
 
+    restoreReleaseDraftState();
+    updateManualChecklistStampLine();
+    if (releaseDraftNoticeEl) {
+      releaseDraftNoticeEl.textContent = staleDraftBuild
+        ? `Saved checklist from build ${staleDraftBuild} was not applied to this build.`
+        : "Checklist is saved on this device for this build only.";
+    }
+
     Object.values(releaseInputs).forEach((input) => {
       if (!input) return;
-      input.onchange = () => syncReleaseValidationSummary();
+      input.onchange = () => {
+        syncReleaseValidationSummary();
+        saveReleaseDraftState();
+      };
     });
+    if (releaseNotesEl) {
+      releaseNotesEl.oninput = () => saveReleaseDraftState();
+    }
 
     const refreshReleaseSnapshotBtn = document.getElementById("refreshReleaseSnapshot");
     if (refreshReleaseSnapshotBtn) {
