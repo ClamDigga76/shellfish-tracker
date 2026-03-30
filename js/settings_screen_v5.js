@@ -358,6 +358,8 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--status">
           <div id="releaseValidationSummary" class="settingsUpdateStatus">Preparing release snapshot…</div>
           <div class="muted settingsBodyTiny" id="releaseValidationStamp"></div>
+          <div class="muted settingsBodyTiny" id="releaseValidationManualStamp">Manual checklist last updated: Not saved yet</div>
+          <div class="muted settingsBodyTiny" id="releaseValidationDraftNotice"></div>
         </div>
         <div class="settingsRow settingsRow--field">
           <div id="releaseValidationSignals" class="muted settingsBodyTiny"></div>
