@@ -34,7 +34,7 @@ try {
 } catch (_) {}
 
 const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, isValidISODate },
-  { THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK, normalizeThemeMode, resolveTheme },
+  { THEME_MODE_DARK, normalizeThemeMode, resolveTheme },
   { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback },
   { ensureNavState, createNavigator },
   { drawReportsCharts },
@@ -144,8 +144,6 @@ function deleteArea(areaName){
 // Backup meta (local-only; no user data duplication)
 const LS_LAST_BACKUP_META = "btc_last_backup_meta_v1";
 const LS_RESTORE_ROLLBACK_SNAPSHOT = "btc_restore_rollback_snapshot_v1";
-let themeMediaQuery = null;
-let onThemeMediaChange = null;
 let needsBootStateSave = false;
 
 function markNeedsBootStateSave(){
@@ -153,38 +151,20 @@ function markNeedsBootStateSave(){
 }
 
 function getThemeMode(){
-  const s = state?.settings || {};
-  const requestedMode = normalizeThemeMode(s.themeMode);
-  if(requestedMode !== THEME_MODE_DARK) return THEME_MODE_DARK;
-  return requestedMode;
+  return normalizeThemeMode(state?.settings?.themeMode);
 }
 
-function updateThemeMeta(resolvedTheme){
+function updateThemeMeta(){
   try{
     const meta = document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.setAttribute("content", resolvedTheme === THEME_MODE_DARK ? "#0b0f16" : "#dce4f4");
+    if(meta) meta.setAttribute("content", "#0b0f16");
   }catch(_){ }
 }
 
 function applyThemeMode(){
-  const mode = getThemeMode();
-  const prefersDark = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  const resolvedTheme = resolveTheme(mode, prefersDark);
+  const resolvedTheme = resolveTheme(getThemeMode());
   try{ document.documentElement.dataset.theme = resolvedTheme; }catch(_){ }
-  updateThemeMeta(resolvedTheme);
-}
-
-function bindThemeMedia(){
-  if(!window.matchMedia) return;
-  themeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-  if(onThemeMediaChange) return;
-  onThemeMediaChange = ()=>{
-    if(getThemeMode() === THEME_MODE_SYSTEM){
-      applyThemeMode();
-    }
-  };
-  if(themeMediaQuery.addEventListener) themeMediaQuery.addEventListener("change", onThemeMediaChange);
-  else if(themeMediaQuery.addListener) themeMediaQuery.addListener(onThemeMediaChange);
+  updateThemeMeta();
 }
 
 function bindThemeControls(){
@@ -683,9 +663,8 @@ migrateLegacyStateIfNeeded(localStorage);
 let state = migrateStateIfNeeded(loadState(), {
   normalizeTrip,
   normalizeThemeMode,
-  themeModeSystem: THEME_MODE_SYSTEM
+  themeModeDefault: THEME_MODE_DARK
 });
-bindThemeMedia();
 applyThemeMode();
 ensureTripsFilter();
 ensureReportsFilter();
@@ -1072,8 +1051,6 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   ensureAreas: () => ensureAreas(),
   ensureDealers: () => ensureDealers(),
   renderPageHeader,
-  themeModeSystem: THEME_MODE_SYSTEM,
-  themeModeLight: THEME_MODE_LIGHT,
   themeModeDark: THEME_MODE_DARK,
   settingsListManagement,
   displayBuildVersion: DISPLAY_BUILD_VERSION,
