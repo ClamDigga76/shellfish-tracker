@@ -331,13 +331,13 @@ main#app.screenTransitionIn{opacity:1;transform:translate3d(0,0,0) scale(1);anim
 .tabbtn[aria-current="page"]::after{opacity:.95;transform:translateX(-50%) scaleX(1);background:var(--accent)}
 .tabbtn:active{transform:scale(.97);filter:brightness(1.03)}
 .tabbtn:active svg{transform:translateY(0) scale(.98)}
-.tabbtn.plus{flex:0 0 64px;min-width:64px;max-width:64px;padding:0;margin-bottom:4px;color:#fff;background:linear-gradient(180deg, rgba(93,146,255,.98) 0%, rgba(47,109,246,.98) 100%);border-radius:999px;border:0;height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18);transform:translateY(-8px)}
+.tabbtn.plus{flex:0 0 64px;min-width:64px;max-width:64px;padding:0;margin-bottom:2px;color:#fff;background:linear-gradient(180deg, rgba(93,146,255,.98) 0%, rgba(47,109,246,.98) 100%);border-radius:999px;border:0;height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18);transform:translateY(-5px)}
 .tabbtn.plus::after{display:none}
 .tabbtn.plus svg{width:26px;height:26px;stroke:#fff;opacity:1;filter:none;transform:none}
 .tabbtn.plus span{display:none}
 .tabbtn.plus.active,
 .tabbtn.plus[aria-current="page"]{background:linear-gradient(180deg, rgba(116,163,255,1) 0%, rgba(47,109,246,1) 100%);box-shadow:0 16px 34px rgba(31,111,235,.28), 0 10px 24px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.24)}
-.tabbtn.plus:active{transform:translateY(-7px) scale(.98);filter:brightness(.98)}
+.tabbtn.plus:active{transform:translateY(-4px) scale(.98);filter:brightness(.98)}
 
 /* Modal shell */
 body.scrollLock{overflow:hidden;overscroll-behavior:none}
