@@ -31,7 +31,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     money: color("--money", "rgba(76,191,117,0.9)"),
     ppl: color("--ppl", "rgba(255,196,77,0.92)"),
     lbs: color("--lbs", "rgba(77,155,255,0.9)"),
-    trips: color("--accent", "rgba(180,161,255,0.78)"),
+    trips: color("--trips", "rgba(242,245,255,0.92)"),
     grid: "rgba(255,255,255,0.07)",
     label: "rgba(255,255,255,0.8)",
     axis: "rgba(255,255,255,0.2)",
@@ -471,7 +471,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   );
 
   const amountPerTripValues = monthRowsChronological.map((r)=> Number(r.amountPerTrip) || 0);
-  drawBarChart("c_amount_per_trip", amountPerTripValues, monthRowsChronological.map((r)=> r.label), palette.trips, formatCompactMoney, formatShortMoney(Math.max(...amountPerTripValues, 0)), {
+  drawBarChart("c_amount_per_trip", amountPerTripValues, monthRowsChronological.map((r)=> r.label), palette.money, formatCompactMoney, formatShortMoney(Math.max(...amountPerTripValues, 0)), {
     minBarWidth: 4,
     barPad: (frame)=> frame.compact ? 0.8 : 1.2
   });
