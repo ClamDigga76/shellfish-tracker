@@ -288,7 +288,7 @@ export function createUpdateRuntimeStatusSeam({
     const startupVersions = Array.isArray(runtimeDiag.startupModuleVersions) ? [...new Set(runtimeDiag.startupModuleVersions)] : [];
     const lines = [];
 
-    lines.push("[Runtime + Update Diagnostics]");
+    lines.push("[Support Bundle: Runtime + Update]");
     lines.push(`BuildTarget: ${String(snap.buildVersion || displayBuildVersion || "(unknown)")}`);
     lines.push(`Schema: ${String(snap.schemaVersion || getSchemaVersion() || "(unknown)")}`);
     lines.push(`SupportSnapshotAt: ${String(snap.capturedAt || new Date().toISOString())}`);
@@ -318,19 +318,22 @@ export function createUpdateRuntimeStatusSeam({
       lines.push(`VersionSkewDetected: ${runtimeDiag.hasVersionSkew ? "yes" : "no"}`);
       lines.push(`InstalledAppLikelyLagging: ${runtimeDiag.installedAppLikelyLagging ? "yes" : "no"}`);
       lines.push(`HardResetSuggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`);
+      lines.push(`RecoveryReadiness: ${runtimeDiag.needsHardReset || runtimeDiag.lastBootError ? "attention-needed" : "ready"}`);
       if(runtimeDiag.lastBootError) lines.push(`LastBootWarning: ${String(runtimeDiag.lastBootError)}`);
     }else{
       lines.push("RuntimeDiagnostics: not captured yet in this session");
     }
 
     if(snap.releaseSnapshot){
+      const readySignals = Number(releaseSummary.updateAligned === true) + Number(releaseSummary.reopenReady === true) + Number(releaseSummary.recoveryReady !== true);
       lines.push(`ReleaseSnapshotAt: ${formatLedgerStamp(snap.releaseSnapshot.at) || "(unknown)"}`);
       if(snap.releaseSnapshot.buildVersion){
         lines.push(`ReleaseSnapshotBuild: ${String(snap.releaseSnapshot.buildVersion)}`);
       }
+      lines.push(`ReleaseValidationRollup: ${readySignals}/3 ready signals`);
       lines.push(`ReleaseUpdateAligned: ${releaseSummary.updateAligned ? "yes" : "no"}`);
       lines.push(`ReleaseReopenReady: ${releaseSummary.reopenReady ? "yes" : "no"}`);
-      lines.push(`ReleaseRecoverySignal: ${releaseSummary.recoveryReady ? "yes" : "no"}`);
+      lines.push(`ReleaseRecoverySignal: ${releaseSummary.recoveryReady ? "present" : "clear"}`);
     }else{
       lines.push("ReleaseSnapshot: not captured yet in this session");
     }
@@ -590,6 +593,11 @@ export function createUpdateRuntimeStatusSeam({
         ...snapshot,
         checks: Array.isArray(snapshot.checks) ? [...snapshot.checks] : [],
         signalLines: Array.isArray(snapshot.signalLines) ? [...snapshot.signalLines] : [],
+        summary: { ...(snapshot.summary || {}) }
+      };
+      windowRef.__SHELLFISH_LAST_RELEASE_SNAPSHOT__ = {
+        at: String(snapshot.at || ""),
+        buildVersion: String(snapshot.buildVersion || ""),
         summary: { ...(snapshot.summary || {}) }
       };
     }catch(_){ }
