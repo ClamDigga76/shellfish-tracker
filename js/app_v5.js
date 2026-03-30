@@ -459,7 +459,11 @@ function exportTrips(trips, label, startISO="", endISO=""){
   exportTripsWithLabel(trips, String(label||"ALL").toUpperCase(), startISO, endISO);
 }
 
-const { renderStandardReadOnlyTripCard, renderStandardInteractiveTripCard } = createTripCardRenderHelpers({
+const {
+  renderStandardReadOnlyTripCard,
+  renderStandardInteractiveTripCard,
+  renderTripsBrowseInteractiveTripCard
+} = createTripCardRenderHelpers({
   formatDateDMY,
   to2,
   computePPL,
@@ -895,7 +899,7 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
   getFilterOptionsFromTrips,
   escapeHtml,
   tripsActiveLabel,
-  renderStandardInteractiveTripCard,
+  renderTripsBrowseInteractiveTripCard,
   renderPageHeader,
   bindNavHandlers,
   getState: () => state,
