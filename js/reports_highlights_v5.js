@@ -125,19 +125,7 @@ export function createReportsHighlightsSeam(deps){
     const trustText = payload?.confidenceLabel === "early"
       ? " • early read"
       : (payload?.confidenceLabel === "weak" ? " • light read" : "");
-    if(payload.metricKey === "trips"){
-      return `${buildTripsDriverText(compare)} • compared over ${windowText}${trustText}`;
-    }
-    if(payload.metricKey === "amount"){
-      return `${buildAmountDriverText(compare).replace(/\.$/, "")} • compared over ${windowText}${trustText}`;
-    }
-    if(payload.metricKey === "pounds"){
-      return `${buildPoundsDriverText(compare).replace(/\.$/, "")} • compared over ${windowText}${trustText}`;
-    }
-    if(payload.metricKey === "ppl"){
-      return `${buildPplDriverText(compare).replace(/\.$/, "")} • compared over ${windowText}${trustText}`;
-    }
-    return `${buildPeriodLabel(period)} • compared over ${windowText}${trustText}`;
+    return `Compared over ${windowText}${trustText}`;
   }
 
   function buildLeaderSummary({ label, entity, totalAmount, noun }){
@@ -377,7 +365,7 @@ export function createReportsHighlightsSeam(deps){
     return `
       <div class="reportsHighlightsCard">
         <div class="reportsHighlightsHdr">Range insights</div>
-        <div class="reportsHighlightsGuide">Start here for the big picture. Tap <b>View breakdown</b> on any compare card for metric detail.</div>
+        <div class="reportsHighlightsGuide">Tap <b>View breakdown</b> on a compare card for metric detail.</div>
         <div class="reportsHighlightsGrid">
           ${highlights.map(item=>`
             <${item.type === "compare" ? "button" : "div"} class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare reportsHighlightItem--drilldown" : "summary"}" ${item.type === "compare" ? `type="button" data-metric-detail="${escapeHtml(item.metricKey)}" aria-label="View ${escapeHtml(item.label)} breakdown"` : ""}>
