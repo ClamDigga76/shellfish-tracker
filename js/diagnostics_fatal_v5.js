@@ -17,11 +17,12 @@ export function createDiagnosticsFatalSeam({
   const LEGACY_LAST_ERROR_KEY = "SHELLFISH_LAST_ERROR";
   const LEGACY_LAST_ERROR_AT_KEY = "SHELLFISH_LAST_ERROR_AT";
 
-  function buildSupportBundle({ heading = "Bank the Catch Support Diagnostics", fatalErrorText = "" } = {}){
+  function buildSupportBundle({ heading = "Bank the Catch Support Bundle", fatalErrorText = "" } = {}){
     const state = getState();
     const appName = "Bank the Catch";
     const trips = Array.isArray(state?.trips) ? state.trips.length : 0;
     const areas = Array.isArray(state?.areas) ? state.areas.length : 0;
+    const deletedTrips = Array.isArray(state?.deletedTrips) ? state.deletedTrips.length : 0;
     const view = state?.view ? String(state.view) : "";
     const last = state?.lastAction ? String(state.lastAction) : "";
     const settings = state?.settings || {};
@@ -55,6 +56,23 @@ export function createDiagnosticsFatalSeam({
     const snooze = settings.backupSnoozeUntil ? new Date(settings.backupSnoozeUntil).toISOString() : "";
     const generatedAt = new Date().toISOString();
 
+    let rollbackSnapshotReady = false;
+    let rollbackSnapshotMeta = null;
+    try{
+      const raw = localStorageRef.getItem("btc_restore_rollback_snapshot_v1") || "";
+      if(raw){
+        const parsed = JSON.parse(raw);
+        const meta = parsed && typeof parsed === "object" ? (parsed.meta || {}) : {};
+        rollbackSnapshotReady = true;
+        rollbackSnapshotMeta = meta && typeof meta === "object" ? meta : null;
+      }
+    }catch{}
+
+    const releaseSnapshot = windowRef.__SHELLFISH_LAST_RELEASE_SNAPSHOT__ && typeof windowRef.__SHELLFISH_LAST_RELEASE_SNAPSHOT__ === "object"
+      ? windowRef.__SHELLFISH_LAST_RELEASE_SNAPSHOT__
+      : null;
+    const releaseSummary = releaseSnapshot?.summary && typeof releaseSnapshot.summary === "object" ? releaseSnapshot.summary : null;
+
     const lines = [];
     lines.push(heading);
     lines.push(`Generated: ${generatedAt}`);
@@ -84,6 +102,7 @@ export function createDiagnosticsFatalSeam({
     lines.push("");
     lines.push("[Storage + Recovery]");
     lines.push(`TripsCount: ${trips}`);
+    lines.push(`DeletedTripsCount: ${deletedTrips}`);
     lines.push(`AreasCount: ${areas}`);
     lines.push(`LocalStorageChars: ${lsChars}`);
     if(lb) lines.push(`LastBackupAt: ${lb}`);
@@ -91,6 +110,26 @@ export function createDiagnosticsFatalSeam({
     if(snooze) lines.push(`BackupSnoozeUntil: ${snooze}`);
     if(lastErrAt) lines.push(`LastErrorAt: ${lastErrAt}`);
     if(lastErr) lines.push(`LastErrorSummary: ${lastErr}`);
+    lines.push(`RollbackSnapshotReady: ${rollbackSnapshotReady ? "yes" : "no"}`);
+    if(rollbackSnapshotMeta){
+      const mode = String(rollbackSnapshotMeta.mode || "").toLowerCase() === "replace" ? "replace" : "merge";
+      lines.push(`RollbackSnapshotMode: ${mode}`);
+      if(Number.isFinite(Number(rollbackSnapshotMeta.tripCount))) lines.push(`RollbackSnapshotTripCount: ${Number(rollbackSnapshotMeta.tripCount)}`);
+      if(Number.isFinite(Number(rollbackSnapshotMeta.areaCount))) lines.push(`RollbackSnapshotAreaCount: ${Number(rollbackSnapshotMeta.areaCount)}`);
+      if(Number.isFinite(Number(rollbackSnapshotMeta.dealerCount))) lines.push(`RollbackSnapshotDealerCount: ${Number(rollbackSnapshotMeta.dealerCount)}`);
+      if(rollbackSnapshotMeta.createdAt){
+        const rollbackAt = new Date(rollbackSnapshotMeta.createdAt);
+        if(!Number.isNaN(rollbackAt.getTime())) lines.push(`RollbackSnapshotAt: ${rollbackAt.toISOString()}`);
+      }
+    }
+
+    if(releaseSummary){
+      const passCount = Number(releaseSummary.updateAligned === true) + Number(releaseSummary.reopenReady === true) + Number(releaseSummary.recoveryReady !== true);
+      lines.push(`ReleaseValidationRollup: ${passCount}/3 ready signals`);
+      lines.push(`ReleaseValidationUpdateAligned: ${releaseSummary.updateAligned ? "yes" : "no"}`);
+      lines.push(`ReleaseValidationReopenReady: ${releaseSummary.reopenReady ? "yes" : "no"}`);
+      lines.push(`ReleaseValidationRecoverySignal: ${releaseSummary.recoveryReady ? "present" : "clear"}`);
+    }
     lines.push("");
     lines.push("[Device]");
     lines.push(`UserAgent: ${navigatorRef.userAgent}`);
@@ -157,7 +196,7 @@ export function createDiagnosticsFatalSeam({
     }
 
     const dump = buildSupportBundle({
-      heading: "Bank the Catch Fatal Support Diagnostics",
+      heading: "Bank the Catch Fatal Support Bundle",
       fatalErrorText: errText
     });
 
@@ -170,7 +209,7 @@ export function createDiagnosticsFatalSeam({
         <div class="muted small" style="white-space:pre-wrap">${escapeHtml(errText)}</div>
 
         <div class="row mt12 gap10 wrap">
-          <button class="btn" id="fatalCopy">Copy support diagnostics</button>
+          <button class="btn" id="fatalCopy">Copy support bundle</button>
           <button class="btn good" id="fatalReload">Reload</button>
           <button class="btn" id="fatalResetCache">Reset cache</button>
         </div>

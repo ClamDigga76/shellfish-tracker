@@ -289,7 +289,7 @@ export function createSettingsSupportRecoverySeam(deps) {
       if (failCount > 0) status += ` • ${failCount} Fail`;
       if (notRunCount > 0) status += ` • ${notRunCount} Not run`;
       if (latestReleaseSnapshot?.summary?.updateAligned === false) status += " • Version alignment warning";
-      if (latestReleaseSnapshot?.summary?.recoveryReady) status += " • Recovery signal present";
+      if (latestReleaseSnapshot?.summary?.recoveryReady) status += " • Recovery attention signal";
       releaseSummaryEl.textContent = status;
       if (advancedSummaryLine) advancedSummaryLine.textContent = `Build ${displayBuildVersion} • ${status}`;
     }
@@ -332,7 +332,7 @@ export function createSettingsSupportRecoverySeam(deps) {
     if (refreshReleaseSnapshotBtn) {
       refreshReleaseSnapshotBtn.onclick = async () => {
         await hydrateReleaseValidationSurface();
-        showToast("Release snapshot refreshed");
+        showToast("Release snapshot refreshed for support bundle");
       };
     }
 
@@ -368,7 +368,7 @@ export function createSettingsSupportRecoverySeam(deps) {
             copied = true;
           } catch (_) {}
         }
-        showToast(copied ? "Release ledger copied" : "Could not copy release ledger");
+        showToast(copied ? "Release ledger copied for support" : "Could not copy release ledger");
       };
     }
 

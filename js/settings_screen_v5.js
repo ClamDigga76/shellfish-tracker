@@ -337,7 +337,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Advanced</div>
-            <div class="settingsAccordionTitle">Diagnostics + release checks + reset</div>
+            <div class="settingsAccordionTitle">Support bundle + release checks + reset</div>
             <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle, release checks, and recovery reset tools</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
@@ -428,7 +428,7 @@ export function createSettingsScreenOrchestrator({
           </div>
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="muted small">Copy this support bundle (privacy-safe runtime metadata only), then include what happened right before the issue.</div>
+          <div class="muted small">Copy this support bundle (privacy-safe runtime metadata only), then include what happened right before the issue or recovery step.</div>
         </div>
         <div class="settingsRow settingsRow--danger">
           <div class="muted small"><b>Danger zone:</b> Erase removes all trips and lists on this device. Create a backup first.</div>
