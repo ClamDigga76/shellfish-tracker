@@ -38,6 +38,15 @@ export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, re
     return renderTripCardHTML(model, { interactive: true, variant: opts.variant || "standard" });
   }
 
+  function renderTripsBrowseInteractiveTripCard(t, opts = {}){
+    const model = resolveTripCardModel(t, opts);
+    return renderTripCardHTML(model, {
+      interactive: true,
+      variant: "tripsBrowse",
+      auditVariant: "tripsBrowse"
+    });
+  }
+
   // Legacy alias while callers migrate to explicit shared APIs.
   function renderTripCatchCard(t, opts = {}){
     return opts?.interactive
@@ -48,6 +57,7 @@ export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, re
   return {
     renderStandardReadOnlyTripCard,
     renderStandardInteractiveTripCard,
+    renderTripsBrowseInteractiveTripCard,
     renderTripCatchCard
   };
 }
