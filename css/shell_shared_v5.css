@@ -387,8 +387,9 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripCardStandard.tripCardReadOnly{pointer-events:none}
 .tripCardStandard .tripCardGrid{
   display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-columns:minmax(0,1fr) minmax(0,fit-content(46%));
   gap:15px;
+  align-items:start;
 }
 .tripCardStandard .tripCardLeftStack{display:grid;gap:4px;align-content:start}
 .tripCardStandard .tripCardTextRow{margin:0}
@@ -407,8 +408,8 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   gap:5px;
   text-align:right;
   min-width:0;
-  width:max-content;
-  max-width:44%;
+  width:auto;
+  max-width:100%;
 }
 .tripCardStandard .tripCardMetricChip{
   display:block;
@@ -417,7 +418,9 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   line-height:1.25;
   letter-spacing:.01em;
   font-weight:660;
-  white-space:nowrap;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 .tripCardStandard .tripCardMetricChip .metricValue{
   display:inline-block;
@@ -467,7 +470,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
     font-size:12px;
   }
   .tripCardStandard .tripCardMetricsCol{
-    max-width:48%;
+    max-width:100%;
   }
   .tripCardStandard .tripCardMetricChip{
     font-size:11px;
