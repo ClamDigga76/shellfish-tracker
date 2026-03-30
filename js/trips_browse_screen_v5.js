@@ -44,14 +44,6 @@ export function createTripsBrowseScreenRenderer(deps){
 
     const filtersCard = `
       <div class="card tripsFiltersCard tripsBrowseFiltersCard">
-        <div class="tripsFiltersTopRow screenIntroStack">
-          <div class="screenIntroBlock">
-            <div class="screenIntroEyebrow">Trips</div>
-            <div class="screenIntroTitle">Browse saved trips</div>
-            <div class="screenIntroMeta">Range ${escapeHtml(r.label)} • ${sorted.length} shown</div>
-            <div class="screenIntroHelper">Adjust filters, then open any trip card to edit details.</div>
-          </div>
-        </div>
         <div class="tripsFiltersGrid">
           <div class="tripsFilterField">
             <div class="muted small">Range</div>

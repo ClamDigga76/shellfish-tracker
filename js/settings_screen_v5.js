@@ -102,14 +102,6 @@ export function createSettingsScreenOrchestrator({
 
     getApp().innerHTML = `
     ${renderPageHeader("settings")}
-
-    <div class="screenIntroBlock">
-      <div class="screenIntroEyebrow">Settings</div>
-      <div class="screenIntroTitle">App controls</div>
-      <div class="screenIntroMeta">${areaCount} areas • ${dealerCount} dealers</div>
-      <div class="screenIntroHelper">Use quick links, then open the section you want to review.</div>
-    </div>
-
     <div class="settingsJumpNavCard card" aria-label="Settings section quick links">
       <div class="settingsJumpNavRow" role="navigation" aria-label="Jump to section">
         ${settingsJumpTargets.map((target) => `<button class="chip settingsJumpChip" type="button" data-settings-jump="${target.id}">${target.label}</button>`).join("")}

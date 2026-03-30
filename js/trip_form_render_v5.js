@@ -38,16 +38,6 @@ export function renderTripEntryForm({
   settlementHintText = ""
 }) {
   const isEdit = mode === "edit";
-  const modeBanner = isEdit ? `
-    <section class="trip-section trip-edit-indicator" aria-label="Edit mode indicator">
-      <h1 class="edit-trip-title">Edit trip</h1>
-      <div class="editModePill" role="status" aria-live="polite">
-        <span class="editModePillIcon" aria-hidden="true">✎</span>
-        <span>Changes apply to this saved trip</span>
-      </div>
-    </section>
-  ` : "";
-
   const tertiaryButton = tertiaryActionLabel ? `<button class="btn danger" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : "";
   const settlementToggle = settlementRevealId
     ? `<button class="tripSettlementReveal" id="${escapeHtml(settlementRevealId)}" type="button" aria-expanded="${settlementExpanded ? "true" : "false"}">${settlementExpanded ? "Hide check details" : "Check differs"}</button>`
@@ -72,8 +62,6 @@ export function renderTripEntryForm({
   return `
     <div class="card formCard tripFormFoundation ${escapeHtml(extraCardClass)}">
       <form id="${escapeHtml(formId)}">
-        ${modeBanner}
-
         <section class="trip-section">
           <div class="field">
             <div class="dateRow">

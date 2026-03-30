@@ -368,13 +368,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderReportsTopShell = ({ body = "", shellMode = "overview" } = {})=> `
     <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
-      <div class="reportsTopHeader cardHeaderRow screenIntroStack">
-        <div class="screenIntroBlock">
-          <div class="screenIntroEyebrow">Reports</div>
-          <div class="screenIntroTitle">Range analysis</div>
-          <div class="screenIntroMeta">Range ${escapeHtml(rangeLabel)} • ${trips.length} trips</div>
-          <div class="screenIntroHelper">Pick a range, then move through Insights, Charts, and detail tables.</div>
-        </div>
+      <div class="reportsTopHeader cardHeaderRow">
         <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
       </div>
 
@@ -403,11 +397,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         </div>
         <div class="reportsSectionSwitch" role="tablist" aria-label="Reports sections">
           ${REPORTS_SECTION_ITEMS.map((item)=> renderReportsSectionChip(item)).join("")}
-        </div>
-        <div class="reportsSectionIntro">${escapeHtml(activeReportsItem.intro)}</div>
-        <div class="reportsSectionMap" aria-label="Reports section map">
-          <span><b>Overview:</b> Insights, Charts, Seasonality</span>
-          <span><b>Detail tables:</b> Records, Detail</span>
         </div>
       </section>
 
