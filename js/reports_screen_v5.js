@@ -291,17 +291,15 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const chip = ({ key, label })=> `<button class="chip segBtn reportsPrimaryFilterChip ${activePresetFilterKey===key?'on is-selected':''}" data-rf="${key}" type="button" role="tab" aria-selected="${activePresetFilterKey===key ? "true" : "false"}">${label}</button>`;
   const REPORTS_SECTION_ITEMS = [
-    { key: "insights", label: "Insights", modeLabel: "Overview", intro: "Highlights and takeaways for your current filter." },
-    { key: "charts", label: "Charts", modeLabel: "Overview", intro: "Trend charts for a quick visual read of this range." },
-    { key: "seasonality", label: "Seasonality", modeLabel: "Overview", intro: "See repeat timing across months and matched windows." },
-    { key: "records", label: "Records", modeLabel: "Detail tables", intro: "Review high and low trip records for this range." },
-    { key: "detail", label: "Detail", modeLabel: "Detail tables", intro: "Dealer, area, and monthly summaries for this range." }
+    { key: "insights", label: "Insights", intro: "Top takeaways for this range." },
+    { key: "charts", label: "Charts", intro: "Trend direction at a glance." },
+    { key: "seasonality", label: "Seasonality", intro: "Matched windows across years." },
+    { key: "records", label: "Records", intro: "High and low trip records." },
+    { key: "detail", label: "Detail", intro: "Dealer, area, and monthly tables." }
   ];
   const activeReportsSection = REPORTS_SECTION_ITEMS.some((item)=> item.key === reportsSectionKey) ? reportsSectionKey : "insights";
-  const activeReportsItem = REPORTS_SECTION_ITEMS.find((item)=> item.key === activeReportsSection) || REPORTS_SECTION_ITEMS[0];
   const renderReportsSectionChip = (item)=> `<button class="chip reportsSectionChip ${activeReportsSection===item.key?'on is-selected':''}" data-reports-section="${item.key}" type="button" role="tab" id="reports-tab-${item.key}" aria-controls="reportsTransitionRoot" aria-selected="${activeReportsSection===item.key ? 'true' : 'false'}" tabindex="${activeReportsSection===item.key ? "0" : "-1"}">
     <span>${item.label}</span>
-    <small>${item.modeLabel}</small>
   </button>`;
   const activeFilterTokens = [];
   const fromISO = parseReportDateToISO(rf.from);
@@ -320,12 +318,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     activeFilterTokens.push(`Area ${areaFilter}`);
   }
   const activeFilterSummaryLabel = activeFilterTokens.length
-    ? `${activeFilterTokens.length} custom filter${activeFilterTokens.length === 1 ? "" : "s"} active`
+    ? `${activeFilterTokens.length} filter${activeFilterTokens.length === 1 ? "" : "s"} on`
     : "No custom filters";
   const renderActiveFilterSummary = activeFilterTokens.length
     ? `
       <div class="reportsActiveFilterSummary" aria-live="polite" aria-label="Active custom filters">
-        <div class="reportsActiveFilterSummaryTitle">Active custom filters</div>
         <div class="reportsActiveFilterChipRow">${activeFilterTokens.map((token)=> `<span class="reportsActiveFilterChip">${escapeHtml(token)}</span>`).join("")}</div>
       </div>
     `
@@ -373,9 +370,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       </div>
 
       <section class="reportsTimeframeShell" aria-label="Reports timeframe controls">
-        <div class="reportsShellRow reportsShellRow--topline">
-          <div class="reportsTopLabel">Quick range</div>
-        </div>
         <div class="segWrap timeframeUnifiedControl reportsTimeframeControl reportsPrimaryFilterBar" role="tablist" aria-label="Reports quick range filters">
           ${REPORTS_PRESET_FILTER_ITEMS.map((item)=> chip(item)).join("")}
         </div>
@@ -391,10 +385,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       </div>
 
       <section class="reportsNavShell" aria-label="Reports sections">
-        <div class="reportsShellRow reportsShellRow--topline">
-          <div class="reportsNavLabel">Section tabs</div>
-          <div class="reportsSectionMapActive" aria-live="polite">Now viewing: <b>${escapeHtml(activeReportsItem.label)}</b> (${escapeHtml(activeReportsItem.modeLabel)})</div>
-        </div>
         <div class="reportsSectionSwitch" role="tablist" aria-label="Reports sections">
           ${REPORTS_SECTION_ITEMS.map((item)=> renderReportsSectionChip(item)).join("")}
         </div>
@@ -732,65 +722,62 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     const dealerAmountTakeaway = dealerAmountPeak
       ? { text: "Top dealer still leads this range", tone: "up" }
       : { text: "Dealer mix still building", tone: "steady" };
-    const primaryMetricPairing = (metricLabel)=> `Primary • ${metricLabel}`;
-    const supportingMetricPairing = (metricLabel)=> `Supporting • ${metricLabel}`;
-
     return [
       renderChartCard({
         takeaway: tripsTakeaway,
         title: "Trips over time",
-        subhead: `${primaryMetricPairing("Trips")} • Monthly trip count`,
+        subhead: "Monthly trip count",
         hero: `<span class="trips">${tripsLatest ? tripsLatest.count : "—"}</span>`,
-        context: `Latest <span class="chartContextValue">${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "month"}</span> • High <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
+        context: `<span class="chartContextValue">${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "Latest month"}</span> • High <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
         canvasId: "c_trips"
       }),
       renderChartCard({
         takeaway: lbsTakeaway,
         title: "Monthly Pounds",
-        subhead: `${primaryMetricPairing("Pounds")} • Pounds by month`,
+        subhead: "Pounds by month",
         hero: `<span class="lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</span>`,
-        context: `Latest <span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "month"}</span> • High <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
+        context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
         canvasId: "c_lbs"
       }),
       renderChartCard({
         takeaway: amountTakeaway,
         title: "Monthly Total Amount",
-        subhead: `${primaryMetricPairing("Amount")} • Total payout by month`,
+        subhead: "Total payout by month",
         hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amt)) : "—"}</span>`,
-        context: `Latest <span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "month"}</span> • High <span class="money">${amountPeak ? formatMoney(to2(amountPeak.amt)) : "—"}</span>`,
+        context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="money">${amountPeak ? formatMoney(to2(amountPeak.amt)) : "—"}</span>`,
         canvasId: "c_amount_monthly"
       }),
       renderChartCard({
         takeaway: pplTakeaway,
         title: "Avg $/lb by Month",
-        subhead: `${primaryMetricPairing("Avg $/lb")} • Pay rate by month`,
+        subhead: "Pay rate by month",
         hero: `<span class="rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</span>`,
-        context: `Latest <span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "month"}</span> • High <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span>`,
+        context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span>`,
         canvasId: "c_ppl"
       }),
       renderChartCard({
         takeaway: amountPerTripTakeaway,
         title: "Monthly Amount per Trip",
-        subhead: `${supportingMetricPairing("Amount")} • Average payout per trip`,
+        subhead: "Average payout per trip",
         hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amountPerTrip)) : "—"}</span>`,
-        context: `Latest <span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "month"}</span> • High <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
+        context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
         canvasId: "c_amount_per_trip"
       }),
       renderChartCard({
         takeaway: dealerRateTakeaway,
         title: "Dealer Avg $/lb",
-        subhead: `${supportingMetricPairing("Avg $/lb")} • Dealer pay rates`,
+        subhead: "Dealer pay rates",
         hero: `<span class="rate ppl">${dealerRatePeak ? `${formatMoney(to2(dealerRatePeak.avg))}/lb` : "—"}</span>`,
-        context: `Top pay-rate dealer • <span class="chartContextValue">${dealerRatePeak ? escapeHtml(String(dealerRatePeak.name || "—")) : "—"}</span>`,
+        context: `Top pay-rate dealer: <span class="chartContextValue">${dealerRatePeak ? escapeHtml(String(dealerRatePeak.name || "—")) : "—"}</span>`,
         canvasId: "c_dealer_rate",
         height: 220
       }),
       renderChartCard({
         takeaway: dealerAmountTakeaway,
         title: "Dealer Amount",
-        subhead: `${supportingMetricPairing("Amount")} • Total payout by dealer`,
+        subhead: "Total payout by dealer",
         hero: `<span class="money">${dealerAmountPeak ? formatMoney(to2(dealerAmountPeak.amt)) : "—"}</span>`,
-        context: `Leading dealer • <span class="chartContextValue">${dealerAmountPeak ? escapeHtml(String(dealerAmountPeak.name || "—")) : "—"}</span>`,
+        context: `Leading dealer: <span class="chartContextValue">${dealerAmountPeak ? escapeHtml(String(dealerAmountPeak.name || "—")) : "—"}</span>`,
         canvasId: "c_dealer",
         height: 220
       })
@@ -825,11 +812,11 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
 
-  const reportsSection = ({ title, intro, body, extraClass = "" })=> `
+  const reportsSection = ({ title, intro = "", body, extraClass = "" })=> `
     <section class="reportsSection ${extraClass}">
       <div class="reportsSectionHead">
         <h2>${escapeHtml(title)}</h2>
-        <p>${escapeHtml(intro)}</p>
+        ${intro ? `<p>${escapeHtml(intro)}</p>` : ""}
       </div>
       ${body}
     </section>
@@ -905,7 +892,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       : "";
     return reportsSection({
       title: "Seasonality",
-      intro: "Seasonality uses matched dates across years, while the first card keeps the year-over-year view clear.",
+      intro: "Matched windows across years.",
       body: `<div class="reportsSeasonalityGrid">
         <div class="card reportsSeasonalityCard">
           <div class="reportsSeasonalityEyebrow">Same part of the month</div>
@@ -927,7 +914,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderChartsBlock = ()=> reportsSection({
     title: "Charts",
-    intro: "Quick mobile-ready charts for scanning trend direction in this range.",
+    intro: "Trend direction at a glance.",
     body: `<div class="reportsChartsStack">${renderChartsSection()}</div>`,
     extraClass: "reportsSection--charts"
   });
@@ -1098,14 +1085,14 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderRecordsBlock = ()=> reportsSection({
     title: "Records",
-    intro: "High and low trip records for pounds, amount, and (when available) $/lb.",
+    intro: "High and low trip records for core metrics.",
     body: `<div class="reportsTablesStack">${renderTableCard("High / Low Summary", highLowBody)}</div>`,
     extraClass: "reportsSection--records"
   });
 
   const renderDetailBlock = ()=> reportsSection({
     title: "Detail",
-    intro: "Dealer, area, and monthly summary tables for this active range.",
+    intro: "Dealer, area, and monthly tables.",
     body: `<div class="reportsTablesStack">${[
       renderTableCard("Dealer Summary", renderAggList(dealerRows, "Add a trip in this range to populate dealer totals.")),
       renderTableCard("Area Summary", renderAggList(areaRows, "Add a trip in this range to populate area totals.")),
@@ -1119,7 +1106,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     if(activeReportsSection === "charts") return renderChartsBlock();
     if(activeReportsSection === "seasonality") return renderSeasonalitySection() || reportsSection({
       title: "Seasonality",
-      intro: "Seasonality appears once enough dated history exists across months and years.",
+      intro: "Available after enough dated history builds.",
       body: `<div class="reportsHighlightsEmpty"><div class="muted small">Add more dated trips across multiple months to reveal seasonality reads.</div></div>`,
       extraClass: "reportsSection--seasonality"
     });
@@ -1127,7 +1114,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     if(activeReportsSection === "detail") return renderDetailBlock();
     return reportsSection({
       title: "Insights",
-      intro: "Top takeaways from this date range.",
+      intro: "Top takeaways for this range.",
       body: `${highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights appear automatically as more trips are added.</div></div>`}${renderPriceRangeMetricBlock()}`,
       extraClass: "reportsSection--highlights"
     });
