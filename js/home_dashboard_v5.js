@@ -225,7 +225,7 @@ export function createHomeDashboardRenderer({
             </div>
           `;
         }
-        return `<div class="homeLastTripCardWrap">${renderStandardReadOnlyTripCard(newestSavedTrip)}</div>`;
+        return `<div class="homeLastTripCardWrap">${renderStandardReadOnlyTripCard(newestSavedTrip, { variant: "standard" })}</div>`;
       })()
       : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No trip saved yet</div><div class="emptyStateBody">Save one trip to show your latest result here.</div></div>`;
 

@@ -659,7 +659,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         </div>
         <div class="hlTripCardWrap">
           <div class="hlTripCardHdr">Record trip</div>
-          ${typeof renderStandardReadOnlyTripCard === "function" ? renderStandardReadOnlyTripCard(t) : ""}
+          ${typeof renderStandardReadOnlyTripCard === "function" ? renderStandardReadOnlyTripCard(t, { variant: "standard" }) : ""}
         </div>
       </div>
     `;
