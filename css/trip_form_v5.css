@@ -56,19 +56,34 @@ body[data-view="edit"] .chip-selector{
   column-gap:4px;
   row-gap:0;
   align-items:end;
-  padding:10px 6px 9px;
-  border:1px solid rgba(47,109,246,.28);
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(47,109,246,.13) 0%, rgba(47,109,246,.05) 48%, rgba(255,255,255,.03) 100%);
-  box-shadow:0 10px 24px rgba(0,0,0,.18);
+  margin-top:2px;
+  padding:14px 9px 11px;
+  border:1px solid rgba(47,109,246,.34);
+  border-radius:16px;
+  background:
+    radial-gradient(160% 110% at 50% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 62%),
+    linear-gradient(180deg, rgba(47,109,246,.18) 0%, rgba(47,109,246,.08) 52%, rgba(255,255,255,.03) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 12px 26px rgba(3,10,26,.26);
+  position:relative;
+  overflow:hidden;
+}
+.tripMetricsRow::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
 }
 .tripMetricsRow .field{min-width:0}
-.tripMetricsRow .fieldLabel{font-size:11px;letter-spacing:.06em;text-align:center}
+.tripMetricsRow .fieldLabel{font-size:10.5px;letter-spacing:.09em;text-align:center}
 .tripMetricsRow .input{padding-left:7px;padding-right:7px}
 .tripMetricsRow #rateValue,
 .tripMetricsRow #rateValueEdit{font-weight:800;color:var(--ppl);background:var(--ppl-bg)}
 .tripMetricField{display:flex;flex-direction:column;align-items:stretch;min-width:0}
-.tripMetricLabel{margin:0 0 6px;line-height:1.1;text-align:center;white-space:nowrap}
+.tripMetricLabel{margin:0 0 7px;line-height:1.1;text-align:center;white-space:nowrap}
 .tripMetricLabel--pounds{color:var(--lbsBlue)}
 .tripMetricLabel--price{color:var(--ppl)}
 .tripMetricLabel--amount{color:var(--good)}
@@ -77,10 +92,11 @@ body[data-view="edit"] .chip-selector{
   align-items:center;
   justify-content:center;
   color:var(--muted);
-  font-size:12px;
-  font-weight:700;
-  opacity:.48;
-  padding-bottom:11px;
+  font-size:13px;
+  font-weight:800;
+  opacity:.58;
+  padding-bottom:12px;
+  text-shadow:0 1px 0 rgba(0,0,0,.18);
   user-select:none;
 }
 .tripSettlementReveal{
@@ -127,13 +143,22 @@ body[data-view="edit"] .chip-selector{
 .edit-mode{
   background:linear-gradient(180deg, rgba(255,77,79,.10) 0%, rgba(255,77,79,.04) 34%, rgba(255,255,255,.03) 100%);
 }
+.edit-mode .tripMetricsRow{
+  border-color:rgba(255,120,120,.34);
+  background:
+    radial-gradient(160% 110% at 50% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 62%),
+    linear-gradient(180deg, rgba(255,77,79,.16) 0%, rgba(255,77,79,.08) 52%, rgba(255,255,255,.03) 100%);
+}
 .trip-edit-indicator{
-  padding-top:4px;
-  padding-bottom:6px;
+  margin:2px 0 10px;
+  padding:10px 10px 8px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.015) 100%);
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:8px;
+  gap:7px;
 }
 .edit-trip-title{
   margin:0;
@@ -149,14 +174,15 @@ body[data-view="edit"] .chip-selector{
   align-items:center;
   justify-content:center;
   gap:6px;
-  padding:6px 10px;
+  padding:6px 11px;
   border-radius:999px;
-  border:1px solid rgba(47,109,246,.38);
-  background:rgba(47,109,246,.10);
+  border:1px solid rgba(47,109,246,.48);
+  background:rgba(47,109,246,.14);
   color:var(--text);
   font-size:12px;
   font-weight:700;
   letter-spacing:.02em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2);
 }
 .editModePillIcon{
   font-size:12px;
@@ -224,11 +250,12 @@ body[data-view="edit"] .tripActionRow.tripActionRow--three{grid-template-columns
   .tripMetricsRow{
     grid-template-columns:minmax(0,1fr) 8px minmax(0,.78fr) 8px minmax(0,1.05fr);
     column-gap:3px;
-    padding:9px 5px 8px;
+    padding:12px 7px 9px;
   }
-  .tripMetricSymbol{font-size:11px;padding-bottom:10px;opacity:.44}
+  .tripMetricSymbol{font-size:11px;padding-bottom:10px;opacity:.48}
   .tripMetricsRow .fieldLabel{font-size:10px;letter-spacing:.05em}
   .tripMetricsRow .input{padding-left:6px;padding-right:6px}
+  .trip-edit-indicator{margin-bottom:9px;padding:9px 8px 7px}
   .inputWrap .unitSuffix,
   .inputWrap .moneyPrefix{font-size:11px}
   .inputWrap--suffix .inputWithSuffix{padding-right:40px}
