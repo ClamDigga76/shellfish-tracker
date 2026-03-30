@@ -69,7 +69,7 @@ export function createTripsBrowseScreenRenderer(deps){
           </div>
 
           <div class="tripsFilterField tripsFilterField--disabled">
-            <div class="muted small">Species (Coming soon)</div>
+            <div class="muted small">Species</div>
             <select id="flt_species" class="select" disabled aria-disabled="true">
               <option>Coming soon</option>
             </select>
@@ -98,7 +98,7 @@ export function createTripsBrowseScreenRenderer(deps){
         </div>
 
         <div class="muted small mt10 tripsFilterSummary">
-          Showing: <b>${escapeHtml(tripsActiveLabel(tf, r.label))}</b>
+          <b>${escapeHtml(tripsActiveLabel(tf, r.label))}</b>
         </div>
       </div>
     `;
