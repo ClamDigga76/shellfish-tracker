@@ -402,11 +402,13 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripCardStandard .tripCardMetricsCol{
   display:grid;
   justify-items:end;
+  justify-self:end;
   align-content:start;
   gap:5px;
   text-align:right;
-  min-width:112px;
-  max-width:46%;
+  min-width:0;
+  width:max-content;
+  max-width:44%;
 }
 .tripCardStandard .tripCardMetricChip{
   display:block;
@@ -465,7 +467,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
     font-size:12px;
   }
   .tripCardStandard .tripCardMetricsCol{
-    min-width:98px;
+    max-width:48%;
   }
   .tripCardStandard .tripCardMetricChip{
     font-size:11px;
