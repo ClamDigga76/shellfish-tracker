@@ -248,9 +248,6 @@ export function createReportsMetricDetailSeam(deps){
   const {
     escapeHtml,
     formatMoney,
-    formatReportDateValue,
-    getTripMetricValue,
-    resolveTripArea,
     to2
   } = deps;
 
@@ -265,85 +262,6 @@ export function createReportsMetricDetailSeam(deps){
     if(metricKey === "amount") return formatMoney(to2(safeValue));
     if(metricKey === "ppl") return `${formatMoney(to2(safeValue))}/lb`;
     return `${to2(safeValue)}`;
-  };
-
-  const formatHomeRecordMetricValue = (metric, trip)=> {
-    if(!trip) return "—";
-    const lbsNum = Number(trip?.pounds) || 0;
-    const amtNum = Number(trip?.amount) || 0;
-    if(metric === "lbs") return `${to2(lbsNum)} lbs`;
-    if(metric === "amount") return formatMoney(to2(amtNum));
-    if(metric === "ppl"){
-      const value = (lbsNum > 0 && amtNum > 0) ? (amtNum / lbsNum) : 0;
-      return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
-    }
-    return "—";
-  };
-
-  const findMetricRecordTrip = ({ metric, direction = "max", recordPools, trips })=> {
-    const sourceTrips = recordPools?.[metric]?.[direction] || trips;
-    const ordered = sourceTrips
-      .map((trip)=> ({ trip, value: getTripMetricValue(trip, metric) }))
-      .filter((row)=> Number.isFinite(row.value) && row.value > 0)
-      .sort((a,b)=> direction === "max" ? (b.value - a.value) : (a.value - b.value));
-    return ordered[0]?.trip || null;
-  };
-
-  const renderHomeRecordRow = ({ label, metric, trip })=> {
-    if(!trip){
-      return `
-        <div class="homeMetricRecordRow">
-          <div class="homeMetricRecordTop">
-            <b>${escapeHtml(label)}</b>
-            <span>—</span>
-          </div>
-          <div class="homeMetricRecordMeta">No qualifying trip yet in this Home view.</div>
-        </div>
-      `;
-    }
-    const dateText = formatReportDateValue(trip?.date) || "Date not set";
-    const dealerText = String(trip?.dealer || "Unknown dealer");
-    const areaText = String(resolveTripArea(trip) || "Unknown area");
-    return `
-      <div class="homeMetricRecordRow">
-        <div class="homeMetricRecordTop">
-          <b>${escapeHtml(label)}</b>
-          <span>${escapeHtml(formatHomeRecordMetricValue(metric, trip))}</span>
-        </div>
-        <div class="homeMetricRecordMeta">${escapeHtml(dateText)} • ${escapeHtml(dealerText)} • ${escapeHtml(areaText)}</div>
-      </div>
-    `;
-  };
-
-  const renderHomeMetricRecordContext = ({ metricKey, recordPools, trips })=> {
-    const entriesByMetric = {
-      pounds: [
-        { label: "High pounds trip", metric: "lbs", trip: findMetricRecordTrip({ metric: "lbs", direction: "max", recordPools, trips }) },
-        { label: "Low pounds trip", metric: "lbs", trip: findMetricRecordTrip({ metric: "lbs", direction: "min", recordPools, trips }) }
-      ],
-      amount: [
-        { label: "High amount trip", metric: "amount", trip: findMetricRecordTrip({ metric: "amount", direction: "max", recordPools, trips }) },
-        { label: "Low amount trip", metric: "amount", trip: findMetricRecordTrip({ metric: "amount", direction: "min", recordPools, trips }) }
-      ],
-      ppl: [
-        { label: "High $/lb trip", metric: "ppl", trip: findMetricRecordTrip({ metric: "ppl", direction: "max", recordPools, trips }) },
-        { label: "Low $/lb trip", metric: "ppl", trip: findMetricRecordTrip({ metric: "ppl", direction: "min", recordPools, trips }) }
-      ],
-      trips: [
-        { label: "Most pounds trip", metric: "lbs", trip: findMetricRecordTrip({ metric: "lbs", direction: "max", recordPools, trips }) },
-        { label: "Highest amount trip", metric: "amount", trip: findMetricRecordTrip({ metric: "amount", direction: "max", recordPools, trips }) }
-      ]
-    };
-    const entries = entriesByMetric[metricKey] || [];
-    if(!entries.length) return "";
-    return `
-      <div class="homeMetricRecordContext" aria-label="Home metric records context">
-        <div class="homeMetricRecordTitle">Trip context in this Home view</div>
-        <div class="homeMetricRecordRows">
-          ${entries.map((entry)=> renderHomeRecordRow(entry)).join("")}
-        </div>
-      </div>
-    `;
   };
 
   const buildMetricCompareSummary = ({ metricKey, payload, compareFoundation, isHomeMetricDetail })=> {
@@ -423,7 +341,7 @@ export function createReportsMetricDetailSeam(deps){
     };
   };
 
-  const renderMetricDetailSection = ({ meta, compareSummary, homeRecordsContext = "", viewModel })=> {
+  const renderMetricDetailSection = ({ meta, compareSummary, viewModel })=> {
     const detailBackLabel = viewModel.isHomeMetricDetail ? "← Home KPIs" : "← Back to reports";
     const detailEyebrow = viewModel.isHomeMetricDetail ? "Home insight" : meta.eyebrow;
     const detailContext = viewModel.isHomeMetricDetail
@@ -468,8 +386,6 @@ export function createReportsMetricDetailSeam(deps){
           ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
         </div>
 
-        ${homeRecordsContext}
-
         <div class="${viewModel.detailChartClass}">
           <b>${escapeHtml(detailChartTitle)}</b>
           <div class="${viewModel.detailChartContextClass}">${escapeHtml(detailChartContext)}</div>
@@ -496,9 +412,7 @@ export function createReportsMetricDetailSeam(deps){
       compareFoundation,
       primaryBasisByMetric,
       detailCharts,
-      isHomeMetricDetail,
-      recordPools,
-      trips
+      isHomeMetricDetail
     } = viewModel;
     const primaryBasis = primaryBasisByMetric?.[metricKey] || null;
     const primaryPayload = primaryBasis?.comparePayload || compareFoundation.metrics?.[metricKey] || null;
@@ -605,8 +519,7 @@ export function createReportsMetricDetailSeam(deps){
     const meta = detailMeta[metricKey];
     if(!meta) return "";
     const compareSummary = buildMetricCompareSummary({ metricKey, payload: meta.comparePayload, compareFoundation, isHomeMetricDetail });
-    const homeRecordsContext = isHomeMetricDetail ? renderHomeMetricRecordContext({ metricKey, recordPools, trips }) : "";
-    return renderMetricDetailSection({ meta, compareSummary, homeRecordsContext, viewModel });
+    return renderMetricDetailSection({ meta, compareSummary, viewModel });
   };
 
   return {
