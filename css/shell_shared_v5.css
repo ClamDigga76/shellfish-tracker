@@ -368,40 +368,10 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 .tripsFilterSummary{padding-top:2px;line-height:1.35}
 
 .tripsBrowseFiltersCard{padding:var(--card-pad-y) var(--card-pad-x)}
-.tripsFiltersTopRow{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:var(--card-body-gap)}
 .tripsFiltersEyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong)}
 .tripsFiltersTitle{font-size:17px;font-weight:860;line-height:1.2;margin-top:2px}
 .tripsBrowseList{display:grid;gap:var(--card-stack-gap)}
 .tripsBrowseList .trip + .trip{margin-top:0}
-.screenIntroStack{
-  display:grid;
-  gap:var(--shell-top-stack-gap);
-}
-.screenIntroBlock{
-  display:grid;
-  gap:var(--shell-intro-gap);
-  min-width:0;
-}
-.screenIntroEyebrow{
-  font-size:11px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--text-muted-strong);
-}
-.screenIntroTitle{
-  font-size:17px;
-  font-weight:860;
-  line-height:1.2;
-}
-.screenIntroMeta,
-.screenIntroHelper{
-  color:var(--text-muted-strong);
-  font-size:12px;
-  line-height:1.4;
-}
-.screenIntroMeta{
-  font-weight:700;
-}
 .screenFirstCard{
   margin-top:var(--section-gap-tight);
 }
@@ -501,7 +471,7 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
 
 /* Settings grouped-list polish (P3) */
 .settingsGroupBlock{margin-bottom:var(--card-stack-gap)}
-.settingsJumpNavCard{margin-bottom:var(--section-gap-tight);padding:10px 11px}
+.settingsJumpNavCard{margin-top:var(--section-gap-tight);margin-bottom:var(--section-gap-tight);padding:10px 11px}
 .settingsJumpNavRow{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .settingsJumpNavRow::-webkit-scrollbar{display:none}
 .settingsJumpChip{white-space:nowrap;flex:0 0 auto}
@@ -649,12 +619,6 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   border:none;
   background:none;
   box-shadow:none;
-}
-.homeScreenShell .homeIntroSection{
-  margin-bottom:var(--shell-top-stack-gap);
-}
-.homeScreenShell .homeIntroBlock{
-  margin:0 2px;
 }
 .homeScreenShell .homeOverviewCard{
   padding:15px 15px 14px;
