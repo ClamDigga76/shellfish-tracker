@@ -47,7 +47,7 @@ export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, re
     });
   }
 
-  // Legacy alias while callers migrate to explicit shared APIs.
+  // Legacy alias; keeps compatibility while always using shared standardized layout.
   function renderTripCatchCard(t, opts = {}){
     return opts?.interactive
       ? renderStandardInteractiveTripCard(t, opts)

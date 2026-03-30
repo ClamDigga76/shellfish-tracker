@@ -52,19 +52,13 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
     const modeClass = interactive ? "tripCardInteractive" : "tripCardReadOnly";
     const isTripsBrowse = variant === "tripsBrowse";
     const variantClass = isTripsBrowse ? "tripCardVariantTripsBrowse" : "tripCardVariantStandard";
-    const primaryIdentity = isTripsBrowse ? model.area : model.dealer;
-    const secondaryIdentity = isTripsBrowse ? model.dealer : model.area;
-    const primaryIdentityClass = isTripsBrowse ? "tripCardArea" : "tripCardDealer";
-    const secondaryIdentityClass = isTripsBrowse ? "tripCardDealer" : "tripCardArea";
-    const metricRows = isTripsBrowse
-      ? `
+    const primaryIdentity = model.area;
+    const secondaryIdentity = model.dealer;
+    const primaryIdentityClass = "tripCardArea";
+    const secondaryIdentityClass = "tripCardDealer";
+    const metricRows = `
             <span class="catchMetric tripCardMetricChip lbsBlue tripCardMetricEmphasis"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
             <span class="catchMetric tripCardMetricChip money tripCardMetricEmphasis"><b class="metricValue money">${model.amountText}</b></span>
-            <span class="catchMetric tripCardMetricChip"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
-        `
-      : `
-            <span class="catchMetric tripCardMetricChip money"><b class="metricValue money">${model.amountText}</b></span>
-            <span class="catchMetric tripCardMetricChip lbsBlue"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
             <span class="catchMetric tripCardMetricChip"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
         `;
 
