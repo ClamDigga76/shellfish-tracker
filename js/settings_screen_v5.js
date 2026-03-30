@@ -15,11 +15,9 @@ export function createSettingsScreenOrchestrator({
   ensureAreas,
   ensureDealers,
   renderPageHeader,
-  themeModeDark,
   settingsListManagement,
   displayBuildVersion,
   updateBuildBadge,
-  bindThemeControls,
   bindNavHandlers,
   pushView,
   updateUpdateRow,
@@ -89,7 +87,6 @@ export function createSettingsScreenOrchestrator({
     const areaCount = Array.isArray(state.areas) ? state.areas.length : 0;
     const dealerCount = Array.isArray(state.dealers) ? state.dealers.length : 0;
     const settingsJumpTargets = [
-      { id: "settingsAppearance", label: "Appearance" },
       { id: "settingsUpdatesSupport", label: "Updates" },
       { id: "settingsInstallApp", label: "Install" },
       { id: "settingsSafetyRecovery", label: "Safety" },
@@ -104,33 +101,6 @@ export function createSettingsScreenOrchestrator({
       <div class="settingsJumpNavRow" role="navigation" aria-label="Jump to section">
         ${settingsJumpTargets.map((target) => `<button class="chip settingsJumpChip" type="button" data-settings-jump="${target.id}">${target.label}</button>`).join("")}
       </div>
-    </div>
-
-    <div class="settingsGroupBlock" id="settingsAppearance">
-      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion open>
-        <summary class="settingsAccordionSummary">
-          <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Appearance</div>
-            <div class="settingsAccordionTitle">Display</div>
-            <div class="muted small settingsAccordionStatus" id="appearanceSummaryLine">Dark mode</div>
-          </div>
-          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
-        </summary>
-        <div class="settingsRow settingsRow--split">
-          <div>
-            <div class="settingsRowTitle">Theme</div>
-          </div>
-          <span class="settingsValuePill">Dark</span>
-        </div>
-        <div class="settingsRow settingsRow--field">
-          <div class="selectRowWrap settingsSelectWrap">
-            <select id="themeMode" class="select" aria-label="Theme">
-              <option value="${themeModeDark}">Dark mode</option>
-            </select>
-            <span class="chev" aria-hidden="true">▾</span>
-          </div>
-        </div>
-      </details>
     </div>
 
     <div class="settingsGroupBlock" id="settingsUpdatesSupport">
@@ -428,7 +398,6 @@ export function createSettingsScreenOrchestrator({
     </div>
   `;
     updateBuildBadge();
-    bindThemeControls();
 
     bindNavHandlers(state);
 
@@ -470,15 +439,11 @@ export function createSettingsScreenOrchestrator({
     const installStepsLine = document.getElementById("installStepsLine");
     const installActionBtn = document.getElementById("installActionBtn");
     const installHelpBtn = document.getElementById("installHelpBtn");
-    const appearanceSummaryLine = document.getElementById("appearanceSummaryLine");
     const updatesSummaryLine = document.getElementById("updatesSummaryLine");
     const installSummaryLine = document.getElementById("installSummaryLine");
     const safetySummaryLine = document.getElementById("safetySummaryLine");
     const advancedSummaryLine = document.getElementById("advancedSummaryLine");
 
-    if (appearanceSummaryLine) {
-      appearanceSummaryLine.textContent = "Dark mode only";
-    }
     if (updatesSummaryLine) {
       updatesSummaryLine.textContent = "Checking version status…";
     }

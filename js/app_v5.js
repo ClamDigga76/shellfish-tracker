@@ -167,25 +167,6 @@ function applyThemeMode(){
   updateThemeMeta();
 }
 
-function bindThemeControls(){
-  const input = document.getElementById("themeMode");
-  if(!input) return;
-  state.settings = state.settings || {};
-  const normalizedSavedMode = normalizeThemeMode(state.settings.themeMode);
-  if(normalizedSavedMode !== THEME_MODE_DARK){
-    state.settings.themeMode = THEME_MODE_DARK;
-    saveState();
-  }
-  input.value = THEME_MODE_DARK;
-  input.onchange = ()=>{
-    state.settings = state.settings || {};
-    state.settings.themeMode = THEME_MODE_DARK;
-    input.value = THEME_MODE_DARK;
-    saveState();
-    applyThemeMode();
-  };
-}
-
 function clearHomeMetricDetailState(){
   state.homeMetricDetail = "";
   state.homeMetricDetailContext = null;
@@ -1051,11 +1032,9 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   ensureAreas: () => ensureAreas(),
   ensureDealers: () => ensureDealers(),
   renderPageHeader,
-  themeModeDark: THEME_MODE_DARK,
   settingsListManagement,
   displayBuildVersion: DISPLAY_BUILD_VERSION,
   updateBuildBadge: () => updateRuntimeStatus.updateBuildBadge(),
-  bindThemeControls: () => bindThemeControls(),
   bindNavHandlers,
   pushView,
   updateUpdateRow: () => updateRuntimeStatus.updateUpdateRow(),
