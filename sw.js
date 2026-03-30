@@ -29,6 +29,7 @@ const CORE_JS_PATHS = [
   "./js/reports_screen_v5.js",
   "./js/feedback_seam_v5.js",
   "./js/trip_screen_orchestrator_v5.js",
+  "./js/trips_browse_screen_v5.js",
   "./js/trip_flow_save_seam_v5.js",
   "./js/unified_filters_seam_v5.js",
   "./js/root_state_save_seam_v5.js",
