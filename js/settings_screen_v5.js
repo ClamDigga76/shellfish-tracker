@@ -15,8 +15,6 @@ export function createSettingsScreenOrchestrator({
   ensureAreas,
   ensureDealers,
   renderPageHeader,
-  themeModeSystem,
-  themeModeLight,
   themeModeDark,
   settingsListManagement,
   displayBuildVersion,
@@ -113,22 +111,21 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Appearance</div>
-            <div class="settingsAccordionTitle">Theme</div>
-            <div class="muted small settingsAccordionStatus" id="appearanceSummaryLine">Theme mode controls</div>
+            <div class="settingsAccordionTitle">Display</div>
+            <div class="muted small settingsAccordionStatus" id="appearanceSummaryLine">Dark mode</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Theme</div>
-            <div class="muted small">Pick how the app looks.</div>
           </div>
-          <span class="settingsValuePill">Mode</span>
+          <span class="settingsValuePill">Dark</span>
         </div>
         <div class="settingsRow settingsRow--field">
           <div class="selectRowWrap settingsSelectWrap">
             <select id="themeMode" class="select" aria-label="Theme">
-              <option value="${themeModeDark}">Dark (temporary only mode)</option>
+              <option value="${themeModeDark}">Dark mode</option>
             </select>
             <span class="chev" aria-hidden="true">▾</span>
           </div>
@@ -141,7 +138,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Updates & Support</div>
-            <div class="settingsAccordionTitle">Quick status + support actions</div>
+            <div class="settingsAccordionTitle">Update status and help</div>
             <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Checking version status…</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
@@ -149,7 +146,6 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">Updates</div>
-            <div class="muted small">Quick build status and recovery actions.</div>
           </div>
           <span class="settingsValuePill">Status</span>
         </div>
@@ -180,7 +176,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Install App</div>
-            <div class="settingsAccordionTitle">Quick mode check + install path</div>
+            <div class="settingsAccordionTitle">Install status and actions</div>
             <div class="muted small settingsAccordionStatus" id="installSummaryLine">Checking install state…</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
@@ -188,7 +184,6 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle settingsMiniTitle">App mode</div>
-            <div class="muted small">Check Browser vs Installed mode, then run install actions.</div>
           </div>
           <span class="settingsValuePill" id="installModePill">Checking…</span>
         </div>
@@ -212,15 +207,14 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Safety & Recovery</div>
-            <div class="settingsAccordionTitle">Backup, restore, and deleted trips</div>
-            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Backup freshness and recovery actions</div>
+            <div class="settingsAccordionTitle">Backup and restore tools</div>
+            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Backup freshness</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Backup & Restore</div>
-            <div class="muted small">Create a backup, then restore from preview when needed.</div>
           </div>
           <span class="settingsValuePill">Freshness</span>
         </div>
@@ -329,8 +323,8 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Advanced</div>
-            <div class="settingsAccordionTitle">Support bundle + release checks + reset</div>
-            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle, release checks, and recovery reset tools</div>
+            <div class="settingsAccordionTitle">Support bundle and reset</div>
+            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support tools and release checks</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
         </summary>
@@ -343,7 +337,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Release-trial validation</div>
-            <div class="muted small">Track browser/install/update/reopen/recovery checks for this release candidate.</div>
+            <div class="muted small">Mark checks for this release candidate.</div>
           </div>
           <span class="settingsValuePill" id="releaseValidationBuild">${displayBuildVersion}</span>
         </div>
@@ -422,7 +416,7 @@ export function createSettingsScreenOrchestrator({
           </div>
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="muted small">Copy this support bundle (privacy-safe runtime metadata only), then include what happened right before the issue or recovery step.</div>
+          <div class="muted small">Copy this support bundle (privacy-safe runtime metadata only) with a short repro note.</div>
         </div>
         <div class="settingsRow settingsRow--danger">
           <div class="muted small"><b>Danger zone:</b> Erase removes all trips and lists on this device. Create a backup first.</div>
@@ -483,7 +477,7 @@ export function createSettingsScreenOrchestrator({
     const advancedSummaryLine = document.getElementById("advancedSummaryLine");
 
     if (appearanceSummaryLine) {
-      appearanceSummaryLine.textContent = "Dark mode active (temporary only mode)";
+      appearanceSummaryLine.textContent = "Dark mode only";
     }
     if (updatesSummaryLine) {
       updatesSummaryLine.textContent = "Checking version status…";

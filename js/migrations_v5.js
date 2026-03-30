@@ -40,7 +40,7 @@ export function migrateLegacyStateIfNeeded(storage = localStorage) {
   }
 }
 
-export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, themeModeSystem }) {
+export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, themeModeDefault }) {
   try {
     st = (st && typeof st === "object") ? st : {};
     const v = Number(st.schemaVersion || 0);
@@ -88,7 +88,7 @@ export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, th
     }
 
     st.settings = (st.settings && typeof st.settings === "object") ? st.settings : {};
-    st.settings.themeMode = normalizeThemeMode(st.settings.themeMode || themeModeSystem);
+    st.settings.themeMode = normalizeThemeMode(st.settings.themeMode || themeModeDefault);
 
     if (v < 1) st.schemaVersion = 1;
     return st;
