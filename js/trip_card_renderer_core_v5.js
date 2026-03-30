@@ -40,28 +40,44 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
 
   function renderTripCardHTML(model, opts = {}){
     const {
-      interactive = false
+      interactive = false,
+      variant = "standard"
     } = opts;
     const tag = interactive ? "button" : "div";
     const role = interactive ? "button" : "group";
     const tab = interactive ? "0" : "-1";
     const idAttr = interactive ? ` data-id="${escapeHtml(model.id)}"` : "";
     const modeClass = interactive ? "tripCardInteractive" : "tripCardReadOnly";
+    const isTripsBrowse = variant === "tripsBrowse";
+    const variantClass = isTripsBrowse ? "tripCardVariantTripsBrowse" : "tripCardVariantStandard";
+    const primaryIdentity = isTripsBrowse ? model.area : model.dealer;
+    const secondaryIdentity = isTripsBrowse ? model.dealer : model.area;
+    const primaryIdentityClass = isTripsBrowse ? "tripCardArea" : "tripCardDealer";
+    const secondaryIdentityClass = isTripsBrowse ? "tripCardDealer" : "tripCardArea";
+    const metricRows = isTripsBrowse
+      ? `
+            <span class="catchMetric tripCardMetricChip lbsBlue tripCardMetricEmphasis"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
+            <span class="catchMetric tripCardMetricChip money tripCardMetricEmphasis"><b class="metricValue money">${model.amountText}</b></span>
+            <span class="catchMetric tripCardMetricChip"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
+        `
+      : `
+            <span class="catchMetric tripCardMetricChip money"><b class="metricValue money">${model.amountText}</b></span>
+            <span class="catchMetric tripCardMetricChip lbsBlue"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
+            <span class="catchMetric tripCardMetricChip"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
+        `;
 
     return `
-      <${tag} class="trip triprow catchCard tripCardStandard ${modeClass}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
+      <${tag} class="trip triprow catchCard tripCardStandard ${modeClass} ${variantClass}"${idAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
         <div class="tripCardGrid">
           <div class="tripCardLeftStack">
             <div class="tripCardTextRow tripCardDate">${escapeHtml(model.dateText)}</div>
-            <div class="tripCardTextRow tripCardDealer">${escapeHtml(model.dealer)}</div>
-            <div class="tripCardTextRow tripCardArea">${escapeHtml(model.area)}</div>
+            <div class="tripCardTextRow ${primaryIdentityClass} tripCardIdentityPrimary">${escapeHtml(primaryIdentity)}</div>
+            <div class="tripCardTextRow ${secondaryIdentityClass} tripCardIdentitySecondary">${escapeHtml(secondaryIdentity)}</div>
             <div class="tripCardTextRow tripCardSpecies" title="Species">${escapeHtml(model.species)}</div>
             ${model.notesPreview ? `<div class="tripCardTextRow tripCardNotes" title="Notes">${escapeHtml(model.notesPreview)}</div>` : ""}
           </div>
           <div class="catchFoot tripCardMetricsCol">
-            <span class="catchMetric tripCardMetricChip money"><b class="metricValue money">${model.amountText}</b></span>
-            <span class="catchMetric tripCardMetricChip lbsBlue"><b class="metricValue lbsBlue">${model.lbs}</b> lbs</span>
-            <span class="catchMetric tripCardMetricChip"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
+            ${metricRows}
             ${model.settlementText ? `<span class="tripCardSettlementSubtle">${escapeHtml(model.settlementText)}</span>` : ""}
           </div>
         </div>

@@ -104,7 +104,7 @@ export function createTripsBrowseScreenRenderer(deps){
     `;
 
     const rows = sorted.length
-      ? sorted.map(t=> renderStandardInteractiveTripCard(t)).join("")
+      ? sorted.map(t=> renderStandardInteractiveTripCard(t, { variant: "tripsBrowse" })).join("")
       : `
         <div class="emptyState tripsEmptyState">
           <div class="emptyStateTitle">No trips in this Trips view</div>

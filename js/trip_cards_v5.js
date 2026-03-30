@@ -30,12 +30,12 @@ export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, re
 
   function renderStandardReadOnlyTripCard(t, opts = {}){
     const model = resolveTripCardModel(t, opts);
-    return renderTripCardHTML(model, { interactive: false });
+    return renderTripCardHTML(model, { interactive: false, variant: opts.variant || "standard" });
   }
 
   function renderStandardInteractiveTripCard(t, opts = {}){
     const model = resolveTripCardModel(t, opts);
-    return renderTripCardHTML(model, { interactive: true });
+    return renderTripCardHTML(model, { interactive: true, variant: opts.variant || "standard" });
   }
 
   // Legacy alias while callers migrate to explicit shared APIs.
