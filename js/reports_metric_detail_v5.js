@@ -468,22 +468,6 @@ export function createReportsMetricDetailSeam(deps){
       if(targetMetric === "ppl") return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
       return `${to2(value)}`;
     };
-    const amountMixChart = detailCharts.amountDealerMix?.labels?.length
-      ? detailCharts.amountDealerMix
-      : (detailCharts.amountAreaMix?.labels?.length ? detailCharts.amountAreaMix : null);
-    const amountMixMeta = detailCharts.amountDealerMix?.labels?.length
-      ? {
-        title: "Total amount by dealer",
-        context: "Bars • top dealers in this Home filter",
-        canvasId: "c_amount_dealer_mix"
-      }
-      : (detailCharts.amountAreaMix?.labels?.length
-        ? {
-          title: "Strongest areas by amount",
-          context: "Bars • top areas in this Home filter",
-          canvasId: "c_amount_area_mix"
-        }
-        : null);
     const homeSecondaryChartsByMetric = {
       trips: [
         detailCharts.tripsMonthlyTrend ? {
@@ -532,11 +516,18 @@ export function createReportsMetricDetailSeam(deps){
           chartModel: detailCharts.amountTrend,
           metricKey: "amount"
         } : null,
-        amountMixChart && amountMixMeta ? {
-          title: amountMixMeta.title,
-          context: amountMixMeta.context,
-          canvasId: amountMixMeta.canvasId,
-          chartModel: amountMixChart,
+        detailCharts.amountDealerMix?.labels?.length ? {
+          title: "Total amount by dealer",
+          context: "Bars • top dealers in this Home filter",
+          canvasId: "c_amount_dealer_mix",
+          chartModel: detailCharts.amountDealerMix,
+          metricKey: "amount"
+        } : null,
+        detailCharts.amountAreaMix?.labels?.length ? {
+          title: "Strongest areas by amount",
+          context: "Bars • top areas in this Home filter",
+          canvasId: "c_amount_area_mix",
+          chartModel: detailCharts.amountAreaMix,
           metricKey: "amount"
         } : null,
         detailCharts.amountPerTripTrend ? {
