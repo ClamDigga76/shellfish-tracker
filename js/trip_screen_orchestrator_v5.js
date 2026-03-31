@@ -49,6 +49,16 @@ function createTripMetricSyncEngine({ parseNum, parseMoney, syncTargets }) {
   };
 }
 
+const METRIC_HELPER_TEXT_BY_PAIR = Object.freeze({
+  "pounds+rate": "Pounds × Pay Rate = Amount (auto-calculated).",
+  "pounds+amount": "Pay Rate is auto-calculated from Pounds + Amount."
+});
+
+function getMetricHelperText(lockPair = []) {
+  const key = Array.isArray(lockPair) ? lockPair.join("+") : "";
+  return METRIC_HELPER_TEXT_BY_PAIR[key] || METRIC_HELPER_TEXT_BY_PAIR["pounds+rate"];
+}
+
 export function createTripScreenOrchestrator({
   state,
   ensureAreas,
@@ -185,7 +195,10 @@ const newTripFormHtml = renderTripEntryForm({
       tertiaryActionId: "clearDraft",
       dateIconHtml: iconSvg("calendar"),
       showSpeciesField: false,
-      showNotesField: false
+      showNotesField: false,
+      metricStateHelperId: "tripMetricStateHelperNew",
+      metricStateHelperText: getMetricHelperText(["pounds", "rate"]),
+      areaGuidanceText: "If the exact area is unknown, choose Area Not Recorded to save this trip accurately."
     }).replace("card formCard", "formCard");
 
 ;getApp().innerHTML = `
@@ -217,6 +230,11 @@ const newTripFormHtml = renderTripEntryForm({
       rate: elRate
     }
   });
+  const metricStateHelperEl = document.getElementById("tripMetricStateHelperNew");
+  const updateMetricStateHelper = ()=>{
+    if(!metricStateHelperEl) return;
+    metricStateHelperEl.textContent = getMetricHelperText(metricSync.getLockPair());
+  };
   const updateRateLine = metricSync.updateDerivedField;
   const updateSettlementLine = ()=>{
     if(!elWrittenCheckAmount) return;
@@ -236,6 +254,7 @@ const newTripFormHtml = renderTripEntryForm({
       hintEl.style.display = hintEl.textContent ? "block" : "none";
     }
   };
+  updateMetricStateHelper();
   if(elSettlementToggle){
     elSettlementToggle.addEventListener("click", ()=>{
       const panel = document.querySelector("#newTripForm [data-settlement-panel]");
@@ -362,6 +381,7 @@ const newTripFormHtml = renderTripEntryForm({
     elPounds.addEventListener("focus", prime);
     elPounds.addEventListener("input", ()=>{
       metricSync.onUserEdit("pounds");
+      updateMetricStateHelper();
       const s = sanitizeDecimalInput(elPounds.value);
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
@@ -383,6 +403,7 @@ const newTripFormHtml = renderTripEntryForm({
     elRate.addEventListener("focus", prime);
     elRate.addEventListener("input", ()=>{
       metricSync.onUserEdit("rate");
+      updateMetricStateHelper();
       const s = sanitizeDecimalInput(elRate.value);
       if(s !== elRate.value) elRate.value = s;
       updateRateLine();
@@ -406,6 +427,7 @@ const newTripFormHtml = renderTripEntryForm({
     elAmount.addEventListener("focus", prime);
     elAmount.addEventListener("input", ()=>{
       metricSync.onUserEdit("amount");
+      updateMetricStateHelper();
       const s = sanitizeDecimalInput(elAmount.value);
       if(s !== elAmount.value) elAmount.value = s;
       updateRateLine();
@@ -632,6 +654,7 @@ if(topDealerWrap && elDealer){
   updateSaveEnabled();
   updateRateLine();
   updateSettlementLine();
+  updateMetricStateHelper();
 }
 
 
@@ -1137,7 +1160,10 @@ function renderEditTrip(){
       extraCardClass: "edit-mode",
       dateIconHtml: iconSvg("calendar"),
       showSpeciesField: false,
-      showNotesField: false
+      showNotesField: false,
+      metricStateHelperId: "tripMetricStateHelperEdit",
+      metricStateHelperText: getMetricHelperText(["pounds", "rate"]),
+      areaGuidanceText: "If the exact area is unknown, choose Area Not Recorded to keep this trip complete."
     }).replace("card formCard", "formCard");
 
   getApp().innerHTML = `
@@ -1172,6 +1198,11 @@ function renderEditTrip(){
       rate: elRate
     }
   });
+  const metricStateHelperEl = document.getElementById("tripMetricStateHelperEdit");
+  const updateMetricStateHelper = ()=>{
+    if(!metricStateHelperEl) return;
+    metricStateHelperEl.textContent = getMetricHelperText(metricSync.getLockPair());
+  };
   const updateRateLine = metricSync.updateDerivedField;
   const updateSettlementLine = ()=>{
     if(!elWrittenCheckAmount) return;
@@ -1387,6 +1418,7 @@ function renderEditTrip(){
   updateSaveEnabled();
   updateRateLine();
   updateSettlementLine();
+  updateMetricStateHelper();
 
   // Big-number keypad + better formatting (match New Trip)
   if(elPounds && !elPounds.__boundNumeric){
@@ -1396,6 +1428,7 @@ function renderEditTrip(){
     elPounds.addEventListener("focus", prime);
     elPounds.addEventListener("input", ()=>{
       metricSync.onUserEdit("pounds");
+      updateMetricStateHelper();
       const s = sanitizeDecimalInput(elPounds.value);
       if(s !== elPounds.value) elPounds.value = s;
       updateSaveEnabled();
@@ -1417,6 +1450,7 @@ function renderEditTrip(){
     elRate.addEventListener("focus", prime);
     elRate.addEventListener("input", ()=>{
       metricSync.onUserEdit("rate");
+      updateMetricStateHelper();
       const s = sanitizeDecimalInput(elRate.value);
       if(s !== elRate.value) elRate.value = s;
       updateRateLine();
@@ -1440,6 +1474,7 @@ function renderEditTrip(){
     elAmount.addEventListener("focus", prime);
     elAmount.addEventListener("input", ()=>{
       metricSync.onUserEdit("amount");
+      updateMetricStateHelper();
       const s = sanitizeDecimalInput(elAmount.value);
       if(s !== elAmount.value) elAmount.value = s;
       updateRateLine();

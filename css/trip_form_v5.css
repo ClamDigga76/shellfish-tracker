@@ -99,6 +99,20 @@ body[data-view="edit"] .chip-selector{
   text-shadow:0 1px 0 rgba(0,0,0,.18);
   user-select:none;
 }
+.tripMetricStateHelper{
+  margin-top:9px;
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.35;
+}
+.tripAreaGuidance{
+  margin-top:8px;
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.35;
+}
 .tripSettlementReveal{
   margin-top:8px;
   border:0;
