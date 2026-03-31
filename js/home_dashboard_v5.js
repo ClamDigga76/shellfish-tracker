@@ -93,8 +93,22 @@ export function createHomeDashboardRenderer({
     const avgAmountPerTrip = trips.length ? (totalAmount / trips.length) : null;
     const avgPoundsPerTrip = trips.length ? (totalLbs / trips.length) : null;
 
+    const formatGroupedHomeNumber = (value, { maximumFractionDigits = 2 } = {}) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return "0";
+      try {
+        return new Intl.NumberFormat("en-US", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits
+        }).format(numeric);
+      } catch {
+        return numeric.toLocaleString("en-US", { maximumFractionDigits });
+      }
+    };
+
     const lbsVal = round2(totalLbs);
-    const lbsStr = (Number.isFinite(lbsVal) && Math.abs(lbsVal % 1) < 1e-9) ? String(Math.trunc(lbsVal)) : String(lbsVal);
+    const lbsStr = formatGroupedHomeNumber(lbsVal);
+    const tripsStr = formatGroupedHomeNumber(trips.length, { maximumFractionDigits: 0 });
     const moneyRounded = (() => {
       const v = Math.round(Number(totalAmount) || 0);
       try { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v); }
@@ -310,7 +324,7 @@ export function createHomeDashboardRenderer({
           <div class="kpiRow">
             <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="trips" aria-label="Open trips detail">
               <div class="kpiLabel trips">Trips</div>
-              <div class="kpiValue trips"><span class="kpiValueFit">${trips.length}</span></div>
+              <div class="kpiValue trips"><span class="kpiValueFit">${tripsStr}</span></div>
             </button>
             <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="pounds" aria-label="Open pounds detail">
               <div class="kpiLabel lbsBlue">Pounds</div>
@@ -325,6 +339,15 @@ export function createHomeDashboardRenderer({
               <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
             </button>
           </div>
+        </section>
+
+        <section class="homeSection homeLastTripShell">
+          <div class="homeLastTripHeaderRow">
+            <div class="homeLastTripHeader reportsHeroEyebrow">Last Saved Trip</div>
+            <div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>
+          </div>
+          ${lastSavedTripContextHtml}
+          ${lastSavedTripHtml}
         </section>
 
         <section class="homeSection homeOverviewCard">
@@ -351,15 +374,6 @@ export function createHomeDashboardRenderer({
               <div class="reportsHeroMeta money">${strongestArea ? formatMoney(round2(strongestArea.amount)) : "No trips in range"}</div>
             </div>
           </div>
-        </section>
-
-        <section class="homeSection homeLastTripShell">
-          <div class="homeLastTripHeaderRow">
-            <div class="homeLastTripHeader reportsHeroEyebrow">Last Saved Trip</div>
-            <div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>
-          </div>
-          ${lastSavedTripContextHtml}
-          ${lastSavedTripHtml}
         </section>
       </div>
 
