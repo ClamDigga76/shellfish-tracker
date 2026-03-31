@@ -136,7 +136,6 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     entityRows: dealerRows,
     safeTrips,
     entityType: "dealer",
-    metricKey: "amount",
     period,
     minEntityTrips: 2,
     minBaselineAmount: 25
@@ -146,7 +145,6 @@ export function buildReportsCompareFoundation({ trips, monthRows, dealerRows, ar
     entityRows: areaRows,
     safeTrips,
     entityType: "area",
-    metricKey: "amount",
     period,
     minEntityTrips: 2,
     minBaselineAmount: 25
@@ -256,9 +254,11 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
   }
 
   const entityStats = buildEntityPeriodRows({ trips: safeTrips, entityType, period });
+  const metricConfig = getEntityMetricConfig(entityType);
   const movement = buildEntityMovementModel({
     entityStats,
     entityType,
+    metricConfig,
     minEntityTrips,
     minBaselineAmount,
     period
@@ -279,7 +279,7 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
         confidence: "none",
         confidenceLabel: "suppressed",
         suppressionCode: "entity-baseline-too-sparse",
-        reason: `No ${entityType} compare yet: no ${entityType} has at least ${minEntityTrips} trips in both periods and ${formatAmountFloor(minBaselineAmount)} in the earlier period.${entityName ? ` Closest option: ${entityName} (${curTrips}/${prevTrips} trips, ${formatAmountFloor(prevAmount)} earlier).` : ""}`
+        reason: `No ${entityType} compare yet: no ${entityType} has enough support in both periods for ${metricConfig.primaryLabel.toLowerCase()} compare.${entityName ? ` Closest option: ${entityName} (${curTrips}/${prevTrips} trips, ${formatAmountFloor(prevAmount)} earlier).` : ""}`
       }),
       leaders: buildLeadersPayload(movement),
       movement: buildMovementPayload(movement),
@@ -289,17 +289,17 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
   }
 
   const metric = buildMetricComparePayload({
-    metricKey: `${entityType}-amount`,
-    label: `${capitalize(entityType)} amount`,
-    currentValue: viable.current.amount,
-    previousValue: viable.previous.amount,
+    metricKey: `${entityType}-${metricConfig.primaryMetricKey}`,
+    label: `${capitalize(entityType)} ${metricConfig.primaryLabel.toLowerCase()}`,
+    currentValue: safeNum(viable.current?.[metricConfig.primaryMetricKey]),
+    previousValue: safeNum(viable.previous?.[metricConfig.primaryMetricKey]),
     period,
-    minBaseline: minBaselineAmount,
-    epsilonPct: 0.06,
+    minBaseline: metricConfig.primaryBaseline,
+    epsilonPct: metricConfig.primaryEpsilonPct,
     minTrips: minEntityTrips,
     minUniqueDays: 1,
-    baselineOk: viable.previous.amount >= minBaselineAmount,
-    baselineReason: `${capitalize(entityType)} compare is held back: ${viable.name} needs at least ${formatAmountFloor(minBaselineAmount)} in the earlier period for a fair % compare.`
+    baselineOk: metricConfig.baselineOk(viable, minEntityTrips, minBaselineAmount),
+    baselineReason: metricConfig.baselineReason(viable, minEntityTrips, minBaselineAmount)
   });
 
   return {
@@ -313,6 +313,10 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
     currentUniqueDays: viable.current.uniqueDays,
     previousUniqueDays: viable.previous.uniqueDays,
     compareTarget: viable.name,
+    compareMetric: metricConfig.primaryMetricKey,
+    compareMetricLabel: metricConfig.primaryLabel,
+    shareMetric: metricConfig.shareMetricKey,
+    shareLabel: metricConfig.shareLabel,
     candidateCount: ranked.length,
     confidence: viable.confidence,
     confidenceLabel: viable.confidenceLabel,
@@ -327,11 +331,12 @@ function buildEntityComparePayload({ entityRows, safeTrips, entityType, period, 
   };
 }
 
-function buildEntityMovementModel({ entityStats, entityType, minEntityTrips, minBaselineAmount, period }){
-  const currentTotal = safeNum(period?.current?.amount);
-  const previousTotal = safeNum(period?.previous?.amount);
+function buildEntityMovementModel({ entityStats, entityType, metricConfig, minEntityTrips, minBaselineAmount, period }){
+  const currentTotal = safeNum(period?.current?.[metricConfig.shareMetricPeriodKey]);
+  const previousTotal = safeNum(period?.previous?.[metricConfig.shareMetricPeriodKey]);
   const enriched = (Array.isArray(entityStats) ? entityStats : []).map((row)=> enrichEntityMovementRow({
     row,
+    metricConfig,
     currentTotal,
     previousTotal,
     minEntityTrips,
@@ -342,8 +347,8 @@ function buildEntityMovementModel({ entityStats, entityType, minEntityTrips, min
     .sort((a, b)=> compareEntityRows(a, b));
   const compareCandidates = ranked.filter((row)=> row.compareEligible);
   const compareTarget = compareCandidates[0] || null;
-  const currentLeader = ranked.filter((row)=> row.current.amount > 0).sort((a, b)=> b.current.amount - a.current.amount)[0] || null;
-  const previousLeader = ranked.filter((row)=> row.previous.amount > 0).sort((a, b)=> b.previous.amount - a.previous.amount)[0] || null;
+  const currentLeader = ranked.filter((row)=> safeNum(row.current?.[metricConfig.leaderMetricKey]) > 0).sort((a, b)=> safeNum(b.current?.[metricConfig.leaderMetricKey]) - safeNum(a.current?.[metricConfig.leaderMetricKey]))[0] || null;
+  const previousLeader = ranked.filter((row)=> safeNum(row.previous?.[metricConfig.leaderMetricKey]) > 0).sort((a, b)=> safeNum(b.previous?.[metricConfig.leaderMetricKey]) - safeNum(a.previous?.[metricConfig.leaderMetricKey]))[0] || null;
   const positiveMovers = ranked.filter((row)=> row.movementEligible && row.deltaValue > 0).sort((a, b)=> compareMovementRows(a, b));
   const negativeMovers = ranked.filter((row)=> row.movementEligible && row.deltaValue < 0).sort((a, b)=> compareMovementRows(a, b));
   const shareGainers = ranked.filter((row)=> row.shareShiftEligible && row.shareDeltaPct > 0).sort((a, b)=> compareShareShiftRows(a, b));
@@ -363,36 +368,36 @@ function buildEntityMovementModel({ entityStats, entityType, minEntityTrips, min
     topShareDecliner: shareDecliners[0] || null,
     leaderChangeSupported,
     currentTotal,
-    previousTotal
+    previousTotal,
+    shareLabel: metricConfig.shareLabel,
+    shareMetricKey: metricConfig.shareMetricKey,
+    primaryMetricKey: metricConfig.primaryMetricKey,
+    primaryLabel: metricConfig.primaryLabel
   };
 }
 
-function enrichEntityMovementRow({ row, currentTotal, previousTotal, minEntityTrips, minBaselineAmount }){
+function enrichEntityMovementRow({ row, metricConfig, currentTotal, previousTotal, minEntityTrips, minBaselineAmount }){
   const currentAmount = safeNum(row?.current?.amount);
   const previousAmount = safeNum(row?.previous?.amount);
-  const deltaValue = currentAmount - previousAmount;
-  const deltaPct = previousAmount >= minBaselineAmount ? (deltaValue / previousAmount) : null;
-  const currentSharePct = currentTotal > 0 ? (currentAmount / currentTotal) * 100 : 0;
-  const previousSharePct = previousTotal > 0 ? (previousAmount / previousTotal) * 100 : 0;
+  const currentPrimary = safeNum(row?.current?.[metricConfig.primaryMetricKey]);
+  const previousPrimary = safeNum(row?.previous?.[metricConfig.primaryMetricKey]);
+  const deltaValue = currentPrimary - previousPrimary;
+  const deltaPct = metricConfig.percentBaselineOk(row, minBaselineAmount) ? (deltaValue / Math.max(previousPrimary, 0.0001)) : null;
+  const currentShareValue = safeNum(row?.current?.[metricConfig.shareMetricKey]);
+  const previousShareValue = safeNum(row?.previous?.[metricConfig.shareMetricKey]);
+  const currentSharePct = currentTotal > 0 ? (currentShareValue / currentTotal) * 100 : 0;
+  const previousSharePct = previousTotal > 0 ? (previousShareValue / previousTotal) * 100 : 0;
   const shareDeltaPct = currentSharePct - previousSharePct;
   const supportScore = scoreSupport({
     currentTrips: row?.current?.trips,
     previousTrips: row?.previous?.trips,
     currentDays: row?.current?.uniqueDays,
     previousDays: row?.previous?.uniqueDays,
-    baselineRatio: previousAmount / Math.max(1, minBaselineAmount)
+    baselineRatio: metricConfig.supportBaselineRatio(row, minBaselineAmount)
   });
   const supportConfidence = classifyConfidenceFromScore(supportScore);
-  const movementBaselineAmount = Math.max(15, minBaselineAmount * 0.6);
-  const movementEligible = row?.current?.trips >= 1
-    && row?.previous?.trips >= 1
-    && row?.current?.uniqueDays >= 1
-    && row?.previous?.uniqueDays >= 1
-    && (safeNum(row?.current?.trips) + safeNum(row?.previous?.trips)) >= Math.max(3, minEntityTrips + 1)
-    && (currentAmount >= movementBaselineAmount || previousAmount >= movementBaselineAmount);
-  const compareEligible = row?.current?.trips >= minEntityTrips
-    && row?.previous?.trips >= minEntityTrips
-    && previousAmount >= minBaselineAmount;
+  const movementEligible = metricConfig.movementEligible(row, minEntityTrips, minBaselineAmount);
+  const compareEligible = metricConfig.compareEligible(row, minEntityTrips, minBaselineAmount);
   const shareShiftEligible = movementEligible && currentTotal >= minBaselineAmount * 3 && previousTotal >= minBaselineAmount * 3;
   const movementStrength = Math.abs(deltaValue) + (Math.abs(shareDeltaPct) * 2) + (supportScore * 10);
 
@@ -458,6 +463,10 @@ function buildMovementEntitySummary(row){
     name: row.name,
     currentAmount: row.current.amount,
     previousAmount: row.previous.amount,
+    currentLbs: row.current.lbs,
+    previousLbs: row.previous.lbs,
+    currentPpl: row.current.ppl,
+    previousPpl: row.previous.ppl,
     deltaValue: row.deltaValue,
     deltaPct: row.deltaPct,
     compareTone: row.compareTone,
@@ -483,7 +492,7 @@ function buildEntityExplanation({ entityType, viable, movement }){
     parts.push(`${leaderChange.currentLeader.name} took the lead from ${leaderChange.previousLeader.name}.`);
   }
   if(shareShift.gainer && Math.abs(safeNum(shareShift.gainer.shareDeltaPct)) >= 3){
-    parts.push(`${shareShift.gainer.name} gained ${formatShareDelta(shareShift.gainer.shareDeltaPct)} of ${entityType} dollars.`);
+    parts.push(`${shareShift.gainer.name} gained ${formatShareDelta(shareShift.gainer.shareDeltaPct)} of ${movement?.shareLabel || "share"}.`);
   }
   if(shareShift.decliner && Math.abs(safeNum(shareShift.decliner.shareDeltaPct)) >= 3 && shareShift.decliner.name !== shareShift.gainer?.name){
     parts.push(`${shareShift.decliner.name} gave back ${formatShareDelta(shareShift.decliner.shareDeltaPct)}.`);
@@ -497,16 +506,72 @@ function compareEntityRows(a, b){
     previousTrips: a.previous.trips,
     currentDays: a.current.uniqueDays,
     previousDays: a.previous.uniqueDays,
-    baselineRatio: a.previous.amount / 25
-  }) + ((a.current.amount + a.previous.amount) / 1000) + (Math.abs(a.shareDeltaPct) / 20);
+    baselineRatio: Math.max(a.previous.amount / 25, a.previous.lbs / 10, a.previous.ppl / 1)
+  }) + ((a.current.amount + a.previous.amount) / 1000) + ((a.current.lbs + a.previous.lbs) / 120) + ((a.current.ppl + a.previous.ppl) * 2) + (Math.abs(a.shareDeltaPct) / 20);
   const bScore = scoreSupport({
     currentTrips: b.current.trips,
     previousTrips: b.previous.trips,
     currentDays: b.current.uniqueDays,
     previousDays: b.previous.uniqueDays,
-    baselineRatio: b.previous.amount / 25
-  }) + ((b.current.amount + b.previous.amount) / 1000) + (Math.abs(b.shareDeltaPct) / 20);
+    baselineRatio: Math.max(b.previous.amount / 25, b.previous.lbs / 10, b.previous.ppl / 1)
+  }) + ((b.current.amount + b.previous.amount) / 1000) + ((b.current.lbs + b.previous.lbs) / 120) + ((b.current.ppl + b.previous.ppl) * 2) + (Math.abs(b.shareDeltaPct) / 20);
   return bScore - aScore;
+}
+
+function getEntityMetricConfig(entityType){
+  if(entityType === "area"){
+    return {
+      primaryMetricKey: "lbs",
+      primaryLabel: "Pounds",
+      leaderMetricKey: "lbs",
+      shareMetricKey: "lbs",
+      shareMetricPeriodKey: "lbs",
+      shareLabel: "area pounds share",
+      primaryBaseline: 10,
+      primaryEpsilonPct: 0.05,
+      baselineOk: (row, minEntityTrips)=> row?.current?.trips >= minEntityTrips && row?.previous?.trips >= minEntityTrips && safeNum(row?.previous?.lbs) >= 10,
+      baselineReason: (row, minEntityTrips)=> `Area compare is held back: ${row?.name || "this area"} needs at least ${minEntityTrips} trips in both periods and 10 lbs in the earlier period.`,
+      compareEligible: (row, minEntityTrips)=> row?.current?.trips >= minEntityTrips && row?.previous?.trips >= minEntityTrips && safeNum(row?.previous?.lbs) >= 10,
+      movementEligible: (row, minEntityTrips)=> row?.current?.trips >= 1
+        && row?.previous?.trips >= 1
+        && row?.current?.uniqueDays >= 1
+        && row?.previous?.uniqueDays >= 1
+        && (safeNum(row?.current?.trips) + safeNum(row?.previous?.trips)) >= Math.max(3, minEntityTrips + 1)
+        && (safeNum(row?.current?.lbs) >= 8 || safeNum(row?.previous?.lbs) >= 8),
+      percentBaselineOk: (row)=> safeNum(row?.previous?.lbs) >= 10,
+      supportBaselineRatio: (row)=> safeNum(row?.previous?.lbs) / 10
+    };
+  }
+  return {
+    primaryMetricKey: "ppl",
+    primaryLabel: "Pay rate ($/lb)",
+    leaderMetricKey: "ppl",
+    shareMetricKey: "amount",
+    shareMetricPeriodKey: "amount",
+    shareLabel: "dealer dollars share",
+    primaryBaseline: 0.1,
+    primaryEpsilonPct: 0.035,
+    baselineOk: (row, minEntityTrips)=> row?.current?.trips >= minEntityTrips
+      && row?.previous?.trips >= minEntityTrips
+      && safeNum(row?.current?.lbs) >= 10
+      && safeNum(row?.previous?.lbs) >= 10
+      && safeNum(row?.previous?.ppl) > 0,
+    baselineReason: (row, minEntityTrips)=> `Dealer compare is held back: ${row?.name || "this dealer"} needs at least ${minEntityTrips} trips in both periods and 10 lbs in each period before $/lb compare.`,
+    compareEligible: (row, minEntityTrips)=> row?.current?.trips >= minEntityTrips
+      && row?.previous?.trips >= minEntityTrips
+      && safeNum(row?.current?.lbs) >= 10
+      && safeNum(row?.previous?.lbs) >= 10
+      && safeNum(row?.previous?.ppl) > 0,
+    movementEligible: (row, minEntityTrips)=> row?.current?.trips >= 1
+      && row?.previous?.trips >= 1
+      && row?.current?.uniqueDays >= 1
+      && row?.previous?.uniqueDays >= 1
+      && (safeNum(row?.current?.trips) + safeNum(row?.previous?.trips)) >= Math.max(3, minEntityTrips + 1)
+      && (safeNum(row?.current?.lbs) >= 5 || safeNum(row?.previous?.lbs) >= 5)
+      && (safeNum(row?.current?.ppl) > 0 || safeNum(row?.previous?.ppl) > 0),
+    percentBaselineOk: (row)=> safeNum(row?.previous?.lbs) >= 10 && safeNum(row?.previous?.ppl) > 0,
+    supportBaselineRatio: (row)=> Math.min(safeNum(row?.previous?.lbs) / 10, safeNum(row?.previous?.ppl) / 1)
+  };
 }
 
 function compareMovementRows(a, b){

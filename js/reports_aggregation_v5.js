@@ -349,12 +349,16 @@ export function buildEntityPeriodRows({ trips, entityType, period }){
     if(!map.has(key)){
       map.set(key, {
         name,
-        current: { amount: 0, trips: 0, uniqueDays: 0, _days: new Set() },
-        previous: { amount: 0, trips: 0, uniqueDays: 0, _days: new Set() }
+        current: { amount: 0, lbs: 0, rateWeightedLbsTotal: 0, trips: 0, uniqueDays: 0, _days: new Set() },
+        previous: { amount: 0, lbs: 0, rateWeightedLbsTotal: 0, trips: 0, uniqueDays: 0, _days: new Set() }
       });
     }
     const row = map.get(key);
+    const lbs = Number(t?.pounds) || 0;
+    const rate = resolveTripPayRate(t);
     row[bucket].amount += Number(t?.amount) || 0;
+    row[bucket].lbs += lbs;
+    row[bucket].rateWeightedLbsTotal += (Number.isFinite(rate) && rate > 0 && lbs > 0) ? (rate * lbs) : 0;
     row[bucket].trips += 1;
     row[bucket]._days.add(iso);
   });
@@ -388,10 +392,15 @@ export function buildMonthWindowValueSeries({ monthRows, trips, dayLimit, metric
 }
 
 function finalizeEntityPeriodBucket(bucket){
+  const lbs = Number(bucket?.lbs) || 0;
+  const amount = Number(bucket?.amount) || 0;
   return {
-    amount: Number(bucket?.amount) || 0,
+    amount,
+    lbs,
+    ppl: lbs > 0 ? (Number(bucket?.rateWeightedLbsTotal) || 0) / lbs : 0,
     trips: Number(bucket?.trips) || 0,
-    uniqueDays: bucket?._days instanceof Set ? bucket._days.size : (Number(bucket?.uniqueDays) || 0)
+    uniqueDays: bucket?._days instanceof Set ? bucket._days.size : (Number(bucket?.uniqueDays) || 0),
+    amountPerTrip: bucket?.trips > 0 ? amount / bucket.trips : 0
   };
 }
 
