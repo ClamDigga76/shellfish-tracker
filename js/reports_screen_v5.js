@@ -836,7 +836,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     : buildReportsSeasonalityFoundation({ trips: seasonalityTrips, nowDate: new Date() });
 
   const compareFoundation = isHomeMetricDetail
-    ? reportsMetricDetailSeam.buildHomeMetricDetailFoundation({ monthRows })
+    ? reportsMetricDetailSeam.buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows })
     : buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
   const highlightsStrip = renderReportsHighlightsStrip({
     dealerRows,
@@ -1217,16 +1217,41 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
 
   if(activeMetricDetail){
+    const homeSecondaryChartByCanvasId = {
+      c_trips_monthly_trend: detailCharts.tripsMonthlyTrend,
+      c_trips_active_days: detailCharts.tripsActiveDaysTrend,
+      c_trips_pounds_per_trip: detailCharts.tripsPoundsPerTripTrend,
+      c_trips_activity_rhythm: detailCharts.tripsActivityRhythmTrend,
+      c_pounds_monthly_trend: detailCharts.poundsMonthlyTrend,
+      c_pounds_per_trip_trend: detailCharts.poundsPerTripTrend,
+      c_pounds_per_day_trend: detailCharts.poundsPerDayTrend,
+      c_pounds_area_mix: detailCharts.poundsAreaMix,
+      c_amount_trend: detailCharts.amountTrend,
+      c_amount_dealer_mix: detailCharts.amountDealerMix,
+      c_amount_per_trip_trend: detailCharts.amountPerTripTrend,
+      c_amount_per_day_trend: detailCharts.amountPerDayTrend,
+      c_amount_area_mix: detailCharts.amountAreaMix,
+      c_ppl_monthly_trend: detailCharts.pplMonthlyTrend,
+      c_ppl_dealer_leaders: detailCharts.pplDealerLeaders,
+      c_ppl_rate_vs_pounds: detailCharts.pplRateVsPoundsTrend
+    };
+    const metricDetailSurface = getApp().querySelector(".reportsMetricDetailSurface");
+    const secondaryCharts = metricDetailSurface
+      ? Array.from(metricDetailSurface.querySelectorAll("canvas.chart[id]"))
+        .map((canvas)=> {
+          const canvasId = String(canvas?.id || "").trim();
+          if(!canvasId || canvasId === "c_trips" || canvasId === "c_lbs" || canvasId === "c_amount_detail" || canvasId === "c_ppl") return null;
+          if(canvasId === "c_dealer") return { canvasId, chartModel: null, metricKey: "amount" };
+          const chartModel = homeSecondaryChartByCanvasId[canvasId] || null;
+          return chartModel ? { canvasId, chartModel, metricKey: String(chartModel.metricKey || activeMetricDetail) } : null;
+        })
+        .filter(Boolean)
+      : [];
     scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, {
       metricDetail: {
         metricKey: activeMetricDetail,
         compareChart: primaryBasisByMetric?.[activeMetricDetail]?.primaryChart || detailCharts?.[activeMetricDetail] || null,
-        secondaryCharts: activeMetricDetail === "amount"
-          ? [
-            detailCharts.amountTrend ? { canvasId: "c_amount_trend", chartModel: detailCharts.amountTrend, metricKey: "amount" } : null,
-            document.getElementById("c_dealer") ? { canvasId: "c_dealer", chartModel: null, metricKey: "amount" } : null
-          ].filter(Boolean)
-          : []
+        secondaryCharts
       }
     });
     return;

@@ -163,26 +163,72 @@ function buildHomeCompareBarChart({ labels, metricKey, currentValue, previousVal
   };
 }
 
-function buildHomeDetailCharts({ monthRows, period }){
+function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel = "Visible Home month view" }){
+  const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows : []);
+  return {
+    chartType: "time-series",
+    metricKey,
+    basisLabel,
+    monthKeys: safeMonths.map((row)=> String(row?.monthKey || "")),
+    labels: safeMonths.map((row)=> String(row?.label || row?.monthKey || "")),
+    values: safeMonths.map((row)=> Number(row?.[valueKey]) || 0)
+  };
+}
+
+function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxItems = 5 }){
+  const safeRows = Array.isArray(rows)
+    ? rows
+      .filter((row)=> Number(row?.[valueKey]) > 0)
+      .slice(0, maxItems)
+    : [];
+  return {
+    chartType: "compare-bars",
+    metricKey,
+    basisLabel: String(basisLabel || "Visible Home month view"),
+    labels: safeRows.map((row)=> String(row?.name || "—")),
+    values: safeRows.map((row)=> Number(row?.[valueKey]) || 0)
+  };
+}
+
+function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows : []);
   const labels = [
     String(period?.previousLabel || "Previous month"),
     String(period?.currentLabel || "Current month")
   ];
-  const amountTrendChart = {
-    chartType: "time-series",
-    metricKey: "amount",
-    basisLabel: "Visible Home month view",
-    monthKeys: safeMonths.map((row)=> String(row?.monthKey || "")),
-    labels: safeMonths.map((row)=> String(row?.label || row?.monthKey || "")),
-    values: safeMonths.map((row)=> Number(row?.amt) || 0)
-  };
+  const areaRowsByPounds = Array.isArray(areaRows)
+    ? areaRows.slice().sort((a,b)=> (Number(b?.lbs) || 0) - (Number(a?.lbs) || 0))
+    : [];
+  const areaRowsByAmount = Array.isArray(areaRows)
+    ? areaRows.slice().sort((a,b)=> (Number(b?.amt) || 0) - (Number(a?.amt) || 0))
+    : [];
+  const dealerRowsByRate = Array.isArray(dealerRows)
+    ? dealerRows
+      .slice()
+      .filter((row)=> (Number(row?.lbs) || 0) > 0 && (Number(row?.avg) || 0) > 0)
+      .sort((a,b)=> (Number(b?.avg) || 0) - (Number(a?.avg) || 0))
+    : [];
   return {
     trips: buildHomeCompareBarChart({ labels, metricKey: "trips", currentValue: period?.current?.trips, previousValue: period?.previous?.trips }),
+    tripsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
+    tripsActiveDaysTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "fishingDays" }),
+    tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
+    tripsActivityRhythmTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "tripsPerFishingDay" }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
+    poundsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" }),
+    poundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
+    poundsPerDayTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerDay" }),
+    poundsAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByPounds, metricKey: "pounds", valueKey: "lbs", basisLabel: "Strongest areas by pounds in this Home filter" }),
     amount: buildHomeCompareBarChart({ labels, metricKey: "amount", currentValue: period?.current?.amount, previousValue: period?.previous?.amount }),
-    amountTrend: amountTrendChart,
-    ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl })
+    amountTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amt" }),
+    amountPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amountPerTrip" }),
+    amountPerDayTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amountPerDay" }),
+    amountDealerMix: buildHomeTopRowsBarChart({ rows: dealerRows, metricKey: "amount", valueKey: "amt", basisLabel: "Top dealers by amount in this Home filter" }),
+    amountAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByAmount, metricKey: "amount", valueKey: "amt", basisLabel: "Strongest areas by amount in this Home filter" }),
+    ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
+    pplMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg" }),
+    pplDealerLeaders: buildHomeTopRowsBarChart({ rows: dealerRowsByRate, metricKey: "ppl", valueKey: "avg", basisLabel: "Dealer pay-rate leaders in this Home filter" }),
+    pplRateVsPoundsTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" })
   };
 }
 
@@ -218,7 +264,7 @@ function buildMetricDetailPrimaryBasisMap({ period, metrics, detailCharts, sourc
   };
 }
 
-function buildHomeMetricDetailFoundation({ monthRows }){
+function buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows }){
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows.filter((row)=> row?.monthKey) : []);
   const currentMonth = safeMonths[safeMonths.length - 1] || null;
   const previousMonth = safeMonths[safeMonths.length - 2] || null;
@@ -229,7 +275,7 @@ function buildHomeMetricDetailFoundation({ monthRows }){
     ? buildHomeComparablePeriod({ currentMonth, previousMonth, current, previous })
     : buildHomeSuppressedPeriod({ currentMonth, previousMonth, current, previous });
   const metrics = buildHomeMetricPayloads(period);
-  const detailCharts = buildHomeDetailCharts({ monthRows: safeMonths, period });
+  const detailCharts = buildHomeDetailCharts({ monthRows: safeMonths, dealerRows, areaRows, period });
 
   return {
     period,
@@ -426,6 +472,128 @@ export function createReportsMetricDetailSeam(deps){
       if(targetMetric === "ppl") return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
       return `${to2(value)}`;
     };
+    const homeSecondaryChartsByMetric = {
+      trips: [
+        detailCharts.tripsMonthlyTrend ? {
+          title: "Monthly trips trend",
+          context: "Context • visible Home months in this filter",
+          canvasId: "c_trips_monthly_trend",
+          chartModel: detailCharts.tripsMonthlyTrend,
+          metricKey: "trips"
+        } : null,
+        detailCharts.tripsActiveDaysTrend ? {
+          title: "Active fishing days",
+          context: "Context • fishing days by visible Home month",
+          canvasId: "c_trips_active_days",
+          chartModel: detailCharts.tripsActiveDaysTrend,
+          metricKey: "trips"
+        } : null,
+        detailCharts.tripsPoundsPerTripTrend ? {
+          title: "Pounds per trip",
+          context: "Context • productivity by visible Home month",
+          canvasId: "c_trips_pounds_per_trip",
+          chartModel: detailCharts.tripsPoundsPerTripTrend,
+          metricKey: "pounds"
+        } : null,
+        detailCharts.tripsActivityRhythmTrend ? {
+          title: "Trip activity trend context",
+          context: "Context • trips per active fishing day",
+          canvasId: "c_trips_activity_rhythm",
+          chartModel: detailCharts.tripsActivityRhythmTrend,
+          metricKey: "trips"
+        } : null
+      ],
+      pounds: [
+        detailCharts.poundsMonthlyTrend ? {
+          title: "Monthly pounds trend",
+          context: "Context • visible Home months in this filter",
+          canvasId: "c_pounds_monthly_trend",
+          chartModel: detailCharts.poundsMonthlyTrend,
+          metricKey: "pounds"
+        } : null,
+        detailCharts.poundsPerTripTrend ? {
+          title: "Pounds per trip",
+          context: "Context • productivity by visible Home month",
+          canvasId: "c_pounds_per_trip_trend",
+          chartModel: detailCharts.poundsPerTripTrend,
+          metricKey: "pounds"
+        } : null,
+        detailCharts.poundsPerDayTrend ? {
+          title: "Pounds per fishing day",
+          context: "Context • fishing-day output across visible Home months",
+          canvasId: "c_pounds_per_day_trend",
+          chartModel: detailCharts.poundsPerDayTrend,
+          metricKey: "pounds"
+        } : null,
+        detailCharts.poundsAreaMix?.labels?.length ? {
+          title: "Strongest area by pounds",
+          context: "Context • top areas in this Home filter",
+          canvasId: "c_pounds_area_mix",
+          chartModel: detailCharts.poundsAreaMix,
+          metricKey: "pounds"
+        } : null
+      ],
+      amount: [
+        detailCharts.amountTrend ? {
+          title: "Amount trend across this range",
+          context: "Context • visible Home months in this filter",
+          canvasId: "c_amount_trend",
+          chartModel: detailCharts.amountTrend,
+          metricKey: "amount"
+        } : null,
+        detailCharts.amountDealerMix?.labels?.length ? {
+          title: "Dealer amount mix",
+          context: "Context • top dealers in this Home filter",
+          canvasId: "c_amount_dealer_mix",
+          chartModel: detailCharts.amountDealerMix,
+          metricKey: "amount"
+        } : null,
+        detailCharts.amountPerTripTrend ? {
+          title: "Amount per trip",
+          context: "Context • average amount per trip by visible Home month",
+          canvasId: "c_amount_per_trip_trend",
+          chartModel: detailCharts.amountPerTripTrend,
+          metricKey: "amount"
+        } : null,
+        detailCharts.amountPerDayTrend ? {
+          title: "Amount per fishing day",
+          context: "Context • average amount per active day by visible Home month",
+          canvasId: "c_amount_per_day_trend",
+          chartModel: detailCharts.amountPerDayTrend,
+          metricKey: "amount"
+        } : null,
+        detailCharts.amountAreaMix?.labels?.length ? {
+          title: "Strongest area by amount",
+          context: "Context • top areas in this Home filter",
+          canvasId: "c_amount_area_mix",
+          chartModel: detailCharts.amountAreaMix,
+          metricKey: "amount"
+        } : null
+      ],
+      ppl: [
+        detailCharts.pplMonthlyTrend ? {
+          title: "Monthly pay-rate trend",
+          context: "Context • visible Home months in this filter",
+          canvasId: "c_ppl_monthly_trend",
+          chartModel: detailCharts.pplMonthlyTrend,
+          metricKey: "ppl"
+        } : null,
+        detailCharts.pplDealerLeaders?.labels?.length ? {
+          title: "Dealer pay-rate leader",
+          context: "Context • top dealer rates in this Home filter",
+          canvasId: "c_ppl_dealer_leaders",
+          chartModel: detailCharts.pplDealerLeaders,
+          metricKey: "ppl"
+        } : null,
+        detailCharts.pplRateVsPoundsTrend ? {
+          title: "Rate vs pounds context",
+          context: "Context • pounds trend beside pay-rate movement",
+          canvasId: "c_ppl_rate_vs_pounds",
+          chartModel: detailCharts.pplRateVsPoundsTrend,
+          metricKey: "pounds"
+        } : null
+      ]
+    };
     const detailMeta = {
       trips: {
         title: "Trips breakdown",
@@ -442,8 +610,9 @@ export function createReportsMetricDetailSeam(deps){
         chartContext: primaryChart?.basisLabel || "Matched range trip totals",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_trips",
+        secondaryCharts: isHomeMetricDetail ? homeSecondaryChartsByMetric.trips : [],
         insight: "Read this compare card with the chart to confirm trip movement in the same matched range.",
-        homeInsight: "Use the compare card and chart together for the clearest trip-count read."
+        homeInsight: "Use compare first, then trend and activity context charts to confirm the trip story."
       },
       pounds: {
         title: "Pounds breakdown",
@@ -460,8 +629,9 @@ export function createReportsMetricDetailSeam(deps){
         chartContext: primaryChart?.basisLabel || "Matched range pound totals",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_lbs",
+        secondaryCharts: isHomeMetricDetail ? homeSecondaryChartsByMetric.pounds : [],
         insight: "Use this compare card and chart together so the headline and values stay aligned to one matched range.",
-        homeInsight: "Use the compare card and chart together to judge pound movement."
+        homeInsight: "Use compare first, then productivity and area context charts for a fuller pounds read."
       },
       amount: {
         title: "Amount breakdown",
@@ -478,24 +648,24 @@ export function createReportsMetricDetailSeam(deps){
         chartContext: primaryChart?.basisLabel || "Matched range amount totals",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_amount_detail",
-        secondaryCharts: [
-          detailCharts.amountTrend ? {
-            title: "Amount trend across this range",
-            context: isHomeMetricDetail
-              ? "Context • visible Home months in this filter"
-              : "Context • full months in this active Reports range",
-            canvasId: "c_amount_trend",
-            chartModel: detailCharts.amountTrend,
-            metricKey: "amount"
-          } : null,
-          {
-            title: "Amount by dealer mix",
-            context: "Context for this same active filter range",
-            canvasId: "c_dealer"
-          }
-        ],
+        secondaryCharts: isHomeMetricDetail
+          ? homeSecondaryChartsByMetric.amount
+          : [
+            detailCharts.amountTrend ? {
+              title: "Amount trend across this range",
+              context: "Context • full months in this active Reports range",
+              canvasId: "c_amount_trend",
+              chartModel: detailCharts.amountTrend,
+              metricKey: "amount"
+            } : null,
+            {
+              title: "Amount by dealer mix",
+              context: "Context for this same active filter range",
+              canvasId: "c_dealer"
+            }
+          ],
         insight: "Start with the compare chart, then use trend and dealer mix for added context.",
-        homeInsight: "Read the main comparison first, then use trend and dealer mix for added context."
+        homeInsight: "Read compare first, then use trend, mix, and unit-output context for amount depth."
       },
       ppl: {
         title: "$/lb breakdown",
@@ -512,8 +682,9 @@ export function createReportsMetricDetailSeam(deps){
         chartContext: primaryChart?.basisLabel || "Matched range average $/lb",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
         chartCanvasId: "c_ppl",
+        secondaryCharts: isHomeMetricDetail ? homeSecondaryChartsByMetric.ppl : [],
         insight: "Use this compare card and chart to read matched-range pricing without mixing full-range averages.",
-        homeInsight: "Use the compare card and chart together to judge pricing."
+        homeInsight: "Use compare first, then trend and dealer-rate context to judge pricing depth."
       }
     };
     const meta = detailMeta[metricKey];
