@@ -7,6 +7,9 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
       metaOverride = ""
     } = opts;
     const date = t?.invalidDateQuarantined ? "Invalid date (quarantined)" : formatDateDMY(t?.dateISO || "");
+    const quarantineStatusText = t?.invalidDateQuarantined
+      ? "Date unavailable • quarantined for safety"
+      : "";
     const dealerRaw = String(t?.dealer || "").trim();
     const dealer = dealerRaw || "(dealer)";
     const areaRaw = String(t?.area || "").trim();
@@ -39,7 +42,8 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
       lbs,
       amountText: formatMoney(amt),
       valueText: valueOverride || `${formatMoney(ppl)}/lb`,
-      settlementText
+      settlementText,
+      quarantineStatusText
     };
   }
 
@@ -75,6 +79,7 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
         <div class="tripCardGrid">
           <div class="tripCardLeftStack">
             <div class="tripCardTextRow tripCardDate">${escapeHtml(model.dateText)}</div>
+            ${model.quarantineStatusText ? `<div class="tripCardTextRow muted small tripCardQuarantineStatus">${escapeHtml(model.quarantineStatusText)}</div>` : ""}
             <div class="tripCardTextRow ${primaryIdentityClass} tripCardIdentityPrimary${model.areaUnknown ? " tripCardAreaUnknown" : ""}">${primaryIdentityContent}</div>
             <div class="tripCardTextRow ${secondaryIdentityClass} tripCardIdentitySecondary">${escapeHtml(secondaryIdentity)}</div>
             <div class="tripCardTextRow tripCardSpecies" title="Species">${escapeHtml(model.species)}</div>
