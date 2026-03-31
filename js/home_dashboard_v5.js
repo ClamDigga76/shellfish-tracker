@@ -15,6 +15,7 @@ export function createHomeDashboardRenderer({
   saveState,
   render,
   bindDatePill,
+  normalizeCustomRangeWithFeedback,
   showToast,
   tipMsg,
   exportBackup,
@@ -78,6 +79,7 @@ export function createHomeDashboardRenderer({
     ensureHomeFilter();
     const hf = state.homeFilter || { mode: "YTD", from: "", to: "" };
     const unified = buildUnifiedFilterFromHomeFilter(hf);
+    const homeCustomCorrectionMessages = Array.isArray(hf.customRangeCorrectionMessages) ? hf.customRangeCorrectionMessages : [];
     const trips = applyUnifiedTripFilter(tripsAll, unified).rows;
     const totalAmount = trips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
     const totalLbs = trips.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
@@ -270,9 +272,7 @@ export function createHomeDashboardRenderer({
       if (f === "7D") return "Last 7 Days";
       if (f === "30D") return "Last 30 Days";
       if (f === "RANGE") {
-        const from = parseReportDateToISO(hf.from || "") || "—";
-        const to = parseReportDateToISO(hf.to || "") || "—";
-        return `${from} → ${to}`;
+        return `${unified.fromISO || "—"} → ${unified.toISO || "—"}`;
       }
       return "YTD";
     })();
@@ -300,6 +300,7 @@ export function createHomeDashboardRenderer({
                 </div>
                 <button class="btn" id="homeRangeApply">Apply</button>
               </div>
+              ${homeCustomCorrectionMessages.length ? `<div class="muted small mt8 homeRangeCorrectionNote" aria-live="polite">${homeCustomCorrectionMessages.map((msg) => `<div>${escapeHtml(msg)}</div>`).join("")}</div>` : ``}
             ` : ``}
           </div>
         </section>
@@ -375,6 +376,7 @@ export function createHomeDashboardRenderer({
       btn.addEventListener("click", () => {
         ensureHomeFilter();
         state.homeFilter.mode = String(btn.getAttribute("data-hf") || "YTD").toUpperCase();
+        if(state.homeFilter.mode !== "RANGE") state.homeFilter.customRangeCorrectionMessages = [];
         saveState();
         showToast("Filter updated");
         renderHome();
@@ -386,10 +388,12 @@ export function createHomeDashboardRenderer({
         ensureHomeFilter();
         const from = parseReportDateToISO(document.getElementById("homeRangeFrom")?.value || "");
         const to = parseReportDateToISO(document.getElementById("homeRangeTo")?.value || "");
-        state.homeFilter.from = from;
-        state.homeFilter.to = to;
+        const normalized = normalizeCustomRangeWithFeedback({ fromISO: from, toISO: to });
+        state.homeFilter.from = normalized.fromISO;
+        state.homeFilter.to = normalized.toISO;
+        state.homeFilter.customRangeCorrectionMessages = normalized.messages;
         saveState();
-        showToast("Range applied");
+        showToast("Range updated");
         renderHome();
       };
     }

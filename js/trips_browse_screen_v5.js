@@ -13,7 +13,7 @@ export function createTripsBrowseScreenRenderer(deps){
     saveState,
     scheduleStateSave,
     renderApp,
-    isoToday,
+    normalizeCustomRangeWithFeedback,
     bindDatePill,
     exportTripsWithLabel,
     showToast
@@ -21,7 +21,7 @@ export function createTripsBrowseScreenRenderer(deps){
 
   function resetTripsFilters(state){
     state.filters = state.filters || {};
-    state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", species:"all", text:"" };
+    state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", species:"all", text:"", customRangeCorrectionMessages:[] };
     state.tripsFilter = state.filters.active;
   }
 
@@ -41,6 +41,10 @@ export function createTripsBrowseScreenRenderer(deps){
       ["30d","Last 30 Days"],
       ["custom","Custom Range"]
     ];
+    const customRangeCorrectionMessages = Array.isArray(tf.customRangeCorrectionMessages) ? tf.customRangeCorrectionMessages : [];
+    const customRangeCorrectionHtml = (tf.range === "custom" && customRangeCorrectionMessages.length)
+      ? `<div class="muted small mt8 tripsCustomRangeNote" aria-live="polite">${customRangeCorrectionMessages.map((msg)=>`<div>${escapeHtml(msg)}</div>`).join("")}</div>`
+      : "";
 
     const filtersCard = `
       <div class="card tripsFiltersCard tripsBrowseFiltersCard">
@@ -95,6 +99,7 @@ export function createTripsBrowseScreenRenderer(deps){
               <input id="flt_to" type="date" class="input" value="${escapeHtml(String(tf.toISO||"").slice(0,10))}" />
             </div>
           </div>
+          ${customRangeCorrectionHtml}
         </div>
 
         <div class="muted small mt10 tripsFilterSummary">
@@ -145,11 +150,12 @@ export function createTripsBrowseScreenRenderer(deps){
     rangeEl?.addEventListener("change", ()=>{
       tf.range = rangeEl.value;
       if(tf.range === "custom"){
-        const now = isoToday();
-        const y = now.slice(0,4);
-        if(!tf.fromISO) tf.fromISO = `${y}-01-01`;
-        if(!tf.toISO) tf.toISO = now;
-        if(tf.fromISO > tf.toISO){ const tmp = tf.fromISO; tf.fromISO = tf.toISO; tf.toISO = tmp; }
+        const normalized = normalizeCustomRangeWithFeedback({ fromISO: tf.fromISO, toISO: tf.toISO });
+        tf.fromISO = normalized.fromISO;
+        tf.toISO = normalized.toISO;
+        tf.customRangeCorrectionMessages = normalized.messages;
+      }else{
+        tf.customRangeCorrectionMessages = [];
       }
       rerender();
     });
@@ -159,8 +165,24 @@ export function createTripsBrowseScreenRenderer(deps){
 
     const fromEl = document.getElementById("flt_from");
     const toEl = document.getElementById("flt_to");
-    fromEl?.addEventListener("change", ()=>{ tf.fromISO = fromEl.value; tf.range="custom"; rerender(); });
-    toEl?.addEventListener("change", ()=>{ tf.toISO = toEl.value; tf.range="custom"; rerender(); });
+    fromEl?.addEventListener("change", ()=>{
+      tf.fromISO = fromEl.value;
+      tf.range = "custom";
+      const normalized = normalizeCustomRangeWithFeedback({ fromISO: tf.fromISO, toISO: tf.toISO });
+      tf.fromISO = normalized.fromISO;
+      tf.toISO = normalized.toISO;
+      tf.customRangeCorrectionMessages = normalized.messages;
+      rerender();
+    });
+    toEl?.addEventListener("change", ()=>{
+      tf.toISO = toEl.value;
+      tf.range = "custom";
+      const normalized = normalizeCustomRangeWithFeedback({ fromISO: tf.fromISO, toISO: tf.toISO });
+      tf.fromISO = normalized.fromISO;
+      tf.toISO = normalized.toISO;
+      tf.customRangeCorrectionMessages = normalized.messages;
+      rerender();
+    });
     bindDatePill("flt_from");
     bindDatePill("flt_to");
 
