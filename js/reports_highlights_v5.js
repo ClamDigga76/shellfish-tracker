@@ -35,6 +35,24 @@ export function createReportsHighlightsSeam(deps){
     if(key === "lbs") return "Pounds";
     return "compare metric";
   };
+  const compareContextFromMetric = (metricKey)=> {
+    const key = String(metricKey || "").toLowerCase();
+    if(key === "lbs" || key === "pounds") return "Pounds";
+    if(key === "ppl" || key === "rate" || key === "pay_rate") return "Pay rate";
+    if(key === "share" || key === "sharepct") return "Share";
+    if(key === "amount" || key === "amt" || key === "money") return "Amount";
+    return "";
+  };
+  const compareContextFromLabel = (label)=> {
+    const text = String(label || "").trim();
+    if(!text) return "";
+    const normalized = text.toLowerCase();
+    if(normalized.includes("pound") || normalized === "lbs") return "Pounds";
+    if(normalized.includes("rate") || normalized.includes("$/lb")) return "Pay rate";
+    if(normalized.includes("share")) return "Share";
+    if(normalized.includes("amount") || normalized.includes("dollar") || normalized.includes("sales")) return "Amount";
+    return text;
+  };
 
   function buildAmountDriverText(compare){
     const pounds = compare?.metrics?.pounds;
@@ -241,6 +259,10 @@ export function createReportsHighlightsSeam(deps){
       headline,
       value,
       valueClass: metricKey === "ppl" ? "rate ppl" : (metricKey === "lbs" ? "lbsBlue" : "money"),
+      compareValueTone: payload.percentValid ? payload.compareTone : "",
+      compareContextLabel: payload.percentValid
+        ? (compareContextFromMetric(metricKey) || compareContextFromLabel(payload.compareMetricLabel))
+        : "",
       statusTone: payload.compareTone,
       statusText: statusBits.join(" • ")
     };
@@ -286,6 +308,8 @@ export function createReportsHighlightsSeam(deps){
       headline,
       value,
       valueClass: movement.primaryMetricKey === "ppl" ? "rate ppl" : (movement.primaryMetricKey === "lbs" ? "lbsBlue" : "money"),
+      compareValueTone: best.deltaPct != null ? best.compareTone : "",
+      compareContextLabel: best.deltaPct != null ? (compareContextFromMetric(movement.primaryMetricKey) || compareContextFromLabel(primaryMetricLabel)) : "",
       statusTone: "steady",
       statusText: "",
       statusLines: movementSupportLines
@@ -300,6 +324,8 @@ export function createReportsHighlightsSeam(deps){
       headline: `${leaderChange.currentLeader.name} replaced ${leaderChange.previousLeader.name} at the top ${noun} spot.`,
       value: `${Math.round(safeNum(leaderChange.currentLeader.currentSharePct))}%`,
       valueClass: "money",
+      compareValueTone: "up",
+      compareContextLabel: "Share",
       statusTone: "up",
       statusText: `${leaderChange.currentLeader.name} now • ${leaderChange.previousLeader.name} before • ${noun} share metric`
     };
@@ -470,7 +496,10 @@ export function createReportsHighlightsSeam(deps){
                 <div class="reportsHighlightAction" aria-hidden="true">Open metric detail →</div>
               ` : `
                 <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
-                  <div class="reportsHighlightValue ${item.valueClass || ""}">${renderPercentEmphasisText(item.value)}</div>
+                  <div class="reportsHighlightValueWrap">
+                    <div class="reportsHighlightValue ${item.valueClass || ""} ${item.compareValueTone ? `reportsHighlightValue--tone-${escapeHtml(item.compareValueTone)}` : ""}">${renderPercentEmphasisText(item.value)}</div>
+                    ${item.compareContextLabel ? `<span class="reportsHighlightContextTag">${escapeHtml(item.compareContextLabel)}</span>` : ""}
+                  </div>
                 </div>
                 ${Array.isArray(item.statusLines) && item.statusLines.length
                   ? `<div class="reportsMovementSupportRows">${item.statusLines.map((line)=> `
