@@ -525,7 +525,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     minPpl,
     tripsTimeline,
     recordPools,
-    priceRangeSummary,
     dealerRangeRows
   } = buildReportsAggregationState({
     trips,
@@ -1002,41 +1001,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     return safe > 0 ? `${formatMoney(to2(safe))}/lb` : "—";
   };
 
-  const renderPriceRangeCard = ({ title, hint, row })=> {
-    const low = Number(row?.rateLow) || 0;
-    const high = Number(row?.rateHigh) || 0;
-    const spread = Number(row?.spread) || 0;
-    const sampleCount = Number(row?.sampleCount) || 0;
-    return `
-      <div class="card">
-        <b>${escapeHtml(title)}</b>
-        <div class="tsub">${escapeHtml(hint)}</div>
-        <div class="sep"></div>
-        <div class="trow">
-          <div>
-            <div class="tname">Low</div>
-            <div class="tsub">Lowest paid rate in this window</div>
-          </div>
-          <div class="tright"><b class="rate ppl">${escapeHtml(formatRateValue(low))}</b></div>
-        </div>
-        <div class="trow">
-          <div>
-            <div class="tname">High</div>
-            <div class="tsub">Highest paid rate in this window</div>
-          </div>
-          <div class="tright"><b class="rate ppl">${escapeHtml(formatRateValue(high))}</b></div>
-        </div>
-        <div class="trow">
-          <div>
-            <div class="tname">Spread</div>
-            <div class="tsub">${sampleCount} priced trips sampled</div>
-          </div>
-          <div class="tright"><b class="rate ppl">${escapeHtml(formatRateValue(spread))}</b></div>
-        </div>
-      </div>
-    `;
-  };
-
   const renderDealerPriceRangeComparison = ()=>{
     if(!Array.isArray(dealerRangeRows) || !dealerRangeRows.length){
       return `
@@ -1059,46 +1023,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         </div>
       </div>
     `).join("");
-  };
-
-  const renderSeasonalRangeRows = ()=>{
-    const rows = Array.isArray(priceRangeSummary?.seasonalRangeRows) ? priceRangeSummary.seasonalRangeRows : [];
-    if(!rows.length) return `<div class="muted small">Seasonal range builds after priced trips are logged across the year.</div>`;
-    return rows.map((row)=> `
-      <div class="trow">
-        <div>
-          <div class="tname">${escapeHtml(String(row?.seasonKey || "Season"))}</div>
-          <div class="tsub">${Number(row?.sampleCount) || 0} priced trips</div>
-        </div>
-        <div class="tright">
-          <div><span class="ppl">Low</span> <b class="rate ppl">${formatRateValue(row?.rateLow)}</b></div>
-          <div><span class="ppl">High</span> <b class="rate ppl">${formatRateValue(row?.rateHigh)}</b></div>
-          <div><span class="ppl">Spread</span> <b class="rate ppl">${formatRateValue(row?.spread)}</b></div>
-        </div>
-      </div>
-    `).join("");
-  };
-
-  const renderPriceRangeMetricBlock = ()=>{
-    const latestWeek = priceRangeSummary?.latestWeek || null;
-    const latestMonth = priceRangeSummary?.latestMonth || null;
-    const allTime = priceRangeSummary?.allTime || null;
-    const weekLabel = latestWeek?.weekKey ? `ISO ${latestWeek.weekKey}` : "Weekly range appears after dated priced trips.";
-    const monthLabel = latestMonth?.label || "Monthly range appears after dated priced trips.";
-    const allTimeLabel = "Across every filtered trip with a valid dealer-set $/lb.";
-    return `
-      <div class="reportsHighlightsCard">
-        <div class="reportsHighlightsHdr">Price range</div>
-        <div class="reportsHighlightsGuide">Low • High • Spread from dealer-set $/lb truth.</div>
-        <div class="reportsTablesStack">${[
-          renderPriceRangeCard({ title: "Weekly Price Range", hint: weekLabel, row: latestWeek }),
-          renderPriceRangeCard({ title: "Monthly Price Range", hint: monthLabel, row: latestMonth }),
-          renderPriceRangeCard({ title: "All-time Price Range", hint: allTimeLabel, row: allTime }),
-          renderTableCard("Seasonal Price Range", renderSeasonalRangeRows()),
-          renderTableCard("Dealer Price Range Comparison", renderDealerPriceRangeComparison())
-        ].join("")}</div>
-      </div>
-    `;
   };
 
   const highLowBody = `
@@ -1158,7 +1082,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     return reportsSection({
       title: "Insights",
       intro: "Top takeaways for this range.",
-      body: `${highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights appear automatically as more trips are added.</div></div>`}${renderPriceRangeMetricBlock()}`,
+      body: `${highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights appear automatically as more trips are added.</div></div>`}`,
       extraClass: "reportsSection--highlights"
     });
   };
