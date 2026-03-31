@@ -1019,6 +1019,8 @@ const settingsListManagement = createSettingsListManagement({
   normalizeKey,
   escapeHtml,
   showToast: feedback.showToast,
+  openModal: (options) => openModal(options),
+  closeModal: (options) => closeModal(options),
   openConfirmModal: (options) => openConfirmModal(options),
   copyTextWithFeedback: feedback.copyTextWithFeedback,
   getDebugInfo: () => getDebugInfo(),
