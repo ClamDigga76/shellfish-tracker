@@ -371,10 +371,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   const renderReportsTopShell = ({ body = "", shellMode = "overview" } = {})=> `
     <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
-      <div class="reportsTopHeader cardHeaderRow">
-        <span class="pill">Range <b>${escapeHtml(rangeLabel)}</b></span>
-      </div>
-
       <section class="reportsTimeframeShell" aria-label="Reports timeframe controls">
         <div class="segWrap timeframeUnifiedControl reportsTimeframeControl reportsPrimaryFilterBar" role="tablist" aria-label="Reports quick range filters">
           ${REPORTS_PRESET_FILTER_ITEMS.map((item)=> chip(item)).join("")}
