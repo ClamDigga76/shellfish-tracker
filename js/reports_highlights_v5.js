@@ -132,40 +132,80 @@ export function createReportsHighlightsSeam(deps){
 
   function buildLeaderSummary({ label, entity, totalValue, noun, shareLabel, valueType = "money" }){
     if(!entity) return null;
-    const entityValue = valueType === "pounds" ? safeNum(entity.lbs) : safeNum(entity.amt);
+    const entityValue = valueType === "pounds"
+      ? safeNum(entity.lbs)
+      : (valueType === "rate" ? safeNum(entity.avg) : safeNum(entity.amt));
     const share = totalValue > 0 ? Math.round((entityValue / totalValue) * 100) : 0;
-    const valueText = valueType === "pounds" ? `${to2(entityValue)} lbs` : formatMoney(to2(entityValue));
-    const headline = share >= 50
-      ? `${entity.name} carried most ${shareLabel} in this range.`
-      : `${entity.name} finished on top for ${shareLabel} in this range.`;
-    const statusText = share > 0
-      ? `${entity.trips} trips • ${to2(entity.lbs)} lbs • ${share}% of ${shareLabel}`
-      : `${entity.trips} trips • ${to2(entity.lbs)} lbs`;
+    const valueText = valueType === "pounds"
+      ? `${to2(entityValue)} lbs`
+      : (valueType === "rate" ? `${formatMoney(to2(entityValue))}/lb` : formatMoney(to2(entityValue)));
+    const headline = valueType === "rate"
+      ? `${entity.name} led dealer pay rate in this range.`
+      : (share >= 50
+        ? `${entity.name} carried most ${shareLabel} in this range.`
+        : `${entity.name} finished on top for ${shareLabel} in this range.`);
+    const statusText = valueType === "rate"
+      ? `${entity.trips} trips • ${to2(entity.lbs)} lbs • ${formatMoney(to2(entity.amt))} outcome`
+      : (share > 0
+        ? `${entity.trips} trips • ${to2(entity.lbs)} lbs • ${share}% of ${shareLabel}`
+        : `${entity.trips} trips • ${to2(entity.lbs)} lbs`);
     return {
       type: "summary",
       label,
       headline,
       value: valueText,
-      valueClass: valueType === "pounds" ? "lbsBlue" : "money",
+      valueClass: valueType === "pounds" ? "lbsBlue" : (valueType === "rate" ? "rate ppl" : "money"),
       statusTone: "up",
       statusText
     };
   }
 
-  function buildTrailingSummary({ label, entity, leader, noun }){
+  function buildTrailingSummary({ label, entity, leader, noun, valueType = "money" }){
     if(!entity || !leader) return null;
-    const leaderAmt = safeNum(leader.amt);
-    const entityAmt = safeNum(entity.amt);
-    if(leaderAmt <= 0 || (entityAmt / leaderAmt) > 0.7) return null;
+    const leaderValue = valueType === "pounds"
+      ? safeNum(leader.lbs)
+      : (valueType === "rate" ? safeNum(leader.avg) : safeNum(leader.amt));
+    const entityValue = valueType === "pounds"
+      ? safeNum(entity.lbs)
+      : (valueType === "rate" ? safeNum(entity.avg) : safeNum(entity.amt));
+    if(leaderValue <= 0 || entityValue <= 0 || (entityValue / leaderValue) > 0.85) return null;
     return {
       type: "summary",
       label,
       headline: `${entity.name} lagged the ${noun} pack in this range.`,
-      value: formatMoney(to2(entityAmt)),
-      valueClass: "money",
+      value: valueType === "pounds"
+        ? `${to2(entityValue)} lbs`
+        : (valueType === "rate" ? `${formatMoney(to2(entityValue))}/lb` : formatMoney(to2(entityValue))),
+      valueClass: valueType === "pounds" ? "lbsBlue" : (valueType === "rate" ? "rate ppl" : "money"),
       statusTone: "down",
-      statusText: `${entity.trips} trips • ${to2(entity.lbs)} lbs`
+      statusText: `${entity.trips} trips • ${to2(entity.lbs)} lbs • ${formatMoney(to2(entity.amt))} outcome`
     };
+  }
+
+  function rankDealerRowsByPayRate(rows){
+    const safeRows = Array.isArray(rows) ? rows.filter(Boolean) : [];
+    const byRateDesc = (a, b)=> {
+      const rateDiff = safeNum(b?.avg) - safeNum(a?.avg);
+      if(rateDiff !== 0) return rateDiff;
+      const lbsDiff = safeNum(b?.lbs) - safeNum(a?.lbs);
+      if(lbsDiff !== 0) return lbsDiff;
+      return safeNum(b?.amt) - safeNum(a?.amt);
+    };
+    const strongSupport = safeRows.filter((row)=> safeNum(row?.avg) > 0 && safeNum(row?.lbs) >= 20 && safeNum(row?.trips) >= 2 && safeNum(row?.sampleCount) >= 2);
+    if(strongSupport.length >= 2) return strongSupport.sort(byRateDesc);
+    const mediumSupport = safeRows.filter((row)=> safeNum(row?.avg) > 0 && safeNum(row?.lbs) >= 5 && safeNum(row?.sampleCount) >= 1);
+    if(mediumSupport.length >= 2) return mediumSupport.sort(byRateDesc);
+    return safeRows.filter((row)=> safeNum(row?.avg) > 0).sort(byRateDesc);
+  }
+
+  function rankAreaRowsByPounds(rows){
+    return (Array.isArray(rows) ? rows.filter(Boolean) : [])
+      .slice()
+      .sort((a, b)=> {
+        const lbsDiff = safeNum(b?.lbs) - safeNum(a?.lbs);
+        if(lbsDiff !== 0) return lbsDiff;
+        return safeNum(b?.amt) - safeNum(a?.amt);
+      });
   }
 
   function buildEntityCompareSummary({ payload, period, share, noun }){
@@ -262,8 +302,10 @@ export function createReportsHighlightsSeam(deps){
   }
 
   function renderHighlightsStrip({ dealerRows, monthRows, areaRows, trips, compareFoundation }){
-    const topDealer = dealerRows[0] || null;
-    const strongestArea = areaRows[0] || null;
+    const dealerRowsByRate = rankDealerRowsByPayRate(dealerRows);
+    const areaRowsByPounds = rankAreaRowsByPounds(areaRows);
+    const topDealer = dealerRowsByRate[0] || null;
+    const strongestArea = areaRowsByPounds[0] || null;
     const latestMonth = monthRows[monthRows.length - 1] || null;
     const priorMonth = monthRows[monthRows.length - 2] || null;
     const compare = compareFoundation || buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
@@ -301,8 +343,8 @@ export function createReportsHighlightsSeam(deps){
       })
     ].filter(Boolean);
 
-    const weakestDealer = dealerRows.length >= 3 ? dealerRows[dealerRows.length - 1] : null;
-    const weakestArea = areaRows.length >= 3 ? areaRows[areaRows.length - 1] : null;
+    const weakestDealer = dealerRowsByRate.length >= 3 ? dealerRowsByRate[dealerRowsByRate.length - 1] : null;
+    const weakestArea = areaRowsByPounds.length >= 3 ? areaRowsByPounds[areaRowsByPounds.length - 1] : null;
     const dealerMovement = buildEntityMovementSummary({ movement: compare.dealer?.movement, label: "Dealer movement", noun: "dealer" });
     const areaMovement = buildEntityMovementSummary({ movement: compare.area?.movement, label: "Area movement", noun: "area" });
     const dealerLeaderChange = buildLeaderChangeSummary({ leaderChange: compare.dealer?.leaderChange, noun: "dealer" });
@@ -328,12 +370,12 @@ export function createReportsHighlightsSeam(deps){
     const areaShare = totalAreaPounds > 0 ? Math.round((safeNum(strongestArea?.lbs) / totalAreaPounds) * 100) : 0;
 
     const summaryCards = [
-      buildLeaderSummary({ label: "Top dealer", entity: topDealer, totalValue: totalDealerAmount, noun: "dealer", shareLabel: "dealer dollars share", valueType: "money" }),
+      buildLeaderSummary({ label: "Top dealer", entity: topDealer, totalValue: 0, noun: "dealer", shareLabel: "dealer pay-rate share", valueType: "rate" }),
       buildEntityCompareSummary({ payload: compare.dealer, period: compare.period, share: dealerShare, noun: "dealer" }),
-      buildTrailingSummary({ label: "Weakest dealer", entity: weakestDealer, leader: topDealer, noun: "dealer" }),
+      buildTrailingSummary({ label: "Weakest dealer", entity: weakestDealer, leader: topDealer, noun: "dealer", valueType: "rate" }),
       buildLeaderSummary({ label: "Top area by pounds", entity: strongestArea, totalValue: totalAreaPounds, noun: "area", shareLabel: "area pounds share", valueType: "pounds" }),
       buildEntityCompareSummary({ payload: compare.area, period: compare.period, share: areaShare, noun: "area" }),
-      buildTrailingSummary({ label: "Weakest area", entity: weakestArea, leader: strongestArea, noun: "area" }),
+      buildTrailingSummary({ label: "Weakest area", entity: weakestArea, leader: strongestArea, noun: "area", valueType: "pounds" }),
       dealerMovement,
       dealerLeaderChange,
       dealerShareShift,

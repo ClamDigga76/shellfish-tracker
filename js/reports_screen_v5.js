@@ -527,8 +527,20 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   });
 
   const renderSummaryAverageLine = (row)=> `<span class="muted">Avg / Trip</span> <span class="money">${formatMoney(to2(row.amountPerTrip))}</span> • <span class="lbsBlue">${to2(row.poundsPerTrip)} lbs</span>`;
+  const sortDealerRowsForSummary = (rows)=> rows.slice().sort((a, b)=> {
+    const rateDiff = (Number(b?.avg) || 0) - (Number(a?.avg) || 0);
+    if(rateDiff !== 0) return rateDiff;
+    const lbsDiff = (Number(b?.lbs) || 0) - (Number(a?.lbs) || 0);
+    if(lbsDiff !== 0) return lbsDiff;
+    return (Number(b?.amt) || 0) - (Number(a?.amt) || 0);
+  });
+  const sortAreaRowsForSummary = (rows)=> rows.slice().sort((a, b)=> {
+    const lbsDiff = (Number(b?.lbs) || 0) - (Number(a?.lbs) || 0);
+    if(lbsDiff !== 0) return lbsDiff;
+    return (Number(b?.amt) || 0) - (Number(a?.amt) || 0);
+  });
 
-  const renderAggList = (rows, emptyMsg)=>{
+  const renderDealerAggList = (rows, emptyMsg)=>{
     if(!rows.length) return `
       <div class="emptyState compact">
         <div class="emptyStateTitle">Insights pending</div>
@@ -543,8 +555,31 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
             <div class="tsub">${renderSummaryAverageLine(r)}</div>
           </div>
           <div class="tright">
-            <div><b class="money">${formatMoney(r.amt)}</b></div>
             <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
+            <div><b class="money">${formatMoney(r.amt)}</b></div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  };
+
+  const renderAreaAggList = (rows, emptyMsg)=>{
+    if(!rows.length) return `
+      <div class="emptyState compact">
+        <div class="emptyStateTitle">Insights pending</div>
+        <div class="emptyStateBody">${escapeHtml(emptyMsg||"Add trips to unlock these insights.")}</div>
+      </div>`;
+    return rows.map(r=>{
+      return `
+        <div class="trow">
+          <div>
+            <div class="tname">${escapeHtml(r.name)}</div>
+            <div class="tsub">${r.trips} trips • ${r.fishingDays || 0} days</div>
+            <div class="tsub"><span class="money">${formatMoney(to2(r.amt))}</span> outcome • <span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
+          </div>
+          <div class="tright">
+            <div><b class="lbsBlue">${to2(r.lbs)} lbs</b></div>
+            <div><b class="money">${formatMoney(r.amt)}</b></div>
           </div>
         </div>
       `;
@@ -1094,8 +1129,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     title: "Detail",
     intro: "Dealer, area, and monthly tables.",
     body: `<div class="reportsTablesStack">${[
-      renderTableCard("Dealer Summary", renderAggList(dealerRows, "Add a trip in this range to populate dealer totals.")),
-      renderTableCard("Area Summary", renderAggList(areaRows, "Add a trip in this range to populate area totals.")),
+      renderTableCard("Dealer Summary", renderDealerAggList(sortDealerRowsForSummary(dealerRows), "Add a trip in this range to populate dealer totals.")),
+      renderTableCard("Area Summary", renderAreaAggList(sortAreaRowsForSummary(areaRows), "Add a trip in this range to populate area totals.")),
       renderTableCard("Monthly Totals", renderMonthList()),
       renderTableCard("Dealer Price Range Comparison", renderDealerPriceRangeComparison())
     ].join("")}</div>`,
