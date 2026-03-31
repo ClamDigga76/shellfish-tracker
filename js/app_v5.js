@@ -792,7 +792,7 @@ function getTripsFilteredRows(){
   // Stable sort: newest first (shared with Home and other trip views)
   rows = getTripsNewestFirst(rows);
 
-  return { rows, range:r, tf };
+  return { rows, range:r, tf, transparency: filtered.transparency || { excludedQuarantinedCount: 0, quarantinedTotalCount: 0, hasExcludedQuarantined: false } };
 }
 
 function tripsActiveLabel(tf, rangeLabel){

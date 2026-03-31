@@ -211,26 +211,30 @@ export function createUnifiedFiltersSeam({
     const areaFilterId = filter.area && filter.area !== "all"
       ? String(filter.area)
       : "all";
+    const textQuery = filter.text && String(filter.text).trim()
+      ? String(filter.text).trim().toLowerCase()
+      : "";
+    const matchesNonDateCriteria = (trip)=>{
+      if(filter.dealer && filter.dealer !== "all" && trip.dealer !== filter.dealer) return false;
+      if(areaFilterId && areaFilterId !== "all"){
+        const resolved = resolveTripArea(trip);
+        if(resolved.canonicalName !== areaFilterId) return false;
+      }
+      if(filter.species && filter.species !== "all" && trip.species !== filter.species) return false;
+      if(textQuery){
+        const resolvedArea = resolveTripArea(trip);
+        const hasTextMatch = (trip.dealer||"").toLowerCase().includes(textQuery) ||
+          (resolvedArea.canonicalName||trip.area||"").toLowerCase().includes(textQuery) ||
+          (trip.species||"").toLowerCase().includes(textQuery) ||
+          (trip.notes||"").toLowerCase().includes(textQuery);
+        if(!hasTextMatch) return false;
+      }
+      return true;
+    };
 
-    let rows = trips.filter((t)=> isValidISODate(t.dateISO) && t.dateISO >= r.fromISO && t.dateISO <= r.toISO);
-
-    if(filter.dealer && filter.dealer !== "all") rows = rows.filter((t)=> t.dealer === filter.dealer);
-    if(areaFilterId && areaFilterId !== "all") rows = rows.filter((t)=> {
-      const resolved = resolveTripArea(t);
-      return resolved.canonicalName === areaFilterId;
-    });
-    if(filter.species && filter.species !== "all") rows = rows.filter((t)=> t.species === filter.species);
-
-    if(filter.text && String(filter.text).trim()){
-      const q = String(filter.text).trim().toLowerCase();
-      rows = rows.filter((t)=> {
-        const resolvedArea = resolveTripArea(t);
-        return (t.dealer||"").toLowerCase().includes(q) ||
-          (resolvedArea.canonicalName||t.area||"").toLowerCase().includes(q) ||
-          (t.species||"").toLowerCase().includes(q) ||
-          (t.notes||"").toLowerCase().includes(q);
-      });
-    }
+    const quarantinedTotalCount = trips.filter((t)=> Boolean(t?.invalidDateQuarantined) || !isValidISODate(t?.dateISO)).length;
+    const excludedQuarantinedCount = trips.filter((t)=> (Boolean(t?.invalidDateQuarantined) || !isValidISODate(t?.dateISO)) && matchesNonDateCriteria(t)).length;
+    const rows = trips.filter((t)=> isValidISODate(t.dateISO) && t.dateISO >= r.fromISO && t.dateISO <= r.toISO && matchesNonDateCriteria(t));
 
     const totalLbs = rows.reduce((a,t)=> a + (Number(t.pounds)||0), 0);
     const totalAmount = rows.reduce((a,t)=> a + (Number(t.amount)||0), 0);
@@ -244,7 +248,12 @@ export function createUnifiedFiltersSeam({
         avgPPL: (totalLbs > 0 ? (totalAmount/totalLbs) : 0)
       },
       range: { fromISO:r.fromISO, toISO:r.toISO },
-      label: buildUnifiedFilterLabel(filter, r.label)
+      label: buildUnifiedFilterLabel(filter, r.label),
+      transparency: {
+        excludedQuarantinedCount,
+        quarantinedTotalCount,
+        hasExcludedQuarantined: excludedQuarantinedCount > 0
+      }
     };
   }
 

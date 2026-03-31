@@ -30,8 +30,12 @@ export function createTripsBrowseScreenRenderer(deps){
     ensureTripsFilter();
     const root = getApp();
 
-    const { rows:sorted, range:r, tf } = getTripsFilteredRows();
+    const { rows:sorted, range:r, tf, transparency } = getTripsFilteredRows();
     const opt = getFilterOptionsFromTrips();
+    const excludedQuarantinedCount = Number(transparency?.excludedQuarantinedCount || 0);
+    const quarantinedSupportNote = excludedQuarantinedCount > 0
+      ? `<div class="muted small mt8 tripsQuarantineSupportNote" role="status">Some trips are excluded from date filters because their date is invalid (quarantined): ${excludedQuarantinedCount}.</div>`
+      : "";
 
     const rangeOptions = [
       ["all","All Time"],
@@ -105,6 +109,7 @@ export function createTripsBrowseScreenRenderer(deps){
         <div class="muted small mt10 tripsFilterSummary">
           <b>${escapeHtml(tripsActiveLabel(tf, r.label))}</b>
         </div>
+        ${quarantinedSupportNote}
       </div>
     `;
 
@@ -114,6 +119,7 @@ export function createTripsBrowseScreenRenderer(deps){
         <div class="emptyState tripsEmptyState">
           <div class="emptyStateTitle">No trips in this Trips view</div>
           <div class="emptyStateBody">No trips match this view yet. Add a trip, or clear filters if needed.</div>
+          ${excludedQuarantinedCount > 0 ? `<div class="emptyStateFollowup">Some trips are excluded from date filters because their date is invalid (quarantined): ${excludedQuarantinedCount}.</div>` : ""}
           <div class="emptyStateAction">
             <button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>
             <button class="btn" id="tripsEmptyReset" type="button">Clear filters</button>

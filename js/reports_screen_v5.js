@@ -283,13 +283,21 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const unified = (isHomeMetricDetail && activeMetricDetail && homeScope)
     ? homeScope.unifiedFilter
     : buildUnifiedFilterFromReportsFilter(rf);
+  const filteredReportsResult = applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" });
   let trips = isHomeMetricDetail && activeMetricDetail && homeScope
     ? homeScope.trips
-    : applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" }).rows;
+    : filteredReportsResult.rows;
   const seasonalityUnified = { ...unified, range: "all", fromISO: "", toISO: "" };
+  const seasonalityResult = applyUnifiedTripFilter(tripsAll, seasonalityUnified);
   const seasonalityTrips = isHomeMetricDetail && homeScope
     ? homeScope.trips
-    : applyUnifiedTripFilter(tripsAll, seasonalityUnified).rows;
+    : seasonalityResult.rows;
+  const excludedQuarantinedCount = Number((isHomeMetricDetail && homeScope)
+    ? 0
+    : filteredReportsResult?.transparency?.excludedQuarantinedCount || 0);
+  const quarantinedSupportCopy = excludedQuarantinedCount > 0
+    ? `Some trips are excluded from Reports date filtering because their date is invalid (quarantined): ${excludedQuarantinedCount}.`
+    : "";
 
   const chip = ({ key, label })=> `<button class="chip segBtn reportsPrimaryFilterChip ${activePresetFilterKey===key?'on is-selected':''}" data-rf="${key}" type="button" role="tab" aria-selected="${activePresetFilterKey===key ? "true" : "false"}">${label}</button>`;
   const REPORTS_SECTION_ITEMS = [
@@ -384,6 +392,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
         </button>
         ${renderActiveFilterSummary}
         ${renderCorrectionSummary}
+        ${quarantinedSupportCopy ? `<div class="reportsRangeCorrectionSummary muted small" aria-live="polite">${escapeHtml(quarantinedSupportCopy)}</div>` : ""}
         ${advPanel}
       </div>
 
@@ -408,6 +417,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       : (beginnerEmpty
         ? "Once one trip is saved, trend insights appear here."
         : "No trips match this filter yet. Add a trip or switch to All Time.");
+    const bodyWithQuarantineNote = quarantinedSupportCopy && !invalidRange
+      ? `${body} ${quarantinedSupportCopy}`
+      : body;
     const followup = invalidRange
       ? ""
       : (beginnerEmpty
@@ -416,7 +428,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     return `
       <div class="emptyState ${beginnerEmpty ? "emptyStateBeginner" : ""}">
         <div class="emptyStateTitle">${title}</div>
-        <div class="emptyStateBody">${body}</div>
+        <div class="emptyStateBody">${bodyWithQuarantineNote}</div>
         ${followup}
         <div class="emptyStateAction cardActionRow">
           <button class="btn primary" id="reportsEmptyPrimary" type="button">${invalidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
