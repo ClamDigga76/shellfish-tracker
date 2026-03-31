@@ -181,7 +181,7 @@ export function createReportsHighlightsSeam(deps){
       headline,
       value: valueText,
       valueClass: valueType === "pounds" ? "lbsBlue" : (valueType === "rate" ? "rate ppl" : "money"),
-      statusTone: "up",
+      statusTone: "steady",
       statusText
     };
   }
@@ -203,7 +203,7 @@ export function createReportsHighlightsSeam(deps){
         ? `${to2(entityValue)} lbs`
         : (valueType === "rate" ? `${formatMoney(to2(entityValue))}/lb` : formatMoney(to2(entityValue))),
       valueClass: valueType === "pounds" ? "lbsBlue" : (valueType === "rate" ? "rate ppl" : "money"),
-      statusTone: "down",
+      statusTone: "steady",
       statusText: `${entity.trips} trips • ${to2(entity.lbs)} lbs • ${formatMoney(to2(entity.amt))} outcome`
     };
   }
@@ -263,7 +263,7 @@ export function createReportsHighlightsSeam(deps){
       compareContextLabel: payload.percentValid
         ? (compareContextFromMetric(metricKey) || compareContextFromLabel(payload.compareMetricLabel))
         : "",
-      statusTone: payload.compareTone,
+      statusTone: "steady",
       statusText: statusBits.join(" • ")
     };
   }
@@ -326,7 +326,7 @@ export function createReportsHighlightsSeam(deps){
       valueClass: "money",
       compareValueTone: "up",
       compareContextLabel: "Share",
-      statusTone: "up",
+      statusTone: "steady",
       statusText: `${leaderChange.currentLeader.name} now • ${leaderChange.previousLeader.name} before • ${noun} share metric`
     };
   }
@@ -348,7 +348,9 @@ export function createReportsHighlightsSeam(deps){
       headline: `${strongest.name} ${direction} the most ${noun} share (${noun === "area" ? "pounds" : "dollars"}).`,
       value: `${Math.round(strongest.shareDeltaPct)} pts`,
       valueClass: "money",
-      statusTone: strongest.shareDeltaPct > 0 ? "up" : "down",
+      compareValueTone: strongest.shareDeltaPct > 0 ? "up" : "down",
+      compareContextLabel: "Share",
+      statusTone: "steady",
       statusText: `${Math.round(safeNum(strongest.currentSharePct))}% now vs ${Math.round(safeNum(strongest.previousSharePct))}% before`
     };
   }
@@ -440,7 +442,7 @@ export function createReportsHighlightsSeam(deps){
         headline: trendCue.headline,
         value: latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—",
         valueClass: "lbsBlue",
-        statusTone: trendCue.tone,
+        statusTone: "steady",
         statusText: latestMonth && priorMonth ? `${latestMonth.label} vs ${priorMonth.label}` : "Gathering trend context"
       } : null,
       compare.period?.suppressed ? {
@@ -508,7 +510,7 @@ export function createReportsHighlightsSeam(deps){
                       <span class="reportsMovementSupportValue">${renderPercentEmphasisText(line.text || "")}</span>
                     </div>
                   `).join("")}</div>`
-                  : `<div class="reportsCompareRow tone-${escapeHtml(item.statusTone)}">${renderPercentEmphasisText(item.statusText)}</div>`
+                  : `<div class="reportsCompareRow reportsCompareRow--support tone-${escapeHtml(item.statusTone || "steady")}">${renderPercentEmphasisText(item.statusText)}</div>`
                 }
               `}
             </${item.type === "compare" ? "button" : "div"}>
