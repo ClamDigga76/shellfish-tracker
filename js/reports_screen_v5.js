@@ -775,48 +775,48 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     return [
       renderChartCard({
         takeaway: tripsTakeaway,
-        title: "Trips over time",
-        subhead: "Monthly trip count",
+        title: "Trips • Monthly",
+        subhead: "Bars • trip count by month",
         hero: `<span class="trips">${tripsLatest ? tripsLatest.count : "—"}</span>`,
         context: `<span class="chartContextValue">${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "Latest month"}</span> • High <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
         canvasId: "c_trips"
       }),
       renderChartCard({
         takeaway: lbsTakeaway,
-        title: "Monthly Pounds",
-        subhead: "Pounds by month",
+        title: "Pounds • Monthly",
+        subhead: "Bars • pounds by month",
         hero: `<span class="lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</span>`,
         context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
         canvasId: "c_lbs"
       }),
       renderChartCard({
         takeaway: amountTakeaway,
-        title: "Monthly Total Amount",
-        subhead: "Total payout by month",
+        title: "Amount • Monthly",
+        subhead: "Bars • total payout by month",
         hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amt)) : "—"}</span>`,
         context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="money">${amountPeak ? formatMoney(to2(amountPeak.amt)) : "—"}</span>`,
         canvasId: "c_amount_monthly"
       }),
       renderChartCard({
         takeaway: pplTakeaway,
-        title: "Avg $/lb by Month",
-        subhead: "Pay rate by month",
+        title: "$/lb • Monthly",
+        subhead: "Bars • average pay rate by month",
         hero: `<span class="rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</span>`,
         context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span>`,
         canvasId: "c_ppl"
       }),
       renderChartCard({
         takeaway: amountPerTripTakeaway,
-        title: "Monthly Amount per Trip",
-        subhead: "Average payout per trip",
+        title: "Amount/Trip • Monthly",
+        subhead: "Bars • average payout per trip",
         hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amountPerTrip)) : "—"}</span>`,
         context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
         canvasId: "c_amount_per_trip"
       }),
       renderChartCard({
         takeaway: dealerRateTakeaway,
-        title: "Dealer Avg $/lb",
-        subhead: "Dealer pay rates",
+        title: "$/lb • Dealer",
+        subhead: "Bars • dealer pay rates",
         hero: `<span class="rate ppl">${dealerRatePeak ? `${formatMoney(to2(dealerRatePeak.avg))}/lb` : "—"}</span>`,
         context: `Top pay-rate dealer: <span class="chartContextValue">${dealerRatePeak ? escapeHtml(String(dealerRatePeak.name || "—")) : "—"}</span>`,
         canvasId: "c_dealer_rate",
@@ -824,8 +824,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       }),
       renderChartCard({
         takeaway: dealerAmountTakeaway,
-        title: "Dealer Amount",
-        subhead: "Total payout by dealer",
+        title: "Amount • Dealer",
+        subhead: "Bars • total payout by dealer",
         hero: `<span class="money">${dealerAmountPeak ? formatMoney(to2(dealerAmountPeak.amt)) : "—"}</span>`,
         context: `Leading dealer: <span class="chartContextValue">${dealerAmountPeak ? escapeHtml(String(dealerAmountPeak.name || "—")) : "—"}</span>`,
         canvasId: "c_dealer",

@@ -475,29 +475,29 @@ export function createReportsMetricDetailSeam(deps){
     const homeSecondaryChartsByMetric = {
       trips: [
         detailCharts.tripsMonthlyTrend ? {
-          title: "Monthly trips trend",
-          context: "Context • visible Home months in this filter",
+          title: "Trips • Monthly",
+          context: "Bars • visible Home months in this filter",
           canvasId: "c_trips_monthly_trend",
           chartModel: detailCharts.tripsMonthlyTrend,
           metricKey: "trips"
         } : null,
         detailCharts.tripsActiveDaysTrend ? {
-          title: "Active fishing days",
-          context: "Context • fishing days by visible Home month",
+          title: "Fishing Days • Monthly",
+          context: "Bars • active fishing days by visible Home month",
           canvasId: "c_trips_active_days",
           chartModel: detailCharts.tripsActiveDaysTrend,
           metricKey: "trips"
         } : null,
         detailCharts.tripsPoundsPerTripTrend ? {
-          title: "Pounds per trip",
-          context: "Context • productivity by visible Home month",
+          title: "Pounds/Trip • Monthly",
+          context: "Bars • productivity by visible Home month",
           canvasId: "c_trips_pounds_per_trip",
           chartModel: detailCharts.tripsPoundsPerTripTrend,
           metricKey: "pounds"
         } : null,
         detailCharts.tripsActivityRhythmTrend ? {
-          title: "Trip activity trend context",
-          context: "Context • trips per active fishing day",
+          title: "Trips/Day • Monthly",
+          context: "Bars • trips per active fishing day",
           canvasId: "c_trips_activity_rhythm",
           chartModel: detailCharts.tripsActivityRhythmTrend,
           metricKey: "trips"
@@ -505,29 +505,29 @@ export function createReportsMetricDetailSeam(deps){
       ],
       pounds: [
         detailCharts.poundsMonthlyTrend ? {
-          title: "Monthly pounds trend",
-          context: "Context • visible Home months in this filter",
+          title: "Pounds • Monthly",
+          context: "Bars • visible Home months in this filter",
           canvasId: "c_pounds_monthly_trend",
           chartModel: detailCharts.poundsMonthlyTrend,
           metricKey: "pounds"
         } : null,
         detailCharts.poundsPerTripTrend ? {
-          title: "Pounds per trip",
-          context: "Context • productivity by visible Home month",
+          title: "Pounds/Trip • Monthly",
+          context: "Bars • productivity by visible Home month",
           canvasId: "c_pounds_per_trip_trend",
           chartModel: detailCharts.poundsPerTripTrend,
           metricKey: "pounds"
         } : null,
         detailCharts.poundsPerDayTrend ? {
-          title: "Pounds per fishing day",
-          context: "Context • fishing-day output across visible Home months",
+          title: "Pounds/Day • Monthly",
+          context: "Bars • fishing-day output across visible Home months",
           canvasId: "c_pounds_per_day_trend",
           chartModel: detailCharts.poundsPerDayTrend,
           metricKey: "pounds"
         } : null,
         detailCharts.poundsAreaMix?.labels?.length ? {
-          title: "Strongest area by pounds",
-          context: "Context • top areas in this Home filter",
+          title: "Pounds • Area Mix",
+          context: "Bars • top areas in this Home filter",
           canvasId: "c_pounds_area_mix",
           chartModel: detailCharts.poundsAreaMix,
           metricKey: "pounds"
@@ -535,36 +535,36 @@ export function createReportsMetricDetailSeam(deps){
       ],
       amount: [
         detailCharts.amountTrend ? {
-          title: "Amount trend across this range",
-          context: "Context • visible Home months in this filter",
+          title: "Amount • Monthly",
+          context: "Bars • visible Home months in this filter",
           canvasId: "c_amount_trend",
           chartModel: detailCharts.amountTrend,
           metricKey: "amount"
         } : null,
         detailCharts.amountDealerMix?.labels?.length ? {
-          title: "Dealer amount mix",
-          context: "Context • top dealers in this Home filter",
+          title: "Amount • Dealer Mix",
+          context: "Bars • top dealers in this Home filter",
           canvasId: "c_amount_dealer_mix",
           chartModel: detailCharts.amountDealerMix,
           metricKey: "amount"
         } : null,
         detailCharts.amountPerTripTrend ? {
-          title: "Amount per trip",
-          context: "Context • average amount per trip by visible Home month",
+          title: "Amount/Trip • Monthly",
+          context: "Bars • average amount per trip by visible Home month",
           canvasId: "c_amount_per_trip_trend",
           chartModel: detailCharts.amountPerTripTrend,
           metricKey: "amount"
         } : null,
         detailCharts.amountPerDayTrend ? {
-          title: "Amount per fishing day",
-          context: "Context • average amount per active day by visible Home month",
+          title: "Amount/Day • Monthly",
+          context: "Bars • average amount per active day by visible Home month",
           canvasId: "c_amount_per_day_trend",
           chartModel: detailCharts.amountPerDayTrend,
           metricKey: "amount"
         } : null,
         detailCharts.amountAreaMix?.labels?.length ? {
-          title: "Strongest area by amount",
-          context: "Context • top areas in this Home filter",
+          title: "Amount • Area Mix",
+          context: "Bars • top areas in this Home filter",
           canvasId: "c_amount_area_mix",
           chartModel: detailCharts.amountAreaMix,
           metricKey: "amount"
@@ -572,22 +572,22 @@ export function createReportsMetricDetailSeam(deps){
       ],
       ppl: [
         detailCharts.pplMonthlyTrend ? {
-          title: "Monthly pay-rate trend",
-          context: "Context • visible Home months in this filter",
+          title: "$/lb • Monthly",
+          context: "Bars • visible Home months in this filter",
           canvasId: "c_ppl_monthly_trend",
           chartModel: detailCharts.pplMonthlyTrend,
           metricKey: "ppl"
         } : null,
         detailCharts.pplDealerLeaders?.labels?.length ? {
-          title: "Dealer pay-rate leader",
-          context: "Context • top dealer rates in this Home filter",
+          title: "$/lb • Dealer Leaders",
+          context: "Bars • top dealer rates in this Home filter",
           canvasId: "c_ppl_dealer_leaders",
           chartModel: detailCharts.pplDealerLeaders,
           metricKey: "ppl"
         } : null,
         detailCharts.pplRateVsPoundsTrend ? {
-          title: "Rate vs pounds context",
-          context: "Context • pounds trend beside pay-rate movement",
+          title: "Pounds • Monthly Context",
+          context: "Bars • pounds trend beside pay-rate movement",
           canvasId: "c_ppl_rate_vs_pounds",
           chartModel: detailCharts.pplRateVsPoundsTrend,
           metricKey: "pounds"
@@ -605,10 +605,10 @@ export function createReportsMetricDetailSeam(deps){
         heroClass: "trips",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Trips comparison",
+        chartTitle: "Trips • Compare",
         homeChartTitle: "Trips",
-        chartContext: primaryChart?.basisLabel || "Matched range trip totals",
-        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
+        chartContext: primaryChart?.basisLabel || "Bars • matched range trip totals",
+        homeChartContext: primaryChart?.basisLabel || "Bars • latest visible month vs previous visible month",
         chartCanvasId: "c_trips",
         secondaryCharts: isHomeMetricDetail ? homeSecondaryChartsByMetric.trips : [],
         insight: "Read this compare card with the chart to confirm trip movement in the same matched range.",
@@ -624,10 +624,10 @@ export function createReportsMetricDetailSeam(deps){
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Pounds comparison",
+        chartTitle: "Pounds • Compare",
         homeChartTitle: "Pounds",
-        chartContext: primaryChart?.basisLabel || "Matched range pound totals",
-        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
+        chartContext: primaryChart?.basisLabel || "Bars • matched range pound totals",
+        homeChartContext: primaryChart?.basisLabel || "Bars • latest visible month vs previous visible month",
         chartCanvasId: "c_lbs",
         secondaryCharts: isHomeMetricDetail ? homeSecondaryChartsByMetric.pounds : [],
         insight: "Use this compare card and chart together so the headline and values stay aligned to one matched range.",
@@ -643,24 +643,24 @@ export function createReportsMetricDetailSeam(deps){
         heroClass: "money",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Amount comparison",
+        chartTitle: "Amount • Compare",
         homeChartTitle: "Amount",
-        chartContext: primaryChart?.basisLabel || "Matched range amount totals",
-        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
+        chartContext: primaryChart?.basisLabel || "Bars • matched range amount totals",
+        homeChartContext: primaryChart?.basisLabel || "Bars • latest visible month vs previous visible month",
         chartCanvasId: "c_amount_detail",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.amount
           : [
             detailCharts.amountTrend ? {
-              title: "Amount trend across this range",
-              context: "Context • full months in this active Reports range",
+              title: "Amount • Monthly",
+              context: "Bars • full months in this active Reports range",
               canvasId: "c_amount_trend",
               chartModel: detailCharts.amountTrend,
               metricKey: "amount"
             } : null,
             {
-              title: "Amount by dealer mix",
-              context: "Context for this same active filter range",
+              title: "Amount • Dealer Mix",
+              context: "Bars • this same active filter range",
               canvasId: "c_dealer"
             }
           ],
@@ -677,10 +677,10 @@ export function createReportsMetricDetailSeam(deps){
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Average $/lb comparison",
+        chartTitle: "$/lb • Compare",
         homeChartTitle: "Avg $/lb",
-        chartContext: primaryChart?.basisLabel || "Matched range average $/lb",
-        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs previous visible month",
+        chartContext: primaryChart?.basisLabel || "Bars • matched range average $/lb",
+        homeChartContext: primaryChart?.basisLabel || "Bars • latest visible month vs previous visible month",
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail ? homeSecondaryChartsByMetric.ppl : [],
         insight: "Use this compare card and chart to read matched-range pricing without mixing full-range averages.",
