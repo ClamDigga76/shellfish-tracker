@@ -423,6 +423,9 @@ function enrichEntityMovementRow({ row, metricConfig, currentTotal, previousTota
 
 function buildMovementPayload(movement){
   return {
+    primaryMetricKey: movement?.primaryMetricKey || "",
+    primaryLabel: movement?.primaryLabel || "",
+    shareLabel: movement?.shareLabel || "",
     topGainer: buildMovementEntitySummary(movement?.topGainer),
     topDecliner: buildMovementEntitySummary(movement?.topDecliner),
     topShareGainer: buildMovementEntitySummary(movement?.topShareGainer),

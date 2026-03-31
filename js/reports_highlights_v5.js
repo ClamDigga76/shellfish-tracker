@@ -27,6 +27,14 @@ export function createReportsHighlightsSeam(deps){
     if(Math.abs(delta) <= epsilon) return "steady";
     return delta > 0 ? "up" : "down";
   };
+  const metricLabelFromMovement = (movement)=> {
+    const key = String(movement?.primaryMetricKey || "");
+    const label = String(movement?.primaryLabel || "").trim();
+    if(label) return label;
+    if(key === "ppl") return "Pay rate ($/lb)";
+    if(key === "lbs") return "Pounds";
+    return "compare metric";
+  };
 
   function buildAmountDriverText(compare){
     const pounds = compare?.metrics?.pounds;
@@ -227,7 +235,6 @@ export function createReportsHighlightsSeam(deps){
       : (metricKey === "ppl" ? signedRateText(payload.deltaValue) : (metricKey === "lbs" ? signedLbsText(payload.deltaValue) : signedMoneyText(payload.deltaValue)));
     const statusBits = [`${currentLabel} ${payload.currentTrips || 0} trips`, `${previousLabel} ${payload.previousTrips || 0} trips`];
     if(share > 0) statusBits.push(`${share}% of ${payload.shareLabel || `${noun} share`} now`);
-    if(Math.abs(safeNum(payload.shareDeltaPct)) >= 3) statusBits.push(`${Math.round(payload.shareDeltaPct)} share pts`);
     return {
       type: "summary",
       label: `${noun[0].toUpperCase()}${noun.slice(1)} compare`,
@@ -251,18 +258,37 @@ export function createReportsHighlightsSeam(deps){
       return topGainer || topDecliner;
     })();
     if(!best) return null;
-    const headline = `${best.name} ${best.compareTone === "down" ? "fell back the most" : "gained the most"} on ${movement.primaryLabel || "the compare metric"} versus the earlier period.`;
+    const primaryMetricLabel = metricLabelFromMovement(movement);
+    const headline = `${best.name} ${best.compareTone === "down" ? "fell back the most" : "gained the most"} on ${primaryMetricLabel} versus the earlier period.`;
     const value = best.deltaPct != null
       ? signedPctText(best.deltaPct)
       : (movement.primaryMetricKey === "ppl" ? signedRateText(best.deltaValue) : (movement.primaryMetricKey === "lbs" ? signedLbsText(best.deltaValue) : signedMoneyText(best.deltaValue)));
+    const movementSupportLines = [
+      {
+        label: "Pounds",
+        text: `${to2(best.currentLbs)} lbs now vs ${to2(best.previousLbs)} lbs before`,
+        tone: compareToneForRatio(best.currentLbs, best.previousLbs)
+      },
+      {
+        label: "Pay rate",
+        text: `${formatMoney(to2(best.currentPpl))}/lb now vs ${formatMoney(to2(best.previousPpl))}/lb before`,
+        tone: compareToneForRatio(best.currentPpl, best.previousPpl, 0.035)
+      },
+      {
+        label: "Amount",
+        text: `${formatMoney(to2(best.currentAmount))} now vs ${formatMoney(to2(best.previousAmount))} before`,
+        tone: compareToneForRatio(best.currentAmount, best.previousAmount)
+      }
+    ];
     return {
       type: "summary",
       label,
       headline,
       value,
       valueClass: movement.primaryMetricKey === "ppl" ? "rate ppl" : (movement.primaryMetricKey === "lbs" ? "lbsBlue" : "money"),
-      statusTone: best.compareTone,
-      statusText: `${to2(best.currentLbs)} lbs now vs ${to2(best.previousLbs)} lbs before • ${formatMoney(to2(best.currentPpl))}/lb now vs ${formatMoney(to2(best.previousPpl))}/lb before • ${formatMoney(to2(best.currentAmount))} now vs ${formatMoney(to2(best.previousAmount))} before`
+      statusTone: "steady",
+      statusText: "",
+      statusLines: movementSupportLines
     };
   }
 
@@ -446,7 +472,15 @@ export function createReportsHighlightsSeam(deps){
                 <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
                   <div class="reportsHighlightValue ${item.valueClass || ""}">${renderPercentEmphasisText(item.value)}</div>
                 </div>
-                <div class="reportsCompareRow tone-${escapeHtml(item.statusTone)}">${renderPercentEmphasisText(item.statusText)}</div>
+                ${Array.isArray(item.statusLines) && item.statusLines.length
+                  ? `<div class="reportsMovementSupportRows">${item.statusLines.map((line)=> `
+                    <div class="reportsMovementSupportLine tone-${escapeHtml(line.tone || "steady")}">
+                      <span class="reportsMovementSupportLabel">${escapeHtml(line.label || "")}</span>
+                      <span class="reportsMovementSupportValue">${renderPercentEmphasisText(line.text || "")}</span>
+                    </div>
+                  `).join("")}</div>`
+                  : `<div class="reportsCompareRow tone-${escapeHtml(item.statusTone)}">${renderPercentEmphasisText(item.statusText)}</div>`
+                }
               `}
             </${item.type === "compare" ? "button" : "div"}>
           `).join("")}
