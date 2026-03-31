@@ -333,3 +333,200 @@ export function computeTripSaveEnabled({ dealer, area, poundsInput, rateInput, p
     enabled: dealerOk && areaOk && poundsOk && rateOk
   };
 }
+
+export function createTripSharedCollectionsEngine({ getState, normalizeKey, normalizeTripRow }) {
+  function getStateRef() {
+    const source = typeof getState === "function" ? getState() : null;
+    return (source && typeof source === "object") ? source : {};
+  }
+
+  function uniqueSorted(arr) {
+    return [...new Set((arr || []).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
+  }
+
+  function resolveAreaValue(value) {
+    const rawValue = String(value || "").trim();
+    return { areaId: "", canonicalName: rawValue, rawValue, key: normalizeKey(rawValue), matchedBy: rawValue ? "raw" : "empty", record: null };
+  }
+
+  function resolveTripArea(trip) {
+    return resolveAreaValue(trip?.area || "");
+  }
+
+  function canonicalizeTripArea(trip) {
+    if (!trip || typeof trip !== "object") return trip;
+    const area = String(trip.area || "").trim();
+    const nextTrip = { ...trip, area };
+    if (Object.prototype.hasOwnProperty.call(nextTrip, "areaId")) delete nextTrip.areaId;
+    return nextTrip;
+  }
+
+  function syncAreaState(nextState = getStateRef()) {
+    const source = (nextState && typeof nextState === "object") ? nextState : getStateRef();
+    if (!Array.isArray(source.areas)) source.areas = [];
+    const tripAreas = Array.isArray(source.trips) ? source.trips.map((trip) => String(trip?.area || "").trim()) : [];
+    source.areas = uniqueSorted([...source.areas, ...tripAreas, AREA_NOT_RECORDED]);
+    if (source && typeof source === "object" && Object.prototype.hasOwnProperty.call(source, "areaRegistry")) delete source.areaRegistry;
+    return source.areas;
+  }
+
+  function addArea(rawName) {
+    const state = getStateRef();
+    const name = String(rawName || "").trim();
+    if (!name) return { created: false, value: "" };
+    ensureAreas();
+    const key = normalizeKey(name);
+    const existing = (Array.isArray(state.areas) ? state.areas : []).find((area) => normalizeKey(area) === key) || "";
+    if (existing) return { created: false, value: existing };
+    state.areas.push(name);
+    state.areas = uniqueSorted(state.areas);
+    return { created: true, value: name };
+  }
+
+  function countTripsForArea(areaName) {
+    const state = getStateRef();
+    const key = normalizeKey(areaName);
+    if (!key) return 0;
+    return (Array.isArray(state.trips) ? state.trips : []).reduce((count, trip) => count + (normalizeKey(trip?.area || "") === key ? 1 : 0), 0);
+  }
+
+  function deleteArea(areaName) {
+    const state = getStateRef();
+    const key = normalizeKey(areaName);
+    if (!key) return { ok: false, reason: "invalid-area" };
+    if (key === normalizeKey(AREA_NOT_RECORDED)) return { ok: false, reason: "protected" };
+    if (countTripsForArea(areaName) > 0) return { ok: false, reason: "in-use" };
+    const nextAreas = (Array.isArray(state.areas) ? state.areas : []).filter((area) => normalizeKey(area) !== key);
+    if (nextAreas.length === (Array.isArray(state.areas) ? state.areas : []).length) return { ok: false, reason: "missing" };
+    state.areas = nextAreas;
+    return { ok: true };
+  }
+
+  function ensureAreas() {
+    syncAreaState(getStateRef());
+  }
+
+  function ensureDealers() {
+    const state = getStateRef();
+    if (!Array.isArray(state.dealers)) state.dealers = [];
+    const seen = new Set();
+    const out = [];
+    for (const d of state.dealers) {
+      const v = String(d || "").trim();
+      if (!v) continue;
+      const k = normalizeKey(v);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(v);
+    }
+    state.dealers = out;
+  }
+
+  function getFilterOptionsFromTrips() {
+    const state = getStateRef();
+    ensureAreas();
+    const trips = Array.isArray(state.trips) ? state.trips.map((trip) => canonicalizeTripArea(normalizeTripRow(trip))).filter(Boolean) : [];
+    return {
+      dealers: uniqueSorted(trips.map((t) => t.dealer)),
+      areas: uniqueSorted([...(Array.isArray(state.areas) ? state.areas : []), ...trips.map((t) => resolveTripArea(t).canonicalName || t.area)]),
+      species: uniqueSorted(trips.map((t) => t.species))
+    };
+  }
+
+  function getLastUniqueFromTrips(field, maxN) {
+    const state = getStateRef();
+    const out = [];
+    const seen = new Set();
+    const trips = Array.isArray(state.trips) ? state.trips : [];
+    for (let i = trips.length - 1; i >= 0; i--) {
+      const t = trips[i];
+      const raw = field === "area"
+        ? (resolveTripArea(t).canonicalName || String(t?.area || "").trim())
+        : String(t?.[field] || "").trim();
+      if (!raw) continue;
+      const key = raw.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(raw);
+      if (out.length >= maxN) break;
+    }
+    return out;
+  }
+
+  function findCanonicalFromList(value, list) {
+    const v = String(value || "").trim();
+    if (!v) return "";
+    const key = v.toLowerCase();
+    for (const item of (Array.isArray(list) ? list : [])) {
+      const s = String(item || "").trim();
+      if (!s) continue;
+      if (s.toLowerCase() === key) return s;
+    }
+    return "";
+  }
+
+  function getValuesWithLegacyEntry(kind, legacyValue, values) {
+    const list = Array.isArray(values) ? values.slice() : [];
+    const legacy = String(legacyValue || "").trim();
+    if (!legacy) return list;
+    const legacyKey = normalizeKey(legacy);
+    const hasLegacy = list.some((item) => normalizeKey(String(item || "").trim()) === legacyKey);
+    if (!hasLegacy) list.unshift(legacy);
+    return list;
+  }
+
+  function getDealerSelectList(topDealers, selectedDealer = "") {
+    const state = getStateRef();
+    const out = [];
+    const seenDealerKeys = new Set();
+    for (const dealer of getValuesWithLegacyEntry("dealer", selectedDealer, [...(Array.isArray(topDealers) ? topDealers : []), ...(Array.isArray(state.dealers) ? state.dealers : [])])) {
+      const val = String(dealer || "").trim();
+      if (!val) continue;
+      const key = normalizeKey(val);
+      if (seenDealerKeys.has(key)) continue;
+      seenDealerKeys.add(key);
+      out.push(val);
+    }
+    return out;
+  }
+
+  function buildAreaOptionsHtml({ selectedArea, addSentinel, escapeHtml }) {
+    const state = getStateRef();
+    ensureAreas();
+    const selectedCanonical = resolveAreaValue(selectedArea).canonicalName || selectedArea;
+    return ["", ...getValuesWithLegacyEntry("area", selectedCanonical, Array.isArray(state.areas) ? state.areas : [])].map((area) => {
+      const label = area ? area : "—";
+      const sel = (String(selectedCanonical || "") === String(area || "")) ? "selected" : "";
+      return `<option value="${escapeHtml(String(area || ""))}" ${sel}>${label}</option>`;
+    }).concat(`<option value="${addSentinel}">+ Add new Area</option>`).join("");
+  }
+
+  function buildDealerOptionsHtml({ selectedDealer, dealerList, addSentinel, escapeHtml }) {
+    return ["", ...(Array.isArray(dealerList) ? dealerList : [])].map((dealer) => {
+      const label = dealer ? dealer : "—";
+      const sel = (normalizeKey(String(selectedDealer || "")) === normalizeKey(String(dealer || ""))) ? "selected" : "";
+      const value = String(dealer || "").replaceAll('"', "&quot;");
+      return `<option value="${value}" ${sel}>${escapeHtml(label)}</option>`;
+    }).concat(`<option value="${addSentinel}">+ Add new Dealer</option>`).join("");
+  }
+
+  return {
+    resolveAreaValue,
+    resolveTripArea,
+    canonicalizeTripArea,
+    syncAreaState,
+    addArea,
+    countTripsForArea,
+    deleteArea,
+    ensureAreas,
+    ensureDealers,
+    uniqueSorted,
+    getFilterOptionsFromTrips,
+    getLastUniqueFromTrips,
+    findCanonicalFromList,
+    getValuesWithLegacyEntry,
+    getDealerSelectList,
+    buildAreaOptionsHtml,
+    buildDealerOptionsHtml
+  };
+}
