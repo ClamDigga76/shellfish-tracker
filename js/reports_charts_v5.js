@@ -108,16 +108,45 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     ctx.textBaseline = "alphabetic";
   }
 
-  function drawBottomTicks(ctx, labels, geom, y, frame){
-    const maxTicks = frame.compact ? 4 : 6;
+  function formatAxisLabel(label, { labelType = "category", compact = false } = {}){
+    const text = String(label || "").trim();
+    if(!text) return "";
+    if(labelType === "month"){
+      const directMonthMatch = text.match(/^([A-Za-z]{3,9})\s+(\d{2,4})$/);
+      if(directMonthMatch){
+        const mon = directMonthMatch[1].slice(0,3);
+        const yearToken = directMonthMatch[2];
+        if(compact) return `${mon} '${yearToken.slice(-2)}`;
+        return `${mon} ${yearToken.slice(-2)}`;
+      }
+      if(/^\d{4}-\d{2}$/.test(text)){
+        const [year, month] = text.split("-");
+        const monthDate = new Date(`${year}-${month}-01T00:00:00Z`);
+        const mon = monthDate.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+        return compact ? `${mon} '${year.slice(-2)}` : `${mon} ${year.slice(-2)}`;
+      }
+    }
+    if(labelType === "compare"){
+      return compact ? text.replace(/\s+/g, " ").slice(0, 10) : text;
+    }
+    return text;
+  }
+
+  function drawBottomTicks(ctx, labels, geom, y, frame, options = {}){
+    const maxTicks = Number(options.maxTicks) || (frame.compact ? 4 : 6);
     const step = Math.max(1, Math.ceil(labels.length / maxTicks));
+    const alignMode = options.alignMode === "bar-center" ? "bar-center" : "index";
+    const labelType = options.labelType || "category";
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     let lastRight = -Infinity;
     labels.forEach((lab,i)=>{
       if(i % step !== 0 && i !== labels.length - 1) return;
-      const x = geom.x0 + ((geom.plotW * i) / (Math.max(1, labels.length - 1)));
-      const text = String(lab || "");
+      const slotW = labels.length > 0 ? (geom.plotW / labels.length) : geom.plotW;
+      const x = alignMode === "bar-center"
+        ? geom.x0 + (slotW * i) + (slotW * 0.5)
+        : geom.x0 + ((geom.plotW * i) / (Math.max(1, labels.length - 1)));
+      const text = formatAxisLabel(lab, { labelType, compact: frame.compact });
       const m = ctx.measureText(text);
       let tx = x - (m.width / 2);
       tx = Math.max(2, Math.min(geom.xRight - m.width, tx));
@@ -214,52 +243,6 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     state.rafId = requestAnimationFrame(tick);
   }
 
-  function drawLineChart(canvasId, values, labels, options = {}){
-    const c = setupCanvas(document.getElementById(canvasId));
-    if(!c) return;
-    const { canvas, ctx, w, h } = c;
-    const frame = chartFrame(w,h);
-    const targetMax = Math.max(1e-6, ...values, 0);
-    const targetMin = Math.min(...values, 0);
-    const targetSpan = (targetMax - targetMin) || targetMax || 1;
-    const lineColor = options.color || palette.ppl;
-    const yFormatter = typeof options.yFormatter === "function" ? options.yFormatter : formatShortMoney;
-    const topLabel = typeof options.topLabel === "function" ? options.topLabel(targetMax) : yFormatter(targetMax);
-    renderAnimatedChart(canvas, values, (animatedVals, alpha)=>{
-      clear(ctx,w,h);
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = palette.plotBg;
-      ctx.fillRect(frame.left, frame.top, w - frame.left - frame.right, h - frame.top - frame.bottom);
-      const geom = drawAxes(ctx,w,h,frame);
-      ctx.strokeStyle = lineColor;
-      ctx.lineWidth = frame.compact ? 2.8 : 3.2;
-      ctx.beginPath();
-      animatedVals.forEach((v,i)=>{
-        const x = geom.x0 + (i/(animatedVals.length-1 || 1))*geom.plotW;
-        const y = geom.y0 - ((v - targetMin)/targetSpan)*geom.plotH;
-        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-      });
-      ctx.stroke();
-      ctx.fillStyle = lineColor;
-      animatedVals.forEach((v,i)=>{
-        const x = geom.x0 + (i/(animatedVals.length-1 || 1))*geom.plotW;
-        const y = geom.y0 - ((v - targetMin)/targetSpan)*geom.plotH;
-        ctx.beginPath();
-        ctx.arc(x,y,frame.compact ? 3.3 : 3.8,0,Math.PI*2);
-        ctx.fill();
-      });
-      drawBottomTicks(ctx, labels, geom, h-10, frame);
-      drawYTickLabels(ctx, geom, frame, [
-        { pos: 1, label: yFormatter(targetMax) },
-        { pos: 0.5, label: yFormatter(targetMin + (targetSpan * 0.5)) },
-        { pos: 0, label: yFormatter(targetMin) }
-      ]);
-      drawYLabel(ctx, topLabel, frame);
-      ctx.restore();
-    });
-  }
-
   function drawBarChart(canvasId, values, labels, barColor, yLabelFormatter, topLabel, options = {}){
     const c = setupCanvas(document.getElementById(canvasId));
     if(!c) return;
@@ -287,7 +270,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       if(options.customLabels){
         options.customLabels({ ctx, frame, geom, barW, canvasHeight: h });
       }else{
-        drawBottomTicks(ctx, labels, geom, h-10, frame);
+        drawBottomTicks(ctx, labels, geom, h-10, frame, {
+          alignMode: "bar-center",
+          labelType: options.xLabelType || "category",
+          maxTicks: options.maxTicks || 0
+        });
       }
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
@@ -318,7 +305,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const values = chronologicalSeries.values.map((v)=> Number(v) || 0);
       const labels = chronologicalSeries.labels.map((v)=> String(v || ""));
       const paletteSet = resolveMetricDetailPalette(metricKey || "amount");
-      drawLineChart(canvasId, values, labels, { color: paletteSet.color, yFormatter: paletteSet.yFormatter, topLabel: paletteSet.topFormatter });
+      const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
+      drawBarChart(canvasId, values, labels, paletteSet.color, paletteSet.yFormatter, paletteSet.topFormatter(topValue), {
+        minTop: metricKey === "trips" ? 1 : 0,
+        minBarWidth: frameMinBarWidth(labels.length),
+        barPad: (frame)=> frame.compact ? 1.2 : 1.8,
+        xLabelType: "month"
+      });
       return true;
     }
     const values = Array.isArray(chartModel?.values) ? chartModel.values.map((v)=> Number(v) || 0) : [];
@@ -335,7 +328,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       {
         minTop: metricKey === "trips" ? 1 : 0,
         minBarWidth: 18,
-        barPad: (frame)=> frame.compact ? 8 : 14
+        barPad: (frame)=> frame.compact ? 8 : 14,
+        xLabelType: labels.length <= 3 ? "compare" : "category"
       }
     );
     return true;
@@ -396,18 +390,25 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     drawMetricDetailChart("c_seasonality_amount", seasonalityChart, seasonalityChart.metricKey || "amount");
   }
 
+  function frameMinBarWidth(count){
+    if(count <= 2) return 20;
+    if(count <= 4) return 16;
+    if(count <= 8) return 10;
+    return 4;
+  }
+
   const amountValues = monthRowsChronological.map((r)=> Number(r.amt) || 0);
-  drawLineChart("c_amount_monthly", amountValues, monthRowsChronological.map((r)=> r.label), {
-    color: palette.money,
-    yFormatter: formatCompactMoney,
-    topLabel: formatShortMoney
+  drawBarChart("c_amount_monthly", amountValues, monthRowsChronological.map((r)=> r.label), palette.money, formatCompactMoney, formatShortMoney(Math.max(...amountValues, 0)), {
+    minBarWidth: frameMinBarWidth(amountValues.length),
+    barPad: (frame)=> frame.compact ? 1.1 : 1.5,
+    xLabelType: "month"
   });
 
   const pplValues = monthRowsChronological.map((r)=> Number(r.avg) || 0);
-  drawLineChart("c_ppl", pplValues, monthRowsChronological.map((r)=> r.label), {
-    color: palette.ppl,
-    yFormatter: formatShortMoney,
-    topLabel: formatShortMoney
+  drawBarChart("c_ppl", pplValues, monthRowsChronological.map((r)=> r.label), palette.ppl, formatShortMoney, formatShortMoney(Math.max(...pplValues, 0)), {
+    minBarWidth: frameMinBarWidth(pplValues.length),
+    barPad: (frame)=> frame.compact ? 1.1 : 1.5,
+    xLabelType: "month"
   });
 
   const dealerAmountRows = dealerRows.slice(0,8);
@@ -473,20 +474,23 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   const amountPerTripValues = monthRowsChronological.map((r)=> Number(r.amountPerTrip) || 0);
   drawBarChart("c_amount_per_trip", amountPerTripValues, monthRowsChronological.map((r)=> r.label), palette.money, formatCompactMoney, formatShortMoney(Math.max(...amountPerTripValues, 0)), {
     minBarWidth: 4,
-    barPad: (frame)=> frame.compact ? 0.8 : 1.2
+    barPad: (frame)=> frame.compact ? 0.8 : 1.2,
+    xLabelType: "month"
   });
 
   const lbsValues = monthRowsChronological.map((r)=> Number(r.lbs) || 0);
   drawBarChart("c_lbs", lbsValues, monthRowsChronological.map((r)=> r.label), palette.lbs, formatCompactCount, `${Math.round(Math.max(...lbsValues, 0))}`, {
     minBarWidth: 4,
-    barPad: (frame)=> frame.compact ? 0.8 : 1.2
+    barPad: (frame)=> frame.compact ? 0.8 : 1.2,
+    xLabelType: "month"
   });
 
   const tripValues = tripsTimelineChronological.map((r)=> Number(r.count) || 0);
   drawBarChart("c_trips", tripValues, tripsTimelineChronological.map((r)=> r.shortLabel || r.label || ""), palette.trips, formatCompactCount, `${Math.round(Math.max(...tripValues, 1))}`, {
     minTop: 1,
     minBarWidth: 4,
-    barPad: (frame)=> frame.compact ? 0.8 : 1.2
+    barPad: (frame)=> frame.compact ? 0.8 : 1.2,
+    xLabelType: "month"
   });
 
 }
