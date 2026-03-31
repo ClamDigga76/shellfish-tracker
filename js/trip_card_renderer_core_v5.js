@@ -1,3 +1,5 @@
+import { AREA_NOT_RECORDED } from "./trip_shared_engine_v5.js";
+
 export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, resolveTripPayRate, deriveTripSettlement, formatMoney, escapeHtml }){
   function resolveTripCardModel(t, opts = {}){
     const {
@@ -7,7 +9,9 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
     const date = t?.invalidDateQuarantined ? "Invalid date (quarantined)" : formatDateDMY(t?.dateISO || "");
     const dealerRaw = String(t?.dealer || "").trim();
     const dealer = dealerRaw || "(dealer)";
-    const area = String(t?.area || "").trim() || "(area)";
+    const areaRaw = String(t?.area || "").trim();
+    const areaUnknown = !areaRaw || areaRaw === AREA_NOT_RECORDED;
+    const area = areaUnknown ? AREA_NOT_RECORDED : areaRaw;
     const species = String(t?.species || "").trim() || "(species)";
     const notesRaw = String(t?.notes || "").trim();
     const notesPreview = notesRaw ? (notesRaw.length > 56 ? `${notesRaw.slice(0, 56)}…` : notesRaw) : "";
@@ -30,6 +34,7 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
       dealer,
       area,
       species,
+      areaUnknown,
       notesPreview,
       lbs,
       amountText: formatMoney(amt),
@@ -53,6 +58,9 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
     const isTripsBrowse = variant === "tripsBrowse";
     const variantClass = isTripsBrowse ? "tripCardVariantTripsBrowse" : "tripCardVariantStandard";
     const primaryIdentity = model.area;
+    const primaryIdentityContent = model.areaUnknown
+      ? `<span class="tripCardUnknownBadge" aria-label="Area unknown">${escapeHtml(primaryIdentity)}</span>`
+      : escapeHtml(primaryIdentity);
     const secondaryIdentity = model.dealer;
     const primaryIdentityClass = "tripCardArea";
     const secondaryIdentityClass = "tripCardDealer";
@@ -67,7 +75,7 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
         <div class="tripCardGrid">
           <div class="tripCardLeftStack">
             <div class="tripCardTextRow tripCardDate">${escapeHtml(model.dateText)}</div>
-            <div class="tripCardTextRow ${primaryIdentityClass} tripCardIdentityPrimary">${escapeHtml(primaryIdentity)}</div>
+            <div class="tripCardTextRow ${primaryIdentityClass} tripCardIdentityPrimary${model.areaUnknown ? " tripCardAreaUnknown" : ""}">${primaryIdentityContent}</div>
             <div class="tripCardTextRow ${secondaryIdentityClass} tripCardIdentitySecondary">${escapeHtml(secondaryIdentity)}</div>
             <div class="tripCardTextRow tripCardSpecies" title="Species">${escapeHtml(model.species)}</div>
             ${model.notesPreview ? `<div class="tripCardTextRow tripCardNotes" title="Notes">${escapeHtml(model.notesPreview)}</div>` : ""}
