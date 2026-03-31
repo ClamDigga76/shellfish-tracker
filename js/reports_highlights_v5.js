@@ -156,6 +156,52 @@ export function createReportsHighlightsSeam(deps){
     return `Compared over ${windowText}${trustText}`;
   }
 
+  function buildMetricUnavailableCard({ payload, headlineLabel, formatter, period }){
+    const suppressionCode = String(payload?.suppressionCode || period?.suppressionCode || "");
+    const reason = String(payload?.reason || period?.reason || "").trim();
+    const currentLabel = period?.currentLabel || "Current";
+    const previousLabel = period?.previousLabel || "Prior";
+    const currentValue = Number(payload?.currentValue) || 0;
+    const previousValue = Number(payload?.previousValue) || 0;
+    let headline = `${headlineLabel} compare is unavailable in this range.`;
+    let compareText = "Compare paused for this range.";
+
+    if(suppressionCode === "missing-periods"){
+      headline = "Need one more month to compare this metric.";
+      compareText = "Not enough months yet.";
+    }else if(suppressionCode === "non-adjacent-months"){
+      headline = "Compare is paused until months are back-to-back.";
+      compareText = "Previous month is missing.";
+    }else if(suppressionCode === "baseline-too-weak"){
+      headline = `${headlineLabel} compare is waiting on a stronger baseline.`;
+      compareText = "Baseline too weak for this metric.";
+    }else if(reason){
+      headline = "Compare is held back to keep this read fair.";
+      compareText = "Held back for fairness/support.";
+    }
+
+    return {
+      type: "compare",
+      unavailable: true,
+      metricKey: payload?.metricKey || "",
+      label: payload?.label || headlineLabel,
+      headline,
+      value: formatter(currentValue),
+      valueClass: payload?.metricKey === "amount"
+        ? "money"
+        : (payload?.metricKey === "pounds" ? "lbsBlue" : (payload?.metricKey === "ppl" ? "rate ppl" : (payload?.metricKey === "trips" ? "trips" : ""))),
+      compareTone: "steady",
+      compareText,
+      aLabel: currentLabel,
+      bLabel: previousLabel,
+      aValue: formatter(currentValue),
+      bValue: formatter(previousValue),
+      aPct: 100,
+      bPct: 100,
+      statusText: reason || "Compare returns automatically when support is strong enough."
+    };
+  }
+
   function buildLeaderSummary({ label, entity, totalValue, noun, shareLabel, valueType = "money" }){
     if(!entity) return null;
     const entityValue = valueType === "pounds"
@@ -407,7 +453,13 @@ export function createReportsHighlightsSeam(deps){
     const areaShareShift = buildShareShiftSummary({ shareShift: compare.area?.shareShift, noun: "area" });
 
     const trendCue = (()=>{
-      if(monthRows.length < 3) return null;
+      if(monthRows.length < 3){
+        return {
+          unavailable: true,
+          headline: "Rolling trend needs at least three months.",
+          tone: "steady"
+        };
+      }
       const recent = monthRows.slice(-3);
       const lbs = recent.map((r)=> safeNum(r.lbs));
       const tripsVals = recent.map((r)=> safeNum(r.trips));
@@ -440,10 +492,12 @@ export function createReportsHighlightsSeam(deps){
         type: "summary",
         label: "Rolling trend",
         headline: trendCue.headline,
-        value: latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—",
+        value: trendCue.unavailable ? "Unavailable" : (latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"),
         valueClass: "lbsBlue",
         statusTone: "steady",
-        statusText: latestMonth && priorMonth ? `${latestMonth.label} vs ${priorMonth.label}` : "Gathering trend context"
+        statusText: trendCue.unavailable
+          ? "Not enough months yet."
+          : (latestMonth && priorMonth ? `${latestMonth.label} vs ${priorMonth.label}` : "Gathering trend context")
       } : null,
       compare.period?.suppressed ? {
         type: "summary",
@@ -473,7 +527,7 @@ export function createReportsHighlightsSeam(deps){
         <div class="reportsHighlightsGuide">Tap <b>View breakdown</b> on a compare card for metric detail.</div>
         <div class="reportsHighlightsGrid">
           ${highlights.map(item=>`
-            <${item.type === "compare" ? "button" : "div"} class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare reportsHighlightItem--drilldown" : "summary"}" ${item.type === "compare" ? `type="button" data-metric-detail="${escapeHtml(item.metricKey)}" aria-label="View ${escapeHtml(item.label)} breakdown"` : ""}>
+            <${item.type === "compare" && !item.unavailable ? "button" : "div"} class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare" : "summary"} ${item.type === "compare" && !item.unavailable ? "reportsHighlightItem--drilldown" : ""}" ${item.type === "compare" && !item.unavailable ? `type="button" data-metric-detail="${escapeHtml(item.metricKey)}" aria-label="View ${escapeHtml(item.label)} breakdown"` : ""}>
               <div class="reportsHighlightLabel">${escapeHtml(item.label)}</div>
               <div class="reportsHighlightHeadline">${renderPercentEmphasisText(item.headline)}</div>
               ${item.type === "compare" ? `
@@ -485,17 +539,21 @@ export function createReportsHighlightsSeam(deps){
                   </div>
                 </div>
                 <div class="reportsCompareRow tone-${escapeHtml(item.compareTone)}">${renderPercentEmphasisText(item.compareText)}</div>
-                <div class="reportsCompareBars" role="presentation">
-                  <div class="reportsCompareLine">
-                    <div class="reportsCompareMeta"><span>${escapeHtml(item.aLabel)}</span><b class="${item.valueClass || ""}">${escapeHtml(item.aValue)}</b></div>
-                    <div class="reportsCompareBarTrack"><span style="width:${item.aPct}%"></span></div>
+                ${item.unavailable ? `
+                  <div class="reportsCompareRow reportsCompareRow--support tone-steady">${renderPercentEmphasisText(item.statusText || "Compare unavailable in this range.")}</div>
+                ` : `
+                  <div class="reportsCompareBars" role="presentation">
+                    <div class="reportsCompareLine">
+                      <div class="reportsCompareMeta"><span>${escapeHtml(item.aLabel)}</span><b class="${item.valueClass || ""}">${escapeHtml(item.aValue)}</b></div>
+                      <div class="reportsCompareBarTrack"><span style="width:${item.aPct}%"></span></div>
+                    </div>
+                    <div class="reportsCompareLine">
+                      <div class="reportsCompareMeta"><span>${escapeHtml(item.bLabel)}</span><b class="${item.valueClass || ""}">${escapeHtml(item.bValue)}</b></div>
+                      <div class="reportsCompareBarTrack muted"><span style="width:${item.bPct}%"></span></div>
+                    </div>
                   </div>
-                  <div class="reportsCompareLine">
-                    <div class="reportsCompareMeta"><span>${escapeHtml(item.bLabel)}</span><b class="${item.valueClass || ""}">${escapeHtml(item.bValue)}</b></div>
-                    <div class="reportsCompareBarTrack muted"><span style="width:${item.bPct}%"></span></div>
-                  </div>
-                </div>
-                <div class="reportsHighlightAction" aria-hidden="true">Open metric detail →</div>
+                  <div class="reportsHighlightAction" aria-hidden="true">Open metric detail →</div>
+                `}
               ` : `
                 <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
                   <div class="reportsHighlightValueWrap">
@@ -513,7 +571,7 @@ export function createReportsHighlightsSeam(deps){
                   : `<div class="reportsCompareRow reportsCompareRow--support tone-${escapeHtml(item.statusTone || "steady")}">${renderPercentEmphasisText(item.statusText)}</div>`
                 }
               `}
-            </${item.type === "compare" ? "button" : "div"}>
+            </${item.type === "compare" && !item.unavailable ? "button" : "div"}>
           `).join("")}
         </div>
       </div>
@@ -521,7 +579,10 @@ export function createReportsHighlightsSeam(deps){
   }
 
   function buildMetricCard({ payload, headlineLabel, formatter, period, compare }){
-    if(!payload || payload.suppressed) return null;
+    if(!payload) return null;
+    if(payload.suppressed){
+      return buildMetricUnavailableCard({ payload, headlineLabel, formatter, period });
+    }
     const cur = payload.currentValue;
     const prev = payload.previousValue;
     const maxVal = Math.max(cur, prev, 1);
