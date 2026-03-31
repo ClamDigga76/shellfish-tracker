@@ -233,7 +233,7 @@ export function createUnifiedFiltersSeam({
     };
 
     const quarantinedTotalCount = trips.filter((t)=> Boolean(t?.invalidDateQuarantined) || !isValidISODate(t?.dateISO)).length;
-    const excludedQuarantinedCount = trips.filter((t)=> (Boolean(t?.invalidDateQuarantined) || !isValidISODate(t?.dateISO)) && matchesNonDateCriteria(t)).length;
+    const excludedQuarantinedCount = trips.filter((t)=> !isValidISODate(t?.dateISO) && matchesNonDateCriteria(t)).length;
     const rows = trips.filter((t)=> isValidISODate(t.dateISO) && t.dateISO >= r.fromISO && t.dateISO <= r.toISO && matchesNonDateCriteria(t));
 
     const totalLbs = rows.reduce((a,t)=> a + (Number(t.pounds)||0), 0);
