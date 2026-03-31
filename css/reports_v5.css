@@ -122,6 +122,9 @@
 .reportsCompareRow .reportsPercentEmphasis{background:rgba(255,255,255,.14)}
 .reportsCompareRow.tone-up .reportsPercentEmphasis,.reportsMetricCompare.tone-up .reportsPercentEmphasis,.homeMetricCompare.tone-up .reportsPercentEmphasis{color:#f3fff8;background:rgba(46,160,67,.22);box-shadow:inset 0 0 0 1px rgba(46,160,67,.28)}
 .reportsCompareRow.tone-down .reportsPercentEmphasis,.reportsMetricCompare.tone-down .reportsPercentEmphasis,.homeMetricCompare.tone-down .reportsPercentEmphasis{color:#fff6f6;background:rgba(255,77,79,.2);box-shadow:inset 0 0 0 1px rgba(255,77,79,.28)}
+.reportsHighlightValue--tone-up .reportsPercentEmphasis{color:#f3fff8;background:rgba(46,160,67,.24);box-shadow:inset 0 0 0 1px rgba(46,160,67,.3)}
+.reportsHighlightValue--tone-down .reportsPercentEmphasis{color:#fff6f6;background:rgba(255,77,79,.22);box-shadow:inset 0 0 0 1px rgba(255,77,79,.3)}
+.reportsHighlightValue--tone-steady .reportsPercentEmphasis{color:#eef3ff;background:rgba(174,184,205,.2);box-shadow:inset 0 0 0 1px rgba(174,184,205,.28)}
 .reportsMetricCompareText .reportsPercentEmphasis,.homeMetricCompareText .reportsPercentEmphasis{margin-left:.06em;margin-right:.06em;font-size:1.12em;background:rgba(255,255,255,.16)}
 .reportsCompareRow.tone-up{color:var(--good)}
 .reportsCompareRow.tone-down{color:var(--bad)}
@@ -347,6 +350,9 @@
 :root[data-theme="light"] .reportsMiniPreviewBar.muted .reportsMiniPreviewFill,
 :root[data-theme="light"] .reportsCompareBarTrack.muted span{background:rgba(128,143,170,.34);}
 :root[data-theme="light"] .reportsPercentEmphasis{color:#13203a;background:rgba(47,109,246,.12);box-shadow:inset 0 0 0 1px rgba(47,109,246,.12);}
+:root[data-theme="light"] .reportsHighlightValue--tone-up .reportsPercentEmphasis{color:#166534;background:rgba(34,197,94,.2);box-shadow:inset 0 0 0 1px rgba(22,163,74,.28);}
+:root[data-theme="light"] .reportsHighlightValue--tone-down .reportsPercentEmphasis{color:#b42318;background:rgba(248,113,113,.2);box-shadow:inset 0 0 0 1px rgba(220,38,38,.25);}
+:root[data-theme="light"] .reportsHighlightValue--tone-steady .reportsPercentEmphasis{color:#344054;background:rgba(148,163,184,.22);box-shadow:inset 0 0 0 1px rgba(100,116,139,.26);}
 :root[data-theme="light"] .reportsNavShell{border-color:rgba(37,53,92,.12);background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,246,255,.88));}
 :root[data-theme="light"] .reportsTimeframeShell{border-color:rgba(37,53,92,.12);background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,246,255,.88));}
 :root[data-theme="light"] .reportsNavLabel{color:rgba(24,35,59,.62);}
