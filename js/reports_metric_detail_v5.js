@@ -211,18 +211,14 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
   return {
     trips: buildHomeCompareBarChart({ labels, metricKey: "trips", currentValue: period?.current?.trips, previousValue: period?.previous?.trips }),
     tripsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
-    tripsActiveDaysTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "fishingDays" }),
     tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
-    tripsActivityRhythmTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "tripsPerFishingDay" }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
     poundsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" }),
     poundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
-    poundsPerDayTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerDay" }),
     poundsAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByPounds, metricKey: "pounds", valueKey: "lbs", basisLabel: "Strongest areas by pounds in this Home filter" }),
     amount: buildHomeCompareBarChart({ labels, metricKey: "amount", currentValue: period?.current?.amount, previousValue: period?.previous?.amount }),
     amountTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amt" }),
     amountPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amountPerTrip" }),
-    amountPerDayTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amountPerDay" }),
     amountDealerMix: buildHomeTopRowsBarChart({ rows: dealerRows, metricKey: "amount", valueKey: "amt", basisLabel: "Top dealers by amount in this Home filter" }),
     amountAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByAmount, metricKey: "amount", valueKey: "amt", basisLabel: "Strongest areas by amount in this Home filter" }),
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
@@ -472,114 +468,95 @@ export function createReportsMetricDetailSeam(deps){
       if(targetMetric === "ppl") return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
       return `${to2(value)}`;
     };
+    const amountMixChart = detailCharts.amountDealerMix?.labels?.length
+      ? detailCharts.amountDealerMix
+      : (detailCharts.amountAreaMix?.labels?.length ? detailCharts.amountAreaMix : null);
+    const amountMixMeta = detailCharts.amountDealerMix?.labels?.length
+      ? {
+        title: "Total amount by dealer",
+        context: "Bars • top dealers in this Home filter",
+        canvasId: "c_amount_dealer_mix"
+      }
+      : (detailCharts.amountAreaMix?.labels?.length
+        ? {
+          title: "Strongest areas by amount",
+          context: "Bars • top areas in this Home filter",
+          canvasId: "c_amount_area_mix"
+        }
+        : null);
     const homeSecondaryChartsByMetric = {
       trips: [
         detailCharts.tripsMonthlyTrend ? {
-          title: "Trips • Monthly",
+          title: "Trips by month",
           context: "Bars • visible Home months in this filter",
           canvasId: "c_trips_monthly_trend",
           chartModel: detailCharts.tripsMonthlyTrend,
           metricKey: "trips"
         } : null,
-        detailCharts.tripsActiveDaysTrend ? {
-          title: "Fishing Days • Monthly",
-          context: "Bars • active fishing days by visible Home month",
-          canvasId: "c_trips_active_days",
-          chartModel: detailCharts.tripsActiveDaysTrend,
-          metricKey: "trips"
-        } : null,
         detailCharts.tripsPoundsPerTripTrend ? {
-          title: "Pounds/Trip • Monthly",
+          title: "Average pounds per trip by month",
           context: "Bars • productivity by visible Home month",
           canvasId: "c_trips_pounds_per_trip",
           chartModel: detailCharts.tripsPoundsPerTripTrend,
           metricKey: "pounds"
-        } : null,
-        detailCharts.tripsActivityRhythmTrend ? {
-          title: "Trips/Day • Monthly",
-          context: "Bars • trips per active fishing day",
-          canvasId: "c_trips_activity_rhythm",
-          chartModel: detailCharts.tripsActivityRhythmTrend,
-          metricKey: "trips"
         } : null
       ],
       pounds: [
         detailCharts.poundsMonthlyTrend ? {
-          title: "Pounds • Monthly",
+          title: "Total pounds by month",
           context: "Bars • visible Home months in this filter",
           canvasId: "c_pounds_monthly_trend",
           chartModel: detailCharts.poundsMonthlyTrend,
           metricKey: "pounds"
         } : null,
-        detailCharts.poundsPerTripTrend ? {
-          title: "Pounds/Trip • Monthly",
-          context: "Bars • productivity by visible Home month",
-          canvasId: "c_pounds_per_trip_trend",
-          chartModel: detailCharts.poundsPerTripTrend,
-          metricKey: "pounds"
-        } : null,
-        detailCharts.poundsPerDayTrend ? {
-          title: "Pounds/Day • Monthly",
-          context: "Bars • fishing-day output across visible Home months",
-          canvasId: "c_pounds_per_day_trend",
-          chartModel: detailCharts.poundsPerDayTrend,
-          metricKey: "pounds"
-        } : null,
         detailCharts.poundsAreaMix?.labels?.length ? {
-          title: "Pounds • Area Mix",
+          title: "Strongest areas by pounds",
           context: "Bars • top areas in this Home filter",
           canvasId: "c_pounds_area_mix",
           chartModel: detailCharts.poundsAreaMix,
+          metricKey: "pounds"
+        } : null,
+        detailCharts.poundsPerTripTrend ? {
+          title: "Average pounds per trip by month",
+          context: "Bars • productivity by visible Home month",
+          canvasId: "c_pounds_per_trip_trend",
+          chartModel: detailCharts.poundsPerTripTrend,
           metricKey: "pounds"
         } : null
       ],
       amount: [
         detailCharts.amountTrend ? {
-          title: "Amount • Monthly",
+          title: "Total amount by month",
           context: "Bars • visible Home months in this filter",
           canvasId: "c_amount_trend",
           chartModel: detailCharts.amountTrend,
           metricKey: "amount"
         } : null,
-        detailCharts.amountDealerMix?.labels?.length ? {
-          title: "Amount • Dealer Mix",
-          context: "Bars • top dealers in this Home filter",
-          canvasId: "c_amount_dealer_mix",
-          chartModel: detailCharts.amountDealerMix,
+        amountMixChart && amountMixMeta ? {
+          title: amountMixMeta.title,
+          context: amountMixMeta.context,
+          canvasId: amountMixMeta.canvasId,
+          chartModel: amountMixChart,
           metricKey: "amount"
         } : null,
         detailCharts.amountPerTripTrend ? {
-          title: "Amount/Trip • Monthly",
+          title: "Average amount per trip by month",
           context: "Bars • average amount per trip by visible Home month",
           canvasId: "c_amount_per_trip_trend",
           chartModel: detailCharts.amountPerTripTrend,
-          metricKey: "amount"
-        } : null,
-        detailCharts.amountPerDayTrend ? {
-          title: "Amount/Day • Monthly",
-          context: "Bars • average amount per active day by visible Home month",
-          canvasId: "c_amount_per_day_trend",
-          chartModel: detailCharts.amountPerDayTrend,
-          metricKey: "amount"
-        } : null,
-        detailCharts.amountAreaMix?.labels?.length ? {
-          title: "Amount • Area Mix",
-          context: "Bars • top areas in this Home filter",
-          canvasId: "c_amount_area_mix",
-          chartModel: detailCharts.amountAreaMix,
           metricKey: "amount"
         } : null
       ],
       ppl: [
         detailCharts.pplMonthlyTrend ? {
-          title: "$/lb • Monthly",
+          title: "Average pay rate by month",
           context: "Bars • visible Home months in this filter",
           canvasId: "c_ppl_monthly_trend",
           chartModel: detailCharts.pplMonthlyTrend,
           metricKey: "ppl"
         } : null,
         detailCharts.pplDealerLeaders?.labels?.length ? {
-          title: "$/lb • Dealer Leaders",
+          title: "Dealer pay-rate leaders",
           context: "Bars • top dealer rates in this Home filter",
           canvasId: "c_ppl_dealer_leaders",
           chartModel: detailCharts.pplDealerLeaders,
