@@ -10,6 +10,50 @@ export function createUnifiedFiltersSeam({
   canonicalizeTripArea,
   isValidISODate
 } = {}){
+  function formatCorrectionDateLabel(iso){
+    const safeISO = String(iso || "").slice(0,10);
+    if(!isValidISODate?.(safeISO)) return safeISO || "today";
+    try{
+      const dt = new Date(`${safeISO}T00:00:00Z`);
+      return new Intl.DateTimeFormat("en-US", { month:"short", day:"numeric", year:"numeric", timeZone:"UTC" }).format(dt);
+    }catch(_){
+      return safeISO;
+    }
+  }
+
+  function normalizeCustomRangeWithFeedback({ fromISO, toISO } = {}){
+    const now = isoToday();
+    const y = now.slice(0,4);
+    const defaultFromISO = `${y}-01-01`;
+    const rawFromISO = String(fromISO || "").slice(0,10);
+    const rawToISO = String(toISO || "").slice(0,10);
+    let normalizedFromISO = rawFromISO;
+    let normalizedToISO = rawToISO;
+    const messages = [];
+
+    if(!isValidISODate?.(normalizedFromISO)){
+      normalizedFromISO = defaultFromISO;
+      messages.push(`Start date was missing, so this range begins on ${formatCorrectionDateLabel(normalizedFromISO)}.`);
+    }
+    if(!isValidISODate?.(normalizedToISO)){
+      normalizedToISO = now;
+      messages.push(`End date was missing, so this range ends on ${formatCorrectionDateLabel(normalizedToISO)}.`);
+    }
+    if(normalizedFromISO > normalizedToISO){
+      const tmp = normalizedFromISO;
+      normalizedFromISO = normalizedToISO;
+      normalizedToISO = tmp;
+      messages.push("From and To were reversed, so the dates were swapped.");
+    }
+
+    return {
+      fromISO: normalizedFromISO,
+      toISO: normalizedToISO,
+      messages,
+      didCorrect: messages.length > 0
+    };
+  }
+
   function ensureUnifiedFilters(){
     const state = getState?.() || {};
 
@@ -39,7 +83,8 @@ export function createUnifiedFiltersSeam({
         dealer: "all",
         area: "all",
         species: "all",
-        text: ""
+        text: "",
+        customRangeCorrectionMessages: []
       };
     }
 
@@ -52,17 +97,12 @@ export function createUnifiedFiltersSeam({
     if(f.text == null) f.text = "";
     if(f.fromISO == null) f.fromISO = "";
     if(f.toISO == null) f.toISO = "";
+    if(!Array.isArray(f.customRangeCorrectionMessages)) f.customRangeCorrectionMessages = [];
 
     if(f.range === "custom"){
-      const now = isoToday();
-      const y = now.slice(0,4);
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(String(f.fromISO||""))) f.fromISO = `${y}-01-01`;
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(String(f.toISO||""))) f.toISO = now;
-      if(f.fromISO > f.toISO){
-        const tmp = f.fromISO;
-        f.fromISO = f.toISO;
-        f.toISO = tmp;
-      }
+      const normalized = normalizeCustomRangeWithFeedback({ fromISO: f.fromISO, toISO: f.toISO });
+      f.fromISO = normalized.fromISO;
+      f.toISO = normalized.toISO;
     }
   }
 
@@ -97,17 +137,9 @@ export function createUnifiedFiltersSeam({
     if(filter.range === "30d") return { fromISO:backDays(30), toISO:now, label:"Last 30 days" };
     if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"Last 7 Days" };
 
-    let fromISO = String(filter.fromISO||"").slice(0,10);
-    let toISO = String(filter.toISO||"").slice(0,10);
-
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(fromISO)) fromISO = `${y}-01-01`;
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(toISO)) toISO = now;
-
-    if(fromISO > toISO){
-      const tmp = fromISO;
-      fromISO = toISO;
-      toISO = tmp;
-    }
+    const normalized = normalizeCustomRangeWithFeedback({ fromISO: filter.fromISO, toISO: filter.toISO });
+    const fromISO = normalized.fromISO;
+    const toISO = normalized.toISO;
     return { fromISO, toISO, label: `${fromISO} → ${toISO}` };
   }
 
@@ -142,7 +174,8 @@ export function createUnifiedFiltersSeam({
       dealer: partial?.dealer || "all",
       area: partial?.area || "all",
       species: partial?.species || "all",
-      text: partial?.text || ""
+      text: partial?.text || "",
+      customRangeCorrectionMessages: Array.isArray(partial?.customRangeCorrectionMessages) ? partial.customRangeCorrectionMessages : []
     };
     const resolved = resolveUnifiedRange(f);
     return { ...f, fromISO: resolved.fromISO, toISO: resolved.toISO };
@@ -154,7 +187,8 @@ export function createUnifiedFiltersSeam({
       fromISO: parseReportDateToISO?.(hf?.from || "") || "",
       toISO: parseReportDateToISO?.(hf?.to || "") || "",
       dealer: "all",
-      area: "all"
+      area: "all",
+      customRangeCorrectionMessages: Array.isArray(hf?.customRangeCorrectionMessages) ? hf.customRangeCorrectionMessages : []
     });
   }
 
@@ -165,7 +199,8 @@ export function createUnifiedFiltersSeam({
       fromISO: parseReportDateToISO?.(rf?.from || "") || "",
       toISO: parseReportDateToISO?.(rf?.to || "") || "",
       dealer: rf?.dealer ? String(rf.dealer) : "all",
-      area: rawArea
+      area: rawArea,
+      customRangeCorrectionMessages: Array.isArray(rf?.customRangeCorrectionMessages) ? rf.customRangeCorrectionMessages : []
     });
   }
 
@@ -229,6 +264,7 @@ export function createUnifiedFiltersSeam({
     buildUnifiedFilterFromHomeFilter,
     buildUnifiedFilterFromReportsFilter,
     applyUnifiedTripFilter,
-    getFilteredTrips
+    getFilteredTrips,
+    normalizeCustomRangeWithFeedback
   };
 }

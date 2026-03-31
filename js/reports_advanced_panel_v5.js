@@ -3,7 +3,8 @@ export function createReportsAdvancedPanelSeam(deps){
     escapeHtml,
     formatReportDateValue,
     parseReportDateToISO,
-    bindDatePill
+    bindDatePill,
+    normalizeCustomRangeWithFeedback
   } = deps;
 
   function renderAdvancedPanel({ reportsFilter, dealers, areas }){
@@ -92,24 +93,17 @@ export function createReportsAdvancedPanelSeam(deps){
           if(from && !to) to = from;
           if(!from && to) from = to;
 
-          if(from || to){
-            const sISO = parseReportDateToISO(from);
-            const eISO = parseReportDateToISO(to);
-            if(!sISO || !eISO){
-              showToast("Invalid dates");
-              return;
-            }
-            state.reportsFilter.mode = "RANGE";
-          }
-
-          from = parseReportDateToISO(from);
-          to = parseReportDateToISO(to);
-
-          state.reportsFilter.from = from;
-          state.reportsFilter.to = to;
+          const fromISO = parseReportDateToISO(from);
+          const toISO = parseReportDateToISO(to);
+          const wantsCustomRange = !!(fromISO || toISO);
+          const normalized = normalizeCustomRangeWithFeedback({ fromISO, toISO });
+          state.reportsFilter.from = wantsCustomRange ? normalized.fromISO : "";
+          state.reportsFilter.to = wantsCustomRange ? normalized.toISO : "";
+          state.reportsFilter.customRangeCorrectionMessages = wantsCustomRange ? normalized.messages : [];
+          if(wantsCustomRange) state.reportsFilter.mode = "RANGE";
 
           saveState();
-          showToast("Filter applied");
+          showToast("Filter updated");
           renderReports();
           return;
         }
@@ -120,22 +114,17 @@ export function createReportsAdvancedPanelSeam(deps){
         const area = String(root.querySelector("#repAdvArea")?.value || "");
         const fromISO = parseReportDateToISO(from);
         const toISO = parseReportDateToISO(to);
-
-        if((from && !fromISO) || (to && !toISO)){
-          showToast("Invalid dates");
-          return;
-        }
-
-        state.reportsFilter.from = fromISO;
-        state.reportsFilter.to = toISO;
+        const wantsCustomRange = !!(fromISO || toISO);
+        const normalized = normalizeCustomRangeWithFeedback({ fromISO, toISO });
+        state.reportsFilter.from = wantsCustomRange ? normalized.fromISO : "";
+        state.reportsFilter.to = wantsCustomRange ? normalized.toISO : "";
+        state.reportsFilter.customRangeCorrectionMessages = wantsCustomRange ? normalized.messages : [];
         state.reportsFilter.dealer = dealer;
         state.reportsFilter.area = area;
-        if(fromISO || toISO){
-          state.reportsFilter.mode = "RANGE";
-        }
+        if(wantsCustomRange) state.reportsFilter.mode = "RANGE";
 
         saveState();
-        showToast("Filter applied");
+        showToast("Filter updated");
         renderReports();
       };
     }
@@ -149,8 +138,9 @@ export function createReportsAdvancedPanelSeam(deps){
           state.reportsFilter.to = "";
           state.reportsFilter.dealer = "";
           state.reportsFilter.area = "";
+          state.reportsFilter.customRangeCorrectionMessages = [];
         }else{
-          state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
+          state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false, customRangeCorrectionMessages:[] };
         }
 
         saveState();

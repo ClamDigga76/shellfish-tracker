@@ -14,6 +14,7 @@ export function createReportsScreenRenderer(deps){
     escapeHtml,
     resolveUnifiedRange,
     formatDateDMY,
+    normalizeCustomRangeWithFeedback,
     getApp,
     renderPageHeader,
     saveState,
@@ -36,7 +37,8 @@ export function createReportsScreenRenderer(deps){
     escapeHtml,
     formatReportDateValue,
     parseReportDateToISO,
-    bindDatePill
+    bindDatePill,
+    normalizeCustomRangeWithFeedback
   });
   const renderReportsAdvancedPanel = typeof reportsAdvancedPanel?.renderAdvancedPanel === "function"
     ? reportsAdvancedPanel.renderAdvancedPanel
@@ -327,6 +329,10 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       </div>
     `
     : "";
+  const customRangeCorrectionMessages = Array.isArray(rf.customRangeCorrectionMessages) ? rf.customRangeCorrectionMessages : [];
+  const renderCorrectionSummary = (fMode === "RANGE" && customRangeCorrectionMessages.length)
+    ? `<div class="reportsRangeCorrectionSummary muted small" aria-live="polite">${customRangeCorrectionMessages.map((msg)=>`<div>${escapeHtml(msg)}</div>`).join("")}</div>`
+    : "";
 
   const advOpen = isAdvancedActive;
   const advPanel = renderReportsAdvancedPanel({
@@ -381,6 +387,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
           <span class="reportsAdvancedDisclosureState">${escapeHtml(activeFilterSummaryLabel)}</span>
         </button>
         ${renderActiveFilterSummary}
+        ${renderCorrectionSummary}
         ${advPanel}
       </div>
 
@@ -433,6 +440,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     if(normalizedKey !== "RANGE"){
       state.reportsFilter.from = "";
       state.reportsFilter.to = "";
+      state.reportsFilter.customRangeCorrectionMessages = [];
     }
   };
 

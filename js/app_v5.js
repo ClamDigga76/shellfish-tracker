@@ -516,7 +516,8 @@ const {
   buildUnifiedFilterFromHomeFilter,
   buildUnifiedFilterFromReportsFilter,
   applyUnifiedTripFilter,
-  getFilteredTrips
+  getFilteredTrips,
+  normalizeCustomRangeWithFeedback
 } = unifiedFiltersSeam;
 
 function uniqueSorted(arr){
@@ -781,7 +782,9 @@ function getTripsFilteredRows(){
   const r = {
     startISO: filtered.range.fromISO,
     endISO: filtered.range.toISO,
-    label: (tf.range === "custom") ? "CUSTOM" : (rangeMap[resolveUnifiedRange(tf).label] || "YTD")
+    label: (tf.range === "custom")
+      ? `${filtered.range.fromISO} → ${filtered.range.toISO}`
+      : (rangeMap[resolveUnifiedRange(tf).label] || "YTD")
   };
 
   let rows = filtered.rows;
@@ -810,6 +813,7 @@ function ensureReportsFilter(){
   if(state.reportsFilter.dealer == null) state.reportsFilter.dealer = "";
   if(state.reportsFilter.area == null) state.reportsFilter.area = "";
   if(state.reportsFilter.adv == null) state.reportsFilter.adv = false;
+  if(!Array.isArray(state.reportsFilter.customRangeCorrectionMessages)) state.reportsFilter.customRangeCorrectionMessages = [];
 }
 
 
@@ -818,6 +822,7 @@ function ensureHomeFilter(){
   if(!state.homeFilter.mode) state.homeFilter.mode = "YTD";
   if(state.homeFilter.from == null) state.homeFilter.from = "";
   if(state.homeFilter.to == null) state.homeFilter.to = "";
+  if(!Array.isArray(state.homeFilter.customRangeCorrectionMessages)) state.homeFilter.customRangeCorrectionMessages = [];
 }
 
 
@@ -866,7 +871,7 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
   saveState: () => saveState(),
   scheduleStateSave: () => scheduleStateSave(),
   renderApp: () => render(),
-  isoToday,
+  normalizeCustomRangeWithFeedback,
   bindDatePill,
   exportTripsWithLabel,
   showToast
@@ -889,6 +894,7 @@ const { renderHome } = createHomeDashboardRenderer({
   saveState: () => saveState(),
   render,
   bindDatePill,
+  normalizeCustomRangeWithFeedback,
   showToast,
   tipMsg: typeof tipMsg !== "undefined" ? tipMsg : undefined,
   exportBackup,
@@ -983,6 +989,7 @@ const { renderReports, renderHomeMetricDetail } = createReportsScreenRenderer({
   escapeHtml,
   resolveUnifiedRange,
   formatDateDMY,
+  normalizeCustomRangeWithFeedback,
   getApp: () => getApp(),
   renderPageHeader,
   saveState: () => saveState(),

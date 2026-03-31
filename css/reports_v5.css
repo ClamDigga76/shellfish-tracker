@@ -81,6 +81,7 @@
 .reportsAdvancedDisclosure.on .reportsAdvancedDisclosureState,
 .reportsAdvancedDisclosure.is-selected .reportsAdvancedDisclosureState{color:currentColor}
 .reportsActiveFilterSummary{display:grid;gap:5px;padding:6px 2px 1px}
+.reportsRangeCorrectionSummary{display:grid;gap:4px;padding:2px 2px 0}
 .reportsActiveFilterSummaryTitle{font-size:10px;font-weight:820;letter-spacing:.08em;text-transform:uppercase;color:#9ea8bc}
 .reportsActiveFilterChipRow{display:flex;flex-wrap:wrap;gap:6px}
 .reportsActiveFilterChip{display:inline-flex;align-items:center;min-height:22px;padding:0 9px;border-radius:999px;font-size:11px;line-height:1.2;font-weight:730;color:#e6edf8;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12)}
