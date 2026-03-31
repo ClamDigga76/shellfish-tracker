@@ -14,6 +14,8 @@ export function createSettingsListManagement(deps){
     normalizeKey,
     escapeHtml,
     showToast,
+    openModal,
+    closeModal,
     openConfirmModal,
     copyTextWithFeedback,
     getDebugInfo,
@@ -46,9 +48,12 @@ export function createSettingsListManagement(deps){
       </div>`).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No areas yet</div><div class="emptyStateBody">Add your first area below so New Trip choices are ready.</div></div>`;
 
     const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
-      <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+      <div class="row" style="justify-content:space-between;align-items:center;gap:10px;margin-top:10px">
         <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
-        <button class="smallbtn danger" data-del-dealer="${i}" type="button">Delete</button>
+        <div class="row" style="gap:8px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="smallbtn" data-rename-dealer="${i}" type="button">Rename</button>
+          <button class="smallbtn danger" data-del-dealer="${i}" type="button">Delete</button>
+        </div>
       </div>
     `).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No dealers yet</div><div class="emptyStateBody">Add your first dealer below so trip entry stays fast.</div></div>`;
 
@@ -110,6 +115,90 @@ export function createSettingsListManagement(deps){
     }
 
     return { ok: true, from: canonicalOldName, to: newName, updatedTrips };
+  }
+
+  function renameDealerInState(oldDealerName, nextDealerName){
+    const state = getState();
+    const oldName = String(oldDealerName || "").trim();
+    const newName = String(nextDealerName || "").trim();
+    if(!oldName || !newName) return { ok: false, reason: "invalid" };
+
+    const oldKey = normalizeKey(oldName);
+    const newKey = normalizeKey(newName);
+    if(!oldKey || !newKey) return { ok: false, reason: "invalid" };
+    if(oldKey === newKey) return { ok: false, reason: "same" };
+
+    ensureDealers();
+    const dealers = Array.isArray(state.dealers) ? state.dealers : [];
+    const oldIndex = dealers.findIndex((dealer)=> normalizeKey(String(dealer || "")) === oldKey);
+    if(oldIndex < 0) return { ok: false, reason: "missing" };
+    const duplicate = dealers.some((dealer, idx)=> idx !== oldIndex && normalizeKey(String(dealer || "")) === newKey);
+    if(duplicate) return { ok: false, reason: "duplicate" };
+
+    dealers[oldIndex] = newName;
+
+    const trips = Array.isArray(state.trips) ? state.trips : [];
+    let updatedTrips = 0;
+    for(let i = 0; i < trips.length; i += 1){
+      const trip = trips[i];
+      const tripDealer = String(trip?.dealer || "").trim();
+      if(!tripDealer) continue;
+      if(normalizeKey(tripDealer) !== oldKey) continue;
+      trips[i] = { ...trip, dealer: newName };
+      updatedTrips += 1;
+    }
+
+    return { ok: true, from: oldName, to: newName, updatedTrips };
+  }
+
+  function openRenameModal({ kind, currentName, onSave }){
+    if(typeof openModal !== "function" || typeof closeModal !== "function"){
+      showToast("Rename is unavailable right now");
+      return;
+    }
+    const label = String(kind || "item").trim().toLowerCase();
+    const modalId = Date.now();
+    const inputId = `renameInput_${modalId}`;
+    const cancelId = `renameCancel_${modalId}`;
+    const saveId = `renameSave_${modalId}`;
+
+    openModal({
+      title: `Rename ${label}`,
+      backdropClose: false,
+      escClose: true,
+      showCloseButton: false,
+      position: "center",
+      html: `
+        <div class="field">
+          <label class="muted small" for="${inputId}">New ${label} name</label>
+          <input class="input" id="${inputId}" maxlength="40" autocomplete="off" enterkeyhint="done" value="${escapeHtml(String(currentName || ""))}" />
+        </div>
+        <div class="modalActions" style="margin-top:12px">
+          <button class="btn" id="${cancelId}" type="button">Cancel</button>
+          <button class="btn primary" id="${saveId}" type="button">Save</button>
+        </div>
+      `,
+      onOpen: ()=>{
+        const input = document.getElementById(inputId);
+        document.getElementById(cancelId)?.addEventListener("click", ()=>closeModal());
+        const submit = ()=>{
+          if(typeof onSave === "function") onSave(String(input?.value || ""));
+        };
+        document.getElementById(saveId)?.addEventListener("click", submit);
+        input?.addEventListener("keydown", (e)=>{
+          if(e.key === "Enter"){
+            e.preventDefault();
+            submit();
+          }
+        });
+        setTimeout(()=>{
+          try{
+            input?.focus();
+            input?.select();
+          }catch(_){ }
+        }, 30);
+      }
+    });
   }
 
   function countTripsUsingValue(kind, rawValue){
@@ -234,37 +323,91 @@ export function createSettingsListManagement(deps){
             showToast("Area is protected");
             return;
           }
-          const typed = prompt(`Rename area "${areaName}" to:`, areaName);
-          if(typed == null) return;
-          const nextName = String(typed || "").trim();
-          if(!nextName){
-            showToast("Enter an area name");
+          openRenameModal({
+            kind: "Area",
+            currentName: areaName,
+            onSave: (typed)=>{
+              const nextName = String(typed || "").trim();
+              if(!nextName){
+                showToast("Enter an area name");
+                return;
+              }
+              if(nextName.length > 40){
+                showToast("Keep it under 40 chars");
+                return;
+              }
+              const result = renameAreaInState(areaName, nextName);
+              if(!result?.ok){
+                if(result?.reason === "protected"){
+                  showToast("Area is protected");
+                  return;
+                }
+                if(result?.reason === "same"){
+                  closeModal();
+                  showToast("Area name is unchanged");
+                  return;
+                }
+                if(result?.reason === "duplicate"){
+                  showToast("That area already exists");
+                  return;
+                }
+                showToast("Area rename failed");
+                return;
+              }
+              closeModal();
+              saveState();
+              refreshListMgmt("areas", true);
+              showToast(`Area renamed • Updated ${result.updatedTrips} trip(s)`);
+            }
+          });
+        };
+      });
+
+      (getApp()?.querySelectorAll("button[data-rename-dealer]") || []).forEach((btn)=>{
+        btn.onclick = ()=>{
+          const i = Number(btn.getAttribute("data-rename-dealer"));
+          if(!Number.isFinite(i) || i < 0){
+            showToast("Dealer rename failed");
             return;
           }
-          if(nextName.length > 40){
-            showToast("Keep it under 40 chars");
+          const dealerName = String(state.dealers?.[i] || "").trim();
+          if(!dealerName){
+            showToast("Dealer rename failed");
             return;
           }
-          const result = renameAreaInState(areaName, nextName);
-          if(!result?.ok){
-            if(result?.reason === "protected"){
-              showToast("Area is protected");
-              return;
+          openRenameModal({
+            kind: "Dealer",
+            currentName: dealerName,
+            onSave: (typed)=>{
+              const nextName = String(typed || "").trim();
+              if(!nextName){
+                showToast("Enter a dealer name");
+                return;
+              }
+              if(nextName.length > 40){
+                showToast("Keep it under 40 chars");
+                return;
+              }
+              const result = renameDealerInState(dealerName, nextName);
+              if(!result?.ok){
+                if(result?.reason === "same"){
+                  closeModal();
+                  showToast("Dealer name is unchanged");
+                  return;
+                }
+                if(result?.reason === "duplicate"){
+                  showToast("That dealer already exists");
+                  return;
+                }
+                showToast("Dealer rename failed");
+                return;
+              }
+              closeModal();
+              saveState();
+              refreshListMgmt("dealers", true);
+              showToast(`Dealer renamed • Updated ${result.updatedTrips} trip(s)`);
             }
-            if(result?.reason === "same"){
-              showToast("Area name is unchanged");
-              return;
-            }
-            if(result?.reason === "duplicate"){
-              showToast("That area already exists");
-              return;
-            }
-            showToast("Area rename failed");
-            return;
-          }
-          saveState();
-          refreshListMgmt("areas", true);
-          showToast(`Area renamed • Updated ${result.updatedTrips} trip(s)`);
+          });
         };
       });
 
@@ -278,7 +421,6 @@ export function createSettingsListManagement(deps){
           const tripCount = countTripsForArea(areaName);
           if(tripCount > 0){
             showToast(`Can't delete area "${areaName}" yet. ${tripCount} trip(s) still use it.`, { haptic: "none" });
-            showToast("Area is used by saved trips");
             return;
           }
           const okToDelete = typeof openConfirmModal === "function"
@@ -294,6 +436,10 @@ export function createSettingsListManagement(deps){
           if(!result?.ok){
             if(result?.reason === "protected"){
               showToast("Area is protected");
+              return;
+            }
+            if(result?.reason === "in-use"){
+              showToast(`Can't delete area "${areaName}" yet. It is used by saved trips.`, { haptic: "none" });
               return;
             }
             showToast("Area can't be deleted yet");
@@ -313,7 +459,6 @@ export function createSettingsListManagement(deps){
           const inUseCount = countTripsUsingValue("dealer", name);
           if(inUseCount > 0){
             showToast(`Can't delete dealer "${name}" yet. ${inUseCount} trip(s) still use it.`, { haptic: "none" });
-            showToast("Dealer is used by saved trips");
             return;
           }
           const okToDelete = typeof openConfirmModal === "function"
