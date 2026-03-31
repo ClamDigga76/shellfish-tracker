@@ -11,6 +11,8 @@ export function createReportsHighlightsSeam(deps){
   const pctText = (value)=> `${Math.abs(Math.round(safeNum(value) * 100))}%`;
   const signedPctText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${Math.round(safeNum(value) * 100)}%`;
   const signedMoneyText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${formatMoney(to2(safeNum(value)))}`;
+  const signedRateText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${formatMoney(to2(safeNum(value)))}/lb`;
+  const signedLbsText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${to2(safeNum(value))} lbs`;
   const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
   const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
   const buildPeriodLabel = (period)=> `${period?.currentLabel || "Current"} vs ${period?.previousLabel || "Prior"}`;
@@ -128,21 +130,23 @@ export function createReportsHighlightsSeam(deps){
     return `Compared over ${windowText}${trustText}`;
   }
 
-  function buildLeaderSummary({ label, entity, totalAmount, noun }){
+  function buildLeaderSummary({ label, entity, totalValue, noun, shareLabel, valueType = "money" }){
     if(!entity) return null;
-    const share = totalAmount > 0 ? Math.round((safeNum(entity.amt) / totalAmount) * 100) : 0;
+    const entityValue = valueType === "pounds" ? safeNum(entity.lbs) : safeNum(entity.amt);
+    const share = totalValue > 0 ? Math.round((entityValue / totalValue) * 100) : 0;
+    const valueText = valueType === "pounds" ? `${to2(entityValue)} lbs` : formatMoney(to2(entityValue));
     const headline = share >= 50
-      ? `${entity.name} carried most ${noun} dollars in this range.`
-      : `${entity.name} finished on top for ${noun} dollars in this range.`;
+      ? `${entity.name} carried most ${shareLabel} in this range.`
+      : `${entity.name} finished on top for ${shareLabel} in this range.`;
     const statusText = share > 0
-      ? `${entity.trips} trips • ${to2(entity.lbs)} lbs • ${share}% of range $`
+      ? `${entity.trips} trips • ${to2(entity.lbs)} lbs • ${share}% of ${shareLabel}`
       : `${entity.trips} trips • ${to2(entity.lbs)} lbs`;
     return {
       type: "summary",
       label,
       headline,
-      value: formatMoney(to2(entity.amt)),
-      valueClass: "money",
+      value: valueText,
+      valueClass: valueType === "pounds" ? "lbsBlue" : "money",
       statusTone: "up",
       statusText
     };
@@ -173,20 +177,23 @@ export function createReportsHighlightsSeam(deps){
     if(leaderChange.changed && leaderChange.currentLeader?.name === payload.entityName){
       headline = `${payload.entityName} moved into the ${noun} lead ahead of ${leaderChange.previousLeader?.name || previousLabel}.`;
     }else if(payload.compareTone === "up"){
-      headline = `${payload.entityName} earned more than in ${previousLabel}${share >= 45 ? " and drove much of the gain" : ""}.`;
+      headline = `${payload.entityName} improved vs ${previousLabel} on ${payload.compareMetricLabel || "compare metric"}${share >= 45 ? " and drove much of the outcome" : ""}.`;
     }else if(payload.compareTone === "down"){
-      headline = `${payload.entityName} came in below ${previousLabel}${share >= 45 ? ", which pulled on the overall result" : ""}.`;
+      headline = `${payload.entityName} softened vs ${previousLabel} on ${payload.compareMetricLabel || "compare metric"}${share >= 45 ? ", which pulled on the overall result" : ""}.`;
     }
-    const value = payload.percentValid ? signedPctText(payload.deltaPct) : signedMoneyText(payload.deltaValue);
+    const metricKey = String(payload.compareMetric || "");
+    const value = payload.percentValid
+      ? signedPctText(payload.deltaPct)
+      : (metricKey === "ppl" ? signedRateText(payload.deltaValue) : (metricKey === "lbs" ? signedLbsText(payload.deltaValue) : signedMoneyText(payload.deltaValue)));
     const statusBits = [`${currentLabel} ${payload.currentTrips || 0} trips`, `${previousLabel} ${payload.previousTrips || 0} trips`];
-    if(share > 0) statusBits.push(`${share}% of ${noun} $ now`);
+    if(share > 0) statusBits.push(`${share}% of ${payload.shareLabel || `${noun} share`} now`);
     if(Math.abs(safeNum(payload.shareDeltaPct)) >= 3) statusBits.push(`${Math.round(payload.shareDeltaPct)} share pts`);
     return {
       type: "summary",
       label: `${noun[0].toUpperCase()}${noun.slice(1)} compare`,
       headline,
       value,
-      valueClass: "money",
+      valueClass: metricKey === "ppl" ? "rate ppl" : (metricKey === "lbs" ? "lbsBlue" : "money"),
       statusTone: payload.compareTone,
       statusText: statusBits.join(" • ")
     };
@@ -204,16 +211,18 @@ export function createReportsHighlightsSeam(deps){
       return topGainer || topDecliner;
     })();
     if(!best) return null;
-    const headline = `${best.name} ${best.compareTone === "down" ? "fell back the most" : "gained the most"} compared with the earlier period.`;
-    const value = best.deltaPct != null ? signedPctText(best.deltaPct) : signedMoneyText(best.deltaValue);
+    const headline = `${best.name} ${best.compareTone === "down" ? "fell back the most" : "gained the most"} on ${movement.primaryLabel || "the compare metric"} versus the earlier period.`;
+    const value = best.deltaPct != null
+      ? signedPctText(best.deltaPct)
+      : (movement.primaryMetricKey === "ppl" ? signedRateText(best.deltaValue) : (movement.primaryMetricKey === "lbs" ? signedLbsText(best.deltaValue) : signedMoneyText(best.deltaValue)));
     return {
       type: "summary",
       label,
       headline,
       value,
-      valueClass: "money",
+      valueClass: movement.primaryMetricKey === "ppl" ? "rate ppl" : (movement.primaryMetricKey === "lbs" ? "lbsBlue" : "money"),
       statusTone: best.compareTone,
-      statusText: `${formatMoney(to2(best.currentAmount))} now vs ${formatMoney(to2(best.previousAmount))} before • ${best.confidenceLabel === "early" ? "early read" : ((best.confidenceLabel || "weak") === "weak" ? "light read" : "strong read")}`
+      statusText: `${to2(best.currentLbs)} lbs now vs ${to2(best.previousLbs)} lbs before • ${formatMoney(to2(best.currentPpl))}/lb now vs ${formatMoney(to2(best.previousPpl))}/lb before • ${formatMoney(to2(best.currentAmount))} now vs ${formatMoney(to2(best.previousAmount))} before`
     };
   }
 
@@ -226,7 +235,7 @@ export function createReportsHighlightsSeam(deps){
       value: `${Math.round(safeNum(leaderChange.currentLeader.currentSharePct))}%`,
       valueClass: "money",
       statusTone: "up",
-      statusText: `${leaderChange.currentLeader.name} now • ${leaderChange.previousLeader.name} before`
+      statusText: `${leaderChange.currentLeader.name} now • ${leaderChange.previousLeader.name} before • ${noun} share metric`
     };
   }
 
@@ -244,7 +253,7 @@ export function createReportsHighlightsSeam(deps){
     return {
       type: "summary",
       label: `${noun[0].toUpperCase()}${noun.slice(1)} share shift`,
-      headline: `${strongest.name} ${direction} the most ${noun} dollar share.`,
+      headline: `${strongest.name} ${direction} the most ${noun} share (${noun === "area" ? "pounds" : "dollars"}).`,
       value: `${Math.round(strongest.shareDeltaPct)} pts`,
       valueClass: "money",
       statusTone: strongest.shareDeltaPct > 0 ? "up" : "down",
@@ -259,7 +268,7 @@ export function createReportsHighlightsSeam(deps){
     const priorMonth = monthRows[monthRows.length - 2] || null;
     const compare = compareFoundation || buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
     const totalDealerAmount = dealerRows.reduce((sum, row)=> sum + safeNum(row?.amt), 0);
-    const totalAreaAmount = areaRows.reduce((sum, row)=> sum + safeNum(row?.amt), 0);
+    const totalAreaPounds = areaRows.reduce((sum, row)=> sum + safeNum(row?.lbs), 0);
 
     const metricCompareCards = [
       buildMetricCard({
@@ -316,13 +325,13 @@ export function createReportsHighlightsSeam(deps){
     })();
 
     const dealerShare = totalDealerAmount > 0 ? Math.round((safeNum(topDealer?.amt) / totalDealerAmount) * 100) : 0;
-    const areaShare = totalAreaAmount > 0 ? Math.round((safeNum(strongestArea?.amt) / totalAreaAmount) * 100) : 0;
+    const areaShare = totalAreaPounds > 0 ? Math.round((safeNum(strongestArea?.lbs) / totalAreaPounds) * 100) : 0;
 
     const summaryCards = [
-      buildLeaderSummary({ label: "Top dealer", entity: topDealer, totalAmount: totalDealerAmount, noun: "dealer" }),
+      buildLeaderSummary({ label: "Top dealer", entity: topDealer, totalValue: totalDealerAmount, noun: "dealer", shareLabel: "dealer dollars share", valueType: "money" }),
       buildEntityCompareSummary({ payload: compare.dealer, period: compare.period, share: dealerShare, noun: "dealer" }),
       buildTrailingSummary({ label: "Weakest dealer", entity: weakestDealer, leader: topDealer, noun: "dealer" }),
-      buildLeaderSummary({ label: "Strongest area", entity: strongestArea, totalAmount: totalAreaAmount, noun: "area" }),
+      buildLeaderSummary({ label: "Top area by pounds", entity: strongestArea, totalValue: totalAreaPounds, noun: "area", shareLabel: "area pounds share", valueType: "pounds" }),
       buildEntityCompareSummary({ payload: compare.area, period: compare.period, share: areaShare, noun: "area" }),
       buildTrailingSummary({ label: "Weakest area", entity: weakestArea, leader: strongestArea, noun: "area" }),
       dealerMovement,
