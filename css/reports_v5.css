@@ -117,18 +117,28 @@
 .reportsMiniPreviewBar.muted .reportsMiniPreviewFill{background:rgba(222,228,243,.52)}
 .reportsCompareRow{margin-top:10px;font-size:12px;line-height:1.3;color:#acb4c4;font-weight:720;min-height:16px}
 .reportsCompareRow--support{margin-top:9px;color:#acb4c4}
+.reportsHighlightMetricRow--summary .reportsHighlightValue .reportsPercentEmphasis{background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09)}
 .reportsPercentEmphasis{display:inline-block;margin:0 .08em;padding:.08em .44em .1em;border-radius:999px;font-size:1.08em;line-height:1.1;font-weight:880;letter-spacing:.01em;font-variant-numeric:tabular-nums;color:#f7fbff;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);white-space:nowrap;vertical-align:baseline}
 .reportsHighlightHeadline .reportsPercentEmphasis{margin-left:.04em;margin-right:.04em;background:rgba(255,255,255,.09)}
 .reportsCompareRow .reportsPercentEmphasis{background:rgba(255,255,255,.14)}
 .reportsCompareRow.tone-up .reportsPercentEmphasis,.reportsMetricCompare.tone-up .reportsPercentEmphasis,.homeMetricCompare.tone-up .reportsPercentEmphasis{color:#f3fff8;background:rgba(46,160,67,.22);box-shadow:inset 0 0 0 1px rgba(46,160,67,.28)}
 .reportsCompareRow.tone-down .reportsPercentEmphasis,.reportsMetricCompare.tone-down .reportsPercentEmphasis,.homeMetricCompare.tone-down .reportsPercentEmphasis{color:#fff6f6;background:rgba(255,77,79,.2);box-shadow:inset 0 0 0 1px rgba(255,77,79,.28)}
-.reportsHighlightValue--tone-up .reportsPercentEmphasis{color:#f3fff8;background:rgba(46,160,67,.24);box-shadow:inset 0 0 0 1px rgba(46,160,67,.3)}
-.reportsHighlightValue--tone-down .reportsPercentEmphasis{color:#fff6f6;background:rgba(255,77,79,.22);box-shadow:inset 0 0 0 1px rgba(255,77,79,.3)}
-.reportsHighlightValue--tone-steady .reportsPercentEmphasis{color:#eef3ff;background:rgba(174,184,205,.2);box-shadow:inset 0 0 0 1px rgba(174,184,205,.28)}
+.reportsHighlightMetricRow--summary .reportsHighlightValue--tone-up .reportsPercentEmphasis{color:#f3fff8;background:rgba(46,160,67,.32);box-shadow:inset 0 0 0 1px rgba(46,160,67,.42)}
+.reportsHighlightMetricRow--summary .reportsHighlightValue--tone-down .reportsPercentEmphasis{color:#fff6f6;background:rgba(255,77,79,.3);box-shadow:inset 0 0 0 1px rgba(255,77,79,.42)}
+.reportsHighlightMetricRow--summary .reportsHighlightValue--tone-steady .reportsPercentEmphasis{color:#eef3ff;background:rgba(174,184,205,.24);box-shadow:inset 0 0 0 1px rgba(174,184,205,.34)}
 .reportsMetricCompareText .reportsPercentEmphasis,.homeMetricCompareText .reportsPercentEmphasis{margin-left:.06em;margin-right:.06em;font-size:1.12em;background:rgba(255,255,255,.16)}
 .reportsCompareRow.tone-up{color:var(--good)}
 .reportsCompareRow.tone-down{color:var(--bad)}
 .reportsCompareRow.tone-neutral,.reportsCompareRow.tone-steady{color:var(--neutral)}
+.reportsCompareRow--support.tone-up,
+.reportsCompareRow--support.tone-down,
+.reportsCompareRow--support.tone-neutral,
+.reportsCompareRow--support.tone-steady{color:#b5bece}
+.reportsCompareRow--support .reportsPercentEmphasis{background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.reportsCompareRow--support.tone-up .reportsPercentEmphasis{color:#f3fff8;background:rgba(46,160,67,.22);box-shadow:inset 0 0 0 1px rgba(46,160,67,.28)}
+.reportsCompareRow--support.tone-down .reportsPercentEmphasis{color:#fff6f6;background:rgba(255,77,79,.2);box-shadow:inset 0 0 0 1px rgba(255,77,79,.28)}
+.reportsCompareRow--support.tone-neutral .reportsPercentEmphasis,
+.reportsCompareRow--support.tone-steady .reportsPercentEmphasis{color:#eef3ff;background:rgba(174,184,205,.2);box-shadow:inset 0 0 0 1px rgba(174,184,205,.26)}
 .reportsMovementSupportRows{margin-top:10px;display:grid;gap:6px}
 .reportsMovementSupportLine{display:grid;grid-template-columns:auto 1fr;gap:7px;align-items:start;font-size:12px;line-height:1.32;color:#acb4c4;font-weight:700}
 .reportsMovementSupportLabel{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#9ea8bc}
@@ -350,9 +360,15 @@
 :root[data-theme="light"] .reportsMiniPreviewBar.muted .reportsMiniPreviewFill,
 :root[data-theme="light"] .reportsCompareBarTrack.muted span{background:rgba(128,143,170,.34);}
 :root[data-theme="light"] .reportsPercentEmphasis{color:#13203a;background:rgba(47,109,246,.12);box-shadow:inset 0 0 0 1px rgba(47,109,246,.12);}
-:root[data-theme="light"] .reportsHighlightValue--tone-up .reportsPercentEmphasis{color:#166534;background:rgba(34,197,94,.2);box-shadow:inset 0 0 0 1px rgba(22,163,74,.28);}
-:root[data-theme="light"] .reportsHighlightValue--tone-down .reportsPercentEmphasis{color:#b42318;background:rgba(248,113,113,.2);box-shadow:inset 0 0 0 1px rgba(220,38,38,.25);}
-:root[data-theme="light"] .reportsHighlightValue--tone-steady .reportsPercentEmphasis{color:#344054;background:rgba(148,163,184,.22);box-shadow:inset 0 0 0 1px rgba(100,116,139,.26);}
+:root[data-theme="light"] .reportsHighlightMetricRow--summary .reportsHighlightValue--tone-up .reportsPercentEmphasis{color:#166534;background:rgba(34,197,94,.28);box-shadow:inset 0 0 0 1px rgba(22,163,74,.32);}
+:root[data-theme="light"] .reportsHighlightMetricRow--summary .reportsHighlightValue--tone-down .reportsPercentEmphasis{color:#b42318;background:rgba(248,113,113,.3);box-shadow:inset 0 0 0 1px rgba(220,38,38,.3);}
+:root[data-theme="light"] .reportsHighlightMetricRow--summary .reportsHighlightValue--tone-steady .reportsPercentEmphasis{color:#344054;background:rgba(148,163,184,.28);box-shadow:inset 0 0 0 1px rgba(100,116,139,.3);}
+:root[data-theme="light"] .reportsCompareRow--support{color:#5f6d89;}
+:root[data-theme="light"] .reportsCompareRow--support .reportsPercentEmphasis{background:rgba(47,109,246,.14);box-shadow:inset 0 0 0 1px rgba(47,109,246,.16);}
+:root[data-theme="light"] .reportsCompareRow--support.tone-up .reportsPercentEmphasis{color:#166534;background:rgba(34,197,94,.18);box-shadow:inset 0 0 0 1px rgba(22,163,74,.22);}
+:root[data-theme="light"] .reportsCompareRow--support.tone-down .reportsPercentEmphasis{color:#b42318;background:rgba(248,113,113,.2);box-shadow:inset 0 0 0 1px rgba(220,38,38,.2);}
+:root[data-theme="light"] .reportsCompareRow--support.tone-neutral .reportsPercentEmphasis,
+:root[data-theme="light"] .reportsCompareRow--support.tone-steady .reportsPercentEmphasis{color:#344054;background:rgba(148,163,184,.2);box-shadow:inset 0 0 0 1px rgba(100,116,139,.2);}
 :root[data-theme="light"] .reportsNavShell{border-color:rgba(37,53,92,.12);background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,246,255,.88));}
 :root[data-theme="light"] .reportsTimeframeShell{border-color:rgba(37,53,92,.12);background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,246,255,.88));}
 :root[data-theme="light"] .reportsNavLabel{color:rgba(24,35,59,.62);}

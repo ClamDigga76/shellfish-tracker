@@ -259,11 +259,11 @@ export function createReportsHighlightsSeam(deps){
       headline,
       value,
       valueClass: metricKey === "ppl" ? "rate ppl" : (metricKey === "lbs" ? "lbsBlue" : "money"),
-      compareValueTone: payload.percentValid ? payload.compareTone : "",
+      compareValueTone: payload.compareTone || "",
       compareContextLabel: payload.percentValid
         ? (compareContextFromMetric(metricKey) || compareContextFromLabel(payload.compareMetricLabel))
         : "",
-      statusTone: "steady",
+      statusTone: payload.compareTone || "steady",
       statusText: statusBits.join(" • ")
     };
   }
@@ -308,7 +308,7 @@ export function createReportsHighlightsSeam(deps){
       headline,
       value,
       valueClass: movement.primaryMetricKey === "ppl" ? "rate ppl" : (movement.primaryMetricKey === "lbs" ? "lbsBlue" : "money"),
-      compareValueTone: best.deltaPct != null ? best.compareTone : "",
+      compareValueTone: best.compareTone || "",
       compareContextLabel: best.deltaPct != null ? (compareContextFromMetric(movement.primaryMetricKey) || compareContextFromLabel(primaryMetricLabel)) : "",
       statusTone: "steady",
       statusText: "",
