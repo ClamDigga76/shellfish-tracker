@@ -35,7 +35,10 @@ export function renderTripEntryForm({
   writtenCheckAmountId = "",
   writtenCheckAmountValue = "",
   settlementAdjustmentText = "",
-  settlementHintText = ""
+  settlementHintText = "",
+  areaGuidanceText = "If you don't know the area yet, choose Area Not Recorded.",
+  metricStateHelperId = "",
+  metricStateHelperText = "Pounds × Pay Rate = Amount"
 }) {
   const isEdit = mode === "edit";
   const tertiaryButton = tertiaryActionLabel ? `<button class="btn danger" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : "";
@@ -96,6 +99,7 @@ export function renderTripEntryForm({
               </div>
             </div>
           </div>
+          <div class="tripMetricStateHelper" id="${escapeHtml(metricStateHelperId)}" aria-live="polite">${escapeHtml(metricStateHelperText)}</div>
           ${settlementToggle}
           ${settlementDetails}
         </section>
@@ -131,6 +135,7 @@ export function renderTripEntryForm({
               <select class="input" id="${escapeHtml(areaId)}" enterkeyhint="done">${areaOptions}</select>
               <span class="chev">›</span>
             </div>
+            <div class="tripAreaGuidance">${escapeHtml(areaGuidanceText)}</div>
           </div>
         </section>
 
