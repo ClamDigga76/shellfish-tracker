@@ -44,10 +44,49 @@ export function createTopLevelNavigationTransitionSeam({
     return fromKey !== toKey && isTopLevelTransitionView(fromKey) && isTopLevelTransitionView(toKey) && supportsTopLevelTransition();
   }
 
+  function hasActiveMetricDetail(metricDetail, metricDetailContext){
+    const detailKey = String(metricDetail || "").trim();
+    const hasContext = !!(metricDetailContext && typeof metricDetailContext === "object");
+    return !!(detailKey || hasContext);
+  }
+
+  function resetActiveTopLevelView(state, activeView){
+    if(!state || typeof state !== "object") return false;
+    if(activeView === "home"){
+      if(hasActiveMetricDetail(state.homeMetricDetail, state.homeMetricDetailContext)){
+        clearHomeMetricDetailState();
+        return true;
+      }
+      return false;
+    }
+    if(activeView === "reports"){
+      if(hasActiveMetricDetail(state.reportsMetricDetail, state.reportsMetricDetailContext)){
+        state.reportsMetricDetail = "";
+        state.reportsMetricDetailContext = null;
+        state.reportsSection = "insights";
+        return true;
+      }
+      const currentReportsSection = String(state.reportsSection || "insights").toLowerCase();
+      if(currentReportsSection !== "insights"){
+        state.reportsSection = "insights";
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
   function navigateTopLevelView(nextView){
     const state = getState();
     const currentView = String(state?.view || "home");
     const nextKey = String(nextView || "home");
+    if(currentView === nextKey){
+      if(resetActiveTopLevelView(state, currentView)){
+        saveState();
+        render();
+      }
+      return;
+    }
     const leavingHome = currentView === "home" && nextKey !== "home";
     if(!shouldAnimateTopLevelScreenChange(currentView, nextKey)){
       if(leavingHome) clearHomeMetricDetailState();
