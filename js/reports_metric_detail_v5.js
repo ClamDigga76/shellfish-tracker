@@ -452,7 +452,7 @@ export function createReportsMetricDetailSeam(deps){
   `;
   };
 
-  const buildMetricDetailView = (viewModel)=> {
+  const buildMetricDetailMeta = (viewModel)=> {
     const {
       metricKey,
       compareFoundation,
@@ -687,14 +687,48 @@ export function createReportsMetricDetailSeam(deps){
         homeInsight: "Use compare first, then trend and dealer-rate context to judge pricing depth."
       }
     };
-    const meta = detailMeta[metricKey];
+    return detailMeta[metricKey] || null;
+  };
+
+  const buildMetricDetailView = (viewModel)=> {
+    const {
+      metricKey,
+      compareFoundation,
+      isHomeMetricDetail
+    } = viewModel;
+    const meta = buildMetricDetailMeta(viewModel);
     if(!meta) return "";
     const compareSummary = buildMetricCompareSummary({ metricKey, payload: meta.comparePayload, compareFoundation, isHomeMetricDetail });
     return renderMetricDetailSection({ meta, compareSummary, viewModel });
   };
 
+  const buildMetricDetailChartConfig = (viewModel)=> {
+    const {
+      metricKey,
+      primaryBasisByMetric,
+      detailCharts
+    } = viewModel;
+    const meta = buildMetricDetailMeta(viewModel);
+    if(!meta) return null;
+    const secondaryCharts = Array.isArray(meta.secondaryCharts)
+      ? meta.secondaryCharts
+        .filter((chart)=> chart && chart.canvasId)
+        .map((chart)=> ({
+          canvasId: String(chart.canvasId),
+          chartModel: chart.chartModel || null,
+          metricKey: String(chart.metricKey || metricKey || "")
+        }))
+      : [];
+    return {
+      metricKey: String(metricKey || ""),
+      compareChart: primaryBasisByMetric?.[metricKey]?.primaryChart || detailCharts?.[metricKey] || null,
+      secondaryCharts
+    };
+  };
+
   return {
     buildHomeMetricDetailFoundation,
-    buildMetricDetailView
+    buildMetricDetailView,
+    buildMetricDetailChartConfig
   };
 }
