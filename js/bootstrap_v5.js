@@ -1,4 +1,4 @@
-import { APP_ENTRY_MODULE_PATH, BOOTSTRAP_REQUIRED_ASSET_PATHS, SW_REGISTRATION_PATH, buildVersionedAssetHref, buildVersionedAssetHrefList, buildVersionedPath } from "./startup_asset_manifest_v5.js";
+import { APP_ENTRY_MODULE_PATH, BOOTSTRAP_REQUIRED_ASSET_PATHS, BOOTSTRAP_SANITY_REFERENCE_PATHS, buildVersionedAssetHref, buildVersionedAssetHrefList, buildVersionedPath } from "./startup_asset_manifest_v5.js";
 
 const BOOTSTRAP_URL = new URL(import.meta.url, location.href);
 const APP_VERSION = BOOTSTRAP_URL.searchParams.get("v") || "0";
@@ -159,12 +159,7 @@ window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {
 };
 
 const STARTUP_REFERENCE_SANITY = [
-  "./utils_v5.js?v=${APP_VERSION}",
-  "./settings.js?v=${APP_VERSION}",
-  "./migrations_v5.js?v=${APP_VERSION}",
-  "./navigation_v5.js?v=${APP_VERSION}",
-  "./app_v5.js?v=${APP_VERSION}",
-  "./sw.js?v=${APP_VERSION}",
+  ...BOOTSTRAP_SANITY_REFERENCE_PATHS.map((path) => buildVersionedPath(path, "${APP_VERSION}")),
 ];
 
 function __assertBootstrapVersionChain() {
