@@ -63,9 +63,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { createRuntimeOrchestrationSeam, renderViewDispatch, startRuntimeRender },
   { createTopLevelNavigationTransitionSeam },
   {
-    renderPageHeader: renderPageHeaderShell,
-    bindHeaderHelpButtons: bindHeaderHelpButtonsShell,
-    renderTabBar: renderTabBarShell
+    createAppShellBindings
   },
   { downloadText, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, openModal, closeModal, createOpenConfirmModal, bindDatePill, attachLongPress }
 ] = await Promise.all([
@@ -246,45 +244,6 @@ function iconSvg(name){
   return "";
 }
 
-function hasUnsavedDraft(){
-  const d = state?.draft || {};
-  return !!(d.date || d.dealer || d.area || d.pounds || d.amount || d.rate);
-}
-
-
-function renderPageHeader(viewKey){
-  return renderPageHeaderShell(viewKey, { escapeHtml });
-}
-
-function bindHeaderHelpButtons(){
-  return bindHeaderHelpButtonsShell({
-    onHelpClick: (helpKey)=>{
-      state.helpJump = helpKey;
-      state.view = "help";
-      saveState();
-      render();
-    }
-  });
-}
-
-function renderTabBar(activeView){
-  return renderTabBarShell({
-    activeView,
-    escapeHtml,
-    hasUnsavedDraft,
-    confirmUnsavedLeave: ()=>openConfirmModal({
-      title: "Leave this screen?",
-      message: "Your unsaved trip entry may be lost.",
-      confirmLabel: "Leave",
-      cancelLabel: "Stay",
-      confirmTone: "default"
-    }),
-    onNavigate: (next)=>{
-      navigateTopLevelView(next);
-    }
-  });
-}
-
 
 
 // Signal to the page watchdog that the module loaded
@@ -297,6 +256,34 @@ const { navigateTopLevelView } = createTopLevelNavigationTransitionSeam({
   render: ()=> render(),
   getApp: ()=> getApp(),
   clearHomeMetricDetailState: ()=> clearHomeMetricDetailState()
+});
+
+const {
+  renderPageHeader,
+  bindHeaderHelpButtons,
+  renderTabBar
+} = createAppShellBindings({
+  escapeHtml,
+  onHelpClick: (helpKey)=>{
+    state.helpJump = helpKey;
+    state.view = "help";
+    saveState();
+    render();
+  },
+  onTabNavigate: (next)=>{
+    navigateTopLevelView(next);
+  },
+  hasUnsavedDraft: ()=>{
+    const d = state?.draft || {};
+    return !!(d.date || d.dealer || d.area || d.pounds || d.amount || d.rate);
+  },
+  confirmUnsavedLeave: ()=>openConfirmModal({
+    title: "Leave this screen?",
+    message: "Your unsaved trip entry may be lost.",
+    confirmLabel: "Leave",
+    cancelLabel: "Stay",
+    confirmTone: "default"
+  })
 });
 
 const rootStateSaveSeam = createRootStateSaveSeam({
