@@ -9,6 +9,12 @@ import {
   APP_ENTRY_MODULE_PATH,
   BOOTSTRAP_SANITY_REFERENCE_PATHS,
 } from "../js/startup_asset_manifest_v5.js";
+import {
+  SW_CORE_GENERATED_START_MARKER,
+  SW_CORE_GENERATED_END_MARKER,
+  buildGeneratedSwCoreJsBlock,
+  buildSwCoreJsPaths,
+} from "./sync-sw-core-js-from-manifest.mjs";
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -154,12 +160,26 @@ if (swJs) {
     fail("service worker cache version derived from SW_V");
   }
 
+  const hasGeneratedMarkers = swJs.includes(SW_CORE_GENERATED_START_MARKER) && swJs.includes(SW_CORE_GENERATED_END_MARKER);
+  if (hasGeneratedMarkers) {
+    pass("service worker core js generated markers present");
+  } else {
+    fail("service worker core js generated markers present");
+  }
+
+  const generatedSwCoreBlock = buildGeneratedSwCoreJsBlock();
+  if (swJs.includes(generatedSwCoreBlock)) {
+    pass("service worker core js generated block aligned", `${SW_CORE_JS_PATHS.length} entries`);
+  } else {
+    fail("service worker core js generated block aligned");
+  }
+
   const swCoreMatch = swJs.match(/const CORE_JS_PATHS = \[(?<body>[\s\S]*?)\];/);
   if (!swCoreMatch || !swCoreMatch.groups) {
     fail("service worker core js ownership list", "CORE_JS_PATHS list is missing");
   } else {
     const swCorePaths = Array.from(swCoreMatch.groups.body.matchAll(/"(\.\/js\/[^"?]+\.js)"/g), (match) => match[1]);
-    const expectedSwCorePaths = SW_CORE_JS_PATHS.map((relPath) => `./js/${relPath.slice(2)}`);
+    const expectedSwCorePaths = buildSwCoreJsPaths();
 
     if (swCorePaths.length === expectedSwCorePaths.length && swCorePaths.every((path, idx) => path === expectedSwCorePaths[idx])) {
       pass("service worker core js parity with startup manifest", `${swCorePaths.length} entries`);

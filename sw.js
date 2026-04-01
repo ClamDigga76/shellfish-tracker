@@ -7,7 +7,8 @@ const CACHE_VERSION = `v${SW_V}`;
 const CACHE_NAME = `shellfish-tracker-${CACHE_VERSION}`;
 
 // Core assets. Keep this list short and stable.
-// JS ownership mirrors js/startup_asset_manifest_v5.js (enforced by preflight).
+// JS ownership is generated from js/startup_asset_manifest_v5.js.
+// BEGIN GENERATED: CORE_JS_PATHS (from js/startup_asset_manifest_v5.js)
 const CORE_JS_PATHS = [
   "./js/utils_v5.js",
   "./js/settings.js",
@@ -45,6 +46,7 @@ const CORE_JS_PATHS = [
   "./js/trip_card_renderer_core_v5.js",
   "./js/app_v5.js",
 ];
+// END GENERATED: CORE_JS_PATHS
 
 const CORE = [
   "./",
