@@ -263,13 +263,40 @@ export function closeModal({ immediate = false } = {}){
   window.setTimeout(finalizeClose, MODAL_ROOT_EXIT_MS);
 }
 
+
+function createFallbackUid(){
+  try{
+    if(globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"){
+      return ()=>globalThis.crypto.randomUUID();
+    }
+  }catch(_){ }
+  return ()=>`uid_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+const fallbackUid = createFallbackUid();
+
+export function createOpenConfirmModal({
+  uid = fallbackUid,
+  openModal: openModalImpl = openModal,
+  closeModal: closeModalImpl = closeModal,
+  triggerHaptic
+} = {}){
+  return (options = {})=>openConfirmModal({
+    ...options,
+    uid,
+    openModal: openModalImpl,
+    closeModal: closeModalImpl,
+    triggerHaptic
+  });
+}
+
 export function openConfirmModal({
   title = "Confirm",
   message = "Are you sure?",
   confirmLabel = "Yes",
   cancelLabel = "Cancel",
   confirmTone = "destructive",
-  uid,
+  uid = fallbackUid,
   openModal: openModalImpl = openModal,
   closeModal: closeModalImpl = closeModal,
   triggerHaptic
