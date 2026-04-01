@@ -407,7 +407,6 @@ let state = migrateStateIfNeeded(loadState(), {
 });
 applyThemeMode();
 ensureTripsFilter();
-ensureReportsFilter();
 ensureHomeFilter();
 ensureAreas();
 ensureDealers();
@@ -512,20 +511,6 @@ const {
 
 
 bindLifecycleSaveFlush();
-
-function ensureReportsFilter(){
-  if(!state.reportsFilter || typeof state.reportsFilter !== "object"){
-    state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
-  }
-  if(!state.reportsFilter.mode) state.reportsFilter.mode = "YTD";
-  if(state.reportsFilter.from == null) state.reportsFilter.from = "";
-  if(state.reportsFilter.to == null) state.reportsFilter.to = "";
-  if(state.reportsFilter.dealer == null) state.reportsFilter.dealer = "";
-  if(state.reportsFilter.area == null) state.reportsFilter.area = "";
-  if(state.reportsFilter.adv == null) state.reportsFilter.adv = false;
-  if(!Array.isArray(state.reportsFilter.customRangeCorrectionMessages)) state.reportsFilter.customRangeCorrectionMessages = [];
-}
-
 
 function ensureHomeFilter(){
   if(!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode:"YTD", from:"", to:"" };
@@ -657,7 +642,6 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
 
 
 const { renderReports, renderHomeMetricDetail } = createReportsScreenRenderer({
-  ensureReportsFilter: () => ensureReportsFilter(),
   getState: () => state,
   buildUnifiedFilterFromReportsFilter,
   applyUnifiedTripFilter,
