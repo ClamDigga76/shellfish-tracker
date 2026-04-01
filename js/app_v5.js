@@ -67,7 +67,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
     bindHeaderHelpButtons: bindHeaderHelpButtonsShell,
     renderTabBar: renderTabBarShell
   },
-  { downloadText, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, openModal, closeModal, openConfirmModal: openConfirmModalBrowser, bindDatePill, attachLongPress }
+  { downloadText, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, openModal, closeModal, createOpenConfirmModal, bindDatePill, attachLongPress }
 ] = await Promise.all([
   ...STARTUP_MODULE_PATHS.map(importVersionedModule),
   importVersionedModule("./ui_browser_helpers_v5.js")
@@ -494,15 +494,12 @@ function renderSuggestions(list, current, dataAttr){
 
 
 
-function openConfirmModal(options = {}){
-  return openConfirmModalBrowser({
-    ...options,
-    uid,
-    openModal,
-    closeModal,
-    triggerHaptic
-  });
-}
+const openConfirmModal = createOpenConfirmModal({
+  uid,
+  openModal,
+  closeModal,
+  triggerHaptic
+});
 
 
 migrateLegacyStateIfNeeded(localStorage);
