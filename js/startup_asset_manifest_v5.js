@@ -60,6 +60,11 @@ export const SW_CORE_JS_EXCLUDED_PATHS = [
 
 export const SW_REGISTRATION_PATH = "./sw.js";
 
+export const BOOTSTRAP_SANITY_REFERENCE_PATHS = [
+  ...BOOTSTRAP_REQUIRED_ASSET_PATHS,
+  SW_REGISTRATION_PATH
+];
+
 export function buildSwCoreVersionedAssetPath(path, version) {
   const normalizedPath = String(path || "").replace(/^\.\//, "");
   return buildVersionedPath(`./js/${normalizedPath}`, version);

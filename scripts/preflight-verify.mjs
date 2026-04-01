@@ -7,6 +7,7 @@ import {
   SW_CORE_JS_PATHS,
   SW_CORE_JS_EXCLUDED_PATHS,
   APP_ENTRY_MODULE_PATH,
+  BOOTSTRAP_SANITY_REFERENCE_PATHS,
 } from "../js/startup_asset_manifest_v5.js";
 
 const ROOT = process.cwd();
@@ -120,17 +121,13 @@ for (const relPath of requiredFiles) {
 }
 
 if (bootstrapJs) {
-  const startupRefs = [
-    "./utils_v5.js?v=${APP_VERSION}",
-    "./settings.js?v=${APP_VERSION}",
-    "./migrations_v5.js?v=${APP_VERSION}",
-    "./navigation_v5.js?v=${APP_VERSION}",
-    "./app_v5.js?v=${APP_VERSION}",
-    "./sw.js?v=${APP_VERSION}",
-  ];
+  const startupRefs = BOOTSTRAP_SANITY_REFERENCE_PATHS.map((path) => `${path}?v=\${APP_VERSION}`);
+  const bootstrapSanityDerived =
+    bootstrapJs.includes("BOOTSTRAP_SANITY_REFERENCE_PATHS") &&
+    bootstrapJs.includes("buildVersionedPath(path, \"${APP_VERSION}\")");
 
   for (const ref of startupRefs) {
-    if (bootstrapJs.includes(ref)) {
+    if (bootstrapSanityDerived) {
       pass(`startup reference sanity: ${ref}`);
     } else {
       fail(`startup reference sanity: ${ref}`);
