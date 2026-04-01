@@ -406,8 +406,6 @@ let state = migrateStateIfNeeded(loadState(), {
   themeModeDefault: THEME_MODE_DARK
 });
 applyThemeMode();
-ensureTripsFilter();
-ensureHomeFilter();
 ensureAreas();
 ensureDealers();
 const SAFE_MODE_ACTIVE = Boolean(state?.__safeMode);
@@ -512,15 +510,6 @@ const {
 
 bindLifecycleSaveFlush();
 
-function ensureHomeFilter(){
-  if(!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode:"YTD", from:"", to:"" };
-  if(!state.homeFilter.mode) state.homeFilter.mode = "YTD";
-  if(state.homeFilter.from == null) state.homeFilter.from = "";
-  if(state.homeFilter.to == null) state.homeFilter.to = "";
-  if(!Array.isArray(state.homeFilter.customRangeCorrectionMessages)) state.homeFilter.customRangeCorrectionMessages = [];
-}
-
-
 
 const { renderAllTrips } = createTripsBrowseScreenRenderer({
   getApp,
@@ -546,7 +535,6 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
 
 const { renderHome } = createHomeDashboardRenderer({
   state,
-  ensureHomeFilter,
   buildUnifiedFilterFromHomeFilter,
   applyUnifiedTripFilter,
   computePPL,

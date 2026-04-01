@@ -1,6 +1,5 @@
 export function createHomeDashboardRenderer({
   state,
-  ensureHomeFilter,
   buildUnifiedFilterFromHomeFilter,
   applyUnifiedTripFilter,
   computePPL,
@@ -26,6 +25,14 @@ export function createHomeDashboardRenderer({
 }) {
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
+
+  function ensureHomeFilter() {
+    if (!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode: "YTD", from: "", to: "" };
+    if (!state.homeFilter.mode) state.homeFilter.mode = "YTD";
+    if (state.homeFilter.from == null) state.homeFilter.from = "";
+    if (state.homeFilter.to == null) state.homeFilter.to = "";
+    if (!Array.isArray(state.homeFilter.customRangeCorrectionMessages)) state.homeFilter.customRangeCorrectionMessages = [];
+  }
 
   function fitHomeKpiValues() {
     const root = getApp();
