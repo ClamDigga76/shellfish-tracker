@@ -2,6 +2,7 @@ import { createReportsAdvancedPanelSeam } from "./reports_advanced_panel_v5.js";
 import { createReportsHighlightsSeam } from "./reports_highlights_v5.js";
 import { createReportsMetricDetailSeam } from "./reports_metric_detail_v5.js";
 import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.js";
+import { createReportsBindingsSeam } from "./reports_bindings_v5.js";
 import { createReportsOverviewSectionsSeam } from "./reports_overview_sections_v5.js";
 import { createReportsShellControlsSeam } from "./reports_shell_controls_v5.js";
 import { createReportsTransitionSeam } from "./reports_transition_seam_v5.js";
@@ -79,6 +80,8 @@ export function createReportsScreenRenderer(deps){
     to2,
     renderStandardReadOnlyTripCard
   });
+
+  const reportsBindingsSeam = createReportsBindingsSeam();
 
   const reportsTransitionSeam = createReportsTransitionSeam({
     drawReportsCharts,
@@ -285,18 +288,17 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     `;
     getApp().scrollTop = 0;
 
-    // quick range buttons
-    getApp().querySelectorAll(".chip[data-rf]").forEach((btn)=>{
-      btn.onclick = ()=>{
-        const key = String(btn.getAttribute("data-rf")||"YTD");
-        applyPrimaryReportsFilterSelection(key);
-        saveState();
-        showToast("Filter updated");
-        renderReportsScreen();
-      };
+    reportsBindingsSeam.bindPresetRangeChips({
+      root: getApp(),
+      applyPrimaryReportsFilterSelection,
+      saveState,
+      showToast,
+      renderReportsScreen,
+      includeToast: true
     });
 
-    bindReportsAdvancedPanel({
+    reportsBindingsSeam.bindReportsAdvancedPanelWrapper({
+      bindReportsAdvancedPanel,
       root: getApp(),
       state,
       saveState,
@@ -305,42 +307,16 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       variant: "empty"
     });
 
-    const reportsEmptyPrimary = document.getElementById("reportsEmptyPrimary");
-    if (reportsEmptyPrimary) {
-      reportsEmptyPrimary.onclick = () => {
-        if (fMode === "RANGE" && !hasValidRange) {
-          if (!state.reportsFilter) state.reportsFilter = {};
-          state.reportsFilter.adv = true;
-          saveState();
-          renderReportsScreen();
-          return;
-        }
-        state.view = "new";
-        saveState();
-        showToast("Start with one trip");
-        renderApp();
-      };
-    }
-
-    const reportsEmptySecondary = document.getElementById("reportsEmptySecondary");
-    if (reportsEmptySecondary) {
-      reportsEmptySecondary.onclick = () => {
-        if ((fMode === "RANGE" && !hasValidRange) || !hasSavedTrips) {
-          state.helpJump = "reports";
-          state.view = "help";
-          saveState();
-          renderApp();
-          return;
-        }
-        if (!state.reportsFilter) state.reportsFilter = {};
-        state.reportsFilter.mode = "ALL";
-        state.reportsFilter.from = "";
-        state.reportsFilter.to = "";
-        saveState();
-        showToast("Filter updated");
-        renderReportsScreen();
-      };
-    }
+    reportsBindingsSeam.bindEmptyStateActions({
+      fMode,
+      hasValidRange,
+      hasSavedTrips,
+      state,
+      saveState,
+      showToast,
+      renderReportsScreen,
+      renderApp
+    });
 
     return;
   }
@@ -459,61 +435,26 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   flushReportsAnnouncement();
   applyReportsFocusIntent(getApp());
 
-  // range chips
-  getApp().querySelectorAll(".chip[data-rf]").forEach((btn)=>{
-    btn.onclick = ()=>{
-      const key = String(btn.getAttribute("data-rf")||"YTD");
-      applyPrimaryReportsFilterSelection(key);
-      saveState();
-      renderReportsScreen();
-    };
+  reportsBindingsSeam.bindPresetRangeChips({
+    root: getApp(),
+    applyPrimaryReportsFilterSelection,
+    saveState,
+    renderReportsScreen
   });
 
-  // section switcher
-  getApp().querySelectorAll(".chip[data-reports-section]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const key = String(btn.getAttribute("data-reports-section") || "insights").toLowerCase();
-      if(key === activeReportsSection) return;
-      const section = REPORTS_SECTION_ITEMS.find((item)=> item.key === key);
-      queueReportsAnnouncement(`Reports section ${section?.label || "updated"}.`);
-      queueReportsFocusIntent({ type: "section-tab", key });
-      runReportsTransition({
-        mutate: ()=>{
-          state.reportsSection = key;
-          saveState();
-        }
-      });
-    };
-  });
-  getApp().querySelectorAll(".chip[data-reports-section]").forEach((btn)=>{
-    btn.addEventListener("keydown", (event)=>{
-      const tabs = Array.from(getApp().querySelectorAll(".chip[data-reports-section]"));
-      const currentIdx = tabs.indexOf(btn);
-      if(currentIdx === -1) return;
-      if(event.key === "ArrowRight" || event.key === "ArrowLeft"){
-        event.preventDefault();
-        const direction = event.key === "ArrowRight" ? 1 : -1;
-        const nextIdx = (currentIdx + direction + tabs.length) % tabs.length;
-        const nextTab = tabs[nextIdx];
-        nextTab?.focus();
-        nextTab?.click();
-        return;
-      }
-      if(event.key === "Home" || event.key === "End"){
-        event.preventDefault();
-        const target = event.key === "Home" ? tabs[0] : tabs[tabs.length - 1];
-        target?.focus();
-        target?.click();
-        return;
-      }
-      if(event.key === "Enter" || event.key === " "){
-        event.preventDefault();
-        btn.click();
-      }
-    });
+  reportsBindingsSeam.bindSectionTabs({
+    root: getApp(),
+    activeReportsSection,
+    REPORTS_SECTION_ITEMS,
+    queueReportsAnnouncement,
+    queueReportsFocusIntent,
+    runReportsTransition,
+    state,
+    saveState
   });
 
-  bindReportsAdvancedPanel({
+  reportsBindingsSeam.bindReportsAdvancedPanelWrapper({
+    bindReportsAdvancedPanel,
     root: getApp(),
     state,
     saveState,
@@ -521,52 +462,17 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     showToast
   });
 
-
-  const metricDetailButtons = getApp().querySelectorAll("[data-metric-detail]");
-  metricDetailButtons.forEach((btn)=>{
-    btn.onclick = ()=>{
-      const metricName = String(btn.getAttribute("data-metric-detail") || "metric").toLowerCase();
-      queueReportsAnnouncement(`Opened ${metricName} metric detail in reports.`);
-      queueReportsFocusIntent({ type: "metric-back" });
-      runReportsTransition({
-        mutate: ()=>{
-          state.reportsMetricDetail = String(btn.getAttribute("data-metric-detail") || "").toLowerCase();
-          state.reportsMetricDetailContext = { source: "reports" };
-          state.homeMetricDetail = "";
-          state.homeMetricDetailContext = null;
-          saveState();
-        }
-      });
-    };
+  reportsBindingsSeam.bindMetricDetailActions({
+    root: getApp(),
+    queueReportsAnnouncement,
+    queueReportsFocusIntent,
+    runReportsTransition,
+    state,
+    saveState,
+    isHomeMetricDetail,
+    activeMetricDetail,
+    renderApp
   });
-
-  const reportsMetricBack = document.getElementById("reportsMetricBack");
-  if(reportsMetricBack){
-    reportsMetricBack.onclick = ()=>{
-      if(isHomeMetricDetail){
-        queueReportsAnnouncement("Returned to Home from metric detail.");
-        runReportsTransition({
-          mutate: ()=>{
-            state.homeMetricDetail = "";
-            state.homeMetricDetailContext = null;
-            state.view = "home";
-            saveState();
-          },
-          renderNext: ()=>{ renderApp(); }
-        });
-        return;
-      }
-      queueReportsAnnouncement("Returned to reports overview.");
-      queueReportsFocusIntent({ type: "metric-button", metricKey: activeMetricDetail });
-      runReportsTransition({
-        mutate: ()=>{
-          state.reportsMetricDetail = "";
-          state.reportsMetricDetailContext = null;
-          saveState();
-        }
-      });
-    };
-  }
 
 
   if(activeMetricDetail){
