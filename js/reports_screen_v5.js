@@ -3,6 +3,7 @@ import { createReportsHighlightsSeam } from "./reports_highlights_v5.js";
 import { createReportsMetricDetailSeam } from "./reports_metric_detail_v5.js";
 import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.js";
 import { createReportsOverviewSectionsSeam } from "./reports_overview_sections_v5.js";
+import { createReportsShellControlsSeam } from "./reports_shell_controls_v5.js";
 import { createReportsTransitionSeam } from "./reports_transition_seam_v5.js";
 
 export function createReportsScreenRenderer(deps){
@@ -34,18 +35,19 @@ export function createReportsScreenRenderer(deps){
     renderApp
   } = deps;
 
-  function ensureReportsFilter(state){
-    if(!state?.reportsFilter || typeof state.reportsFilter !== "object"){
-      state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
-    }
-    if(!state.reportsFilter.mode) state.reportsFilter.mode = "YTD";
-    if(state.reportsFilter.from == null) state.reportsFilter.from = "";
-    if(state.reportsFilter.to == null) state.reportsFilter.to = "";
-    if(state.reportsFilter.dealer == null) state.reportsFilter.dealer = "";
-    if(state.reportsFilter.area == null) state.reportsFilter.area = "";
-    if(state.reportsFilter.adv == null) state.reportsFilter.adv = false;
-    if(!Array.isArray(state.reportsFilter.customRangeCorrectionMessages)) state.reportsFilter.customRangeCorrectionMessages = [];
-  }
+  const reportsShellControls = createReportsShellControlsSeam({
+    escapeHtml,
+    parseReportDateToISO,
+    formatDateDMY
+  });
+  const ensureReportsFilter = reportsShellControls.ensureReportsFilter;
+  const REPORTS_PRESET_FILTER_ITEMS = reportsShellControls.REPORTS_PRESET_FILTER_ITEMS;
+  const REPORTS_PRESET_MODES = reportsShellControls.REPORTS_PRESET_MODES;
+  const REPORTS_SECTION_ITEMS = reportsShellControls.REPORTS_SECTION_ITEMS;
+  const resolveActiveReportsSection = reportsShellControls.resolveActiveReportsSection;
+  const buildActiveFilterSummary = reportsShellControls.buildActiveFilterSummary;
+  const renderCorrectionSummary = reportsShellControls.renderCorrectionSummary;
+  const renderReportsTopShell = reportsShellControls.renderReportsTopShell;
 
   const reportsAdvancedPanel = createReportsAdvancedPanelSeam({
     escapeHtml,
@@ -110,14 +112,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const hasSavedTrips = tripsAll.length > 0;
   const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
   const fMode = String(rf.mode || "YTD").toUpperCase();
-  const REPORTS_PRESET_FILTER_ITEMS = [
-    { key: "YTD", label: "YTD" },
-    { key: "THIS_MONTH", label: "This Month" },
-    { key: "LAST_MONTH", label: "Last Month" },
-    { key: "90D", label: "Last 3 Months" },
-    { key: "ALL", label: "All Time" }
-  ];
-  const REPORTS_PRESET_MODES = REPORTS_PRESET_FILTER_ITEMS.map((item)=> item.key);
   const hasReportsCustomConstraints = !!parseReportDateToISO(rf.from)
     || !!parseReportDateToISO(rf.to)
     || !!String(rf.dealer || "").trim()
@@ -217,48 +211,16 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ? `Some trips are excluded from Reports date filtering because their date is invalid (quarantined): ${excludedQuarantinedCount}.`
     : "";
 
-  const chip = ({ key, label })=> `<button class="chip segBtn reportsPrimaryFilterChip ${activePresetFilterKey===key?'on is-selected':''}" data-rf="${key}" type="button" role="tab" aria-selected="${activePresetFilterKey===key ? "true" : "false"}">${label}</button>`;
-  const REPORTS_SECTION_ITEMS = [
-    { key: "insights", label: "Insights", intro: "Top takeaways for this range." },
-    { key: "charts", label: "Charts", intro: "Trend direction at a glance." },
-    { key: "seasonality", label: "Seasonality", intro: "Matched windows across years." },
-    { key: "records", label: "Records", intro: "High and low trip records." },
-    { key: "detail", label: "Detail", intro: "Dealer, area, and monthly tables." }
-  ];
-  const activeReportsSection = REPORTS_SECTION_ITEMS.some((item)=> item.key === reportsSectionKey) ? reportsSectionKey : "insights";
-  const renderReportsSectionChip = (item)=> `<button class="chip reportsSectionChip ${activeReportsSection===item.key?'on is-selected':''}" data-reports-section="${item.key}" type="button" role="tab" id="reports-tab-${item.key}" aria-controls="reportsTransitionRoot" aria-selected="${activeReportsSection===item.key ? 'true' : 'false'}" tabindex="${activeReportsSection===item.key ? "0" : "-1"}">
-    <span>${item.label}</span>
-  </button>`;
-  const activeFilterTokens = [];
-  const fromISO = parseReportDateToISO(rf.from);
-  const toISO = parseReportDateToISO(rf.to);
-  if(fromISO || toISO){
-    const fromLabel = fromISO ? formatDateDMY(fromISO) : "Start";
-    const toLabel = toISO ? formatDateDMY(toISO) : "End";
-    activeFilterTokens.push(`Date ${fromLabel} → ${toLabel}`);
-  }
-  const dealerFilter = String(rf.dealer || "").trim();
-  if(dealerFilter){
-    activeFilterTokens.push(`Dealer ${dealerFilter}`);
-  }
-  const areaFilter = String(rf.area || "").trim();
-  if(areaFilter){
-    activeFilterTokens.push(`Area ${areaFilter}`);
-  }
-  const activeFilterSummaryLabel = activeFilterTokens.length
-    ? `${activeFilterTokens.length} filter${activeFilterTokens.length === 1 ? "" : "s"} on`
-    : "No custom filters";
-  const renderActiveFilterSummary = activeFilterTokens.length
-    ? `
-      <div class="reportsActiveFilterSummary" aria-live="polite" aria-label="Active custom filters">
-        <div class="reportsActiveFilterChipRow">${activeFilterTokens.map((token)=> `<span class="reportsActiveFilterChip">${escapeHtml(token)}</span>`).join("")}</div>
-      </div>
-    `
-    : "";
+  const activeReportsSection = resolveActiveReportsSection(reportsSectionKey);
+  const {
+    activeFilterSummaryLabel,
+    renderActiveFilterSummary
+  } = buildActiveFilterSummary(rf);
   const customRangeCorrectionMessages = Array.isArray(rf.customRangeCorrectionMessages) ? rf.customRangeCorrectionMessages : [];
-  const renderCorrectionSummary = (fMode === "RANGE" && customRangeCorrectionMessages.length)
-    ? `<div class="reportsRangeCorrectionSummary muted small" aria-live="polite">${customRangeCorrectionMessages.map((msg)=>`<div>${escapeHtml(msg)}</div>`).join("")}</div>`
-    : "";
+  const correctionSummary = renderCorrectionSummary({
+    filterMode: fMode,
+    customRangeCorrectionMessages
+  });
 
   const advOpen = isAdvancedActive;
   const advPanel = renderReportsAdvancedPanel({
@@ -295,35 +257,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const detailChartContextClass = isHomeMetricDetail ? "homeMetricChartContext" : "reportsMetricChartContext";
   const detailInsightClass = isHomeMetricDetail ? "homeMetricInsight" : "reportsMetricInsight";
 
-  const renderReportsTopShell = ({ body = "", shellMode = "overview" } = {})=> `
-    <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
-      <section class="reportsTimeframeShell" aria-label="Reports timeframe controls">
-        <div class="segWrap timeframeUnifiedControl reportsTimeframeControl reportsPrimaryFilterBar" role="tablist" aria-label="Reports quick range filters">
-          ${REPORTS_PRESET_FILTER_ITEMS.map((item)=> chip(item)).join("")}
-        </div>
-      </section>
-
-      <div class="reportsAdvancedShell" aria-label="Reports advanced filters">
-        <button class="chip segBtn repAdvToggle reportsAdvancedDisclosure ${isAdvancedActive ? "on is-selected" : ""}" type="button" aria-expanded="${advOpen ? "true" : "false"}" aria-controls="reportsAdvancedInlinePanel">
-          <span class="reportsAdvancedDisclosureTitle">Advanced</span>
-          <span class="reportsAdvancedDisclosureState">${escapeHtml(activeFilterSummaryLabel)}</span>
-        </button>
-        ${renderActiveFilterSummary}
-        ${renderCorrectionSummary}
-        ${quarantinedSupportCopy ? `<div class="reportsRangeCorrectionSummary muted small" aria-live="polite">${escapeHtml(quarantinedSupportCopy)}</div>` : ""}
-        ${advPanel}
-      </div>
-
-      <section class="reportsNavShell" aria-label="Reports sections">
-        <div class="reportsSectionSwitch" role="tablist" aria-label="Reports sections">
-          ${REPORTS_SECTION_ITEMS.map((item)=> renderReportsSectionChip(item)).join("")}
-        </div>
-      </section>
-
-      ${body}
-    </div>
-  `;
-
   const renderNoResultsState = ()=> reportsOverviewSections.renderNoResultsState({
     fMode,
     hasValidRange,
@@ -331,25 +264,24 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     quarantinedSupportCopy
   });
 
-  const applyPrimaryReportsFilterSelection = (key)=>{
-    const normalizedKey = String(key || "YTD").toUpperCase();
-    if(!state.reportsFilter || typeof state.reportsFilter !== "object"){
-      state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
-    }
-    state.reportsFilter.mode = normalizedKey;
-    state.reportsFilter.adv = false;
-    if(normalizedKey !== "RANGE"){
-      state.reportsFilter.from = "";
-      state.reportsFilter.to = "";
-      state.reportsFilter.customRangeCorrectionMessages = [];
-    }
-  };
+  const applyPrimaryReportsFilterSelection = (key)=> reportsShellControls.applyPrimaryReportsFilterSelection(state, key);
 
   if(!trips.length){
     getApp().innerHTML = `
       ${renderPageHeader("reports")}
 
-      ${renderReportsTopShell({ body: renderNoResultsState() })}
+      ${renderReportsTopShell({
+        body: renderNoResultsState(),
+        activePresetFilterKey,
+        isAdvancedActive,
+        advOpen,
+        activeFilterSummaryLabel,
+        renderActiveFilterSummary,
+        correctionSummary,
+        quarantinedSupportCopy,
+        advPanel,
+        activeReportsSection
+      })}
     `;
     getApp().scrollTop = 0;
 
@@ -507,6 +439,15 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
     ${renderReportsTopShell({
       shellMode: activeMetricDetail ? "detail" : "overview",
+      activePresetFilterKey,
+      isAdvancedActive,
+      advOpen,
+      activeFilterSummaryLabel,
+      renderActiveFilterSummary,
+      correctionSummary,
+      quarantinedSupportCopy,
+      advPanel,
+      activeReportsSection,
       body: `<div id="reportsTransitionRoot" class="reportsTransitionRoot" data-reports-view="${escapeHtml(reportsBodyView)}" data-detail-mode="${activeMetricDetail ? "reports" : "overview"}" role="tabpanel" aria-labelledby="reports-tab-${escapeHtml(activeReportsSection)}" tabindex="-1">
         ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : renderActiveReportsSection()}
       </div>`
