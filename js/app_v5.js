@@ -513,54 +513,6 @@ const {
 
 bindLifecycleSaveFlush();
 
-function ensureTripsFilter(){
-  // Trips now uses the unified filter object as its source of truth.
-  ensureUnifiedFilters();
-  state.tripsFilter = state.filters.active;
-
-  // Guardrails for Trips-visible selectors.
-  if(state.tripsFilter.dealer == null) state.tripsFilter.dealer = "all";
-  if(state.tripsFilter.area == null) state.tripsFilter.area = "all";
-}
-
-function getTripsFilteredRows(){
-  ensureTripsFilter();
-  const tf = state.tripsFilter;
-  const tripsAll = Array.isArray(state.trips) ? state.trips : [];
-  const filtered = applyUnifiedTripFilter(tripsAll, tf);
-
-  const rangeMap = {
-    "All Time": "All Time",
-    "YTD": "YTD",
-    "Last 12 months": "Last 12 Months",
-    "Last 90 days": "Last 90 Days",
-    "Last 30 days": "Last 30 Days",
-    "Last 7 Days": "Last 7 Days"
-  };
-  const r = {
-    startISO: filtered.range.fromISO,
-    endISO: filtered.range.toISO,
-    label: (tf.range === "custom")
-      ? `${filtered.range.fromISO} → ${filtered.range.toISO}`
-      : (rangeMap[resolveUnifiedRange(tf).label] || "YTD")
-  };
-
-  let rows = filtered.rows;
-
-  // Stable sort: newest first (shared with Home and other trip views)
-  rows = getTripsNewestFirst(rows);
-
-  return { rows, range:r, tf, transparency: filtered.transparency || { excludedQuarantinedCount: 0, quarantinedTotalCount: 0, hasExcludedQuarantined: false } };
-}
-
-function tripsActiveLabel(tf, rangeLabel){
-  const parts = [];
-  parts.push(rangeLabel || "YTD");
-  if(tf?.dealer && tf.dealer !== "all") parts.push(`Dealer: ${tf.dealer}`);
-  if(tf?.area && tf.area !== "all") parts.push(`Area: ${resolveAreaValue(tf.area).canonicalName || tf.area}`);
-  return parts.join(" • ");
-}
-
 function ensureReportsFilter(){
   if(!state.reportsFilter || typeof state.reportsFilter !== "object"){
     state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
@@ -586,12 +538,9 @@ function ensureHomeFilter(){
 
 
 const { renderAllTrips } = createTripsBrowseScreenRenderer({
-  ensureTripsFilter,
   getApp,
-  getTripsFilteredRows,
   getFilterOptionsFromTrips,
   escapeHtml,
-  tripsActiveLabel,
   renderTripsBrowseInteractiveTripCard,
   renderPageHeader,
   bindNavHandlers,
@@ -602,7 +551,12 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
   normalizeCustomRangeWithFeedback,
   bindDatePill,
   exportTripsWithLabel,
-  showToast
+  showToast,
+  ensureUnifiedFilters,
+  applyUnifiedTripFilter,
+  resolveUnifiedRange,
+  getTripsNewestFirst,
+  resolveAreaValue
 });
 
 const { renderHome } = createHomeDashboardRenderer({
