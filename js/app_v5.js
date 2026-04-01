@@ -230,39 +230,6 @@ function buildTripProvenanceSummary(trip){
   return { summaryLines, historyItems };
 }
 
-function sanitizeDecimalInput(raw){
-  let s = String(raw || "").replace(/[^\d.,]/g, "");
-  const decimalIdx = s.search(/[.,]/);
-  if(decimalIdx !== -1){
-    const intPart = s.slice(0, decimalIdx).replace(/[.,]/g, "");
-    const fracPart = s.slice(decimalIdx + 1).replace(/[.,]/g, "");
-    s = `${intPart}.${fracPart}`;
-  }else{
-    s = s.replace(/[.,]/g, "");
-  }
-  return s;
-}
-
-function primeNumericField(el, zeroValues){
-  try{
-    const v = String(el.value || "").trim();
-    if(!v || (zeroValues || []).includes(v)){
-      el.value = "";
-    }else{
-      requestAnimationFrame(()=>{ try{ el.select(); }catch(_){} });
-    }
-  }catch(_){ }
-}
-
-function normalizeAmountOnBlur(el){
-  try{
-    const s = String(el.value || "").trim();
-    if(!s){ el.value = "0.00"; return; }
-    const n = parseMoney(s);
-    el.value = Number.isFinite(n) ? n.toFixed(2) : "0.00";
-  }catch(_){ }
-}
-
 // ---- Toasts ----
 
 const feedback = createFeedbackSeam({
@@ -469,29 +436,6 @@ const {
 } = unifiedFiltersSeam;
 
 // Home + Reports badge (UI choice #2)
-
-
-function renderSuggestions(list, current, dataAttr){
-  const cur = String(current||"").trim().toLowerCase();
-  if(!cur) return "";
-  const matches = [];
-  for(const item of (Array.isArray(list)?list:[])){
-    const s = String(item||"").trim();
-    if(!s) continue;
-    const key = s.toLowerCase();
-    if(key === cur) continue;
-    if(key.includes(cur)) matches.push(s);
-    if(matches.length >= 8) break;
-  }
-  if(!matches.length) return "";
-  return `<div class="muted small" style="margin-top:8px">Suggestions</div>
-    <div class="chips" style="margin-top:8px">
-      ${matches.map(s=>`<button class="chip" ${dataAttr}="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
-    </div>`;
-}
-
-
-
 
 
 const openConfirmModal = createOpenConfirmModal({
@@ -767,9 +711,6 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
   scheduleStateSave,
   computeTripSaveEnabled,
   isValidAreaValue,
-  sanitizeDecimalInput,
-  primeNumericField,
-  normalizeAmountOnBlur,
   commitTripFromDraft,
   render,
   saveDraft,
@@ -785,12 +726,10 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
   parseReportDateToISO,
   findDuplicateTrip,
   to2,
-  displayAmount,
   openQuickChipCustomizeModal,
   bindQuickChipLongPress,
   bindAreaChips,
   bindQuickChips,
-  renderSuggestions,
   clearPendingTripUndo,
   openConfirmModal,
   goBack,
@@ -1018,19 +957,6 @@ startRuntimeRender({
   displayBuildVersion: DISPLAY_BUILD_VERSION,
   showFatal
 });
-
-// ---- Display helpers (no state) ----
-function display2(val){
-  if(val === "" || val == null) return "";
-  const n = Number(val);
-  if(!Number.isFinite(n)) return String(val);
-  const rounded = Math.round((n + Number.EPSILON) * 100) / 100;
-  return rounded.toFixed(2);
-}
-function displayAmount(val){
-  return display2(val);
-}
-
 
 function buildAreaOptionsHtml(selectedArea, addSentinel){
   return buildAreaOptionsHtmlShared({ selectedArea, addSentinel, escapeHtml });
