@@ -106,12 +106,13 @@ const {
   findCanonicalFromList,
   getValuesWithLegacyEntry,
   getDealerSelectList,
-  buildAreaOptionsHtml: buildAreaOptionsHtmlShared,
-  buildDealerOptionsHtml: buildDealerOptionsHtmlShared
+  buildAreaOptionsHtml,
+  buildDealerOptionsHtml
 } = createTripSharedCollectionsEngine({
   getState: () => state,
   normalizeKey,
-  normalizeTripRow
+  normalizeTripRow,
+  escapeHtml
 });
 
 // Backup meta (local-only; no user data duplication)
@@ -837,10 +838,3 @@ startRuntimeRender({
   showFatal
 });
 
-function buildAreaOptionsHtml(selectedArea, addSentinel){
-  return buildAreaOptionsHtmlShared({ selectedArea, addSentinel, escapeHtml });
-}
-
-function buildDealerOptionsHtml(selectedDealer, dealerList, addSentinel){
-  return buildDealerOptionsHtmlShared({ selectedDealer, dealerList, addSentinel, escapeHtml });
-}

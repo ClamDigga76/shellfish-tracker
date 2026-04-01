@@ -381,7 +381,7 @@ export function computeTripSaveEnabled({ dealer, area, poundsInput, rateInput, p
   };
 }
 
-export function createTripSharedCollectionsEngine({ getState, normalizeKey, normalizeTripRow }) {
+export function createTripSharedCollectionsEngine({ getState, normalizeKey, normalizeTripRow, escapeHtml }) {
   function getStateRef() {
     const source = typeof getState === "function" ? getState() : null;
     return (source && typeof source === "object") ? source : {};
@@ -537,7 +537,7 @@ export function createTripSharedCollectionsEngine({ getState, normalizeKey, norm
     return out;
   }
 
-  function buildAreaOptionsHtml({ selectedArea, addSentinel, escapeHtml }) {
+  function buildAreaOptionsHtml(selectedArea, addSentinel) {
     const state = getStateRef();
     ensureAreas();
     const selectedCanonical = resolveAreaValue(selectedArea).canonicalName || selectedArea;
@@ -548,7 +548,7 @@ export function createTripSharedCollectionsEngine({ getState, normalizeKey, norm
     }).concat(`<option value="${addSentinel}">+ Add new Area</option>`).join("");
   }
 
-  function buildDealerOptionsHtml({ selectedDealer, dealerList, addSentinel, escapeHtml }) {
+  function buildDealerOptionsHtml(selectedDealer, dealerList, addSentinel) {
     return ["", ...(Array.isArray(dealerList) ? dealerList : [])].map((dealer) => {
       const label = dealer ? dealer : "—";
       const sel = (normalizeKey(String(selectedDealer || "")) === normalizeKey(String(dealer || ""))) ? "selected" : "";
