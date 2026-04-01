@@ -134,3 +134,29 @@ export function renderTabBar({
     };
   });
 }
+
+export function createAppShellBindings({
+  escapeHtml,
+  onHelpClick,
+  onTabNavigate,
+  hasUnsavedDraft,
+  confirmUnsavedLeave
+}){
+  return {
+    renderPageHeader(viewKey){
+      return renderPageHeader(viewKey, { escapeHtml });
+    },
+    bindHeaderHelpButtons(){
+      return bindHeaderHelpButtons({ onHelpClick });
+    },
+    renderTabBar(activeView){
+      return renderTabBar({
+        activeView,
+        escapeHtml,
+        hasUnsavedDraft,
+        onNavigate: onTabNavigate,
+        confirmUnsavedLeave
+      });
+    }
+  };
+}
