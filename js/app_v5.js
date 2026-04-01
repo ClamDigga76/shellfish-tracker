@@ -50,7 +50,6 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { renderTripEntryForm },
   { createHomeDashboardRenderer },
   { createSettingsScreenOrchestrator },
-  { createReportsOverviewSections },
   { createReportsScreenRenderer },
   { createFeedbackSeam },
   { createTripScreenOrchestrator },
@@ -71,7 +70,6 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   ...STARTUP_MODULE_PATHS.map(importVersionedModule),
   importVersionedModule("./ui_browser_helpers_v5.js")
 ]);
-void createReportsOverviewSections;
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;
