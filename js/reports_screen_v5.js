@@ -3,6 +3,7 @@ import { createReportsHighlightsSeam } from "./reports_highlights_v5.js";
 import { createReportsMetricDetailSeam } from "./reports_metric_detail_v5.js";
 import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.js";
 import { createReportsOverviewSectionsSeam } from "./reports_overview_sections_v5.js";
+import { createReportsTransitionSeam } from "./reports_transition_seam_v5.js";
 
 export function createReportsScreenRenderer(deps){
   const {
@@ -77,123 +78,19 @@ export function createReportsScreenRenderer(deps){
     renderStandardReadOnlyTripCard
   });
 
-  const REPORTS_TRANSITION_MS = 180;
-  let reportsTransitionTimer = null;
-  let reportsChartRenderToken = 0;
-  let reportsChartScheduleRafId = 0;
-  let pendingReportsAnnouncement = "";
-  let reportsFocusIntent = null;
-
-  function invalidateReportsChartSchedule(){
-    reportsChartRenderToken += 1;
-    if(reportsChartScheduleRafId){
-      cancelAnimationFrame(reportsChartScheduleRafId);
-      reportsChartScheduleRafId = 0;
-    }
-    return reportsChartRenderToken;
-  }
-
-  function scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, options){
-    const renderToken = invalidateReportsChartSchedule();
-    reportsChartScheduleRafId = requestAnimationFrame(()=>{
-      reportsChartScheduleRafId = 0;
-      if(renderToken !== reportsChartRenderToken) return;
-      drawReportsCharts(monthRows, dealerRows, tripsTimeline, options);
-    });
-  }
-
-  function animateReportsShellEnter(root){
-    if(!root) return;
-    root.classList.remove("is-ready");
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        root.classList.add("is-ready");
-      });
-    });
-  }
-
-  function queueReportsAnnouncement(message){
-    const text = String(message || "").trim();
-    if(!text) return;
-    pendingReportsAnnouncement = text;
-  }
-
-  function flushReportsAnnouncement(){
-    const text = String(pendingReportsAnnouncement || "").trim();
-    if(!text) return;
-    pendingReportsAnnouncement = "";
-    try{
-      const live = document.getElementById("ariaLive");
-      if(!live) return;
-      live.setAttribute("aria-live", "polite");
-      live.textContent = "";
-      setTimeout(()=>{
-        live.textContent = text;
-        setTimeout(()=>{ live.textContent = ""; }, 1800);
-      }, 40);
-    }catch(_){ }
-  }
-
-  function queueReportsFocusIntent(intent){
-    if(!intent || typeof intent !== "object"){
-      reportsFocusIntent = null;
-      return;
-    }
-    reportsFocusIntent = intent;
-  }
-
-  function applyReportsFocusIntent(root){
-    const intent = reportsFocusIntent;
-    reportsFocusIntent = null;
-    if(!intent || !root) return;
-    const safeFocus = (target)=>{
-      if(!(target instanceof HTMLElement)) return false;
-      try{
-        target.focus({ preventScroll: true });
-        return true;
-      }catch(_){
-        return false;
-      }
-    };
-    if(intent.type === "section-tab"){
-      const tab = root.querySelector(`.chip[data-reports-section="${intent.key}"]`);
-      if(safeFocus(tab)) return;
-    }
-    if(intent.type === "metric-button"){
-      const metricBtn = root.querySelector(`[data-metric-detail="${intent.metricKey}"]`);
-      if(safeFocus(metricBtn)) return;
-    }
-    if(intent.type === "metric-back"){
-      const backBtn = root.querySelector("#reportsMetricBack");
-      if(safeFocus(backBtn)) return;
-    }
-    const panel = root.querySelector("#reportsTransitionRoot");
-    safeFocus(panel);
-  }
-
-  function runReportsTransition({ mutate, renderNext = () => renderReportsScreen(), homeMetricOnly = false } = {}){
-    if(typeof mutate !== "function") return;
-    const app = getApp();
-    const root = app?.querySelector("#reportsTransitionRoot");
-    const finish = ()=>{
-      mutate();
-      if(typeof renderNext === "function") renderNext({ homeMetricOnly });
-    };
-    if(!root){
-      finish();
-      return;
-    }
-    if(reportsTransitionTimer){
-      clearTimeout(reportsTransitionTimer);
-      reportsTransitionTimer = null;
-    }
-    root.classList.remove("is-ready");
-    root.classList.add("is-leaving");
-    reportsTransitionTimer = setTimeout(()=>{
-      reportsTransitionTimer = null;
-      finish();
-    }, REPORTS_TRANSITION_MS);
-  }
+  const reportsTransitionSeam = createReportsTransitionSeam({
+    drawReportsCharts,
+    getApp,
+    renderReportsScreen: (options)=> renderReportsScreen(options)
+  });
+  const invalidateReportsChartSchedule = reportsTransitionSeam.invalidateReportsChartSchedule;
+  const scheduleReportsChartsDraw = reportsTransitionSeam.scheduleReportsChartsDraw;
+  const animateReportsShellEnter = reportsTransitionSeam.animateReportsShellEnter;
+  const queueReportsAnnouncement = reportsTransitionSeam.queueReportsAnnouncement;
+  const flushReportsAnnouncement = reportsTransitionSeam.flushReportsAnnouncement;
+  const queueReportsFocusIntent = reportsTransitionSeam.queueReportsFocusIntent;
+  const applyReportsFocusIntent = reportsTransitionSeam.applyReportsFocusIntent;
+  const runReportsTransition = reportsTransitionSeam.runReportsTransition;
 
 function renderReportsScreen({ homeMetricOnly = false } = {}){
   const state = getState();
