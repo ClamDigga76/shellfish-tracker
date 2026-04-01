@@ -59,6 +59,70 @@ function getMetricHelperText(lockPair = []) {
   return METRIC_HELPER_TEXT_BY_PAIR[key] || METRIC_HELPER_TEXT_BY_PAIR["pounds+rate"];
 }
 
+function sanitizeDecimalInput(raw){
+  let s = String(raw || "").replace(/[^\d.,]/g, "");
+  const decimalIdx = s.search(/[.,]/);
+  if(decimalIdx !== -1){
+    const intPart = s.slice(0, decimalIdx).replace(/[.,]/g, "");
+    const fracPart = s.slice(decimalIdx + 1).replace(/[.,]/g, "");
+    s = `${intPart}.${fracPart}`;
+  }else{
+    s = s.replace(/[.,]/g, "");
+  }
+  return s;
+}
+
+function primeNumericField(el, zeroValues){
+  try{
+    const v = String(el.value || "").trim();
+    if(!v || (zeroValues || []).includes(v)){
+      el.value = "";
+    }else{
+      requestAnimationFrame(()=>{ try{ el.select(); }catch(_){} });
+    }
+  }catch(_){ }
+}
+
+function normalizeAmountOnBlur(el, parseMoney){
+  try{
+    const s = String(el.value || "").trim();
+    if(!s){ el.value = "0.00"; return; }
+    const n = parseMoney(s);
+    el.value = Number.isFinite(n) ? n.toFixed(2) : "0.00";
+  }catch(_){ }
+}
+
+function display2(val){
+  if(val === "" || val == null) return "";
+  const n = Number(val);
+  if(!Number.isFinite(n)) return String(val);
+  const rounded = Math.round((n + Number.EPSILON) * 100) / 100;
+  return rounded.toFixed(2);
+}
+
+function displayAmount(val){
+  return display2(val);
+}
+
+function renderSuggestions(list, current, dataAttr, escapeHtml){
+  const cur = String(current||"").trim().toLowerCase();
+  if(!cur) return "";
+  const matches = [];
+  for(const item of (Array.isArray(list)?list:[])){
+    const s = String(item||"").trim();
+    if(!s) continue;
+    const key = s.toLowerCase();
+    if(key === cur) continue;
+    if(key.includes(cur)) matches.push(s);
+    if(matches.length >= 8) break;
+  }
+  if(!matches.length) return "";
+  return `<div class="muted small" style="margin-top:8px">Suggestions</div>
+    <div class="chips" style="margin-top:8px">
+      ${matches.map(s=>`<button class="chip" ${dataAttr}="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
+    </div>`;
+}
+
 export function createTripScreenOrchestrator({
   state,
   ensureAreas,
@@ -91,9 +155,6 @@ export function createTripScreenOrchestrator({
   scheduleStateSave,
   computeTripSaveEnabled,
   isValidAreaValue,
-  sanitizeDecimalInput,
-  primeNumericField,
-  normalizeAmountOnBlur,
   commitTripFromDraft,
   render,
   saveDraft,
@@ -109,12 +170,10 @@ export function createTripScreenOrchestrator({
   parseReportDateToISO,
   findDuplicateTrip,
   to2,
-  displayAmount,
   openQuickChipCustomizeModal,
   bindQuickChipLongPress,
   bindAreaChips,
   bindQuickChips,
-  renderSuggestions,
   clearPendingTripUndo,
   openConfirmModal,
   goBack,
@@ -436,7 +495,7 @@ const newTripFormHtml = renderTripEntryForm({
     });
     elAmount.addEventListener("blur", ()=>{
       if(String(elAmount.value||"").endsWith(".")) elAmount.value = String(elAmount.value).slice(0, -1);
-      normalizeAmountOnBlur(elAmount);
+      normalizeAmountOnBlur(elAmount, parseMoney);
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
@@ -455,7 +514,7 @@ const newTripFormHtml = renderTripEntryForm({
     });
     elWrittenCheckAmount.addEventListener("blur", ()=>{
       if(String(elWrittenCheckAmount.value||"").endsWith(".")) elWrittenCheckAmount.value = String(elWrittenCheckAmount.value).slice(0, -1);
-      normalizeAmountOnBlur(elWrittenCheckAmount);
+      normalizeAmountOnBlur(elWrittenCheckAmount, parseMoney);
       updateSettlementLine();
       saveDraft();
     });
@@ -963,7 +1022,7 @@ function updateReviewDealerSuggestions(){
   const wrap = document.getElementById("r_dealerSugg");
   const el = document.getElementById("r_dealer");
   if(!wrap || !el) return;
-  wrap.innerHTML = renderSuggestions(state.dealers, el.value, "data-dealer-sugg-r");
+  wrap.innerHTML = renderSuggestions(state.dealers, el.value, "data-dealer-sugg-r", escapeHtml);
 }
 const topAreaWrapR = document.getElementById("topAreasR");
 const topDealerWrapR = document.getElementById("topDealersR");
@@ -1483,7 +1542,7 @@ function renderEditTrip(){
     });
     elAmount.addEventListener("blur", ()=>{
       if(String(elAmount.value||"").endsWith(".")) elAmount.value = String(elAmount.value).slice(0, -1);
-      normalizeAmountOnBlur(elAmount);
+      normalizeAmountOnBlur(elAmount, parseMoney);
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
@@ -1502,7 +1561,7 @@ function renderEditTrip(){
     });
     elWrittenCheckAmount.addEventListener("blur", ()=>{
       if(String(elWrittenCheckAmount.value||"").endsWith(".")) elWrittenCheckAmount.value = String(elWrittenCheckAmount.value).slice(0, -1);
-      normalizeAmountOnBlur(elWrittenCheckAmount);
+      normalizeAmountOnBlur(elWrittenCheckAmount, parseMoney);
       updateSettlementLine();
       updateSaveEnabled();
     });
