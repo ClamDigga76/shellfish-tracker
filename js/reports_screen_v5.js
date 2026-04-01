@@ -5,7 +5,6 @@ import { buildReportsCompareFoundation } from "./reports_compare_foundations_v5.
 
 export function createReportsScreenRenderer(deps){
   const {
-    ensureReportsFilter,
     getState,
     buildUnifiedFilterFromReportsFilter,
     applyUnifiedTripFilter,
@@ -32,6 +31,19 @@ export function createReportsScreenRenderer(deps){
     renderStandardReadOnlyTripCard,
     renderApp
   } = deps;
+
+  function ensureReportsFilter(state){
+    if(!state?.reportsFilter || typeof state.reportsFilter !== "object"){
+      state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
+    }
+    if(!state.reportsFilter.mode) state.reportsFilter.mode = "YTD";
+    if(state.reportsFilter.from == null) state.reportsFilter.from = "";
+    if(state.reportsFilter.to == null) state.reportsFilter.to = "";
+    if(state.reportsFilter.dealer == null) state.reportsFilter.dealer = "";
+    if(state.reportsFilter.area == null) state.reportsFilter.area = "";
+    if(state.reportsFilter.adv == null) state.reportsFilter.adv = false;
+    if(!Array.isArray(state.reportsFilter.customRangeCorrectionMessages)) state.reportsFilter.customRangeCorrectionMessages = [];
+  }
 
   const reportsAdvancedPanel = createReportsAdvancedPanelSeam({
     escapeHtml,
@@ -176,7 +188,7 @@ export function createReportsScreenRenderer(deps){
 
 function renderReportsScreen({ homeMetricOnly = false } = {}){
   const state = getState();
-  ensureReportsFilter();
+  ensureReportsFilter(state);
 
   if (!homeMetricOnly) {
     const hasStaleHomeDetail = String(state.homeMetricDetail || "").trim()
