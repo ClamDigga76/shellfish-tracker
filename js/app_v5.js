@@ -44,7 +44,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { createReportsFilterHelpers },
   { createSettingsListManagement },
   { createBackupRestoreSubsystem },
-  { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled, appendTripHistoryEvent, ensureTripProvenanceShape, AREA_NOT_RECORDED, createTripSharedCollectionsEngine },
+  { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled, appendTripHistoryEvent, createTripProvenanceSummaryHelpers, AREA_NOT_RECORDED, createTripSharedCollectionsEngine },
   { createTripCardRenderHelpers, normalizeDealerDisplay },
   { renderHelpViewHTML, renderAboutViewHTML },
   { renderTripEntryForm },
@@ -86,6 +86,12 @@ const {
   isValidAreaValue,
   validateTrip
 } = createTripDataEngine({ uid, isValidISODate });
+const {
+  buildTripProvenanceSummary
+} = createTripProvenanceSummaryHelpers({
+  normalizeTrip,
+  formatDateDMY
+});
 const {
   resolveAreaValue,
   resolveTripArea,
@@ -188,46 +194,6 @@ function formatDateDMY(input){
   const dt = (input instanceof Date) ? input : new Date(input);
   if(Number.isNaN(dt.getTime())) return formatDateLegacyDMY(input);
   return `${String(dt.getMonth() + 1).padStart(2, "0")}/${String(dt.getDate()).padStart(2, "0")}/${dt.getFullYear()}`;
-}
-
-function formatTripAuditTimestamp(value){
-  const iso = String(value || "").trim();
-  if(!iso) return "";
-  const date = new Date(iso);
-  if(Number.isNaN(date.getTime())) return "";
-  const day = formatDateDMY(date);
-  const hh = String(date.getHours()).padStart(2, "0");
-  const mm = String(date.getMinutes()).padStart(2, "0");
-  return `${day} ${hh}:${mm}`;
-}
-
-function buildTripProvenanceSummary(trip){
-  const normalizedTrip = normalizeTrip(trip);
-  const provenance = ensureTripProvenanceShape(normalizedTrip, normalizedTrip?.createdAt);
-  const history = Array.isArray(provenance.history) ? [...provenance.history].sort((a,b)=>String(b.at).localeCompare(String(a.at))) : [];
-  const summaryLines = [];
-  const eventLabels = { created: "Created", edited: "Edited", imported: "Imported" };
-  const sourceLabels = { manual: "in app", import: "from backup", restore: "from backup", legacy: "on this device", system: "in app" };
-  const createdLine = formatTripAuditTimestamp(provenance.createdAt);
-  if(createdLine){
-    const createdSource = sourceLabels[String(provenance.createdSource || "").trim().toLowerCase()] || "on this device";
-    summaryLines.push(`Created ${createdLine} • ${createdSource}`);
-  }
-  if(provenance.updatedAt){
-    const updatedLine = formatTripAuditTimestamp(provenance.updatedAt);
-    if(updatedLine) summaryLines.push(`Last edited ${updatedLine}`);
-  }
-  if(provenance.importedAt){
-    const importedLine = formatTripAuditTimestamp(provenance.importedAt);
-    if(importedLine) summaryLines.push(`Imported ${importedLine}`);
-  }
-  const historyItems = history.slice(0, 4).map((event)=>{
-    const label = eventLabels[String(event.type || "").toLowerCase()] || "Updated";
-    const stamp = formatTripAuditTimestamp(event.at) || "Unknown time";
-    const source = sourceLabels[String(event.source || "").trim().toLowerCase()] || "in app";
-    return `${label} ${stamp} • ${source}`;
-  });
-  return { summaryLines, historyItems };
 }
 
 // ---- Toasts ----
