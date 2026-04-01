@@ -263,6 +263,89 @@ export function closeModal({ immediate = false } = {}){
   window.setTimeout(finalizeClose, MODAL_ROOT_EXIT_MS);
 }
 
+export function openConfirmModal({
+  title = "Confirm",
+  message = "Are you sure?",
+  confirmLabel = "Yes",
+  cancelLabel = "Cancel",
+  confirmTone = "destructive",
+  uid,
+  openModal: openModalImpl = openModal,
+  closeModal: closeModalImpl = closeModal,
+  triggerHaptic
+} = {}){
+  return new Promise((resolve)=>{
+    const confirmId = `confirmModalYes_${uid()}`;
+    const cancelId = `confirmModalNo_${uid()}`;
+    let settled = false;
+    const settle = (result)=>{
+      if(settled) return;
+      settled = true;
+      closeModalImpl();
+      resolve(Boolean(result));
+    };
+
+    const normalizedTone = String(confirmTone || "destructive").toLowerCase();
+    const confirmToneClass = normalizedTone === "destructive"
+      ? "danger"
+      : normalizedTone === "warning"
+        ? "warn"
+        : "";
+
+    openModalImpl({
+      title,
+      backdropClose: false,
+      escClose: false,
+      showCloseButton: false,
+      position: "center",
+      html: `
+        <div class="muted" style="white-space:pre-wrap;line-height:1.4">${escapeHtml(String(message||""))}</div>
+        <div class="modalActions" style="margin-top:14px">
+          <button class="btn" id="${cancelId}" type="button">${escapeHtml(String(cancelLabel||"Cancel"))}</button>
+          <button class="btn ${confirmToneClass}" id="${confirmId}" type="button">${escapeHtml(String(confirmLabel||"Yes"))}</button>
+        </div>
+      `,
+      onOpen: ()=>{
+        document.getElementById(cancelId)?.addEventListener("click", ()=>settle(false));
+        document.getElementById(confirmId)?.addEventListener("click", ()=>{
+          if(typeof triggerHaptic === "function") triggerHaptic("light");
+          settle(true);
+        });
+      }
+    });
+  });
+}
+
+export function bindDatePill(inputId, placeholder = "Select date"){
+  const el = document.getElementById(inputId);
+  if(!el || String(el.type||"").toLowerCase() !== "date") return;
+  let wrap = el.parentElement;
+  if(!wrap || !wrap.classList.contains("datePillWrap")){
+    wrap = document.createElement("div");
+    wrap.className = "datePillWrap";
+    el.parentNode.insertBefore(wrap, el);
+    wrap.appendChild(el);
+  }
+  let ph = wrap.querySelector(".datePillPlaceholder");
+  if(!ph){
+    ph = document.createElement("span");
+    ph.className = "datePillPlaceholder";
+    ph.setAttribute("aria-hidden", "true");
+    ph.textContent = placeholder;
+    wrap.appendChild(ph);
+  }
+  const sync = ()=>{
+    wrap.classList.toggle("is-empty", !String(el.value||"").trim());
+  };
+  if(!el.__datePillBound){
+    el.__datePillBound = true;
+    el.addEventListener("input", sync);
+    el.addEventListener("change", sync);
+    el.addEventListener("blur", sync);
+  }
+  sync();
+}
+
 export function attachLongPress(el, { ms = 500, movePx = 10, onLongPressArmed, onLongPressTrigger } = {}){
   if(!el) return ()=>{};
 
