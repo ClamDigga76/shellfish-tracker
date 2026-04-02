@@ -135,7 +135,6 @@ export function createUnifiedFiltersSeam({
     }
     if(filter.range === "90d") return { fromISO:backDays(90), toISO:now, label:"Last 90 days" };
     if(filter.range === "30d") return { fromISO:backDays(30), toISO:now, label:"Last 30 days" };
-    if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"Last 7 Days" };
 
     const normalized = normalizeCustomRangeWithFeedback({ fromISO: filter.fromISO, toISO: filter.toISO });
     const fromISO = normalized.fromISO;

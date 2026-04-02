@@ -479,16 +479,12 @@ export function createSettingsScreenOrchestrator({
     const updateBigStatusEl = document.getElementById("updateBigStatus");
     const updateVersionLineEl = document.getElementById("updateVersionLine");
     if (updatesSummaryLine && updateBigStatusEl) {
-      const status = String(updateBigStatusEl.textContent || "").trim();
-      const versionMeta = String(updateVersionLineEl?.textContent || "").trim();
-      updatesSummaryLine.textContent = versionMeta ? `${status} • ${versionMeta}` : (status || "Update status available");
-    }
-    if (updatesSummaryLine && updateBigStatusEl) {
       const syncUpdateSummaryLine = () => {
         const status = String(updateBigStatusEl.textContent || "").trim();
         const versionMeta = String(updateVersionLineEl?.textContent || "").trim();
         updatesSummaryLine.textContent = versionMeta ? `${status} • ${versionMeta}` : (status || "Update status available");
       };
+      syncUpdateSummaryLine();
       const updateObserver = new MutationObserver(() => syncUpdateSummaryLine());
       updateObserver.observe(updateBigStatusEl, { childList: true, characterData: true, subtree: true });
       if (updateVersionLineEl) {
