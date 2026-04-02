@@ -6,6 +6,7 @@ import {
   STARTUP_MODULE_PATHS,
   SW_CORE_JS_PATHS,
   SW_CORE_JS_EXCLUDED_PATHS,
+  STARTUP_APP_OWNED_MODULE_PATHS,
   APP_ENTRY_MODULE_PATH,
   BOOTSTRAP_SANITY_REFERENCE_PATHS,
 } from "../js/startup_asset_manifest_v5.js";
@@ -115,6 +116,7 @@ const requiredFiles = [
     ...SW_CORE_JS_PATHS,
     APP_ENTRY_MODULE_PATH,
     ...SW_CORE_JS_EXCLUDED_PATHS,
+    ...STARTUP_APP_OWNED_MODULE_PATHS,
   ]).values(),
 ].map((relPath) => relPath.startsWith("./") ? `js/${relPath.slice(2)}` : relPath);
 
@@ -242,7 +244,8 @@ if (bootstrapJs && appJs) {
     fail("app startup loads use versioned module list");
   }
 
-  if (appJs.includes("window.__SHELLFISH_STARTUP_IMPORTS__ = [...STARTUP_MODULE_URLS];")) {
+  if (appJs.includes("window.__SHELLFISH_STARTUP_IMPORTS__ = startupImportUrls;") &&
+      appJs.includes("window.__BOOT_DIAG__.startupModuleUrls = startupImportUrls;")) {
     pass("app exposes startup module diagnostics");
   } else {
     fail("app exposes startup module diagnostics");
@@ -254,6 +257,36 @@ if (bootstrapJs && appJs) {
       pass(`startup module parity: ${rel}`);
     } else {
       fail(`startup module parity: ${rel}`);
+    }
+  }
+
+  if (appJs.includes("...STARTUP_APP_OWNED_MODULE_PATHS.map(importVersionedModule)")) {
+    pass("app startup app-owned modules derive from manifest list");
+  } else {
+    fail("app startup app-owned modules derive from manifest list");
+  }
+
+  if (appJs.includes('importVersionedModule("./app_local_utils_v5.js")') ||
+      appJs.includes('importVersionedModule("./trips_unified_filter_bridge_v5.js")') ||
+      appJs.includes('importVersionedModule("./theme_runtime_seam_v5.js")') ||
+      appJs.includes('importVersionedModule("./ui_browser_helpers_v5.js")')) {
+    fail("app startup app-owned modules not hardcoded");
+  } else {
+    pass("app startup app-owned modules not hardcoded");
+  }
+
+  for (const rel of STARTUP_APP_OWNED_MODULE_PATHS) {
+    const relPath = `js/${rel.slice(2)}`;
+    if (existsSync(path.join(ROOT, relPath))) {
+      pass(`startup app-owned module present: ${rel}`);
+    } else {
+      fail(`startup app-owned module present: ${rel}`);
+    }
+
+    if (SW_CORE_JS_EXCLUDED_PATHS.includes(rel)) {
+      pass(`startup app-owned module excluded from SW core: ${rel}`);
+    } else {
+      fail(`startup app-owned module excluded from SW core: ${rel}`);
     }
   }
 }
