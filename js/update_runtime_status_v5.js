@@ -10,6 +10,7 @@ export function createUpdateRuntimeStatusSeam({
 }){
   let swUpdateReady = false;
   let lastSwUpdateSignal = "";
+  let lastSwRegistrationSignal = "";
   let lastRuntimeVersionDiagnostics = null;
   let lastReleaseValidationSnapshot = null;
 
@@ -88,6 +89,16 @@ export function createUpdateRuntimeStatusSeam({
       }
     });
   }catch(_){ }
+  try{
+    windowRef.addEventListener("sw-registration-state", (ev)=>{
+      const state = String(ev?.detail?.state || "");
+      if(!state) return;
+      lastSwRegistrationSignal = state;
+      if(getIsSettingsView()){
+        try{ updateUpdateRow(); }catch(_){ }
+      }
+    });
+  }catch(_){ }
 
   function getIsStandalone(){
     return Boolean(
@@ -156,10 +167,6 @@ export function createUpdateRuntimeStatusSeam({
     return match ? match[1] : "";
   }
 
-  function asPassFailLabel(value){
-    return value ? "Pass" : "Fail";
-  }
-
   function formatLedgerStamp(dateValue){
     const d = dateValue instanceof Date ? dateValue : new Date(dateValue || Date.now());
     if(Number.isNaN(d.getTime())) return "";
@@ -177,7 +184,11 @@ export function createUpdateRuntimeStatusSeam({
       swWaitingVersion: "",
       cacheVersions: [],
       startupModuleVersions: [],
-      lastBootError: ""
+      lastBootError: "",
+      swRegistrationAttempted: false,
+      swRegistrationConfirmed: false,
+      swRegistrationScope: "",
+      swRegistrationError: ""
     };
 
     try{
@@ -221,22 +232,33 @@ export function createUpdateRuntimeStatusSeam({
     try{
       details.lastBootError = String(windowRef.__BOOT_DIAG__?.lastBootError?.message || "");
     }catch(_){ }
+    try{
+      const swRegistrationDiag = windowRef.__BOOT_DIAG__?.swRegistration || {};
+      details.swRegistrationAttempted = swRegistrationDiag.attempted === true;
+      details.swRegistrationConfirmed = swRegistrationDiag.registered === true;
+      details.swRegistrationScope = String(swRegistrationDiag.scope || "");
+      details.swRegistrationError = String(swRegistrationDiag.lastError || "");
+    }catch(_){ }
 
-    details.hasVersionSkew = Boolean(
+    details.hasExplicitVersionMismatch = Boolean(
       (details.swScriptVersion && buildDigits && details.swScriptVersion !== buildDigits) ||
       details.cacheVersions.some(v=>buildDigits && v !== buildDigits) ||
-      details.startupModuleVersions.some(v=>buildDigits && v !== buildDigits) ||
-      (buildDigits && details.startupModuleVersions.length > 0 && !details.swController)
+      details.startupModuleVersions.some(v=>buildDigits && v !== buildDigits)
     );
+    details.swControlUnconfirmed = Boolean(!details.swController && (details.swRegistrationConfirmed || details.swRegistrationAttempted));
+    details.swRegistrationUnconfirmed = Boolean(!details.swRegistrationConfirmed);
+    details.hasVersionSkew = details.hasExplicitVersionMismatch;
     details.installedAppLikelyLagging = Boolean(
       details.standalone && (
-        (!details.swController && details.startupModuleVersions.length > 0) ||
+        details.swControlUnconfirmed ||
+        details.swRegistrationUnconfirmed ||
         (details.swScriptVersion && buildDigits && details.swScriptVersion !== buildDigits) ||
         (details.swWaitingVersion && buildDigits && details.swWaitingVersion !== buildDigits)
       )
     );
     details.needsHardReset = Boolean(
-      details.hasVersionSkew ||
+      details.hasExplicitVersionMismatch ||
+      details.swRegistrationError ||
       /reset cache|stale required asset|wrong required asset|unexpected js payload|corrupted js response|empty js response|incomplete js response/i.test(details.lastBootError)
     );
 
@@ -316,10 +338,14 @@ export function createUpdateRuntimeStatusSeam({
       lines.push(`CacheVersions: ${cacheVersions.length ? cacheVersions.map(v=>`v${v}`).join(", ") : "(none)"}`);
       lines.push(`StartupModuleVersions: ${startupVersions.length ? startupVersions.map(v=>`v${v}`).join(", ") : "(none)"}`);
       lines.push(`VersionSkewDetected: ${runtimeDiag.hasVersionSkew ? "yes" : "no"}`);
+      lines.push(`ExplicitVersionMismatch: ${runtimeDiag.hasExplicitVersionMismatch ? "yes" : "no"}`);
+      lines.push(`SWControlUnconfirmed: ${runtimeDiag.swControlUnconfirmed ? "yes" : "no"}`);
+      lines.push(`SWRegistrationConfirmed: ${runtimeDiag.swRegistrationConfirmed ? "yes" : "no"}`);
       lines.push(`InstalledAppLikelyLagging: ${runtimeDiag.installedAppLikelyLagging ? "yes" : "no"}`);
       lines.push(`HardResetSuggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`);
       lines.push(`RecoveryReadiness: ${runtimeDiag.needsHardReset || runtimeDiag.lastBootError ? "attention-needed" : "ready"}`);
       if(runtimeDiag.lastBootError) lines.push(`LastBootWarning: ${String(runtimeDiag.lastBootError)}`);
+      if(runtimeDiag.swRegistrationError) lines.push(`SWRegistrationWarning: ${String(runtimeDiag.swRegistrationError)}`);
     }else{
       lines.push("RuntimeDiagnostics: not captured yet in this session");
     }
@@ -412,14 +438,17 @@ export function createUpdateRuntimeStatusSeam({
       if(startupMismatchVersions.length){
         warningParts.push(`startup modules ${startupMismatchVersions.map(v=>`v${v}`).join(", ")}`);
       }
-      if(runtimeDiag.buildDigits && runtimeDiag.startupModuleVersions.length && !runtimeDiag.swController){
-        warningParts.push("installed app has no SW controller");
-      }
       parts.push(`Version check: warning${warningParts.length ? " • " + warningParts.join(" • ") : ""}`);
     }else if(runtimeDiag.buildDigits){
       parts.push(`Version check: aligned to v${runtimeDiag.buildDigits}`);
     }
 
+    if(runtimeDiag.swControlUnconfirmed && !runtimeDiag.hasExplicitVersionMismatch){
+      parts.push("Service worker note: registration exists but this tab is not controlled yet.");
+    }
+    if(runtimeDiag.swRegistrationUnconfirmed && !runtimeDiag.hasExplicitVersionMismatch){
+      parts.push("Service worker note: registration is not confirmed yet on this device.");
+    }
     if(runtimeDiag.installedAppLikelyLagging){
       parts.push("Installed app note: this Home Screen copy may be behind browser mode. Reopen it after loading the latest build.");
     }
@@ -472,6 +501,14 @@ export function createUpdateRuntimeStatusSeam({
       btnPrimary.textContent = "Reset cache & reload";
       btnPrimary.onclick = async ()=>{ await swCheckNow({ hardReset: true }); };
       if(inlineMsg) inlineMsg.textContent = "Use Reset cache & reload for a clean fetch if Reload latest build still looks stale.";
+      return;
+    }
+
+    if(runtimeDiag?.swControlUnconfirmed || runtimeDiag?.swRegistrationUnconfirmed){
+      statusEl.textContent = "Latest build check is still pending on this device";
+      btnPrimary.textContent = "Reload latest build";
+      btnPrimary.onclick = async ()=>{ await swCheckNow(); };
+      if(inlineMsg) inlineMsg.textContent = "Run Reload latest build after service worker control is confirmed.";
       return;
     }
 
@@ -540,10 +577,11 @@ export function createUpdateRuntimeStatusSeam({
     const runtimeDiag = await getRuntimeVersionDiagnostics();
     const buildDigits = runtimeDiag.buildDigits || parseBuildDigits(displayBuildVersion);
     const updateReady = Boolean(swUpdateReady || runtimeDiag.swWaitingVersion);
-    const updateAligned = Boolean(!runtimeDiag.hasVersionSkew && runtimeDiag.swController);
+    const swControlConfirmed = Boolean(runtimeDiag.swController && runtimeDiag.swRegistrationConfirmed);
+    const updateAligned = Boolean(!runtimeDiag.hasExplicitVersionMismatch && swControlConfirmed);
     const lastGoodRuntime = getLastGoodRuntimeConfirmation();
     const hasLastGoodForBuild = Boolean(lastGoodRuntime?.buildVersion && lastGoodRuntime.buildVersion === String(displayBuildVersion || ""));
-    const reopenReady = Boolean(!runtimeDiag.installedAppLikelyLagging && !runtimeDiag.hasVersionSkew && hasLastGoodForBuild);
+    const reopenReady = Boolean(swControlConfirmed && !runtimeDiag.installedAppLikelyLagging && !runtimeDiag.hasExplicitVersionMismatch && hasLastGoodForBuild);
     const recoveryReady = Boolean(runtimeDiag.needsHardReset || runtimeDiag.lastBootError);
     const cacheLine = runtimeDiag.cacheVersions.length
       ? [...new Set(runtimeDiag.cacheVersions)].map(v=>`v${v}`).join(", ")
@@ -555,9 +593,9 @@ export function createUpdateRuntimeStatusSeam({
 
     const checks = [
       { key: "browser_mode", label: "Browser mode opens current release", suggested: "not-run" },
-      { key: "installed_mode", label: "Installed app opens current release", suggested: runtimeDiag.standalone ? asPassFailLabel(updateAligned).toLowerCase() : "not-run" },
-      { key: "update_pickup", label: "Update pickup after reload", suggested: asPassFailLabel(updateAligned).toLowerCase() },
-      { key: "reopen_behavior", label: "Reopen keeps expected build", suggested: asPassFailLabel(reopenReady).toLowerCase() },
+      { key: "installed_mode", label: "Installed app opens current release", suggested: runtimeDiag.standalone ? (runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging ? "fail" : (swControlConfirmed ? "pass" : "not-run")) : "not-run" },
+      { key: "update_pickup", label: "Update pickup after reload", suggested: runtimeDiag.hasExplicitVersionMismatch ? "fail" : (swControlConfirmed ? "pass" : "not-run") },
+      { key: "reopen_behavior", label: "Reopen keeps expected build", suggested: runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging ? "fail" : (reopenReady ? "pass" : "not-run") },
       { key: "recovery_reset", label: "Recovery/reset trust flow", suggested: recoveryReady ? "not-run" : "pass" }
     ];
 
@@ -565,10 +603,12 @@ export function createUpdateRuntimeStatusSeam({
       `Build target: ${displayBuildVersion}${buildDigits ? ` (digits ${buildDigits})` : ""}`,
       `Mode: ${runtimeDiag.standalone ? "Installed app (standalone)" : "Browser/tab mode"}`,
       `SW controller: ${runtimeDiag.swController ? "yes" : "no"}`,
+      `SW registration confirmed: ${runtimeDiag.swRegistrationConfirmed ? "yes" : "no"}${lastSwRegistrationSignal ? ` (${lastSwRegistrationSignal})` : ""}`,
       `SW waiting update: ${waitingLine}`,
       `Cache versions: ${cacheLine}`,
       `Startup module versions: ${startupLine}`,
       `Version skew detected: ${runtimeDiag.hasVersionSkew ? "yes" : "no"}`,
+      `SW control unconfirmed: ${runtimeDiag.swControlUnconfirmed ? "yes" : "no"}`,
       `Installed-app lag likely: ${runtimeDiag.installedAppLikelyLagging ? "yes" : "no"}`,
       `Hard reset suggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`,
       `Last-good runtime recorded for target build: ${hasLastGoodForBuild ? "yes" : "no"}`,
