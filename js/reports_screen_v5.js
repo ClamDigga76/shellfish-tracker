@@ -6,6 +6,7 @@ import { createReportsBindingsSeam } from "./reports_bindings_v5.js";
 import { createReportsOverviewSectionsSeam } from "./reports_overview_sections_v5.js";
 import { createReportsShellControlsSeam } from "./reports_shell_controls_v5.js";
 import { createReportsTransitionSeam } from "./reports_transition_seam_v5.js";
+import { createReportsMetricRouteSeam } from "./reports_metric_route_seam_v5.js";
 
 export function createReportsScreenRenderer(deps){
   const {
@@ -82,6 +83,13 @@ export function createReportsScreenRenderer(deps){
   });
 
   const reportsBindingsSeam = createReportsBindingsSeam();
+  const reportsMetricRouteSeam = createReportsMetricRouteSeam({
+    parseReportDateToISO,
+    resolveUnifiedRange,
+    formatDateDMY,
+    applyUnifiedTripFilter,
+    buildUnifiedFilterFromReportsFilter
+  });
 
   const reportsTransitionSeam = createReportsTransitionSeam({
     drawReportsCharts,
@@ -101,118 +109,42 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const state = getState();
   ensureReportsFilter(state);
 
-  if (!homeMetricOnly) {
-    const hasStaleHomeDetail = String(state.homeMetricDetail || "").trim()
-      || (state.homeMetricDetailContext && typeof state.homeMetricDetailContext === "object");
-    if (hasStaleHomeDetail) {
-      state.homeMetricDetail = "";
-      state.homeMetricDetailContext = null;
-      saveState();
-    }
+  const didClearStaleHomeDetail = reportsMetricRouteSeam.clearStaleHomeDetailForReports({
+    state,
+    homeMetricOnly
+  });
+  if(didClearStaleHomeDetail){
+    saveState();
   }
 
   const tripsAll = Array.isArray(state.trips) ? state.trips.slice() : [];
   const hasSavedTrips = tripsAll.length > 0;
-  const rf = state.reportsFilter || { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false };
-  const fMode = String(rf.mode || "YTD").toUpperCase();
-  const hasReportsCustomConstraints = !!parseReportDateToISO(rf.from)
-    || !!parseReportDateToISO(rf.to)
-    || !!String(rf.dealer || "").trim()
-    || !!String(rf.area || "").trim();
-  const isPresetExactMatch = REPORTS_PRESET_MODES.includes(fMode) && !hasReportsCustomConstraints;
-  const isAdvancedActive = !!rf.adv || !isPresetExactMatch;
-  const activePresetFilterKey = isPresetExactMatch ? fMode : "";
-  const reportsSectionKey = String(state.reportsSection || "insights").toLowerCase();
-  const reportsMetricDetail = String(state.reportsMetricDetail || "").toLowerCase();
-  const reportsMetricDetailContext = state.reportsMetricDetailContext && typeof state.reportsMetricDetailContext === "object"
-    ? state.reportsMetricDetailContext
-    : null;
-  const homeMetricDetail = String(state.homeMetricDetail || "").toLowerCase();
-  const homeMetricDetailContext = state.homeMetricDetailContext && typeof state.homeMetricDetailContext === "object"
-    ? state.homeMetricDetailContext
-    : null;
-  const isHomeMetricDetail = !!homeMetricOnly;
-  const activeMetricDetail = isHomeMetricDetail ? homeMetricDetail : reportsMetricDetail;
-  const metricDetailContext = isHomeMetricDetail ? homeMetricDetailContext : reportsMetricDetailContext;
+  const routeContext = reportsMetricRouteSeam.resolveMetricRouteContext({
+    state,
+    homeMetricOnly,
+    tripsAll,
+    reportsPresetModes: REPORTS_PRESET_MODES
+  });
+  const {
+    rf,
+    fMode,
+    hasValidRange,
+    isAdvancedActive,
+    activePresetFilterKey,
+    reportsSectionKey,
+    isHomeMetricDetail,
+    activeMetricDetail,
+    trips,
+    seasonalityTrips,
+    quarantinedSupportCopy,
+    rangeLabel,
+    reportsBodyView
+  } = routeContext;
 
   if (homeMetricOnly && !activeMetricDetail) {
     renderApp();
     return;
   }
-
-  const hasValidRange = (fMode !== "RANGE") || (parseReportDateToISO(rf.from) && parseReportDateToISO(rf.to));
-  const mapHomeModeToUnifiedRange = (modeValue)=> {
-    const normalized = String(modeValue || "YTD").toUpperCase();
-    if(normalized === "ALL") return "all";
-    if(normalized === "MONTH" || normalized === "THIS_MONTH") return "mtd";
-    if(normalized === "LAST_MONTH") return "last_month";
-    if(normalized === "7D" || normalized === "LAST_7_DAYS") return "7d";
-    if(normalized === "30D") return "30d";
-    if(normalized === "90D") return "90d";
-    if(normalized === "12M") return "12m";
-    if(normalized === "RANGE" || normalized === "CUSTOM") return "custom";
-    return "ytd";
-  };
-  const buildHomeMetricScope = (homeFilter, homeScopeSnapshot = null)=> {
-    const normalizedFilter = homeFilter && typeof homeFilter === "object"
-      ? {
-        mode: String(homeFilter.mode || "YTD").toUpperCase(),
-        from: parseReportDateToISO(homeFilter.from || "") || "",
-        to: parseReportDateToISO(homeFilter.to || "") || ""
-      }
-      : null;
-    if(!normalizedFilter) return null;
-    const unifiedFilter = {
-      range: mapHomeModeToUnifiedRange(normalizedFilter.mode),
-      fromISO: normalizedFilter.from,
-      toISO: normalizedFilter.to,
-      dealer: "all",
-      area: "all",
-      species: "all",
-      text: ""
-    };
-    const resolvedRange = resolveUnifiedRange(unifiedFilter);
-    const displayRangeLabel = unifiedFilter.range === "custom"
-      ? `${formatDateDMY(resolvedRange.fromISO)} → ${formatDateDMY(resolvedRange.toISO)}`
-      : String(resolvedRange.label || "YTD");
-    const filtered = applyUnifiedTripFilter(tripsAll, unifiedFilter);
-    const fallbackTripCount = filtered.rows.length;
-    const snapshotTripCount = Number(homeScopeSnapshot?.tripCount);
-    const tripCount = Number.isFinite(snapshotTripCount) && snapshotTripCount >= 0
-      ? snapshotTripCount
-      : fallbackTripCount;
-    const contextText = `Home • Range ${displayRangeLabel} • ${tripCount} trips`;
-    return {
-      filter: normalizedFilter,
-      unifiedFilter,
-      resolvedRange,
-      rangeLabel: displayRangeLabel,
-      tripCount,
-      contextText,
-      trips: filtered.rows
-    };
-  };
-  const homeScope = isHomeMetricDetail
-    ? buildHomeMetricScope(metricDetailContext?.homeFilter, metricDetailContext?.homeScope)
-    : null;
-  const unified = (isHomeMetricDetail && activeMetricDetail && homeScope)
-    ? homeScope.unifiedFilter
-    : buildUnifiedFilterFromReportsFilter(rf);
-  const filteredReportsResult = applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" });
-  let trips = isHomeMetricDetail && activeMetricDetail && homeScope
-    ? homeScope.trips
-    : filteredReportsResult.rows;
-  const seasonalityUnified = { ...unified, range: "all", fromISO: "", toISO: "" };
-  const seasonalityResult = applyUnifiedTripFilter(tripsAll, seasonalityUnified);
-  const seasonalityTrips = isHomeMetricDetail && homeScope
-    ? homeScope.trips
-    : seasonalityResult.rows;
-  const excludedQuarantinedCount = Number((isHomeMetricDetail && homeScope)
-    ? 0
-    : filteredReportsResult?.transparency?.excludedQuarantinedCount || 0);
-  const quarantinedSupportCopy = excludedQuarantinedCount > 0
-    ? `Some trips are excluded from Reports date filtering because their date is invalid (quarantined): ${excludedQuarantinedCount}.`
-    : "";
 
   const activeReportsSection = resolveActiveReportsSection(reportsSectionKey);
   const {
@@ -232,18 +164,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     areas: state.areas
   });
 
-  const resolvedReportsRange = isHomeMetricDetail && homeScope
-    ? homeScope.resolvedRange
-    : resolveUnifiedRange(unified);
-  const rangeLabel = isHomeMetricDetail && homeScope
-    ? homeScope.rangeLabel
-    : (fMode === "RANGE")
-      ? (hasValidRange ? `${formatDateDMY(resolvedReportsRange.fromISO)} → ${formatDateDMY(resolvedReportsRange.toISO)}` : "Set dates")
-      : (fMode === "THIS_MONTH" ? "This Month"
-        : (fMode === "LAST_MONTH" ? "Last Month"
-          : (fMode === "90D" ? "Last 3 Months"
-            : (fMode === "ALL" ? "All Time"
-            : "YTD"))));
   const detailSurfaceClass = isHomeMetricDetail ? "homeMetricDetail" : "reportsMetricDetail";
   const detailCardClass = isHomeMetricDetail ? "homeMetricDetailCard" : "reportsMetricDetailCard";
   const detailBackClass = isHomeMetricDetail ? "homeMetricBackBtn" : "reportsMetricBackBtn";
@@ -403,7 +323,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     getTripMetricValue
   });
 
-  const reportsBodyView = activeMetricDetail ? "metric-detail" : activeReportsSection;
   getApp().innerHTML = homeMetricOnly ? `
     ${renderPageHeader("home")}
 
