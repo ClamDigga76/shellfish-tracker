@@ -132,8 +132,8 @@ export function createHomeDashboardRenderer({
       <div class="noticeBand" role="status" aria-live="polite">
         <div class="noticeTitle">Installed app check</div>
         <div class="muted small noticeBody">
-          On iPhone/iPad (and sometimes Android), the Home Screen app may use separate local storage from Safari.
-          If recent trips were saved in Safari, create a backup there and restore it here to keep records aligned.
+          Browser mode and Installed mode are both valid. Installed mode is recommended for app-like use.
+          Storage can differ by mode or device, so create backup and restore backup when switching phones, browsers, or app modes.
         </div>
         <div class="row mt10 noticeActions">
           <button class="btn" id="pwaNoteHelp">Review safe transfer</button>
@@ -203,7 +203,7 @@ export function createHomeDashboardRenderer({
       <section class="homeSection homeInstallSection">
         <div class="noticeBand homeInstallBand" role="status" aria-live="polite">
           <div class="noticeTitle">Best experience: install the app</div>
-          <div class="muted small noticeBody">${escapeHtml(installModel.statusHint || "Use the installed app when you want a steadier Home Screen shortcut and clearer app-vs-browser status.")}</div>
+          <div class="muted small noticeBody">${escapeHtml(installModel.statusHint || "Browser mode and Installed mode are both valid. Installed mode is recommended when you want a steadier Home Screen shortcut and app-like use.")}</div>
           <div class="muted small noticeBody mt8">${escapeHtml(installModel.stepsLine || "Open Settings later if you need install steps again.")}</div>
           <div class="row mt10 noticeActions">
             ${installModel.showAction ? `<button class="btn" id="homeInstallAction" type="button" ${installModel.actionEnabled ? '' : 'disabled'}>${escapeHtml(installModel.actionLabel)}</button>` : ``}

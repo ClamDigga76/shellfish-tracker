@@ -90,9 +90,9 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> quick actions and status checks.</div>
         <ul style="margin:8px 0 0 18px">
-          <li><b>Updates:</b> check status, then run <b>Reload latest build</b> or <b>Reset cache &amp; reload</b> when prompted.</li>
-          <li><b>Install App:</b> confirm Browser vs Installed mode and run install actions.</li>
-          <li><b>Backup & Restore:</b> create or restore backups.</li>
+          <li><b>Updates:</b> check current build and latest build status, then run <b>Reload latest build</b> or <b>Reset cache &amp; reload</b> when prompted.</li>
+          <li><b>Install App:</b> Browser mode and Installed mode are both valid; Installed mode is recommended for app-like use.</li>
+          <li><b>Backup & Restore:</b> create backup, restore backup, and rollback / undo last restore.</li>
           <li><b>List Management:</b> maintain Dealers and Areas.</li>
         </ul>
       </div>
@@ -114,7 +114,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>Review preview details before confirming.</li>
           <li>Choose <b>Merge</b> or <b>Replace</b>.</li>
         </ol>
-        <div style="margin-top:8px"><b>Tip:</b> Before switching phones, browsers, or app mode, create a fresh backup first.</div>
+        <div style="margin-top:8px"><b>Tip:</b> Before switching phones, browsers, or app modes, create backup first.</div>
       </div>
     </div>
 
@@ -123,7 +123,8 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Current mode:</b> ${escapeHtml(String(installModel?.statusPill || (isStandalone ? "Installed" : "Browser")))}</div>
-        <div style="margin-top:8px">${escapeHtml(String(installModel?.statusLine || "Bank the Catch can run in your browser or as an installed Home Screen app."))}</div>
+        <div style="margin-top:8px">${escapeHtml(String(installModel?.statusLine || "Bank the Catch can run in Browser mode or Installed mode. Both are valid, and Installed mode is recommended for app-like use."))}</div>
+        <div style="margin-top:8px"><b>Storage note:</b> storage can differ by mode or device, so backup is the safe bridge when you switch.</div>
         <div style="margin-top:8px">Settings gives quick mode + action status. This section has the full install steps.</div>
         <div style="margin-top:8px"><b>iPhone/iPad Safari</b></div>
         <ol style="margin:8px 0 0 18px">
@@ -149,7 +150,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
         <ul style="margin:0 0 0 18px">
           <li>If the app looks stale, open <b>Settings</b> and run <b>Reload latest build</b>. If prompted, run <b>Reset cache &amp; reload</b>.</li>
           <li>Use <b>Settings → Install App</b> for a quick mode check, then follow the install steps above when needed.</li>
-          <li>If things still seem off after updating, reopen the app and check Settings status again.</li>
+          <li>If things still seem off after updating, reopen the app and check current build vs latest build status again.</li>
           <li>For support, email <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</li>
         </ul>
       </div>
