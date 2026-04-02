@@ -195,7 +195,17 @@ export function startRuntimeRender({ render, getBootPill, displayBuildVersion, s
       bp.title = `v ${displayBuildVersion}`;
     }
     try{
-      window.__recordLastGoodRuntimeConfirmation?.();
+      const standalone = Boolean(
+        (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+        (navigator.standalone === true)
+      );
+      const hasController = !!navigator.serviceWorker?.controller;
+      if(!standalone || hasController){
+        window.__recordLastGoodRuntimeConfirmation?.();
+      }else{
+        window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {};
+        window.__BOOT_DIAG__.lastGoodRuntimeDeferred = true;
+      }
     }catch(_){ }
   }catch(err){
     showFatal(err);

@@ -1,4 +1,4 @@
-import { APP_ENTRY_MODULE_PATH, BOOTSTRAP_REQUIRED_ASSET_PATHS, BOOTSTRAP_SANITY_REFERENCE_PATHS, buildVersionedAssetHref, buildVersionedAssetHrefList, buildVersionedPath } from "./startup_asset_manifest_v5.js";
+import { APP_ENTRY_MODULE_PATH, BOOTSTRAP_REQUIRED_ASSET_PATHS, BOOTSTRAP_SANITY_REFERENCE_PATHS, SW_REGISTRATION_PATH, buildVersionedAssetHref, buildVersionedAssetHrefList, buildVersionedPath } from "./startup_asset_manifest_v5.js";
 
 const BOOTSTRAP_URL = new URL(import.meta.url, location.href);
 const APP_VERSION = BOOTSTRAP_URL.searchParams.get("v") || "0";
@@ -156,6 +156,15 @@ window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {
   stage: "bootstrap:init",
   assetChecks: [],
   lastBootError: null,
+};
+window.__BOOT_DIAG__.swRegistration = window.__BOOT_DIAG__.swRegistration || {
+  attempted: false,
+  registered: false,
+  scope: "",
+  activeScriptURL: "",
+  waitingScriptURL: "",
+  controllerPresentAtRegistration: false,
+  lastError: "",
 };
 
 const STARTUP_REFERENCE_SANITY = [
@@ -429,13 +438,56 @@ window.__BOOT_WATCHDOG__ = setTimeout(() => {
 }, 4000);
 
 async function registerServiceWorker() {
-  if (!("serviceWorker" in navigator)) return;
+  if (!("serviceWorker" in navigator)) {
+    try {
+      window.dispatchEvent(new CustomEvent("sw-registration-state", { detail: { state: "unsupported", version: APP_VERSION } }));
+    } catch (_) {}
+    return;
+  }
+
+  const emitSwRegistrationState = (state, details = {}) => {
+    try {
+      window.dispatchEvent(new CustomEvent("sw-registration-state", { detail: { state: String(state || ""), version: APP_VERSION, ...details } }));
+    } catch (_) {}
+  };
+
+  const updateSwRegistrationDiag = (next = {}) => {
+    try {
+      const base = window.__BOOT_DIAG__.swRegistration || {};
+      window.__BOOT_DIAG__.swRegistration = {
+        attempted: base.attempted === true,
+        registered: base.registered === true,
+        scope: String(base.scope || ""),
+        activeScriptURL: String(base.activeScriptURL || ""),
+        waitingScriptURL: String(base.waitingScriptURL || ""),
+        controllerPresentAtRegistration: base.controllerPresentAtRegistration === true,
+        lastError: String(base.lastError || ""),
+        ...next,
+      };
+    } catch (_) {}
+  };
 
   try {
     __setBootStage("sw:registering");
+    updateSwRegistrationDiag({ attempted: true, lastError: "" });
+    emitSwRegistrationState("attempted", { controllerPresent: !!navigator.serviceWorker?.controller });
     const swUrl = buildVersionedPath(SW_REGISTRATION_PATH, APP_VERSION);
     const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: "none" });
     __setBootStage("sw:registered");
+    updateSwRegistrationDiag({
+      registered: true,
+      scope: String(reg?.scope || ""),
+      activeScriptURL: String(reg?.active?.scriptURL || ""),
+      waitingScriptURL: String(reg?.waiting?.scriptURL || ""),
+      controllerPresentAtRegistration: !!navigator.serviceWorker?.controller,
+      lastError: "",
+    });
+    emitSwRegistrationState("registered", {
+      scope: String(reg?.scope || ""),
+      controllerPresent: !!navigator.serviceWorker?.controller,
+      activeScriptURL: String(reg?.active?.scriptURL || ""),
+      waitingScriptURL: String(reg?.waiting?.scriptURL || ""),
+    });
     try {
       await reg.update();
     } catch (_) {}
@@ -512,7 +564,17 @@ async function registerServiceWorker() {
         }
       });
     });
-  } catch (_) {}
+  } catch (err) {
+    updateSwRegistrationDiag({
+      registered: false,
+      scope: "",
+      activeScriptURL: "",
+      waitingScriptURL: "",
+      controllerPresentAtRegistration: !!navigator.serviceWorker?.controller,
+      lastError: String(err?.message || err || "Unknown service worker registration error"),
+    });
+    emitSwRegistrationState("error", { message: String(err?.message || err || "Unknown service worker registration error") });
+  }
 }
 
 window.addEventListener("load", () => {
