@@ -66,11 +66,13 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
     createAppShellBindings
   },
   { to2, createFormatDateDMY, iconSvg },
+  { createTripsUnifiedFilterBridge },
   { createThemeRuntimeSeam },
   { downloadText, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, openModal, closeModal, createOpenConfirmModal, bindDatePill, attachLongPress }
 ] = await Promise.all([
   ...STARTUP_MODULE_PATHS.map(importVersionedModule),
   importVersionedModule("./app_local_utils_v5.js"),
+  importVersionedModule("./trips_unified_filter_bridge_v5.js"),
   importVersionedModule("./theme_runtime_seam_v5.js"),
   importVersionedModule("./ui_browser_helpers_v5.js")
 ]);
@@ -458,6 +460,13 @@ const {
 
 bindLifecycleSaveFlush();
 
+const tripsUnifiedFilterBridge = createTripsUnifiedFilterBridge({
+  ensureUnifiedFilters,
+  applyUnifiedTripFilter,
+  resolveUnifiedRange,
+  getTripsNewestFirst,
+  resolveAreaValue
+});
 
 const { renderAllTrips } = createTripsBrowseScreenRenderer({
   getApp,
@@ -474,11 +483,7 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
   bindDatePill,
   exportTripsWithLabel,
   showToast,
-  ensureUnifiedFilters,
-  applyUnifiedTripFilter,
-  resolveUnifiedRange,
-  getTripsNewestFirst,
-  resolveAreaValue
+  ...tripsUnifiedFilterBridge
 });
 
 const { renderHome } = createHomeDashboardRenderer({
