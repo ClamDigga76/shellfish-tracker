@@ -190,14 +190,14 @@ export function createSettingsScreenOrchestrator({
           <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="hint"><b>Recommended:</b> create a fresh backup before major updates or Replace restore.</div>
+          <div class="hint"><b>Recommended:</b> create backup before major updates, Replace restore, or switching phones, browsers, or app modes.</div>
           <div class="muted small mt8">Keep one current copy and one older copy in iCloud Drive or Google Drive.</div>
         </div>
         <div class="settingsRow settingsRow--status">
           <div class="muted small" id="restoreRollbackLine"></div>
         </div>
         <div class="settingsRow settingsRow--action">
-          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Undo last restore</button>
+          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Rollback / undo last restore</button>
         </div>
         ${deletedTripsHtml}
       </details>
