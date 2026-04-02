@@ -80,6 +80,7 @@ const DEFAULT_TRIP_SPECIES = "Soft-shell Clams";
 const QUICK_CHIP_MOVE_CANCEL_PX = 10;
 const SCHEMA_VERSION = 1;
 const DELETED_TRIPS_LIMIT = 25;
+const formatDateDMY = createFormatDateDMY(formatDateLegacyDMY);
 const {
   normalizeTripRow,
   normalizeTrip,
@@ -153,8 +154,6 @@ const { pushView, goBack, bindNavHandlers } = createNavigator({
   saveState: () => saveState(),
   render: () => render()
 });
-
-const formatDateDMY = createFormatDateDMY(formatDateLegacyDMY);
 
 const {
   isoToday,
