@@ -786,21 +786,29 @@ body.scrollLock{overflow:hidden;overscroll-behavior:none}
   margin-top:0;
 }
 .homeScreenShell .timeframeUnifiedControl{
-  padding:0;
-  border:none;
-  border-radius:0;
-  background:none;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  padding:8px;
+  border:1px solid rgba(176,194,224,.24);
+  border-radius:16px;
+  background:linear-gradient(180deg, rgba(46,60,83,.34) 0%, rgba(24,34,52,.24) 100%);
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn{
-  min-height:40px;
-  border-color:rgba(255,255,255,.06);
-  background:rgba(255,255,255,.03);
+  min-height:41px;
+  border-color:rgba(156,178,214,.20);
+  background:linear-gradient(180deg, rgba(255,255,255,.055) 0%, rgba(255,255,255,.025) 100%);
+  color:rgba(218,227,242,.78);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn.on,
 .homeScreenShell .timeframeUnifiedControl .segBtn.is-selected{
-  background:linear-gradient(180deg, rgba(152,165,184,.46) 0%, rgba(122,136,160,.34) 100%);
-  border-color:rgba(197,210,231,.34);
-  box-shadow:none;
+  color:rgba(244,248,255,.98);
+  background:linear-gradient(180deg, rgba(174,193,225,.70) 0%, rgba(142,164,199,.58) 100%);
+  border-color:rgba(227,237,255,.58);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26), 0 4px 10px rgba(15,22,34,.24);
+}
+.homeScreenShell .homeFilterStack > .homeRangeRow{
+  margin-top:4px !important;
 }
 .homeScreenShell .kpiRow{
   gap:10px;
