@@ -1,4 +1,8 @@
-import { STARTUP_MODULE_PATHS as STARTUP_MODULE_PATHS_MANIFEST, buildVersionedAssetHref } from "./startup_asset_manifest_v5.js";
+import {
+  STARTUP_MODULE_PATHS as STARTUP_MODULE_PATHS_MANIFEST,
+  STARTUP_APP_OWNED_MODULE_PATHS,
+  buildVersionedAssetHref
+} from "./startup_asset_manifest_v5.js";
 
 const moduleV = new URL(import.meta.url).searchParams.get("v") || "";
 const bootV = String(window.APP_VERSION || "");
@@ -22,15 +26,17 @@ function getVersionedModuleHref(relPath){
 }
 
 const STARTUP_MODULE_URLS = STARTUP_MODULE_PATHS.map(getVersionedModuleHref);
+const STARTUP_APP_OWNED_MODULE_URLS = STARTUP_APP_OWNED_MODULE_PATHS.map(getVersionedModuleHref);
 
 async function importVersionedModule(relPath){
   return import(getVersionedModuleHref(relPath));
 }
 
 try {
-  window.__SHELLFISH_STARTUP_IMPORTS__ = [...STARTUP_MODULE_URLS];
+  const startupImportUrls = [...STARTUP_MODULE_URLS, ...STARTUP_APP_OWNED_MODULE_URLS];
+  window.__SHELLFISH_STARTUP_IMPORTS__ = startupImportUrls;
   window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {};
-  window.__BOOT_DIAG__.startupModuleUrls = [...STARTUP_MODULE_URLS];
+  window.__BOOT_DIAG__.startupModuleUrls = startupImportUrls;
 } catch (_) {}
 
 const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, isValidISODate },
@@ -71,10 +77,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { downloadText, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, openModal, closeModal, createOpenConfirmModal, bindDatePill, attachLongPress }
 ] = await Promise.all([
   ...STARTUP_MODULE_PATHS.map(importVersionedModule),
-  importVersionedModule("./app_local_utils_v5.js"),
-  importVersionedModule("./trips_unified_filter_bridge_v5.js"),
-  importVersionedModule("./theme_runtime_seam_v5.js"),
-  importVersionedModule("./ui_browser_helpers_v5.js")
+  ...STARTUP_APP_OWNED_MODULE_PATHS.map(importVersionedModule)
 ]);
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;

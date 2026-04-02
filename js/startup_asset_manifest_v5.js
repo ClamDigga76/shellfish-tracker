@@ -41,6 +41,16 @@ export const BOOTSTRAP_REQUIRED_ASSET_PATHS = [
   APP_ENTRY_MODULE_PATH
 ];
 
+
+// Startup-time modules intentionally loaded by app_v5.js at boot but app-owned
+// (network-first), so they remain outside service worker core JS ownership.
+export const STARTUP_APP_OWNED_MODULE_PATHS = [
+  "./app_local_utils_v5.js",
+  "./trips_unified_filter_bridge_v5.js",
+  "./theme_runtime_seam_v5.js",
+  "./ui_browser_helpers_v5.js"
+];
+
 // Service worker core JS ownership is declared here, then mirrored in sw.js and
 // enforced by scripts/preflight-verify.mjs to prevent drift.
 export const SW_CORE_JS_PATHS = [
@@ -52,10 +62,10 @@ export const SW_CORE_JS_PATHS = [
   APP_ENTRY_MODULE_PATH
 ];
 
-// Runtime seam loaded at startup by app_v5.js but intentionally network-first,
-// so it is not pre-cached as SW core JS.
+// Startup-time app-owned modules stay explicitly excluded from SW core JS
+// ownership to preserve current runtime/cache behavior.
 export const SW_CORE_JS_EXCLUDED_PATHS = [
-  "./ui_browser_helpers_v5.js"
+  ...STARTUP_APP_OWNED_MODULE_PATHS
 ];
 
 export const SW_REGISTRATION_PATH = "./sw.js";
