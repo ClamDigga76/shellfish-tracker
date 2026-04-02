@@ -34,7 +34,7 @@ try {
 } catch (_) {}
 
 const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, isValidISODate },
-  { THEME_MODE_DARK, normalizeThemeMode, resolveTheme },
+  { THEME_MODE_DARK, normalizeThemeMode },
   { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback },
   { ensureNavState, createNavigator },
   { drawReportsCharts },
@@ -66,10 +66,12 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
     createAppShellBindings
   },
   { to2, createFormatDateDMY, iconSvg },
+  { createThemeRuntimeSeam },
   { downloadText, lockBodyScroll, unlockBodyScroll, focusFirstFocusable, openModal, closeModal, createOpenConfirmModal, bindDatePill, attachLongPress }
 ] = await Promise.all([
   ...STARTUP_MODULE_PATHS.map(importVersionedModule),
   importVersionedModule("./app_local_utils_v5.js"),
+  importVersionedModule("./theme_runtime_seam_v5.js"),
   importVersionedModule("./ui_browser_helpers_v5.js")
 ]);
 const APP_VERSION = (window.APP_BUILD || "v5");
@@ -125,23 +127,6 @@ let needsBootStateSave = false;
 
 function markNeedsBootStateSave(){
   needsBootStateSave = true;
-}
-
-function getThemeMode(){
-  return normalizeThemeMode(state?.settings?.themeMode);
-}
-
-function updateThemeMeta(){
-  try{
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.setAttribute("content", "#0b0f16");
-  }catch(_){ }
-}
-
-function applyThemeMode(){
-  const resolvedTheme = resolveTheme(getThemeMode());
-  try{ document.documentElement.dataset.theme = resolvedTheme; }catch(_){ }
-  updateThemeMeta();
 }
 
 function clearHomeMetricDetailState(){
@@ -365,9 +350,12 @@ let state = migrateStateIfNeeded(loadState(), {
   normalizeThemeMode,
   themeModeDefault: THEME_MODE_DARK
 });
+const themeRuntimeSeam = createThemeRuntimeSeam();
+const applyThemeMode = ()=> themeRuntimeSeam.applyThemeMode(state);
 applyThemeMode();
 ensureAreas();
 ensureDealers();
+
 const SAFE_MODE_ACTIVE = Boolean(state?.__safeMode);
 if(SAFE_MODE_ACTIVE){
   rootStateSaveSeam.clearSafeModeFlag();
