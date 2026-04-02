@@ -245,17 +245,6 @@ const rootStateSaveSeam = createRootStateSaveSeam({
   showToast
 });
 
-function loadState(){
-  return rootStateSaveSeam.loadState();
-}
-
-
-
-function exportTrips(trips, label, startISO="", endISO=""){
-  // legacy wrapper (v36): keep behavior consistent with Trips screen
-  exportTripsWithLabel(trips, String(label||"ALL").toUpperCase(), startISO, endISO);
-}
-
 const {
   renderStandardReadOnlyTripCard,
   renderStandardInteractiveTripCard,
@@ -347,7 +336,7 @@ const openConfirmModal = createOpenConfirmModal({
 
 
 migrateLegacyStateIfNeeded(localStorage);
-let state = migrateStateIfNeeded(loadState(), {
+let state = migrateStateIfNeeded(rootStateSaveSeam.loadState(), {
   normalizeTrip,
   normalizeThemeMode,
   themeModeDefault: THEME_MODE_DARK
