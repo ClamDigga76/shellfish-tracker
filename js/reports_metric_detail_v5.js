@@ -412,34 +412,38 @@ export function createReportsMetricDetailSeam(deps){
           <span class="reportsMetricSectionPill">Compare basis • ${escapeHtml(compareContractBasis)}</span>
         </div>
 
-        <div class="${viewModel.detailHeroWrapClass}">
-          <div class="${viewModel.detailHeroLabelClass}">${escapeHtml(viewModel.isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
-          <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
-        </div>
-
-        <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
-          <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(compareSummary.text)}</div>
-          <div class="${viewModel.detailCompareRowsClass}">
-            <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
-            <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
+        <div class="reportsMetricStoryStack">
+          <div class="${viewModel.detailHeroWrapClass}">
+            <div class="${viewModel.detailHeroLabelClass}">${escapeHtml(viewModel.isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
+            <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
           </div>
-          <div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
-          ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
+
+          <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
+            <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(compareSummary.text)}</div>
+            <div class="${viewModel.detailCompareRowsClass}">
+              <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
+              <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
+            </div>
+            <div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
+            ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
+          </div>
         </div>
 
-        <div class="${viewModel.detailChartClass}">
-          <b>${escapeHtml(detailChartTitle)}</b>
-          <div class="${viewModel.detailChartContextClass}">${escapeHtml(detailChartContext)}</div>
-          <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
-        </div>
-
-        ${secondaryCharts.map((chart)=> `
+        <div class="reportsMetricChartsStack">
           <div class="${viewModel.detailChartClass}">
-            <b>${escapeHtml(chart.title)}</b>
-            <div class="${viewModel.detailChartContextClass}">${escapeHtml(chart.context)}</div>
-            <canvas class="chart" id="${escapeHtml(chart.canvasId)}" height="220"></canvas>
+            <b>${escapeHtml(detailChartTitle)}</b>
+            <div class="${viewModel.detailChartContextClass}">${escapeHtml(detailChartContext)}</div>
+            <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
           </div>
-        `).join("")}
+
+          ${secondaryCharts.map((chart)=> `
+            <div class="${viewModel.detailChartClass}">
+              <b>${escapeHtml(chart.title)}</b>
+              <div class="${viewModel.detailChartContextClass}">${escapeHtml(chart.context)}</div>
+              <canvas class="chart" id="${escapeHtml(chart.canvasId)}" height="220"></canvas>
+            </div>
+          `).join("")}
+        </div>
 
         <div class="${viewModel.detailInsightClass}">${escapeHtml(detailInsight)}</div>
       </div>
