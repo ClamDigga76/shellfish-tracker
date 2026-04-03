@@ -391,17 +391,15 @@ export function createReportsMetricDetailSeam(deps){
 
   const renderMetricDetailSection = ({ meta, compareSummary, viewModel })=> {
     const detailBackLabel = viewModel.isHomeMetricDetail ? "← Home KPIs" : "← Back to reports";
-    const detailEyebrow = viewModel.isHomeMetricDetail ? "Home insight" : meta.eyebrow;
+    const detailEyebrow = viewModel.isHomeMetricDetail ? "HOME METRIC DETAIL" : meta.eyebrow;
+    const homeRangeLabel = String(viewModel.homeScope?.rangeLabel || viewModel.rangeLabel || "").trim();
+    const homeTripCount = Number(viewModel.homeScope?.tripCount ?? viewModel.trips?.length) || 0;
     const detailContext = viewModel.isHomeMetricDetail
-      ? String(viewModel.homeScope?.contextText || `Home range ${viewModel.rangeLabel}`)
+      ? `Range ${homeRangeLabel || "Active"} • ${homeTripCount} trips`
       : `Range ${viewModel.rangeLabel} • ${viewModel.trips.length} trips`;
     const detailChartTitle = viewModel.isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = meta.primaryBasis?.basisLabel || (viewModel.isHomeMetricDetail ? meta.homeChartContext : meta.chartContext);
     const detailInsight = viewModel.isHomeMetricDetail ? meta.homeInsight : meta.insight;
-    const heroScopeText = viewModel.isHomeMetricDetail
-      ? String(viewModel.homeScope?.rangeLabel ? `Range ${viewModel.homeScope.rangeLabel}` : "").trim()
-      : "";
-    const showHeroScope = viewModel.isHomeMetricDetail && heroScopeText && heroScopeText !== String(detailContext || "").trim();
     const compareContractLabel = viewModel.compareFoundation.period?.compareModelLabel || "Comparison";
     const compareContractBasis = viewModel.compareFoundation.period?.currentLabel && viewModel.compareFoundation.period?.previousLabel
       ? formatPeriodPair(viewModel.compareFoundation.period.previousLabel, viewModel.compareFoundation.period.currentLabel)
@@ -418,17 +416,16 @@ export function createReportsMetricDetailSeam(deps){
       <div class="${viewModel.detailCardClass}">
         <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">${detailBackLabel}</button>
         <div class="${viewModel.detailEyebrowClass}">${escapeHtml(detailEyebrow)}</div>
-        <h2 class="${viewModel.detailTitleClass}">${escapeHtml(viewModel.isHomeMetricDetail ? meta.homeTitle : meta.title)}</h2>
+        <h2 class="${viewModel.detailTitleClass}">${escapeHtml(viewModel.isHomeMetricDetail ? `${meta.homeTitle} detail` : meta.title)}</h2>
         <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
-        <div class="reportsMetricSectionRail" aria-hidden="true">
+        ${viewModel.isHomeMetricDetail ? "" : `<div class="reportsMetricSectionRail" aria-hidden="true">
           <span class="reportsMetricSectionPill">Compare basis • ${escapeHtml(compareContractBasis)}</span>
-        </div>
+        </div>`}
 
         <div class="reportsMetricStoryStack">
           <div class="${viewModel.detailHeroWrapClass}">
             <div class="${viewModel.detailHeroLabelClass}">${escapeHtml(viewModel.isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
             <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
-            ${showHeroScope ? `<div class="homeMetricHeroScopeLine">${escapeHtml(heroScopeText)}</div>` : ""}
           </div>
 
           <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
