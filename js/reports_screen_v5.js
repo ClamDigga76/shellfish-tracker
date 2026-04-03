@@ -281,6 +281,10 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     resolveTripArea,
     to2
   });
+  const {
+    buildMetricDetailView,
+    buildMetricDetailChartConfig
+  } = reportsMetricDetailSeam;
 
   const seasonalityFoundation = isHomeMetricDetail
     ? null
@@ -300,6 +304,18 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   const primaryBasisByMetric = compareFoundation.primaryBasis || {};
   const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
+  const metricDetailViewModel = activeMetricDetail
+    ? {
+      metricKey: activeMetricDetail,
+      compareFoundation,
+      primaryBasisByMetric,
+      detailCharts,
+      isHomeMetricDetail,
+      rangeLabel,
+      trips,
+      homeScope: routeContext?.homeScope || null
+    }
+    : null;
 
   const renderActiveReportsSection = ()=> reportsOverviewSections.renderActiveReportsSection({
     activeReportsSection,
@@ -327,7 +343,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ${renderPageHeader("home")}
 
     <div id="reportsTransitionRoot" class="reportsTransitionRoot reportsTransitionRoot--detail" data-reports-view="${escapeHtml(reportsBodyView)}" data-detail-mode="home">
-      ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : ""}
+      ${metricDetailViewModel ? buildMetricDetailView(metricDetailViewModel) : ""}
     </div>
   ` : `
     ${renderPageHeader("reports")}
@@ -344,7 +360,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       advPanel,
       activeReportsSection,
       body: `<div id="reportsTransitionRoot" class="reportsTransitionRoot" data-reports-view="${escapeHtml(reportsBodyView)}" data-detail-mode="${activeMetricDetail ? "reports" : "overview"}" role="tabpanel" aria-labelledby="reports-tab-${escapeHtml(activeReportsSection)}" tabindex="-1">
-        ${activeMetricDetail ? buildMetricDetailView(activeMetricDetail) : renderActiveReportsSection()}
+        ${metricDetailViewModel ? buildMetricDetailView(metricDetailViewModel) : renderActiveReportsSection()}
       </div>`
     })}
   `;
@@ -395,7 +411,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
 
   if(activeMetricDetail){
-    const metricDetailChartConfig = buildMetricDetailChartConfig(activeMetricDetail) || {};
+    const metricDetailChartConfig = buildMetricDetailChartConfig(metricDetailViewModel) || {};
     scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, {
       metricDetail: {
         metricKey: String(metricDetailChartConfig.metricKey || activeMetricDetail),
