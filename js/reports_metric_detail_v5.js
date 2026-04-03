@@ -296,6 +296,11 @@ export function createReportsMetricDetailSeam(deps){
   const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
   const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
   const formatPeriodPair = (previousLabel, currentLabel)=> `${String(previousLabel || "Previous")} → ${String(currentLabel || "Current")}`;
+  const toMaxTwoSentences = (text)=> {
+    const parts = String(text || "").trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+    if(!parts.length) return "";
+    return parts.slice(0, 2).join(" ").trim();
+  };
 
   const formatMetricCompareValue = (metricKey, value)=> {
     const safeValue = Number(value);
@@ -404,8 +409,8 @@ export function createReportsMetricDetailSeam(deps){
     const compareContractText = viewModel.compareFoundation.period?.suppressed
       ? (viewModel.compareFoundation.period?.explanation || "")
       : "";
-    const conciseSupportText = viewModel.isHomeMetricDetail
-      ? String(compareSummary.text || "").split(/(?<=[.!?])\s+/).filter(Boolean)[0] || String(compareSummary.text || "")
+    const supportAnalysisText = viewModel.isHomeMetricDetail
+      ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
       : String(compareSummary.text || "");
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
     return `
@@ -428,7 +433,7 @@ export function createReportsMetricDetailSeam(deps){
 
           <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
             ${viewModel.isHomeMetricDetail ? `<div class="homeMetricSupportHeader">Supporting analysis</div>` : ""}
-            <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(conciseSupportText)}</div>
+            <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
             <div class="${viewModel.detailCompareRowsClass}">
               <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
               <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
