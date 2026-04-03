@@ -411,6 +411,27 @@ export function createReportsMetricDetailSeam(deps){
       ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
       : String(compareSummary.text || "");
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
+    const renderHomePremiumSupportCard = ()=> `
+      <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
+        <div class="homeMetricSupportHeader">Supporting analysis</div>
+        <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
+        <div class="homeMetricSupportFooter">
+          <span class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</span>
+          ${compareContractText ? `<span class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</span>` : ""}
+        </div>
+      </div>
+    `;
+    const renderStandardSupportCard = ()=> `
+      <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
+        <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
+        <div class="${viewModel.detailCompareRowsClass}">
+          <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
+          <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
+        </div>
+        <div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
+        ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
+      </div>
+    `;
     return `
     <section class="${viewModel.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
       <div class="${viewModel.detailCardClass}">
@@ -428,19 +449,7 @@ export function createReportsMetricDetailSeam(deps){
             <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
           </div>
 
-          <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
-            ${viewModel.isHomeMetricDetail ? `<div class="homeMetricSupportHeader">Supporting analysis</div>` : ""}
-            <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
-            <div class="${viewModel.detailCompareRowsClass}">
-              <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
-              <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
-            </div>
-            ${viewModel.isHomeMetricDetail ? `<div class="homeMetricSupportFooter">
-              <span class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</span>
-              ${compareContractText ? `<span class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</span>` : ""}
-            </div>` : `<div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
-            ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}`}
-          </div>
+          ${viewModel.isHomeMetricDetail ? renderHomePremiumSupportCard() : renderStandardSupportCard()}
         </div>
 
         <div class="reportsMetricChartsStack">
