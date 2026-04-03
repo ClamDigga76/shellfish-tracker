@@ -319,66 +319,128 @@
 .reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{flex-wrap:wrap}
 .homeMetricRecordTop,.homeMetricRecordMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 
-/* v570 Home KPI drill-down card-story restoration */
+/* v571 Home KPI drill-down hero + premium support refinement */
 .homeMetricDetail{
   margin-top:2px;
   padding-bottom:calc(26px + var(--safeBottom, 0px));
 }
 .homeMetricDetailCard{
   padding:14px 13px 16px;
-  border:1px solid rgba(126,200,255,.2);
+  border:1px solid rgba(126,200,255,.22);
   border-radius:18px;
-  background:linear-gradient(180deg,rgba(16,25,44,.72),rgba(8,14,26,.84));
-  box-shadow:0 14px 30px rgba(2,8,18,.38);
+  background:linear-gradient(180deg,rgba(17,28,50,.8),rgba(8,14,27,.9));
+  box-shadow:0 14px 30px rgba(2,8,18,.42);
 }
 .homeMetricDetail .reportsMetricSectionRail{
   margin-top:9px;
 }
 .homeMetricDetail .reportsMetricSectionPill{
-  background:rgba(126,200,255,.18);
+  background:rgba(126,200,255,.16);
   border:1px solid rgba(126,200,255,.24);
-  color:#e3f5ff;
+  color:#dff2ff;
 }
 .reportsMetricStoryStack{
-  margin-top:13px;
+  margin-top:14px;
   display:grid;
-  gap:11px;
+  gap:12px;
 }
 .homeMetricHeroWrap{
   margin-top:0;
-  padding:13px 12px 12px;
-  border-radius:14px;
-  border:1px solid rgba(126,200,255,.28);
-  border-top:1px solid rgba(126,200,255,.28);
-  background:linear-gradient(180deg,rgba(47,109,246,.18),rgba(26,63,145,.16));
+  padding:14px 13px 12px;
+  border-radius:15px;
+  border:1px solid rgba(126,200,255,.34);
+  border-top:1px solid rgba(158,221,255,.45);
+  background:linear-gradient(165deg,rgba(57,130,255,.26),rgba(28,67,152,.2));
+  box-shadow:inset 0 1px 0 rgba(196,234,255,.22),0 10px 20px rgba(4,12,30,.26);
+}
+.homeMetricHeroLabel{
+  color:#c6ebff;
+}
+.homeMetricHeroValue{
+  margin-top:5px;
+  font-size:clamp(42px,11.8vw,56px);
+  line-height:.97;
+  letter-spacing:.22px;
+  text-shadow:0 1px 0 rgba(0,0,0,.2);
+}
+.homeMetricHeroScopeLine{
+  margin-top:8px;
+  font-size:11px;
+  line-height:1.3;
+  font-weight:730;
+  letter-spacing:.03em;
+  color:#cbe8ff;
 }
 .homeMetricCompare{
   margin-top:0;
-  padding:11px 12px 10px;
-  border-radius:14px;
-  border:1px solid rgba(126,200,255,.26);
-  border-left:1px solid rgba(126,200,255,.26);
-  background:rgba(126,200,255,.11);
+  padding:12px;
+  border-radius:15px;
+  border:1px solid rgba(126,200,255,.28);
+  background:linear-gradient(180deg,rgba(126,200,255,.14),rgba(126,200,255,.09));
 }
 .homeMetricCompare.tone-up{
-  border-color:rgba(46,160,67,.44);
-  border-left-color:rgba(46,160,67,.44);
-  background:rgba(46,160,67,.2);
+  border-color:rgba(46,160,67,.42);
+  background:linear-gradient(180deg,rgba(46,160,67,.22),rgba(46,160,67,.12));
 }
 .homeMetricCompare.tone-down{
   border-color:rgba(255,77,79,.42);
-  border-left-color:rgba(255,77,79,.42);
-  background:rgba(255,77,79,.18);
+  background:linear-gradient(180deg,rgba(255,77,79,.2),rgba(255,77,79,.1));
+}
+.homeMetricSupportHeader{
+  font-size:10px;
+  line-height:1.2;
+  font-weight:860;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:#b8def7;
+}
+.homeMetricCompareText{
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.4;
+}
+.homeMetricCompareText .reportsPercentEmphasis{
+  margin-left:.08em;
+  margin-right:.08em;
+  padding:.07em .48em .11em;
+  font-size:1.02em;
 }
 .homeMetricCompareRows{
   margin-top:9px;
-  gap:6px;
+  gap:7px;
 }
 .homeMetricCompareRows > div{
-  padding:5px 0 4px;
+  padding:6px 0 5px;
+  border-bottom:1px solid rgba(126,200,255,.22);
+}
+.homeMetricCompareRows > div span{
+  color:#d3e9fb;
+  font-size:11px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  font-weight:760;
+}
+.homeMetricCompareRows > div b{
+  font-size:14px;
+  line-height:1.25;
+  color:#fff;
+}
+.homeMetricSupportFooter{
+  margin-top:9px;
+  padding-top:7px;
+  border-top:1px solid rgba(126,200,255,.2);
+  display:grid;
+  gap:3px;
+}
+.homeMetricSupportFooter .homeMetricChartContext{
+  margin-top:0;
+  font-size:11px;
+  line-height:1.32;
+  font-weight:650;
+  color:#a8c8e4;
 }
 .reportsMetricChartsStack{
-  margin-top:16px;
+  margin-top:18px;
   display:grid;
   gap:15px;
 }
@@ -395,10 +457,11 @@
 @media (max-width:430px){
   .homeMetricDetail{padding-bottom:calc(30px + var(--safeBottom, 0px))}
   .homeMetricDetailCard{padding:13px 12px 15px}
-  .reportsMetricStoryStack{margin-top:12px;gap:10px}
-  .homeMetricHeroWrap{padding:12px 11px 11px}
-  .homeMetricCompare{padding:10px 11px 9px}
-  .reportsMetricChartsStack{margin-top:15px;gap:14px}
+  .reportsMetricStoryStack{margin-top:12px;gap:11px}
+  .homeMetricHeroWrap{padding:13px 12px 11px}
+  .homeMetricHeroValue{font-size:clamp(40px,13vw,50px)}
+  .homeMetricCompare{padding:11px 11px 10px}
+  .reportsMetricChartsStack{margin-top:16px;gap:14px}
 }
 .reportsHighlightValue,.reportsMiniPreview,.reportsCompareMeta > span,.reportsCompareMeta > b,.reportsMetricCompareRows > div > span,.reportsMetricCompareRows > div > b,.homeMetricCompareRows > div > span,.homeMetricCompareRows > div > b{min-width:0;max-width:100%}
 .reportsHighlightValue,.reportsMetricHeroValue,.homeMetricHeroValue{overflow-wrap:anywhere;word-break:break-word}

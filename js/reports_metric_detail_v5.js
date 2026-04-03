@@ -393,6 +393,10 @@ export function createReportsMetricDetailSeam(deps){
     const detailChartTitle = viewModel.isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = meta.primaryBasis?.basisLabel || (viewModel.isHomeMetricDetail ? meta.homeChartContext : meta.chartContext);
     const detailInsight = viewModel.isHomeMetricDetail ? meta.homeInsight : meta.insight;
+    const heroScopeText = viewModel.isHomeMetricDetail
+      ? String(viewModel.homeScope?.rangeLabel ? `Range ${viewModel.homeScope.rangeLabel}` : "").trim()
+      : "";
+    const showHeroScope = viewModel.isHomeMetricDetail && heroScopeText && heroScopeText !== String(detailContext || "").trim();
     const compareContractLabel = viewModel.compareFoundation.period?.compareModelLabel || "Comparison";
     const compareContractBasis = viewModel.compareFoundation.period?.currentLabel && viewModel.compareFoundation.period?.previousLabel
       ? formatPeriodPair(viewModel.compareFoundation.period.previousLabel, viewModel.compareFoundation.period.currentLabel)
@@ -400,6 +404,9 @@ export function createReportsMetricDetailSeam(deps){
     const compareContractText = viewModel.compareFoundation.period?.suppressed
       ? (viewModel.compareFoundation.period?.explanation || "")
       : "";
+    const conciseSupportText = viewModel.isHomeMetricDetail
+      ? String(compareSummary.text || "").split(/(?<=[.!?])\s+/).filter(Boolean)[0] || String(compareSummary.text || "")
+      : String(compareSummary.text || "");
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
     return `
     <section class="${viewModel.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
@@ -416,16 +423,21 @@ export function createReportsMetricDetailSeam(deps){
           <div class="${viewModel.detailHeroWrapClass}">
             <div class="${viewModel.detailHeroLabelClass}">${escapeHtml(viewModel.isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
             <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
+            ${showHeroScope ? `<div class="homeMetricHeroScopeLine">${escapeHtml(heroScopeText)}</div>` : ""}
           </div>
 
           <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
-            <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(compareSummary.text)}</div>
+            ${viewModel.isHomeMetricDetail ? `<div class="homeMetricSupportHeader">Supporting analysis</div>` : ""}
+            <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(conciseSupportText)}</div>
             <div class="${viewModel.detailCompareRowsClass}">
               <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
               <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
             </div>
-            <div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
-            ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
+            ${viewModel.isHomeMetricDetail ? `<div class="homeMetricSupportFooter">
+              <span class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</span>
+              ${compareContractText ? `<span class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</span>` : ""}
+            </div>` : `<div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
+            ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}`}
           </div>
         </div>
 
