@@ -313,7 +313,22 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       isHomeMetricDetail,
       rangeLabel,
       trips,
-      homeScope: routeContext?.homeScope || null
+      homeScope: routeContext?.homeScope || null,
+      detailSurfaceClass,
+      detailCardClass,
+      detailBackClass,
+      detailEyebrowClass,
+      detailTitleClass,
+      detailContextClass,
+      detailHeroWrapClass,
+      detailHeroLabelClass,
+      detailHeroValueClass,
+      detailCompareClass,
+      detailCompareTextClass,
+      detailCompareRowsClass,
+      detailChartClass,
+      detailChartContextClass,
+      detailInsightClass
     }
     : null;
 
