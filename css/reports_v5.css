@@ -225,18 +225,6 @@
 .homeMetricTitle{margin:6px 0 0;font-size:27px;line-height:1.14;letter-spacing:.2px}
 .homeMetricContext{margin-top:4px;font-size:12px;color:#c9e7ff;font-weight:700}
 .homeMetricDetail .reportsMetricSectionPill{background:rgba(126,200,255,.15);color:#d6efff}
-.homeMetricHeroWrap{margin-top:13px;padding:12px;border-radius:14px;border:1px solid rgba(126,200,255,.22);background:rgba(47,109,246,.11)}
-.homeMetricHeroLabel{font-size:10px;font-weight:860;letter-spacing:.11em;text-transform:uppercase;color:#addfff}
-.homeMetricHeroValue{margin-top:6px;font-size:38px;line-height:1.02;font-weight:920;letter-spacing:.15px;color:#fff;font-variant-numeric:tabular-nums}
-.homeMetricCompare{margin-top:12px;padding:11px 12px;border-radius:14px;border:1px solid rgba(126,200,255,.24);background:rgba(126,200,255,.1)}
-.homeMetricCompare.tone-up{border-color:rgba(46,160,67,.42);background:rgba(46,160,67,.18)}
-.homeMetricCompare.tone-down{border-color:rgba(255,77,79,.4);background:rgba(255,77,79,.16)}
-.homeMetricCompareText{font-size:13px;line-height:1.42;font-weight:760;color:#f7fbff;text-wrap:pretty}
-.homeMetricCompareRows{margin-top:8px;display:grid;gap:5px}
-.homeMetricCompareRows > div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:14px;row-gap:2px;font-size:12px;color:#d4ebff;padding:3px 0;border-bottom:1px solid rgba(126,200,255,.2)}
-.homeMetricCompareRows > div:last-child{border-bottom:0}
-.homeMetricCompareRows > div span{min-width:0;line-height:1.35}
-.homeMetricCompareRows > div b{font-size:13px;color:#ffffff;line-height:1.25;text-align:right;white-space:normal;overflow-wrap:anywhere}
 .homeMetricChartBlock{margin-top:13px}
 .homeMetricChartContext{margin-top:4px;font-size:12px;line-height:1.35;color:#c5def6;font-weight:700}
 .homeMetricRecordContext{margin-top:14px;padding:2px 0 0 14px;border-left:2px solid rgba(126,200,255,.3)}
@@ -252,10 +240,10 @@
 .reportsHeroLabel{font-size:10px;font-weight:860;letter-spacing:.11em;text-transform:uppercase;color:#9ea8bc}
 .reportsHeroValue{margin-top:5px;font-size:20px;line-height:1.1;font-weight:850;letter-spacing:.12px;color:#f2f5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .reportsHeroMeta{margin-top:4px;font-size:11px;line-height:1.3;color:#aeb6c7;font-weight:700}
-.reportsMetricHeroWrap,.homeMetricHeroWrap{margin-top:11px;padding:11px 0 0;border-radius:0;border:0;border-top:1px solid rgba(255,255,255,.08);background:transparent}
-.reportsMetricCompare,.homeMetricCompare{margin-top:12px;padding:1px 0 0 14px;border-radius:0;border:0;border-left:2px solid rgba(174,184,205,.26);background:transparent}
-.reportsMetricCompare.tone-up,.homeMetricCompare.tone-up{border-left-color:rgba(46,160,67,.54);background:transparent}
-.reportsMetricCompare.tone-down,.homeMetricCompare.tone-down{border-left-color:rgba(255,77,79,.5);background:transparent}
+.reportsMetricHeroWrap{margin-top:11px;padding:11px 0 0;border-radius:0;border:0;border-top:1px solid rgba(255,255,255,.08);background:transparent}
+.reportsMetricCompare{margin-top:12px;padding:1px 0 0 14px;border-radius:0;border:0;border-left:2px solid rgba(174,184,205,.26);background:transparent}
+.reportsMetricCompare.tone-up{border-left-color:rgba(46,160,67,.54);background:transparent}
+.reportsMetricCompare.tone-down{border-left-color:rgba(255,77,79,.5);background:transparent}
 .homeMetricRecordContext{border-radius:0;border:0;border-left:2px solid rgba(126,200,255,.36);background:transparent}
 .reportsMetricChartBlock,.homeMetricChartBlock{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)}
 .reportsMetricInsight,.homeMetricInsight{margin-top:18px;padding-top:14px;padding-bottom:calc(22px + var(--safeBottom, 0px));border-top:1px solid rgba(255,255,255,.07)}
@@ -529,10 +517,8 @@
 :root[data-theme="light"] .reportsHeroCard{background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(237,243,255,.94));border-color:rgba(37,53,92,.14);box-shadow:0 12px 26px rgba(28,46,89,.10);}
 :root[data-theme="light"] .reportsHeroStat{border-color:rgba(37,53,92,.12);background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(241,246,255,.82));}
 :root[data-theme="light"] .reportsHeroStat--tap:hover{border-color:rgba(47,109,246,.32);background:rgba(47,109,246,.08);}
-:root[data-theme="light"] .reportsMetricHeroWrap,
-:root[data-theme="light"] .homeMetricHeroWrap{border-top-color:rgba(37,53,92,.14);}
-:root[data-theme="light"] .reportsMetricCompare,
-:root[data-theme="light"] .homeMetricCompare{border-left-color:rgba(37,53,92,.28);}
+:root[data-theme="light"] .reportsMetricHeroWrap{border-top-color:rgba(37,53,92,.14);}
+:root[data-theme="light"] .reportsMetricCompare{border-left-color:rgba(37,53,92,.28);}
 :root[data-theme="light"] .homeMetricHeroWrap{
   border-color:rgba(47,109,246,.3);
   border-top-color:rgba(47,109,246,.34);
