@@ -672,6 +672,83 @@ export function createUpdateRuntimeStatusSeam({
     return lines.join("\n");
   }
 
+  function getHomeKpiValidationSnapshot(){
+    const runtimeDiag = lastRuntimeVersionDiagnostics && typeof lastRuntimeVersionDiagnostics === "object"
+      ? { ...lastRuntimeVersionDiagnostics }
+      : {};
+    const summaryParts = [];
+    const buildDigits = String(runtimeDiag.buildDigits || parseBuildDigits(displayBuildVersion) || "");
+    const swScriptVersion = String(runtimeDiag.swScriptVersion || "");
+    const cacheVersions = Array.isArray(runtimeDiag.cacheVersions) ? [...new Set(runtimeDiag.cacheVersions)] : [];
+    const startupVersions = Array.isArray(runtimeDiag.startupModuleVersions) ? [...new Set(runtimeDiag.startupModuleVersions)] : [];
+    const swAligned = Boolean(swScriptVersion && buildDigits && swScriptVersion === buildDigits);
+    const cacheAligned = cacheVersions.length > 0 && cacheVersions.every(v=>v === buildDigits);
+    const startupAligned = startupVersions.length > 0 && startupVersions.every(v=>v === buildDigits);
+
+    if(buildDigits){
+      summaryParts.push(`Build digits v${buildDigits}`);
+    }else{
+      summaryParts.push("Build digits unknown");
+    }
+    summaryParts.push(`SW script ${swScriptVersion ? `v${swScriptVersion}` : "unknown"}`);
+    if(cacheVersions.length){
+      summaryParts.push(`Cache ${cacheAligned ? "aligned" : "mixed"} (${cacheVersions.map(v=>`v${v}`).join(", ")})`);
+    }else{
+      summaryParts.push("Cache versions unavailable");
+    }
+    if(startupVersions.length){
+      summaryParts.push(`Startup modules ${startupAligned ? "aligned" : "mixed"} (${startupVersions.map(v=>`v${v}`).join(", ")})`);
+    }else{
+      summaryParts.push("Startup module versions unavailable");
+    }
+
+    return {
+      at: new Date().toISOString(),
+      buildVersion: String(displayBuildVersion || ""),
+      runtimeMode: runtimeDiag.standalone ? "installed-standalone" : "browser-tab",
+      swController: runtimeDiag.swController === true ? "yes" : "no",
+      versionAlignmentSummary: summaryParts.join(" • ")
+    };
+  }
+
+  function formatHomeKpiValidationLedger(snapshot, selectedResults = {}, notes = ""){
+    const snap = snapshot && typeof snapshot === "object" ? snapshot : {};
+    const checks = [
+      { key: "trips_open", label: "Trips drill-down opens" },
+      { key: "pounds_open", label: "Pounds drill-down opens" },
+      { key: "amount_open", label: "Amount drill-down opens" },
+      { key: "avg_open", label: "Avg $/lb drill-down opens" },
+      { key: "hero_all", label: "Hero card present on all four" },
+      { key: "support_all", label: "Support card present on all four" },
+      { key: "support_two_sentences", label: "Support analysis uses no more than 2 sentences" },
+      { key: "compare_rows", label: "Compare rows are structured/readable" },
+      { key: "charts_below", label: "Charts render below the cards" },
+      { key: "reports_metric_detail", label: "Reports metric detail still works" },
+      { key: "back_navigation", label: "Back navigation returns cleanly" }
+    ];
+    const lines = [];
+    lines.push("Bank the Catch Home KPI drill-down validation ledger");
+    lines.push(`Build: ${String(snap.buildVersion || displayBuildVersion || "")}`);
+    lines.push(`Snapshot: ${formatLedgerStamp(snap.at) || "(unknown)"}`);
+    lines.push(`Runtime mode: ${String(snap.runtimeMode || "(unknown)")}`);
+    lines.push(`SW controller: ${String(snap.swController || "(unknown)")}`);
+    lines.push(`Version alignment summary: ${String(snap.versionAlignmentSummary || "(unknown)")}`);
+    lines.push("");
+    lines.push("Manual checklist:");
+    checks.forEach((check, idx)=>{
+      const raw = String(selectedResults[check.key] || "not-run").toLowerCase();
+      const status = raw === "pass" ? "PASS" : (raw === "fail" ? "FAIL" : "NOT RUN");
+      lines.push(`${idx + 1}. ${check.label}: ${status}`);
+    });
+    const extraNotes = String(notes || "").trim();
+    if(extraNotes){
+      lines.push("");
+      lines.push("Notes:");
+      lines.push(extraNotes);
+    }
+    return lines.join("\n");
+  }
+
   return {
     markSwUpdateReady,
     swCheckNow,
@@ -681,6 +758,8 @@ export function createUpdateRuntimeStatusSeam({
     formatSupportDiagnosticsSection,
     getReleaseValidationSnapshot,
     formatReleaseValidationLedger,
+    getHomeKpiValidationSnapshot,
+    formatHomeKpiValidationLedger,
     updateBuildInfo,
     updateUpdateRow,
     updateBuildBadge
