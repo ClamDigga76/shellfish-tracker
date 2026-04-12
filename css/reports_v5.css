@@ -2,6 +2,7 @@
 .reportsTransitionRoot.is-ready{opacity:1;transform:translateY(0) scale(1)}
 .reportsTransitionRoot.is-leaving{opacity:0;transform:translateY(-6px) scale(.992);pointer-events:none}
 .reportsTransitionRoot--detail{margin-top:0}
+.homeMetricOnlyShell{padding-top:8px}
 .chart{transition:opacity var(--motion-duration-screen, 180ms) var(--motion-ease-soft, ease),transform var(--motion-duration-screen, 180ms) var(--motion-ease-standard, cubic-bezier(.22,.61,.36,1));transform-origin:center bottom}
 @media (prefers-reduced-motion: reduce){
   .reportsTransitionRoot,.chart{transition:none;transform:none;opacity:1}
@@ -211,10 +212,10 @@
 .reportsMetricCompare.tone-down{border-color:rgba(255,77,79,.34);background:rgba(255,77,79,.13)}
 .reportsMetricCompareText{font-size:13px;line-height:1.42;font-weight:760;color:#eef3fc;text-wrap:pretty}
 .reportsMetricCompareRows{margin-top:8px;display:grid;gap:5px}
-.reportsMetricCompareRows > div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:14px;row-gap:2px;font-size:12px;color:#b8c1d3;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-.reportsMetricCompareRows > div:last-child{border-bottom:0}
-.reportsMetricCompareRows > div span{min-width:0;line-height:1.35}
-.reportsMetricCompareRows > div b{font-size:13px;color:#f4f8ff;line-height:1.25;text-align:right;white-space:normal;overflow-wrap:anywhere}
+.reportsMetricCompareRow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:14px;row-gap:2px;font-size:12px;color:#b8c1d3;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.reportsMetricCompareRow:last-child{border-bottom:0}
+.reportsMetricCompareLabel{min-width:0;line-height:1.35}
+.reportsMetricCompareValue{font-size:13px;color:#f4f8ff;line-height:1.25;text-align:right;white-space:normal;overflow-wrap:anywhere}
 .reportsMetricChartBlock{margin-top:13px}
 .reportsMetricChartContext{margin-top:4px;font-size:12px;line-height:1.35;color:#aeb7c8;font-weight:700}
 .reportsMetricInsight{margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.11);font-size:13px;line-height:1.4;color:#c0c8d8}
@@ -302,9 +303,9 @@
 /* v355 overflow guardrail pass */
 .hlTripCardWrap,.reportsHighlightsCard,.reportsHighlightItem,.chartCard,.reportsHeroCard,.reportsHeroStat,.reportsMetricDetailCard,.reportsMetricHeroWrap,.reportsMetricCompare,.homeMetricDetailCard,.homeMetricHeroWrap,.homeMetricCompare,.reportsTopShell,.reportsHighlightsEmpty,.reportsDetailHint{min-width:0;max-width:100%}
 .hlTripCardWrap .tripCardHeadline,.hlTripCardWrap .tripCardMain,.hlTripCardWrap .tripCardHeadlineDealer,.hlTripCardWrap .tripCardSpecies,.hlTripCardWrap .tripCardNotes,.reportsHighlightHeadline,.reportsCompareRow,.chartTitle,.chartSubhead,.chartContext,.reportsHeroHeadline,.reportsHeroSub,.reportsMetricTitle,.reportsMetricContext,.reportsMetricChartContext,.reportsMetricInsight,.homeMetricTitle,.homeMetricContext,.homeMetricChartContext,.homeMetricInsight,.reportsHeroMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
-.reportsHighlightMetricRow,.reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{min-width:0;max-width:100%}
+.reportsHighlightMetricRow,.reportsCompareMeta,.reportsMetricCompareRow,.homeMetricCompareRow{min-width:0;max-width:100%}
 .reportsHighlightMetricRow{flex-wrap:wrap}
-.reportsCompareMeta,.reportsMetricCompareRows > div,.homeMetricCompareRows > div{flex-wrap:wrap}
+.reportsCompareMeta,.reportsMetricCompareRow,.homeMetricCompareRow{flex-wrap:wrap}
 .homeMetricRecordTop,.homeMetricRecordMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 
 /* v571 Home KPI drill-down hero + premium support refinement */
@@ -400,36 +401,59 @@
   margin-top:9px;
   gap:7px;
 }
-.homeMetricCompareRows > div{
+.homeMetricCompareRow{
   padding:6px 0 5px;
   border-bottom:1px solid rgba(126,200,255,.22);
 }
-.homeMetricCompareRows > div span{
+.homeMetricCompareRow:last-child{
+  border-bottom:0;
+}
+.homeMetricCompareLabel{
   color:#d3e9fb;
   font-size:11px;
   letter-spacing:.04em;
   text-transform:uppercase;
   font-weight:760;
+  min-width:0;
+  line-height:1.35;
 }
-.homeMetricCompareRows > div b{
+.homeMetricCompareValue{
   font-size:14px;
   line-height:1.25;
   color:#fff;
+  text-align:right;
+  white-space:normal;
+  overflow-wrap:anywhere;
 }
 .homeMetricSupportFooter{
   margin-top:10px;
   padding-top:8px;
   border-top:1px solid rgba(126,200,255,.2);
   display:grid;
-  gap:3px;
-  opacity:.86;
+  gap:2px;
+  opacity:.72;
 }
-.homeMetricSupportFooter .homeMetricChartContext{
+.homeMetricSupportMeta{
   margin-top:0;
-  font-size:11px;
+  font-size:10px;
   line-height:1.32;
-  font-weight:620;
-  color:#9ebfdd;
+  font-weight:560;
+  color:#8fb2d1;
+}
+.homeMetricSupportMeta b{
+  font-weight:640;
+  color:#a7c7e2;
+}
+.homeMetricSupportMeta--model{
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.homeMetricSupportMeta--basis{
+  font-size:10.5px;
+  color:#96bad8;
+}
+.homeMetricSupportMeta--note{
+  color:#88abc7;
 }
 .reportsMetricChartsStack{
   margin-top:20px;
@@ -455,7 +479,7 @@
   .homeMetricCompare{padding:12px 11px 10px}
   .reportsMetricChartsStack{margin-top:16px;gap:14px}
 }
-.reportsHighlightValue,.reportsMiniPreview,.reportsCompareMeta > span,.reportsCompareMeta > b,.reportsMetricCompareRows > div > span,.reportsMetricCompareRows > div > b,.homeMetricCompareRows > div > span,.homeMetricCompareRows > div > b{min-width:0;max-width:100%}
+.reportsHighlightValue,.reportsMiniPreview,.reportsCompareMeta > span,.reportsCompareMeta > b,.reportsMetricCompareLabel,.reportsMetricCompareValue,.homeMetricCompareLabel,.homeMetricCompareValue{min-width:0;max-width:100%}
 .reportsHighlightValue,.reportsMetricHeroValue,.homeMetricHeroValue{overflow-wrap:anywhere;word-break:break-word}
 .chartCard .chart,.reportsHeroGrid,.reportsHighlightsGrid,.reportsCompareBars,.reportsMetricCompareRows,.homeMetricCompareRows{min-width:0;max-width:100%}
 
@@ -541,6 +565,8 @@
   border-color:rgba(100,116,139,.28);
   background:linear-gradient(180deg,rgba(148,163,184,.14),rgba(100,116,139,.07));
 }
+:root[data-theme="light"] .homeMetricSupportMeta{color:#5f6d89}
+:root[data-theme="light"] .homeMetricSupportMeta b{color:#344054}
 :root[data-theme="light"] .homeMetricRecordContext{border-left-color:rgba(37,53,92,.28);}
 :root[data-theme="light"] .reportsMetricChartBlock,
 :root[data-theme="light"] .homeMetricChartBlock,

@@ -355,10 +355,10 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   });
 
   getApp().innerHTML = homeMetricOnly ? `
-    ${renderPageHeader("home")}
-
-    <div id="reportsTransitionRoot" class="reportsTransitionRoot reportsTransitionRoot--detail" data-reports-view="${escapeHtml(reportsBodyView)}" data-detail-mode="home">
+    <div class="homeMetricOnlyShell">
+      <div id="reportsTransitionRoot" class="reportsTransitionRoot reportsTransitionRoot--detail" data-reports-view="${escapeHtml(reportsBodyView)}" data-detail-mode="home">
       ${metricDetailViewModel ? buildMetricDetailView(metricDetailViewModel) : ""}
+      </div>
     </div>
   ` : `
     ${renderPageHeader("reports")}
