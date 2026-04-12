@@ -414,12 +414,13 @@ export function createReportsMetricDetailSeam(deps){
         <div class="homeMetricSupportHeader">Supporting analysis</div>
         <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
         <div class="${viewModel.detailCompareRowsClass}">
-          <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
-          <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
+          <div class="homeMetricCompareRow"><span class="homeMetricCompareLabel">${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b class="homeMetricCompareValue">${escapeHtml(compareSummary.previousValue)}</b></div>
+          <div class="homeMetricCompareRow"><span class="homeMetricCompareLabel">${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b class="homeMetricCompareValue">${escapeHtml(compareSummary.currentValue)}</b></div>
         </div>
         <div class="homeMetricSupportFooter">
-          <span class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</span>
-          ${compareContractText ? `<span class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</span>` : ""}
+          <span class="homeMetricSupportMeta homeMetricSupportMeta--model">Comparison model • <b>${escapeHtml(compareContractLabel)}</b></span>
+          <span class="homeMetricSupportMeta homeMetricSupportMeta--basis">${escapeHtml(compareContractBasis)}</span>
+          ${compareContractText ? `<span class="homeMetricSupportMeta homeMetricSupportMeta--note">${escapeHtml(compareContractText)}</span>` : ""}
         </div>
       </div>
     `;
@@ -427,8 +428,8 @@ export function createReportsMetricDetailSeam(deps){
       <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
         <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
         <div class="${viewModel.detailCompareRowsClass}">
-          <div><span>${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b>${escapeHtml(compareSummary.previousValue)}</b></div>
-          <div><span>${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b>${escapeHtml(compareSummary.currentValue)}</b></div>
+          <div class="reportsMetricCompareRow"><span class="reportsMetricCompareLabel">${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b class="reportsMetricCompareValue">${escapeHtml(compareSummary.previousValue)}</b></div>
+          <div class="reportsMetricCompareRow"><span class="reportsMetricCompareLabel">${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b class="reportsMetricCompareValue">${escapeHtml(compareSummary.currentValue)}</b></div>
         </div>
         <div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
         ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
@@ -438,6 +439,7 @@ export function createReportsMetricDetailSeam(deps){
     <section class="${viewModel.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
       <div class="${viewModel.detailCardClass}">
         ${viewModel.isHomeMetricDetail ? `
+          <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to Home</button>
           <div class="${viewModel.detailEyebrowClass}">HOME METRIC DETAIL</div>
           <h2 class="${viewModel.detailTitleClass}">${escapeHtml(`${meta.homeTitle} detail`)}</h2>
           <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
