@@ -1,3 +1,5 @@
+import { buildRollingSeriesFromMonthRows, describeRollingContext, getRollingWindowForMetric } from "./reports_rolling_trends_v5.js";
+
 const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
   fairWindowLabel: "Visible Home month view",
   compareModel: "home-full-month",
@@ -223,6 +225,30 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
     amountAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByAmount, metricKey: "amount", valueKey: "amt", basisLabel: "Strongest areas by amount in this Home filter" }),
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
     pplMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg" }),
+    tripsRollingTrend: buildRollingSeriesFromMonthRows({
+      monthRows: safeMonths,
+      metricKey: "trips",
+      windowSize: getRollingWindowForMetric("trips", { surface: "home" }),
+      basisLabel: "Rolling trips trend • visible Home months"
+    }),
+    poundsRollingTrend: buildRollingSeriesFromMonthRows({
+      monthRows: safeMonths,
+      metricKey: "pounds",
+      windowSize: getRollingWindowForMetric("pounds", { surface: "home" }),
+      basisLabel: "Rolling pounds trend • visible Home months"
+    }),
+    amountRollingTrend: buildRollingSeriesFromMonthRows({
+      monthRows: safeMonths,
+      metricKey: "amount",
+      windowSize: getRollingWindowForMetric("amount", { surface: "home" }),
+      basisLabel: "Rolling amount trend • visible Home months"
+    }),
+    pplRollingTrend: buildRollingSeriesFromMonthRows({
+      monthRows: safeMonths,
+      metricKey: "ppl",
+      windowSize: getRollingWindowForMetric("ppl", { surface: "home" }),
+      basisLabel: "Rolling $/lb trend • visible Home months"
+    }),
     pplDealerLeaders: buildHomeTopRowsBarChart({ rows: dealerRowsByRate, metricKey: "ppl", valueKey: "avg", basisLabel: "Dealer pay-rate leaders in this Home filter" }),
     pplRateVsPoundsTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" })
   };
@@ -402,12 +428,17 @@ export function createReportsMetricDetailSeam(deps){
       }
     };
     const summaryText = (summaryBuilders[metricKey] || summaryBuilders.amount)();
+    const rollingContextText = describeRollingContext({
+      chartModel: compareFoundation?.detailCharts?.[`${metricKey}RollingTrend`],
+      metricKey,
+      compareTone: tone
+    });
     const trustNote = payload.confidenceLabel === "early"
       ? " Early read."
       : (payload.confidenceLabel === "weak" ? " Light read." : "");
     return {
       tone,
-      text: `${summaryText}${trustNote}`.trim(),
+      text: `${summaryText}${rollingContextText ? ` ${rollingContextText}` : ""}${trustNote}`.trim(),
       currentValue: formatMetricCompareValue(metricKey, payload.currentValue),
       previousValue: formatMetricCompareValue(metricKey, payload.previousValue)
     };
@@ -530,6 +561,13 @@ export function createReportsMetricDetailSeam(deps){
     };
     const homeSecondaryChartsByMetric = {
       trips: [
+        detailCharts.tripsRollingTrend ? {
+          title: `Trips • ${detailCharts.tripsRollingTrend.windowSize}-month rolling`,
+          context: "Line • rolling window with current marker",
+          canvasId: "c_trips_rolling_trend",
+          chartModel: detailCharts.tripsRollingTrend,
+          metricKey: "trips"
+        } : null,
         detailCharts.tripsMonthlyTrend ? {
           title: "Trips by month",
           context: "Bars • visible Home months in this filter",
@@ -546,6 +584,13 @@ export function createReportsMetricDetailSeam(deps){
         } : null
       ],
       pounds: [
+        detailCharts.poundsRollingTrend ? {
+          title: `Pounds • ${detailCharts.poundsRollingTrend.windowSize}-month rolling`,
+          context: "Line • rolling window with current marker",
+          canvasId: "c_pounds_rolling_trend",
+          chartModel: detailCharts.poundsRollingTrend,
+          metricKey: "pounds"
+        } : null,
         detailCharts.poundsMonthlyTrend ? {
           title: "Total pounds by month",
           context: "Bars • visible Home months in this filter",
@@ -569,6 +614,13 @@ export function createReportsMetricDetailSeam(deps){
         } : null
       ],
       amount: [
+        detailCharts.amountRollingTrend ? {
+          title: `Amount • ${detailCharts.amountRollingTrend.windowSize}-month rolling`,
+          context: "Line • rolling window with current marker",
+          canvasId: "c_amount_rolling_trend",
+          chartModel: detailCharts.amountRollingTrend,
+          metricKey: "amount"
+        } : null,
         detailCharts.amountTrend ? {
           title: "Total amount by month",
           context: "Bars • visible Home months in this filter",
@@ -599,6 +651,13 @@ export function createReportsMetricDetailSeam(deps){
         } : null
       ],
       ppl: [
+        detailCharts.pplRollingTrend ? {
+          title: `Avg $/lb • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
+          context: "Line • rolling window with current marker",
+          canvasId: "c_ppl_rolling_trend",
+          chartModel: detailCharts.pplRollingTrend,
+          metricKey: "ppl"
+        } : null,
         detailCharts.pplMonthlyTrend ? {
           title: "Average pay rate by month",
           context: "Bars • visible Home months in this filter",
@@ -638,7 +697,17 @@ export function createReportsMetricDetailSeam(deps){
         chartContext: primaryChart?.basisLabel || "Bars • matched range trip totals",
         homeChartContext: primaryChart?.basisLabel || "Bars • latest visible month vs previous visible month",
         chartCanvasId: "c_trips",
-        secondaryCharts: isHomeMetricDetail ? homeSecondaryChartsByMetric.trips : [],
+        secondaryCharts: isHomeMetricDetail
+          ? homeSecondaryChartsByMetric.trips
+          : [
+            detailCharts.tripsRollingTrend ? {
+              title: `Trips • ${detailCharts.tripsRollingTrend.windowSize}-month rolling`,
+              context: "Line • rolling window with current marker",
+              canvasId: "c_trips_rolling_trend",
+              chartModel: detailCharts.tripsRollingTrend,
+              metricKey: "trips"
+            } : null
+          ],
         insight: "Read this compare card with the chart to confirm trip movement in the same matched range.",
         homeInsight: "Use compare first, then trend and activity context charts to confirm the trip story."
       },
@@ -657,7 +726,17 @@ export function createReportsMetricDetailSeam(deps){
         chartContext: primaryChart?.basisLabel || "Bars • matched range pound totals",
         homeChartContext: primaryChart?.basisLabel || "Bars • latest visible month vs previous visible month",
         chartCanvasId: "c_lbs",
-        secondaryCharts: isHomeMetricDetail ? homeSecondaryChartsByMetric.pounds : [],
+        secondaryCharts: isHomeMetricDetail
+          ? homeSecondaryChartsByMetric.pounds
+          : [
+            detailCharts.poundsRollingTrend ? {
+              title: `Pounds • ${detailCharts.poundsRollingTrend.windowSize}-month rolling`,
+              context: "Line • rolling window with current marker",
+              canvasId: "c_pounds_rolling_trend",
+              chartModel: detailCharts.poundsRollingTrend,
+              metricKey: "pounds"
+            } : null
+          ],
         insight: "Use this compare card and chart together so the headline and values stay aligned to one matched range.",
         homeInsight: "Use compare first, then productivity and area context charts for a fuller pounds read."
       },
@@ -679,6 +758,13 @@ export function createReportsMetricDetailSeam(deps){
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.amount
           : [
+            detailCharts.amountRollingTrend ? {
+              title: `Amount • ${detailCharts.amountRollingTrend.windowSize}-month rolling`,
+              context: "Line • rolling window with current marker",
+              canvasId: "c_amount_rolling_trend",
+              chartModel: detailCharts.amountRollingTrend,
+              metricKey: "amount"
+            } : null,
             detailCharts.amountTrend ? {
               title: "Amount • Monthly",
               context: "Bars • full months in this active Reports range",
@@ -710,7 +796,17 @@ export function createReportsMetricDetailSeam(deps){
         chartContext: primaryChart?.basisLabel || "Bars • matched range average $/lb",
         homeChartContext: primaryChart?.basisLabel || "Bars • latest visible month vs previous visible month",
         chartCanvasId: "c_ppl",
-        secondaryCharts: isHomeMetricDetail ? homeSecondaryChartsByMetric.ppl : [],
+        secondaryCharts: isHomeMetricDetail
+          ? homeSecondaryChartsByMetric.ppl
+          : [
+            detailCharts.pplRollingTrend ? {
+              title: `Avg $/lb • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
+              context: "Line • rolling window with current marker",
+              canvasId: "c_ppl_rolling_trend",
+              chartModel: detailCharts.pplRollingTrend,
+              metricKey: "ppl"
+            } : null
+          ],
         insight: "Use this compare card and chart to read matched-range pricing without mixing full-range averages.",
         homeInsight: "Use compare first, then trend and dealer-rate context to judge pricing depth."
       }

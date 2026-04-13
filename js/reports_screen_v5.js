@@ -7,6 +7,7 @@ import { createReportsOverviewSectionsSeam } from "./reports_overview_sections_v
 import { createReportsShellControlsSeam } from "./reports_shell_controls_v5.js";
 import { createReportsTransitionSeam } from "./reports_transition_seam_v5.js";
 import { createReportsMetricRouteSeam } from "./reports_metric_route_seam_v5.js";
+import { buildRollingSeriesFromMonthRows, getRollingWindowForMetric } from "./reports_rolling_trends_v5.js";
 
 export function createReportsScreenRenderer(deps){
   const {
@@ -301,6 +302,34 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     compareFoundation: isHomeMetricDetail ? null : compareFoundation
   });
   const detailCharts = compareFoundation.detailCharts || {};
+  const rollingSurface = isHomeMetricDetail ? "home" : "reports";
+  const detailChartsWithRolling = {
+    ...detailCharts,
+    tripsRollingTrend: detailCharts.tripsRollingTrend || buildRollingSeriesFromMonthRows({
+      monthRows,
+      metricKey: "trips",
+      windowSize: getRollingWindowForMetric("trips", { surface: rollingSurface }),
+      basisLabel: isHomeMetricDetail ? "Rolling trips trend • visible Home months" : "Rolling trips trend • active Reports range"
+    }),
+    poundsRollingTrend: detailCharts.poundsRollingTrend || buildRollingSeriesFromMonthRows({
+      monthRows,
+      metricKey: "pounds",
+      windowSize: getRollingWindowForMetric("pounds", { surface: rollingSurface }),
+      basisLabel: isHomeMetricDetail ? "Rolling pounds trend • visible Home months" : "Rolling pounds trend • active Reports range"
+    }),
+    amountRollingTrend: detailCharts.amountRollingTrend || buildRollingSeriesFromMonthRows({
+      monthRows,
+      metricKey: "amount",
+      windowSize: getRollingWindowForMetric("amount", { surface: rollingSurface }),
+      basisLabel: isHomeMetricDetail ? "Rolling amount trend • visible Home months" : "Rolling amount trend • active Reports range"
+    }),
+    pplRollingTrend: detailCharts.pplRollingTrend || buildRollingSeriesFromMonthRows({
+      monthRows,
+      metricKey: "ppl",
+      windowSize: getRollingWindowForMetric("ppl", { surface: rollingSurface }),
+      basisLabel: isHomeMetricDetail ? "Rolling $/lb trend • visible Home months" : "Rolling $/lb trend • active Reports range"
+    })
+  };
   const primaryBasisByMetric = compareFoundation.primaryBasis || {};
   const amountCompare = compareFoundation.metrics?.amount || null;
   const lbsCompare = compareFoundation.metrics?.pounds || null;
@@ -309,7 +338,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       metricKey: activeMetricDetail,
       compareFoundation,
       primaryBasisByMetric,
-      detailCharts,
+      detailCharts: detailChartsWithRolling,
       isHomeMetricDetail,
       rangeLabel,
       trips,
