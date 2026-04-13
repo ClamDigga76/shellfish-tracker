@@ -1,4 +1,4 @@
-# RUNTIME-PULL-LOCK.md — Runtime Re-sync / Live-lock Guardrails (VibeCoder 4.0)
+# RUNTIME-PULL-LOCK.md — Runtime Re-sync / Live-lock Guardrails (Bank the Catch / VibeCoder 4.5 Repo-Compatible)
 
 ## Purpose
 This helper file isolates runtime-facing re-sync and anti-drift guardrails.
