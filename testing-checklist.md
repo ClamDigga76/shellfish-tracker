@@ -38,3 +38,7 @@ After workflow-doc updates, confirm:
 - runtime live-lock rules remain in `RUNTIME-PULL-LOCK.md`
 - `Refresh` still means project-state re-sync
 - `STATE-SNAPSHOT.md` stays a compact helper, not a second roadmap
+
+## Final reminder
+Test the changed thing first.
+Then test the nearby thing most likely to have been affected.
