@@ -1,7 +1,7 @@
-# patch-prompt-style.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible
+# patch-prompt-style.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible Slim Core
 
 ## Purpose
-This file defines the default **Web Codex / browser sandbox** patch prompt style for Bank the Catch.
+This file defines the default **Web Codex / browser sandbox** patch prompt style.
 
 ## Source-of-truth reminder
 `AGENTS.md` is the source of truth for workflow rules.
@@ -35,8 +35,17 @@ For project/workflow support patches:
 When useful:
 - classify the lane before writing the prompt
 - keep Suggestions outside the active pass
-- preserve plain-English framing
+- preserve Jeremy-style plain English in the framing
 - use `Snapshot` when the work needs a compact handoff
+
+## Pull / Do command rule
+When the user says `Pull <item>`, treat it as the default full working execution output.
+
+That means the response should usually include the full usable pull sheet in the right lane shape, not just a light preview.
+
+`Do <item>` is a compatibility alias for the same behavior.
+
+Use `Audit <item>` only when the user wants inspection without the full pull sheet.
 
 ## Refresh wording rule
 When using **Refresh** in prompt text, treat it as project-state re-sync.

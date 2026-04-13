@@ -1,4 +1,4 @@
-# STATE-SNAPSHOT.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible
+# STATE-SNAPSHOT.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible Slim Core
 
 ## Purpose
 This file defines the compact current-state snapshot for handoff and resumption.
@@ -7,13 +7,12 @@ Use it when the work is long, the system has evolved, or the chat may need a cle
 
 ## Core rule
 Keep the snapshot compact.
-
-It should help the next pass start cleanly without turning into a heavy reporting system or a second roadmap.
+It should help the next pass start cleanly without turning into a heavy reporting system.
 
 ## Snapshot fields
 Use these fields when relevant:
 
-- **Version:** current VibeCoder pack state or workflow state
+- **Version:** current VibeCoder version or pack state
 - **Lane:** current primary lane
 - **Entry state:** current entry-state classification
 - **Active item:** the one main item in focus
@@ -46,5 +45,4 @@ A handoff should:
 
 ## Final reminder
 A good snapshot should be enough to restart the next pass cleanly.
-
 It should not feel like a second roadmap.

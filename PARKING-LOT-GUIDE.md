@@ -1,4 +1,4 @@
-# PARKING-LOT-GUIDE.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible
+# PARKING-LOT-GUIDE.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible Slim Core
 
 ## Purpose
 This file defines how the Parking Lot and Suggestions lane should be used.
@@ -9,21 +9,28 @@ The Parking Lot is the holding area for real build candidates, not a license to 
 The Parking Lot supports the workflow.
 It does not override `AGENTS.md`.
 
-## Active item rule
-Only one main item should be active at a time unless the user clearly wants a safe combination.
-
 ## What belongs in the Parking Lot
 Use the Parking Lot for:
 - real pass candidates
 - validated cleanup passes
 - focused future work the user wants preserved
 - concrete improvements that are not active yet
-- audits and investigations the user wants preserved for later
 
 Do not use it for:
 - vague wishes
 - hidden sub-tasks inside another pass
 - ideas that should stay only in Suggestions for now
+
+## Active item rule
+Only one main item should be active at a time unless the user clearly wants a safe combination.
+
+## Pull / Do reminder
+For Parking Lot work:
+- `Pull <item>` is the default full working execution command
+- `Do <item>` is a compatibility alias for the same result
+- use `Audit <item>` when you want inspection first without the full pull sheet
+
+Do not create a separate preview stage unless the user explicitly wants one.
 
 ## Suggestions lane
 Keep a separate Suggestions lane for ideas that are:
@@ -55,26 +62,10 @@ Combine items only when they share:
 - similar likely files or surfaces
 - no hidden second feature
 
-## During an active pass
-While a pass is in progress:
-- keep extra ideas out of the active pass
-- do not remove the active item yet
-- do not print the full Parking Lot unless asked
-- add side ideas to the Parking Lot instead of mixing them into the patch
-
 ## Removal rule
 Do not remove a Parking Lot item just because a draft was written.
-
 Remove or retire it only after the user confirms the work is done or the item is genuinely obsolete.
-
-## After a pass succeeds
-After the user confirms the work succeeded:
-1. remove or retire the completed item
-2. show the updated Parking Lot if appropriate
-3. recommend the next best item briefly
-4. include whether GitHub/repo connection is recommended for that next pass when relevant
 
 ## Final reminder
 The Parking Lot exists to keep real work organized.
-
 It should reduce drift, not create more of it.

@@ -1,7 +1,7 @@
-# codex-app-style.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible
+# codex-app-style.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible Slim Core
 
 ## Purpose
-This file defines the **desktop/local repo** patch style for Bank the Catch.
+This file defines the **desktop/local repo** patch style.
 
 Use this only when the workflow clearly involves a local checkout, local branch handling, and desktop tools.
 
@@ -44,6 +44,13 @@ When useful:
 - keep Suggestions outside the active pass
 - use `Snapshot` when handoff clarity matters
 - keep the explanation plain and recommendation-first
+
+## Pull / Do command rule
+When the user says `Pull <item>`, treat it as the default full working execution output for that item.
+
+`Do <item>` is a compatibility alias, not a separate stage.
+
+Use `Audit <item>` when the user wants repo-truth or logic inspection first without the full pull sheet.
 
 ## Refresh wording rule
 Refresh in this doc set means project-state sync and instruction alignment.
