@@ -353,37 +353,61 @@ export function createReportsMetricDetailSeam(deps){
       ? "up"
       : (currentPoundsPerDay < previousPoundsPerDay * 0.95 ? "down" : "steady");
 
-    const homePrefix = isHomeMetricDetail ? "" : `${currentLabel} `;
-
+    const metricMoveLead = (name)=> {
+      if(tone === "up") return `${name} moved up`;
+      if(tone === "down") return `${name} moved down`;
+      return `${name} held close`;
+    };
+    const toneWord = (toneValue, { up = "up", down = "down", steady = "close" } = {})=> (
+      toneValue === "up" ? up : (toneValue === "down" ? down : steady)
+    );
     const summaryBuilders = {
       trips: ()=> {
-        if(tone === "up") return `${homePrefix}${isHomeMetricDetail ? "Trips rose." : `ran more trips than ${previousLabel}.`} ${productivityTone === "down" ? "Pounds per trip slipped." : (productivityTone === "up" ? "Pounds per trip improved." : "Pounds per trip stayed close.")} ${poundsPerDayTone === "up" ? "Pounds per fishing day improved too." : (poundsPerDayTone === "down" ? "Pounds per fishing day softened too." : "")}`.trim();
-        if(tone === "down") return `${homePrefix}${isHomeMetricDetail ? "Trips fell." : `ran fewer trips than ${previousLabel}.`} ${productivityTone === "up" ? "Pounds per trip improved." : (productivityTone === "down" ? "Pounds per trip softened." : "Pounds per trip stayed close.")} ${poundsPerDayTone === "up" ? "Pounds per fishing day still improved." : (poundsPerDayTone === "down" ? "Pounds per fishing day eased too." : "")}`.trim();
-        return `${isHomeMetricDetail ? "Trip count held close" : `${currentLabel} matched ${previousLabel} on trip count`}, with pounds per trip ${productivityTone === "up" ? "improving" : (productivityTone === "down" ? "slipping" : "holding steady")}${poundsPerDayTone === "steady" ? "." : ` and pounds per fishing day ${poundsPerDayTone === "up" ? "improving" : "slipping"}.`}`;
+        const cause = tone === "up"
+          ? "more trip days"
+          : (tone === "down" ? "fewer trip days" : "a flat trip schedule");
+        const evidence = `Evidence: pounds per trip stayed ${toneWord(productivityTone)} and pounds per day stayed ${toneWord(poundsPerDayTone)}.`;
+        return `${metricMoveLead("Trips")} mainly from ${cause}. ${evidence}`;
       },
       pounds: ()=> {
-        if(tone === "up") return `${homePrefix}${isHomeMetricDetail ? "Pounds rose." : `landed more pounds than ${previousLabel} in this matched range.`} ${tripsPayload?.compareTone === "up" ? "More trips helped drive the gain." : (productivityTone === "up" ? "The gain came from stronger pounds per trip." : "Trip count stayed close while pounds climbed.")} ${poundsPerDayTone === "up" ? "Pounds per fishing day improved too." : ""}`.trim();
-        if(tone === "down") return `${homePrefix}${isHomeMetricDetail ? "Pounds fell." : `landed fewer pounds than ${previousLabel} in this matched range.`} ${tripsPayload?.compareTone === "down" ? "Fewer trips were part of the drop." : (productivityTone === "down" ? "Average pounds per trip also declined." : "Trip count stayed close while pounds fell.")} ${poundsPerDayTone === "down" ? "Pounds per fishing day also declined." : ""}`.trim();
-        return `${isHomeMetricDetail ? "Pounds held close" : `${currentLabel} held close to ${previousLabel} on pounds`}, with ${productivityTone === "up" ? "better" : (productivityTone === "down" ? "softer" : "steady")} pounds per trip${poundsPerDayTone === "steady" ? "." : ` and pounds per fishing day ${poundsPerDayTone === "up" ? "up" : "down"}.`}`;
+        const cause = tripsPayload?.compareTone === "up"
+          ? "more trips"
+          : (tripsPayload?.compareTone === "down"
+            ? "fewer trips"
+            : `pounds per trip ${toneWord(productivityTone, { up: "improved", down: "softened", steady: "held close" })}`);
+        const evidence = `Evidence: pounds per day stayed ${toneWord(poundsPerDayTone)} while trip count was ${toneWord(tripsPayload?.compareTone, { up: "up", down: "down", steady: "flat" })}.`;
+        return `${metricMoveLead("Pounds")} mainly from ${cause}. ${evidence}`;
       },
       amount: ()=> {
-        if(tone === "up") return `${homePrefix}${isHomeMetricDetail ? "Amount rose." : `earned more than ${previousLabel} in this matched range.`} ${poundsPayload?.compareTone === "up" && pplPayload?.compareTone === "up" ? "Both pounds and $/lb moved up." : (poundsPayload?.compareTone === "up" ? "Heavier pounds carried most of the gain." : (pplPayload?.compareTone === "up" ? "Stronger $/lb did most of the lifting." : "Volume and rate both stayed fairly close."))} ${amountPerTripTone === "up" ? "Amount per trip improved." : ""} ${amountPerDayTone === "up" ? "Amount per fishing day improved too." : ""}`.trim();
-        if(tone === "down") return `${homePrefix}${isHomeMetricDetail ? "Amount fell." : `earned less than ${previousLabel} in this matched range.`} ${poundsPayload?.compareTone === "down" && pplPayload?.compareTone === "down" ? "Lighter pounds and softer $/lb both contributed." : (poundsPayload?.compareTone === "down" ? "The drop came mostly from lighter pounds." : (pplPayload?.compareTone === "down" ? "Softer $/lb did most of the damage." : "Volume and rate both stayed fairly close."))} ${amountPerTripTone === "down" ? "Amount per trip also softened." : ""} ${amountPerDayTone === "down" ? "Amount per fishing day softened too." : ""}`.trim();
-        return `${isHomeMetricDetail ? "Amount held close." : `${currentLabel} stayed close to ${previousLabel} on amount in this matched range,`} ${isHomeMetricDetail ? `Pounds were ${poundsPayload?.compareTone === "up" ? "up" : (poundsPayload?.compareTone === "down" ? "down" : "steady")} and $/lb was ${pplPayload?.compareTone === "up" ? "up" : (pplPayload?.compareTone === "down" ? "down" : "steady")}.` : `while pounds were ${poundsPayload?.compareTone === "up" ? "up" : (poundsPayload?.compareTone === "down" ? "down" : "steady")} and $/lb was ${pplPayload?.compareTone === "up" ? "up" : (pplPayload?.compareTone === "down" ? "down" : "steady")}.`} ${amountPerTripTone === "steady" ? "Amount per trip stayed close." : `Amount per trip moved ${amountPerTripTone}.`} ${amountPerDayTone === "steady" ? "Amount per fishing day stayed close." : `Amount per fishing day moved ${amountPerDayTone}.`}`.trim();
+        const cause = poundsPayload?.compareTone === "up" && pplPayload?.compareTone !== "up"
+          ? "higher pounds landed"
+          : (pplPayload?.compareTone === "up" && poundsPayload?.compareTone !== "up"
+            ? "stronger average $/lb"
+            : (poundsPayload?.compareTone === "down" && pplPayload?.compareTone !== "down"
+              ? "lighter pounds landed"
+              : (pplPayload?.compareTone === "down" && poundsPayload?.compareTone !== "down"
+                ? "softer average $/lb"
+                : "a combined shift in pounds and $/lb")));
+        const evidence = `Evidence: amount per trip was ${toneWord(amountPerTripTone)} and amount per day was ${toneWord(amountPerDayTone)}.`;
+        return `${metricMoveLead("Amount")} mainly from ${cause}. ${evidence}`;
       },
       ppl: ()=> {
-        if(tone === "up") return `${isHomeMetricDetail ? "Avg $/lb improved" : `${currentLabel} improved average $/lb over ${previousLabel}`}${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "down" ? "It improved even with lighter pounds." : (isHomeMetricDetail ? "Pricing strengthened." : "Pricing strengthened versus the prior period.")}`;
-        if(tone === "down") return `${isHomeMetricDetail ? "Avg $/lb softened" : `${currentLabel} came in below ${previousLabel} on average $/lb`}${payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : ""}. ${poundsPayload?.compareTone === "up" ? "Heavier pounds did not fully offset the softer rate." : (isHomeMetricDetail ? "Pricing softened." : "Pricing softened versus the prior period.")}`;
-        return `${isHomeMetricDetail ? "Average $/lb held close." : `${currentLabel} held close to ${previousLabel} on average $/lb in this matched range,`} ${isHomeMetricDetail ? `Amount was ${amountPayload?.compareTone === "up" ? "still up" : (amountPayload?.compareTone === "down" ? "still down" : "also holding steady")}.` : `with amount ${amountPayload?.compareTone === "up" ? "still up" : (amountPayload?.compareTone === "down" ? "still down" : "also holding steady")}.`}`;
+        const pctMove = payload.percentValid ? ` by ${pctText(payload.deltaPct)}` : "";
+        const cause = tone === "up"
+          ? "stronger pricing"
+          : (tone === "down" ? "softer pricing" : "stable pricing");
+        const amountDirection = toneWord(amountPayload?.compareTone, { up: "up", down: "down", steady: "flat" });
+        const poundsDirection = toneWord(poundsPayload?.compareTone, { up: "up", down: "down", steady: "flat" });
+        return `${metricMoveLead("Avg $/lb")}${pctMove} mainly from ${cause}. Evidence: amount was ${amountDirection} while pounds were ${poundsDirection}.`;
       }
     };
     const summaryText = (summaryBuilders[metricKey] || summaryBuilders.amount)();
     const trustNote = payload.confidenceLabel === "early"
-      ? "Early read."
-      : (payload.confidenceLabel === "weak" ? "Light read." : "");
+      ? " Early read."
+      : (payload.confidenceLabel === "weak" ? " Light read." : "");
     return {
       tone,
-      text: `${summaryText} ${trustNote}`.trim(),
+      text: `${summaryText}${trustNote}`.trim(),
       currentValue: formatMetricCompareValue(metricKey, payload.currentValue),
       previousValue: formatMetricCompareValue(metricKey, payload.previousValue)
     };
@@ -529,18 +553,18 @@ export function createReportsMetricDetailSeam(deps){
           chartModel: detailCharts.poundsMonthlyTrend,
           metricKey: "pounds"
         } : null,
-        detailCharts.poundsAreaMix?.labels?.length ? {
-          title: "Strongest areas by pounds",
-          context: "Bars • top areas in this Home filter",
-          canvasId: "c_pounds_area_mix",
-          chartModel: detailCharts.poundsAreaMix,
-          metricKey: "pounds"
-        } : null,
         detailCharts.poundsPerTripTrend ? {
           title: "Average pounds per trip by month",
           context: "Bars • productivity by visible Home month",
           canvasId: "c_pounds_per_trip_trend",
           chartModel: detailCharts.poundsPerTripTrend,
+          metricKey: "pounds"
+        } : null,
+        detailCharts.poundsAreaMix?.labels?.length ? {
+          title: "Strongest areas by pounds",
+          context: "Bars • top areas in this Home filter",
+          canvasId: "c_pounds_area_mix",
+          chartModel: detailCharts.poundsAreaMix,
           metricKey: "pounds"
         } : null
       ],
@@ -550,6 +574,13 @@ export function createReportsMetricDetailSeam(deps){
           context: "Bars • visible Home months in this filter",
           canvasId: "c_amount_trend",
           chartModel: detailCharts.amountTrend,
+          metricKey: "amount"
+        } : null,
+        detailCharts.amountPerTripTrend ? {
+          title: "Average amount per trip by month",
+          context: "Bars • average amount per trip by visible Home month",
+          canvasId: "c_amount_per_trip_trend",
+          chartModel: detailCharts.amountPerTripTrend,
           metricKey: "amount"
         } : null,
         detailCharts.amountDealerMix?.labels?.length ? {
@@ -565,13 +596,6 @@ export function createReportsMetricDetailSeam(deps){
           canvasId: "c_amount_area_mix",
           chartModel: detailCharts.amountAreaMix,
           metricKey: "amount"
-        } : null,
-        detailCharts.amountPerTripTrend ? {
-          title: "Average amount per trip by month",
-          context: "Bars • average amount per trip by visible Home month",
-          canvasId: "c_amount_per_trip_trend",
-          chartModel: detailCharts.amountPerTripTrend,
-          metricKey: "amount"
         } : null
       ],
       ppl: [
@@ -582,19 +606,19 @@ export function createReportsMetricDetailSeam(deps){
           chartModel: detailCharts.pplMonthlyTrend,
           metricKey: "ppl"
         } : null,
-        detailCharts.pplDealerLeaders?.labels?.length ? {
-          title: "Dealer pay-rate leaders",
-          context: "Bars • top dealer rates in this Home filter",
-          canvasId: "c_ppl_dealer_leaders",
-          chartModel: detailCharts.pplDealerLeaders,
-          metricKey: "ppl"
-        } : null,
         detailCharts.pplRateVsPoundsTrend ? {
           title: "Pounds • Monthly Context",
           context: "Bars • pounds trend beside pay-rate movement",
           canvasId: "c_ppl_rate_vs_pounds",
           chartModel: detailCharts.pplRateVsPoundsTrend,
           metricKey: "pounds"
+        } : null,
+        detailCharts.pplDealerLeaders?.labels?.length ? {
+          title: "Dealer pay-rate leaders",
+          context: "Bars • top dealer rates in this Home filter",
+          canvasId: "c_ppl_dealer_leaders",
+          chartModel: detailCharts.pplDealerLeaders,
+          metricKey: "ppl"
         } : null
       ]
     };
