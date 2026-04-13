@@ -99,6 +99,9 @@ const settingsScreenSource = readSource('js/settings_screen_v5.js');
 const tripFormSource = readSource('js/trip_form_render_v5.js');
 const tripScreenSource = readSource('js/trip_screen_orchestrator_v5.js');
 const reportsScreenSource = readSource('js/reports_screen_v5.js');
+const reportsShellControlsSource = readSource('js/reports_shell_controls_v5.js');
+const reportsOverviewSectionsSource = readSource('js/reports_overview_sections_v5.js');
+const reportsMetricDetailSource = readSource('js/reports_metric_detail_v5.js');
 const updateStatusSource = readSource('js/update_runtime_status_v5.js');
 
 if (appSource) {
@@ -188,13 +191,37 @@ if (tripScreenSource) {
 if (reportsScreenSource) {
   checkIncludes(reportsScreenSource, 'reports screen renderer export exists', 'export function createReportsScreenRenderer(deps){');
   checkIncludes(reportsScreenSource, 'reports header marker present', 'renderPageHeader("reports")');
-  checkIncludes(reportsScreenSource, 'reports timeframe filter marker present', 'aria-label="Reports timeframe filter"');
-  checkIncludesAny(reportsScreenSource, 'reports chart surface marker present', ['id="reportsCharts"', 'class="chart"']);
+}
+
+if (reportsShellControlsSource) {
+  checkIncludesAny(reportsShellControlsSource, 'reports timeframe filter marker present', [
+    'aria-label="Reports timeframe controls"',
+    'aria-label="Reports quick range filters"',
+    'aria-label="Reports timeframe filter"',
+  ]);
+}
+
+const reportsChartSurfaceSource = [
+  reportsScreenSource,
+  reportsOverviewSectionsSource,
+  reportsMetricDetailSource,
+].join('\n');
+
+if (reportsChartSurfaceSource.trim()) {
+  checkIncludesAny(reportsChartSurfaceSource, 'reports chart surface marker present', [
+    'id="reportsCharts"',
+    'class="chart"',
+    '<canvas class="chart"',
+    'reportsChartsStack',
+  ]);
 }
 
 if (updateStatusSource) {
   checkIncludes(updateStatusSource, 'runtime update seam export exists', 'export function createUpdateRuntimeStatusSeam({');
-  checkIncludes(updateStatusSource, 'runtime update ready status marker present', 'Latest version ready • Safe to load now');
+  checkIncludesAny(updateStatusSource, 'runtime update ready status marker present', [
+    'Latest build ready on this device',
+    'Latest version ready • Safe to load now',
+  ]);
   checkIncludes(updateStatusSource, 'runtime current build marker present', 'Version ${displayBuildVersion}');
   checkIncludes(updateStatusSource, 'runtime build badge marker present', 'App ${displayBuildVersion}');
 }
