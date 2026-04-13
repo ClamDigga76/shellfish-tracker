@@ -1,0 +1,31 @@
+name: Repo Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  repo-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Show Node and npm versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Run repo checks
+        run: npm run check:repo
+
+      - name: Run smoke checks
+        run: npm run smoke
