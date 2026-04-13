@@ -286,6 +286,63 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     });
   }
 
+  function drawRollingLineChart(canvasId, values, labels, metricKey, options = {}){
+    const c = setupCanvas(document.getElementById(canvasId));
+    if(!c) return;
+    const { canvas, ctx, w, h } = c;
+    const frame = chartFrame(w,h);
+    const paletteSet = resolveMetricDetailPalette(metricKey);
+    const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
+    const yScale = niceScale(Math.max(topValue, 1), 4);
+    renderAnimatedChart(canvas, values, (animatedVals, alpha)=> {
+      clear(ctx,w,h);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = palette.plotBg;
+      ctx.fillRect(frame.left, frame.top, w - frame.left - frame.right, h - frame.top - frame.bottom);
+      const geom = drawAxes(ctx,w,h,frame);
+      const points = animatedVals.map((rawValue, index)=> {
+        const safe = Math.max(0, Number(rawValue) || 0);
+        const x = geom.x0 + ((geom.plotW * index) / Math.max(1, animatedVals.length - 1));
+        const y = geom.y0 - ((safe / Math.max(1, yScale.top)) * geom.plotH);
+        return { x, y, value: safe };
+      });
+
+      ctx.strokeStyle = paletteSet.color;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      points.forEach((pt, index)=> {
+        if(index === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      });
+      ctx.stroke();
+
+      points.forEach((pt, index)=> {
+        const isCurrent = index === points.length - 1;
+        ctx.beginPath();
+        ctx.fillStyle = isCurrent ? "#ffffff" : paletteSet.color;
+        ctx.strokeStyle = paletteSet.color;
+        ctx.lineWidth = isCurrent ? 2.2 : 1.6;
+        ctx.arc(pt.x, pt.y, isCurrent ? 4.6 : 3.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      drawBottomTicks(ctx, labels, geom, h-10, frame, {
+        alignMode: "index",
+        labelType: options.xLabelType || "month",
+        maxTicks: options.maxTicks || 0
+      });
+      const yLabels = [];
+      for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
+        yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: paletteSet.yFormatter(v) });
+      }
+      drawYTickLabels(ctx, geom, frame, yLabels);
+      drawYLabel(ctx, paletteSet.topFormatter(topValue), frame);
+      ctx.restore();
+    });
+  }
+
   function resolveMetricDetailPalette(metricKey){
     if(metricKey === "amount") return { color: palette.money, yFormatter: formatCompactMoney, topFormatter: formatShortMoney };
     if(metricKey === "ppl") return { color: palette.ppl, yFormatter: formatShortMoney, topFormatter: formatShortMoney };
@@ -312,6 +369,21 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         barPad: (frame)=> frame.compact ? 1.2 : 1.8,
         xLabelType: "month"
       });
+      return true;
+    }
+    if(chartModel.chartType === "rolling-line"){
+      const chronologicalSeries = normalizeChronologicalSeries({
+        monthKeys: Array.isArray(chartModel?.monthKeys) ? chartModel.monthKeys : [],
+        labels: Array.isArray(chartModel?.labels) ? chartModel.labels : [],
+        values: Array.isArray(chartModel?.values) ? chartModel.values : []
+      });
+      drawRollingLineChart(
+        canvasId,
+        chronologicalSeries.values.map((v)=> Number(v) || 0),
+        chronologicalSeries.labels.map((v)=> String(v || "")),
+        metricKey || chartModel?.metricKey || "amount",
+        { xLabelType: "month" }
+      );
       return true;
     }
     const values = Array.isArray(chartModel?.values) ? chartModel.values.map((v)=> Number(v) || 0) : [];
