@@ -1,53 +1,80 @@
-# PARKING-LOT-GUIDE.md — VibeCoder 4.0
+# PARKING-LOT-GUIDE.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible
 
 ## Purpose
-The Parking Lot is the live waiting list for ideas that are **not** in the current active patch.
+This file defines how the Parking Lot and Suggestions lane should be used.
 
-It exists to protect patch focus.
+The Parking Lot is the holding area for real build candidates, not a license to broaden the current pass.
 
 ## Core rule
-One active change at a time by default.
+The Parking Lot supports the workflow.
+It does not override `AGENTS.md`.
 
-Everything else waits in the Parking Lot unless the user clearly wants a tightly related, low-risk bundle.
+## Active item rule
+Only one main item should be active at a time unless the user clearly wants a safe combination.
 
 ## What belongs in the Parking Lot
-Add these to the Parking Lot instead of mixing them into the current patch:
+Use the Parking Lot for:
+- real pass candidates
+- validated cleanup passes
+- focused future work the user wants preserved
+- concrete improvements that are not active yet
+- audits and investigations the user wants preserved for later
 
-- side ideas
-- follow-up polish
-- related but separate fixes
-- future refactors
-- nice-to-have UI ideas
-- audits and investigations not needed for the current patch
-- anything risky that should be isolated
+Do not use it for:
+- vague wishes
+- hidden sub-tasks inside another pass
+- ideas that should stay only in Suggestions for now
 
-## Pull rule
-By default, pull **one main item** from the Parking Lot at a time.
+## Suggestions lane
+Keep a separate Suggestions lane for ideas that are:
+- useful
+- not part of the active pass
+- not ready to become a Parking Lot item yet
 
-Only bundle when the work is:
-- tightly related
-- low risk
-- same screen or same behavior cluster
-- still a small/local diff
+Do not silently turn suggestion items into active scope.
 
-## During a patch
-While a patch is in progress:
+## Suggestion display rule
+When Suggestions are relevant, show them briefly as:
+- worth keeping
+- not in this pass
+- revisit later only if still useful
 
-- keep extra ideas out of the active patch
+Do not let Suggestions take over the response.
+
+## Promotion reminder
+Promote a Suggestion only when it:
+- solves a real repeated need
+- has a clear seam
+- is concrete enough to build
+- will not quietly widen the current pass
+
+## Safe combination rule
+Combine items only when they share:
+- the same seam or closely related seam
+- low regression risk
+- similar likely files or surfaces
+- no hidden second feature
+
+## During an active pass
+While a pass is in progress:
+- keep extra ideas out of the active pass
 - do not remove the active item yet
 - do not print the full Parking Lot unless asked
 - add side ideas to the Parking Lot instead of mixing them into the patch
 
-## After a patch succeeds
-After the user confirms the patch worked:
+## Removal rule
+Do not remove a Parking Lot item just because a draft was written.
 
-1. remove that item from the working Parking Lot
+Remove or retire it only after the user confirms the work is done or the item is genuinely obsolete.
+
+## After a pass succeeds
+After the user confirms the work succeeded:
+1. remove or retire the completed item
 2. show the updated Parking Lot if appropriate
 3. recommend the next best item briefly
-4. include whether GitHub/repo connection is recommended for that next patch
+4. include whether GitHub/repo connection is recommended for that next pass when relevant
 
-Do not remove an item before the user confirms success.
+## Final reminder
+The Parking Lot exists to keep real work organized.
 
-## Operating reminder
-The Parking Lot is not the patch.
-It is the waiting line that keeps the patch clean.
+It should reduce drift, not create more of it.

@@ -1,4 +1,4 @@
-# START-HERE.md — VibeCoder 4.0
+# START-HERE.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible
 
 ## Purpose
 This file is the quick map for the Bank the Catch workflow-doc set.
@@ -16,11 +16,20 @@ For normal work, use this order:
 ## File roles
 - `AGENTS.md` = operational law (primary)
 - `PROJECT-INSTRUCTION-BLOCK.md` = wrapper/adaptation block for this project package
+- `STATE-SNAPSHOT.md` = compact snapshot and handoff helper
 - `RUNTIME-PULL-LOCK.md` = runtime re-sync and live-lock guardrails
-- `PARKING-LOT-GUIDE.md` = Parking Lot behavior
+- `PARKING-LOT-GUIDE.md` = Parking Lot and Suggestions behavior
 - `patch-prompt-style.md` = Web Codex patch prompt style
 - `codex-app-style.md` = desktop/local prompt style
-- `testing-checklist.md` = post-patch test loop
+- `testing-checklist.md` = post-patch test loop and hierarchy check
+
+## Official commands
+- `Refresh` = re-sync the VibeCoder project state
+- `Pull <item>` = build the pass for one item or one safe batch
+- `Do <item>` = execute the normal working output for the item
+- `Recommend next` = recommend the best next move
+- `Snapshot` = produce the compact state snapshot
+- `Audit` = run a focused system or work audit
 
 ## Default mode
 Default to **Web Codex / browser sandbox** workflow unless the task clearly requires desktop/local repo flow.
@@ -45,6 +54,7 @@ Refresh does **not** mean automatic runtime re-check or forced live repo/runtime
 - Keep helper docs subordinate and non-competing.
 - Keep runtime live-lock guidance in `RUNTIME-PULL-LOCK.md`.
 - Keep `PROJECT-INSTRUCTION-BLOCK.md` as wrapper/adaptation text, not as a second law file.
+- Keep `STATE-SNAPSHOT.md` compact and useful, not a second roadmap.
 
 ## Final reminder
 If there is a conflict, `AGENTS.md` wins.

@@ -1,4 +1,4 @@
-# patch-prompt-style.md — VibeCoder 4.0
+# patch-prompt-style.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible
 
 ## Purpose
 This file defines the default **Web Codex / browser sandbox** patch prompt style for Bank the Catch.
@@ -30,6 +30,13 @@ For project/workflow support patches:
 - keep scope to docs/workflow files only
 - avoid runtime edits
 - avoid version bump/preflight unless runtime files were touched
+
+## 4.5 execution reminders
+When useful:
+- classify the lane before writing the prompt
+- keep Suggestions outside the active pass
+- preserve plain-English framing
+- use `Snapshot` when the work needs a compact handoff
 
 ## Refresh wording rule
 When using **Refresh** in prompt text, treat it as project-state re-sync.

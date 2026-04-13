@@ -1,4 +1,4 @@
-# testing-checklist.md — VibeCoder 4.0
+# testing-checklist.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible
 
 ## Purpose
 This is the default post-patch verification loop for Bank the Catch.
@@ -24,7 +24,6 @@ If a stable smoke check exists for the touched behavior, run it too.
 
 ## Project-files / workflow patch checks
 For project-files/docs/workflow patches:
-
 - no runtime version bump
 - no runtime preflight required
 - verify wording clarity, hierarchy, and non-conflicting guidance
@@ -36,3 +35,9 @@ After workflow-doc updates, confirm:
 - `AGENTS.md` still reads as primary law
 - helper docs remain subordinate
 - runtime live-lock rules remain in `RUNTIME-PULL-LOCK.md`
+- `Refresh` still means project-state re-sync
+- `STATE-SNAPSHOT.md` stays a compact helper, not a second roadmap
+
+## Final reminder
+Test the changed thing first.
+Then test the nearby thing most likely to have been affected.

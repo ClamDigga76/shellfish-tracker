@@ -1,4 +1,4 @@
-# codex-app-style.md — VibeCoder 4.0
+# codex-app-style.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible
 
 ## Purpose
 This file defines the **desktop/local repo** patch style for Bank the Catch.
@@ -37,6 +37,13 @@ Desktop/local prompts still follow the same patch slice structure:
 9. Commit message
 10. Changelog
 11. Rollback rope
+
+## 4.5 execution reminders
+When useful:
+- classify the lane before writing the prompt
+- keep Suggestions outside the active pass
+- use `Snapshot` when handoff clarity matters
+- keep the explanation plain and recommendation-first
 
 ## Refresh wording rule
 Refresh in this doc set means project-state sync and instruction alignment.
