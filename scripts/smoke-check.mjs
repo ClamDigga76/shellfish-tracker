@@ -92,12 +92,14 @@ if (indexHtml) {
 }
 
 const appSource = readSource('js/app_v5.js');
+const startupAssetManifestSource = readSource('js/startup_asset_manifest_v5.js');
 const runtimeOrchestrationSource = readSource('js/runtime_orchestration_seam_v5.js');
 const homeSource = readSource('js/home_dashboard_v5.js');
 const shellSource = readSource('js/app_shell_v5.js');
 const settingsScreenSource = readSource('js/settings_screen_v5.js');
 const tripFormSource = readSource('js/trip_form_render_v5.js');
 const tripScreenSource = readSource('js/trip_screen_orchestrator_v5.js');
+const tripsBrowseScreenSource = readSource('js/trips_browse_screen_v5.js');
 const reportsScreenSource = readSource('js/reports_screen_v5.js');
 const reportsShellControlsSource = readSource('js/reports_shell_controls_v5.js');
 const reportsOverviewSectionsSource = readSource('js/reports_overview_sections_v5.js');
@@ -139,21 +141,27 @@ if (homeSource) {
   checkIncludesAny(homeSource, 'home view marker present', ['renderPageHeader("home")', 'renderPageHeader(\'home\')']);
 }
 
-if (appSource) {
-  checkIncludesAny(appSource, 'home renderer import wired', [
-    'from "./home_dashboard_v5.js"',
-    "from './home_dashboard_v5.js'",
+if (startupAssetManifestSource) {
+  checkIncludesAny(startupAssetManifestSource, 'home renderer import wired', [
     '"./home_dashboard_v5.js"',
+    "'./home_dashboard_v5.js'",
   ]);
-  checkIncludes(appSource, 'home renderer created', 'const { renderHome } = createHomeDashboardRenderer({');
-  checkPattern(appSource, 'trips screen render function exists', /function\s+renderAllTrips\s*\(/, 'function renderAllTrips(...)');
-  checkIncludesAny(appSource, 'settings renderer import wired', [
-    'from "./settings_screen_v5.js"',
-    "from './settings_screen_v5.js'",
+  checkIncludesAny(startupAssetManifestSource, 'settings renderer import wired', [
     '"./settings_screen_v5.js"',
+    "'./settings_screen_v5.js'",
   ]);
+}
+
+if (appSource) {
+  checkIncludes(appSource, 'home renderer created', 'const { renderHome } = createHomeDashboardRenderer({');
   checkIncludes(appSource, 'settings renderer created', 'const { renderSettings } = createSettingsScreenOrchestrator({');
+  checkIncludes(appSource, 'trips renderer wired', 'const { renderAllTrips } = createTripsBrowseScreenRenderer({');
   checkIncludes(appSource, 'startup module list versioned loader present', 'const STARTUP_MODULE_URLS = STARTUP_MODULE_PATHS.map(getVersionedModuleHref);');
+}
+
+if (tripsBrowseScreenSource) {
+  checkIncludes(tripsBrowseScreenSource, 'trips browse renderer export exists', 'export function createTripsBrowseScreenRenderer(deps){');
+  checkPattern(tripsBrowseScreenSource, 'trips screen render function exists', /function\s+renderAllTrips\s*\(/, 'function renderAllTrips(...)');
 }
 
 if (shellSource) {
