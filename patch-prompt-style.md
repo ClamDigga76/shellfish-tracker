@@ -31,6 +31,10 @@ For project/workflow support patches:
 - avoid runtime edits
 - avoid version bump/preflight unless runtime files were touched
 
+For presentation/UI formatting patches:
+- include a short human visual verification note in Done when or Validation
+- keep full visual-check policy in `testing-checklist.md` (do not duplicate it here)
+
 ## 4.5 execution reminders
 When useful:
 - classify the lane before writing the prompt
