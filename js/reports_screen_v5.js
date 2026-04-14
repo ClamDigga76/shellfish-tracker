@@ -80,7 +80,9 @@ export function createReportsScreenRenderer(deps){
     escapeHtml,
     formatMoney,
     to2,
-    renderStandardReadOnlyTripCard
+    renderStandardReadOnlyTripCard,
+    buildRollingSeriesFromMonthRows,
+    getRollingWindowForMetric
   });
 
   const reportsBindingsSeam = createReportsBindingsSeam();

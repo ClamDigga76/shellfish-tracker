@@ -3,7 +3,9 @@ export function createReportsOverviewSectionsSeam(deps){
     escapeHtml,
     formatMoney,
     to2,
-    renderStandardReadOnlyTripCard
+    renderStandardReadOnlyTripCard,
+    buildRollingSeriesFromMonthRows,
+    getRollingWindowForMetric
   } = deps;
 
   const reportsSection = ({ title, intro = "", body, extraClass = "" })=> `
@@ -83,18 +85,21 @@ export function createReportsOverviewSectionsSeam(deps){
   }
 
   function renderChartsSection(context){
-    const { monthRows, dealerRows, tripsTimeline } = context;
+    const { monthRows, dealerRows } = context;
     const latestMonth = monthRows[monthRows.length - 1] || null;
     const priorMonth = monthRows.length > 1 ? monthRows[monthRows.length - 2] : null;
-    const amountPeak = monthRows.reduce((best,r)=> (Number(r?.amt)||0) > (Number(best?.amt)||0) ? r : best, monthRows[0] || null);
-    const pplPeak = monthRows.reduce((best,r)=> (Number(r?.avg)||0) > (Number(best?.avg)||0) ? r : best, monthRows[0] || null);
     const amountPerTripPeak = monthRows.reduce((best,r)=> (Number(r?.amountPerTrip)||0) > (Number(best?.amountPerTrip)||0) ? r : best, monthRows[0] || null);
-    const lbsPeak = monthRows.reduce((best,r)=> (Number(r?.lbs)||0) > (Number(best?.lbs)||0) ? r : best, monthRows[0] || null);
     const dealerAmountPeak = dealerRows[0] || null;
-    const tripsLatest = tripsTimeline[tripsTimeline.length - 1] || null;
-    const tripsPrior = tripsTimeline.length > 1 ? tripsTimeline[tripsTimeline.length - 2] : null;
-    const tripsPeak = tripsTimeline.reduce((best,r)=> (Number(r?.count)||0) > (Number(best?.count)||0) ? r : best, tripsTimeline[0] || null);
-    const tripsTotal = tripsTimeline.reduce((sum,r)=> sum + (Number(r?.count)||0), 0);
+    const buildRollingModel = (metricKey, basisLabel)=> buildRollingSeriesFromMonthRows({
+      monthRows,
+      metricKey,
+      windowSize: getRollingWindowForMetric(metricKey, { surface: "reports" }),
+      basisLabel
+    });
+    const rollingTrips = buildRollingModel("trips", "Rolling trips trend • active Reports range");
+    const rollingPounds = buildRollingModel("pounds", "Rolling pounds trend • active Reports range");
+    const rollingAmount = buildRollingModel("amount", "Rolling amount trend • active Reports range");
+    const rollingPpl = buildRollingModel("ppl", "Rolling $/lb trend • active Reports range");
 
     const trendTone = (delta, epsilon = 0.02)=> {
       if(Math.abs(delta) <= epsilon) return "steady";
@@ -115,21 +120,47 @@ export function createReportsOverviewSectionsSeam(deps){
       return { text: "Holding steady", tone };
     };
 
-    const buildTripsTakeaway = ()=> {
-      const latest = Number(tripsLatest?.count) || 0;
-      const prior = Number(tripsPrior?.count) || 0;
-      if(!tripsPrior) return { text: "Baseline month set", tone: "steady" };
-      if(latest === prior) return { text: "Trips unchanged month to month", tone: "steady" };
-      return latest > prior
-        ? { text: "Trips up vs prior month", tone: "up" }
-        : { text: "Trips down vs prior month", tone: "down" };
+    const buildRollingTakeaway = (rollingModel, metricLabel)=> {
+      const current = Number(rollingModel?.currentValue) || 0;
+      const previous = Number(rollingModel?.previousValue) || 0;
+      if(previous <= 0 && current <= 0){
+        return { text: `${metricLabel} rolling trend is steady`, tone: "steady" };
+      }
+      if(previous <= 0){
+        return { text: `Rolling ${metricLabel} baseline is set`, tone: "up" };
+      }
+      const delta = (current - previous) / Math.max(1, Math.abs(previous));
+      const tone = trendTone(delta, 0.04);
+      if(tone === "up") return { text: `Rolling ${metricLabel} is improving`, tone };
+      if(tone === "down") return { text: `Rolling ${metricLabel} softened lately`, tone };
+      return { text: `Rolling ${metricLabel} is steady`, tone };
     };
+    const buildRollingDirection = (rollingModel)=> {
+      const current = Number(rollingModel?.currentValue) || 0;
+      const previous = Number(rollingModel?.previousValue) || 0;
+      if(previous <= 0){
+        return "No prior rolling window yet";
+      }
+      const delta = current - previous;
+      const pct = Math.abs((delta / Math.max(1, Math.abs(previous))) * 100);
+      const pctLabel = `${Math.round(pct)}%`;
+      if(Math.abs(delta) <= 0.00001) return "Flat versus prior rolling window";
+      if(delta > 0) return `Up ${pctLabel} vs prior rolling window`;
+      return `Down ${pctLabel} vs prior rolling window`;
+    };
+    const formatRollingValue = (metricKey, value)=> {
+      const safe = Number(value) || 0;
+      if(metricKey === "trips") return `${Math.round(safe)} trips`;
+      if(metricKey === "pounds") return `${to2(safe)} lbs`;
+      if(metricKey === "amount") return formatMoney(to2(safe));
+      return `${formatMoney(to2(safe))}/lb`;
+    };
+    const rollingTripsTakeaway = buildRollingTakeaway(rollingTrips, "trips");
+    const rollingPoundsTakeaway = buildRollingTakeaway(rollingPounds, "pounds");
+    const rollingAmountTakeaway = buildRollingTakeaway(rollingAmount, "amount");
+    const rollingPplTakeaway = buildRollingTakeaway(rollingPpl, "$/lb");
 
-    const amountTakeaway = buildMonthTakeaway("amt");
-    const pplTakeaway = buildMonthTakeaway("avg");
     const amountPerTripTakeaway = buildMonthTakeaway("amountPerTrip");
-    const lbsTakeaway = buildMonthTakeaway("lbs");
-    const tripsTakeaway = buildTripsTakeaway();
     const dealerRatePeak = dealerRows
       .filter((row)=> (Number(row?.lbs) || 0) > 0 && (Number(row?.avg) || 0) > 0)
       .reduce((best, row)=> (!best || (Number(row.avg) || 0) > (Number(best.avg) || 0) ? row : best), null);
@@ -141,36 +172,36 @@ export function createReportsOverviewSectionsSeam(deps){
       : { text: "Dealer mix still building", tone: "steady" };
     return [
       renderChartCard({
-        takeaway: tripsTakeaway,
-        title: "Trips • Monthly",
-        subhead: "Bars • trip count by month",
-        hero: `<span class="trips">${tripsLatest ? tripsLatest.count : "—"}</span>`,
-        context: `<span class="chartContextValue">${tripsLatest ? escapeHtml(tripsLatest.shortLabel) : "Latest month"}</span> • High <span class="trips">${tripsPeak ? tripsPeak.count : "—"}</span> • Total <span class="trips">${tripsTotal}</span>`,
-        canvasId: "c_trips"
+        takeaway: rollingTripsTakeaway,
+        title: "Trips • Rolling",
+        subhead: "Line • 3-month rolling trips",
+        hero: `<span class="trips">${escapeHtml(formatRollingValue("trips", rollingTrips.currentValue))}</span>`,
+        context: `<span class="chartContextValue">${escapeHtml(rollingTrips.currentLabel || "Current window")}</span> • ${escapeHtml(buildRollingDirection(rollingTrips))}`,
+        canvasId: "c_roll_trips"
       }),
       renderChartCard({
-        takeaway: lbsTakeaway,
-        title: "Pounds • Monthly",
-        subhead: "Bars • pounds by month",
-        hero: `<span class="lbsBlue">${latestMonth ? `${to2(latestMonth.lbs)} lbs` : "—"}</span>`,
-        context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="lbsBlue">${lbsPeak ? `${to2(lbsPeak.lbs)} lbs` : "—"}</span>`,
-        canvasId: "c_lbs"
+        takeaway: rollingPoundsTakeaway,
+        title: "Pounds • Rolling",
+        subhead: "Line • 3-month rolling pounds",
+        hero: `<span class="lbsBlue">${escapeHtml(formatRollingValue("pounds", rollingPounds.currentValue))}</span>`,
+        context: `<span class="chartContextValue">${escapeHtml(rollingPounds.currentLabel || "Current window")}</span> • ${escapeHtml(buildRollingDirection(rollingPounds))}`,
+        canvasId: "c_roll_lbs"
       }),
       renderChartCard({
-        takeaway: amountTakeaway,
-        title: "Amount • Monthly",
-        subhead: "Bars • total payout by month",
-        hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amt)) : "—"}</span>`,
-        context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="money">${amountPeak ? formatMoney(to2(amountPeak.amt)) : "—"}</span>`,
-        canvasId: "c_amount_monthly"
+        takeaway: rollingAmountTakeaway,
+        title: "Amount • Rolling",
+        subhead: "Line • 3-month rolling payout",
+        hero: `<span class="money">${escapeHtml(formatRollingValue("amount", rollingAmount.currentValue))}</span>`,
+        context: `<span class="chartContextValue">${escapeHtml(rollingAmount.currentLabel || "Current window")}</span> • ${escapeHtml(buildRollingDirection(rollingAmount))}`,
+        canvasId: "c_roll_amount"
       }),
       renderChartCard({
-        takeaway: pplTakeaway,
-        title: "$/lb • Monthly",
-        subhead: "Bars • average pay rate by month",
-        hero: `<span class="rate ppl">${latestMonth ? `${formatMoney(to2(latestMonth.avg))}/lb` : "—"}</span>`,
-        context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="rate ppl">${pplPeak ? `${formatMoney(to2(pplPeak.avg))}/lb` : "—"}</span>`,
-        canvasId: "c_ppl"
+        takeaway: rollingPplTakeaway,
+        title: "$/lb • Rolling",
+        subhead: "Line • 3-month rolling avg pay rate",
+        hero: `<span class="rate ppl">${escapeHtml(formatRollingValue("ppl", rollingPpl.currentValue))}</span>`,
+        context: `<span class="chartContextValue">${escapeHtml(rollingPpl.currentLabel || "Current window")}</span> • ${escapeHtml(buildRollingDirection(rollingPpl))}`,
+        canvasId: "c_roll_ppl"
       }),
       renderChartCard({
         takeaway: amountPerTripTakeaway,
