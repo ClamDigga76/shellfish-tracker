@@ -567,6 +567,19 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     xLabelType: "month"
   });
 
+  const rollingMetricKeys = ["trips", "pounds", "amount", "ppl"];
+  const rollingModelsByMetric = Object.fromEntries(
+    rollingMetricKeys.map((metricKey)=> [
+      metricKey,
+      buildRollingSeriesFromMonthRows({
+        monthRows: monthRowsChronological,
+        metricKey,
+        windowSize: getRollingWindowForMetric(metricKey, { surface: "reports" }),
+        basisLabel: "Rolling trend • active Reports range"
+      })
+    ])
+  );
+
   const rollingMetricCards = [
     { canvasId: "c_roll_trips", metricKey: "trips" },
     { canvasId: "c_roll_lbs", metricKey: "pounds" },
@@ -575,12 +588,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   ];
   rollingMetricCards.forEach(({ canvasId, metricKey })=> {
     if(!document.getElementById(canvasId)) return;
-    const chartModel = buildRollingSeriesFromMonthRows({
-      monthRows: monthRowsChronological,
-      metricKey,
-      windowSize: getRollingWindowForMetric(metricKey, { surface: "reports" }),
-      basisLabel: "Rolling trend • active Reports range"
-    });
+    const chartModel = rollingModelsByMetric[metricKey];
     if(chartModel?.chartType !== "rolling-line") return;
     drawMetricDetailChart(canvasId, chartModel, metricKey);
   });
