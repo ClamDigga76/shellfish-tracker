@@ -472,7 +472,7 @@ export function createReportsMetricDetailSeam(deps){
           <div class="homeMetricCompareRow"><span class="homeMetricCompareLabel">${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b class="homeMetricCompareValue">${escapeHtml(compareSummary.previousValue)}</b></div>
           <div class="homeMetricCompareRow"><span class="homeMetricCompareLabel">${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b class="homeMetricCompareValue">${escapeHtml(compareSummary.currentValue)}</b></div>
         </div>
-        <div class="homeMetricSupportFooter">
+        <div class="homeMetricSupportFooter" aria-label="Support metadata">
           <span class="homeMetricSupportMeta homeMetricSupportMeta--model">Comparison model • <b>${escapeHtml(compareContractLabel)}</b></span>
           <span class="homeMetricSupportMeta homeMetricSupportMeta--basis">${escapeHtml(compareContractBasis)}</span>
           ${compareContractText ? `<span class="homeMetricSupportMeta homeMetricSupportMeta--note">${escapeHtml(compareContractText)}</span>` : ""}
@@ -486,8 +486,11 @@ export function createReportsMetricDetailSeam(deps){
           <div class="reportsMetricCompareRow"><span class="reportsMetricCompareLabel">${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b class="reportsMetricCompareValue">${escapeHtml(compareSummary.previousValue)}</b></div>
           <div class="reportsMetricCompareRow"><span class="reportsMetricCompareLabel">${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b class="reportsMetricCompareValue">${escapeHtml(compareSummary.currentValue)}</b></div>
         </div>
-        <div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
-        ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
+        <div class="reportsMetricSupportMetaBlock" aria-label="Support metadata">
+          <div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--model">Comparison model • <b>${escapeHtml(compareContractLabel)}</b></div>
+          <div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--basis">${escapeHtml(compareContractBasis)}</div>
+          ${compareContractText ? `<div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--note">${escapeHtml(compareContractText)}</div>` : ""}
+        </div>
       </div>
     `;
     return `
