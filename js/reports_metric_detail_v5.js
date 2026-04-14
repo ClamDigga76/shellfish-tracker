@@ -338,76 +338,6 @@ export function createReportsMetricDetailSeam(deps){
     return `${to2(safeValue)}`;
   };
 
-  const resolveDetailContext = (viewModel)=> {
-    if(viewModel.isHomeMetricDetail){
-      const homeRangeLabel = String(viewModel.homeScope?.rangeLabel || viewModel.rangeLabel || "").trim();
-      const homeTripCount = Number(viewModel.homeScope?.tripCount ?? viewModel.trips?.length) || 0;
-      return `Range ${homeRangeLabel || "Active"} • ${homeTripCount} trips`;
-    }
-    return `Range ${viewModel.rangeLabel} • ${viewModel.trips.length} trips`;
-  };
-
-  const resolveCompareContract = ({ meta, viewModel })=> {
-    const period = viewModel.compareFoundation.period || {};
-    const compareContractLabel = period.compareModelLabel || "Comparison";
-    const compareContractBasis = period.currentLabel && period.previousLabel
-      ? formatPeriodPair(period.previousLabel, period.currentLabel)
-      : (meta.primaryBasis?.basisLabel || period.supportLabel || period.support || period.fairWindowLabel || "Matched date range");
-    return {
-      compareContractLabel,
-      compareContractBasis,
-      compareContractText: period.suppressed ? (period.explanation || "") : ""
-    };
-  };
-
-  const renderCompareRows = ({ isHomeMetricDetail, compareRowsClass, previousLabel, currentLabel, compareSummary })=> {
-    const rowClass = isHomeMetricDetail ? "homeMetricCompareRow" : "reportsMetricCompareRow";
-    const labelClass = isHomeMetricDetail ? "homeMetricCompareLabel" : "reportsMetricCompareLabel";
-    const valueClass = isHomeMetricDetail ? "homeMetricCompareValue" : "reportsMetricCompareValue";
-    return `
-      <div class="${compareRowsClass}">
-        <div class="${rowClass}"><span class="${labelClass}">${escapeHtml(previousLabel)}</span><b class="${valueClass}">${escapeHtml(compareSummary.previousValue)}</b></div>
-        <div class="${rowClass}"><span class="${labelClass}">${escapeHtml(currentLabel)}</span><b class="${valueClass}">${escapeHtml(compareSummary.currentValue)}</b></div>
-      </div>
-    `;
-  };
-
-  const renderSupportAnalysisText = ({ text, isHomeMetricDetail })=> {
-    if(!isHomeMetricDetail) return String(text || "");
-    return toMaxTwoSentences(text) || String(text || "");
-  };
-
-  const renderSupportMeta = ({ isHomeMetricDetail, detailChartContextClass, compareContractLabel, compareContractBasis, compareContractText })=> {
-    if(isHomeMetricDetail){
-      return `
-        <div class="homeMetricSupportFooter">
-          <span class="homeMetricSupportMeta homeMetricSupportMeta--model">Comparison model • <b>${escapeHtml(compareContractLabel)}</b></span>
-          <span class="homeMetricSupportMeta homeMetricSupportMeta--basis">${escapeHtml(compareContractBasis)}</span>
-          ${compareContractText ? `<span class="homeMetricSupportMeta homeMetricSupportMeta--note">${escapeHtml(compareContractText)}</span>` : ""}
-        </div>
-      `;
-    }
-    return `
-      <div class="${detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
-      ${compareContractText ? `<div class="${detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
-    `;
-  };
-
-  const renderDetailHeader = ({ meta, viewModel, detailContext, compareContractBasis })=> viewModel.isHomeMetricDetail ? `
-    <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to Home</button>
-    <div class="${viewModel.detailEyebrowClass}">HOME METRIC DETAIL</div>
-    <h2 class="${viewModel.detailTitleClass}">${escapeHtml(`${meta.homeTitle} detail`)}</h2>
-    <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
-  ` : `
-    <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to reports</button>
-    <div class="${viewModel.detailEyebrowClass}">${escapeHtml(meta.eyebrow)}</div>
-    <h2 class="${viewModel.detailTitleClass}">${escapeHtml(meta.title)}</h2>
-    <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
-    <div class="reportsMetricSectionRail" aria-hidden="true">
-      <span class="reportsMetricSectionPill">Compare basis • ${escapeHtml(compareContractBasis)}</span>
-    </div>
-  `;
-
   const buildMetricCompareSummary = ({ metricKey, payload, compareFoundation, isHomeMetricDetail })=> {
     if(compareFoundation.period?.suppressed || !payload || payload.suppressed){
       const reason = payload?.reason || compareFoundation.period?.reason || "This comparison appears once both periods have enough trips.";
@@ -515,42 +445,68 @@ export function createReportsMetricDetailSeam(deps){
   };
 
   const renderMetricDetailSection = ({ meta, compareSummary, viewModel })=> {
-    const detailContext = resolveDetailContext(viewModel);
+    const homeRangeLabel = String(viewModel.homeScope?.rangeLabel || viewModel.rangeLabel || "").trim();
+    const homeTripCount = Number(viewModel.homeScope?.tripCount ?? viewModel.trips?.length) || 0;
+    const detailContext = viewModel.isHomeMetricDetail
+      ? `Range ${homeRangeLabel || "Active"} • ${homeTripCount} trips`
+      : `Range ${viewModel.rangeLabel} • ${viewModel.trips.length} trips`;
     const detailChartTitle = viewModel.isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = meta.primaryBasis?.basisLabel || (viewModel.isHomeMetricDetail ? meta.homeChartContext : meta.chartContext);
     const detailInsight = viewModel.isHomeMetricDetail ? meta.homeInsight : meta.insight;
-    const { compareContractLabel, compareContractBasis, compareContractText } = resolveCompareContract({ meta, viewModel });
-    const supportAnalysisText = renderSupportAnalysisText({
-      text: compareSummary.text,
-      isHomeMetricDetail: viewModel.isHomeMetricDetail
-    });
+    const compareContractLabel = viewModel.compareFoundation.period?.compareModelLabel || "Comparison";
+    const compareContractBasis = viewModel.compareFoundation.period?.currentLabel && viewModel.compareFoundation.period?.previousLabel
+      ? formatPeriodPair(viewModel.compareFoundation.period.previousLabel, viewModel.compareFoundation.period.currentLabel)
+      : (meta.primaryBasis?.basisLabel || viewModel.compareFoundation.period?.supportLabel || viewModel.compareFoundation.period?.support || viewModel.compareFoundation.period?.fairWindowLabel || "Matched date range");
+    const compareContractText = viewModel.compareFoundation.period?.suppressed
+      ? (viewModel.compareFoundation.period?.explanation || "")
+      : "";
+    const supportAnalysisText = viewModel.isHomeMetricDetail
+      ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
+      : String(compareSummary.text || "");
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
-    const previousLabel = meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous";
-    const currentLabel = meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current";
-    const renderSupportCard = ()=> `
+    const renderHomePremiumSupportCard = ()=> `
       <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
-        ${viewModel.isHomeMetricDetail ? `<div class="homeMetricSupportHeader">Supporting analysis</div>` : ""}
+        <div class="homeMetricSupportHeader">Supporting analysis</div>
         <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
-        ${renderCompareRows({
-          isHomeMetricDetail: viewModel.isHomeMetricDetail,
-          compareRowsClass: viewModel.detailCompareRowsClass,
-          previousLabel,
-          currentLabel,
-          compareSummary
-        })}
-        ${renderSupportMeta({
-          isHomeMetricDetail: viewModel.isHomeMetricDetail,
-          detailChartContextClass: viewModel.detailChartContextClass,
-          compareContractLabel,
-          compareContractBasis,
-          compareContractText
-        })}
+        <div class="${viewModel.detailCompareRowsClass}">
+          <div class="homeMetricCompareRow"><span class="homeMetricCompareLabel">${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b class="homeMetricCompareValue">${escapeHtml(compareSummary.previousValue)}</b></div>
+          <div class="homeMetricCompareRow"><span class="homeMetricCompareLabel">${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b class="homeMetricCompareValue">${escapeHtml(compareSummary.currentValue)}</b></div>
+        </div>
+        <div class="homeMetricSupportFooter">
+          <span class="homeMetricSupportMeta homeMetricSupportMeta--model">Comparison model • <b>${escapeHtml(compareContractLabel)}</b></span>
+          <span class="homeMetricSupportMeta homeMetricSupportMeta--basis">${escapeHtml(compareContractBasis)}</span>
+          ${compareContractText ? `<span class="homeMetricSupportMeta homeMetricSupportMeta--note">${escapeHtml(compareContractText)}</span>` : ""}
+        </div>
+      </div>
+    `;
+    const renderStandardSupportCard = ()=> `
+      <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
+        <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
+        <div class="${viewModel.detailCompareRowsClass}">
+          <div class="reportsMetricCompareRow"><span class="reportsMetricCompareLabel">${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b class="reportsMetricCompareValue">${escapeHtml(compareSummary.previousValue)}</b></div>
+          <div class="reportsMetricCompareRow"><span class="reportsMetricCompareLabel">${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b class="reportsMetricCompareValue">${escapeHtml(compareSummary.currentValue)}</b></div>
+        </div>
+        <div class="${viewModel.detailChartContextClass}">Comparison model • <b>${escapeHtml(compareContractLabel)}</b> • ${escapeHtml(compareContractBasis)}</div>
+        ${compareContractText ? `<div class="${viewModel.detailChartContextClass}">${escapeHtml(compareContractText)}</div>` : ""}
       </div>
     `;
     return `
     <section class="${viewModel.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
       <div class="${viewModel.detailCardClass}">
-        ${renderDetailHeader({ meta, viewModel, detailContext, compareContractBasis })}
+        ${viewModel.isHomeMetricDetail ? `
+          <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to Home</button>
+          <div class="${viewModel.detailEyebrowClass}">HOME METRIC DETAIL</div>
+          <h2 class="${viewModel.detailTitleClass}">${escapeHtml(`${meta.homeTitle} detail`)}</h2>
+          <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
+        ` : `
+          <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to reports</button>
+          <div class="${viewModel.detailEyebrowClass}">${escapeHtml(meta.eyebrow)}</div>
+          <h2 class="${viewModel.detailTitleClass}">${escapeHtml(meta.title)}</h2>
+          <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
+          <div class="reportsMetricSectionRail" aria-hidden="true">
+          <span class="reportsMetricSectionPill">Compare basis • ${escapeHtml(compareContractBasis)}</span>
+          </div>
+        `}
 
         <div class="reportsMetricStoryStack">
           <div class="${viewModel.detailHeroWrapClass}">
@@ -558,7 +514,7 @@ export function createReportsMetricDetailSeam(deps){
             <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
           </div>
 
-          ${renderSupportCard()}
+          ${viewModel.isHomeMetricDetail ? renderHomePremiumSupportCard() : renderStandardSupportCard()}
         </div>
 
         <div class="reportsMetricChartsStack">
