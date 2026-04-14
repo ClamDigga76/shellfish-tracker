@@ -538,21 +538,21 @@ export function createReportsHighlightsSeam(deps){
                     <span class="reportsMiniPreviewBar muted"><span class="reportsMiniPreviewFill" style="width:${item.bPct}%"></span></span>
                   </div>
                 </div>
-                <div class="reportsCompareRow tone-${escapeHtml(item.compareTone)}">${renderPercentEmphasisText(item.compareText)}</div>
+                <div class="reportsCompareRow reportsCompareRow--context tone-${escapeHtml(item.compareTone)}">${renderPercentEmphasisText(item.compareText)}</div>
                 ${item.unavailable ? `
                   <div class="reportsCompareRow reportsCompareRow--support tone-steady">${renderPercentEmphasisText(item.statusText || "Compare unavailable in this range.")}</div>
                 ` : `
                   <div class="reportsCompareBars" role="presentation">
                     <div class="reportsCompareLine">
-                      <div class="reportsCompareMeta"><span>${escapeHtml(item.aLabel)}</span><b class="${item.valueClass || ""}">${escapeHtml(item.aValue)}</b></div>
+                      <div class="reportsCompareMeta"><span class="reportsCompareMetaLabel">${escapeHtml(item.aLabel)}</span><b class="reportsCompareMetaValue ${item.valueClass || ""}">${escapeHtml(item.aValue)}</b></div>
                       <div class="reportsCompareBarTrack"><span style="width:${item.aPct}%"></span></div>
                     </div>
                     <div class="reportsCompareLine">
-                      <div class="reportsCompareMeta"><span>${escapeHtml(item.bLabel)}</span><b class="${item.valueClass || ""}">${escapeHtml(item.bValue)}</b></div>
+                      <div class="reportsCompareMeta"><span class="reportsCompareMetaLabel">${escapeHtml(item.bLabel)}</span><b class="reportsCompareMetaValue ${item.valueClass || ""}">${escapeHtml(item.bValue)}</b></div>
                       <div class="reportsCompareBarTrack muted"><span style="width:${item.bPct}%"></span></div>
                     </div>
                   </div>
-                  <div class="reportsHighlightAction" aria-hidden="true">Open metric detail →</div>
+                  <div class="reportsHighlightAction" aria-hidden="true">View breakdown →</div>
                 `}
               ` : `
                 <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
