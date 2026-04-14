@@ -62,6 +62,10 @@ Combine items only when they share:
 - similar likely files or surfaces
 - no hidden second feature
 
+For presentation cleanup passes:
+- keep the pass narrow to one visual seam (or one safe tightly related seam batch)
+- do not silently bundle multiple visual seams into one cleanup pass
+
 ## Removal rule
 Do not remove a Parking Lot item just because a draft was written.
 Remove or retire it only after the user confirms the work is done or the item is genuinely obsolete.

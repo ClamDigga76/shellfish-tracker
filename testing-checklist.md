@@ -30,6 +30,15 @@ For project-files/docs/workflow patches:
 - verify wording clarity, hierarchy, and non-conflicting guidance
 - verify referenced helper files exist
 
+## Presentation/UI formatting patch checks
+For presentation/UI formatting patches, after repo and smoke checks pass:
+
+- require a human visual check before calling the patch successful
+- verify Home KPI detail compare/support card formatting
+- verify Reports metric detail compare/support card formatting
+- verify Reports Insights/highlights card stack when touched
+- verify narrow-width phone rendering
+
 ## Hierarchy check
 After workflow-doc updates, confirm:
 
