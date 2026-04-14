@@ -261,12 +261,12 @@
 .reportsSectionMapActive{font-size:11px;line-height:1.35;color:#d5dded;font-weight:740}
 .reportsSectionMapActive b{color:#f3f7ff}
 .reportsSection{margin-bottom:var(--card-stack-gap)}
-.reportsSectionHead{margin:0 0 11px}
+.reportsSectionHead{margin:0 0 10px}
 .reportsSectionHead h2{margin:0;font-size:17px;line-height:1.2;letter-spacing:.2px}
 .reportsSectionHead p{margin:6px 0 0;font-size:12px;line-height:1.4;color:var(--text-muted-strong);font-weight:650}
 .reportsSection .card:last-child{margin-bottom:0}
 .reportsSection--highlights .reportsHighlightsCard{margin-bottom:0}
-.reportsChartsStack,.reportsTablesStack{display:grid;gap:13px}
+.reportsChartsStack,.reportsTablesStack{display:grid;gap:12px}
 .reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:0}
 .reportsChartsStack .chartCard{position:relative}
 .reportsChartsStack .chartCard + .chartCard::before{content:"";position:absolute;left:0;right:0;top:-7px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,0))}
@@ -334,9 +334,9 @@
   color:#cee9ff;
 }
 .reportsMetricStoryStack{
-  margin-top:14px;
+  margin-top:15px;
   display:grid;
-  gap:12px;
+  gap:13px;
 }
 .homeMetricHeroWrap{
   margin-top:0;
@@ -426,11 +426,11 @@
   overflow-wrap:anywhere;
 }
 .homeMetricSupportFooter{
-  margin-top:9px;
+  margin-top:10px;
   padding-top:8px;
   border-top:1px solid rgba(126,200,255,.2);
   display:grid;
-  gap:3px;
+  gap:2px;
   opacity:.72;
 }
 .homeMetricSupportMeta{
@@ -456,17 +456,17 @@
   color:#88abc7;
 }
 .reportsMetricChartsStack{
-  margin-top:18px;
+  margin-top:20px;
   display:grid;
-  gap:14px;
+  gap:15px;
 }
 .homeMetricChartBlock{
   margin-top:0;
-  padding-top:13px;
+  padding-top:14px;
   border-top:1px solid rgba(126,200,255,.14);
 }
 .homeMetricInsight{
-  margin-top:16px;
+  margin-top:17px;
   padding-top:13px;
   padding-bottom:calc(20px + var(--safeBottom, 0px));
 }
