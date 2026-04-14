@@ -34,7 +34,7 @@ export function renderPageHeader(viewKey, { escapeHtml }){
     <div class="pageHeader">
       <span class="phActionStub" aria-hidden="true"></span>
       <div class="phTitleSlot">
-        ${showLandingTarget ? '<span class="pageLandingTarget sr-only" data-top-level-landing="true" tabindex="-1"></span>' : ""}
+        ${showLandingTarget ? `<span class="pageLandingTarget sr-only" data-top-level-landing="true" tabindex="-1" aria-label="${escapeHtml(`${headerTitle} page`)}"></span>` : ""}
         <h2 class="phTitle">${escapeHtml(headerTitle)}</h2>
       </div>
       ${showHelp
