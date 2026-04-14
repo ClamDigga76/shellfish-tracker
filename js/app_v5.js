@@ -732,7 +732,7 @@ function render(){
   const focusTopLevelLanding = ()=>{
     const appRoot = getApp();
     if(!appRoot) return;
-    const landingTarget = appRoot.querySelector("[data-top-level-landing='true'], .phTitle");
+    const landingTarget = appRoot.querySelector("[data-top-level-landing='true']");
     if(landingTarget instanceof HTMLElement){
       try{
         landingTarget.focus({ preventScroll: true });
