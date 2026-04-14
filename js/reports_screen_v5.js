@@ -107,6 +107,41 @@ export function createReportsScreenRenderer(deps){
   const queueReportsFocusIntent = reportsTransitionSeam.queueReportsFocusIntent;
   const applyReportsFocusIntent = reportsTransitionSeam.applyReportsFocusIntent;
   const runReportsTransition = reportsTransitionSeam.runReportsTransition;
+  const resolveMetricDetailClassMap = (isHomeMetricDetail)=> isHomeMetricDetail
+    ? {
+      detailSurfaceClass: "homeMetricDetail",
+      detailCardClass: "homeMetricDetailCard",
+      detailBackClass: "homeMetricBackBtn",
+      detailEyebrowClass: "homeMetricEyebrow",
+      detailTitleClass: "homeMetricTitle",
+      detailContextClass: "homeMetricContext",
+      detailHeroWrapClass: "homeMetricHeroWrap",
+      detailHeroLabelClass: "homeMetricHeroLabel",
+      detailHeroValueClass: "homeMetricHeroValue",
+      detailCompareClass: "homeMetricCompare",
+      detailCompareTextClass: "homeMetricCompareText",
+      detailCompareRowsClass: "homeMetricCompareRows",
+      detailChartClass: "homeMetricChartBlock",
+      detailChartContextClass: "homeMetricChartContext",
+      detailInsightClass: "homeMetricInsight"
+    }
+    : {
+      detailSurfaceClass: "reportsMetricDetail",
+      detailCardClass: "reportsMetricDetailCard",
+      detailBackClass: "reportsMetricBackBtn",
+      detailEyebrowClass: "reportsMetricEyebrow",
+      detailTitleClass: "reportsMetricTitle",
+      detailContextClass: "reportsMetricContext",
+      detailHeroWrapClass: "reportsMetricHeroWrap",
+      detailHeroLabelClass: "reportsMetricHeroLabel",
+      detailHeroValueClass: "reportsMetricHeroValue",
+      detailCompareClass: "reportsMetricCompare",
+      detailCompareTextClass: "reportsMetricCompareText",
+      detailCompareRowsClass: "reportsMetricCompareRows",
+      detailChartClass: "reportsMetricChartBlock",
+      detailChartContextClass: "reportsMetricChartContext",
+      detailInsightClass: "reportsMetricInsight"
+    };
 
 function renderReportsScreen({ homeMetricOnly = false } = {}){
   const state = getState();
@@ -167,21 +202,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     areas: state.areas
   });
 
-  const detailSurfaceClass = isHomeMetricDetail ? "homeMetricDetail" : "reportsMetricDetail";
-  const detailCardClass = isHomeMetricDetail ? "homeMetricDetailCard" : "reportsMetricDetailCard";
-  const detailBackClass = isHomeMetricDetail ? "homeMetricBackBtn" : "reportsMetricBackBtn";
-  const detailEyebrowClass = isHomeMetricDetail ? "homeMetricEyebrow" : "reportsMetricEyebrow";
-  const detailTitleClass = isHomeMetricDetail ? "homeMetricTitle" : "reportsMetricTitle";
-  const detailContextClass = isHomeMetricDetail ? "homeMetricContext" : "reportsMetricContext";
-  const detailHeroWrapClass = isHomeMetricDetail ? "homeMetricHeroWrap" : "reportsMetricHeroWrap";
-  const detailHeroLabelClass = isHomeMetricDetail ? "homeMetricHeroLabel" : "reportsMetricHeroLabel";
-  const detailHeroValueClass = isHomeMetricDetail ? "homeMetricHeroValue" : "reportsMetricHeroValue";
-  const detailCompareClass = isHomeMetricDetail ? "homeMetricCompare" : "reportsMetricCompare";
-  const detailCompareTextClass = isHomeMetricDetail ? "homeMetricCompareText" : "reportsMetricCompareText";
-  const detailCompareRowsClass = isHomeMetricDetail ? "homeMetricCompareRows" : "reportsMetricCompareRows";
-  const detailChartClass = isHomeMetricDetail ? "homeMetricChartBlock" : "reportsMetricChartBlock";
-  const detailChartContextClass = isHomeMetricDetail ? "homeMetricChartContext" : "reportsMetricChartContext";
-  const detailInsightClass = isHomeMetricDetail ? "homeMetricInsight" : "reportsMetricInsight";
+  const metricDetailClassMap = resolveMetricDetailClassMap(isHomeMetricDetail);
 
   const renderNoResultsState = ()=> reportsOverviewSections.renderNoResultsState({
     fMode,
@@ -345,21 +366,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       rangeLabel,
       trips,
       homeScope: routeContext?.homeScope || null,
-      detailSurfaceClass,
-      detailCardClass,
-      detailBackClass,
-      detailEyebrowClass,
-      detailTitleClass,
-      detailContextClass,
-      detailHeroWrapClass,
-      detailHeroLabelClass,
-      detailHeroValueClass,
-      detailCompareClass,
-      detailCompareTextClass,
-      detailCompareRowsClass,
-      detailChartClass,
-      detailChartContextClass,
-      detailInsightClass
+      ...metricDetailClassMap
     }
     : null;
 

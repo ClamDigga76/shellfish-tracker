@@ -427,6 +427,31 @@ export function createReportsOverviewSectionsSeam(deps){
 
   function renderDetailBlock(context){
     const { dealerRows, areaRows, monthRows, dealerRangeRows } = context;
+    const formatTripsSummaryLine = (row)=> `${row.trips} trips • ${row.fishingDays || 0} days • <span class="lbsBlue">${to2(row.lbs)} lbs</span>`;
+    const renderSummaryRightColumn = (row, { primary = "rate" } = {})=> {
+      if(primary === "amount"){
+        return `
+          <div><b class="money">${formatMoney(row.amt)}</b></div>
+          <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(row.avg)}</b></div>
+        `;
+      }
+      return `
+        <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(row.avg)}</b></div>
+        <div><b class="money">${formatMoney(row.amt)}</b></div>
+      `;
+    };
+    const renderSummaryTableRow = (row, { primary = "rate" } = {})=> `
+      <div class="trow">
+        <div>
+          <div class="tname">${escapeHtml(row.name)}</div>
+          <div class="tsub">${formatTripsSummaryLine(row)}</div>
+          <div class="tsub">${renderSummaryAverageLine(row)}</div>
+        </div>
+        <div class="tright">
+          ${renderSummaryRightColumn(row, { primary })}
+        </div>
+      </div>
+    `;
 
     const renderSummaryAverageLine = (row)=> {
       const trips = Math.max(0, Number(row?.trips) || 0);
@@ -457,34 +482,10 @@ export function createReportsOverviewSectionsSeam(deps){
           <div class="emptyStateTitle">Insights pending</div>
           <div class="emptyStateBody">${escapeHtml(emptyMsg||"Add trips to unlock these insights.")}</div>
         </div>`;
-      return rows.map((r)=> `
-        <div class="trow">
-          <div>
-            <div class="tname">${escapeHtml(r.name)}</div>
-            <div class="tsub">${r.trips} trips • ${r.fishingDays || 0} days • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
-            <div class="tsub">${renderSummaryAverageLine(r)}</div>
-          </div>
-          <div class="tright">
-            <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
-            <div><b class="money">${formatMoney(r.amt)}</b></div>
-          </div>
-        </div>
-      `).join("");
+      return rows.map((r)=> renderSummaryTableRow(r)).join("");
     };
 
-    const renderMonthList = ()=> monthRows.map((r)=> `
-      <div class="trow">
-        <div>
-          <div class="tname">${escapeHtml(r.label)}</div>
-          <div class="tsub">${r.trips} trips • ${r.fishingDays || 0} days • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
-          <div class="tsub">${renderSummaryAverageLine(r)}</div>
-        </div>
-        <div class="tright">
-          <div><b class="money">${formatMoney(r.amt)}</b></div>
-          <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
-        </div>
-      </div>
-    `).join("");
+    const renderMonthList = ()=> monthRows.map((r)=> renderSummaryTableRow({ ...r, name: r.label }, { primary: "amount" })).join("");
 
     const renderDealerPriceRangeComparison = ()=>{
       if(!Array.isArray(dealerRangeRows) || !dealerRangeRows.length){
