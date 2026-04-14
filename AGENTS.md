@@ -178,6 +178,35 @@ Runtime re-sync and live-lock anti-drift guardrails belong in `RUNTIME-PULL-LOCK
 
 Keep this file focused on baseline operating law and project-state workflow.
 
+## Repo truth guardrail for future pulls
+Before reporting branch or remote limitations, distinguish **repo truth** from **local worktree state**.
+
+### Repo truth
+- The GitHub remote is the source of truth for default branch and branch existence.
+- Do not say the repo has no `main` branch unless the remote repo itself confirms that.
+- When asked to use latest `main`, treat remote `main` as the intended base unless the remote proves otherwise.
+
+### Local worktree limitations
+If the current local worktree does not have a configured `origin` remote, does not have a local `main`, or cannot fetch `origin/main`, report that as a **local environment limitation**, not repo truth.
+
+Use wording like:
+- `The local worktree does not have a configured origin remote.`
+- `The local worktree does not currently have a local main branch checked out.`
+- `I could not verify origin/main from this local environment, so I proceeded from the available local base.`
+
+Do **not** use wording like:
+- `This repo has no main branch`
+- `This repo has no configured origin remote`
+
+unless the remote repo itself confirms those statements.
+
+### Required reporting when local environment limits a pull
+Always report:
+- the local branch used
+- the local base commit used
+- whether remote `main` was verified or unavailable from the local environment
+- whether the limitation is local-only or repo truth
+
 ## Confidence language
 When useful, separate:
 - **solid** = directly supported by the current pack or request
