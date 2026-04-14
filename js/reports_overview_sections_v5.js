@@ -428,7 +428,16 @@ export function createReportsOverviewSectionsSeam(deps){
   function renderDetailBlock(context){
     const { dealerRows, areaRows, monthRows, dealerRangeRows } = context;
 
-    const renderSummaryAverageLine = (row)=> `<span class="muted">Avg / Trip</span> <span class="money">${formatMoney(to2(row.amountPerTrip))}</span> • <span class="lbsBlue">${to2(row.poundsPerTrip)} lbs</span>`;
+    const renderSummaryAverageLine = (row)=> {
+      const trips = Math.max(0, Number(row?.trips) || 0);
+      const amountPerTrip = Number.isFinite(Number(row?.amountPerTrip))
+        ? Number(row.amountPerTrip)
+        : (trips > 0 ? (Number(row?.amt) || 0) / trips : 0);
+      const poundsPerTrip = Number.isFinite(Number(row?.poundsPerTrip))
+        ? Number(row.poundsPerTrip)
+        : (trips > 0 ? (Number(row?.lbs) || 0) / trips : 0);
+      return `<span class="muted">Avg / Trip</span> <span class="money">${formatMoney(to2(amountPerTrip))}</span> • <span class="lbsBlue">${to2(poundsPerTrip)} lbs</span>`;
+    };
     const sortDealerRowsForSummary = (rows)=> rows.slice().sort((a, b)=> {
       const rateDiff = (Number(b?.avg) || 0) - (Number(a?.avg) || 0);
       if(rateDiff !== 0) return rateDiff;
@@ -442,7 +451,7 @@ export function createReportsOverviewSectionsSeam(deps){
       return (Number(b?.amt) || 0) - (Number(a?.amt) || 0);
     });
 
-    const renderDealerAggList = (rows, emptyMsg)=>{
+    const renderSummaryAggList = (rows, emptyMsg)=>{
       if(!rows.length) return `
         <div class="emptyState compact">
           <div class="emptyStateTitle">Insights pending</div>
@@ -457,27 +466,6 @@ export function createReportsOverviewSectionsSeam(deps){
           </div>
           <div class="tright">
             <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
-            <div><b class="money">${formatMoney(r.amt)}</b></div>
-          </div>
-        </div>
-      `).join("");
-    };
-
-    const renderAreaAggList = (rows, emptyMsg)=>{
-      if(!rows.length) return `
-        <div class="emptyState compact">
-          <div class="emptyStateTitle">Insights pending</div>
-          <div class="emptyStateBody">${escapeHtml(emptyMsg||"Add trips to unlock these insights.")}</div>
-        </div>`;
-      return rows.map((r)=> `
-        <div class="trow">
-          <div>
-            <div class="tname">${escapeHtml(r.name)}</div>
-            <div class="tsub">${r.trips} trips • ${r.fishingDays || 0} days</div>
-            <div class="tsub"><span class="money">${formatMoney(to2(r.amt))}</span> outcome • <span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
-          </div>
-          <div class="tright">
-            <div><b class="lbsBlue">${to2(r.lbs)} lbs</b></div>
             <div><b class="money">${formatMoney(r.amt)}</b></div>
           </div>
         </div>
@@ -526,8 +514,8 @@ export function createReportsOverviewSectionsSeam(deps){
       title: "Detail",
       intro: "Dealer, area, and monthly tables.",
       body: `<div class="reportsTablesStack">${[
-        renderTableCard("Dealer Summary", renderDealerAggList(sortDealerRowsForSummary(dealerRows), "Add a trip in this range to populate dealer totals.")),
-        renderTableCard("Area Summary", renderAreaAggList(sortAreaRowsForSummary(areaRows), "Add a trip in this range to populate area totals.")),
+        renderTableCard("Dealer Summary", renderSummaryAggList(sortDealerRowsForSummary(dealerRows), "Add a trip in this range to populate dealer totals.")),
+        renderTableCard("Area Summary", renderSummaryAggList(sortAreaRowsForSummary(areaRows), "Add a trip in this range to populate area totals.")),
         renderTableCard("Monthly Totals", renderMonthList()),
         renderTableCard("Dealer Price Range Comparison", renderDealerPriceRangeComparison())
       ].join("")}</div>`,
