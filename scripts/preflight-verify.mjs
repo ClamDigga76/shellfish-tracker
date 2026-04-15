@@ -90,6 +90,7 @@ if (indexHtml) {
 
     const requiredCssRefs = [
       `./css/shell_shared_v5.css?v=${canonicalVersion}`,
+      `./css/shell_feature_surfaces_v5.css?v=${canonicalVersion}`,
       `./css/trip_form_v5.css?v=${canonicalVersion}`,
       `./css/reports_v5.css?v=${canonicalVersion}`,
     ];
