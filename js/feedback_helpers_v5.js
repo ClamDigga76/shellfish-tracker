@@ -360,7 +360,10 @@ export function createFeedbackHelpers({
   function showMilestoneToast({ headline = "", detail = "", okLabel = "OK", durationMs = 0 } = {}){
     try{
       const root = document.getElementById("celebrationRoot");
-      if(!root) return false;
+      if(!root){
+        try{ console.debug("[milestone] celebration modal mount failed: missing root"); }catch(_){ }
+        return false;
+      }
       const toastEl = document.getElementById("toast");
       if(toastEl) hardResetToastShell(toastEl);
       clearCelebration();
@@ -433,13 +436,15 @@ export function createFeedbackHelpers({
       if(Number.isFinite(durationMs) && durationMs > 0){
         celebrationTimer = setTimeout(()=>{ clearCelebration(); }, durationMs);
       }
+      try{ console.debug("[milestone] celebration modal mount succeeded"); }catch(_){ }
       return true;
     }catch{
+      try{ console.debug("[milestone] celebration modal mount failed: exception thrown"); }catch(_){ }
       return false;
     }
   }
 
-  function clearCelebration({ restoreFocus = true } = {}){
+  function clearCelebration({ shouldRestoreFocus = true } = {}){
     const root = document.getElementById("celebrationRoot");
     const panel = root?.querySelector(".celebrationPanel");
     clearTimeout(celebrationTimer);
@@ -454,7 +459,7 @@ export function createFeedbackHelpers({
       celebrationKeydownHandler = null;
     }
     root.textContent = "";
-    if(restoreFocus){
+    if(shouldRestoreFocus){
       restoreFocus(celebrationFocusReturn);
     }
     celebrationFocusReturn = null;
@@ -689,7 +694,7 @@ export function createFeedbackHelpers({
     announce,
     showToast,
     showMilestoneToast,
-    clearMilestoneCelebration: ()=>clearCelebration({ restoreFocus: false }),
+    clearMilestoneCelebration: ()=>clearCelebration({ shouldRestoreFocus: false }),
     maybeOfferInstallAfterFirstSave,
     confirmSaveModal,
     copyTextWithFeedback,
