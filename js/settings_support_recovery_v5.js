@@ -98,6 +98,8 @@ export function createSettingsSupportRecoverySeam(deps) {
             const r = await exportBackup();
             if (r?.ok) {
               showToast(r.method === "share" ? "Backup ready to share" : "Backup saved");
+            } else if (r?.reason === "share-canceled") {
+              showToast("Backup canceled");
             } else {
               showToast("Backup failed");
             }
