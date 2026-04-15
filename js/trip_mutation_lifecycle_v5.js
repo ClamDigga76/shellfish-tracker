@@ -203,6 +203,12 @@ export function createTripMutationLifecycleSeam({
     return null;
   }
 
+  function logMilestoneDebug(payload = {}){
+    try{
+      console.debug("[milestone]", payload);
+    }catch(_){ }
+  }
+
   async function commitTripFromDraft({ mode, editId="", inputs, nextView="home" }){
     clearPendingTripUndo();
     const state = getState();
@@ -318,6 +324,14 @@ export function createTripMutationLifecycleSeam({
       : trips.concat([tripNorm]);
     const afterRecords = getAllTimeMetricSnapshot(nextTrips);
     const milestoneToast = buildAllTimeMilestoneToast(beforeRecords, afterRecords);
+    if(beforeRecords || afterRecords){
+      logMilestoneDebug({
+        stage: "resolved",
+        beforeRecords,
+        afterRecords,
+        milestoneToast
+      });
+    }
 
     const undoSnapshot = {
       trips,
@@ -342,9 +356,23 @@ export function createTripMutationLifecycleSeam({
     render();
     showUndoToast({ message: "Trip saved", snapshot: undoSnapshot });
     if(milestoneToast){
-      showMilestoneToast({
-        headline: milestoneToast.headline,
-        detail: milestoneToast.detail
+      let celebrationShown = false;
+      try{
+        celebrationShown = showMilestoneToast({
+          headline: milestoneToast.headline,
+          detail: milestoneToast.detail
+        }) === true;
+      }catch(_){
+        celebrationShown = false;
+      }
+      if(!celebrationShown){
+        showToast(`All-time milestone reached: ${milestoneToast.headline}`);
+      }
+      logMilestoneDebug({
+        stage: "ui",
+        milestoneToast,
+        celebrationShown,
+        fallbackUsed: !celebrationShown
       });
     }
     if(!isEdit){ try{ setTimeout(()=>{ maybeOfferInstallAfterFirstSave(); }, 350); }catch(_){} }
