@@ -75,6 +75,7 @@ export function buildNewTripSaveSnapshot({
     inputs.dealer ||
     (inputs.pounds > 0) ||
     (inputs.amount > 0) ||
+    (inputs.writtenCheckAmount > 0) ||
     (inputs.rate > 0) ||
     inputs.area ||
     inputs.notes

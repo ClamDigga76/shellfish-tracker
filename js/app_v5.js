@@ -228,8 +228,77 @@ const {
     navigateTopLevelView(next);
   },
   hasUnsavedDraft: ()=>{
-    const d = state?.draft || {};
-    return !!(d.date || d.dealer || d.area || d.pounds || d.amount || d.rate);
+    const normalizeText = (value)=> String(value || "").trim();
+    const normalizeMoney = (value)=> {
+      const n = parseMoney(value);
+      return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
+    };
+    const normalizeNumber = (value)=> {
+      const n = parseNum(value);
+      return Number.isFinite(n) ? n : 0;
+    };
+    const sameText = (a, b)=> normalizeText(a).toLowerCase() === normalizeText(b).toLowerCase();
+    const sameMoney = (a, b)=> Math.abs(normalizeMoney(a) - normalizeMoney(b)) < 0.000001;
+    const sameNumber = (a, b)=> Math.abs(normalizeNumber(a) - normalizeNumber(b)) < 0.000001;
+
+    if(state?.view === "new"){
+      const dateInput = normalizeText(document.getElementById("t_date")?.value || state?.draft?.dateISO || state?.draft?.date);
+      const dealerInput = normalizeDealerDisplay(normalizeText(document.getElementById("t_dealer")?.value || state?.draft?.dealer));
+      const areaInput = normalizeText(document.getElementById("t_area")?.value || state?.draft?.area);
+      const poundsInput = normalizeNumber(document.getElementById("t_pounds")?.value || state?.draft?.pounds);
+      const amountInput = normalizeMoney(document.getElementById("t_amount")?.value || state?.draft?.amount);
+      const rateInput = normalizeMoney(document.getElementById("rateValue")?.value || state?.draft?.rate || state?.draft?.payRate);
+      const writtenCheckInput = normalizeMoney(document.getElementById("t_written_check_amount")?.value || state?.draft?.writtenCheckAmount);
+      const notesInput = normalizeText(document.getElementById("t_notes")?.value || state?.draft?.notes);
+      return Boolean(
+        dateInput ||
+        dealerInput ||
+        areaInput ||
+        poundsInput > 0 ||
+        amountInput > 0 ||
+        rateInput > 0 ||
+        writtenCheckInput > 0 ||
+        notesInput
+      );
+    }
+
+    if(state?.view === "edit"){
+      const id = String(state?.editId || "");
+      const trips = Array.isArray(state?.trips) ? state.trips : [];
+      const original = trips.find((trip)=> String(trip?.id || "") === id);
+      if(!original) return false;
+
+      const currentDateISO = normalizeText(document.getElementById("e_date")?.value || original.dateISO || "").slice(0, 10);
+      const currentDealer = normalizeDealerDisplay(normalizeText(document.getElementById("e_dealer")?.value || original.dealer));
+      const currentArea = normalizeText(document.getElementById("e_area")?.value || original.area);
+      const currentPounds = normalizeNumber(document.getElementById("e_pounds")?.value || original.pounds);
+      const currentAmount = normalizeMoney(document.getElementById("e_amount")?.value || original.amount);
+      const currentRate = normalizeMoney(document.getElementById("rateValueEdit")?.value || resolveTripPayRate(original));
+      const currentWrittenCheck = normalizeMoney(document.getElementById("e_written_check_amount")?.value || original.writtenCheckAmount);
+      const currentNotes = normalizeText(document.getElementById("e_notes")?.value || original.notes);
+
+      const originalDateISO = normalizeText(original.dateISO || "").slice(0, 10);
+      const originalDealer = normalizeDealerDisplay(normalizeText(original.dealer));
+      const originalArea = normalizeText(original.area);
+      const originalPounds = normalizeNumber(original.pounds);
+      const originalAmount = normalizeMoney(original.amount);
+      const originalRate = normalizeMoney(resolveTripPayRate(original));
+      const originalWrittenCheck = normalizeMoney(original.writtenCheckAmount);
+      const originalNotes = normalizeText(original.notes);
+
+      return Boolean(
+        currentDateISO !== originalDateISO ||
+        !sameText(currentDealer, originalDealer) ||
+        !sameText(currentArea, originalArea) ||
+        !sameNumber(currentPounds, originalPounds) ||
+        !sameMoney(currentAmount, originalAmount) ||
+        !sameMoney(currentRate, originalRate) ||
+        !sameMoney(currentWrittenCheck, originalWrittenCheck) ||
+        currentNotes !== originalNotes
+      );
+    }
+
+    return false;
   },
   confirmUnsavedLeave: ()=>openConfirmModal({
     title: "Leave this screen?",
