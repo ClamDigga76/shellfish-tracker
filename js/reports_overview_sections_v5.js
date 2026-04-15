@@ -393,33 +393,33 @@ export function createReportsOverviewSectionsSeam(deps){
     };
 
     const highLowBody = `
-      ${renderHLItem("Most Pounds", maxLbs, "lbs", "max")}
+      ${renderHLItem("Most Pounds in Range", maxLbs, "lbs", "max")}
       <div class="sep"></div>
 
-      ${renderHLItem("Least Pounds", minLbs, "lbs", "min")}
+      ${renderHLItem("Least Pounds in Range", minLbs, "lbs", "min")}
       <div class="sep"></div>
 
-      ${renderHLItem("Highest Amount", maxAmt, "amount", "max")}
+      ${renderHLItem("Highest Amount in Range", maxAmt, "amount", "max")}
       <div class="sep"></div>
 
-      ${renderHLItem("Lowest Amount", minAmt, "amount", "min")}
+      ${renderHLItem("Lowest Amount in Range", minAmt, "amount", "min")}
       <div class="sep"></div>
 
       ${pplRows.length ? `
-        ${renderHLItem("Highest $/lb", maxPpl, "ppl", "max")}
+        ${renderHLItem("Highest $/lb in Range", maxPpl, "ppl", "max")}
         <div class="sep"></div>
 
-        ${renderHLItem("Lowest $/lb", minPpl, "ppl", "min")}
+        ${renderHLItem("Lowest $/lb in Range", minPpl, "ppl", "min")}
       ` : `
         <div class="emptyState compact">
           <div class="emptyStateTitle">$/lb insights unavailable</div>
-          <div class="emptyStateBody">Add trips with both pounds and amount to populate this view.</div>
+          <div class="emptyStateBody">Add trips with both pounds and amount in this range to populate this view.</div>
         </div>`}
     `;
 
     return reportsSection({
       title: "Records",
-      intro: "High and low trip records for core metrics.",
+      intro: "High and low trip records within the active Reports range.",
       body: `<div class="reportsTablesStack">${renderTableCard("High / Low Summary", highLowBody)}</div>`,
       extraClass: "reportsSection--records"
     });
