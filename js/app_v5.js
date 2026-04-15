@@ -45,7 +45,7 @@ registerStartupImportDiagnostics(STARTUP_MODULE_URLS, STARTUP_APP_OWNED_MODULE_U
 
 const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, isValidISODate },
   { THEME_MODE_DARK, normalizeThemeMode },
-  { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback },
+  { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback, buildDefaultAppState },
   { ensureNavState, createNavigator },
   { drawReportsCharts },
   { buildReportsAggregationState },
@@ -240,6 +240,15 @@ const {
   })
 });
 
+function buildAppDefaultState(){
+  const defaultState = buildDefaultAppState();
+  defaultState.settings = (defaultState.settings && typeof defaultState.settings === "object")
+    ? defaultState.settings
+    : {};
+  defaultState.settings.themeMode = normalizeThemeMode(defaultState.settings.themeMode || THEME_MODE_DARK);
+  return defaultState;
+}
+
 const rootStateSaveSeam = createRootStateSaveSeam({
   localStorage,
   sessionStorage,
@@ -247,6 +256,7 @@ const rootStateSaveSeam = createRootStateSaveSeam({
   locationHref: ()=> location.href,
   ensureNavState,
   loadStateWithLegacyFallback,
+  buildDefaultAppState: () => buildAppDefaultState(),
   LS_KEY,
   createTripDraftSaveEngine,
   showToast
@@ -630,7 +640,8 @@ const settingsListManagement = createSettingsListManagement({
   copyTextWithFeedback: feedback.copyTextWithFeedback,
   getDebugInfo: () => getDebugInfo(),
   forceRefreshApp: () => updateRuntimeStatus.forceRefreshApp(),
-  render: () => render()
+  render: () => render(),
+  buildResetState: () => buildAppDefaultState()
 });
 
 const { renderSettings } = createSettingsScreenOrchestrator({

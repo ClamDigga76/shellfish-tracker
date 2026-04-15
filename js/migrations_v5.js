@@ -1,6 +1,23 @@
 export const LS_KEY = "shellfish-state";
 export const LEGACY_KEYS = ["shellfish-v1.5.0", "shellfish-v1.4.2"];
 
+export function buildDefaultAppState() {
+  return {
+    trips: [],
+    deletedTrips: [],
+    areas: [],
+    dealers: [],
+    view: "home",
+    filter: "YTD",
+    homeFilter: { mode: "YTD", from: "", to: "" },
+    tripsFilter: { mode: "ALL", from: "", to: "" },
+    reportsFilter: { mode: "YTD", from: "", to: "" },
+    reportsMode: "tables",
+    settings: {},
+    navStack: []
+  };
+}
+
 export function parseSemverKey(key) {
   const m = /^shellfish-v(\d+)\.(\d+)\.(\d+)$/.exec(key || "");
   if (!m) return null;
@@ -42,7 +59,8 @@ export function migrateLegacyStateIfNeeded(storage = localStorage) {
 
 export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, themeModeDefault }) {
   try {
-    st = (st && typeof st === "object") ? st : {};
+    const parsedState = (st && typeof st === "object") ? st : {};
+    st = { ...buildDefaultAppState(), ...parsedState };
     const v = Number(st.schemaVersion || 0);
 
     if (!Array.isArray(st.trips)) st.trips = [];
@@ -98,19 +116,12 @@ export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, th
   }
 }
 
-export function loadStateWithLegacyFallback(storage = localStorage, ensureNavStateFn = (s)=>s) {
-  const fallback = ensureNavStateFn({
-    trips: [],
-    view: "home",
-    filter: "YTD",
-    settings: {},
-    areas: [],
-    dealers: [],
-    navStack: [],
-    tripsFilter: { mode: "ALL", from: "", to: "" },
-    reportsFilter: { mode: "YTD", from: "", to: "" },
-    deletedTrips: [],
-  });
+export function loadStateWithLegacyFallback(
+  storage = localStorage,
+  ensureNavStateFn = (s)=>s,
+  buildStateFn = buildDefaultAppState
+) {
+  const fallback = ensureNavStateFn(buildStateFn());
 
   try {
     const tryKeys = [LS_KEY, pickBestLegacyKey(storage), ...LEGACY_KEYS].filter(Boolean);
@@ -122,18 +133,10 @@ export function loadStateWithLegacyFallback(storage = localStorage, ensureNavSta
     if (!raw) return fallback;
 
     const p = JSON.parse(raw);
-    return ensureNavStateFn({
-      trips: Array.isArray(p?.trips) ? p.trips : [],
-      view: p?.view || "home",
-      filter: p?.filter || "YTD",
-      settings: p?.settings && typeof p.settings === "object" ? p.settings : {},
-      areas: Array.isArray(p?.areas) ? p.areas : [],
-      dealers: Array.isArray(p?.dealers) ? p.dealers : [],
-      navStack: Array.isArray(p?.navStack) ? p.navStack : [],
-      tripsFilter: (p?.tripsFilter && typeof p.tripsFilter === "object") ? p.tripsFilter : { mode: "ALL", from: "", to: "" },
-      reportsFilter: (p?.reportsFilter && typeof p.reportsFilter === "object") ? p.reportsFilter : { mode: "YTD", from: "", to: "" },
-      deletedTrips: Array.isArray(p?.deletedTrips) ? p.deletedTrips : [],
-    });
+    const merged = (p && typeof p === "object")
+      ? { ...buildStateFn(), ...p }
+      : buildStateFn();
+    return ensureNavStateFn(merged);
   } catch {
     return fallback;
   }

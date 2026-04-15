@@ -5,6 +5,7 @@ export function createRootStateSaveSeam({
   locationHref,
   ensureNavState,
   loadStateWithLegacyFallback,
+  buildDefaultAppState = () => ({}),
   LS_KEY,
   createTripDraftSaveEngine,
   showToast,
@@ -69,23 +70,12 @@ export function createRootStateSaveSeam({
 
   function loadState(){
     if(isSafeModeEnabled()){
-      const safeState = ensureNavState({
-        trips: [],
-        view: "home",
-        filter: "YTD",
-        settings: {},
-        areas: [],
-        dealers: [],
-        navStack: [],
-        tripsFilter: { mode: "ALL", from: "", to: "" },
-        reportsFilter: { mode: "YTD", from: "", to: "" },
-        deletedTrips: [],
-      });
+      const safeState = ensureNavState(buildDefaultAppState());
       safeState.__safeMode = true;
       return safeState;
     }
 
-    const loaded = loadStateWithLegacyFallback(localStorage, ensureNavState);
+    const loaded = loadStateWithLegacyFallback(localStorage, ensureNavState, buildDefaultAppState);
     const hasNormalDraft = hasMeaningfulTripDraft(loaded?.draft);
     if(hasNormalDraft) return loaded;
 
