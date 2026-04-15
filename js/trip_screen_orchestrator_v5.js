@@ -617,6 +617,21 @@ const btnClear = document.getElementById("clearDraft");
     }
   });
   const { persistDraft, persistDraftInput, applyDraftValue } = createDraftHelpers();
+  const captureLiveNewTripDraft = ()=>{
+    state.draft = {
+      ...(state.draft || {}),
+      dateISO: String(elDate?.value || ""),
+      dealer: String(elDealer?.value || ""),
+      pounds: String(elPounds?.value || ""),
+      amount: String(elAmount?.value || ""),
+      writtenCheckAmount: String(elWrittenCheckAmount?.value || ""),
+      rate: String(elRate?.value || ""),
+      area: String(elArea?.value || ""),
+      species: String(elSpecies?.value || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES,
+      notes: String(elNotes?.value || "")
+    };
+    return state.draft;
+  };
   [elDate, elDealer, elPounds, elAmount, elRate, elWrittenCheckAmount, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
     el.addEventListener("input", persistDraftInput);
@@ -635,7 +650,9 @@ const btnClear = document.getElementById("clearDraft");
       onAdded: (addedValue)=>{
         const value = String(addedValue || "").trim();
         if(!value || !selectEl) return;
+        const liveDraft = captureLiveNewTripDraft();
         selectEl.value = value;
+        liveDraft[kind] = value;
         saveDraft();
         updateSaveEnabled();
         updateRateLine();
