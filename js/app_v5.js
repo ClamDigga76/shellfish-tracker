@@ -32,12 +32,16 @@ async function importVersionedModule(relPath){
   return import(getVersionedModuleHref(relPath));
 }
 
-try {
-  const startupImportUrls = [...STARTUP_MODULE_URLS, ...STARTUP_APP_OWNED_MODULE_URLS];
-  window.__SHELLFISH_STARTUP_IMPORTS__ = startupImportUrls;
-  window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {};
-  window.__BOOT_DIAG__.startupModuleUrls = startupImportUrls;
-} catch (_) {}
+function registerStartupImportDiagnostics(startupModuleUrls, startupAppOwnedModuleUrls){
+  try {
+    const startupImportUrls = [...startupModuleUrls, ...startupAppOwnedModuleUrls];
+    window.__SHELLFISH_STARTUP_IMPORTS__ = startupImportUrls;
+    window.__BOOT_DIAG__ = window.__BOOT_DIAG__ || {};
+    window.__BOOT_DIAG__.startupModuleUrls = startupImportUrls;
+  } catch (_) {}
+}
+
+registerStartupImportDiagnostics(STARTUP_MODULE_URLS, STARTUP_APP_OWNED_MODULE_URLS);
 
 const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, isValidISODate },
   { THEME_MODE_DARK, normalizeThemeMode },
@@ -728,8 +732,8 @@ function renderAbout(){
   };
 }
 
-function render(){
-  const focusTopLevelLanding = ()=>{
+function createTopLevelLandingFocusHandler({ getApp, focusFirstFocusable }){
+  return function focusTopLevelLanding(){
     const appRoot = getApp();
     if(!appRoot) return;
     const landingTarget = appRoot.querySelector("[data-top-level-landing='true']");
@@ -754,19 +758,24 @@ function render(){
     }
     try{ focusFirstFocusable(appRoot); }catch(_){ }
   };
+}
 
+const screenRenderers = {
+  renderSettings,
+  renderNewTrip,
+  renderEditTrip,
+  renderReports,
+  renderHelp,
+  renderAllTrips,
+  renderAbout,
+  renderHome
+};
+const focusTopLevelLanding = createTopLevelLandingFocusHandler({ getApp, focusFirstFocusable });
+
+function render(){
   renderViewDispatch({
     state,
-    renderers: {
-      renderSettings,
-      renderNewTrip,
-      renderEditTrip,
-      renderReports,
-      renderHelp,
-      renderAllTrips,
-      renderAbout,
-      renderHome
-    },
+    renderers: screenRenderers,
     onRedirectToNew: ()=>{ state.view = "new"; saveState(); renderNewTrip(); },
     renderTabBar,
     bindHeaderHelpButtons,
