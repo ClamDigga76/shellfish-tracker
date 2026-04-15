@@ -242,16 +242,23 @@ const {
     const sameNumber = (a, b)=> Math.abs(normalizeNumber(a) - normalizeNumber(b)) < 0.000001;
 
     if(state?.view === "new"){
-      const dateInput = normalizeText(document.getElementById("t_date")?.value || state?.draft?.dateISO || state?.draft?.date);
-      const dealerInput = normalizeDealerDisplay(normalizeText(document.getElementById("t_dealer")?.value || state?.draft?.dealer));
-      const areaInput = normalizeText(document.getElementById("t_area")?.value || state?.draft?.area);
-      const poundsInput = normalizeNumber(document.getElementById("t_pounds")?.value || state?.draft?.pounds);
-      const amountInput = normalizeMoney(document.getElementById("t_amount")?.value || state?.draft?.amount);
-      const rateInput = normalizeMoney(document.getElementById("rateValue")?.value || state?.draft?.rate || state?.draft?.payRate);
-      const writtenCheckInput = normalizeMoney(document.getElementById("t_written_check_amount")?.value || state?.draft?.writtenCheckAmount);
-      const notesInput = normalizeText(document.getElementById("t_notes")?.value || state?.draft?.notes);
+      const readNewValue = (id, fallback)=> {
+        const el = document.getElementById(id);
+        return el ? el.value : fallback;
+      };
+      const dateEl = document.getElementById("t_date");
+      const dateInput = normalizeText(readNewValue("t_date", state?.draft?.dateISO || state?.draft?.date)).slice(0, 10);
+      const dealerInput = normalizeDealerDisplay(normalizeText(readNewValue("t_dealer", state?.draft?.dealer)));
+      const areaInput = normalizeText(readNewValue("t_area", state?.draft?.area));
+      const poundsInput = normalizeNumber(readNewValue("t_pounds", state?.draft?.pounds));
+      const amountInput = normalizeMoney(readNewValue("t_amount", state?.draft?.amount));
+      const rateInput = normalizeMoney(readNewValue("rateValue", state?.draft?.rate || state?.draft?.payRate));
+      const writtenCheckInput = normalizeMoney(readNewValue("t_written_check_amount", state?.draft?.writtenCheckAmount));
+      const notesInput = normalizeText(readNewValue("t_notes", state?.draft?.notes));
+      const defaultDateISO = normalizeText(dateEl?.defaultValue || state?.draft?.dateISO || state?.draft?.date).slice(0, 10);
+      const dateDirty = Boolean(dateInput && (!defaultDateISO || dateInput !== defaultDateISO));
       return Boolean(
-        dateInput ||
+        dateDirty ||
         dealerInput ||
         areaInput ||
         poundsInput > 0 ||
@@ -268,14 +275,18 @@ const {
       const original = trips.find((trip)=> String(trip?.id || "") === id);
       if(!original) return false;
 
-      const currentDateISO = normalizeText(document.getElementById("e_date")?.value || original.dateISO || "").slice(0, 10);
-      const currentDealer = normalizeDealerDisplay(normalizeText(document.getElementById("e_dealer")?.value || original.dealer));
-      const currentArea = normalizeText(document.getElementById("e_area")?.value || original.area);
-      const currentPounds = normalizeNumber(document.getElementById("e_pounds")?.value || original.pounds);
-      const currentAmount = normalizeMoney(document.getElementById("e_amount")?.value || original.amount);
-      const currentRate = normalizeMoney(document.getElementById("rateValueEdit")?.value || resolveTripPayRate(original));
-      const currentWrittenCheck = normalizeMoney(document.getElementById("e_written_check_amount")?.value || original.writtenCheckAmount);
-      const currentNotes = normalizeText(document.getElementById("e_notes")?.value || original.notes);
+      const readEditValue = (id, fallback)=> {
+        const el = document.getElementById(id);
+        return el ? el.value : fallback;
+      };
+      const currentDateISO = normalizeText(readEditValue("e_date", original.dateISO || "")).slice(0, 10);
+      const currentDealer = normalizeDealerDisplay(normalizeText(readEditValue("e_dealer", original.dealer)));
+      const currentArea = normalizeText(readEditValue("e_area", original.area));
+      const currentPounds = normalizeNumber(readEditValue("e_pounds", original.pounds));
+      const currentAmount = normalizeMoney(readEditValue("e_amount", original.amount));
+      const currentRate = normalizeMoney(readEditValue("rateValueEdit", resolveTripPayRate(original)));
+      const currentWrittenCheck = normalizeMoney(readEditValue("e_written_check_amount", original.writtenCheckAmount));
+      const currentNotes = normalizeText(readEditValue("e_notes", original.notes));
 
       const originalDateISO = normalizeText(original.dateISO || "").slice(0, 10);
       const originalDealer = normalizeDealerDisplay(normalizeText(original.dealer));
