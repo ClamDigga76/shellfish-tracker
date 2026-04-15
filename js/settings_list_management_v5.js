@@ -20,7 +20,8 @@ export function createSettingsListManagement(deps){
     copyTextWithFeedback,
     getDebugInfo,
     forceRefreshApp,
-    render
+    render,
+    buildResetState = () => ({})
   } = deps;
   const PROTECTED_AREA_NAME = String(protectedAreaName || "Area Not Recorded").trim();
   const PROTECTED_AREA_KEY = normalizeKey(PROTECTED_AREA_NAME);
@@ -497,7 +498,7 @@ export function createSettingsListManagement(deps){
     document.getElementById("resetData").onclick = ()=>{
       const typed = prompt('Type DELETE to permanently erase ALL trips and lists on this device.');
       if(typed !== "DELETE") { showToast("Erase canceled"); return; }
-      setState({ trips: [], areas: [], dealers: [], filter: "YTD", view: "home", settings: {} });
+      setState(buildResetState());
       saveState();
       showToast("All data erased");
       render();
