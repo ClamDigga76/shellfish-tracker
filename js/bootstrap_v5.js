@@ -199,6 +199,101 @@ function __setBootStage(stage) {
   } catch (_) {}
 }
 
+function dispatchVersionedWindowEvent(name, detail = {}) {
+  try {
+    window.dispatchEvent(new CustomEvent(String(name || ""), { detail: { ...detail, version: APP_VERSION } }));
+  } catch (_) {}
+}
+
+function updateSwRegistrationDiag(next = {}) {
+  try {
+    const base = window.__BOOT_DIAG__.swRegistration || {};
+    window.__BOOT_DIAG__.swRegistration = {
+      attempted: base.attempted === true,
+      registered: base.registered === true,
+      scope: String(base.scope || ""),
+      activeScriptURL: String(base.activeScriptURL || ""),
+      waitingScriptURL: String(base.waitingScriptURL || ""),
+      controllerPresentAtRegistration: base.controllerPresentAtRegistration === true,
+      lastError: String(base.lastError || ""),
+      ...next,
+    };
+  } catch (_) {}
+}
+
+function wireServiceWorkerUpdateBanner(reg) {
+  const banner = document.getElementById("swUpdateBanner");
+  let __swUpdateReadyNotified = false;
+  const btnApply = document.getElementById("swUpdateApply");
+  const btnDismiss = document.getElementById("swUpdateDismiss");
+  const bannerMsg = banner?.querySelector?.(".swUpdateBannerMessage");
+
+  const emitSwUpdateState = (state) => {
+    dispatchVersionedWindowEvent("sw-update-state", { state: String(state || "") });
+  };
+
+  const showBanner = () => {
+    if (!banner) return;
+    banner.style.display = "block";
+    banner.dataset.state = "ready";
+    if (bannerMsg) {
+      bannerMsg.textContent = `Build v5.${APP_VERSION} is ready on this device. Load it now to avoid staying on an older runtime.`;
+    }
+    emitSwUpdateState("ready");
+    if (!__swUpdateReadyNotified) {
+      __swUpdateReadyNotified = true;
+      try {
+        window.dispatchEvent(new CustomEvent("sw-update-ready", { detail: { version: APP_VERSION } }));
+      } catch (_) {}
+    }
+  };
+
+  const hideBanner = () => {
+    if (!banner) return;
+    banner.style.display = "none";
+    delete banner.dataset.state;
+  };
+
+  if (btnDismiss) btnDismiss.onclick = () => {
+    emitSwUpdateState("dismissed");
+    hideBanner();
+  };
+
+  if (btnApply) {
+    btnApply.onclick = async () => {
+      emitSwUpdateState("applying");
+      try {
+        if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      } catch (_) {}
+      hideBanner();
+      // Reload once when the new SW takes control (avoids reload loops on iOS).
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloaded) return;
+        reloaded = true;
+        emitSwUpdateState("controller-changed");
+        location.reload();
+      });
+    };
+  }
+
+  const maybePrompt = () => {
+    if (reg.waiting) showBanner();
+  };
+
+  maybePrompt();
+
+  reg.addEventListener("updatefound", () => {
+    const installing = reg.installing;
+    if (!installing) return;
+    installing.addEventListener("statechange", () => {
+      if (installing.state === "installed" && navigator.serviceWorker.controller) {
+        maybePrompt();
+      }
+    });
+  });
+}
+
 // Exposed so asset checks + global handlers can show a friendly recovery screen.
 window.__showModuleError = function (err) {
   try {
@@ -439,32 +534,12 @@ window.__BOOT_WATCHDOG__ = setTimeout(() => {
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
-    try {
-      window.dispatchEvent(new CustomEvent("sw-registration-state", { detail: { state: "unsupported", version: APP_VERSION } }));
-    } catch (_) {}
+    dispatchVersionedWindowEvent("sw-registration-state", { state: "unsupported" });
     return;
   }
 
   const emitSwRegistrationState = (state, details = {}) => {
-    try {
-      window.dispatchEvent(new CustomEvent("sw-registration-state", { detail: { state: String(state || ""), version: APP_VERSION, ...details } }));
-    } catch (_) {}
-  };
-
-  const updateSwRegistrationDiag = (next = {}) => {
-    try {
-      const base = window.__BOOT_DIAG__.swRegistration || {};
-      window.__BOOT_DIAG__.swRegistration = {
-        attempted: base.attempted === true,
-        registered: base.registered === true,
-        scope: String(base.scope || ""),
-        activeScriptURL: String(base.activeScriptURL || ""),
-        waitingScriptURL: String(base.waitingScriptURL || ""),
-        controllerPresentAtRegistration: base.controllerPresentAtRegistration === true,
-        lastError: String(base.lastError || ""),
-        ...next,
-      };
-    } catch (_) {}
+    dispatchVersionedWindowEvent("sw-registration-state", { state: String(state || ""), ...details });
   };
 
   try {
@@ -491,79 +566,7 @@ async function registerServiceWorker() {
     try {
       await reg.update();
     } catch (_) {}
-
-    const banner = document.getElementById("swUpdateBanner");
-    let __swUpdateReadyNotified = false;
-    const btnApply = document.getElementById("swUpdateApply");
-    const btnDismiss = document.getElementById("swUpdateDismiss");
-    const bannerMsg = banner?.querySelector?.(".swUpdateBannerMessage");
-
-    const emitSwUpdateState = (state) => {
-      try {
-        window.dispatchEvent(new CustomEvent("sw-update-state", { detail: { state: String(state || ""), version: APP_VERSION } }));
-      } catch (_) {}
-    };
-
-    const showBanner = () => {
-      if (!banner) return;
-      banner.style.display = "block";
-      banner.dataset.state = "ready";
-      if (bannerMsg) {
-        bannerMsg.textContent = `Build v5.${APP_VERSION} is ready on this device. Load it now to avoid staying on an older runtime.`;
-      }
-      emitSwUpdateState("ready");
-      if (!__swUpdateReadyNotified) {
-        __swUpdateReadyNotified = true;
-        try {
-          window.dispatchEvent(new CustomEvent("sw-update-ready", { detail: { version: APP_VERSION } }));
-        } catch (_) {}
-      }
-    };
-
-    const hideBanner = () => {
-      if (!banner) return;
-      banner.style.display = "none";
-      delete banner.dataset.state;
-    };
-
-    if (btnDismiss) btnDismiss.onclick = () => {
-      emitSwUpdateState("dismissed");
-      hideBanner();
-    };
-
-    if (btnApply) {
-      btnApply.onclick = async () => {
-        emitSwUpdateState("applying");
-        try {
-          if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
-        } catch (_) {}
-        hideBanner();
-        // Reload once when the new SW takes control (avoids reload loops on iOS).
-        let reloaded = false;
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (reloaded) return;
-          reloaded = true;
-          emitSwUpdateState("controller-changed");
-          location.reload();
-        });
-      };
-    }
-
-    const maybePrompt = () => {
-      if (reg.waiting) showBanner();
-    };
-
-    maybePrompt();
-
-    reg.addEventListener("updatefound", () => {
-      const installing = reg.installing;
-      if (!installing) return;
-      installing.addEventListener("statechange", () => {
-        if (installing.state === "installed" && navigator.serviceWorker.controller) {
-          maybePrompt();
-        }
-      });
-    });
+    wireServiceWorkerUpdateBanner(reg);
   } catch (err) {
     updateSwRegistrationDiag({
       registered: false,
