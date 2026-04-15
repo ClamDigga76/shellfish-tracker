@@ -322,14 +322,20 @@ export function createBackupRestoreSubsystem(deps){
     const payload = buildBackupPayloadFromState(state, exportedAtISO);
     const tripCount = Array.isArray(payload?.data?.trips) ? payload.data.trips.length : (Array.isArray(state.trips) ? state.trips.length : 0);
     const fname = __backupFilename();
-
-    try{
-      state.settings = state.settings || {};
-      state.settings.lastBackupAt = Date.now();
-      state.settings.lastBackupTripCount = tripCount;
-      saveState();
-    }catch(_){ }
-    __setLastBackupMeta({ iso: exportedAtISO, tripCount, build: __buildNum(), filename: fname });
+    let shareWasCanceled = false;
+    let shareCancelError = null;
+    const commitSuccessfulExport = (method)=>{
+      try{
+        state.settings = state.settings || {};
+        state.settings.lastBackupAt = Date.now();
+        state.settings.lastBackupTripCount = tripCount;
+        saveState();
+      }catch(_){ }
+      __setLastBackupMeta({ iso: exportedAtISO, tripCount, build: __buildNum(), filename: fname });
+      try{ updateLastBackupLine(); }catch(_){ }
+      try{ updateBackupHealthWarning(); }catch(_){ }
+      return { ok:true, method, filename: fname, tripCount };
+    };
 
     try{
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -337,18 +343,23 @@ export function createBackupRestoreSubsystem(deps){
       const canShareFiles = !!(navigator?.canShare && navigator.canShare({ files: [file] }));
       if(canShareFiles && navigator?.share){
         await navigator.share({ files: [file] });
-        try{ updateLastBackupLine(); }catch(_){ }
-        try{ updateBackupHealthWarning(); }catch(_){ }
-        return { ok:true, method:"share", filename: fname, tripCount };
+        return commitSuccessfulExport("share");
       }
-    }catch(_){ }
+    }catch(shareErr){
+      const shareCancelled = String(shareErr?.name || "").toLowerCase() === "aborterror";
+      if(shareCancelled){
+        shareWasCanceled = true;
+        shareCancelError = shareErr;
+      }
+    }
 
     try{
       downloadBackupPayload(payload, fname);
-      try{ updateLastBackupLine(); }catch(_){ }
-      try{ updateBackupHealthWarning(); }catch(_){ }
-      return { ok:true, method:"download", filename: fname, tripCount };
+      return commitSuccessfulExport("download");
     }catch(e){
+      if(shareWasCanceled){
+        return { ok:false, reason:"share-canceled", error: shareCancelError, fallbackError: e };
+      }
       return { ok:false, error: e };
     }
   }
