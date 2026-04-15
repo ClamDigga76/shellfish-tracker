@@ -75,6 +75,28 @@ export const BOOTSTRAP_SANITY_REFERENCE_PATHS = [
   SW_REGISTRATION_PATH
 ];
 
+// Required startup/core cache truth used by service-worker trust diagnostics.
+// Keep this as a single source of truth so diagnostics do not drift from
+// startup/core ownership intent.
+export const REQUIRED_CORE_CACHE_STATIC_PATHS = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./css/shell_shared_v5.css",
+  "./css/shell_feature_surfaces_v5.css",
+  "./css/trip_form_v5.css",
+  "./css/reports_v5.css",
+  "./css/boot_shell_inline_extract_v1.css",
+  "./js/bootstrap_v5.js"
+];
+
+export function buildRequiredCoreCachePaths(version) {
+  return [
+    ...REQUIRED_CORE_CACHE_STATIC_PATHS.map((path) => buildVersionedPath(path, version)),
+    ...SW_CORE_JS_PATHS.map((path) => buildSwCoreVersionedAssetPath(path, version))
+  ];
+}
+
 export function buildSwCoreVersionedAssetPath(path, version) {
   const normalizedPath = String(path || "").replace(/^\.\//, "");
   return buildVersionedPath(`./js/${normalizedPath}`, version);
