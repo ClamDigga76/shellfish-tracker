@@ -59,8 +59,9 @@ export function migrateLegacyStateIfNeeded(storage = localStorage) {
 
 export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, themeModeDefault }) {
   try {
+    const defaults = buildDefaultAppState();
     const parsedState = (st && typeof st === "object") ? st : {};
-    st = { ...buildDefaultAppState(), ...parsedState };
+    st = { ...defaults, ...parsedState };
     const v = Number(st.schemaVersion || 0);
 
     if (!Array.isArray(st.trips)) st.trips = [];
@@ -79,17 +80,13 @@ export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, th
       };
     }).filter(Boolean);
 
-    if (!st.homeFilter || typeof st.homeFilter !== "object") {
-      st.homeFilter = { mode: "YTD", from: "", to: "" };
-    }
+    st.homeFilter = { ...defaults.homeFilter, ...((st.homeFilter && typeof st.homeFilter === "object") ? st.homeFilter : {}) };
     if (st.filter && (!st.homeFilter.mode || st.homeFilter.mode === "")) {
       const m = String(st.filter || "YTD").toUpperCase();
       st.homeFilter.mode = (m.includes("MONTH") ? "MONTH" : (m.includes("7") ? "7D" : (m.includes("ALL") ? "ALL" : "YTD")));
     }
 
-    if (!st.reportsFilter || typeof st.reportsFilter !== "object") {
-      st.reportsFilter = { mode: "YTD", from: "", to: "" };
-    }
+    st.reportsFilter = { ...defaults.reportsFilter, ...((st.reportsFilter && typeof st.reportsFilter === "object") ? st.reportsFilter : {}) };
     if (!st.reportsMode) st.reportsMode = "tables";
 
     if (st.filters && typeof st.filters === "object" && st.filters.active && typeof st.filters.active === "object") {
@@ -101,9 +98,7 @@ export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, th
       if (st.filters.active.toISO == null) st.filters.active.toISO = "";
     }
 
-    if (!st.tripsFilter || typeof st.tripsFilter !== "object") {
-      st.tripsFilter = { mode: "ALL", from: "", to: "" };
-    }
+    st.tripsFilter = { ...defaults.tripsFilter, ...((st.tripsFilter && typeof st.tripsFilter === "object") ? st.tripsFilter : {}) };
 
     st.settings = (st.settings && typeof st.settings === "object") ? st.settings : {};
     st.settings.themeMode = normalizeThemeMode(st.settings.themeMode || themeModeDefault);
