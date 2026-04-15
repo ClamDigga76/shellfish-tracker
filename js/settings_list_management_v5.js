@@ -115,7 +115,22 @@ export function createSettingsListManagement(deps){
       updatedTrips += 1;
     }
 
-    return { ok: true, from: canonicalOldName, to: newName, updatedTrips };
+    const reconcileStateValue = (container, key)=>{
+      if(!container || typeof container !== "object") return 0;
+      const rawValue = String(container[key] || "").trim();
+      if(!rawValue) return 0;
+      if(normalizeKey(rawValue) !== oldKey) return 0;
+      container[key] = newName;
+      return 1;
+    };
+
+    let updatedActiveRefs = 0;
+    updatedActiveRefs += reconcileStateValue(state.draft, "area");
+    updatedActiveRefs += reconcileStateValue(state.reviewDraft, "area");
+    updatedActiveRefs += reconcileStateValue(state.reportsFilter, "area");
+    updatedActiveRefs += reconcileStateValue(state.filters?.active, "area");
+
+    return { ok: true, from: canonicalOldName, to: newName, updatedTrips, updatedActiveRefs };
   }
 
   function renameDealerInState(oldDealerName, nextDealerName){
@@ -149,7 +164,22 @@ export function createSettingsListManagement(deps){
       updatedTrips += 1;
     }
 
-    return { ok: true, from: oldName, to: newName, updatedTrips };
+    const reconcileStateValue = (container, key)=>{
+      if(!container || typeof container !== "object") return 0;
+      const rawValue = String(container[key] || "").trim();
+      if(!rawValue) return 0;
+      if(normalizeKey(rawValue) !== oldKey) return 0;
+      container[key] = newName;
+      return 1;
+    };
+
+    let updatedActiveRefs = 0;
+    updatedActiveRefs += reconcileStateValue(state.draft, "dealer");
+    updatedActiveRefs += reconcileStateValue(state.reviewDraft, "dealer");
+    updatedActiveRefs += reconcileStateValue(state.reportsFilter, "dealer");
+    updatedActiveRefs += reconcileStateValue(state.filters?.active, "dealer");
+
+    return { ok: true, from: oldName, to: newName, updatedTrips, updatedActiveRefs };
   }
 
   function openRenameModal({ kind, currentName, onSave }){
