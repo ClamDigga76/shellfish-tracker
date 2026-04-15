@@ -42,13 +42,20 @@ export function createReportsFilterHelpers({ parseUsDateToISODate, formatDateDMY
   function tripsFilename(label, startISO = "", endISO = "") {
     const base = "shellfish_trips";
     const L = String(label || "").toUpperCase();
+    const modeAliases = {
+      MONTH: "THIS_MONTH",
+      MTD: "THIS_MONTH",
+      RANGE_7D: "7D"
+    };
+    const normalized = modeAliases[L] || L;
+    const withDates = (token)=> `${base}_${token}_${formatISOForFile(startISO)}_to_${formatISOForFile(endISO)}.csv`;
     if (L === "ALL") return `${base}_ALL.csv`;
-    if (L === "YTD" || L === "12M" || L === "90D" || L === "30D") {
-      if (startISO && endISO) return `${base}_${L}_${formatISOForFile(startISO)}_to_${formatISOForFile(endISO)}.csv`;
-      return `${base}_${L}.csv`;
+    if (normalized === "YTD" || normalized === "12M" || normalized === "90D" || normalized === "30D" || normalized === "7D" || normalized === "THIS_MONTH" || normalized === "LAST_MONTH") {
+      if (startISO && endISO) return withDates(normalized);
+      return `${base}_${normalized}.csv`;
     }
-    if (L === "RANGE" && startISO && endISO) {
-      return `${base}_RANGE_${formatISOForFile(startISO)}_to_${formatISOForFile(endISO)}.csv`;
+    if (normalized === "RANGE" && startISO && endISO) {
+      return withDates("RANGE");
     }
     return `${base}.csv`;
   }

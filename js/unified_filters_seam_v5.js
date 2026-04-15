@@ -127,14 +127,14 @@ export function createUnifiedFiltersSeam({
       const toISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()).padStart(2,"0")}`;
       return { fromISO, toISO, label:"Last Month" };
     }
-    if(filter.range === "7d") return { fromISO:backDays(7), toISO:now, label:"Last 7 Days" };
+    if(filter.range === "7d") return { fromISO:backDays(6), toISO:now, label:"Last 7 Days" };
     if(filter.range === "12m"){
       const d = new Date();
       d.setFullYear(d.getFullYear()-1);
       return { fromISO:d.toISOString().slice(0,10), toISO:now, label:"Last 12 months" };
     }
-    if(filter.range === "90d") return { fromISO:backDays(90), toISO:now, label:"Last 90 days" };
-    if(filter.range === "30d") return { fromISO:backDays(30), toISO:now, label:"Last 30 days" };
+    if(filter.range === "90d") return { fromISO:backDays(89), toISO:now, label:"Last 90 days" };
+    if(filter.range === "30d") return { fromISO:backDays(29), toISO:now, label:"Last 30 days" };
 
     const normalized = normalizeCustomRangeWithFeedback({ fromISO: filter.fromISO, toISO: filter.toISO });
     const fromISO = normalized.fromISO;
