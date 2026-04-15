@@ -360,7 +360,7 @@ export function createFeedbackHelpers({
   function showMilestoneToast({ headline = "", detail = "", okLabel = "OK", durationMs = 0 } = {}){
     try{
       const root = document.getElementById("celebrationRoot");
-      if(!root) return;
+      if(!root) return false;
       const toastEl = document.getElementById("toast");
       if(toastEl) hardResetToastShell(toastEl);
       clearCelebration();
@@ -433,7 +433,10 @@ export function createFeedbackHelpers({
       if(Number.isFinite(durationMs) && durationMs > 0){
         celebrationTimer = setTimeout(()=>{ clearCelebration(); }, durationMs);
       }
-    }catch{}
+      return true;
+    }catch{
+      return false;
+    }
   }
 
   function clearCelebration({ restoreFocus = true } = {}){
