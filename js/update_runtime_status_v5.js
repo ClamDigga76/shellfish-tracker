@@ -1,3 +1,5 @@
+import { buildRequiredCoreCachePaths } from "./startup_asset_manifest_v5.js";
+
 export function createUpdateRuntimeStatusSeam({
   displayBuildVersion,
   getIsSettingsView,
@@ -188,7 +190,11 @@ export function createUpdateRuntimeStatusSeam({
       swRegistrationAttempted: false,
       swRegistrationConfirmed: false,
       swRegistrationScope: "",
-      swRegistrationError: ""
+      swRegistrationError: "",
+      requiredCoreCacheExpectedCount: 0,
+      requiredCoreCacheFoundCount: 0,
+      requiredCoreCacheMissing: [],
+      requiredCoreCacheIncomplete: false
     };
 
     try{
@@ -214,6 +220,40 @@ export function createUpdateRuntimeStatusSeam({
             return m ? m[1] : "";
           })
           .filter(Boolean);
+      }
+    }catch(_){ }
+
+    try{
+      if(windowRef.caches && cachesRef.keys && cachesRef.open){
+        const requiredCorePaths = buildRequiredCoreCachePaths(buildDigits);
+        details.requiredCoreCacheExpectedCount = requiredCorePaths.length;
+        const expectedCacheName = buildDigits ? `shellfish-tracker-v${buildDigits}` : "";
+        const keys = await cachesRef.keys();
+        const cacheName = keys.find((k)=>expectedCacheName && String(k) === expectedCacheName) || "";
+        if(cacheName){
+          const cache = await cachesRef.open(cacheName);
+          const missing = [];
+          let found = 0;
+          for(const path of requiredCorePaths){
+            let hit = await cache.match(path);
+            if(!hit){
+              try{
+                hit = await cache.match(new URL(path, locationRef.href).href);
+              }catch(_){ }
+            }
+            if(hit){
+              found += 1;
+            }else{
+              missing.push(path);
+            }
+          }
+          details.requiredCoreCacheFoundCount = found;
+          details.requiredCoreCacheMissing = missing;
+          details.requiredCoreCacheIncomplete = missing.length > 0;
+        }else if(requiredCorePaths.length){
+          details.requiredCoreCacheMissing = [...requiredCorePaths];
+          details.requiredCoreCacheIncomplete = true;
+        }
       }
     }catch(_){ }
 
@@ -258,6 +298,7 @@ export function createUpdateRuntimeStatusSeam({
     );
     details.needsHardReset = Boolean(
       details.hasExplicitVersionMismatch ||
+      details.requiredCoreCacheIncomplete ||
       details.swRegistrationError ||
       /reset cache|stale required asset|wrong required asset|unexpected js payload|corrupted js response|empty js response|incomplete js response/i.test(details.lastBootError)
     );
@@ -342,8 +383,14 @@ export function createUpdateRuntimeStatusSeam({
       lines.push(`SWControlUnconfirmed: ${runtimeDiag.swControlUnconfirmed ? "yes" : "no"}`);
       lines.push(`SWRegistrationConfirmed: ${runtimeDiag.swRegistrationConfirmed ? "yes" : "no"}`);
       lines.push(`InstalledAppLikelyLagging: ${runtimeDiag.installedAppLikelyLagging ? "yes" : "no"}`);
+      lines.push(`RequiredCoreCacheExpected: ${Number(runtimeDiag.requiredCoreCacheExpectedCount || 0)}`);
+      lines.push(`RequiredCoreCacheFound: ${Number(runtimeDiag.requiredCoreCacheFoundCount || 0)}`);
+      lines.push(`RequiredCoreCacheIncomplete: ${runtimeDiag.requiredCoreCacheIncomplete ? "yes" : "no"}`);
+      if(Array.isArray(runtimeDiag.requiredCoreCacheMissing) && runtimeDiag.requiredCoreCacheMissing.length){
+        lines.push(`RequiredCoreCacheMissing: ${runtimeDiag.requiredCoreCacheMissing.join(", ")}`);
+      }
       lines.push(`HardResetSuggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`);
-      lines.push(`RecoveryReadiness: ${runtimeDiag.needsHardReset || runtimeDiag.lastBootError ? "attention-needed" : "ready"}`);
+      lines.push(`RecoveryReadiness: ${runtimeDiag.needsHardReset || runtimeDiag.lastBootError || runtimeDiag.requiredCoreCacheIncomplete ? "attention-needed" : "ready"}`);
       if(runtimeDiag.lastBootError) lines.push(`LastBootWarning: ${String(runtimeDiag.lastBootError)}`);
       if(runtimeDiag.swRegistrationError) lines.push(`SWRegistrationWarning: ${String(runtimeDiag.swRegistrationError)}`);
     }else{
@@ -443,6 +490,17 @@ export function createUpdateRuntimeStatusSeam({
       parts.push(`Version check: aligned to v${runtimeDiag.buildDigits}`);
     }
 
+    if(runtimeDiag.requiredCoreCacheExpectedCount){
+      parts.push(
+        runtimeDiag.requiredCoreCacheIncomplete
+          ? `Required core cache: incomplete (${runtimeDiag.requiredCoreCacheFoundCount}/${runtimeDiag.requiredCoreCacheExpectedCount})`
+          : `Required core cache: complete (${runtimeDiag.requiredCoreCacheFoundCount}/${runtimeDiag.requiredCoreCacheExpectedCount})`
+      );
+      if(runtimeDiag.requiredCoreCacheIncomplete && runtimeDiag.requiredCoreCacheMissing.length){
+        parts.push(`Missing required assets: ${runtimeDiag.requiredCoreCacheMissing.join(", ")}`);
+      }
+    }
+
     if(runtimeDiag.swControlUnconfirmed && !runtimeDiag.hasExplicitVersionMismatch){
       parts.push("Service worker note: registration exists but this tab is not controlled yet.");
     }
@@ -500,7 +558,11 @@ export function createUpdateRuntimeStatusSeam({
       statusEl.textContent = "Could not confirm latest build on this device";
       btnPrimary.textContent = "Reset cache & reload";
       btnPrimary.onclick = async ()=>{ await swCheckNow({ hardReset: true }); };
-      if(inlineMsg) inlineMsg.textContent = "Use Reset cache & reload for a clean fetch if Reload latest build still looks stale.";
+      if(inlineMsg){
+        inlineMsg.textContent = runtimeDiag.requiredCoreCacheIncomplete
+          ? `Required core cache is incomplete (${runtimeDiag.requiredCoreCacheFoundCount}/${runtimeDiag.requiredCoreCacheExpectedCount}). Use Reset cache & reload to recover.`
+          : "Use Reset cache & reload for a clean fetch if Reload latest build still looks stale.";
+      }
       return;
     }
 
@@ -523,7 +585,7 @@ export function createUpdateRuntimeStatusSeam({
     const recentAttempt = getStoredUpdateAttempt();
     const lastGoodRuntime = getLastGoodRuntimeConfirmation();
     const lastGoodMatchesBuild = Boolean(lastGoodRuntime?.buildVersion && lastGoodRuntime.buildVersion === displayBuildVersion);
-    statusEl.textContent = "Up to date on this device";
+    statusEl.textContent = runtimeDiag?.requiredCoreCacheIncomplete ? "Core cache integrity needs attention" : "Up to date on this device";
     btnPrimary.textContent = "Reload latest build";
     btnPrimary.onclick = async ()=>{ await swCheckNow(); };
     if(inlineMsg){
@@ -578,11 +640,12 @@ export function createUpdateRuntimeStatusSeam({
     const buildDigits = runtimeDiag.buildDigits || parseBuildDigits(displayBuildVersion);
     const updateReady = Boolean(swUpdateReady || runtimeDiag.swWaitingVersion);
     const swControlConfirmed = Boolean(runtimeDiag.swController && runtimeDiag.swRegistrationConfirmed);
-    const updateAligned = Boolean(!runtimeDiag.hasExplicitVersionMismatch && swControlConfirmed);
+    const requiredCoreCacheHealthy = !runtimeDiag.requiredCoreCacheIncomplete;
+    const updateAligned = Boolean(!runtimeDiag.hasExplicitVersionMismatch && requiredCoreCacheHealthy && swControlConfirmed);
     const lastGoodRuntime = getLastGoodRuntimeConfirmation();
     const hasLastGoodForBuild = Boolean(lastGoodRuntime?.buildVersion && lastGoodRuntime.buildVersion === String(displayBuildVersion || ""));
-    const reopenReady = Boolean(swControlConfirmed && !runtimeDiag.installedAppLikelyLagging && !runtimeDiag.hasExplicitVersionMismatch && hasLastGoodForBuild);
-    const recoveryReady = Boolean(runtimeDiag.needsHardReset || runtimeDiag.lastBootError);
+    const reopenReady = Boolean(swControlConfirmed && requiredCoreCacheHealthy && !runtimeDiag.installedAppLikelyLagging && !runtimeDiag.hasExplicitVersionMismatch && hasLastGoodForBuild);
+    const recoveryReady = Boolean(runtimeDiag.needsHardReset || runtimeDiag.lastBootError || runtimeDiag.requiredCoreCacheIncomplete);
     const cacheLine = runtimeDiag.cacheVersions.length
       ? [...new Set(runtimeDiag.cacheVersions)].map(v=>`v${v}`).join(", ")
       : "(none)";
@@ -593,9 +656,9 @@ export function createUpdateRuntimeStatusSeam({
 
     const checks = [
       { key: "browser_mode", label: "Browser mode opens current release", suggested: "not-run" },
-      { key: "installed_mode", label: "Installed app opens current release", suggested: runtimeDiag.standalone ? (runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging ? "fail" : (swControlConfirmed ? "pass" : "not-run")) : "not-run" },
-      { key: "update_pickup", label: "Update pickup after reload", suggested: runtimeDiag.hasExplicitVersionMismatch ? "fail" : (swControlConfirmed ? "pass" : "not-run") },
-      { key: "reopen_behavior", label: "Reopen keeps expected build", suggested: runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging ? "fail" : (reopenReady ? "pass" : "not-run") },
+      { key: "installed_mode", label: "Installed app opens current release", suggested: runtimeDiag.standalone ? (runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging || runtimeDiag.requiredCoreCacheIncomplete ? "fail" : (swControlConfirmed ? "pass" : "not-run")) : "not-run" },
+      { key: "update_pickup", label: "Update pickup after reload", suggested: runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.requiredCoreCacheIncomplete ? "fail" : (swControlConfirmed ? "pass" : "not-run") },
+      { key: "reopen_behavior", label: "Reopen keeps expected build", suggested: runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging || runtimeDiag.requiredCoreCacheIncomplete ? "fail" : (reopenReady ? "pass" : "not-run") },
       { key: "recovery_reset", label: "Recovery/reset trust flow", suggested: recoveryReady ? "not-run" : "pass" }
     ];
 
@@ -607,6 +670,10 @@ export function createUpdateRuntimeStatusSeam({
       `SW waiting update: ${waitingLine}`,
       `Cache versions: ${cacheLine}`,
       `Startup module versions: ${startupLine}`,
+      `Required core cache expected: ${runtimeDiag.requiredCoreCacheExpectedCount || 0}`,
+      `Required core cache found: ${runtimeDiag.requiredCoreCacheFoundCount || 0}`,
+      `Required core cache incomplete: ${runtimeDiag.requiredCoreCacheIncomplete ? "yes" : "no"}`,
+      `Required core cache missing: ${runtimeDiag.requiredCoreCacheMissing?.length ? runtimeDiag.requiredCoreCacheMissing.join(", ") : "none"}`,
       `Version skew detected: ${runtimeDiag.hasVersionSkew ? "yes" : "no"}`,
       `SW control unconfirmed: ${runtimeDiag.swControlUnconfirmed ? "yes" : "no"}`,
       `Installed-app lag likely: ${runtimeDiag.installedAppLikelyLagging ? "yes" : "no"}`,

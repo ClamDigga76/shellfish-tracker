@@ -70,6 +70,21 @@ const CORE = [
   ...CORE_JS_PATHS.map((path) => `${path}?v=${SW_V}`),
 ];
 
+const REQUIRED_CORE = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  `./css/shell_shared_v5.css?v=${SW_V}`,
+  `./css/shell_feature_surfaces_v5.css?v=${SW_V}`,
+  `./css/trip_form_v5.css?v=${SW_V}`,
+  `./css/reports_v5.css?v=${SW_V}`,
+  `./css/boot_shell_inline_extract_v1.css?v=${SW_V}`,
+  `./js/bootstrap_v5.js?v=${SW_V}`,
+  ...CORE_JS_PATHS.map((path) => `${path}?v=${SW_V}`),
+];
+
+const REQUIRED_CORE_SET = new Set(REQUIRED_CORE);
+
 function isJS(url) {
   return /\.js($|\?)/i.test(url);
 }
@@ -84,20 +99,33 @@ function looksLikeJSResponse(resp) {
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
+    const requiredFailures = [];
 
     // Install with guards: never cache HTML as JS.
     for (const url of CORE) {
+      const required = REQUIRED_CORE_SET.has(url);
       try {
         const r = await fetch(url, { cache: "no-store" });
-        if (!r.ok) continue;
+        if (!r.ok) {
+          if (required) requiredFailures.push(`${url} (HTTP ${r.status})`);
+          continue;
+        }
 
         if (isJS(url) && !looksLikeJSResponse(r)) {
           // Skip caching bad response; this prevents JS parse errors later.
+          if (required) requiredFailures.push(`${url} (unexpected content-type: ${(r.headers.get("content-type") || "unknown").toLowerCase()})`);
           continue;
         }
         await cache.put(url, r);
-      } catch (_) {}
+      } catch (err) {
+        if (required) requiredFailures.push(`${url} (${err?.message || "fetch failed"})`);
+      }
     }
+
+    if (requiredFailures.length) {
+      throw new Error(`Required core cache install failed (${requiredFailures.length}): ${requiredFailures.join("; ")}`);
+    }
+
     self.skipWaiting();
   })());
 });
