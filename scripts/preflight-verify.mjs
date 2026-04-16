@@ -45,6 +45,7 @@ let bootstrapJs = "";
 let swJs = "";
 let appJs = "";
 let runtimeStatusJs = "";
+let manifestWebmanifest = "";
 let canonicalVersion = "";
 
 try {
@@ -53,6 +54,7 @@ try {
   swJs = read("sw.js");
   appJs = read("js/app_v5.js");
   runtimeStatusJs = read("js/update_runtime_status_v5.js");
+  manifestWebmanifest = read("manifest.webmanifest");
 } catch (error) {
   fail("core files load", String(error.message || error));
 }
@@ -100,6 +102,18 @@ if (indexHtml) {
         pass(`index required css ref: ${ref}`);
       } else {
         fail(`index required css ref: ${ref}`);
+      }
+    }
+
+    const manifestMatch = indexHtml.match(/<link\s+rel="manifest"\s+href="([^"?]*manifest\.webmanifest)\?v=(\d+)"\s*>/i);
+    if (!manifestMatch) {
+      fail("index manifest query version", "index.html is missing manifest.webmanifest?v=<build>");
+    } else {
+      const [, manifestPath, manifestVersion] = manifestMatch;
+      if (manifestVersion === canonicalVersion) {
+        pass("index manifest query version", `${manifestPath}?v=${manifestVersion}`);
+      } else {
+        fail("index manifest query version", `expected v=${canonicalVersion}, found v=${manifestVersion}`);
       }
     }
   }
@@ -163,6 +177,12 @@ if (swJs) {
     fail("service worker cache version derived from SW_V");
   }
 
+  if (swJs.includes("`./manifest.webmanifest?v=${SW_V}`")) {
+    pass("service worker manifest core ref versioned from SW_V");
+  } else {
+    fail("service worker manifest core ref versioned from SW_V");
+  }
+
   const hasGeneratedMarkers = swJs.includes(SW_CORE_GENERATED_START_MARKER) && swJs.includes(SW_CORE_GENERATED_END_MARKER);
   if (hasGeneratedMarkers) {
     pass("service worker core js generated markers present");
@@ -217,6 +237,22 @@ if (swJs) {
     } else {
       fail(`service worker core ownership excludes: ${rel}`, `${swPath} is present in sw.js`);
     }
+  }
+}
+
+if (manifestWebmanifest) {
+  try {
+    const manifest = JSON.parse(manifestWebmanifest);
+    const requiredManifestKeys = ["display_override", "launch_handler", "handle_links"];
+    for (const key of requiredManifestKeys) {
+      if (Object.hasOwn(manifest, key)) {
+        pass(`manifest enrichment key present: ${key}`);
+      } else {
+        fail(`manifest enrichment key present: ${key}`);
+      }
+    }
+  } catch (error) {
+    fail("manifest parse", String(error.message || error));
   }
 }
 
