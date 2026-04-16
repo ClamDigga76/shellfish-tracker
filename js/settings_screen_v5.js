@@ -100,7 +100,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Updates & Support</div>
-            <div class="settingsAccordionTitle">Update status and help</div>
+            <div class="settingsAccordionTitle">Update status and help access</div>
             <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Checking version status…</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
@@ -125,10 +125,10 @@ export function createSettingsScreenOrchestrator({
         </details>
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
-            <div class="settingsRowTitle">Help</div>
-            <div class="muted small">Open full install, backup, update, and support walkthroughs.</div>
+            <div class="settingsRowTitle">Help guide</div>
+            <div class="muted small">Open full help for install, backup, updates, and support.</div>
           </div>
-          <button class="btn settingsInlineBtn" id="openHelp">Open Help</button>
+          <button class="btn settingsInlineBtn" id="openHelp">Open help guide</button>
         </div>
       </details>
     </div>
@@ -138,7 +138,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Install App</div>
-            <div class="settingsAccordionTitle">Install status and actions</div>
+            <div class="settingsAccordionTitle">Install mode and actions</div>
             <div class="muted small settingsAccordionStatus" id="installSummaryLine">Checking install state…</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
@@ -155,7 +155,7 @@ export function createSettingsScreenOrchestrator({
         </div>
         <div class="settingsRow settingsRow--action settingsInstallActions">
           <button class="btn primary settingsInlineBtn" id="installActionBtn" type="button">Install app</button>
-          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">Open full install help</button>
+          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">Open install help</button>
         </div>
         <div class="settingsRow settingsRow--minor">
           <div class="hint" id="installWhyLine"></div>
@@ -190,7 +190,7 @@ export function createSettingsScreenOrchestrator({
           <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="hint"><b>Recommended:</b> create backup before major updates, Replace restore, or switching phones, browsers, or app modes.</div>
+          <div class="hint"><b>Recommended:</b> Create a backup before major updates, Replace restore, or switching phones, browsers, or app modes.</div>
           <div class="muted small mt8">Keep one current copy and one older copy in iCloud Drive or Google Drive.</div>
         </div>
         <div class="settingsRow settingsRow--status">
@@ -260,7 +260,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--minor">
           <div class="muted small">Bank the Catch • Created by <b>Jeremy Wood</b></div>
           <div class="muted small mt6">Support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
-          <div class="muted small mt6">Need setup or recovery help? Open <b>Help</b>.</div>
+          <div class="muted small mt6">Need setup or recovery help? Open the <b>Help guide</b>.</div>
           <div class="muted small mt8">© 2026 Jeremy Wood. All rights reserved.</div>
         </div>
         <div class="settingsRow settingsRow--split settingsRow--minor">
@@ -285,7 +285,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Advanced</div>
-            <div class="settingsAccordionTitle">Support bundle and reset</div>
+            <div class="settingsAccordionTitle">Support bundle and reset tools</div>
             <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support tools and release checks</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
@@ -378,7 +378,7 @@ export function createSettingsScreenOrchestrator({
           </div>
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="muted small">Copy this support bundle (privacy-safe runtime metadata only) with a short repro note.</div>
+          <div class="muted small">Copy this support bundle (privacy-safe runtime metadata only), then add a short repro note.</div>
         </div>
         <div class="settingsRow settingsRow--danger">
           <div class="muted small"><b>Danger zone:</b> Erase removes all trips and lists on this device. Create a backup first.</div>
