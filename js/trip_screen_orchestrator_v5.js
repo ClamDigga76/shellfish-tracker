@@ -1154,7 +1154,7 @@ function renderEditTrip(){
     state.editId = null;
     state.view = "all_trips";
     saveState();
-    return renderHome();
+    return render();
   }
 
   const trip = t;
