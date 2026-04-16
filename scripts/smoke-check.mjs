@@ -57,6 +57,23 @@ function checkPattern(source, checkName, pattern, detail = pattern.toString()) {
   }
 }
 
+function checkPatterns(source, checkName, patterns, detail = 'required structural patterns') {
+  const missing = patterns.filter((pattern) => !pattern.test(source));
+  if (missing.length === 0) {
+    pass(checkName);
+  } else {
+    fail(checkName, `missing ${detail}`);
+  }
+}
+
+function checkRouteDispatch(source, checkName, { view, renderer }) {
+  const routePattern = new RegExp(
+    `nextView\\s*===\\s*["']${view}["'][\\s\\S]{0,140}?renderers\\.${renderer}\\s*\\(`,
+    'm'
+  );
+  checkPattern(source, checkName, routePattern, `route ${view} -> ${renderer}(...)`);
+}
+
 const requiredFiles = [
   'index.html',
   'sw.js',
@@ -107,38 +124,55 @@ const reportsMetricDetailSource = readSource('js/reports_metric_detail_v5.js');
 const updateStatusSource = readSource('js/update_runtime_status_v5.js');
 
 if (appSource) {
-  checkIncludes(appSource, 'boot startup marker initialized', 'window.__SHELLFISH_APP_STARTED = false;');
-  checkPattern(appSource, 'boot dispatcher present', /function\s+render\s*\(/, 'function render(...)');
+  checkPatterns(
+    appSource,
+    'boot startup state and render entrypoint present',
+    [/window\.__SHELLFISH_APP_STARTED\s*=\s*false\s*;/, /function\s+render\s*\(/],
+    'startup marker init and render() entrypoint'
+  );
 }
 
 if (runtimeOrchestrationSource) {
-  checkIncludes(runtimeOrchestrationSource, 'boot startup marker finalized', 'window.__SHELLFISH_APP_STARTED = true;');
-  checkPattern(runtimeOrchestrationSource, 'boot home default render', /if\s*\(\s*!state\.view\s*\)\s*state\.view\s*=\s*["']home["']\s*;/, 'state.view defaults to "home"');
-  checkPattern(
+  checkPatterns(
     runtimeOrchestrationSource,
-    'boot all_trips route wired',
-    /(state\.view|nextView)\s*===\s*["']all_trips["']\s*\)\s*renderers\.renderAllTrips\(/,
-    'dispatcher branch for all_trips'
+    'boot runtime startup finalization present',
+    [/function\s+startRuntimeRender\s*\(/, /window\.__SHELLFISH_APP_STARTED\s*=\s*true\s*;/],
+    'startRuntimeRender(...) and startup finalization marker'
   );
-  checkPattern(runtimeOrchestrationSource, 'home route reachable from dispatcher', /else\s+renderers\.renderHome\s*\(/, 'dispatcher fallback to renderHome(...)');
-  checkPattern(
+  checkPatterns(
     runtimeOrchestrationSource,
-    'settings route reachable from dispatcher',
-    /(state\.view|nextView)\s*===\s*["']settings["']\s*\)\s*renderers\.renderSettings\(/,
-    'dispatcher branch for settings'
+    'top-level dispatcher structure present',
+    [/function\s+renderViewDispatch\s*\(/, /if\s*\(\s*!state\.view\s*\)\s*state\.view\s*=\s*["']home["']/, /const\s+nextView\s*=\s*String\(/],
+    'renderViewDispatch shape and home default'
   );
+  checkRouteDispatch(runtimeOrchestrationSource, 'all trips route reachable from dispatcher', {
+    view: 'all_trips',
+    renderer: 'renderAllTrips',
+  });
+  checkRouteDispatch(runtimeOrchestrationSource, 'settings route reachable from dispatcher', {
+    view: 'settings',
+    renderer: 'renderSettings',
+  });
+  checkRouteDispatch(runtimeOrchestrationSource, 'new trip route reachable from dispatcher', {
+    view: 'new',
+    renderer: 'renderNewTrip',
+  });
+  checkRouteDispatch(runtimeOrchestrationSource, 'reports route reachable from dispatcher', {
+    view: 'reports',
+    renderer: 'renderReports',
+  });
   checkPattern(
     runtimeOrchestrationSource,
-    'new trip route reachable from dispatcher',
-    /(state\.view|nextView)\s*===\s*["']new["']\s*\)\s*renderers\.renderNewTrip\(/,
-    'dispatcher branch for new'
+    'home route reachable from dispatcher fallback',
+    /else\s+renderers\.renderHome\s*\(/,
+    'fallback dispatch to renderHome(...)'
   );
 }
 
 if (homeSource) {
-  checkIncludes(homeSource, 'home renderer factory exists', 'export function createHomeDashboardRenderer({');
+  checkPattern(homeSource, 'home renderer factory exists', /export\s+function\s+createHomeDashboardRenderer\s*\(/, 'createHomeDashboardRenderer export');
   checkPattern(homeSource, 'home render function exists', /function\s+renderHome\s*\(/, 'function renderHome(...)');
-  checkIncludesAny(homeSource, 'home view marker present', ['renderPageHeader("home")', 'renderPageHeader(\'home\')']);
+  checkPattern(homeSource, 'home header wiring present', /renderPageHeader\s*\(\s*["']home["']\s*\)/, 'renderPageHeader("home")');
 }
 
 if (startupAssetManifestSource) {
@@ -153,10 +187,23 @@ if (startupAssetManifestSource) {
 }
 
 if (appSource) {
-  checkIncludes(appSource, 'home renderer created', 'const { renderHome } = createHomeDashboardRenderer({');
-  checkIncludes(appSource, 'settings renderer created', 'const { renderSettings } = createSettingsScreenOrchestrator({');
-  checkIncludes(appSource, 'trips renderer wired', 'const { renderAllTrips } = createTripsBrowseScreenRenderer({');
-  checkIncludes(appSource, 'startup module list versioned loader present', 'const STARTUP_MODULE_URLS = STARTUP_MODULE_PATHS.map(getVersionedModuleHref);');
+  checkPatterns(
+    appSource,
+    'top-level renderers instantiated in app boot',
+    [
+      /{\s*[^}]*\brenderHome\b[^}]*}\s*=\s*createHomeDashboardRenderer\s*\(/,
+      /{\s*[^}]*\brenderSettings\b[^}]*}\s*=\s*createSettingsScreenOrchestrator\s*\(/,
+      /{\s*[^}]*\brenderAllTrips\b[^}]*}\s*=\s*createTripsBrowseScreenRenderer\s*\(/,
+      /{\s*[^}]*\brenderReports\b[^}]*}\s*=\s*createReportsScreenRenderer\s*\(/,
+    ],
+    'renderer factory wiring for home/settings/trips/reports'
+  );
+  checkPattern(
+    appSource,
+    'startup module list versioned loader present',
+    /STARTUP_MODULE_URLS\s*=\s*STARTUP_MODULE_PATHS\.map\s*\(\s*getVersionedModuleHref\s*\)/,
+    'STARTUP_MODULE_URLS built from getVersionedModuleHref'
+  );
 }
 
 if (tripsBrowseScreenSource) {
@@ -165,13 +212,16 @@ if (tripsBrowseScreenSource) {
 }
 
 if (shellSource) {
-  checkIncludesAny(shellSource, 'trips tab present', ['{ key: "all_trips", label: "Trips"', "{ key: 'all_trips', label: 'Trips'"]);
-  checkIncludesAny(shellSource, 'new trip title marker present', ['new: "New Trip"', "new: 'New Trip'"]);
+  checkPattern(shellSource, 'trips tab present', /key:\s*["']all_trips["']\s*,\s*label:\s*["']Trips["']/, 'all_trips tab label');
+  checkPattern(shellSource, 'new trip tab present', /key:\s*["']new["']\s*,\s*label:\s*["']New["']/, 'new tab label');
+  checkPattern(shellSource, 'new trip title mapping present', /new:\s*["']New Trip["']/, 'header title map for new trip');
+  checkPattern(shellSource, 'reports tab present', /key:\s*["']reports["']\s*,\s*label:\s*["']Reports["']/, 'reports tab label');
+  checkPattern(shellSource, 'settings tab present', /key:\s*["']settings["']\s*,\s*label:\s*["']Settings["']/, 'settings tab label');
 }
 
 if (settingsScreenSource) {
-  checkIncludes(settingsScreenSource, 'settings screen orchestrator export exists', 'export function createSettingsScreenOrchestrator({');
-  checkIncludesAny(settingsScreenSource, 'settings page header marker present', ['renderPageHeader("settings")', "renderPageHeader('settings')"]);
+  checkPattern(settingsScreenSource, 'settings screen orchestrator export exists', /export\s+function\s+createSettingsScreenOrchestrator\s*\(/, 'createSettingsScreenOrchestrator export');
+  checkPattern(settingsScreenSource, 'settings page header marker present', /renderPageHeader\s*\(\s*["']settings["']\s*\)/, 'renderPageHeader("settings")');
   checkPattern(settingsScreenSource, 'settings updates section marker present', /settingsMiniTitle[\s\S]*Updates/, 'settings updates section anchor');
   checkIncludes(settingsScreenSource, 'settings update status row marker present', 'id="updateBigStatus"');
   checkIncludes(settingsScreenSource, 'settings build version row marker present', 'id="updateVersionLine"');
@@ -197,8 +247,8 @@ if (tripScreenSource) {
 }
 
 if (reportsScreenSource) {
-  checkIncludes(reportsScreenSource, 'reports screen renderer export exists', 'export function createReportsScreenRenderer(deps){');
-  checkIncludes(reportsScreenSource, 'reports header marker present', 'renderPageHeader("reports")');
+  checkPattern(reportsScreenSource, 'reports screen renderer export exists', /export\s+function\s+createReportsScreenRenderer\s*\(/, 'createReportsScreenRenderer export');
+  checkPattern(reportsScreenSource, 'reports header marker present', /renderPageHeader\s*\(\s*["']reports["']\s*\)/, 'renderPageHeader("reports")');
 }
 
 if (reportsShellControlsSource) {
