@@ -51,7 +51,7 @@ const CORE_JS_PATHS = [
 const CORE = [
   "./",
   "./index.html",
-  "./manifest.webmanifest",
+  `./manifest.webmanifest?v=${SW_V}`,
   "./legal/terms.html",
   "./legal/privacy.html",
   "./legal/license.html",
@@ -73,7 +73,7 @@ const CORE = [
 const REQUIRED_CORE = [
   "./",
   "./index.html",
-  "./manifest.webmanifest",
+  `./manifest.webmanifest?v=${SW_V}`,
   `./css/shell_shared_v5.css?v=${SW_V}`,
   `./css/shell_feature_surfaces_v5.css?v=${SW_V}`,
   `./css/trip_form_v5.css?v=${SW_V}`,
