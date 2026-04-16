@@ -814,6 +814,8 @@ getApp().innerHTML = `
           <span class="pill" id="pplPill">Price/Lb: <b class="rate ppl">${formatMoney(ppl)}</b></span>
         </div>
 
+        <div id="reviewWarnings"></div>
+
         ${d.raw ? `
           <div class="sep"></div>
           <div class="muted small" style="white-space:pre-wrap">${escapeHtml(d.raw)}</div>
@@ -1120,7 +1122,6 @@ if(elDealerLive){
         dealer: elDealer.value,
         pounds: elPounds.value,
         amount: elAmount.value,
-        rate: elRate.value,
         area: elArea.value,
         species: DEFAULT_TRIP_SPECIES
       }
