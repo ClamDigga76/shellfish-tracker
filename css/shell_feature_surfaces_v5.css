@@ -382,6 +382,29 @@
   font-size:11px;
   line-height:1.45;
 }
+
+.homeOverviewPrimaryMetric{
+  margin:10px 0 12px;
+  padding:12px 13px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.15);
+  background:linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);
+}
+.homeOverviewPrimaryMetricLabel{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--text-muted-strong);
+  font-weight:820;
+}
+.homeOverviewPrimaryMetricValue{
+  margin-top:4px;
+  font-size:clamp(24px, 6vw, 34px);
+  line-height:1.08;
+  font-weight:900;
+  font-variant-numeric:tabular-nums;
+}
+.homeOverviewPrimaryMetricValue.money{color:var(--money)}
 .kpiGroupLabel{
   margin:var(--card-title-gap) 0 var(--card-body-gap);
   font-size:11px;

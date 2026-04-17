@@ -252,41 +252,7 @@ export function createHomeDashboardRenderer({
       })()
       : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No trip saved yet</div><div class="emptyStateBody">Save your first trip to show it here.</div></div>`;
 
-    const monthTotals = trips.reduce((map, trip) => {
-      const iso = parseReportDateToISO(trip?.dateISO || "");
-      if (!iso) return map;
-      const monthKey = String(iso).slice(0, 7);
-      if (!monthKey) return map;
-      const bucket = map.get(monthKey) || { monthKey, amount: 0, pounds: 0, trips: 0 };
-      bucket.amount += Number(trip?.amount) || 0;
-      bucket.pounds += Number(trip?.pounds) || 0;
-      bucket.trips += 1;
-      map.set(monthKey, bucket);
-      return map;
-    }, new Map());
-    const monthSeries = Array.from(monthTotals.values()).sort((a, b) => String(a.monthKey).localeCompare(String(b.monthKey)));
-    const currentMonth = monthSeries[monthSeries.length - 1] || null;
-    const previousMonth = monthSeries.length > 1 ? monthSeries[monthSeries.length - 2] : null;
-    const toneFromDelta = (current, prior) => {
-      if (!(prior > 0) || !(current > 0)) return "steady";
-      const delta = (current - prior) / Math.max(1, Math.abs(prior));
-      if (Math.abs(delta) <= 0.03) return "steady";
-      return delta > 0 ? "up" : "down";
-    };
-    const poundsTone = toneFromDelta(Number(currentMonth?.pounds) || 0, Number(previousMonth?.pounds) || 0);
-    const amountTone = toneFromDelta(Number(currentMonth?.amount) || 0, Number(previousMonth?.amount) || 0);
-    const homeOverviewTone = (() => {
-      if (!previousMonth || !currentMonth) return "steady";
-      if (amountTone === "up" || poundsTone === "up") return "up";
-      if (amountTone === "down" && poundsTone === "down") return "down";
-      return "steady";
-    })();
-    const homeOverviewHeadline = (() => {
-      if (!previousMonth || !currentMonth) return "Overview aligned to the selected range.";
-      if (homeOverviewTone === "up") return "Recent catches are trending higher than last month.";
-      if (homeOverviewTone === "down") return "Recent catches are below last month levels.";
-      return "Recent catches are holding steady month to month.";
-    })();
+    const homePrimaryHighlightLabel = "Filtered amount";
     const homeFilterLabel = (() => {
       if (f === "MONTH") return "This Month";
       if (f === "LAST_MONTH") return "Last Month";
@@ -298,6 +264,7 @@ export function createHomeDashboardRenderer({
       return "YTD";
     })();
     const homeOverviewRangeLabel = homeFilterLabel;
+    const homeOverviewHeadline = `Showing ${homeFilterLabel} totals only.`;
     getApp().innerHTML = `
       ${renderPageHeader("home")}
 
@@ -361,6 +328,10 @@ export function createHomeDashboardRenderer({
           <div class="reportsHeroEyebrow">Overview</div>
           <div class="homeHeroHeadline">${escapeHtml(homeOverviewHeadline)}</div>
           <div class="reportsHeroSub">${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
+          <div class="homeOverviewPrimaryMetric" role="status" aria-live="polite" aria-label="Primary filtered amount highlight">
+            <div class="homeOverviewPrimaryMetricLabel">${homePrimaryHighlightLabel}</div>
+            <div class="homeOverviewPrimaryMetricValue money">${moneyRounded}</div>
+          </div>
           <div class="reportsHeroGrid">
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Average amount / trip</div>
