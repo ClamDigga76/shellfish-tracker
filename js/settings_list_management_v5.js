@@ -20,6 +20,8 @@ export function createSettingsListManagement(deps){
     copyTextWithFeedback,
     getDebugInfo,
     forceRefreshApp,
+    applyThemeMode,
+    clearBackupRecoveryMetadata,
     render,
     buildResetState = () => ({})
   } = deps;
@@ -526,10 +528,16 @@ export function createSettingsListManagement(deps){
     };
 
     document.getElementById("resetData").onclick = ()=>{
-      const typed = prompt('Type DELETE to permanently erase ALL trips and lists on this device.');
+      const typed = prompt("Type DELETE to permanently erase all trips, list entries, and recovery metadata on this device.");
       if(typed !== "DELETE") { showToast("Erase canceled"); return; }
       setState(buildResetState());
+      try{
+        if(typeof clearBackupRecoveryMetadata === "function") clearBackupRecoveryMetadata();
+      }catch(_){ }
       saveState();
+      try{
+        if(typeof applyThemeMode === "function") applyThemeMode();
+      }catch(_){ }
       showToast("All data erased");
       render();
     };

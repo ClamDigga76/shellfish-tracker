@@ -372,7 +372,8 @@ const {
   openRestoreErrorModal,
   openRestoreResultModal,
   importBackupFromFile,
-  restoreFromRollbackSnapshot
+  restoreFromRollbackSnapshot,
+  clearBackupRecoveryMetadata
 } = createBackupRestoreSubsystem({
   getState: ()=> state,
   saveState: ()=> saveState(),
@@ -722,6 +723,8 @@ const settingsListManagement = createSettingsListManagement({
   copyTextWithFeedback: feedback.copyTextWithFeedback,
   getDebugInfo: () => getDebugInfo(),
   forceRefreshApp: () => updateRuntimeStatus.forceRefreshApp(),
+  applyThemeMode: () => applyThemeMode(),
+  clearBackupRecoveryMetadata: () => clearBackupRecoveryMetadata(),
   render: () => render(),
   buildResetState: () => buildAppDefaultState()
 });
