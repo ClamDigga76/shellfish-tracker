@@ -223,6 +223,27 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return normalized.slice(0, 5).trimEnd() + "…";
   }
 
+  function normalizeAreaLabel(name){
+    return String(name || "").replace(/\s+/g, " ").trim();
+  }
+
+  function drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight }){
+    ctx.fillStyle = palette.label;
+    ctx.font = frame.tickFont;
+    labels.forEach((rawLabel, i)=>{
+      const fullLabel = normalizeAreaLabel(rawLabel || "");
+      if(!fullLabel) return;
+      const maxLabelW = Math.max(22, barW - 2);
+      const rankedLabel = `${i + 1}. ${fullLabel}`;
+      const compactLabel = `${i + 1}. ${fullLabel.slice(0, 18)}`;
+      const base = frame.compact ? compactLabel : rankedLabel;
+      const lab = fitLabel(ctx, base, maxLabelW);
+      const tx = geom.x0 + i * barW + ((barW - ctx.measureText(lab).width) / 2);
+      const x = Math.max(2, tx);
+      ctx.fillText(lab, x, canvasHeight - 10);
+    });
+  }
+
   function drawDealerIdentityLabels(rows, { ctx, frame, geom, barW, canvasHeight }){
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
@@ -449,6 +470,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const labels = Array.isArray(chartModel?.labels) ? chartModel.labels.map((v)=> String(v || "")) : [];
     const paletteSet = resolveMetricDetailPalette(metricKey);
     const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
+    const labelMode = String(chartModel?.labelMode || "").trim();
+    const customLabels = labelMode === "home-area-direct"
+      ? ({ ctx, frame, geom, barW, canvasHeight })=>{
+        drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight });
+      }
+      : null;
     drawBarChart(
       canvasId,
       values,
@@ -460,7 +487,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         minTop: metricKey === "trips" ? 1 : 0,
         minBarWidth: 18,
         barPad: (frame)=> frame.compact ? 8 : 14,
-        xLabelType: labels.length <= 3 ? "compare" : "category"
+        xLabelType: labels.length <= 3 ? "compare" : "category",
+        customLabels
       }
     );
     return true;
