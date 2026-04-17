@@ -752,6 +752,7 @@ const { renderSettings } = createSettingsScreenOrchestrator({
   importBackupFromFile: (file, options) => importBackupFromFile(file, options),
   restoreFromRollbackSnapshot: () => restoreFromRollbackSnapshot(),
   saveState: () => saveState(),
+  clearPendingTripUndo: () => clearPendingTripUndo(),
   openConfirmModal: (options) => openConfirmModal(options),
   restoreDeletedTrip: (deletedEntryId) => restoreDeletedTrip(deletedEntryId),
   permanentlyDeleteDeletedTrip: (deletedEntryId) => permanentlyDeleteDeletedTrip(deletedEntryId),

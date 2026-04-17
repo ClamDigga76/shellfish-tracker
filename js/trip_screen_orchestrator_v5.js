@@ -1489,7 +1489,8 @@ function renderEditTrip(){
     const undoSnapshot = {
       trips,
       deletedTrips: Array.isArray(state.deletedTrips) ? [...state.deletedTrips] : [],
-      view: state.view
+      view: state.view,
+      navStack: Array.isArray(state.navStack) ? [...state.navStack] : []
     };
     if(Object.prototype.hasOwnProperty.call(state, "editId")) undoSnapshot.editId = state.editId;
     if(Object.prototype.hasOwnProperty.call(state, "draft")) undoSnapshot.draft = state.draft;

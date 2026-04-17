@@ -24,6 +24,7 @@ export function createSettingsSupportRecoverySeam(deps) {
     updateBackupHealthWarning,
     updateLastBackupLine,
     updateRestoreRollbackLine,
+    clearPendingTripUndo,
     restoreDeletedTrip,
     permanentlyDeleteDeletedTrip,
     clearDeletedTripsBin,
@@ -187,6 +188,7 @@ export function createSettingsSupportRecoverySeam(deps) {
     try {
       document.querySelectorAll("[data-restore-trip]").forEach((btn) => {
         btn.addEventListener("click", () => {
+          clearPendingTripUndo();
           const result = restoreDeletedTrip(btn.getAttribute("data-restore-trip"));
           if (!result?.ok) {
             showToast("Trip restore failed");
@@ -207,6 +209,7 @@ export function createSettingsSupportRecoverySeam(deps) {
             confirmTone: "destructive"
           });
           if (!ok) return;
+          clearPendingTripUndo();
           const removed = permanentlyDeleteDeletedTrip(btn.getAttribute("data-delete-forever"));
           if (!removed) {
             showToast("Delete forever failed");
@@ -228,6 +231,7 @@ export function createSettingsSupportRecoverySeam(deps) {
             confirmTone: "destructive"
           });
           if (!ok) return;
+          clearPendingTripUndo();
           const cleared = clearDeletedTripsBin();
           saveState();
           render();
