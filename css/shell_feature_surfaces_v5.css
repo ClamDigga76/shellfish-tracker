@@ -383,28 +383,38 @@
   line-height:1.45;
 }
 
-.homeOverviewPrimaryMetric{
-  margin:10px 0 12px;
-  padding:12px 13px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.15);
-  background:linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);
+.homeOverviewHeaderRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:10px;
 }
-.homeOverviewPrimaryMetricLabel{
+.homeOverviewScopePill{
   font-size:11px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
+  line-height:1.2;
+  letter-spacing:.04em;
   color:var(--text-muted-strong);
-  font-weight:820;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;
+  padding:4px 8px;
+  background:rgba(8,12,20,.30);
+  white-space:nowrap;
 }
-.homeOverviewPrimaryMetricValue{
+.homeOverviewCard .reportsHeroStat{
+  padding:11px 12px;
+}
+.homeOverviewCard .reportsHeroLabel{
+  font-size:10px;
+}
+.homeOverviewCard .reportsHeroValue{
+  font-size:17px;
+  line-height:1.2;
+}
+.homeOverviewCard .reportsHeroMeta{
   margin-top:4px;
-  font-size:clamp(24px, 6vw, 34px);
-  line-height:1.08;
-  font-weight:900;
-  font-variant-numeric:tabular-nums;
 }
-.homeOverviewPrimaryMetricValue.money{color:var(--money)}
 .kpiGroupLabel{
   margin:var(--card-title-gap) 0 var(--card-body-gap);
   font-size:11px;
