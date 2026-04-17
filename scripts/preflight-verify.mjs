@@ -48,6 +48,8 @@ function extractStartupImportDestructureBody(source = "") {
 function countTopLevelArrayEntries(body = "") {
   let count = 0;
   let tokenActive = false;
+  let pendingElision = true;
+  let sawTopLevelSlotSignal = false;
   let braceDepth = 0;
   let bracketDepth = 0;
   let parenDepth = 0;
@@ -137,17 +139,22 @@ function countTopLevelArrayEntries(body = "") {
     }
 
     if (ch === "," && braceDepth === 0 && bracketDepth === 0 && parenDepth === 0) {
-      if (tokenActive) {
-        count += 1;
-        tokenActive = false;
-      }
+      if (tokenActive || pendingElision) count += 1;
+      tokenActive = false;
+      pendingElision = true;
+      sawTopLevelSlotSignal = true;
       continue;
     }
 
-    if (!/\s/.test(ch)) tokenActive = true;
+    if (!/\s/.test(ch)) {
+      tokenActive = true;
+      pendingElision = false;
+      sawTopLevelSlotSignal = true;
+    }
   }
 
-  if (tokenActive) count += 1;
+  if (!sawTopLevelSlotSignal && body.trim() === "") return 0;
+  if (tokenActive || pendingElision) count += 1;
   return count;
 }
 
@@ -334,7 +341,7 @@ if (swJs) {
 
   for (const rel of SW_CORE_JS_PATHS) {
     const swPath = `./js/${rel.slice(2)}`;
-    if (swJs.includes(`\"${swPath}\"`)) {
+    if (swJs.includes(`"${swPath}"`)) {
       pass(`service worker core ownership includes: ${rel}`);
     } else {
       fail(`service worker core ownership includes: ${rel}`);
