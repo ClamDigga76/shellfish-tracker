@@ -217,12 +217,12 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
     poundsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" }),
     poundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
-    poundsAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByPounds, metricKey: "pounds", valueKey: "lbs", basisLabel: "Strongest areas by pounds in this Home filter" }),
+    poundsAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByPounds, metricKey: "pounds", valueKey: "lbs", basisLabel: "Strongest areas by pounds" }),
     amount: buildHomeCompareBarChart({ labels, metricKey: "amount", currentValue: period?.current?.amount, previousValue: period?.previous?.amount }),
     amountTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amt" }),
     amountPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amountPerTrip" }),
-    amountDealerMix: buildHomeTopRowsBarChart({ rows: dealerRows, metricKey: "amount", valueKey: "amt", basisLabel: "Top dealers by amount in this Home filter" }),
-    amountAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByAmount, metricKey: "amount", valueKey: "amt", basisLabel: "Strongest areas by amount in this Home filter" }),
+    amountDealerMix: buildHomeTopRowsBarChart({ rows: dealerRows, metricKey: "amount", valueKey: "amt", basisLabel: "Top dealers by amount" }),
+    amountAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByAmount, metricKey: "amount", valueKey: "amt", basisLabel: "Strongest areas by amount" }),
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
     pplMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg" }),
     tripsRollingTrend: buildRollingSeriesFromMonthRows({
@@ -249,7 +249,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       windowSize: getRollingWindowForMetric("ppl", { surface: "home" }),
       basisLabel: "Rolling $/lb trend • visible Home months"
     }),
-    pplDealerLeaders: buildHomeTopRowsBarChart({ rows: dealerRowsByRate, metricKey: "ppl", valueKey: "avg", basisLabel: "Dealer pay-rate leaders in this Home filter" }),
+    pplDealerLeaders: buildHomeTopRowsBarChart({ rows: dealerRowsByRate, metricKey: "ppl", valueKey: "avg", basisLabel: "Dealer pay-rate leaders" }),
     pplRateVsPoundsTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" })
   };
 }
@@ -452,6 +452,9 @@ export function createReportsMetricDetailSeam(deps){
     const detailContext = viewModel.isHomeMetricDetail
       ? `Range ${homeRangeLabel || "Active"} • ${homeTripCount} trips`
       : `Range ${viewModel.rangeLabel} • ${viewModel.trips.length} trips`;
+    const homeDetailMetaRow = viewModel.isHomeMetricDetail
+      ? `<div class="homeMetricMetaRow" aria-label="Active scope"><span class="homeMetricMetaItem"><span class="homeMetricMetaLabel">Scope</span><b class="homeMetricMetaValue">${escapeHtml(homeRangeLabel || "Active filter")}</b></span><span class="homeMetricMetaItem"><span class="homeMetricMetaLabel">Trips</span><b class="homeMetricMetaValue">${escapeHtml(String(homeTripCount))}</b></span></div>`
+      : "";
     const detailChartTitle = viewModel.isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = meta.primaryBasis?.basisLabel || (viewModel.isHomeMetricDetail ? meta.homeChartContext : meta.chartContext);
     const detailInsight = viewModel.isHomeMetricDetail ? meta.homeInsight : meta.insight;
@@ -487,7 +490,7 @@ export function createReportsMetricDetailSeam(deps){
           <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to Home</button>
           <div class="${viewModel.detailEyebrowClass}">HOME METRIC DETAIL</div>
           <h2 class="${viewModel.detailTitleClass}">${escapeHtml(`${meta.homeTitle} detail`)}</h2>
-          <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
+          ${homeDetailMetaRow}
         ` : `
           <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to reports</button>
           <div class="${viewModel.detailEyebrowClass}">${escapeHtml(meta.eyebrow)}</div>
@@ -549,11 +552,27 @@ export function createReportsMetricDetailSeam(deps){
       if(targetMetric === "ppl") return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
       return `${to2(value)}`;
     };
+    const formatHomeKpiHeroValue = (targetMetric, trips)=> {
+      const safeTrips = Array.isArray(trips) ? trips : [];
+      const tripCount = safeTrips.length;
+      const pounds = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.lbs) || 0), 0);
+      const amount = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amt) || 0), 0);
+      if(targetMetric === "trips") return `${tripCount} trips`;
+      if(targetMetric === "pounds") return `${to2(pounds)} lbs`;
+      if(targetMetric === "amount") return formatMoney(to2(amount));
+      if(targetMetric === "ppl") return pounds > 0 ? `${formatMoney(to2(amount / pounds))}/lb` : "—";
+      return "—";
+    };
+    const resolveHeroValue = (targetMetric)=> (
+      isHomeMetricDetail
+        ? formatHomeKpiHeroValue(targetMetric, viewModel.trips)
+        : formatHeroFromPrimaryBasis(targetMetric, primaryBasis)
+    );
     const homeSecondaryChartsByMetric = {
       trips: [
         detailCharts.tripsMonthlyTrend ? {
           title: "Trips by month",
-          context: "Monthly trip counts for this Home view",
+          context: "Monthly trip counts",
           canvasId: "c_trips_monthly_trend",
           chartModel: detailCharts.tripsMonthlyTrend,
           metricKey: "trips"
@@ -569,7 +588,7 @@ export function createReportsMetricDetailSeam(deps){
       pounds: [
         detailCharts.poundsMonthlyTrend ? {
           title: "Total pounds by month",
-          context: "Monthly pounds landed in this Home view",
+          context: "Monthly pounds landed",
           canvasId: "c_pounds_monthly_trend",
           chartModel: detailCharts.poundsMonthlyTrend,
           metricKey: "pounds"
@@ -592,7 +611,7 @@ export function createReportsMetricDetailSeam(deps){
       amount: [
         detailCharts.amountTrend ? {
           title: "Total amount by month",
-          context: "Monthly earnings in this Home view",
+          context: "Monthly earnings",
           canvasId: "c_amount_trend",
           chartModel: detailCharts.amountTrend,
           metricKey: "amount"
@@ -606,14 +625,14 @@ export function createReportsMetricDetailSeam(deps){
         } : null,
         detailCharts.amountDealerMix?.labels?.length ? {
           title: "Top dealers by amount",
-          context: "Dealers paying the most in this Home view",
+          context: "Dealers paying the most",
           canvasId: "c_amount_dealer_mix",
           chartModel: detailCharts.amountDealerMix,
           metricKey: "amount"
         } : null,
         detailCharts.amountAreaMix?.labels?.length ? {
           title: "Strongest areas by amount",
-          context: "Areas earning the most in this Home view",
+          context: "Areas earning the most",
           canvasId: "c_amount_area_mix",
           chartModel: detailCharts.amountAreaMix,
           metricKey: "amount"
@@ -622,7 +641,7 @@ export function createReportsMetricDetailSeam(deps){
       ppl: [
         detailCharts.pplMonthlyTrend ? {
           title: "Average pay rate by month",
-          context: "Average $/lb each month in this Home view",
+          context: "Average $/lb each month",
           canvasId: "c_ppl_monthly_trend",
           chartModel: detailCharts.pplMonthlyTrend,
           metricKey: "ppl"
@@ -650,7 +669,7 @@ export function createReportsMetricDetailSeam(deps){
         eyebrow: "Metric breakdown",
         heroLabel: "Trips this range",
         homeHeroLabel: "Latest visible Home month",
-        heroValue: formatHeroFromPrimaryBasis("trips", primaryBasis),
+        heroValue: resolveHeroValue("trips"),
         heroClass: "trips",
         comparePayload: primaryPayload,
         primaryBasis,
@@ -679,7 +698,7 @@ export function createReportsMetricDetailSeam(deps){
         eyebrow: "Metric breakdown",
         heroLabel: "Pounds this range",
         homeHeroLabel: "Latest visible Home month",
-        heroValue: formatHeroFromPrimaryBasis("pounds", primaryBasis),
+        heroValue: resolveHeroValue("pounds"),
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
         primaryBasis,
@@ -708,7 +727,7 @@ export function createReportsMetricDetailSeam(deps){
         eyebrow: "Metric breakdown",
         heroLabel: "Amount this range",
         homeHeroLabel: "Latest visible Home month",
-        heroValue: formatHeroFromPrimaryBasis("amount", primaryBasis),
+        heroValue: resolveHeroValue("amount"),
         heroClass: "money",
         comparePayload: primaryPayload,
         primaryBasis,
@@ -749,7 +768,7 @@ export function createReportsMetricDetailSeam(deps){
         eyebrow: "Metric breakdown",
         heroLabel: "Average $/lb this range",
         homeHeroLabel: "Latest visible Home month",
-        heroValue: formatHeroFromPrimaryBasis("ppl", primaryBasis),
+        heroValue: resolveHeroValue("ppl"),
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,

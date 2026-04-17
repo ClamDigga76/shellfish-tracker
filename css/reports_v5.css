@@ -373,6 +373,33 @@
   line-height:1.42;
   color:#cee9ff;
 }
+.homeMetricMetaRow{
+  margin-top:10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.homeMetricMetaItem{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(126,200,255,.3);
+  background:rgba(126,200,255,.12);
+}
+.homeMetricMetaLabel{
+  font-size:11px;
+  font-weight:760;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:#c7e9ff;
+}
+.homeMetricMetaValue{
+  font-size:12px;
+  font-weight:830;
+  color:#f4fbff;
+}
 .reportsMetricStoryStack{
   margin-top:17px;
   display:grid;
@@ -584,6 +611,9 @@
 :root[data-theme="light"] .homeMetricContext,
 :root[data-theme="light"] .homeMetricChartContext,
 :root[data-theme="light"] .homeMetricInsight{color:var(--text-muted-strong);}
+:root[data-theme="light"] .homeMetricMetaItem{border-color:rgba(37,53,92,.18);background:rgba(37,53,92,.06);}
+:root[data-theme="light"] .homeMetricMetaLabel{color:#5f6d89;}
+:root[data-theme="light"] .homeMetricMetaValue{color:#344054;}
 :root[data-theme="light"] .reportsMiniPreviewBar,
 :root[data-theme="light"] .reportsCompareBarTrack{background:rgba(37,53,92,.12);}
 :root[data-theme="light"] .reportsMiniPreviewBar.muted .reportsMiniPreviewFill,
