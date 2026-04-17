@@ -12,7 +12,6 @@ export function createTripsBrowseScreenRenderer(deps){
     renderApp,
     normalizeCustomRangeWithFeedback,
     bindDatePill,
-    exportTripsWithLabel,
     showToast,
     ensureTripsFilter,
     getTripsFilteredRows,
@@ -81,9 +80,6 @@ export function createTripsBrowseScreenRenderer(deps){
         </div>
 
         <div class="tripsFilterActions">
-          <div class="tripsFilterActionExport">
-            <button class="btn" id="exportTrips" type="button">Export CSV</button>
-          </div>
           <button class="btn btn-ghost" id="flt_reset" type="button">Reset</button>
         </div>
 
@@ -192,15 +188,6 @@ export function createTripsBrowseScreenRenderer(deps){
       saveState();
       renderAllTrips();
     });
-
-    const exportBtn = document.getElementById("exportTrips");
-    if(exportBtn){
-      exportBtn.onclick = ()=>{
-        const { rows, range } = getTripsFilteredRows(state);
-        exportTripsWithLabel(rows, range.label, range.startISO, range.endISO);
-        showToast("CSV exported");
-      };
-    }
 
     const tripsEmptyAdd = document.getElementById("tripsEmptyAdd");
     if (tripsEmptyAdd) {
