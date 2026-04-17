@@ -656,7 +656,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Trips • Compare",
         homeChartTitle: "Trips",
-        chartContext: primaryChart?.basisLabel || "Bars • matched range trip totals",
+        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window trip totals",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_trips",
         secondaryCharts: isHomeMetricDetail
@@ -670,7 +670,7 @@ export function createReportsMetricDetailSeam(deps){
               metricKey: "trips"
             } : null
           ],
-        insight: "Read this compare card with the chart to confirm trip movement in the same matched range.",
+        insight: "Read this compare card with the chart to confirm trip movement in the same latest comparable-month window.",
         homeInsight: "Start with the month-to-month compare, then scan monthly charts for quick context."
       },
       pounds: {
@@ -685,7 +685,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Pounds • Compare",
         homeChartTitle: "Pounds",
-        chartContext: primaryChart?.basisLabel || "Bars • matched range pound totals",
+        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window pound totals",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_lbs",
         secondaryCharts: isHomeMetricDetail
@@ -699,7 +699,7 @@ export function createReportsMetricDetailSeam(deps){
               metricKey: "pounds"
             } : null
           ],
-        insight: "Use this compare card and chart together so the headline and values stay aligned to one matched range.",
+        insight: "Use this compare card and chart together so the headline and values stay aligned to one latest comparable-month window.",
         homeInsight: "Start with the compare chart, then use monthly and area charts to see what drove the change."
       },
       amount: {
@@ -714,7 +714,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Amount • Compare",
         homeChartTitle: "Amount",
-        chartContext: primaryChart?.basisLabel || "Bars • matched range amount totals",
+        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window amount totals",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_amount_detail",
         secondaryCharts: isHomeMetricDetail
@@ -755,7 +755,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "$/lb • Compare",
         homeChartTitle: "Avg $/lb",
-        chartContext: primaryChart?.basisLabel || "Bars • matched range average $/lb",
+        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window average $/lb",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
@@ -769,7 +769,7 @@ export function createReportsMetricDetailSeam(deps){
               metricKey: "ppl"
             } : null
           ],
-        insight: "Use this compare card and chart to read matched-range pricing without mixing full-range averages.",
+        insight: "Use this compare card and chart to read latest comparable-month window pricing without mixing full-range averages.",
         homeInsight: "Start with compare, then scan monthly pounds and dealer-rate charts for pricing context."
       }
     };

@@ -153,7 +153,7 @@ export function createReportsHighlightsSeam(deps){
     const trustText = payload?.confidenceLabel === "early"
       ? " • early read"
       : (payload?.confidenceLabel === "weak" ? " • light read" : "");
-    return `Compared over ${windowText}${trustText}`;
+    return `Latest comparable-month window: ${windowText}${trustText}`;
   }
 
   function buildMetricUnavailableCard({ payload, headlineLabel, formatter, period }){
@@ -510,51 +510,21 @@ export function createReportsHighlightsSeam(deps){
     ].filter(Boolean);
 
     const featuredSummaries = summaryCards.filter(Boolean).slice(0, 8);
-    const highlights = [];
-    if(metricCompareCards.length >= 2 && featuredSummaries.length){
-      highlights.push(featuredSummaries[0], metricCompareCards[0], metricCompareCards[1], ...featuredSummaries.slice(1));
-    }else if(metricCompareCards.length === 1){
-      highlights.push(metricCompareCards[0], ...featuredSummaries);
-    }else{
-      highlights.push(...featuredSummaries);
-    }
-
-    if(!highlights.length) return "";
+    const groupedSummaries = featuredSummaries;
+    const groupedCompareCards = metricCompareCards;
+    if(!groupedSummaries.length && !groupedCompareCards.length) return "";
 
     return `
       <div class="reportsHighlightsCard">
-        <div class="reportsHighlightsHdr">Range insights</div>
-        <div class="reportsHighlightsGuide">Tap <b>View breakdown</b> on a compare card for metric detail.</div>
-        <div class="reportsHighlightsGrid">
-          ${highlights.map(item=>`
-            <${item.type === "compare" && !item.unavailable ? "button" : "div"} class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare" : "summary"} ${item.type === "compare" && !item.unavailable ? "reportsHighlightItem--drilldown" : ""}" ${item.type === "compare" && !item.unavailable ? `type="button" data-metric-detail="${escapeHtml(item.metricKey)}" aria-label="View ${escapeHtml(item.label)} breakdown"` : ""}>
-              <div class="reportsHighlightLabel">${escapeHtml(item.label)}</div>
-              <div class="reportsHighlightHeadline">${renderPercentEmphasisText(item.headline)}</div>
-              ${item.type === "compare" ? `
-                <div class="reportsHighlightMetricRow">
-                  <div class="reportsHighlightValue ${item.valueClass || ""}">${renderPercentEmphasisText(item.value)}</div>
-                  <div class="reportsMiniPreview" role="presentation" aria-hidden="true">
-                    <span class="reportsMiniPreviewBar"><span class="reportsMiniPreviewFill" style="width:${item.aPct}%"></span></span>
-                    <span class="reportsMiniPreviewBar muted"><span class="reportsMiniPreviewFill" style="width:${item.bPct}%"></span></span>
-                  </div>
-                </div>
-                <div class="reportsCompareRow reportsCompareRow--context tone-${escapeHtml(item.compareTone)}">${renderPercentEmphasisText(item.compareText)}</div>
-                ${item.unavailable ? `
-                  <div class="reportsCompareRow reportsCompareRow--support tone-steady">${renderPercentEmphasisText(item.statusText || "Compare unavailable in this range.")}</div>
-                ` : `
-                  <div class="reportsCompareBars" role="presentation">
-                    <div class="reportsCompareLine">
-                      <div class="reportsCompareMeta"><span class="reportsCompareMetaLabel">${escapeHtml(item.aLabel)}</span><b class="reportsCompareMetaValue ${item.valueClass || ""}">${escapeHtml(item.aValue)}</b></div>
-                      <div class="reportsCompareBarTrack"><span style="width:${item.aPct}%"></span></div>
-                    </div>
-                    <div class="reportsCompareLine">
-                      <div class="reportsCompareMeta"><span class="reportsCompareMetaLabel">${escapeHtml(item.bLabel)}</span><b class="reportsCompareMetaValue ${item.valueClass || ""}">${escapeHtml(item.bValue)}</b></div>
-                      <div class="reportsCompareBarTrack muted"><span style="width:${item.bPct}%"></span></div>
-                    </div>
-                  </div>
-                  <div class="reportsHighlightAction" aria-hidden="true">View breakdown →</div>
-                `}
-              ` : `
+        <div class="reportsHighlightsHdr">Insights</div>
+        <div class="reportsHighlightsGuide">Range summaries stay range-wide. Compare cards use only the latest comparable-month window.</div>
+        ${groupedSummaries.length ? `
+          <div class="reportsHighlightsHdr">Range-wide summaries</div>
+          <div class="reportsHighlightsGrid">
+            ${groupedSummaries.map(item=>`
+              <div class="reportsHighlightItem reportsHighlightItem--summary">
+                <div class="reportsHighlightLabel">${escapeHtml(item.label)}</div>
+                <div class="reportsHighlightHeadline">${renderPercentEmphasisText(item.headline)}</div>
                 <div class="reportsHighlightMetricRow reportsHighlightMetricRow--summary">
                   <div class="reportsHighlightValueWrap">
                     <div class="reportsHighlightValue ${item.valueClass || ""} ${item.compareValueTone ? `reportsHighlightValue--tone-${escapeHtml(item.compareValueTone)}` : ""}">${renderPercentEmphasisText(item.value)}</div>
@@ -570,10 +540,45 @@ export function createReportsHighlightsSeam(deps){
                   `).join("")}</div>`
                   : `<div class="reportsCompareRow reportsCompareRow--support tone-${escapeHtml(item.statusTone || "steady")}">${renderPercentEmphasisText(item.statusText)}</div>`
                 }
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+        ${groupedCompareCards.length ? `
+          <div class="reportsHighlightsHdr">Latest comparable-month window cards</div>
+          <div class="reportsHighlightsGuide">Tap <b>View breakdown</b> to open metric detail for this compare window.</div>
+          <div class="reportsHighlightsGrid">
+            ${groupedCompareCards.map(item=>`
+            <${item.type === "compare" && !item.unavailable ? "button" : "div"} class="reportsHighlightItem reportsHighlightItem--${item.type === "compare" ? "compare" : "summary"} ${item.type === "compare" && !item.unavailable ? "reportsHighlightItem--drilldown" : ""}" ${item.type === "compare" && !item.unavailable ? `type="button" data-metric-detail="${escapeHtml(item.metricKey)}" aria-label="View ${escapeHtml(item.label)} breakdown"` : ""}>
+              <div class="reportsHighlightLabel">${escapeHtml(item.label)}</div>
+              <div class="reportsHighlightHeadline">${renderPercentEmphasisText(item.headline)}</div>
+              <div class="reportsHighlightMetricRow">
+                <div class="reportsHighlightValue ${item.valueClass || ""}">${renderPercentEmphasisText(item.value)}</div>
+                <div class="reportsMiniPreview" role="presentation" aria-hidden="true">
+                  <span class="reportsMiniPreviewBar"><span class="reportsMiniPreviewFill" style="width:${item.aPct}%"></span></span>
+                  <span class="reportsMiniPreviewBar muted"><span class="reportsMiniPreviewFill" style="width:${item.bPct}%"></span></span>
+                </div>
+              </div>
+              <div class="reportsCompareRow reportsCompareRow--context tone-${escapeHtml(item.compareTone)}">${renderPercentEmphasisText(item.compareText)}</div>
+              ${item.unavailable ? `
+                <div class="reportsCompareRow reportsCompareRow--support tone-steady">${renderPercentEmphasisText(item.statusText || "Compare unavailable in this range.")}</div>
+              ` : `
+                <div class="reportsCompareBars" role="presentation">
+                  <div class="reportsCompareLine">
+                    <div class="reportsCompareMeta"><span class="reportsCompareMetaLabel">${escapeHtml(item.aLabel)}</span><b class="reportsCompareMetaValue ${item.valueClass || ""}">${escapeHtml(item.aValue)}</b></div>
+                    <div class="reportsCompareBarTrack"><span style="width:${item.aPct}%"></span></div>
+                  </div>
+                  <div class="reportsCompareLine">
+                    <div class="reportsCompareMeta"><span class="reportsCompareMetaLabel">${escapeHtml(item.bLabel)}</span><b class="reportsCompareMetaValue ${item.valueClass || ""}">${escapeHtml(item.bValue)}</b></div>
+                    <div class="reportsCompareBarTrack muted"><span style="width:${item.bPct}%"></span></div>
+                  </div>
+                </div>
+                <div class="reportsHighlightAction" aria-hidden="true">View breakdown →</div>
               `}
             </${item.type === "compare" && !item.unavailable ? "button" : "div"}>
           `).join("")}
-        </div>
+          </div>
+        ` : ""}
       </div>
     `;
   }

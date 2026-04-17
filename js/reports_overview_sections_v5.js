@@ -541,7 +541,7 @@ export function createReportsOverviewSectionsSeam(deps){
     if(activeReportsSection === "detail") return renderDetailBlock(context);
     return reportsSection({
       title: "Insights",
-      intro: "Top takeaways for this range.",
+      intro: "Range-wide summaries plus latest comparable-month window cards.",
       body: `${highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights appear automatically as more trips are added.</div></div>`}`,
       extraClass: "reportsSection--highlights"
     });
