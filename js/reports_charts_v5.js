@@ -142,8 +142,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     let lastRight = -Infinity;
-    labels.forEach((lab,i)=>{
-      if(i % step !== 0 && i !== labels.length - 1) return;
+    const tickIndexes = new Set([0, Math.max(0, labels.length - 1)]);
+    labels.forEach((_, i)=> {
+      if(i % step === 0) tickIndexes.add(i);
+    });
+    Array.from(tickIndexes).sort((a,b)=> a - b).forEach((i)=>{
+      const lab = labels[i];
       const slotW = labels.length > 0 ? (geom.plotW / labels.length) : geom.plotW;
       const x = alignMode === "bar-center"
         ? geom.x0 + (slotW * i) + (slotW * 0.5)
@@ -152,7 +156,10 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const m = ctx.measureText(text);
       let tx = x - (m.width / 2);
       tx = Math.max(2, Math.min(geom.xRight - m.width, tx));
-      if(tx <= lastRight + (frame.compact ? 9 : 7)) return;
+      if(tx <= lastRight + (frame.compact ? 9 : 7)){
+        if(i !== labels.length - 1) return;
+        tx = Math.max(2, geom.xRight - m.width);
+      }
       ctx.fillText(text, tx, y);
       lastRight = tx + m.width;
     });
@@ -203,6 +210,51 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       return `${words[0]} ${words[1]}`;
     }
     return cleaned;
+  }
+
+  function compactDealerTag(name){
+    const normalized = normalizeDealerLabel(name);
+    if(normalized.length <= 6) return normalized;
+    const words = normalized.split(" ").filter(Boolean);
+    if(words.length > 1){
+      const initials = words.map((part)=> part[0]).join("").slice(0,3);
+      if(initials.length >= 2) return initials.toUpperCase();
+    }
+    return normalized.slice(0, 5).trimEnd() + "…";
+  }
+
+  function drawDealerIdentityLabels(rows, { ctx, frame, geom, barW, canvasHeight }){
+    ctx.fillStyle = palette.label;
+    ctx.font = frame.tickFont;
+    const labelStep = Math.max(1, Math.ceil(rows.length / (frame.compact ? 5 : 7)));
+    rows.forEach((r,i)=>{
+      if(i % labelStep !== 0 && i !== rows.length - 1 && i !== 0) return;
+      const maxLabelW = Math.max(20, barW - 1);
+      const base = frame.compact ? compactDealerTag(r.name || "") : normalizeDealerLabel(r.name || "");
+      const withRank = `${i + 1} ${base}`;
+      const lab = fitLabel(ctx, withRank, maxLabelW);
+      const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
+      const x = Math.max(2, tx);
+      ctx.fillText(lab, x, canvasHeight-10);
+    });
+  }
+
+  function drawPointValueChip(ctx, text, x, y){
+    if(!text) return;
+    ctx.save();
+    ctx.font = "11px system-ui, -apple-system, Segoe UI, Arial";
+    const padX = 5;
+    const padY = 3;
+    const m = ctx.measureText(text);
+    const chipW = Math.max(18, m.width + (padX * 2));
+    const chipH = 16;
+    const chipX = x - (chipW / 2);
+    const chipY = y - 18;
+    ctx.fillStyle = "rgba(6,12,22,0.82)";
+    ctx.fillRect(chipX, chipY, chipW, chipH);
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.fillText(text, chipX + padX, chipY + chipH - padY);
+    ctx.restore();
   }
 
   function easeOutCubic(t){
@@ -330,6 +382,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ctx.stroke();
       });
 
+      const currentPoint = points[points.length - 1];
+      if(currentPoint){
+        drawPointValueChip(ctx, paletteSet.yFormatter(currentPoint.value), currentPoint.x, currentPoint.y);
+      }
+
       drawBottomTicks(ctx, labels, geom, h-10, frame, {
         alignMode: "index",
         labelType: options.xLabelType || "month",
@@ -437,18 +494,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         minBarWidth: 8,
         barPad: (frame)=> frame.compact ? 3 : 4,
         customLabels: ({ ctx, frame, geom, barW, canvasHeight })=>{
-          ctx.fillStyle = palette.label;
-          ctx.font = frame.tickFont;
-          const labelStep = Math.max(1, Math.ceil(topDealers.length / (frame.compact ? 5 : 7)));
-          topDealers.forEach((r,i)=>{
-            if(i % labelStep !== 0 && i !== topDealers.length - 1) return;
-            const maxLabelW = Math.max(18, barW - 1);
-            const base = normalizeDealerLabel(r.name || "");
-            const lab = fitLabel(ctx, base, maxLabelW);
-            const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
-            const x = Math.max(2, tx);
-            ctx.fillText(lab, x, canvasHeight-10);
-          });
+          drawDealerIdentityLabels(topDealers, { ctx, frame, geom, barW, canvasHeight });
         }
       }
     );
@@ -498,18 +544,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         minBarWidth: 8,
         barPad: (frame)=> frame.compact ? 3 : 4,
         customLabels: ({ ctx, frame, geom, barW, canvasHeight })=>{
-          ctx.fillStyle = palette.label;
-          ctx.font = frame.tickFont;
-          const labelStep = Math.max(1, Math.ceil(dealerAmountRows.length / (frame.compact ? 5 : 7)));
-          dealerAmountRows.forEach((r,i)=>{
-            if(i % labelStep !== 0 && i !== dealerAmountRows.length - 1) return;
-            const maxLabelW = Math.max(18, barW - 1);
-            const base = normalizeDealerLabel(r.name || "");
-            const lab = fitLabel(ctx, base, maxLabelW);
-            const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
-            const x = Math.max(2, tx);
-            ctx.fillText(lab, x, canvasHeight-10);
-          });
+          drawDealerIdentityLabels(dealerAmountRows, { ctx, frame, geom, barW, canvasHeight });
         }
       }
     );
@@ -529,18 +564,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       minBarWidth: 8,
       barPad: (frame)=> frame.compact ? 3 : 4,
       customLabels: ({ ctx, frame, geom, barW, canvasHeight })=>{
-        ctx.fillStyle = palette.label;
-        ctx.font = frame.tickFont;
-        const labelStep = Math.max(1, Math.ceil(dealerRateRows.length / (frame.compact ? 5 : 7)));
-        dealerRateRows.forEach((r,i)=>{
-          if(i % labelStep !== 0 && i !== dealerRateRows.length - 1) return;
-          const maxLabelW = Math.max(18, barW - 1);
-          const base = normalizeDealerLabel(r.name || "");
-          const lab = fitLabel(ctx, base, maxLabelW);
-          const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
-          const x = Math.max(2, tx);
-          ctx.fillText(lab, x, canvasHeight-10);
-        });
+        drawDealerIdentityLabels(dealerRateRows, { ctx, frame, geom, barW, canvasHeight });
       }
     }
   );
