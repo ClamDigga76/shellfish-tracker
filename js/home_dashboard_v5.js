@@ -252,7 +252,6 @@ export function createHomeDashboardRenderer({
       })()
       : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No trip saved yet</div><div class="emptyStateBody">Save your first trip to show it here.</div></div>`;
 
-    const homePrimaryHighlightLabel = "Filtered amount";
     const homeFilterLabel = (() => {
       if (f === "MONTH") return "This Month";
       if (f === "LAST_MONTH") return "Last Month";
@@ -264,7 +263,6 @@ export function createHomeDashboardRenderer({
       return "YTD";
     })();
     const homeOverviewRangeLabel = homeFilterLabel;
-    const homeOverviewHeadline = `Showing ${homeFilterLabel} totals only.`;
     getApp().innerHTML = `
       ${renderPageHeader("home")}
 
@@ -325,12 +323,9 @@ export function createHomeDashboardRenderer({
         </section>
 
         <section class="homeSection homeOverviewCard">
-          <div class="reportsHeroEyebrow">Overview</div>
-          <div class="homeHeroHeadline">${escapeHtml(homeOverviewHeadline)}</div>
-          <div class="reportsHeroSub">${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
-          <div class="homeOverviewPrimaryMetric" role="status" aria-live="polite" aria-label="Primary filtered amount highlight">
-            <div class="homeOverviewPrimaryMetricLabel">${homePrimaryHighlightLabel}</div>
-            <div class="homeOverviewPrimaryMetricValue money">${moneyRounded}</div>
+          <div class="homeOverviewHeaderRow">
+            <div class="reportsHeroEyebrow">Overview</div>
+            <div class="homeOverviewScopePill" aria-label="Active Home filter scope">${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
           </div>
           <div class="reportsHeroGrid">
             <div class="reportsHeroStat">
