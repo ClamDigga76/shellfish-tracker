@@ -292,7 +292,6 @@ export function createHomeDashboardRenderer({
         </section>
 
         <section class="homeSection homeKpiSection">
-          <div class="kpiGroupLabel">Core metrics</div>
           <div class="kpiRow">
             <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="trips" aria-label="Open trips detail">
               <div class="kpiLabel trips">Trips</div>
