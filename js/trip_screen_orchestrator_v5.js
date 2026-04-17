@@ -1,6 +1,7 @@
 import {
   createTripMetricSyncEngine,
   getMetricHelperText,
+  createMetricStateHelperUpdater,
   sanitizeDecimalInput,
   primeNumericField,
   normalizeAmountOnBlur,
@@ -178,11 +179,10 @@ const newTripFormHtml = renderTripEntryForm({
       rate: elRate
     }
   });
-  const metricStateHelperEl = document.getElementById("tripMetricStateHelperNew");
-  const updateMetricStateHelper = ()=>{
-    if(!metricStateHelperEl) return;
-    metricStateHelperEl.textContent = getMetricHelperText(metricSync.getLockPair());
-  };
+  const updateMetricStateHelper = createMetricStateHelperUpdater({
+    helperId: "tripMetricStateHelperNew",
+    metricSync
+  });
   const updateRateLine = metricSync.updateDerivedField;
   const updateSettlementLine = createSettlementLineUpdater({
     elWrittenCheckAmount,
@@ -1149,11 +1149,10 @@ function renderEditTrip(){
       rate: elRate
     }
   });
-  const metricStateHelperEl = document.getElementById("tripMetricStateHelperEdit");
-  const updateMetricStateHelper = ()=>{
-    if(!metricStateHelperEl) return;
-    metricStateHelperEl.textContent = getMetricHelperText(metricSync.getLockPair());
-  };
+  const updateMetricStateHelper = createMetricStateHelperUpdater({
+    helperId: "tripMetricStateHelperEdit",
+    metricSync
+  });
   const updateRateLine = metricSync.updateDerivedField;
   const updateSettlementLine = createSettlementLineUpdater({
     elWrittenCheckAmount,

@@ -59,6 +59,14 @@ export function getMetricHelperText(lockPair = []) {
   return METRIC_HELPER_TEXT_BY_PAIR[key] || METRIC_HELPER_TEXT_BY_PAIR["pounds+rate"];
 }
 
+export function createMetricStateHelperUpdater({ helperId, metricSync }) {
+  const metricStateHelperEl = document.getElementById(helperId);
+  return ()=>{
+    if(!metricStateHelperEl) return;
+    metricStateHelperEl.textContent = getMetricHelperText(metricSync.getLockPair());
+  };
+}
+
 export function sanitizeDecimalInput(raw){
   let s = String(raw || "").replace(/[^\d.,]/g, "");
   const decimalIdx = s.search(/[.,]/);
