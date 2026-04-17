@@ -40,6 +40,117 @@ function read(relPath) {
   return readFileSync(fullPath, "utf8");
 }
 
+function extractStartupImportDestructureBody(source = "") {
+  const match = source.match(/const\s+\[(?<body>[\s\S]*?)\]\s*=\s*await\s+Promise\.all\(\[/m);
+  return match?.groups?.body || "";
+}
+
+function countTopLevelArrayEntries(body = "") {
+  let count = 0;
+  let tokenActive = false;
+  let braceDepth = 0;
+  let bracketDepth = 0;
+  let parenDepth = 0;
+  let quote = "";
+  let escaping = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let i = 0; i < body.length; i += 1) {
+    const ch = body[i];
+    const next = body[i + 1] || "";
+
+    if (inLineComment) {
+      if (ch === "\n") inLineComment = false;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (ch === "*" && next === "/") {
+        inBlockComment = false;
+        i += 1;
+      }
+      continue;
+    }
+
+    if (quote) {
+      tokenActive = true;
+      if (escaping) {
+        escaping = false;
+        continue;
+      }
+      if (ch === "\\") {
+        escaping = true;
+        continue;
+      }
+      if (ch === quote) quote = "";
+      continue;
+    }
+
+    if (ch === "/" && next === "/") {
+      inLineComment = true;
+      i += 1;
+      continue;
+    }
+
+    if (ch === "/" && next === "*") {
+      inBlockComment = true;
+      i += 1;
+      continue;
+    }
+
+    if (ch === "'" || ch === "\"" || ch === "`") {
+      quote = ch;
+      tokenActive = true;
+      continue;
+    }
+
+    if (ch === "{") {
+      braceDepth += 1;
+      tokenActive = true;
+      continue;
+    }
+    if (ch === "}") {
+      braceDepth = Math.max(0, braceDepth - 1);
+      tokenActive = true;
+      continue;
+    }
+    if (ch === "[") {
+      bracketDepth += 1;
+      tokenActive = true;
+      continue;
+    }
+    if (ch === "]") {
+      bracketDepth = Math.max(0, bracketDepth - 1);
+      tokenActive = true;
+      continue;
+    }
+    if (ch === "(") {
+      parenDepth += 1;
+      tokenActive = true;
+      continue;
+    }
+    if (ch === ")") {
+      parenDepth = Math.max(0, parenDepth - 1);
+      tokenActive = true;
+      continue;
+    }
+
+    if (ch === "," && braceDepth === 0 && bracketDepth === 0 && parenDepth === 0) {
+      if (tokenActive) {
+        count += 1;
+        tokenActive = false;
+      }
+      continue;
+    }
+
+    if (!/\s/.test(ch)) tokenActive = true;
+  }
+
+  if (tokenActive) count += 1;
+  return count;
+}
+
 let indexHtml = "";
 let bootstrapJs = "";
 let swJs = "";
@@ -223,7 +334,7 @@ if (swJs) {
 
   for (const rel of SW_CORE_JS_PATHS) {
     const swPath = `./js/${rel.slice(2)}`;
-    if (swJs.includes(`"${swPath}"`)) {
+    if (swJs.includes(`\"${swPath}\"`)) {
       pass(`service worker core ownership includes: ${rel}`);
     } else {
       fail(`service worker core ownership includes: ${rel}`);
@@ -281,11 +392,45 @@ if (bootstrapJs && appJs) {
     fail("app startup loads use versioned module list");
   }
 
-  if (appJs.includes("window.__SHELLFISH_STARTUP_IMPORTS__ = startupImportUrls;") &&
-      appJs.includes("window.__BOOT_DIAG__.startupModuleUrls = startupImportUrls;")) {
+  if (
+    appJs.includes("window.__SHELLFISH_STARTUP_IMPORTS__ = startupImportUrls;") &&
+    appJs.includes("window.__BOOT_DIAG__.startupModuleUrls = startupImportUrls;")
+  ) {
     pass("app exposes startup module diagnostics");
   } else {
     fail("app exposes startup module diagnostics");
+  }
+
+  const startupImportDestructureBody = extractStartupImportDestructureBody(appJs);
+  if (startupImportDestructureBody) {
+    pass("app startup import destructure present");
+    const expectedStartupImportSlotCount = STARTUP_MODULE_PATHS.length + STARTUP_APP_OWNED_MODULE_PATHS.length;
+    const actualStartupImportSlotCount = countTopLevelArrayEntries(startupImportDestructureBody);
+    if (actualStartupImportSlotCount === expectedStartupImportSlotCount) {
+      pass("app startup import slot count matches manifest lists", `${actualStartupImportSlotCount} slots`);
+    } else {
+      fail(
+        "app startup import slot count matches manifest lists",
+        `expected ${expectedStartupImportSlotCount}, found ${actualStartupImportSlotCount}`
+      );
+    }
+  } else {
+    fail("app startup import destructure present");
+  }
+
+  const requiresExtractedTripHelperGap =
+    STARTUP_MODULE_PATHS.includes("./trip_screen_shared_helpers_v5.js") &&
+    STARTUP_MODULE_PATHS.includes("./trip_screen_field_bindings_v5.js");
+  if (requiresExtractedTripHelperGap) {
+    const tripHelperGapPattern = /\{\s*createFeedbackSeam\s*\}\s*,\s*_tripScreenSharedHelpersModule\s*,\s*_tripScreenFieldBindingsModule\s*,\s*\{\s*createTripScreenOrchestrator\s*\}/m;
+    if (tripHelperGapPattern.test(startupImportDestructureBody || appJs)) {
+      pass("app startup extracted trip helper alignment gap preserved");
+    } else {
+      fail(
+        "app startup extracted trip helper alignment gap preserved",
+        "expected createFeedbackSeam -> trip helper placeholders -> createTripScreenOrchestrator order"
+      );
+    }
   }
 
   for (const rel of STARTUP_MODULE_PATHS) {
@@ -303,10 +448,12 @@ if (bootstrapJs && appJs) {
     fail("app startup app-owned modules derive from manifest list");
   }
 
-  if (appJs.includes('importVersionedModule("./app_local_utils_v5.js")') ||
-      appJs.includes('importVersionedModule("./trips_unified_filter_bridge_v5.js")') ||
-      appJs.includes('importVersionedModule("./theme_runtime_seam_v5.js")') ||
-      appJs.includes('importVersionedModule("./ui_browser_helpers_v5.js")')) {
+  if (
+    appJs.includes('importVersionedModule("./app_local_utils_v5.js")') ||
+    appJs.includes('importVersionedModule("./trips_unified_filter_bridge_v5.js")') ||
+    appJs.includes('importVersionedModule("./theme_runtime_seam_v5.js")') ||
+    appJs.includes('importVersionedModule("./ui_browser_helpers_v5.js")')
+  ) {
     fail("app startup app-owned modules not hardcoded");
   } else {
     pass("app startup app-owned modules not hardcoded");
