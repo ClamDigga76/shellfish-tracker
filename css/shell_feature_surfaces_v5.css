@@ -403,17 +403,30 @@
   white-space:nowrap;
 }
 .homeOverviewCard .reportsHeroStat{
-  padding:11px 12px;
+  padding:12px 12px 11px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  gap:4px;
+  min-height:108px;
 }
 .homeOverviewCard .reportsHeroLabel{
-  font-size:10px;
+  font-size:11px;
+  line-height:1.25;
+  font-weight:860;
+  letter-spacing:.1em;
 }
 .homeOverviewCard .reportsHeroValue{
-  font-size:17px;
-  line-height:1.2;
+  margin-top:0;
+  font-size:18px;
+  line-height:1.15;
+  font-weight:850;
 }
 .homeOverviewCard .reportsHeroMeta{
-  margin-top:4px;
+  margin-top:0;
+  font-size:11px;
+  line-height:1.35;
+  font-weight:700;
 }
 .kpiGroupLabel{
   margin:var(--card-title-gap) 0 var(--card-body-gap);
