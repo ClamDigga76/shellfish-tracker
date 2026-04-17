@@ -227,20 +227,113 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return String(name || "").replace(/\s+/g, " ").trim();
   }
 
+  function splitAreaWords(label){
+    return String(label || "")
+      .trim()
+      .split(/[\s/-]+/)
+      .map((word)=> word.trim())
+      .filter(Boolean);
+  }
+
+  function buildTwoLineAreaWrap(ctx, label, maxW, rankPrefix = ""){
+    const words = splitAreaWords(label);
+    if(words.length < 2) return null;
+    let best = null;
+    for(let i=1; i<words.length; i++){
+      const first = words.slice(0, i).join(" ");
+      const second = words.slice(i).join(" ");
+      if(!first || !second) continue;
+      const firstWithRank = `${rankPrefix}${first}`;
+      const firstW = ctx.measureText(firstWithRank).width;
+      const secondW = ctx.measureText(second).width;
+      if(firstW > maxW || secondW > maxW) continue;
+      const score = Math.abs(firstW - secondW);
+      if(!best || score < best.score){
+        best = { first, second, score };
+      }
+    }
+    return best ? [best.first, best.second] : null;
+  }
+
+  function buildMeaningfulAreaAbbrev(label){
+    const words = splitAreaWords(label);
+    if(!words.length) return "";
+    if(words.length === 1){
+      const single = words[0];
+      return single.length > 8 ? `${single.slice(0, 8)}…` : single;
+    }
+    const placeSuffixes = new Set(["bay","harbor","harbour","point","island","isle","beach","cove","reef","channel","banks","shoal","sound","inlet","gulf","coast","head"]);
+    const lowerWords = words.map((word)=> word.toLowerCase());
+    const suffix = placeSuffixes.has(lowerWords[lowerWords.length - 1]) ? words[words.length - 1] : "";
+    const sourceWords = suffix ? words.slice(0, -1) : words;
+    const initials = sourceWords
+      .filter((word)=> !["of", "the", "and", "at", "in"].includes(word.toLowerCase()))
+      .map((word)=> word[0]?.toUpperCase() || "")
+      .join("")
+      .slice(0, 3);
+    if(suffix && initials){
+      return `${initials} ${suffix}`;
+    }
+    if(initials.length >= 2){
+      return initials;
+    }
+    return words.slice(0, 2).join(" ");
+  }
+
+  function shortenAreaLabelRecognizable(label){
+    const src = String(label || "").trim();
+    if(!src) return "";
+    if(src.length <= 12) return src;
+    return `${src.slice(0, 12).trimEnd()}…`;
+  }
+
+  function resolveAreaLabelLayout(ctx, { label, rank, maxW }){
+    const fullLabel = normalizeAreaLabel(label);
+    if(!fullLabel) return [];
+    const rankPrefix = `${rank}. `;
+    const fullWithRank = `${rankPrefix}${fullLabel}`;
+    if(ctx.measureText(fullWithRank).width <= maxW){
+      return [fullWithRank];
+    }
+    const twoLine = buildTwoLineAreaWrap(ctx, fullLabel, maxW, rankPrefix);
+    if(twoLine){
+      return [`${rankPrefix}${twoLine[0]}`, twoLine[1]];
+    }
+    const meaningful = buildMeaningfulAreaAbbrev(fullLabel);
+    if(meaningful){
+      const meaningfulWithRank = `${rankPrefix}${meaningful}`;
+      if(ctx.measureText(meaningfulWithRank).width <= maxW){
+        return [meaningfulWithRank];
+      }
+      const meaningfulTwoLine = buildTwoLineAreaWrap(ctx, meaningful, maxW, rankPrefix);
+      if(meaningfulTwoLine){
+        return [`${rankPrefix}${meaningfulTwoLine[0]}`, meaningfulTwoLine[1]];
+      }
+    }
+    const shortened = `${rankPrefix}${shortenAreaLabelRecognizable(fullLabel)}`;
+    if(ctx.measureText(shortened).width <= maxW){
+      return [shortened];
+    }
+    return [shortened.slice(0, Math.max(6, shortened.length - 1)).trimEnd() + "…"];
+  }
+
   function drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight }){
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     labels.forEach((rawLabel, i)=>{
       const fullLabel = normalizeAreaLabel(rawLabel || "");
       if(!fullLabel) return;
-      const maxLabelW = Math.max(22, barW - 2);
-      const rankedLabel = `${i + 1}. ${fullLabel}`;
-      const compactLabel = `${i + 1}. ${fullLabel.slice(0, 18)}`;
-      const base = frame.compact ? compactLabel : rankedLabel;
-      const lab = fitLabel(ctx, base, maxLabelW);
-      const tx = geom.x0 + i * barW + ((barW - ctx.measureText(lab).width) / 2);
-      const x = Math.max(2, tx);
-      ctx.fillText(lab, x, canvasHeight - 10);
+      const maxLabelW = Math.max(32, barW - 2);
+      const lines = resolveAreaLabelLayout(ctx, { label: fullLabel, rank: i + 1, maxW: maxLabelW });
+      if(!lines.length) return;
+      const lineHeight = frame.compact ? 10 : 11;
+      const baseY = lines.length > 1 ? canvasHeight - 20 : canvasHeight - 10;
+      lines.forEach((line, lineIndex)=>{
+        const tx = geom.x0 + i * barW + ((barW - ctx.measureText(line).width) / 2);
+        const x = Math.max(2, tx);
+        const y = baseY + (lineHeight * lineIndex);
+        ctx.fillText(line, x, y);
+      });
     });
   }
 
