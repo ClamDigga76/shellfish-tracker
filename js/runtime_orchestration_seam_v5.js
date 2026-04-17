@@ -188,6 +188,10 @@ export function renderViewDispatch({
 export function startRuntimeRender({ render, getBootPill, displayBuildVersion, showFatal }){
   try{
     window.__SHELLFISH_APP_STARTED = true;
+    try{
+      document.documentElement?.setAttribute("data-boot-state", "started");
+      window.dispatchEvent(new Event("shellfish-app-started"));
+    }catch(_){ }
     render();
     const bp = getBootPill();
     if(bp && !bp.classList.contains("err")){

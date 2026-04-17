@@ -89,6 +89,7 @@ export const REQUIRED_CORE_CACHE_STATIC_PATHS = [
   "./css/trip_form_v5.css",
   "./css/reports_v5.css",
   "./css/boot_shell_inline_extract_v1.css",
+  "./js/boot_fallback_gate_v1.js",
   "./js/bootstrap_v5.js"
 ];
 
