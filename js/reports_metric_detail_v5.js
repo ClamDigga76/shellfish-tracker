@@ -488,7 +488,6 @@ export function createReportsMetricDetailSeam(deps){
       <div class="${viewModel.detailCardClass}">
         ${viewModel.isHomeMetricDetail ? `
           <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to Home</button>
-          <div class="${viewModel.detailEyebrowClass}">HOME METRIC DETAIL</div>
           <h2 class="${viewModel.detailTitleClass}">${escapeHtml(`${meta.homeTitle} detail`)}</h2>
           ${homeDetailMetaRow}
         ` : `
@@ -503,7 +502,7 @@ export function createReportsMetricDetailSeam(deps){
 
         <div class="reportsMetricStoryStack">
           <div class="${viewModel.detailHeroWrapClass}">
-            <div class="${viewModel.detailHeroLabelClass}">${escapeHtml(viewModel.isHomeMetricDetail ? meta.homeHeroLabel : meta.heroLabel)}</div>
+            ${viewModel.isHomeMetricDetail ? "" : `<div class="${viewModel.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>`}
             <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
           </div>
 
@@ -555,8 +554,8 @@ export function createReportsMetricDetailSeam(deps){
     const formatHomeKpiHeroValue = (targetMetric, trips)=> {
       const safeTrips = Array.isArray(trips) ? trips : [];
       const tripCount = safeTrips.length;
-      const pounds = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.lbs) || 0), 0);
-      const amount = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amt) || 0), 0);
+      const pounds = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0);
+      const amount = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0);
       if(targetMetric === "trips") return `${tripCount} trips`;
       if(targetMetric === "pounds") return `${to2(pounds)} lbs`;
       if(targetMetric === "amount") return formatMoney(to2(amount));
@@ -668,7 +667,6 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Trips",
         eyebrow: "Metric breakdown",
         heroLabel: "Trips this range",
-        homeHeroLabel: "Latest visible Home month",
         heroValue: resolveHeroValue("trips"),
         heroClass: "trips",
         comparePayload: primaryPayload,
@@ -697,7 +695,6 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Pounds",
         eyebrow: "Metric breakdown",
         heroLabel: "Pounds this range",
-        homeHeroLabel: "Latest visible Home month",
         heroValue: resolveHeroValue("pounds"),
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
@@ -726,7 +723,6 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Amount",
         eyebrow: "Metric breakdown",
         heroLabel: "Amount this range",
-        homeHeroLabel: "Latest visible Home month",
         heroValue: resolveHeroValue("amount"),
         heroClass: "money",
         comparePayload: primaryPayload,
@@ -767,7 +763,6 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Avg $/lb",
         eyebrow: "Metric breakdown",
         heroLabel: "Average $/lb this range",
-        homeHeroLabel: "Latest visible Home month",
         heroValue: resolveHeroValue("ppl"),
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
