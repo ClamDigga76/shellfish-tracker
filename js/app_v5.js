@@ -62,6 +62,8 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { createSettingsScreenOrchestrator },
   { createReportsScreenRenderer },
   { createFeedbackSeam },
+  _tripScreenSharedHelpersModule,
+  _tripScreenFieldBindingsModule,
   { createTripScreenOrchestrator },
   { createTripsBrowseScreenRenderer },
   { buildTripFormInputs, buildNewTripSaveSnapshot },
