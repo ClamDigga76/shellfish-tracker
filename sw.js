@@ -68,6 +68,7 @@ const CORE = [
   `./css/trip_form_v5.css?v=${SW_V}`,
   `./css/reports_v5.css?v=${SW_V}`,
   `./css/boot_shell_inline_extract_v1.css?v=${SW_V}`,
+  `./js/boot_fallback_gate_v1.js?v=${SW_V}`,
   `./js/bootstrap_v5.js?v=${SW_V}`,
   ...CORE_JS_PATHS.map((path) => `${path}?v=${SW_V}`),
 ];
@@ -81,6 +82,7 @@ const REQUIRED_CORE = [
   `./css/trip_form_v5.css?v=${SW_V}`,
   `./css/reports_v5.css?v=${SW_V}`,
   `./css/boot_shell_inline_extract_v1.css?v=${SW_V}`,
+  `./js/boot_fallback_gate_v1.js?v=${SW_V}`,
   `./js/bootstrap_v5.js?v=${SW_V}`,
   ...CORE_JS_PATHS.map((path) => `${path}?v=${SW_V}`),
 ];
