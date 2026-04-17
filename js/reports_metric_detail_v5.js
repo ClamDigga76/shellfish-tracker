@@ -177,7 +177,7 @@ function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel =
   };
 }
 
-function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxItems = 5 }){
+function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxItems = 5, labelMode = "" }){
   const safeRows = Array.isArray(rows)
     ? rows
       .filter((row)=> Number(row?.[valueKey]) > 0)
@@ -187,6 +187,7 @@ function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxIt
     chartType: "compare-bars",
     metricKey,
     basisLabel: String(basisLabel || "Visible Home month view"),
+    labelMode: String(labelMode || ""),
     labels: safeRows.map((row)=> String(row?.name || "—")),
     values: safeRows.map((row)=> Number(row?.[valueKey]) || 0)
   };
@@ -217,12 +218,24 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
     poundsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" }),
     poundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
-    poundsAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByPounds, metricKey: "pounds", valueKey: "lbs", basisLabel: "Strongest areas by pounds" }),
+    poundsAreaMix: buildHomeTopRowsBarChart({
+      rows: areaRowsByPounds,
+      metricKey: "pounds",
+      valueKey: "lbs",
+      basisLabel: "Strongest areas by pounds",
+      labelMode: "home-area-direct"
+    }),
     amount: buildHomeCompareBarChart({ labels, metricKey: "amount", currentValue: period?.current?.amount, previousValue: period?.previous?.amount }),
     amountTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amt" }),
     amountPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amountPerTrip" }),
     amountDealerMix: buildHomeTopRowsBarChart({ rows: dealerRows, metricKey: "amount", valueKey: "amt", basisLabel: "Top dealers by amount" }),
-    amountAreaMix: buildHomeTopRowsBarChart({ rows: areaRowsByAmount, metricKey: "amount", valueKey: "amt", basisLabel: "Strongest areas by amount" }),
+    amountAreaMix: buildHomeTopRowsBarChart({
+      rows: areaRowsByAmount,
+      metricKey: "amount",
+      valueKey: "amt",
+      basisLabel: "Strongest areas by amount",
+      labelMode: "home-area-direct"
+    }),
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
     pplMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg" }),
     tripsRollingTrend: buildRollingSeriesFromMonthRows({
