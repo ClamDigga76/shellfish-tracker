@@ -7,6 +7,10 @@ import {
   displayAmount,
   renderSuggestions
 } from "./trip_screen_shared_helpers_v5.js";
+import {
+  bindEntryNumericField,
+  createSettlementLineUpdater
+} from "./trip_screen_field_bindings_v5.js";
 
 export function createTripScreenOrchestrator({
   state,
@@ -180,24 +184,15 @@ const newTripFormHtml = renderTripEntryForm({
     metricStateHelperEl.textContent = getMetricHelperText(metricSync.getLockPair());
   };
   const updateRateLine = metricSync.updateDerivedField;
-  const updateSettlementLine = ()=>{
-    if(!elWrittenCheckAmount) return;
-    const settlement = deriveTripSettlement({
-      amount: parseMoney(elAmount?.value),
-      writtenCheckAmount: parseMoney(elWrittenCheckAmount.value)
-    });
-    const adjustmentEl = document.getElementById("t_written_check_amount_adjustment");
-    if(adjustmentEl){
-      adjustmentEl.textContent = `${settlement.dealerAdjustment >= 0 ? "+" : "-"}${formatMoney(Math.abs(settlement.dealerAdjustment))}`;
-    }
-    const hintEl = document.querySelector("#newTripForm .tripSettlementHint");
-    if(hintEl){
-      hintEl.textContent = settlement.adjustmentClass === "rounded_up"
-        ? "Likely rounded up."
-        : (settlement.adjustmentClass === "rounded_down" ? "Likely rounded down." : "");
-      hintEl.style.display = hintEl.textContent ? "block" : "none";
-    }
-  };
+  const updateSettlementLine = createSettlementLineUpdater({
+    elWrittenCheckAmount,
+    elAmount,
+    parseMoney,
+    deriveTripSettlement,
+    formatMoney,
+    adjustmentId: "t_written_check_amount_adjustment",
+    hintSelector: "#newTripForm .tripSettlementHint"
+  });
   updateMetricStateHelper();
   if(elSettlementToggle){
     elSettlementToggle.addEventListener("click", ()=>{
@@ -318,92 +313,86 @@ const newTripFormHtml = renderTripEntryForm({
   };
 
   // Bind numeric field UX ONCE per render (never inside updateSaveEnabled)
-  if(elPounds && !elPounds.__boundNumeric){
-    elPounds.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elPounds, ["0","0.0","0.00"]);
-    elPounds.addEventListener("pointerdown", prime);
-    elPounds.addEventListener("focus", prime);
-    elPounds.addEventListener("input", ()=>{
-      metricSync.onUserEdit("pounds");
-      updateMetricStateHelper();
-      const s = sanitizeDecimalInput(elPounds.value);
-      if(s !== elPounds.value) elPounds.value = s;
+  bindEntryNumericField({
+    fieldEl: elPounds,
+    primeValues: ["0","0.0","0.00"],
+    metricSync,
+    metricField: "pounds",
+    updateMetricStateHelper,
+    sanitizeDecimalInput,
+    primeNumericField,
+    onAfterInput: ()=>{
       updateSaveEnabled();
       updateRateLine();
       updateSettlementLine();
-    });
-    elPounds.addEventListener("blur", ()=>{
-      if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
+    },
+    onAfterBlur: ()=>{
       updateSaveEnabled();
       updateRateLine();
       updateSettlementLine();
-    });
-  }
+    }
+  });
 
-  if(elRate && !elRate.__boundNumeric){
-    elRate.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elRate, ["0","0.0","0.00"]);
-    elRate.addEventListener("pointerdown", prime);
-    elRate.addEventListener("focus", prime);
-    elRate.addEventListener("input", ()=>{
-      metricSync.onUserEdit("rate");
-      updateMetricStateHelper();
-      const s = sanitizeDecimalInput(elRate.value);
-      if(s !== elRate.value) elRate.value = s;
+  bindEntryNumericField({
+    fieldEl: elRate,
+    primeValues: ["0","0.0","0.00"],
+    metricSync,
+    metricField: "rate",
+    updateMetricStateHelper,
+    sanitizeDecimalInput,
+    primeNumericField,
+    onBlurNormalize: ()=>{
+      const rate = parseNum(elRate?.value);
+      if(rate > 0 && elRate) elRate.value = rate.toFixed(2);
+    },
+    onAfterInput: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
-    });
-    elRate.addEventListener("blur", ()=>{
-      if(String(elRate.value||"").endsWith(".")) elRate.value = String(elRate.value).slice(0, -1);
-      const rate = parseNum(elRate.value);
-      if(rate > 0) elRate.value = rate.toFixed(2);
+    },
+    onAfterBlur: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
-    });
-  }
+    }
+  });
 
-  if(elAmount && !elAmount.__boundNumeric){
-    elAmount.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elAmount, ["0","0.0","0.00"]);
-    elAmount.addEventListener("pointerdown", prime);
-    elAmount.addEventListener("focus", prime);
-    elAmount.addEventListener("input", ()=>{
-      metricSync.onUserEdit("amount");
-      updateMetricStateHelper();
-      const s = sanitizeDecimalInput(elAmount.value);
-      if(s !== elAmount.value) elAmount.value = s;
+  bindEntryNumericField({
+    fieldEl: elAmount,
+    primeValues: ["0","0.0","0.00"],
+    metricSync,
+    metricField: "amount",
+    updateMetricStateHelper,
+    sanitizeDecimalInput,
+    primeNumericField,
+    onBlurNormalize: ()=>normalizeAmountOnBlur(elAmount, parseMoney),
+    onAfterInput: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
-    });
-    elAmount.addEventListener("blur", ()=>{
-      if(String(elAmount.value||"").endsWith(".")) elAmount.value = String(elAmount.value).slice(0, -1);
-      normalizeAmountOnBlur(elAmount, parseMoney);
+    },
+    onAfterBlur: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
-    });
-  }
-  if(elWrittenCheckAmount && !elWrittenCheckAmount.__boundNumeric){
-    elWrittenCheckAmount.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elWrittenCheckAmount, ["0","0.0","0.00"]);
-    elWrittenCheckAmount.addEventListener("pointerdown", prime);
-    elWrittenCheckAmount.addEventListener("focus", prime);
-    elWrittenCheckAmount.addEventListener("input", ()=>{
-      const s = sanitizeDecimalInput(elWrittenCheckAmount.value);
-      if(s !== elWrittenCheckAmount.value) elWrittenCheckAmount.value = s;
+    }
+  });
+
+  bindEntryNumericField({
+    fieldEl: elWrittenCheckAmount,
+    primeValues: ["0","0.0","0.00"],
+    sanitizeDecimalInput,
+    primeNumericField,
+    onBlurNormalize: ()=>normalizeAmountOnBlur(elWrittenCheckAmount, parseMoney),
+    onAfterInput: ()=>{
       updateSettlementLine();
       saveDraft();
-    });
-    elWrittenCheckAmount.addEventListener("blur", ()=>{
-      if(String(elWrittenCheckAmount.value||"").endsWith(".")) elWrittenCheckAmount.value = String(elWrittenCheckAmount.value).slice(0, -1);
-      normalizeAmountOnBlur(elWrittenCheckAmount, parseMoney);
+    },
+    onAfterBlur: ()=>{
       updateSettlementLine();
       saveDraft();
-    });
-  }
+    }
+  });
 
   const createNewTripSubmitHandler = (btnSave)=>async ()=>{
     try{
@@ -1166,24 +1155,15 @@ function renderEditTrip(){
     metricStateHelperEl.textContent = getMetricHelperText(metricSync.getLockPair());
   };
   const updateRateLine = metricSync.updateDerivedField;
-  const updateSettlementLine = ()=>{
-    if(!elWrittenCheckAmount) return;
-    const settlement = deriveTripSettlement({
-      amount: parseMoney(elAmount?.value),
-      writtenCheckAmount: parseMoney(elWrittenCheckAmount.value)
-    });
-    const adjustmentEl = document.getElementById("e_written_check_amount_adjustment");
-    if(adjustmentEl){
-      adjustmentEl.textContent = `${settlement.dealerAdjustment >= 0 ? "+" : "-"}${formatMoney(Math.abs(settlement.dealerAdjustment))}`;
-    }
-    const hintEl = document.querySelector("#editTripForm .tripSettlementHint");
-    if(hintEl){
-      hintEl.textContent = settlement.adjustmentClass === "rounded_up"
-        ? "Likely rounded up."
-        : (settlement.adjustmentClass === "rounded_down" ? "Likely rounded down." : "");
-      hintEl.style.display = hintEl.textContent ? "block" : "none";
-    }
-  };
+  const updateSettlementLine = createSettlementLineUpdater({
+    elWrittenCheckAmount,
+    elAmount,
+    parseMoney,
+    deriveTripSettlement,
+    formatMoney,
+    adjustmentId: "e_written_check_amount_adjustment",
+    hintSelector: "#editTripForm .tripSettlementHint"
+  });
   if(elSettlementToggle){
     elSettlementToggle.addEventListener("click", ()=>{
       const panel = document.querySelector("#editTripForm [data-settlement-panel]");
@@ -1383,92 +1363,85 @@ function renderEditTrip(){
   updateMetricStateHelper();
 
   // Big-number keypad + better formatting (match New Trip)
-  if(elPounds && !elPounds.__boundNumeric){
-    elPounds.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elPounds, ["0","0.","0.0"]);
-    elPounds.addEventListener("pointerdown", prime);
-    elPounds.addEventListener("focus", prime);
-    elPounds.addEventListener("input", ()=>{
-      metricSync.onUserEdit("pounds");
-      updateMetricStateHelper();
-      const s = sanitizeDecimalInput(elPounds.value);
-      if(s !== elPounds.value) elPounds.value = s;
+  bindEntryNumericField({
+    fieldEl: elPounds,
+    primeValues: ["0","0.","0.0"],
+    metricSync,
+    metricField: "pounds",
+    updateMetricStateHelper,
+    sanitizeDecimalInput,
+    primeNumericField,
+    onAfterInput: ()=>{
       updateSaveEnabled();
       updateRateLine();
       updateSettlementLine();
-    });
-    elPounds.addEventListener("blur", ()=>{
-      if(String(elPounds.value||"").endsWith(".")) elPounds.value = String(elPounds.value).slice(0, -1);
+    },
+    onAfterBlur: ()=>{
       updateSaveEnabled();
       updateRateLine();
       updateSettlementLine();
-    });
-  }
+    }
+  });
 
-  if(elRate && !elRate.__boundNumeric){
-    elRate.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elRate, ["0","0.0","0.00"]);
-    elRate.addEventListener("pointerdown", prime);
-    elRate.addEventListener("focus", prime);
-    elRate.addEventListener("input", ()=>{
-      metricSync.onUserEdit("rate");
-      updateMetricStateHelper();
-      const s = sanitizeDecimalInput(elRate.value);
-      if(s !== elRate.value) elRate.value = s;
+  bindEntryNumericField({
+    fieldEl: elRate,
+    primeValues: ["0","0.0","0.00"],
+    metricSync,
+    metricField: "rate",
+    updateMetricStateHelper,
+    sanitizeDecimalInput,
+    primeNumericField,
+    onBlurNormalize: ()=>{
+      const rate = parseNum(elRate?.value);
+      if(rate > 0 && elRate) elRate.value = rate.toFixed(2);
+    },
+    onAfterInput: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
-    });
-    elRate.addEventListener("blur", ()=>{
-      if(String(elRate.value||"").endsWith(".")) elRate.value = String(elRate.value).slice(0, -1);
-      const rate = parseNum(elRate.value);
-      if(rate > 0) elRate.value = rate.toFixed(2);
+    },
+    onAfterBlur: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
-    });
-  }
+    }
+  });
 
-  if(elAmount && !elAmount.__boundNumeric){
-    elAmount.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elAmount, ["0","0.0","0.00"]);
-    elAmount.addEventListener("pointerdown", prime);
-    elAmount.addEventListener("focus", prime);
-    elAmount.addEventListener("input", ()=>{
-      metricSync.onUserEdit("amount");
-      updateMetricStateHelper();
-      const s = sanitizeDecimalInput(elAmount.value);
-      if(s !== elAmount.value) elAmount.value = s;
+  bindEntryNumericField({
+    fieldEl: elAmount,
+    primeValues: ["0","0.0","0.00"],
+    metricSync,
+    metricField: "amount",
+    updateMetricStateHelper,
+    sanitizeDecimalInput,
+    primeNumericField,
+    onBlurNormalize: ()=>normalizeAmountOnBlur(elAmount, parseMoney),
+    onAfterInput: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
-    });
-    elAmount.addEventListener("blur", ()=>{
-      if(String(elAmount.value||"").endsWith(".")) elAmount.value = String(elAmount.value).slice(0, -1);
-      normalizeAmountOnBlur(elAmount, parseMoney);
+    },
+    onAfterBlur: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
-    });
-  }
-  if(elWrittenCheckAmount && !elWrittenCheckAmount.__boundNumeric){
-    elWrittenCheckAmount.__boundNumeric = true;
-    const prime = ()=>primeNumericField(elWrittenCheckAmount, ["0","0.0","0.00"]);
-    elWrittenCheckAmount.addEventListener("pointerdown", prime);
-    elWrittenCheckAmount.addEventListener("focus", prime);
-    elWrittenCheckAmount.addEventListener("input", ()=>{
-      const s = sanitizeDecimalInput(elWrittenCheckAmount.value);
-      if(s !== elWrittenCheckAmount.value) elWrittenCheckAmount.value = s;
+    }
+  });
+  bindEntryNumericField({
+    fieldEl: elWrittenCheckAmount,
+    primeValues: ["0","0.0","0.00"],
+    sanitizeDecimalInput,
+    primeNumericField,
+    onBlurNormalize: ()=>normalizeAmountOnBlur(elWrittenCheckAmount, parseMoney),
+    onAfterInput: ()=>{
       updateSettlementLine();
       updateSaveEnabled();
-    });
-    elWrittenCheckAmount.addEventListener("blur", ()=>{
-      if(String(elWrittenCheckAmount.value||"").endsWith(".")) elWrittenCheckAmount.value = String(elWrittenCheckAmount.value).slice(0, -1);
-      normalizeAmountOnBlur(elWrittenCheckAmount, parseMoney);
+    },
+    onAfterBlur: ()=>{
       updateSettlementLine();
       updateSaveEnabled();
-    });
-  }
+    }
+  });
 
   [elDate, elDealer, elPounds, elAmount, elWrittenCheckAmount, elArea, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
