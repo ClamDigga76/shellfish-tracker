@@ -46,6 +46,9 @@ export function createTripMutationLifecycleSeam({
     const state = getState();
     state.trips = Array.isArray(snap.trips) ? cloneUndoValue(snap.trips) : [];
     state.deletedTrips = Array.isArray(snap.deletedTrips) ? cloneUndoValue(snap.deletedTrips) : [];
+    if(Object.prototype.hasOwnProperty.call(snap, "navStack")){
+      state.navStack = Array.isArray(snap.navStack) ? cloneUndoValue(snap.navStack) : [];
+    }
     if(Object.prototype.hasOwnProperty.call(snap, "editId")) state.editId = snap.editId;
     else delete state.editId;
     if(Object.prototype.hasOwnProperty.call(snap, "draft")) state.draft = cloneUndoValue(snap.draft);
@@ -335,7 +338,8 @@ export function createTripMutationLifecycleSeam({
 
     const undoSnapshot = {
       trips,
-      view: state.view
+      view: state.view,
+      navStack: Array.isArray(state.navStack) ? state.navStack : []
     };
     if(Object.prototype.hasOwnProperty.call(state, "editId")) undoSnapshot.editId = state.editId;
     if(Object.prototype.hasOwnProperty.call(state, "draft")) undoSnapshot.draft = state.draft;
@@ -418,6 +422,23 @@ export function createTripMutationLifecycleSeam({
     const trips = Array.isArray(state.trips) ? state.trips : [];
     if(trips.some((trip)=> String(trip?.id || "") === String(restoredTrip.id || ""))){
       restoredTrip.id = uid("t");
+    }
+    const dealerName = normalizeDealerDisplay(String(restoredTrip.dealer || "").trim());
+    if(dealerName){
+      if(!Array.isArray(state.dealers)) state.dealers = [];
+      const dealerKey = normalizeKey(dealerName);
+      const dealerExists = state.dealers.some((dealer)=> normalizeKey(String(dealer || "")) === dealerKey);
+      if(!dealerExists){
+        state.dealers.push(dealerName);
+      }
+    }
+    ensureAreas();
+    const rawArea = String(restoredTrip.area || "").trim();
+    if(rawArea){
+      const areaCreate = addArea(rawArea);
+      if(areaCreate?.value){
+        restoredTrip.area = areaCreate.value;
+      }
     }
     state.trips = [restoredTrip, ...trips];
     state.deletedTrips = deletedTrips.filter((entry)=> String(entry?.id || "") !== entryId);
