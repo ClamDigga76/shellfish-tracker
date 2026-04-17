@@ -18,6 +18,8 @@ export const STARTUP_MODULE_PATHS = [
   "./settings_screen_v5.js",
   "./reports_screen_v5.js",
   "./feedback_seam_v5.js",
+  "./trip_screen_shared_helpers_v5.js",
+  "./trip_screen_field_bindings_v5.js",
   "./trip_screen_orchestrator_v5.js",
   "./trips_browse_screen_v5.js",
   "./trip_flow_save_seam_v5.js",
