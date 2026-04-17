@@ -152,6 +152,11 @@ export function createBackupRestoreSubsystem(deps){
     try{ localStorage.removeItem(LS_RESTORE_ROLLBACK_SNAPSHOT); }catch(_){ }
   }
 
+  function clearBackupRecoveryMetadata(){
+    try{ localStorage.removeItem(LS_LAST_BACKUP_META); }catch(_){ }
+    clearRestoreRollbackSnapshot();
+  }
+
   function capturePreRestoreRollbackSnapshot({ mode="merge", includeSettings=false, sourceFileName="" }={}){
     const state = getState();
     const payload = buildBackupPayloadFromState(state, new Date().toISOString()).data;
@@ -964,6 +969,7 @@ export function createBackupRestoreSubsystem(deps){
     openRestoreErrorModal,
     openRestoreResultModal,
     importBackupFromFile,
-    restoreFromRollbackSnapshot
+    restoreFromRollbackSnapshot,
+    clearBackupRecoveryMetadata
   };
 }

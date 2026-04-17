@@ -195,6 +195,7 @@ export function createSettingsScreenOrchestrator({
         </div>
         <div class="settingsRow settingsRow--status">
           <div class="muted small" id="restoreRollbackLine"></div>
+          <div class="muted settingsBodyTiny mt6">Erase All Data also clears backup freshness and rollback status shown on this device.</div>
         </div>
         <div class="settingsRow settingsRow--action">
           <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Rollback / undo last restore</button>
@@ -381,7 +382,7 @@ export function createSettingsScreenOrchestrator({
           <div class="muted small">Copy this support bundle (privacy-safe runtime metadata only), then add a short repro note.</div>
         </div>
         <div class="settingsRow settingsRow--danger">
-          <div class="muted small"><b>Danger zone:</b> Erase removes all trips and lists on this device. Create a backup first.</div>
+          <div class="muted small"><b>Danger zone:</b> Erase removes all trips, list entries, and local recovery metadata on this device. Create a backup first.</div>
           <div class="row mt10">
             <button class="btn danger" id="resetData">Erase All Data</button>
           </div>
