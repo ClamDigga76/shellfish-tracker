@@ -568,7 +568,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       ? ({ ctx, frame, geom, barW, canvasHeight })=>{
         drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight });
       }
-      : null;
+      : (labelMode === "home-dealer-direct"
+        ? ({ ctx, frame, geom, barW, canvasHeight })=>{
+          const dealerRows = labels.map((label)=> ({ name: label }));
+          drawDealerIdentityLabels(dealerRows, { ctx, frame, geom, barW, canvasHeight });
+        }
+        : null);
     drawBarChart(
       canvasId,
       values,
@@ -619,6 +624,15 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         }
       }
     );
+  }
+
+  const homeAnalyticsCharts = Array.isArray(options?.homeAnalyticsCharts) ? options.homeAnalyticsCharts : [];
+  if(homeAnalyticsCharts.length){
+    homeAnalyticsCharts.forEach((chart)=> {
+      if(!chart?.canvasId || !chart?.chartModel) return;
+      drawMetricDetailChart(chart.canvasId, chart.chartModel, chart.metricKey || chart.chartModel?.metricKey || "");
+    });
+    return;
   }
 
   if(drawMetricDetailCompareChart(options?.metricDetail)){
