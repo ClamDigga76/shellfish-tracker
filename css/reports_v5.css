@@ -328,6 +328,16 @@
 }
 .homeInsightsChartExplanation{margin:5px 0 0;font-size:12px;line-height:1.38;color:#aab5c8;font-weight:640}
 .homeInsightsChartCard .chartContext{margin-top:4px}
+.homeInsightsChartEmpty{
+  margin-top:10px;
+  padding:10px 12px;
+  border:1px dashed rgba(255,255,255,.14);
+  border-radius:10px;
+  font-size:12px;
+  line-height:1.35;
+  color:#b4bfd2;
+  background:rgba(255,255,255,.03);
+}
 .reportsHighlightsEmpty,.reportsDetailHint{padding:14px 0 0;border-top:1px solid rgba(255,255,255,.07)}
 .reportsHighlightsEmpty{margin-top:4px}
 .reportsDetailHint .btn{width:100%}
