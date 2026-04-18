@@ -46,8 +46,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       compact,
       left: compact ? 46 : 54,
       right: compact ? 12 : 16,
-      top: compact ? 14 : 16,
-      bottom: compact ? 40 : 42,
+      top: compact ? 26 : 28,
+      bottom: compact ? 54 : 58,
       tickFont: compact ? "11px system-ui, -apple-system, Segoe UI, Arial" : "12px system-ui, -apple-system, Segoe UI, Arial"
     };
   }
@@ -313,7 +313,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return [shortened.slice(0, Math.max(6, shortened.length - 1)).trimEnd() + "…"];
   }
 
-  function drawAreaIdentityLabels(labels, { ctx, frame, geom, bars = [], barW, canvasHeight, labelStyle = "" }){
+  function drawAreaIdentityLabels(labels, { ctx, frame, geom, bars = [], barW, canvasHeight, labelStyle = "", categoryLabelY = 0 }){
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     const preferTopLabels = labelStyle === "top-clean";
@@ -326,9 +326,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const lines = resolveAreaLabelLayout(ctx, { label: fullLabel, maxW: maxLabelW });
       if(!lines.length) return;
       const lineHeight = frame.compact ? 10 : 11;
-      const fallbackBottomY = lines.length > 1 ? canvasHeight - 20 : canvasHeight - 10;
-      let baseY = fallbackBottomY;
-      if(preferTopLabels && bar){
+      const preferredBelowY = Number(categoryLabelY) > 0
+        ? categoryLabelY
+        : (lines.length > 1 ? canvasHeight - 20 : canvasHeight - 10);
+      let baseY = preferredBelowY - ((lines.length - 1) * lineHeight);
+      if(preferTopLabels && bar && !(Number(categoryLabelY) > 0)){
         const topGap = lines.length > 1 ? 14 : 9;
         baseY = Math.max(frame.top + 10, bar.y - topGap - ((lines.length - 1) * lineHeight));
       }
@@ -343,19 +345,37 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     });
   }
 
-  function drawDealerIdentityLabels(rows, { ctx, frame, geom, barW, canvasHeight }){
+  function drawDealerIdentityLabels(rows, { ctx, frame, geom, barW, canvasHeight, bars = [], categoryLabelY = 0 }){
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
-    const labelStep = Math.max(1, Math.ceil(rows.length / (frame.compact ? 5 : 7)));
+    const baselineY = Number(categoryLabelY) > 0 ? categoryLabelY : canvasHeight - 10;
     rows.forEach((r,i)=>{
-      if(i % labelStep !== 0 && i !== rows.length - 1 && i !== 0) return;
-      const maxLabelW = Math.max(20, barW - 1);
+      const bar = bars[i] || null;
+      const labelWidthBase = bar?.width || barW;
+      const maxLabelW = Math.max(20, labelWidthBase - 2);
       const base = frame.compact ? compactDealerTag(r.name || "") : normalizeDealerLabel(r.name || "");
-      const withRank = `${i + 1} ${base}`;
-      const lab = fitLabel(ctx, withRank, maxLabelW);
-      const tx = geom.x0 + i*barW + ((barW - ctx.measureText(lab).width) / 2);
+      const lab = fitLabel(ctx, base, maxLabelW);
+      const left = bar ? bar.x : (geom.x0 + i * barW);
+      const width = bar ? bar.width : barW;
+      const tx = left + ((width - ctx.measureText(lab).width) / 2);
       const x = Math.max(2, tx);
-      ctx.fillText(lab, x, canvasHeight-10);
+      ctx.fillText(lab, x, baselineY);
+    });
+  }
+
+  function drawBarValueLabels(bars, { ctx, frame, formatter }){
+    if(!Array.isArray(bars) || !bars.length) return;
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.font = frame.tickFont;
+    ctx.textBaseline = "alphabetic";
+    bars.forEach((bar)=>{
+      if(!bar || !(bar.height > 0)) return;
+      const raw = typeof formatter === "function" ? formatter(bar.value) : String(Math.round(Number(bar.value) || 0));
+      const text = String(raw || "").trim();
+      if(!text) return;
+      const x = Math.max(2, bar.x + ((bar.width - ctx.measureText(text).width) / 2));
+      const y = Math.max(frame.top + 12, bar.y - 6);
+      ctx.fillText(text, x, y);
     });
   }
 
@@ -459,10 +479,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ctx.fillRect(x, y, drawWidth, bh);
         renderedBars.push({ x, y, width: drawWidth, height: bh, value: safe, index: i, slotW: barW });
       });
+      if(options.showBarValueLabels){
+        drawBarValueLabels(renderedBars, { ctx, frame, formatter: options.barValueFormatter || yLabelFormatter });
+      }
+      const categoryLabelY = options.categoryLabelsBelowBars ? (h - (frame.compact ? 10 : 12)) : (h - 10);
       if(options.customLabels){
-        options.customLabels({ ctx, frame, geom, barW, canvasHeight: h, bars: renderedBars, yScale });
+        options.customLabels({ ctx, frame, geom, barW, canvasHeight: h, bars: renderedBars, yScale, categoryLabelY });
       }else{
-        drawBottomTicks(ctx, labels, geom, h-10, frame, {
+        drawBottomTicks(ctx, labels, geom, categoryLabelY, frame, {
           alignMode: "bar-center",
           labelType: options.xLabelType || "category",
           maxTicks: options.maxTicks || 0
@@ -589,14 +613,16 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
     const labelMode = String(chartModel?.labelMode || "").trim();
     const areaLabelStyle = String(chartModel?.areaLabelStyle || "").trim();
+    const showBarValueLabels = chartModel?.showBarValueLabels !== false;
+    const categoryLabelsBelowBars = chartModel?.categoryLabelsBelowBars !== false;
     const customLabels = labelMode === "home-area-direct"
-      ? ({ ctx, frame, geom, barW, canvasHeight, bars })=>{
-        drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight, bars, labelStyle: areaLabelStyle });
+      ? ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
+        drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight, bars, labelStyle: areaLabelStyle, categoryLabelY });
       }
       : (labelMode === "home-dealer-direct"
-        ? ({ ctx, frame, geom, barW, canvasHeight })=>{
+        ? ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
           const dealerRows = labels.map((label)=> ({ name: label }));
-          drawDealerIdentityLabels(dealerRows, { ctx, frame, geom, barW, canvasHeight });
+          drawDealerIdentityLabels(dealerRows, { ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY });
         }
         : null);
     drawBarChart(
@@ -611,7 +637,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         minBarWidth: 18,
         barPad: (frame)=> frame.compact ? 8 : 14,
         xLabelType: labels.length <= 3 ? "compare" : "category",
-        customLabels
+        customLabels,
+        showBarValueLabels,
+        categoryLabelsBelowBars
       }
     );
     return true;
@@ -644,9 +672,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       {
         minBarWidth: 8,
         barPad: (frame)=> frame.compact ? 3 : 4,
-        customLabels: ({ ctx, frame, geom, barW, canvasHeight })=>{
-          drawDealerIdentityLabels(topDealers, { ctx, frame, geom, barW, canvasHeight });
-        }
+        showBarValueLabels: true,
+        categoryLabelsBelowBars: true,
+        customLabels: ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
+          drawDealerIdentityLabels(topDealers, { ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY });
+        },
       }
     );
   }
@@ -706,9 +736,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       {
         minBarWidth: 8,
         barPad: (frame)=> frame.compact ? 3 : 4,
-        customLabels: ({ ctx, frame, geom, barW, canvasHeight })=>{
-          drawDealerIdentityLabels(dealerAmountRows, { ctx, frame, geom, barW, canvasHeight });
-        }
+        showBarValueLabels: true,
+        categoryLabelsBelowBars: true,
+        customLabels: ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
+          drawDealerIdentityLabels(dealerAmountRows, { ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY });
+        },
       }
     );
   }
@@ -726,9 +758,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     {
       minBarWidth: 8,
       barPad: (frame)=> frame.compact ? 3 : 4,
-      customLabels: ({ ctx, frame, geom, barW, canvasHeight })=>{
-        drawDealerIdentityLabels(dealerRateRows, { ctx, frame, geom, barW, canvasHeight });
-      }
+      showBarValueLabels: true,
+      categoryLabelsBelowBars: true,
+      customLabels: ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
+        drawDealerIdentityLabels(dealerRateRows, { ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY });
+      },
     }
   );
 
