@@ -333,6 +333,51 @@
   background:none;
   box-shadow:none;
 }
+.homeInsightsEntryRow{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+.homeInsightsEntryBtn{
+  min-height:40px;
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid rgba(126,200,255,.32);
+  background:linear-gradient(180deg, rgba(47,109,246,.26) 0%, rgba(24,35,58,.78) 100%);
+  color:#f0f6ff;
+  font-weight:820;
+  letter-spacing:.02em;
+}
+.homeInsightsEntryBtn:focus-visible{
+  outline:2px solid rgba(120,184,255,.75);
+  outline-offset:2px;
+}
+.homeInsightsSurface{
+  padding:12px 0 18px;
+}
+.homeInsightsTopRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:10px;
+}
+.homeInsightsHero{
+  margin-bottom:14px;
+}
+.homeInsightsChartStack{
+  gap:14px;
+}
+.homeInsightsChartCard{
+  padding:14px 0 15px;
+}
+.homeInsightsChartExplanation{
+  margin:7px 0 0;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--text-muted-strong);
+}
 .homeScreenShell .homeOverviewCard{
   padding:15px 15px 14px;
   border-radius:18px;

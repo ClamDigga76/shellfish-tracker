@@ -598,7 +598,14 @@ const { renderHome } = createHomeDashboardRenderer({
   renderHomeMetricDetail: () => renderHomeMetricDetail(),
   getInstallSurfaceModel: () => getInstallSurfaceModel(),
   runInstallAction: () => runInstallAction(),
-  renderStandardReadOnlyTripCard
+  renderStandardReadOnlyTripCard,
+  buildReportsAggregationForTrips: (trips)=> buildReportsAggregationState({
+    trips,
+    canonicalDealerGroupKey,
+    normalizeDealerDisplay,
+    resolveTripArea
+  }),
+  drawReportsCharts
 });
 
 const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrchestrator({

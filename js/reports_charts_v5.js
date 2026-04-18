@@ -631,6 +631,18 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return;
   }
 
+  const chartDeck = Array.isArray(options?.chartDeck) ? options.chartDeck : [];
+  if(chartDeck.length){
+    chartDeck.forEach((entry)=> {
+      if(!entry || typeof entry !== "object") return;
+      const canvasId = String(entry.canvasId || "").trim();
+      const chartModel = entry.chartModel && typeof entry.chartModel === "object" ? entry.chartModel : null;
+      if(!canvasId || !chartModel) return;
+      drawMetricDetailChart(canvasId, chartModel, String(entry.metricKey || chartModel.metricKey || ""));
+    });
+    return;
+  }
+
   const seasonalityChart = options?.seasonalityChart;
   if(seasonalityChart && document.getElementById("c_seasonality_amount")){
     drawMetricDetailChart("c_seasonality_amount", seasonalityChart, seasonalityChart.metricKey || "amount");
