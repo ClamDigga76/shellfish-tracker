@@ -54,7 +54,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { createReportsFilterHelpers },
   { createSettingsListManagement },
   { createBackupRestoreSubsystem },
-  { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled, appendTripHistoryEvent, createTripProvenanceSummaryHelpers, AREA_NOT_RECORDED, createTripSharedCollectionsEngine },
+  { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled, appendTripHistoryEvent, AREA_NOT_RECORDED, createTripSharedCollectionsEngine },
   { createTripCardRenderHelpers, normalizeDealerDisplay },
   { renderHelpViewHTML, renderAboutViewHTML },
   { renderTripEntryForm },
@@ -100,12 +100,6 @@ const {
   isValidAreaValue,
   validateTrip
 } = createTripDataEngine({ uid, isValidISODate });
-const {
-  buildTripProvenanceSummary
-} = createTripProvenanceSummaryHelpers({
-  normalizeTrip,
-  formatDateDMY
-});
 const {
   resolveAreaValue,
   resolveTripArea,
@@ -666,7 +660,6 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
   renderHome,
   buildTripFormInputs,
   buildNewTripSaveSnapshot,
-  buildTripProvenanceSummary,
   addTripToDeletedBin
 });
 
