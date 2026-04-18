@@ -457,7 +457,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const { canvas, ctx, w, h } = c;
     const frame = chartFrame(w,h);
     const observedTop = Math.max(...values, 0);
-    const labelHeadroom = options.showBarValueLabels === false
+    const showBarValueLabels = options.showBarValueLabels !== false;
+    const labelHeadroom = !showBarValueLabels
       ? 0
       : computeBarValueHeadroom(observedTop, { frame, chartHeight: h });
     const targetTop = Math.max(options.minTop || 1, observedTop + labelHeadroom, 0);
@@ -497,10 +498,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ctx.fillRect(x, y, drawWidth, bh);
         renderedBars.push({ x, y, width: drawWidth, height: bh, value: safe, index: i, slotW: barW });
       });
-      if(options.showBarValueLabels){
+      if(showBarValueLabels){
         drawBarValueLabels(renderedBars, { ctx, frame, formatter: options.barValueFormatter || yLabelFormatter });
       }
-      const categoryLabelY = options.categoryLabelsBelowBars ? (h - (frame.compact ? 10 : 12)) : (h - 10);
+      const defaultCategoryLabelY = Math.min(
+        h - 8,
+        geom.y0 + (frame.compact ? 16 : 18)
+      );
+      const categoryLabelY = options.categoryLabelsBelowBars ? defaultCategoryLabelY : (h - 10);
       if(options.customLabels){
         options.customLabels({ ctx, frame, geom, barW, canvasHeight: h, bars: renderedBars, yScale, categoryLabelY });
       }else{
@@ -515,7 +520,6 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: yLabelFormatter(v) });
       }
       drawYTickLabels(ctx, geom, frame, yLabels);
-      drawYLabel(ctx, topLabel, frame);
       ctx.restore();
     });
   }
