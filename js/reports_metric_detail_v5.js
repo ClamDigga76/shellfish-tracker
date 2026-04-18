@@ -160,6 +160,8 @@ function buildHomeCompareBarChart({ labels, metricKey, currentValue, previousVal
     chartType: "compare-bars",
     metricKey,
     basisLabel: String(labels?.length ? labels.join(" vs ") : "Visible Home month view"),
+    showBarValueLabels: true,
+    categoryLabelsBelowBars: true,
     labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Previous month", "Current month"],
     values: [Number(previousValue) || 0, Number(currentValue) || 0]
   };
@@ -189,6 +191,8 @@ function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxIt
     basisLabel: String(basisLabel || "Visible Home month view"),
     labelMode: String(labelMode || ""),
     areaLabelStyle: String(areaLabelStyle || ""),
+    showBarValueLabels: true,
+    categoryLabelsBelowBars: true,
     labels: safeRows.map((row)=> String(row?.name || "—")),
     values: safeRows.map((row)=> Number(row?.[valueKey]) || 0)
   };

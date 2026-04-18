@@ -293,6 +293,8 @@ export function createHomeDashboardRenderer({
           metricKey,
           labelMode,
           areaLabelStyle: String(areaLabelStyle || ""),
+          showBarValueLabels: true,
+          categoryLabelsBelowBars: true,
           labels: safeRows.map((row) => String(row?.name || "—")),
           values: safeRows.map((row) => Number(row?.[valueKey]) || 0)
         };
