@@ -31,14 +31,14 @@ export function createReportsHighlightsSeam(deps){
     const key = String(movement?.primaryMetricKey || "");
     const label = String(movement?.primaryLabel || "").trim();
     if(label) return label;
-    if(key === "ppl") return "Pay rate ($/lb)";
+    if(key === "ppl") return "Price Per Pound";
     if(key === "lbs") return "Pounds";
     return "compare metric";
   };
   const compareContextFromMetric = (metricKey)=> {
     const key = String(metricKey || "").toLowerCase();
     if(key === "lbs" || key === "pounds") return "Pounds";
-    if(key === "ppl" || key === "rate" || key === "pay_rate") return "Pay rate";
+    if(key === "ppl" || key === "rate" || key === "pay_rate") return "Price Per Pound";
     if(key === "share" || key === "sharepct") return "Share";
     if(key === "amount" || key === "amt" || key === "money") return "Amount";
     return "";
@@ -48,7 +48,7 @@ export function createReportsHighlightsSeam(deps){
     if(!text) return "";
     const normalized = text.toLowerCase();
     if(normalized.includes("pound") || normalized === "lbs") return "Pounds";
-    if(normalized.includes("rate") || normalized.includes("$/lb")) return "Pay rate";
+    if(normalized.includes("rate") || normalized.includes("$/lb")) return "Price Per Pound";
     if(normalized.includes("share")) return "Share";
     if(normalized.includes("amount") || normalized.includes("dollar") || normalized.includes("sales")) return "Amount";
     return text;
@@ -63,12 +63,12 @@ export function createReportsHighlightsSeam(deps){
     if(!pounds || !ppl || pounds.suppressed || ppl.suppressed){
       return "compared with the earlier period.";
     }
-    if(pounds.compareTone === "up" && ppl.compareTone === "up") return "with both pounds and $/lb up.";
-    if(pounds.compareTone === "down" && ppl.compareTone === "down") return "with lighter pounds and a softer $/lb.";
+    if(pounds.compareTone === "up" && ppl.compareTone === "up") return "with both pounds and Price Per Pound up.";
+    if(pounds.compareTone === "down" && ppl.compareTone === "down") return "with lighter pounds and a softer Price Per Pound.";
     if(pounds.compareTone === "up" && ppl.compareTone === "down") return "$ grew on heavier pounds even with a softer rate.";
-    if(pounds.compareTone === "down" && ppl.compareTone === "up") return "$ changed on stronger $/lb despite lighter pounds.";
-    if(pounds.compareTone === "steady" && ppl.compareTone === "up") return "mostly because $/lb improved.";
-    if(pounds.compareTone === "steady" && ppl.compareTone === "down") return "mostly because $/lb eased.";
+    if(pounds.compareTone === "down" && ppl.compareTone === "up") return "$ changed on stronger Price Per Pound despite lighter pounds.";
+    if(pounds.compareTone === "steady" && ppl.compareTone === "up") return "mostly because Price Per Pound improved.";
+    if(pounds.compareTone === "steady" && ppl.compareTone === "down") return "mostly because Price Per Pound eased.";
     if(pounds.compareTone === "up" && ppl.compareTone === "steady") return "mostly because pounds increased.";
     if(pounds.compareTone === "down" && ppl.compareTone === "steady") return "mostly because pounds fell.";
     if(tripTone === "up" && dayTone === "up") return "with both $ per trip and $ per fishing day up.";
@@ -338,7 +338,7 @@ export function createReportsHighlightsSeam(deps){
         tone: compareToneForRatio(best.currentLbs, best.previousLbs)
       },
       {
-        label: "Pay rate",
+        label: "Price Per Pound",
         text: `${formatMoney(to2(best.currentPpl))}/lb now vs ${formatMoney(to2(best.previousPpl))}/lb before`,
         tone: compareToneForRatio(best.currentPpl, best.previousPpl, 0.035)
       },

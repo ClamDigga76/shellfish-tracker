@@ -99,7 +99,7 @@ export function createReportsOverviewSectionsSeam(deps){
     const rollingTrips = buildRollingModel("trips", "Rolling trips trend • active Reports range");
     const rollingPounds = buildRollingModel("pounds", "Rolling pounds trend • active Reports range");
     const rollingAmount = buildRollingModel("amount", "Rolling amount trend • active Reports range");
-    const rollingPpl = buildRollingModel("ppl", "Rolling $/lb trend • active Reports range");
+    const rollingPpl = buildRollingModel("ppl", "Rolling Price Per Pound trend • active Reports range");
 
     const trendTone = (delta, epsilon = 0.02)=> {
       if(Math.abs(delta) <= epsilon) return "steady";
@@ -158,7 +158,7 @@ export function createReportsOverviewSectionsSeam(deps){
     const rollingTripsTakeaway = buildRollingTakeaway(rollingTrips, "trips");
     const rollingPoundsTakeaway = buildRollingTakeaway(rollingPounds, "pounds");
     const rollingAmountTakeaway = buildRollingTakeaway(rollingAmount, "amount");
-    const rollingPplTakeaway = buildRollingTakeaway(rollingPpl, "$/lb");
+    const rollingPplTakeaway = buildRollingTakeaway(rollingPpl, "Price Per Pound");
 
     const amountPerTripTakeaway = buildMonthTakeaway("amountPerTrip");
     const dealerRatePeak = dealerRows
@@ -197,8 +197,8 @@ export function createReportsOverviewSectionsSeam(deps){
       }),
       renderChartCard({
         takeaway: rollingPplTakeaway,
-        title: "$/lb • Rolling",
-        subhead: "Line • 3-month rolling avg pay rate",
+        title: "Price Per Pound • Rolling",
+        subhead: "Line • 3-month rolling Price Per Pound",
         hero: `<span class="rate ppl">${escapeHtml(formatRollingValue("ppl", rollingPpl.currentValue))}</span>`,
         context: `<span class="chartContextValue">${escapeHtml(rollingPpl.currentLabel || "Current window")}</span> • ${escapeHtml(buildRollingDirection(rollingPpl))}`,
         canvasId: "c_roll_ppl"
@@ -213,8 +213,8 @@ export function createReportsOverviewSectionsSeam(deps){
       }),
       renderChartCard({
         takeaway: dealerRateTakeaway,
-        title: "$/lb • Dealer",
-        subhead: "Bars • dealer pay rates",
+        title: "Price Per Pound • Dealer",
+        subhead: "Bars • dealer Price Per Pound",
         hero: `<span class="rate ppl">${dealerRatePeak ? `${formatMoney(to2(dealerRatePeak.avg))}/lb` : "—"}</span>`,
         context: `Top pay-rate dealer: <span class="chartContextValue">${dealerRatePeak ? escapeHtml(String(dealerRatePeak.name || "—")) : "—"}</span>`,
         canvasId: "c_dealer_rate",
@@ -406,13 +406,13 @@ export function createReportsOverviewSectionsSeam(deps){
       <div class="sep"></div>
 
       ${pplRows.length ? `
-        ${renderHLItem("Highest $/lb in Range", maxPpl, "ppl", "max")}
+        ${renderHLItem("Highest Price Per Pound in Range", maxPpl, "ppl", "max")}
         <div class="sep"></div>
 
-        ${renderHLItem("Lowest $/lb in Range", minPpl, "ppl", "min")}
+        ${renderHLItem("Lowest Price Per Pound in Range", minPpl, "ppl", "min")}
       ` : `
         <div class="emptyState compact">
-          <div class="emptyStateTitle">$/lb insights unavailable</div>
+          <div class="emptyStateTitle">Price Per Pound insights unavailable</div>
           <div class="emptyStateBody">Add trips with both pounds and amount in this range to populate this view.</div>
         </div>`}
     `;
@@ -465,7 +465,7 @@ export function createReportsOverviewSectionsSeam(deps){
             <div class="tsub">${renderSummaryAverageLine(r)}</div>
           </div>
           <div class="tright">
-            <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
+            <div><span class="ppl">Price Per Pound</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
             <div><b class="money">${formatMoney(r.amt)}</b></div>
           </div>
         </div>
@@ -481,7 +481,7 @@ export function createReportsOverviewSectionsSeam(deps){
         </div>
         <div class="tright">
           <div><b class="money">${formatMoney(r.amt)}</b></div>
-          <div><span class="ppl">$/lb</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
+          <div><span class="ppl">Price Per Pound</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
         </div>
       </div>
     `).join("");

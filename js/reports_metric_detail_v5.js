@@ -150,7 +150,7 @@ function buildHomeMetricPayloads(period){
       previousValue: previous.ppl,
       period,
       suppressed: !(current.lbs > 0 && previous.lbs > 0),
-      reason: "Log pounds in both visible Home months to compare average $/lb."
+      reason: "Log pounds in both visible Home months to compare Price Per Pound."
     })
   };
 }
@@ -301,7 +301,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       monthRows: safeMonths,
       metricKey: "ppl",
       windowSize: getRollingWindowForMetric("ppl", { surface: "home" }),
-      basisLabel: "Rolling $/lb trend • visible Home months"
+      basisLabel: "Rolling Price Per Pound trend • visible Home months"
     }),
     pplAreaLeaders: buildHomeTopRowsBarChart({
       rows: areaRowsByRate,
@@ -470,12 +470,12 @@ export function createReportsMetricDetailSeam(deps){
         const cause = poundsPayload?.compareTone === "up" && pplPayload?.compareTone !== "up"
           ? "higher pounds landed"
           : (pplPayload?.compareTone === "up" && poundsPayload?.compareTone !== "up"
-            ? "stronger average $/lb"
+            ? "stronger Price Per Pound"
             : (poundsPayload?.compareTone === "down" && pplPayload?.compareTone !== "down"
               ? "lighter pounds landed"
               : (pplPayload?.compareTone === "down" && poundsPayload?.compareTone !== "down"
-                ? "softer average $/lb"
-                : "a combined shift in pounds and $/lb")));
+                ? "softer Price Per Pound"
+                : "a combined shift in pounds and Price Per Pound")));
         const evidence = `Evidence: amount per trip was ${toneWord(amountPerTripTone)} and amount per day was ${toneWord(amountPerDayTone)}.`;
         return `${metricMoveLead("Amount")} mainly from ${cause}. ${evidence}`;
       },
@@ -844,18 +844,18 @@ export function createReportsMetricDetailSeam(deps){
         homeInsight: "Start with compare, then check monthly, dealer, and area charts for where earnings came from."
       },
       ppl: {
-        title: "$/lb breakdown",
+        title: "Price Per Pound breakdown",
         homeTitle: "Price Per Pound",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
-        heroLabel: "Average $/lb this range",
+        heroLabel: "Average Price Per Pound this range",
         heroValue: resolveHeroValue("ppl"),
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "$/lb • Compare",
+        chartTitle: "Price Per Pound • Compare",
         homeChartTitle: "Price Per Pound",
-        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window average $/lb",
+        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window average Price Per Pound",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
