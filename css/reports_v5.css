@@ -198,7 +198,7 @@
 .chartCard .chart{margin-top:10px}
 
 
-.chartCard{padding:12px 0 16px;background:transparent;border:0;border-radius:0;box-shadow:none;border-top:0}
+.chartCard{padding:12px 0 15px;background:transparent;border:0;border-radius:0;box-shadow:none;border-top:0}
 .chartTakeaway{display:inline-flex;align-items:center;min-height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:830;letter-spacing:.07em;text-transform:uppercase;background:rgba(190,196,210,.11);color:#c7cfdd}
 .chartTakeaway.tone-up{background:rgba(46,160,67,.16);color:var(--good)}
 .chartTakeaway.tone-down{background:rgba(255,77,79,.15);color:var(--bad)}
@@ -285,7 +285,7 @@
 .reportsMetricCompare.tone-up{border-left-color:rgba(46,160,67,.54);background:transparent}
 .reportsMetricCompare.tone-down{border-left-color:rgba(255,77,79,.5);background:transparent}
 .homeMetricRecordContext{border-radius:0;border:0;border-left:2px solid rgba(126,200,255,.36);background:transparent}
-.reportsMetricChartBlock,.homeMetricChartBlock{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07)}
+.reportsMetricChartBlock,.homeMetricChartBlock{margin-top:15px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)}
 .reportsMetricInsight,.homeMetricInsight{margin-top:20px;padding-top:15px;padding-bottom:calc(22px + var(--safeBottom, 0px));border-top:1px solid rgba(255,255,255,.07)}
 
 .reportsNavShell{margin-top:8px;padding:0;border:0;border-radius:0;background:transparent}
@@ -309,6 +309,9 @@
 .reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:0}
 .reportsChartsStack .chartCard{position:relative}
 .reportsChartsStack .chartCard + .chartCard::before{content:"";position:absolute;left:0;right:0;top:-7px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,0))}
+.homeInsightsChartStack{gap:10px}
+.homeInsightsChartStack .homeInsightsChartCard{padding-top:10px;padding-bottom:12px}
+.homeInsightsChartStack .homeInsightsChartCard .chart{margin-top:12px}
 .reportsHighlightsEmpty,.reportsDetailHint{padding:14px 0 0;border-top:1px solid rgba(255,255,255,.07)}
 .reportsHighlightsEmpty{margin-top:4px}
 .reportsDetailHint .btn{width:100%}

@@ -235,7 +235,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       .filter(Boolean);
   }
 
-  function buildTwoLineAreaWrap(ctx, label, maxW, rankPrefix = ""){
+  function buildTwoLineAreaWrap(ctx, label, maxW){
     const words = splitAreaWords(label);
     if(words.length < 2) return null;
     let best = null;
@@ -243,8 +243,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const first = words.slice(0, i).join(" ");
       const second = words.slice(i).join(" ");
       if(!first || !second) continue;
-      const firstWithRank = `${rankPrefix}${first}`;
-      const firstW = ctx.measureText(firstWithRank).width;
+      const firstW = ctx.measureText(first).width;
       const secondW = ctx.measureText(second).width;
       if(firstW > maxW || secondW > maxW) continue;
       const score = Math.abs(firstW - secondW);
@@ -287,49 +286,56 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return `${src.slice(0, 12).trimEnd()}…`;
   }
 
-  function resolveAreaLabelLayout(ctx, { label, rank, maxW }){
+  function resolveAreaLabelLayout(ctx, { label, maxW }){
     const fullLabel = normalizeAreaLabel(label);
     if(!fullLabel) return [];
-    const rankPrefix = `${rank}. `;
-    const fullWithRank = `${rankPrefix}${fullLabel}`;
-    if(ctx.measureText(fullWithRank).width <= maxW){
-      return [fullWithRank];
+    if(ctx.measureText(fullLabel).width <= maxW){
+      return [fullLabel];
     }
-    const twoLine = buildTwoLineAreaWrap(ctx, fullLabel, maxW, rankPrefix);
+    const twoLine = buildTwoLineAreaWrap(ctx, fullLabel, maxW);
     if(twoLine){
-      return [`${rankPrefix}${twoLine[0]}`, twoLine[1]];
+      return [twoLine[0], twoLine[1]];
     }
     const meaningful = buildMeaningfulAreaAbbrev(fullLabel);
     if(meaningful){
-      const meaningfulWithRank = `${rankPrefix}${meaningful}`;
-      if(ctx.measureText(meaningfulWithRank).width <= maxW){
-        return [meaningfulWithRank];
+      if(ctx.measureText(meaningful).width <= maxW){
+        return [meaningful];
       }
-      const meaningfulTwoLine = buildTwoLineAreaWrap(ctx, meaningful, maxW, rankPrefix);
+      const meaningfulTwoLine = buildTwoLineAreaWrap(ctx, meaningful, maxW);
       if(meaningfulTwoLine){
-        return [`${rankPrefix}${meaningfulTwoLine[0]}`, meaningfulTwoLine[1]];
+        return [meaningfulTwoLine[0], meaningfulTwoLine[1]];
       }
     }
-    const shortened = `${rankPrefix}${shortenAreaLabelRecognizable(fullLabel)}`;
+    const shortened = shortenAreaLabelRecognizable(fullLabel);
     if(ctx.measureText(shortened).width <= maxW){
       return [shortened];
     }
     return [shortened.slice(0, Math.max(6, shortened.length - 1)).trimEnd() + "…"];
   }
 
-  function drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight }){
+  function drawAreaIdentityLabels(labels, { ctx, frame, geom, bars = [], barW, canvasHeight, labelStyle = "" }){
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
+    const preferTopLabels = labelStyle === "top-clean";
     labels.forEach((rawLabel, i)=>{
       const fullLabel = normalizeAreaLabel(rawLabel || "");
       if(!fullLabel) return;
-      const maxLabelW = Math.max(32, barW - 2);
-      const lines = resolveAreaLabelLayout(ctx, { label: fullLabel, rank: i + 1, maxW: maxLabelW });
+      const bar = bars[i] || null;
+      const labelWidthBase = bar?.width || barW;
+      const maxLabelW = Math.max(32, labelWidthBase - 2);
+      const lines = resolveAreaLabelLayout(ctx, { label: fullLabel, maxW: maxLabelW });
       if(!lines.length) return;
       const lineHeight = frame.compact ? 10 : 11;
-      const baseY = lines.length > 1 ? canvasHeight - 20 : canvasHeight - 10;
+      const fallbackBottomY = lines.length > 1 ? canvasHeight - 20 : canvasHeight - 10;
+      let baseY = fallbackBottomY;
+      if(preferTopLabels && bar){
+        const topGap = lines.length > 1 ? 14 : 9;
+        baseY = Math.max(frame.top + 10, bar.y - topGap - ((lines.length - 1) * lineHeight));
+      }
       lines.forEach((line, lineIndex)=>{
-        const tx = geom.x0 + i * barW + ((barW - ctx.measureText(line).width) / 2);
+        const left = bar ? bar.x : (geom.x0 + i * barW);
+        const width = bar ? bar.width : barW;
+        const tx = left + ((width - ctx.measureText(line).width) / 2);
         const x = Math.max(2, tx);
         const y = baseY + (lineHeight * lineIndex);
         ctx.fillText(line, x, y);
@@ -425,18 +431,36 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       ctx.fillRect(frame.left, frame.top, w - frame.left - frame.right, h - frame.top - frame.bottom);
       const geom = drawAxes(ctx,w,h,frame);
       const yScale = niceScale(targetTop, 4);
-      const barW = geom.plotW / (animatedVals.length || 1);
+      const count = Math.max(1, animatedVals.length || 0);
+      const barW = geom.plotW / count;
+      const constrainSmallCountBars = options.constrainSmallCountBars !== false;
+      const smallCount = constrainSmallCountBars && count <= 2;
+      const smallCountMaxBarW = smallCount
+        ? Math.max(
+          options.minBarWidth || 4,
+          Math.min(
+            barW * (count === 1 ? 0.36 : 0.5),
+            frame.compact ? 68 : 84
+          )
+        )
+        : 0;
+      const renderedBars = [];
       animatedVals.forEach((v,i)=>{
         const safe = Math.max(0, Number(v) || 0);
         const bh = yScale.top ? (safe / yScale.top) * geom.plotH : 0;
         const barPad = typeof options.barPad === "function" ? options.barPad(frame) : (frame.compact ? 1 : 1.4);
-        const x = geom.x0 + i*barW + barPad;
+        const naturalWidth = Math.max(options.minBarWidth || 4, barW - (barPad * 2));
+        const drawWidth = smallCount ? Math.min(naturalWidth, smallCountMaxBarW) : naturalWidth;
+        const x = smallCount
+          ? geom.x0 + i * barW + ((barW - drawWidth) / 2)
+          : geom.x0 + i * barW + barPad;
         const y = geom.y0 - bh;
         ctx.fillStyle = barColor;
-        ctx.fillRect(x, y, Math.max(options.minBarWidth || 4, barW - (barPad * 2)), bh);
+        ctx.fillRect(x, y, drawWidth, bh);
+        renderedBars.push({ x, y, width: drawWidth, height: bh, value: safe, index: i, slotW: barW });
       });
       if(options.customLabels){
-        options.customLabels({ ctx, frame, geom, barW, canvasHeight: h });
+        options.customLabels({ ctx, frame, geom, barW, canvasHeight: h, bars: renderedBars, yScale });
       }else{
         drawBottomTicks(ctx, labels, geom, h-10, frame, {
           alignMode: "bar-center",
@@ -564,9 +588,10 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const paletteSet = resolveMetricDetailPalette(metricKey);
     const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
     const labelMode = String(chartModel?.labelMode || "").trim();
+    const areaLabelStyle = String(chartModel?.areaLabelStyle || "").trim();
     const customLabels = labelMode === "home-area-direct"
-      ? ({ ctx, frame, geom, barW, canvasHeight })=>{
-        drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight });
+      ? ({ ctx, frame, geom, barW, canvasHeight, bars })=>{
+        drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight, bars, labelStyle: areaLabelStyle });
       }
       : (labelMode === "home-dealer-direct"
         ? ({ ctx, frame, geom, barW, canvasHeight })=>{
