@@ -279,7 +279,8 @@ export function createHomeDashboardRenderer({
           <h3 class="chartTitle">${escapeHtml(title)}</h3>
           <p class="homeInsightsChartExplanation">${escapeHtml(explanation)}</p>
           ${context ? `<div class="chartContext">${escapeHtml(context)}</div>` : ""}
-          <canvas class="chart" id="${escapeHtml(id)}" height="230"></canvas>
+          <canvas class="chart" id="${escapeHtml(id)}" height="256"></canvas>
+          <div class="homeInsightsChartEmpty" data-chart-empty-for="${escapeHtml(id)}" hidden>Not enough data in this range yet.</div>
         </article>
       `;
       const buildTopRowsChart = ({ rows, valueKey, metricKey, labelMode = "", maxItems = 6 }) => {
@@ -340,12 +341,12 @@ export function createHomeDashboardRenderer({
         {
           canvasId: "homeInsightsPplByDealer",
           metricKey: "ppl",
-          chartModel: buildTopRowsChart({ rows: dealerRows, valueKey: "avgPpl", metricKey: "ppl", labelMode: "home-dealer-direct" })
+          chartModel: buildTopRowsChart({ rows: dealerRows, valueKey: "avg", metricKey: "ppl", labelMode: "home-dealer-direct" })
         },
         {
           canvasId: "homeInsightsPplByArea",
           metricKey: "ppl",
-          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "avgPpl", metricKey: "ppl", labelMode: "home-area-direct" })
+          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "avg", metricKey: "ppl", labelMode: "home-area-direct" })
         },
         {
           canvasId: "homeInsightsPoundsPerTripByArea",
@@ -355,7 +356,7 @@ export function createHomeDashboardRenderer({
         {
           canvasId: "homeInsightsTripsByDealer",
           metricKey: "trips",
-          chartModel: buildTopRowsChart({ rows: dealerRows, valueKey: "count", metricKey: "trips", labelMode: "home-dealer-direct" })
+          chartModel: buildTopRowsChart({ rows: dealerRows, valueKey: "trips", metricKey: "trips", labelMode: "home-dealer-direct" })
         },
         {
           canvasId: "homeInsightsPplByMonth",
@@ -410,7 +411,7 @@ export function createHomeDashboardRenderer({
         };
       }
       if (typeof drawReportsCharts === "function") {
-        drawReportsCharts(monthRows, dealerRows, tripsTimeline, { chartDeck });
+        drawReportsCharts(monthRows, dealerRows, tripsTimeline, { chartDeck, homeInsightsMode: true });
       }
       return;
     }

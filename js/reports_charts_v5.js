@@ -40,16 +40,40 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     plotBg: "rgba(255,255,255,0.025)"
   };
 
-  function chartFrame(w,h){
+  function chartFrame(w,h, mode = "default"){
     const compact = w < 360;
+    const isHomeInsights = mode === "home-insights";
     return {
       compact,
-      left: compact ? 46 : 54,
-      right: compact ? 12 : 16,
-      top: compact ? 26 : 28,
-      bottom: compact ? 54 : 58,
+      left: isHomeInsights ? (compact ? 38 : 44) : (compact ? 46 : 54),
+      right: isHomeInsights ? (compact ? 8 : 10) : (compact ? 12 : 16),
+      top: isHomeInsights ? (compact ? 18 : 20) : (compact ? 26 : 28),
+      bottom: isHomeInsights ? (compact ? 46 : 50) : (compact ? 54 : 58),
       tickFont: compact ? "11px system-ui, -apple-system, Segoe UI, Arial" : "12px system-ui, -apple-system, Segoe UI, Arial"
     };
+  }
+
+  function hasUsableChartData(chartModel){
+    if(!chartModel || typeof chartModel !== "object") return false;
+    const values = Array.isArray(chartModel.values) ? chartModel.values : [];
+    return values.some((value)=> Number.isFinite(Number(value)) && Number(value) > 0);
+  }
+
+  function toggleChartEmptyState(canvasId, shouldShowEmpty, emptyMessage = "Not enough data in this range yet."){
+    if(!canvasId) return;
+    const canvas = document.getElementById(canvasId);
+    if(!canvas) return;
+    const emptyNode = Array.from(document.querySelectorAll("[data-chart-empty-for]"))
+      .find((node)=> String(node?.getAttribute("data-chart-empty-for") || "") === canvasId);
+    if(canvas){
+      canvas.hidden = !!shouldShowEmpty;
+    }
+    if(emptyNode){
+      emptyNode.hidden = !shouldShowEmpty;
+      if(shouldShowEmpty){
+        emptyNode.textContent = String(emptyMessage || "Not enough data in this range yet.");
+      }
+    }
   }
 
   function drawAxes(ctx, w, h, frame){
@@ -455,7 +479,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const c = setupCanvas(document.getElementById(canvasId));
     if(!c) return;
     const { canvas, ctx, w, h } = c;
-    const frame = chartFrame(w,h);
+    const frame = chartFrame(w,h, options.frameMode || "default");
     const observedTop = Math.max(...values, 0);
     const showBarValueLabels = options.showBarValueLabels !== false;
     const labelHeadroom = !showBarValueLabels
@@ -540,7 +564,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const c = setupCanvas(document.getElementById(canvasId));
     if(!c) return;
     const { canvas, ctx, w, h } = c;
-    const frame = chartFrame(w,h);
+    const frame = chartFrame(w,h, options.frameMode || "default");
     const paletteSet = resolveMetricDetailPalette(metricKey);
     const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
     const yScale = niceScale(Math.max(topValue, 1), 4);
@@ -610,9 +634,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return { color: palette.trips, yFormatter: formatCompactCount, topFormatter: (v)=> `${Math.round(Number(v) || 0)}` };
   }
 
-  function drawMetricDetailChart(canvasId, chartModel, metricKeyOverride = ""){
+  function drawMetricDetailChart(canvasId, chartModel, metricKeyOverride = "", drawOptions = {}){
     const metricKey = String(metricKeyOverride || chartModel?.metricKey || "").toLowerCase();
     if(!canvasId || !chartModel || !document.getElementById(canvasId)) return false;
+    const frameMode = drawOptions?.frameMode || chartModel?.frameMode || "default";
+    const emptyStateEnabled = drawOptions?.emptyStateEnabled === true;
+    const showEmptyState = emptyStateEnabled && !hasUsableChartData(chartModel);
+    toggleChartEmptyState(canvasId, showEmptyState, drawOptions?.emptyMessage);
+    if(showEmptyState) return true;
     if(chartModel.chartType === "time-series"){
       const chronologicalSeries = normalizeChronologicalSeries({
         monthKeys: Array.isArray(chartModel?.monthKeys) ? chartModel.monthKeys : [],
@@ -627,7 +656,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         minTop: metricKey === "trips" ? 1 : 0,
         minBarWidth: frameMinBarWidth(labels.length),
         barPad: (frame)=> frame.compact ? 1.2 : 1.8,
-        xLabelType: "month"
+        xLabelType: "month",
+        frameMode
       });
       return true;
     }
@@ -642,7 +672,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         chronologicalSeries.values.map((v)=> Number(v) || 0),
         chronologicalSeries.labels.map((v)=> String(v || "")),
         metricKey || chartModel?.metricKey || "amount",
-        { xLabelType: "month" }
+        { xLabelType: "month", frameMode }
       );
       return true;
     }
@@ -672,12 +702,16 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       paletteSet.topFormatter(topValue),
       {
         minTop: metricKey === "trips" ? 1 : 0,
-        minBarWidth: 18,
-        barPad: (frame)=> frame.compact ? 8 : 14,
+        minBarWidth: frameMode === "home-insights" ? 20 : 18,
+        barPad: (frame)=> {
+          if(frameMode === "home-insights") return frame.compact ? 4 : 6;
+          return frame.compact ? 8 : 14;
+        },
         xLabelType: labels.length <= 3 ? "compare" : "category",
         customLabels,
         showBarValueLabels,
-        categoryLabelsBelowBars
+        categoryLabelsBelowBars,
+        frameMode
       }
     );
     return true;
@@ -731,7 +765,16 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const canvasId = String(entry.canvasId || "").trim();
       const chartModel = entry.chartModel && typeof entry.chartModel === "object" ? entry.chartModel : null;
       if(!canvasId || !chartModel) return;
-      drawMetricDetailChart(canvasId, chartModel, String(entry.metricKey || chartModel.metricKey || ""));
+      drawMetricDetailChart(
+        canvasId,
+        chartModel,
+        String(entry.metricKey || chartModel.metricKey || ""),
+        {
+          frameMode: options?.homeInsightsMode ? "home-insights" : "default",
+          emptyStateEnabled: options?.homeInsightsMode === true,
+          emptyMessage: options?.homeInsightsEmptyMessage || "Not enough data in this range yet."
+        }
+      );
     });
     return;
   }
