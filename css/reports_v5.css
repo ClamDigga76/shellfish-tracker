@@ -400,6 +400,23 @@
   font-weight:830;
   color:#f4fbff;
 }
+
+.homeMetricTitleHeader{
+  margin-top:2px;
+  padding:2px 0 10px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.homeMetricSimpleTitle{
+  margin:0;
+  font-size:clamp(28px,8.8vw,36px);
+  line-height:1.08;
+  font-weight:900;
+  letter-spacing:.2px;
+}
+.homeMetricSimpleTitle--trips{color:#e6eefc;}
+.homeMetricSimpleTitle--pounds{color:#7ec8ff;}
+.homeMetricSimpleTitle--amount{color:#78e7a5;}
+.homeMetricSimpleTitle--ppl{color:#f3d06d;}
 .reportsMetricStoryStack{
   margin-top:17px;
   display:grid;
@@ -611,6 +628,12 @@
 :root[data-theme="light"] .homeMetricContext,
 :root[data-theme="light"] .homeMetricChartContext,
 :root[data-theme="light"] .homeMetricInsight{color:var(--text-muted-strong);}
+
+:root[data-theme="light"] .homeMetricTitleHeader{border-bottom-color:rgba(37,53,92,.14);}
+:root[data-theme="light"] .homeMetricSimpleTitle--trips{color:#1f2d44;}
+:root[data-theme="light"] .homeMetricSimpleTitle--pounds{color:#1f67d2;}
+:root[data-theme="light"] .homeMetricSimpleTitle--amount{color:#16824f;}
+:root[data-theme="light"] .homeMetricSimpleTitle--ppl{color:#8a6900;}
 :root[data-theme="light"] .homeMetricMetaItem{border-color:rgba(37,53,92,.18);background:rgba(37,53,92,.06);}
 :root[data-theme="light"] .homeMetricMetaLabel{color:#5f6d89;}
 :root[data-theme="light"] .homeMetricMetaValue{color:#344054;}

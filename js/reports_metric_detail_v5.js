@@ -145,7 +145,7 @@ function buildHomeMetricPayloads(period){
     amount: buildHomeMetricPayload({ metricKey: "amount", label: "Amount", currentValue: current.amount, previousValue: previous.amount, period }),
     ppl: buildHomeMetricPayload({
       metricKey: "ppl",
-      label: "Avg $/lb",
+      label: "Price Per Pound",
       currentValue: current.ppl,
       previousValue: previous.ppl,
       period,
@@ -482,7 +482,7 @@ export function createReportsMetricDetailSeam(deps){
           : (tone === "down" ? "softer pricing" : "stable pricing");
         const amountDirection = toneWord(amountPayload?.compareTone, { up: "up", down: "down", steady: "flat" });
         const poundsDirection = toneWord(poundsPayload?.compareTone, { up: "up", down: "down", steady: "flat" });
-        return `${metricMoveLead("Avg $/lb")}${pctMove} mainly from ${cause}. Evidence: amount was ${amountDirection} while pounds were ${poundsDirection}.`;
+        return `${metricMoveLead("Price Per Pound")}${pctMove} mainly from ${cause}. Evidence: amount was ${amountDirection} while pounds were ${poundsDirection}.`;
       }
     };
     const summaryText = (summaryBuilders[metricKey] || summaryBuilders.amount)();
@@ -510,9 +510,6 @@ export function createReportsMetricDetailSeam(deps){
     const detailContext = viewModel.isHomeMetricDetail
       ? `Range ${homeRangeLabel || "Active"} • ${homeTripCount} trips`
       : `Range ${viewModel.rangeLabel} • ${viewModel.trips.length} trips`;
-    const homeDetailMetaRow = viewModel.isHomeMetricDetail
-      ? `<div class="homeMetricMetaRow" aria-label="Active scope"><span class="homeMetricMetaItem"><span class="homeMetricMetaLabel">Scope</span><b class="homeMetricMetaValue">${escapeHtml(homeRangeLabel || "Active filter")}</b></span><span class="homeMetricMetaItem"><span class="homeMetricMetaLabel">Trips</span><b class="homeMetricMetaValue">${escapeHtml(String(homeTripCount))}</b></span></div>`
-      : "";
     const detailChartTitle = viewModel.isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = meta.primaryBasis?.basisLabel || (viewModel.isHomeMetricDetail ? meta.homeChartContext : meta.chartContext);
     const detailInsight = viewModel.isHomeMetricDetail ? meta.homeInsight : meta.insight;
@@ -545,9 +542,9 @@ export function createReportsMetricDetailSeam(deps){
     <section class="${viewModel.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
       <div class="${viewModel.detailCardClass}">
         ${viewModel.isHomeMetricDetail ? `
-          <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to Home</button>
-          <h2 class="${viewModel.detailTitleClass}">${escapeHtml(`${meta.homeTitle} detail`)}</h2>
-          ${homeDetailMetaRow}
+          <div class="homeMetricTitleHeader" aria-label="Metric title">
+            <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
+          </div>
         ` : `
           <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to reports</button>
           <div class="${viewModel.detailEyebrowClass}">${escapeHtml(meta.eyebrow)}</div>
@@ -558,14 +555,16 @@ export function createReportsMetricDetailSeam(deps){
           </div>
         `}
 
+        ${viewModel.isHomeMetricDetail ? "" : `
         <div class="reportsMetricStoryStack">
           <div class="${viewModel.detailHeroWrapClass}">
-            ${viewModel.isHomeMetricDetail ? "" : `<div class="${viewModel.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>`}
+            <div class="${viewModel.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
             <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
           </div>
 
-          ${viewModel.isHomeMetricDetail ? "" : renderStandardSupportCard()}
+          ${renderStandardSupportCard()}
         </div>
+        `}
 
         <div class="reportsMetricChartsStack">
           <div class="${viewModel.detailChartClass}">
@@ -712,7 +711,7 @@ export function createReportsMetricDetailSeam(deps){
       ppl: [
         detailCharts.pplMonthlyTrend ? {
           title: "Average pay rate by month",
-          context: "Average $/lb each month",
+          context: "Price Per Pound each month",
           canvasId: "c_ppl_monthly_trend",
           chartModel: detailCharts.pplMonthlyTrend,
           metricKey: "ppl"
@@ -725,14 +724,14 @@ export function createReportsMetricDetailSeam(deps){
           metricKey: "pounds"
         } : null,
         detailCharts.pplAreaLeaders?.labels?.length ? {
-          title: "Average $/lb by area",
+          title: "Price Per Pound by area",
           context: "Min 2 trips + 150 lbs to rank",
           canvasId: "c_ppl_area_leaders",
           chartModel: detailCharts.pplAreaLeaders,
           metricKey: "ppl"
         } : null,
         detailCharts.pplDealerLeaders?.labels?.length ? {
-          title: "Average $/lb by dealer",
+          title: "Price Per Pound by dealer",
           context: "Min 2 trips + 150 lbs to rank",
           canvasId: "c_ppl_dealer_leaders",
           chartModel: detailCharts.pplDealerLeaders,
@@ -744,6 +743,7 @@ export function createReportsMetricDetailSeam(deps){
       trips: {
         title: "Trips breakdown",
         homeTitle: "Trips",
+        homeTitleToneClass: "homeMetricSimpleTitle--trips",
         eyebrow: "Metric breakdown",
         heroLabel: "Trips this range",
         heroValue: resolveHeroValue("trips"),
@@ -772,6 +772,7 @@ export function createReportsMetricDetailSeam(deps){
       pounds: {
         title: "Pounds breakdown",
         homeTitle: "Pounds",
+        homeTitleToneClass: "homeMetricSimpleTitle--pounds",
         eyebrow: "Metric breakdown",
         heroLabel: "Pounds this range",
         heroValue: resolveHeroValue("pounds"),
@@ -800,6 +801,7 @@ export function createReportsMetricDetailSeam(deps){
       amount: {
         title: "Amount breakdown",
         homeTitle: "Amount",
+        homeTitleToneClass: "homeMetricSimpleTitle--amount",
         eyebrow: "Metric breakdown",
         heroLabel: "Amount this range",
         heroValue: resolveHeroValue("amount"),
@@ -839,7 +841,8 @@ export function createReportsMetricDetailSeam(deps){
       },
       ppl: {
         title: "$/lb breakdown",
-        homeTitle: "Avg $/lb",
+        homeTitle: "Price Per Pound",
+        homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
         heroLabel: "Average $/lb this range",
         heroValue: resolveHeroValue("ppl"),
@@ -847,7 +850,7 @@ export function createReportsMetricDetailSeam(deps){
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "$/lb • Compare",
-        homeChartTitle: "Avg $/lb",
+        homeChartTitle: "Price Per Pound",
         chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window average $/lb",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_ppl",
@@ -855,7 +858,7 @@ export function createReportsMetricDetailSeam(deps){
           ? homeSecondaryChartsByMetric.ppl
           : [
             detailCharts.pplRollingTrend ? {
-              title: `Avg $/lb • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
+              title: `Price Per Pound • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
               context: "Line • rolling window with current marker",
               canvasId: "c_ppl_rolling_trend",
               chartModel: detailCharts.pplRollingTrend,
