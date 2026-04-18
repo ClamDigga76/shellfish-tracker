@@ -111,7 +111,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   }
 
   function formatAxisLabel(label, { labelType = "category", compact = false } = {}){
-    const text = String(label || "").trim();
+    const raw = String(label || "").trim();
+    const text = labelType === "month" ? raw : stripLeadingRankPrefix(raw);
     if(!text) return "";
     if(labelType === "month"){
       const directMonthMatch = text.match(/^([A-Za-z]{3,9})\s+(\d{2,4})$/);
@@ -132,6 +133,15 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       return compact ? text.replace(/\s+/g, " ").slice(0, 10) : text;
     }
     return text;
+  }
+
+  function stripLeadingRankPrefix(label){
+    const text = String(label || "").trim();
+    if(!text) return "";
+    return text
+      .replace(/^\s*(?:#\s*)?\d{1,3}\s*[\).:-]\s*/,"")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   function drawBottomTicks(ctx, labels, geom, y, frame, options = {}){
@@ -201,7 +211,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   }
 
   function normalizeDealerLabel(name){
-    const src = String(name || "").trim();
+    const src = stripLeadingRankPrefix(name);
     if(!src) return "";
     const cleaned = src.replace(/\s+/g, " ");
     if(cleaned.length <= 14) return cleaned;
@@ -224,7 +234,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   }
 
   function normalizeAreaLabel(name){
-    return String(name || "").replace(/\s+/g, " ").trim();
+    return stripLeadingRankPrefix(name);
   }
 
   function splitAreaWords(label){
@@ -313,10 +323,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return [shortened.slice(0, Math.max(6, shortened.length - 1)).trimEnd() + "…"];
   }
 
-  function drawAreaIdentityLabels(labels, { ctx, frame, geom, bars = [], barW, canvasHeight, labelStyle = "", categoryLabelY = 0 }){
+  function drawAreaIdentityLabels(labels, { ctx, frame, geom, bars = [], barW, canvasHeight, categoryLabelY = 0 }){
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
-    const preferTopLabels = labelStyle === "top-clean";
     labels.forEach((rawLabel, i)=>{
       const fullLabel = normalizeAreaLabel(rawLabel || "");
       if(!fullLabel) return;
@@ -329,11 +338,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const preferredBelowY = Number(categoryLabelY) > 0
         ? categoryLabelY
         : (lines.length > 1 ? canvasHeight - 20 : canvasHeight - 10);
-      let baseY = preferredBelowY - ((lines.length - 1) * lineHeight);
-      if(preferTopLabels && bar && !(Number(categoryLabelY) > 0)){
-        const topGap = lines.length > 1 ? 14 : 9;
-        baseY = Math.max(frame.top + 10, bar.y - topGap - ((lines.length - 1) * lineHeight));
-      }
+      const baseY = preferredBelowY - ((lines.length - 1) * lineHeight);
       lines.forEach((line, lineIndex)=>{
         const left = bar ? bar.x : (geom.x0 + i * barW);
         const width = bar ? bar.width : barW;
@@ -368,18 +373,21 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.font = frame.tickFont;
     ctx.textBaseline = "alphabetic";
+    const textHeight = Math.max(10, Math.ceil(Number.parseFloat(frame.tickFont) || 11));
+    const safeTopBaseline = frame.top + textHeight + 2;
+    const barGap = frame.compact ? 7 : 8;
     bars.forEach((bar)=>{
       if(!bar || !(bar.height > 0)) return;
       const raw = typeof formatter === "function" ? formatter(bar.value) : String(Math.round(Number(bar.value) || 0));
       const text = String(raw || "").trim();
       if(!text) return;
       const x = Math.max(2, bar.x + ((bar.width - ctx.measureText(text).width) / 2));
-      const y = Math.max(frame.top + 12, bar.y - 6);
+      const y = Math.max(safeTopBaseline, bar.y - barGap);
       ctx.fillText(text, x, y);
     });
   }
 
-  function drawPointValueChip(ctx, text, x, y){
+  function drawPointValueChip(ctx, text, x, y, bounds = {}){
     if(!text) return;
     ctx.save();
     ctx.font = "11px system-ui, -apple-system, Segoe UI, Arial";
@@ -388,8 +396,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const m = ctx.measureText(text);
     const chipW = Math.max(18, m.width + (padX * 2));
     const chipH = 16;
-    const chipX = x - (chipW / 2);
-    const chipY = y - 18;
+    const minX = Number(bounds.minX) || 0;
+    const maxX = Number(bounds.maxX) || Number.POSITIVE_INFINITY;
+    const minY = Number(bounds.minY) || 0;
+    const maxY = Number(bounds.maxY) || Number.POSITIVE_INFINITY;
+    let chipX = x - (chipW / 2);
+    let chipY = y - 18;
+    chipX = Math.max(minX, Math.min(maxX - chipW, chipX));
+    chipY = Math.max(minY, Math.min(maxY - chipH, chipY));
     ctx.fillStyle = "rgba(6,12,22,0.82)";
     ctx.fillRect(chipX, chipY, chipW, chipH);
     ctx.fillStyle = "rgba(255,255,255,0.9)";
@@ -442,7 +456,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     if(!c) return;
     const { canvas, ctx, w, h } = c;
     const frame = chartFrame(w,h);
-    const targetTop = Math.max(options.minTop || 1, ...values, 0);
+    const observedTop = Math.max(...values, 0);
+    const labelHeadroom = options.showBarValueLabels === false
+      ? 0
+      : computeBarValueHeadroom(observedTop, { frame, chartHeight: h });
+    const targetTop = Math.max(options.minTop || 1, observedTop + labelHeadroom, 0);
     renderAnimatedChart(canvas, values, (animatedVals, alpha)=>{
       clear(ctx,w,h);
       ctx.save();
@@ -502,6 +520,18 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     });
   }
 
+  function computeBarValueHeadroom(maxValue, { frame, chartHeight } = {}){
+    const safeMax = Math.max(0, Number(maxValue) || 0);
+    if(!(safeMax > 0)) return 1;
+    const textHeight = Math.max(10, Math.ceil(Number.parseFloat(frame?.tickFont) || 11));
+    const plotHeight = Math.max(80, (Number(chartHeight) || 180) - (Number(frame?.top) || 0) - (Number(frame?.bottom) || 0));
+    const lanePx = textHeight + (frame?.compact ? 12 : 10);
+    const ratio = Math.max(frame?.compact ? 0.14 : 0.12, Math.min(0.36, lanePx / plotHeight));
+    const relativeExtra = safeMax * ratio;
+    const minimumExtra = safeMax * (frame?.compact ? 0.08 : 0.06);
+    return Math.max(relativeExtra, minimumExtra);
+  }
+
   function drawRollingLineChart(canvasId, values, labels, metricKey, options = {}){
     const c = setupCanvas(document.getElementById(canvasId));
     if(!c) return;
@@ -546,7 +576,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
       const currentPoint = points[points.length - 1];
       if(currentPoint){
-        drawPointValueChip(ctx, paletteSet.yFormatter(currentPoint.value), currentPoint.x, currentPoint.y);
+        drawPointValueChip(ctx, paletteSet.yFormatter(currentPoint.value), currentPoint.x, currentPoint.y, {
+          minX: geom.x0 + 2,
+          maxX: geom.xRight - 2,
+          minY: frame.top + 2,
+          maxY: geom.y0 - 2
+        });
       }
 
       drawBottomTicks(ctx, labels, geom, h-10, frame, {
@@ -612,12 +647,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const paletteSet = resolveMetricDetailPalette(metricKey);
     const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
     const labelMode = String(chartModel?.labelMode || "").trim();
-    const areaLabelStyle = String(chartModel?.areaLabelStyle || "").trim();
     const showBarValueLabels = chartModel?.showBarValueLabels !== false;
     const categoryLabelsBelowBars = chartModel?.categoryLabelsBelowBars !== false;
     const customLabels = labelMode === "home-area-direct"
       ? ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
-        drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight, bars, labelStyle: areaLabelStyle, categoryLabelY });
+        drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY });
       }
       : (labelMode === "home-dealer-direct"
         ? ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{

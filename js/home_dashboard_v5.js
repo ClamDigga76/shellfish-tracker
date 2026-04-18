@@ -282,7 +282,7 @@ export function createHomeDashboardRenderer({
           <canvas class="chart" id="${escapeHtml(id)}" height="230"></canvas>
         </article>
       `;
-      const buildTopRowsChart = ({ rows, valueKey, metricKey, labelMode = "", areaLabelStyle = "", maxItems = 6 }) => {
+      const buildTopRowsChart = ({ rows, valueKey, metricKey, labelMode = "", maxItems = 6 }) => {
         const safeRows = (Array.isArray(rows) ? rows : [])
           .filter((row) => Number(row?.[valueKey]) > 0)
           .slice()
@@ -292,7 +292,6 @@ export function createHomeDashboardRenderer({
           chartType: "compare-bars",
           metricKey,
           labelMode,
-          areaLabelStyle: String(areaLabelStyle || ""),
           showBarValueLabels: true,
           categoryLabelsBelowBars: true,
           labels: safeRows.map((row) => String(row?.name || "—")),
@@ -320,12 +319,12 @@ export function createHomeDashboardRenderer({
         {
           canvasId: "homeInsightsAmountByArea",
           metricKey: "amount",
-          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "amt", metricKey: "amount", labelMode: "home-area-direct", areaLabelStyle: "top-clean" })
+          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "amt", metricKey: "amount", labelMode: "home-area-direct" })
         },
         {
           canvasId: "homeInsightsPoundsByArea",
           metricKey: "pounds",
-          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "lbs", metricKey: "pounds", labelMode: "home-area-direct", areaLabelStyle: "top-clean" })
+          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "lbs", metricKey: "pounds", labelMode: "home-area-direct" })
         },
         {
           canvasId: "homeInsightsTripsByMonth",
@@ -341,12 +340,12 @@ export function createHomeDashboardRenderer({
         {
           canvasId: "homeInsightsAmountPerTripByArea",
           metricKey: "amount",
-          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "amountPerTrip", metricKey: "amount", labelMode: "home-area-direct", areaLabelStyle: "top-clean" })
+          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "amountPerTrip", metricKey: "amount", labelMode: "home-area-direct" })
         },
         {
           canvasId: "homeInsightsPoundsPerTripByArea",
           metricKey: "pounds",
-          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "poundsPerTrip", metricKey: "pounds", labelMode: "home-area-direct", areaLabelStyle: "top-clean" })
+          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "poundsPerTrip", metricKey: "pounds", labelMode: "home-area-direct" })
         },
         {
           canvasId: "homeInsightsAmountByDealer",
@@ -371,7 +370,7 @@ export function createHomeDashboardRenderer({
         {
           canvasId: "homeInsightsPplByArea",
           metricKey: "ppl",
-          chartModel: buildTopRowsChart({ rows: areaRowsByRate, valueKey: "avg", metricKey: "ppl", labelMode: "home-area-direct", areaLabelStyle: "top-clean" })
+          chartModel: buildTopRowsChart({ rows: areaRowsByRate, valueKey: "avg", metricKey: "ppl", labelMode: "home-area-direct" })
         },
         {
           canvasId: "homeInsightsTripsByDealer",
