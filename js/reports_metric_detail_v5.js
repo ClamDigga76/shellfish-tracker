@@ -1,15 +1,15 @@
 import { buildRollingSeriesFromMonthRows, describeRollingContext, getRollingWindowForMetric } from "./reports_rolling_trends_v5.js";
 
 const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
-  fairWindowLabel: "Visible Home month view",
+  fairWindowLabel: "Visible range",
   compareModel: "home-full-month",
   compareModelLabel: "Month view",
-  supportLabel: "Visible Home month view",
-  support: "Comparing the latest two visible Home months.",
+  supportLabel: "Visible range",
+  support: "Comparing the latest two visible months in this range.",
   explanation: "",
   missingReason: "Show one more visible month to unlock month-to-month detail.",
   missingSuppressionCode: "missing-home-months",
-  missingExplanation: "Add one more visible Home month and this comparison will appear.",
+  missingExplanation: "Add one more visible month in this range and this comparison will appear.",
   metricExplanation: ()=> "Uses the same visible month pair in the compare card and chart."
 });
 
@@ -97,7 +97,7 @@ function buildHomeSuppressedPeriod({ currentMonth, previousMonth, current, previ
     explanation: HOME_METRIC_DETAIL_COMPARE_CONTRACT.missingExplanation,
     currentLabel: currentMonth?.label || "Current month",
     previousLabel: previousMonth?.label || "Previous month",
-    ...buildHomeCompareContractFields({ support: "Visible Home months" }),
+    ...buildHomeCompareContractFields({ support: "Visible months in this range" }),
     current,
     previous
   };
@@ -150,7 +150,7 @@ function buildHomeMetricPayloads(period){
       previousValue: previous.ppl,
       period,
       suppressed: !(current.lbs > 0 && previous.lbs > 0),
-      reason: "Log pounds in both visible Home months to compare Price Per Pound."
+      reason: "Log pounds in both visible months in this range to compare Price Per Pound."
     })
   };
 }
@@ -159,7 +159,7 @@ function buildHomeCompareBarChart({ labels, metricKey, currentValue, previousVal
   return {
     chartType: "compare-bars",
     metricKey,
-    basisLabel: String(labels?.length ? labels.join(" vs ") : "Visible Home month view"),
+    basisLabel: String(labels?.length ? labels.join(" vs ") : "Visible range"),
     showBarValueLabels: true,
     categoryLabelsBelowBars: true,
     labels: Array.isArray(labels) ? labels.slice(0, 2) : ["Previous month", "Current month"],
@@ -167,7 +167,7 @@ function buildHomeCompareBarChart({ labels, metricKey, currentValue, previousVal
   };
 }
 
-function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel = "Visible Home month view" }){
+function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel = "Visible range" }){
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows : []);
   return {
     chartType: "time-series",
@@ -188,7 +188,7 @@ function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxIt
   return {
     chartType: "compare-bars",
     metricKey,
-    basisLabel: String(basisLabel || "Visible Home month view"),
+    basisLabel: String(basisLabel || "Visible range"),
     labelMode: String(labelMode || ""),
     showBarValueLabels: true,
     categoryLabelsBelowBars: true,
@@ -283,25 +283,25 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       monthRows: safeMonths,
       metricKey: "trips",
       windowSize: getRollingWindowForMetric("trips", { surface: "home" }),
-      basisLabel: "Rolling trips trend • visible Home months"
+      basisLabel: "Rolling trips trend • visible months in this range"
     }),
     poundsRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "pounds",
       windowSize: getRollingWindowForMetric("pounds", { surface: "home" }),
-      basisLabel: "Rolling pounds trend • visible Home months"
+      basisLabel: "Rolling pounds trend • visible months in this range"
     }),
     amountRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "amount",
       windowSize: getRollingWindowForMetric("amount", { surface: "home" }),
-      basisLabel: "Rolling amount trend • visible Home months"
+      basisLabel: "Rolling amount trend • visible months in this range"
     }),
     pplRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "ppl",
       windowSize: getRollingWindowForMetric("ppl", { surface: "home" }),
-      basisLabel: "Rolling Price Per Pound trend • visible Home months"
+      basisLabel: "Rolling Price Per Pound trend • visible months in this range"
     }),
     pplAreaLeaders: buildHomeTopRowsBarChart({
       rows: areaRowsByRate,
@@ -336,7 +336,7 @@ function buildMetricDetailPrimaryBasisMap({ period, metrics, detailCharts, sourc
   const safePeriod = period && typeof period === "object" ? period : {};
   const safeMetrics = metrics && typeof metrics === "object" ? metrics : {};
   const safeCharts = detailCharts && typeof detailCharts === "object" ? detailCharts : {};
-  const defaultBasisLabel = String(safePeriod.supportLabel || safePeriod.support || safePeriod.fairWindowLabel || (source === "home" ? "Visible Home month view" : "Matched date range"));
+  const defaultBasisLabel = String(safePeriod.supportLabel || safePeriod.support || safePeriod.fairWindowLabel || (source === "home" ? "Visible range" : "Matched date range"));
   const currentLabel = String(safePeriod.currentLabel || "Current");
   const previousLabel = String(safePeriod.previousLabel || "Previous");
 
@@ -632,14 +632,14 @@ export function createReportsMetricDetailSeam(deps){
       trips: [
         detailCharts.tripsAreaMix?.labels?.length ? {
           title: "Trips by area",
-          context: "Where you fished most in this Home range",
+          context: "Where you fished most in this range",
           canvasId: "c_trips_area_mix",
           chartModel: detailCharts.tripsAreaMix,
           metricKey: "trips"
         } : null,
         detailCharts.tripsDealerMix?.labels?.length ? {
           title: "Trips by dealer",
-          context: "Who you sold to most in this Home range",
+          context: "Who you sold to most in this range",
           canvasId: "c_trips_dealer_mix",
           chartModel: detailCharts.tripsDealerMix,
           metricKey: "trips"

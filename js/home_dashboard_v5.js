@@ -541,7 +541,7 @@ export function createHomeDashboardRenderer({
           homeScope: {
             rangeLabel: launchedRangeLabel,
             tripCount: trips.length,
-            contextText: `Home • Range ${launchedRangeLabel} • ${trips.length} trips`
+            contextText: `Range ${launchedRangeLabel} • ${trips.length} trips`
           }
         };
         state.reportsMetricDetail = "";
