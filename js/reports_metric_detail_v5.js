@@ -179,7 +179,7 @@ function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel =
   };
 }
 
-function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxItems = 5, labelMode = "", areaLabelStyle = "" }){
+function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxItems = 5, labelMode = "" }){
   const safeRows = Array.isArray(rows)
     ? rows
       .filter((row)=> Number(row?.[valueKey]) > 0)
@@ -190,7 +190,6 @@ function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxIt
     metricKey,
     basisLabel: String(basisLabel || "Visible Home month view"),
     labelMode: String(labelMode || ""),
-    areaLabelStyle: String(areaLabelStyle || ""),
     showBarValueLabels: true,
     categoryLabelsBelowBars: true,
     labels: safeRows.map((row)=> String(row?.name || "—")),
@@ -246,8 +245,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       valueKey: "trips",
       basisLabel: "Trips by area",
       maxItems: 6,
-      labelMode: "home-area-direct",
-      areaLabelStyle: "top-clean"
+      labelMode: "home-area-direct"
     }),
     tripsDealerMix: buildHomeTopRowsBarChart({
       rows: dealerRowsByTrips,
@@ -277,8 +275,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       metricKey: "amount",
       valueKey: "amt",
       basisLabel: "Strongest areas by amount",
-      labelMode: "home-area-direct",
-      areaLabelStyle: "top-clean"
+      labelMode: "home-area-direct"
     }),
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
     pplMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg" }),
@@ -312,8 +309,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       valueKey: "avg",
       basisLabel: `Min ${AVG_RATE_MIN_TRIPS} trips + ${AVG_RATE_MIN_POUNDS} lbs to rank`,
       maxItems: 6,
-      labelMode: "home-area-direct",
-      areaLabelStyle: "top-clean"
+      labelMode: "home-area-direct"
     }),
     pplDealerLeaders: buildHomeTopRowsBarChart({ rows: dealerRowsByRate, metricKey: "ppl", valueKey: "avg", basisLabel: "Dealer pay-rate leaders" }),
     pplRateVsPoundsTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" })
