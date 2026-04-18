@@ -329,7 +329,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       monthRows,
       metricKey: "ppl",
       windowSize: getRollingWindowForMetric("ppl", { surface: rollingSurface }),
-      basisLabel: isHomeMetricDetail ? "Rolling $/lb trend • visible Home months" : "Rolling $/lb trend • active Reports range"
+      basisLabel: isHomeMetricDetail ? "Rolling Price Per Pound trend • visible Home months" : "Rolling Price Per Pound trend • active Reports range"
     })
   };
   const primaryBasisByMetric = compareFoundation.primaryBasis || {};
