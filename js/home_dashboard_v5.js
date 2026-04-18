@@ -21,7 +21,9 @@ export function createHomeDashboardRenderer({
   renderHomeMetricDetail,
   getInstallSurfaceModel,
   runInstallAction,
-  renderStandardReadOnlyTripCard
+  renderStandardReadOnlyTripCard,
+  buildReportsAggregationForTrips,
+  drawReportsCharts
 }) {
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
@@ -88,6 +90,13 @@ export function createHomeDashboardRenderer({
     const unified = buildUnifiedFilterFromHomeFilter(hf);
     const homeCustomCorrectionMessages = Array.isArray(hf.customRangeCorrectionMessages) ? hf.customRangeCorrectionMessages : [];
     const trips = applyUnifiedTripFilter(tripsAll, unified).rows;
+    const reportsAgg = typeof buildReportsAggregationForTrips === "function"
+      ? buildReportsAggregationForTrips(trips)
+      : null;
+    const monthRows = Array.isArray(reportsAgg?.monthRows) ? reportsAgg.monthRows : [];
+    const dealerRows = Array.isArray(reportsAgg?.dealerRows) ? reportsAgg.dealerRows : [];
+    const areaRows = Array.isArray(reportsAgg?.areaRows) ? reportsAgg.areaRows : [];
+    const tripsTimeline = Array.isArray(reportsAgg?.tripsTimeline) ? reportsAgg.tripsTimeline : [];
     const totalAmount = trips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
     const totalLbs = trips.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
     const weightedRateTotal = trips.reduce((sum, trip) => {
@@ -263,12 +272,159 @@ export function createHomeDashboardRenderer({
       return "YTD";
     })();
     const homeOverviewRangeLabel = homeFilterLabel;
+    const isHomeInsightsOpen = !!state.homeInsightsOpen;
+    if (isHomeInsightsOpen) {
+      const chartCard = ({ id, title, explanation, context = "" }) => `
+        <article class="card chartCard homeInsightsChartCard">
+          <h3 class="chartTitle">${escapeHtml(title)}</h3>
+          <p class="homeInsightsChartExplanation">${escapeHtml(explanation)}</p>
+          ${context ? `<div class="chartContext">${escapeHtml(context)}</div>` : ""}
+          <canvas class="chart" id="${escapeHtml(id)}" height="230"></canvas>
+        </article>
+      `;
+      const buildTopRowsChart = ({ rows, valueKey, metricKey, labelMode = "", maxItems = 6 }) => {
+        const safeRows = (Array.isArray(rows) ? rows : [])
+          .filter((row) => Number(row?.[valueKey]) > 0)
+          .slice()
+          .sort((a, b) => (Number(b?.[valueKey]) || 0) - (Number(a?.[valueKey]) || 0))
+          .slice(0, maxItems);
+        return {
+          chartType: "compare-bars",
+          metricKey,
+          labelMode,
+          labels: safeRows.map((row) => String(row?.name || "—")),
+          values: safeRows.map((row) => Number(row?.[valueKey]) || 0)
+        };
+      };
+      const buildMonthSeriesChart = ({ rows, valueKey, metricKey }) => ({
+        chartType: "time-series",
+        metricKey,
+        monthKeys: (Array.isArray(rows) ? rows : []).map((row) => String(row?.monthKey || "")),
+        labels: (Array.isArray(rows) ? rows : []).map((row) => String(row?.label || row?.monthKey || "—")),
+        values: (Array.isArray(rows) ? rows : []).map((row) => Number(row?.[valueKey]) || 0)
+      });
+      const AVG_RATE_MIN_TRIPS = 2;
+      const AVG_RATE_MIN_POUNDS = 150;
+      const dealerRowsByRate = dealerRows
+        .filter((row) => (Number(row?.avg) || 0) > 0 && (Number(row?.trips) || 0) >= AVG_RATE_MIN_TRIPS && (Number(row?.lbs) || 0) >= AVG_RATE_MIN_POUNDS)
+        .slice()
+        .sort((a, b) => (Number(b?.avg) || 0) - (Number(a?.avg) || 0));
+      const areaRowsByRate = areaRows
+        .filter((row) => (Number(row?.avg) || 0) > 0 && (Number(row?.trips) || 0) >= AVG_RATE_MIN_TRIPS && (Number(row?.lbs) || 0) >= AVG_RATE_MIN_POUNDS)
+        .slice()
+        .sort((a, b) => (Number(b?.avg) || 0) - (Number(a?.avg) || 0));
+      const chartDeck = [
+        {
+          canvasId: "homeInsightsAmountByArea",
+          metricKey: "amount",
+          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "amt", metricKey: "amount", labelMode: "home-area-direct" })
+        },
+        {
+          canvasId: "homeInsightsPoundsByArea",
+          metricKey: "pounds",
+          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "lbs", metricKey: "pounds", labelMode: "home-area-direct" })
+        },
+        {
+          canvasId: "homeInsightsTripsByMonth",
+          metricKey: "trips",
+          chartModel: {
+            chartType: "time-series",
+            metricKey: "trips",
+            monthKeys: tripsTimeline.map((row) => String(row?.monthKey || "")),
+            labels: tripsTimeline.map((row) => String(row?.shortLabel || row?.label || row?.monthKey || "—")),
+            values: tripsTimeline.map((row) => Number(row?.count) || 0)
+          }
+        },
+        {
+          canvasId: "homeInsightsAmountPerTripByArea",
+          metricKey: "amount",
+          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "amountPerTrip", metricKey: "amount", labelMode: "home-area-direct" })
+        },
+        {
+          canvasId: "homeInsightsPoundsPerTripByArea",
+          metricKey: "pounds",
+          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "poundsPerTrip", metricKey: "pounds", labelMode: "home-area-direct" })
+        },
+        {
+          canvasId: "homeInsightsAmountByDealer",
+          metricKey: "amount",
+          chartModel: buildTopRowsChart({ rows: dealerRows, valueKey: "amt", metricKey: "amount", labelMode: "home-dealer-direct" })
+        },
+        {
+          canvasId: "homeInsightsPoundsByDealer",
+          metricKey: "pounds",
+          chartModel: buildTopRowsChart({ rows: dealerRows, valueKey: "lbs", metricKey: "pounds", labelMode: "home-dealer-direct" })
+        },
+        {
+          canvasId: "homeInsightsPplByMonth",
+          metricKey: "ppl",
+          chartModel: buildMonthSeriesChart({ rows: monthRows, valueKey: "avg", metricKey: "ppl" })
+        },
+        {
+          canvasId: "homeInsightsPplByDealer",
+          metricKey: "ppl",
+          chartModel: buildTopRowsChart({ rows: dealerRowsByRate, valueKey: "avg", metricKey: "ppl", labelMode: "home-dealer-direct" })
+        },
+        {
+          canvasId: "homeInsightsPplByArea",
+          metricKey: "ppl",
+          chartModel: buildTopRowsChart({ rows: areaRowsByRate, valueKey: "avg", metricKey: "ppl", labelMode: "home-area-direct" })
+        },
+        {
+          canvasId: "homeInsightsTripsByDealer",
+          metricKey: "trips",
+          chartModel: buildTopRowsChart({ rows: dealerRows, valueKey: "trips", metricKey: "trips", labelMode: "home-dealer-direct" })
+        }
+      ];
+      getApp().innerHTML = `
+        ${renderPageHeader("home")}
+        <section class="card dashCard homeInsightsSurface" aria-label="Home insights">
+          <div class="homeInsightsTopRow">
+            <button class="btn reportsMetricBackBtn" id="homeInsightsBack" type="button">← Back to Home</button>
+            <div class="homeOverviewScopePill">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
+          </div>
+          <div class="reportsHeroCard homeInsightsHero">
+            <div class="reportsHeroEyebrow">Home insights</div>
+            <h2 class="reportsHeroHeadline">Decision support for your current Home filter</h2>
+            <p class="reportsHeroSub">Scan where earnings, volume, pricing, and trip activity are strongest before planning your next outings.</p>
+          </div>
+          <div class="reportsChartsStack homeInsightsChartStack">
+            ${chartCard({ id: "homeInsightsAmountByArea", title: "Amount by area", explanation: "Shows which fishing areas are making you the most money." })}
+            ${chartCard({ id: "homeInsightsPoundsByArea", title: "Pounds by area", explanation: "Shows which areas are producing the most total catch volume." })}
+            ${chartCard({ id: "homeInsightsTripsByMonth", title: "Trips by month", explanation: "Shows whether your fishing activity is rising, falling, or staying steady over time." })}
+            ${chartCard({ id: "homeInsightsAmountPerTripByArea", title: "Amount per trip by area", explanation: "Shows which areas give you the best money return for each trip." })}
+            ${chartCard({ id: "homeInsightsPoundsPerTripByArea", title: "Pounds per trip by area", explanation: "Shows which areas give you the strongest catch volume per outing." })}
+            ${chartCard({ id: "homeInsightsAmountByDealer", title: "Amount by dealer", explanation: "Shows which dealers have paid you the most overall." })}
+            ${chartCard({ id: "homeInsightsPoundsByDealer", title: "Pounds by dealer", explanation: "Shows which dealers have taken the most total product from you." })}
+            ${chartCard({ id: "homeInsightsPplByMonth", title: "Price Per Pound by month", explanation: "Shows whether your average pay rate is improving or softening over time." })}
+            ${chartCard({ id: "homeInsightsPplByDealer", title: "Price Per Pound by dealer", explanation: "Shows which dealers consistently pay the best average rate.", context: "Min 2 trips + 150 lbs to rank" })}
+            ${chartCard({ id: "homeInsightsPplByArea", title: "Price Per Pound by area", explanation: "Shows which areas are producing the highest-value catch.", context: "Min 2 trips + 150 lbs to rank" })}
+            ${chartCard({ id: "homeInsightsTripsByDealer", title: "Trips by dealer", explanation: "Shows which dealers you rely on most often." })}
+          </div>
+        </section>
+      `;
+      const insightsBack = document.getElementById("homeInsightsBack");
+      if (insightsBack) {
+        insightsBack.onclick = () => {
+          state.homeInsightsOpen = false;
+          saveState();
+          renderHome();
+        };
+      }
+      if (typeof drawReportsCharts === "function") {
+        drawReportsCharts(monthRows, dealerRows, tripsTimeline, { chartDeck });
+      }
+      return;
+    }
     getApp().innerHTML = `
       ${renderPageHeader("home")}
 
       <div class="card dashCard homeScreenShell">
         ${homeBeginnerCardHTML}
         <section class="homeSection homeFilterSection">
+          <div class="homeInsightsEntryRow">
+            <button class="btn homeInsightsEntryBtn" id="homeOpenInsights" type="button">Insights</button>
+          </div>
           <div class="homeFilterStack">
             <div class="segWrap timeframeUnifiedControl" role="group" aria-label="Home timeframe filter">
               ${chip("YTD", "YTD")}
@@ -387,6 +543,18 @@ export function createHomeDashboardRenderer({
     bindDatePill("homeRangeFrom");
     bindDatePill("homeRangeTo");
     fitHomeKpiValues();
+    const homeOpenInsights = document.getElementById("homeOpenInsights");
+    if (homeOpenInsights) {
+      homeOpenInsights.onclick = () => {
+        state.homeInsightsOpen = true;
+        state.homeMetricDetail = "";
+        state.homeMetricDetailContext = null;
+        state.reportsMetricDetail = "";
+        state.reportsMetricDetailContext = null;
+        saveState();
+        renderHome();
+      };
+    }
 
     getApp().querySelectorAll("[data-kpi-detail]").forEach((btn) => {
       btn.addEventListener("click", () => {
