@@ -199,31 +199,68 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
     String(period?.previousLabel || "Previous month"),
     String(period?.currentLabel || "Current month")
   ];
-  const areaRowsByPounds = Array.isArray(areaRows)
-    ? areaRows.slice().sort((a,b)=> (Number(b?.lbs) || 0) - (Number(a?.lbs) || 0))
+  const AVG_RATE_MIN_TRIPS = 2;
+  const AVG_RATE_MIN_POUNDS = 150;
+  const dealerRowsByTrips = Array.isArray(dealerRows)
+    ? dealerRows
+      .slice()
+      .sort((a,b)=> (Number(b?.trips) || 0) - (Number(a?.trips) || 0) || (Number(b?.amt) || 0) - (Number(a?.amt) || 0) || (Number(b?.lbs) || 0) - (Number(a?.lbs) || 0) || String(a?.name || "").localeCompare(String(b?.name || "")))
+    : [];
+  const areaRowsByTrips = Array.isArray(areaRows)
+    ? areaRows
+      .slice()
+      .sort((a,b)=> (Number(b?.trips) || 0) - (Number(a?.trips) || 0) || (Number(b?.amt) || 0) - (Number(a?.amt) || 0) || (Number(b?.lbs) || 0) - (Number(a?.lbs) || 0) || String(a?.name || "").localeCompare(String(b?.name || "")))
     : [];
   const areaRowsByAmount = Array.isArray(areaRows)
     ? areaRows.slice().sort((a,b)=> (Number(b?.amt) || 0) - (Number(a?.amt) || 0))
     : [];
+  const dealerRowsByPounds = Array.isArray(dealerRows)
+    ? dealerRows
+      .slice()
+      .sort((a,b)=> (Number(b?.lbs) || 0) - (Number(a?.lbs) || 0) || (Number(b?.amt) || 0) - (Number(a?.amt) || 0) || (Number(b?.trips) || 0) - (Number(a?.trips) || 0) || String(a?.name || "").localeCompare(String(b?.name || "")))
+    : [];
+  const areaRowsByRate = Array.isArray(areaRows)
+    ? areaRows
+      .slice()
+      .filter((row)=> (Number(row?.lbs) || 0) > 0 && (Number(row?.avg) || 0) > 0 && (Number(row?.trips) || 0) >= AVG_RATE_MIN_TRIPS && (Number(row?.lbs) || 0) >= AVG_RATE_MIN_POUNDS)
+      .sort((a,b)=> (Number(b?.avg) || 0) - (Number(a?.avg) || 0) || (Number(b?.lbs) || 0) - (Number(a?.lbs) || 0) || (Number(b?.trips) || 0) - (Number(a?.trips) || 0) || String(a?.name || "").localeCompare(String(b?.name || "")))
+    : [];
   const dealerRowsByRate = Array.isArray(dealerRows)
     ? dealerRows
       .slice()
-      .filter((row)=> (Number(row?.lbs) || 0) > 0 && (Number(row?.avg) || 0) > 0)
+      .filter((row)=> (Number(row?.lbs) || 0) > 0 && (Number(row?.avg) || 0) > 0 && (Number(row?.trips) || 0) >= AVG_RATE_MIN_TRIPS && (Number(row?.lbs) || 0) >= AVG_RATE_MIN_POUNDS)
       .sort((a,b)=> (Number(b?.avg) || 0) - (Number(a?.avg) || 0))
     : [];
   return {
     trips: buildHomeCompareBarChart({ labels, metricKey: "trips", currentValue: period?.current?.trips, previousValue: period?.previous?.trips }),
     tripsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
     tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
+    tripsAreaMix: buildHomeTopRowsBarChart({
+      rows: areaRowsByTrips,
+      metricKey: "trips",
+      valueKey: "trips",
+      basisLabel: "Trips by area",
+      maxItems: 6,
+      labelMode: "home-area-direct"
+    }),
+    tripsDealerMix: buildHomeTopRowsBarChart({
+      rows: dealerRowsByTrips,
+      metricKey: "trips",
+      valueKey: "trips",
+      basisLabel: "Trips by dealer",
+      maxItems: 6,
+      labelMode: "home-dealer-direct"
+    }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
     poundsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" }),
     poundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
-    poundsAreaMix: buildHomeTopRowsBarChart({
-      rows: areaRowsByPounds,
+    poundsDealerMix: buildHomeTopRowsBarChart({
+      rows: dealerRowsByPounds,
       metricKey: "pounds",
       valueKey: "lbs",
-      basisLabel: "Strongest areas by pounds",
-      labelMode: "home-area-direct"
+      basisLabel: "Top dealers by pounds",
+      maxItems: 6,
+      labelMode: "home-dealer-direct"
     }),
     amount: buildHomeCompareBarChart({ labels, metricKey: "amount", currentValue: period?.current?.amount, previousValue: period?.previous?.amount }),
     amountTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amt" }),
@@ -261,6 +298,14 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       metricKey: "ppl",
       windowSize: getRollingWindowForMetric("ppl", { surface: "home" }),
       basisLabel: "Rolling $/lb trend • visible Home months"
+    }),
+    pplAreaLeaders: buildHomeTopRowsBarChart({
+      rows: areaRowsByRate,
+      metricKey: "ppl",
+      valueKey: "avg",
+      basisLabel: `Min ${AVG_RATE_MIN_TRIPS} trips + ${AVG_RATE_MIN_POUNDS} lbs to rank`,
+      maxItems: 6,
+      labelMode: "home-area-direct"
     }),
     pplDealerLeaders: buildHomeTopRowsBarChart({ rows: dealerRowsByRate, metricKey: "ppl", valueKey: "avg", basisLabel: "Dealer pay-rate leaders" }),
     pplRateVsPoundsTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" })
@@ -582,6 +627,20 @@ export function createReportsMetricDetailSeam(deps){
     );
     const homeSecondaryChartsByMetric = {
       trips: [
+        detailCharts.tripsAreaMix?.labels?.length ? {
+          title: "Trips by area",
+          context: "Where you fished most in this Home range",
+          canvasId: "c_trips_area_mix",
+          chartModel: detailCharts.tripsAreaMix,
+          metricKey: "trips"
+        } : null,
+        detailCharts.tripsDealerMix?.labels?.length ? {
+          title: "Trips by dealer",
+          context: "Who you sold to most in this Home range",
+          canvasId: "c_trips_dealer_mix",
+          chartModel: detailCharts.tripsDealerMix,
+          metricKey: "trips"
+        } : null,
         detailCharts.tripsMonthlyTrend ? {
           title: "Trips by month",
           context: "Monthly trip counts",
@@ -612,11 +671,11 @@ export function createReportsMetricDetailSeam(deps){
           chartModel: detailCharts.poundsPerTripTrend,
           metricKey: "pounds"
         } : null,
-        detailCharts.poundsAreaMix?.labels?.length ? {
-          title: "Strongest areas by pounds",
-          context: "Top areas by landed pounds",
-          canvasId: "c_pounds_area_mix",
-          chartModel: detailCharts.poundsAreaMix,
+        detailCharts.poundsDealerMix?.labels?.length ? {
+          title: "Top dealers by pounds",
+          context: "Dealers with the most landed pounds",
+          canvasId: "c_pounds_dealer_mix",
+          chartModel: detailCharts.poundsDealerMix,
           metricKey: "pounds"
         } : null
       ],
@@ -665,9 +724,16 @@ export function createReportsMetricDetailSeam(deps){
           chartModel: detailCharts.pplRateVsPoundsTrend,
           metricKey: "pounds"
         } : null,
+        detailCharts.pplAreaLeaders?.labels?.length ? {
+          title: "Average $/lb by area",
+          context: "Min 2 trips + 150 lbs to rank",
+          canvasId: "c_ppl_area_leaders",
+          chartModel: detailCharts.pplAreaLeaders,
+          metricKey: "ppl"
+        } : null,
         detailCharts.pplDealerLeaders?.labels?.length ? {
-          title: "Dealer pay-rate leaders",
-          context: "Dealers paying the highest average $/lb",
+          title: "Average $/lb by dealer",
+          context: "Min 2 trips + 150 lbs to rank",
           canvasId: "c_ppl_dealer_leaders",
           chartModel: detailCharts.pplDealerLeaders,
           metricKey: "ppl"

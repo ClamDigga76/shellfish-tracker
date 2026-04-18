@@ -1,5 +1,3 @@
-import { drawReportsCharts } from "./reports_charts_v5.js";
-
 export function createHomeDashboardRenderer({
   state,
   buildUnifiedFilterFromHomeFilter,
@@ -199,102 +197,6 @@ export function createHomeDashboardRenderer({
     }, new Map());
     const strongestArea = Array.from(areaRollup.values())
       .sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null;
-    const sortedDealersByAmount = dealers
-      .slice()
-      .sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips || a.dealer.localeCompare(b.dealer));
-    const sortedDealersByPounds = dealers
-      .slice()
-      .sort((a, b) => b.pounds - a.pounds || b.amount - a.amount || b.trips - a.trips || a.dealer.localeCompare(b.dealer));
-    const areas = Array.from(areaRollup.values());
-    const sortedAreasByTrips = areas
-      .slice()
-      .sort((a, b) => b.trips - a.trips || b.amount - a.amount || b.pounds - a.pounds || a.area.localeCompare(b.area));
-    const sortedDealersByTrips = dealers
-      .slice()
-      .sort((a, b) => b.trips - a.trips || b.amount - a.amount || b.pounds - a.pounds || a.dealer.localeCompare(b.dealer));
-    const AVG_RATE_MIN_TRIPS = 2;
-    const AVG_RATE_MIN_POUNDS = 150;
-    const areaAvgRateRows = areas
-      .map((row) => ({
-        name: row.area,
-        trips: row.trips,
-        lbs: row.pounds,
-        avg: row.pounds > 0 ? (row.amount / row.pounds) : 0
-      }))
-      .filter((row) => row.avg > 0 && row.trips >= AVG_RATE_MIN_TRIPS && row.lbs >= AVG_RATE_MIN_POUNDS)
-      .sort((a, b) => b.avg - a.avg || b.lbs - a.lbs || b.trips - a.trips || a.name.localeCompare(b.name));
-    const dealerAvgRateRows = dealers
-      .map((row) => ({
-        name: row.dealer,
-        trips: row.trips,
-        lbs: row.pounds,
-        avg: row.pounds > 0 ? (row.amount / row.pounds) : 0
-      }))
-      .filter((row) => row.avg > 0 && row.trips >= AVG_RATE_MIN_TRIPS && row.lbs >= AVG_RATE_MIN_POUNDS)
-      .sort((a, b) => b.avg - a.avg || b.lbs - a.lbs || b.trips - a.trips || a.name.localeCompare(b.name));
-    const homeAnalyticsCharts = [
-      {
-        canvasId: "home_chart_dealer_amount",
-        chartModel: {
-          chartType: "compare-bars",
-          metricKey: "amount",
-          labels: sortedDealersByAmount.slice(0, 6).map((row) => row.dealer),
-          values: sortedDealersByAmount.slice(0, 6).map((row) => Number(row.amount) || 0),
-          labelMode: "home-dealer-direct"
-        }
-      },
-      {
-        canvasId: "home_chart_dealer_pounds",
-        chartModel: {
-          chartType: "compare-bars",
-          metricKey: "pounds",
-          labels: sortedDealersByPounds.slice(0, 6).map((row) => row.dealer),
-          values: sortedDealersByPounds.slice(0, 6).map((row) => Number(row.pounds) || 0),
-          labelMode: "home-dealer-direct"
-        }
-      },
-      {
-        canvasId: "home_chart_area_trips",
-        chartModel: {
-          chartType: "compare-bars",
-          metricKey: "trips",
-          labels: sortedAreasByTrips.slice(0, 6).map((row) => row.area),
-          values: sortedAreasByTrips.slice(0, 6).map((row) => Number(row.trips) || 0),
-          labelMode: "home-area-direct"
-        }
-      },
-      {
-        canvasId: "home_chart_dealer_trips",
-        chartModel: {
-          chartType: "compare-bars",
-          metricKey: "trips",
-          labels: sortedDealersByTrips.slice(0, 6).map((row) => row.dealer),
-          values: sortedDealersByTrips.slice(0, 6).map((row) => Number(row.trips) || 0),
-          labelMode: "home-dealer-direct"
-        }
-      },
-      {
-        canvasId: "home_chart_area_rate",
-        chartModel: {
-          chartType: "compare-bars",
-          metricKey: "ppl",
-          labels: areaAvgRateRows.slice(0, 6).map((row) => row.name),
-          values: areaAvgRateRows.slice(0, 6).map((row) => Number(row.avg) || 0),
-          labelMode: "home-area-direct"
-        }
-      },
-      {
-        canvasId: "home_chart_dealer_rate",
-        chartModel: {
-          chartType: "compare-bars",
-          metricKey: "ppl",
-          labels: dealerAvgRateRows.slice(0, 6).map((row) => row.name),
-          values: dealerAvgRateRows.slice(0, 6).map((row) => Number(row.avg) || 0),
-          labelMode: "home-dealer-direct"
-        }
-      }
-    ];
-    const rateGuardText = `Min ${AVG_RATE_MIN_TRIPS} trips + ${AVG_RATE_MIN_POUNDS} lbs to rank`;
     const installModel = typeof getInstallSurfaceModel === "function" ? getInstallSurfaceModel() : null;
     const showInstallCard = shouldShowBeginnerCard && installModel && !installModel.isInstalled;
     const installCardHTML = showInstallCard ? `
@@ -446,44 +348,6 @@ export function createHomeDashboardRenderer({
           </div>
         </section>
 
-        <section class="homeSection homeAnalyticsSection">
-          <div class="homeAnalyticsHeaderRow">
-            <div class="reportsHeroEyebrow">Home Analytics</div>
-            <div class="homeOverviewScopePill" aria-label="Home analytics filter scope">${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
-          </div>
-          <div class="homeAnalyticsGrid">
-            <article class="chartCard homeAnalyticsCard">
-              <div class="chartTitle">Top dealers by amount</div>
-              <div class="chartSubhead">Highest total dollars in this Home range.</div>
-              <canvas class="chart" id="home_chart_dealer_amount" height="190"></canvas>
-            </article>
-            <article class="chartCard homeAnalyticsCard">
-              <div class="chartTitle">Top dealers by pounds</div>
-              <div class="chartSubhead">Highest total pounds in this Home range.</div>
-              <canvas class="chart" id="home_chart_dealer_pounds" height="190"></canvas>
-            </article>
-            <article class="chartCard homeAnalyticsCard">
-              <div class="chartTitle">Trips by area</div>
-              <div class="chartSubhead">Where you fished most often in this range.</div>
-              <canvas class="chart" id="home_chart_area_trips" height="190"></canvas>
-            </article>
-            <article class="chartCard homeAnalyticsCard">
-              <div class="chartTitle">Trips by dealer</div>
-              <div class="chartSubhead">Who you sold to most often in this range.</div>
-              <canvas class="chart" id="home_chart_dealer_trips" height="190"></canvas>
-            </article>
-            <article class="chartCard homeAnalyticsCard">
-              <div class="chartTitle">Average $/lb by area</div>
-              <div class="chartSubhead">${escapeHtml(rateGuardText)}</div>
-              <canvas class="chart" id="home_chart_area_rate" height="190"></canvas>
-            </article>
-            <article class="chartCard homeAnalyticsCard">
-              <div class="chartTitle">Average $/lb by dealer</div>
-              <div class="chartSubhead">${escapeHtml(rateGuardText)}</div>
-              <canvas class="chart" id="home_chart_dealer_rate" height="190"></canvas>
-            </article>
-          </div>
-        </section>
       </div>
 
       ${pwaStorageNoteHTML}
@@ -522,9 +386,6 @@ export function createHomeDashboardRenderer({
     }
     bindDatePill("homeRangeFrom");
     bindDatePill("homeRangeTo");
-    drawReportsCharts([], [], [], {
-      homeAnalyticsCharts
-    });
     fitHomeKpiValues();
 
     getApp().querySelectorAll("[data-kpi-detail]").forEach((btn) => {
