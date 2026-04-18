@@ -309,9 +309,25 @@
 .reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:0}
 .reportsChartsStack .chartCard{position:relative}
 .reportsChartsStack .chartCard + .chartCard::before{content:"";position:absolute;left:0;right:0;top:-7px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,0))}
-.homeInsightsChartStack{gap:10px}
-.homeInsightsChartStack .homeInsightsChartCard{padding-top:10px;padding-bottom:12px}
-.homeInsightsChartStack .homeInsightsChartCard .chart{margin-top:12px}
+.homeInsightsChartStack{gap:8px}
+.homeInsightsChartStack .homeInsightsChartCard{
+  padding:11px 0 13px;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+.homeInsightsChartStack .homeInsightsChartCard + .homeInsightsChartCard{
+  border-top:1px solid rgba(255,255,255,.07);
+}
+.homeInsightsChartStack .homeInsightsChartCard .chart{
+  margin-top:10px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+.homeInsightsChartExplanation{margin:5px 0 0;font-size:12px;line-height:1.38;color:#aab5c8;font-weight:640}
+.homeInsightsChartCard .chartContext{margin-top:4px}
 .reportsHighlightsEmpty,.reportsDetailHint{padding:14px 0 0;border-top:1px solid rgba(255,255,255,.07)}
 .reportsHighlightsEmpty{margin-top:4px}
 .reportsDetailHint .btn{width:100%}
@@ -350,7 +366,7 @@
 .reportsCompareMeta,.reportsMetricCompareRow,.homeMetricCompareRow{flex-wrap:wrap}
 .homeMetricRecordTop,.homeMetricRecordMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 
-/* v571 Home KPI drill-down hero + premium support refinement */
+/* v572 Home Insights chart expansion + flattened chrome */
 .homeMetricDetail{
   margin-top:2px;
   padding-bottom:calc(26px + var(--safeBottom, 0px));
