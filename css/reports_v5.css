@@ -8,7 +8,7 @@
   .reportsTransitionRoot,.chart{transition:none;transform:none;opacity:1}
 }
 
-.chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.02)}
+.chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.012)}
 .hlHdr{
   font-size:13px;
   font-weight:800;
@@ -208,7 +208,7 @@
 .chartHero{margin-top:8px;font-size:35px;line-height:1.01;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums;color:#fff}
 .chartContext{margin-top:5px;font-size:11px;line-height:1.34;color:#a8b3c6;font-weight:640}
 .chartContextValue{font-weight:760;color:#d6ddeb}
-.chartCard .chart{display:block;margin-top:14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.018),rgba(255,255,255,.01));border-color:rgba(255,255,255,.045)}
+.chartCard .chart{display:block;margin-top:14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.012),rgba(255,255,255,.006));border-color:rgba(255,255,255,.03)}
 @media (max-width:430px){
   .chartCard{padding:11px 0 14px}
   .chartTakeaway{font-size:9px;padding:0 8px}
@@ -647,7 +647,8 @@
 .chartCard .chart,.reportsHeroGrid,.reportsHighlightsGrid,.reportsCompareBars,.reportsMetricCompareRows,.homeMetricCompareRows{min-width:0;max-width:100%}
 
 
-:root[data-theme="light"] .chart{border-color:rgba(37,53,92,.14);background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(239,244,255,.8));}
+:root[data-theme="light"] .chart{border-color:rgba(37,53,92,.1);background:linear-gradient(180deg, rgba(255,255,255,.78), rgba(239,244,255,.56));}
+:root[data-theme="light"] .chartCard .chart{border-color:rgba(37,53,92,.08);background:linear-gradient(180deg, rgba(255,255,255,.74), rgba(239,244,255,.52));}
 :root[data-theme="light"] .reportsHighlightsHdr,
 :root[data-theme="light"] .reportsHeroEyebrow,
 :root[data-theme="light"] .reportsHeroLabel,
