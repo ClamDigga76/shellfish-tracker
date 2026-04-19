@@ -405,6 +405,13 @@ export function createReportsMetricDetailSeam(deps){
     if(confidence === "suppressed") return " Support note: Comparison stays hidden until both months have usable pounds.";
     return "";
   };
+  const getPplSupportNote = (payload)=> {
+    const confidence = String(payload?.confidenceLabel || payload?.trustLabel || "").toLowerCase();
+    if(confidence === "early") return "Early read from lighter month support.";
+    if(confidence === "weak") return "Light read with thin month support.";
+    if(confidence === "suppressed") return "Comparison stays hidden until both months have usable pounds.";
+    return "";
+  };
 
   const buildMetricCompareSummary = ({ metricKey, payload, compareFoundation, isHomeMetricDetail })=> {
     if(compareFoundation.period?.suppressed || !payload || payload.suppressed){
@@ -531,6 +538,10 @@ export function createReportsMetricDetailSeam(deps){
     const compareContractText = viewModel.compareFoundation.period?.suppressed
       ? (viewModel.compareFoundation.period?.explanation || "")
       : "";
+    const pplSupportNoteText = viewModel.metricKey === "ppl"
+      ? getPplSupportNote(meta.comparePayload)
+      : "";
+    const supportMetaNote = [compareContractText, pplSupportNoteText].filter(Boolean).join(" ");
     const supportAnalysisText = viewModel.isHomeMetricDetail
       ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
       : String(compareSummary.text || "");
@@ -545,7 +556,7 @@ export function createReportsMetricDetailSeam(deps){
         <div class="reportsMetricSupportMetaBlock" aria-label="Support metadata">
           <div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--model">Comparison type • <b>${escapeHtml(compareContractLabel)}</b></div>
           <div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--basis">${escapeHtml(compareContractBasis)}</div>
-          ${compareContractText ? `<div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--note">${escapeHtml(compareContractText)}</div>` : ""}
+          ${supportMetaNote ? `<div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--note">${escapeHtml(supportMetaNote)}</div>` : ""}
         </div>
       </div>
     `;
@@ -838,8 +849,8 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Price Per Pound • Compare",
         homeChartTitle: "Price Per Pound",
-        chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getRateLeaderThresholdText()}`,
-        homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getRateLeaderThresholdText()}`,
+        chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getRateLeaderThresholdText()}${getPplSupportNote(primaryPayload) ? ` • ${getPplSupportNote(primaryPayload)}` : ""}`,
+        homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getRateLeaderThresholdText()}${getPplSupportNote(primaryPayload) ? ` • ${getPplSupportNote(primaryPayload)}` : ""}`,
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.ppl
@@ -852,8 +863,8 @@ export function createReportsMetricDetailSeam(deps){
               metricKey: "ppl"
             } : null
           ],
-        insight: "Use the compare card and chart to read pricing for the latest matched months without mixing full-range averages.",
-        homeInsight: "Start with compare, then scan monthly pounds and dealer-rate charts for pricing context."
+        insight: `Use the compare card and chart to read pricing for the latest matched months without mixing full-range averages.${getPplSupportNote(primaryPayload) ? ` ${getPplSupportNote(primaryPayload)}` : ""}`,
+        homeInsight: `Start with compare, then scan monthly pounds and dealer-rate charts for pricing context.${getPplSupportNote(primaryPayload) ? ` ${getPplSupportNote(primaryPayload)}` : ""}`
       }
     };
     return detailMeta[metricKey] || null;
