@@ -436,13 +436,19 @@
   border-bottom:1px solid rgba(255,255,255,.1);
 }
 .homeMetricLeadIn{
-  margin-top:11px;
-  margin-bottom:2px;
+  margin-top:12px;
+  margin-bottom:6px;
+  padding:11px 12px 10px;
+  border-radius:12px;
+  border:1px solid rgba(126,200,255,.28);
+  border-left:3px solid rgba(126,200,255,.54);
+  background:linear-gradient(180deg,rgba(126,200,255,.16),rgba(126,200,255,.08));
+  box-shadow:inset 0 1px 0 rgba(208,235,255,.16);
   font-size:14px;
-  line-height:1.5;
-  font-weight:760;
+  line-height:1.44;
+  font-weight:780;
   letter-spacing:.01em;
-  color:#e5f2ff;
+  color:#eff7ff;
   text-wrap:pretty;
 }
 .homeMetricSimpleTitle{
@@ -728,6 +734,13 @@
 :root[data-theme="light"] .homeMetricCompare.tone-steady{
   border-color:rgba(100,116,139,.28);
   background:linear-gradient(180deg,rgba(148,163,184,.14),rgba(100,116,139,.07));
+}
+:root[data-theme="light"] .homeMetricLeadIn{
+  border-color:rgba(47,109,246,.22);
+  border-left-color:rgba(47,109,246,.44);
+  background:linear-gradient(180deg,rgba(47,109,246,.09),rgba(47,109,246,.04));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+  color:#334155;
 }
 :root[data-theme="light"] .homeMetricSupportMeta{color:#5f6d89}
 :root[data-theme="light"] .homeMetricSupportMeta b{color:#344054}
