@@ -660,6 +660,20 @@ export function createReportsMetricDetailSeam(deps){
         } : null
       ],
       pounds: [
+        detailCharts.poundsMonthlyTrend ? {
+          title: "Pounds by month",
+          context: "Monthly landed pounds",
+          canvasId: "c_pounds_monthly_trend",
+          chartModel: detailCharts.poundsMonthlyTrend,
+          metricKey: "pounds"
+        } : null,
+        detailCharts.poundsPerTripTrend ? {
+          title: "Average Pounds Per Trip by month",
+          context: "How much each trip landed each month",
+          canvasId: "c_pounds_per_trip_trend",
+          chartModel: detailCharts.poundsPerTripTrend,
+          metricKey: "pounds"
+        } : null,
         detailCharts.poundsDealerMix?.labels?.length ? {
           title: "Pounds by dealer",
           context: "Dealers with the most landed pounds",
@@ -669,9 +683,29 @@ export function createReportsMetricDetailSeam(deps){
         } : null
       ],
       amount: [
-        null
+        detailCharts.amountTrend ? {
+          title: "Amount by month",
+          context: "Monthly earnings totals",
+          canvasId: "c_amount_monthly_trend",
+          chartModel: detailCharts.amountTrend,
+          metricKey: "amount"
+        } : null,
+        detailCharts.amountPerTripTrend ? {
+          title: "Average Amount Per Trip by month",
+          context: "How much each trip earned each month",
+          canvasId: "c_amount_per_trip_trend",
+          chartModel: detailCharts.amountPerTripTrend,
+          metricKey: "amount"
+        } : null
       ],
       ppl: [
+        detailCharts.pplMonthlyTrend ? {
+          title: "Average Price Per Pound by month",
+          context: "Monthly average pay rate",
+          canvasId: "c_ppl_monthly_trend",
+          chartModel: detailCharts.pplMonthlyTrend,
+          metricKey: "ppl"
+        } : null,
         detailCharts.pplRateVsPoundsTrend ? {
           title: "Monthly pounds landed",
           context: "Pounds by month to pair with pay-rate movement",
