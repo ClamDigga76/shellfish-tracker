@@ -525,7 +525,7 @@ export function createReportsMetricDetailSeam(deps){
           <div class="reportsMetricCompareRow"><span class="reportsMetricCompareLabel">${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b class="reportsMetricCompareValue">${escapeHtml(compareSummary.currentValue)}</b></div>
         </div>
         <div class="reportsMetricSupportMetaBlock" aria-label="Support metadata">
-          <div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--model">Comparison model • <b>${escapeHtml(compareContractLabel)}</b></div>
+          <div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--model">Comparison type • <b>${escapeHtml(compareContractLabel)}</b></div>
           <div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--basis">${escapeHtml(compareContractBasis)}</div>
           ${compareContractText ? `<div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--note">${escapeHtml(compareContractText)}</div>` : ""}
         </div>
@@ -545,7 +545,7 @@ export function createReportsMetricDetailSeam(deps){
           <h2 class="${viewModel.detailTitleClass}">${escapeHtml(meta.title)}</h2>
           <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
           <div class="reportsMetricSectionRail" aria-hidden="true">
-          <span class="reportsMetricSectionPill">Compare basis • ${escapeHtml(compareContractBasis)}</span>
+          <span class="reportsMetricSectionPill">Compared months • ${escapeHtml(compareContractBasis)}</span>
           </div>
         `}
 
@@ -721,7 +721,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Trips • Compare",
         homeChartTitle: "Trips",
-        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window trip totals",
+        chartContext: primaryChart?.basisLabel || "Bars • trip totals for the latest matched months",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_trips",
         secondaryCharts: isHomeMetricDetail
@@ -729,13 +729,13 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.tripsRollingTrend ? {
               title: `Trips • ${detailCharts.tripsRollingTrend.windowSize}-month rolling`,
-              context: "Line • rolling window with current marker",
+              context: "Line • rolling trend with current month marked",
               canvasId: "c_trips_rolling_trend",
               chartModel: detailCharts.tripsRollingTrend,
               metricKey: "trips"
             } : null
           ],
-        insight: "Read this compare card with the chart to confirm trip movement in the same latest comparable-month window.",
+        insight: "Read the compare card with the chart to confirm trip movement in the same latest matched months.",
         homeInsight: "Start with month-to-month compare, then scan monthly charts for context."
       },
       pounds: {
@@ -750,7 +750,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Pounds • Compare",
         homeChartTitle: "Pounds",
-        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window pound totals",
+        chartContext: primaryChart?.basisLabel || "Bars • pound totals for the latest matched months",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_lbs",
         secondaryCharts: isHomeMetricDetail
@@ -758,13 +758,13 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.poundsRollingTrend ? {
               title: `Pounds • ${detailCharts.poundsRollingTrend.windowSize}-month rolling`,
-              context: "Line • rolling window with current marker",
+              context: "Line • rolling trend with current month marked",
               canvasId: "c_pounds_rolling_trend",
               chartModel: detailCharts.poundsRollingTrend,
               metricKey: "pounds"
             } : null
           ],
-        insight: "Use this compare card and chart together so the headline and values stay aligned to one latest comparable-month window.",
+        insight: "Use the compare card and chart together so the headline and values stay aligned to the latest matched months.",
         homeInsight: "Start with compare, then use monthly and area charts to see what drove the shift."
       },
       amount: {
@@ -779,7 +779,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Amount • Compare",
         homeChartTitle: "Amount",
-        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window amount totals",
+        chartContext: primaryChart?.basisLabel || "Bars • amount totals for the latest matched months",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_amount_detail",
         secondaryCharts: isHomeMetricDetail
@@ -787,21 +787,21 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.amountRollingTrend ? {
               title: `Amount • ${detailCharts.amountRollingTrend.windowSize}-month rolling`,
-              context: "Line • rolling window with current marker",
+              context: "Line • rolling trend with current month marked",
               canvasId: "c_amount_rolling_trend",
               chartModel: detailCharts.amountRollingTrend,
               metricKey: "amount"
             } : null,
             detailCharts.amountTrend ? {
               title: "Amount • Monthly",
-              context: "Bars • full months in this active Reports range",
+              context: "Bars • full months in the selected Reports date range",
               canvasId: "c_amount_trend",
               chartModel: detailCharts.amountTrend,
               metricKey: "amount"
             } : null,
             {
               title: "Amount • Dealer Mix",
-              context: "Bars • this same active filter range",
+              context: "Bars • the same selected date range",
               canvasId: "c_dealer"
             }
           ],
@@ -820,7 +820,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Price Per Pound • Compare",
         homeChartTitle: "Price Per Pound",
-        chartContext: primaryChart?.basisLabel || "Bars • latest comparable-month window average Price Per Pound",
+        chartContext: primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
@@ -828,13 +828,13 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.pplRollingTrend ? {
               title: `Price Per Pound • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
-              context: "Line • rolling window with current marker",
+              context: "Line • rolling trend with current month marked",
               canvasId: "c_ppl_rolling_trend",
               chartModel: detailCharts.pplRollingTrend,
               metricKey: "ppl"
             } : null
           ],
-        insight: "Use this compare card and chart to read latest comparable-month window pricing without mixing full-range averages.",
+        insight: "Use the compare card and chart to read pricing for the latest matched months without mixing full-range averages.",
         homeInsight: "Start with compare, then scan monthly pounds and dealer-rate charts for pricing context."
       }
     };
