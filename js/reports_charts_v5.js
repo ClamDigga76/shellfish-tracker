@@ -39,15 +39,48 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     plotBg: isLightTheme ? "rgba(21,38,72,0.012)" : "rgba(255,255,255,0.008)"
   };
 
-  function chartFrame(w,h, mode = "default"){
+  function resolveFrameProfile({ mode = "default", chartKind = "bar", pointCount = 0, labelType = "category" } = {}){
+    const safeCount = Math.max(0, Number(pointCount) || 0);
+    const sparse = safeCount > 0 && safeCount <= 3;
+    const dense = safeCount >= 10;
+    const rolling = chartKind === "rolling-line";
+    const monthLabels = labelType === "month";
+    const compareLabels = labelType === "compare";
+    return {
+      sparse,
+      dense,
+      rolling,
+      monthLabels,
+      compareLabels,
+      mode
+    };
+  }
+
+  function chartFrame(w,h, mode = "default", context = {}){
     const compact = w < 360;
     const isHomeInsights = mode === "home-insights";
+    const profile = resolveFrameProfile({ mode, ...context });
+    const leftBase = isHomeInsights ? (compact ? 38 : 44) : (compact ? 46 : 54);
+    const rightBase = isHomeInsights ? (compact ? 8 : 10) : (compact ? 12 : 16);
+    const topBase = isHomeInsights ? (compact ? 18 : 20) : (compact ? 26 : 28);
+    const bottomBase = isHomeInsights ? (compact ? 46 : 50) : (compact ? 54 : 58);
+    const left = leftBase + (profile.dense && !compact ? -2 : 0);
+    const right = rightBase + (profile.sparse ? (compact ? 4 : 6) : 0) + (profile.dense ? -2 : 0);
+    const top = topBase + (profile.rolling ? (compact ? 4 : 6) : 0) + (profile.sparse && !profile.rolling ? 2 : 0);
+    const bottom = Math.max(
+      compact ? 40 : 44,
+      bottomBase
+        + (profile.compareLabels && profile.sparse ? (compact ? 3 : 6) : 0)
+        + (profile.monthLabels && profile.dense ? (compact ? -8 : -10) : 0)
+        + (profile.rolling ? (compact ? 2 : 4) : 0)
+    );
     return {
       compact,
-      left: isHomeInsights ? (compact ? 38 : 44) : (compact ? 46 : 54),
-      right: isHomeInsights ? (compact ? 8 : 10) : (compact ? 12 : 16),
-      top: isHomeInsights ? (compact ? 18 : 20) : (compact ? 26 : 28),
-      bottom: isHomeInsights ? (compact ? 46 : 50) : (compact ? 54 : 58),
+      left,
+      right,
+      top,
+      bottom,
+      profile,
       tickFont: compact ? "11px system-ui, -apple-system, Segoe UI, Arial" : "12px system-ui, -apple-system, Segoe UI, Arial"
     };
   }
@@ -168,7 +201,17 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   }
 
   function drawBottomTicks(ctx, labels, geom, y, frame, options = {}){
-    const maxTicks = Number(options.maxTicks) || (frame.compact ? 4 : 6);
+    const explicitMaxTicks = Number(options.maxTicks) || 0;
+    const inferredMaxTicks = (()=>{
+      const count = labels.length;
+      if(count <= 0) return frame.compact ? 4 : 6;
+      const profile = frame.profile || {};
+      if(profile.compareLabels && count <= 4) return count;
+      if(profile.monthLabels && profile.dense) return frame.compact ? 5 : 8;
+      if(profile.rolling) return frame.compact ? 5 : 7;
+      return frame.compact ? 4 : 6;
+    })();
+    const maxTicks = explicitMaxTicks || inferredMaxTicks;
     const step = Math.max(1, Math.ceil(labels.length / maxTicks));
     const alignMode = options.alignMode === "bar-center" ? "bar-center" : "index";
     const labelType = options.labelType || "category";
@@ -482,7 +525,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const c = setupCanvas(document.getElementById(canvasId));
     if(!c) return false;
     const { canvas, ctx, w, h } = c;
-    const frame = chartFrame(w,h, options.frameMode || "default");
+    const count = Math.max(0, values.length || 0);
+    const xLabelType = options.xLabelType || "category";
+    const frame = chartFrame(w,h, options.frameMode || "default", {
+      chartKind: "bar",
+      pointCount: count,
+      labelType: xLabelType
+    });
     const observedTop = Math.max(...values, 0);
     const showBarValueLabels = options.showBarValueLabels !== false;
     const labelHeadroom = !showBarValueLabels
@@ -514,7 +563,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       animatedVals.forEach((v,i)=>{
         const safe = Math.max(0, Number(v) || 0);
         const bh = yScale.top ? (safe / yScale.top) * geom.plotH : 0;
-        const barPad = typeof options.barPad === "function" ? options.barPad(frame) : (frame.compact ? 1 : 1.4);
+        const baseBarPad = typeof options.barPad === "function" ? options.barPad(frame) : (frame.compact ? 1 : 1.4);
+        const adaptivePad = frame.profile?.dense ? (baseBarPad * 0.8) : (frame.profile?.sparse ? (baseBarPad * 1.08) : baseBarPad);
+        const barPad = Math.max(0.25, adaptivePad);
         const naturalWidth = Math.max(options.minBarWidth || 4, barW - (barPad * 2));
         const drawWidth = smallCount ? Math.min(naturalWidth, smallCountMaxBarW) : naturalWidth;
         const x = smallCount
@@ -538,7 +589,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       }else{
         drawBottomTicks(ctx, labels, geom, categoryLabelY, frame, {
           alignMode: "bar-center",
-          labelType: options.xLabelType || "category",
+          labelType: xLabelType,
           maxTicks: options.maxTicks || 0
         });
       }
@@ -572,7 +623,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const c = setupCanvas(document.getElementById(canvasId));
     if(!c) return false;
     const { canvas, ctx, w, h } = c;
-    const frame = chartFrame(w,h, options.frameMode || "default");
+    const frame = chartFrame(w,h, options.frameMode || "default", {
+      chartKind: "rolling-line",
+      pointCount: values.length,
+      labelType: options.xLabelType || "month"
+    });
     const paletteSet = resolveMetricDetailPalette(metricKey);
     const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
     const yScale = niceScale(Math.max(topValue, 1), 4);
