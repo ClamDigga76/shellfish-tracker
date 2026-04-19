@@ -46,6 +46,7 @@ const CORE_JS_PATHS = [
   "./js/reports_advanced_panel_v5.js",
   "./js/reports_highlights_v5.js",
   "./js/trip_card_renderer_core_v5.js",
+  "./js/reports_chart_definitions_v5.js",
   "./js/app_v5.js",
 ];
 // END GENERATED: CORE_JS_PATHS

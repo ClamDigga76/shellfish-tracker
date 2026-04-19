@@ -61,6 +61,7 @@ export const SW_CORE_JS_PATHS = [
   "./reports_advanced_panel_v5.js",
   "./reports_highlights_v5.js",
   "./trip_card_renderer_core_v5.js",
+  "./reports_chart_definitions_v5.js",
   APP_ENTRY_MODULE_PATH
 ];
 
