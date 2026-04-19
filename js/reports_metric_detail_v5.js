@@ -194,6 +194,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
   ];
   const AVG_RATE_MIN_TRIPS = Number(HOME_RATE_RANKING_THRESHOLDS.minTrips) || 2;
   const AVG_RATE_MIN_POUNDS = Number(HOME_RATE_RANKING_THRESHOLDS.minPounds) || 150;
+  const rateLeaderSupportLabel = `Rate leaders use rows with at least ${AVG_RATE_MIN_TRIPS} trips and ${AVG_RATE_MIN_POUNDS} lbs.`;
   const dealerRowsByTrips = Array.isArray(dealerRows)
     ? dealerRows
       .slice()
@@ -267,7 +268,10 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       labelMode: "home-area-direct"
     }),
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
-    pplMonthlyTrend: buildHomeSharedChartModel({ chartId: "pplByMonth", monthRows: safeMonths, dealerRows, areaRows }),
+    pplMonthlyTrend: {
+      ...buildHomeSharedChartModel({ chartId: "pplByMonth", monthRows: safeMonths, dealerRows, areaRows }),
+      basisLabel: `Visible months in this range • ${rateLeaderSupportLabel}`
+    },
     tripsRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "trips",
@@ -290,7 +294,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       monthRows: safeMonths,
       metricKey: "ppl",
       windowSize: getRollingWindowForMetric("ppl", { surface: "home" }),
-      basisLabel: "Rolling Price Per Pound trend • visible months in this range"
+      basisLabel: `Rolling Price Per Pound trend • visible months in this range • ${rateLeaderSupportLabel}`
     }),
     pplAreaLeaders: buildHomeTopRowsBarChart({
       rows: areaRowsByRate,
@@ -387,6 +391,19 @@ export function createReportsMetricDetailSeam(deps){
     if(metricKey === "amount") return formatMoney(to2(safeValue));
     if(metricKey === "ppl") return `${formatMoney(to2(safeValue))}/lb`;
     return `${to2(safeValue)}`;
+  };
+  const getRateLeaderThresholdText = ()=> {
+    const minTrips = Number(HOME_RATE_RANKING_THRESHOLDS.minTrips) || 2;
+    const minPounds = Number(HOME_RATE_RANKING_THRESHOLDS.minPounds) || 150;
+    return `Rate leaders rank rows with at least ${minTrips} trips and ${minPounds} lbs.`;
+  };
+  const getSupportHonestyText = (payload, metricKey)=> {
+    if(metricKey !== "ppl") return "";
+    const confidence = String(payload?.confidenceLabel || payload?.trustLabel || "").toLowerCase();
+    if(confidence === "early") return " Support note: Early read from lighter month support.";
+    if(confidence === "weak") return " Support note: Light read with thin month support.";
+    if(confidence === "suppressed") return " Support note: Comparison stays hidden until both months have usable pounds.";
+    return "";
   };
 
   const buildMetricCompareSummary = ({ metricKey, payload, compareFoundation, isHomeMetricDetail })=> {
@@ -489,9 +506,10 @@ export function createReportsMetricDetailSeam(deps){
     const trustNote = payload.confidenceLabel === "early"
       ? " Early read."
       : (payload.confidenceLabel === "weak" ? " Light read." : "");
+    const supportHonesty = getSupportHonestyText(payload, metricKey);
     return {
       tone,
-      text: `${summaryText}${rollingContextText ? ` ${rollingContextText}` : ""}${trustNote}`.trim(),
+      text: `${summaryText}${rollingContextText ? ` ${rollingContextText}` : ""}${trustNote}${supportHonesty}`.trim(),
       currentValue: formatMetricCompareValue(metricKey, payload.currentValue),
       previousValue: formatMetricCompareValue(metricKey, payload.previousValue)
     };
@@ -694,7 +712,7 @@ export function createReportsMetricDetailSeam(deps){
       ppl: [
         detailCharts.pplMonthlyTrend ? {
           title: sharedChartTitle("pplByMonth", "Average Price Per Pound by month"),
-          context: "Monthly average pay rate",
+          context: `Monthly average pay rate • ${detailCharts.pplMonthlyTrend?.basisLabel || getRateLeaderThresholdText()}`,
           canvasId: "c_ppl_monthly_trend",
           chartModel: detailCharts.pplMonthlyTrend,
           metricKey: "ppl"
@@ -820,15 +838,15 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Price Per Pound • Compare",
         homeChartTitle: "Price Per Pound",
-        chartContext: primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months",
-        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
+        chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getRateLeaderThresholdText()}`,
+        homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getRateLeaderThresholdText()}`,
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.ppl
           : [
             detailCharts.pplRollingTrend ? {
               title: `Price Per Pound • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
-              context: "Line • rolling trend with current month marked",
+              context: `Line • rolling trend with current month marked • ${getRateLeaderThresholdText()}`,
               canvasId: "c_ppl_rolling_trend",
               chartModel: detailCharts.pplRollingTrend,
               metricKey: "ppl"
