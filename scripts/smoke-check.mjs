@@ -32,6 +32,16 @@ function readSource(relPath) {
   }
 }
 
+function sliceSourceBetweenMarkers(source, startMarker, endMarker) {
+  const startIndex = source.indexOf(startMarker);
+  if (startIndex === -1) return '';
+
+  const endIndex = source.indexOf(endMarker, startIndex);
+  if (endIndex === -1) return '';
+
+  return source.slice(startIndex, endIndex);
+}
+
 function checkIncludes(source, checkName, token, detail = token) {
   if (source.includes(token)) {
     pass(checkName);
@@ -214,11 +224,25 @@ if (appSource) {
 }
 
 if (backupRestoreSource) {
-  checkPattern(
+  const clearBackupRecoveryMetadataSource = sliceSourceBetweenMarkers(
     backupRestoreSource,
-    'backup recovery metadata clear seam structure present',
-    /function\s+clearBackupRecoveryMetadata\s*\(\)\s*\{[\s\S]*?localStorage\.removeItem\(LS_LAST_BACKUP_META\)[\s\S]*?clearRestoreRollbackSnapshot\s*\(\s*\)/,
-    'clearBackupRecoveryMetadata clears LS_LAST_BACKUP_META and rollback snapshot'
+    'function clearBackupRecoveryMetadata(',
+    'function capturePreRestoreRollbackSnapshot('
+  );
+  checkIncludes(
+    clearBackupRecoveryMetadataSource,
+    'backup recovery metadata clear seam function marker present',
+    'function clearBackupRecoveryMetadata('
+  );
+  checkIncludes(
+    clearBackupRecoveryMetadataSource,
+    'backup recovery metadata clear seam removes backup metadata',
+    'localStorage.removeItem(LS_LAST_BACKUP_META)'
+  );
+  checkIncludes(
+    clearBackupRecoveryMetadataSource,
+    'backup recovery metadata clear seam clears rollback snapshot',
+    'clearRestoreRollbackSnapshot()'
   );
 }
 
