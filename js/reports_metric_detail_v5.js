@@ -1,4 +1,5 @@
 import { buildRollingSeriesFromMonthRows, describeRollingContext, getRollingWindowForMetric } from "./reports_rolling_trends_v5.js";
+import { HOME_RATE_RANKING_THRESHOLDS, buildHomeSharedChartModel, getHomeSharedChartDefinition, normalizeChronologicalRows } from "./reports_chart_definitions_v5.js";
 
 const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
   fairWindowLabel: "Visible range",
@@ -12,18 +13,6 @@ const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
   missingExplanation: "Add one more visible month in this range and this comparison will appear.",
   metricExplanation: ()=> "Uses the same visible month pair in the compare card and chart."
 });
-
-function normalizeChronologicalRows(rows){
-  const list = Array.isArray(rows) ? rows.slice() : [];
-  return list.sort((a,b)=> {
-    const keyA = String(a?.monthKey || a?.key || "").trim();
-    const keyB = String(b?.monthKey || b?.key || "").trim();
-    if(/^\d{4}-\d{2}$/.test(keyA) && /^\d{4}-\d{2}$/.test(keyB)) return keyA.localeCompare(keyB);
-    if(/^\d{4}-\d{2}$/.test(keyA)) return -1;
-    if(/^\d{4}-\d{2}$/.test(keyB)) return 1;
-    return 0;
-  });
-}
 
 function toneFromDelta(deltaPct, epsilonPct){
   const v = Number(deltaPct) || 0;
@@ -203,8 +192,8 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
     String(period?.previousLabel || "Previous month"),
     String(period?.currentLabel || "Current month")
   ];
-  const AVG_RATE_MIN_TRIPS = 2;
-  const AVG_RATE_MIN_POUNDS = 150;
+  const AVG_RATE_MIN_TRIPS = Number(HOME_RATE_RANKING_THRESHOLDS.minTrips) || 2;
+  const AVG_RATE_MIN_POUNDS = Number(HOME_RATE_RANKING_THRESHOLDS.minPounds) || 150;
   const dealerRowsByTrips = Array.isArray(dealerRows)
     ? dealerRows
       .slice()
@@ -256,7 +245,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       labelMode: "home-dealer-direct"
     }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
-    poundsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" }),
+    poundsMonthlyTrend: buildHomeSharedChartModel({ chartId: "poundsByMonth", monthRows: safeMonths, dealerRows, areaRows }),
     poundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
     poundsDealerMix: buildHomeTopRowsBarChart({
       rows: dealerRowsByPounds,
@@ -267,9 +256,9 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       labelMode: "home-dealer-direct"
     }),
     amount: buildHomeCompareBarChart({ labels, metricKey: "amount", currentValue: period?.current?.amount, previousValue: period?.previous?.amount }),
-    amountTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amt" }),
-    amountPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amountPerTrip" }),
-    amountDealerMix: buildHomeTopRowsBarChart({ rows: dealerRows, metricKey: "amount", valueKey: "amt", basisLabel: "Amount by dealer" }),
+    amountTrend: buildHomeSharedChartModel({ chartId: "amountByMonth", monthRows: safeMonths, dealerRows, areaRows }),
+    amountPerTripTrend: buildHomeSharedChartModel({ chartId: "amountPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }),
+    amountDealerMix: buildHomeSharedChartModel({ chartId: "amountByDealer", monthRows: safeMonths, dealerRows, areaRows }),
     amountAreaMix: buildHomeTopRowsBarChart({
       rows: areaRowsByAmount,
       metricKey: "amount",
@@ -278,7 +267,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       labelMode: "home-area-direct"
     }),
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
-    pplMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg" }),
+    pplMonthlyTrend: buildHomeSharedChartModel({ chartId: "pplByMonth", monthRows: safeMonths, dealerRows, areaRows }),
     tripsRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "trips",
@@ -629,6 +618,7 @@ export function createReportsMetricDetailSeam(deps){
         ? formatHomeKpiHeroValue(targetMetric, viewModel.trips)
         : formatHeroFromPrimaryBasis(targetMetric, primaryBasis)
     );
+    const sharedChartTitle = (chartId, fallback)=> String(getHomeSharedChartDefinition(chartId)?.title || fallback);
     const homeSecondaryChartsByMetric = {
       trips: [
         detailCharts.tripsAreaMix?.labels?.length ? {
@@ -662,7 +652,7 @@ export function createReportsMetricDetailSeam(deps){
       ],
       pounds: [
         detailCharts.poundsMonthlyTrend ? {
-          title: "Pounds by month",
+          title: sharedChartTitle("poundsByMonth", "Pounds by month"),
           context: "Monthly landed pounds",
           canvasId: "c_pounds_monthly_trend",
           chartModel: detailCharts.poundsMonthlyTrend,
@@ -685,14 +675,14 @@ export function createReportsMetricDetailSeam(deps){
       ],
       amount: [
         detailCharts.amountTrend ? {
-          title: "Amount by month",
+          title: sharedChartTitle("amountByMonth", "Amount by month"),
           context: "Monthly earnings totals",
           canvasId: "c_amount_monthly_trend",
           chartModel: detailCharts.amountTrend,
           metricKey: "amount"
         } : null,
         detailCharts.amountPerTripTrend ? {
-          title: "Average Amount Per Trip by month",
+          title: sharedChartTitle("amountPerTripByMonth", "Average Amount Per Trip by month"),
           context: "How much each trip earned each month",
           canvasId: "c_amount_per_trip_trend",
           chartModel: detailCharts.amountPerTripTrend,
@@ -701,7 +691,7 @@ export function createReportsMetricDetailSeam(deps){
       ],
       ppl: [
         detailCharts.pplMonthlyTrend ? {
-          title: "Average Price Per Pound by month",
+          title: sharedChartTitle("pplByMonth", "Average Price Per Pound by month"),
           context: "Monthly average pay rate",
           canvasId: "c_ppl_monthly_trend",
           chartModel: detailCharts.pplMonthlyTrend,
