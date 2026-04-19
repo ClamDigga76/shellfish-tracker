@@ -32,11 +32,11 @@ function readSource(relPath) {
   }
 }
 
-function sliceSourceBetweenMarkers(source, startMarker, endMarker) {
-  const startIndex = source.indexOf(startMarker);
+function sliceSourceBetweenFunctionMarkers(source, startFunctionMarker, endFunctionMarker) {
+  const startIndex = source.indexOf(startFunctionMarker);
   if (startIndex === -1) return '';
 
-  const endIndex = source.indexOf(endMarker, startIndex);
+  const endIndex = source.indexOf(endFunctionMarker, startIndex);
   if (endIndex === -1) return '';
 
   return source.slice(startIndex, endIndex);
@@ -224,7 +224,7 @@ if (appSource) {
 }
 
 if (backupRestoreSource) {
-  const clearBackupRecoveryMetadataSource = sliceSourceBetweenMarkers(
+  const clearBackupRecoveryMetadataSource = sliceSourceBetweenFunctionMarkers(
     backupRestoreSource,
     'function clearBackupRecoveryMetadata(',
     'function capturePreRestoreRollbackSnapshot('
