@@ -66,7 +66,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const emptyNode = Array.from(document.querySelectorAll("[data-chart-empty-for]"))
       .find((node)=> String(node?.getAttribute("data-chart-empty-for") || "") === canvasId);
     if(canvas){
-      canvas.hidden = !!shouldShowEmpty;
+      canvas.hidden = shouldShowEmpty && !!emptyNode;
     }
     if(emptyNode){
       emptyNode.hidden = !shouldShowEmpty;
@@ -476,8 +476,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   }
 
   function drawBarChart(canvasId, values, labels, barColor, yLabelFormatter, topLabel, options = {}){
+    const showEmptyState = options?.emptyStateEnabled === true
+      && !values.some((value)=> Number.isFinite(Number(value)) && Number(value) > 0);
+    toggleChartEmptyState(canvasId, showEmptyState, options?.emptyMessage);
+    if(showEmptyState) return true;
     const c = setupCanvas(document.getElementById(canvasId));
-    if(!c) return;
+    if(!c) return false;
     const { canvas, ctx, w, h } = c;
     const frame = chartFrame(w,h, options.frameMode || "default");
     const observedTop = Math.max(...values, 0);
@@ -546,6 +550,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       drawYTickLabels(ctx, geom, frame, yLabels);
       ctx.restore();
     });
+    return true;
   }
 
   function computeBarValueHeadroom(maxValue, { frame, chartHeight } = {}){
@@ -561,8 +566,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   }
 
   function drawRollingLineChart(canvasId, values, labels, metricKey, options = {}){
+    const showEmptyState = options?.emptyStateEnabled === true
+      && !values.some((value)=> Number.isFinite(Number(value)) && Number(value) > 0);
+    toggleChartEmptyState(canvasId, showEmptyState, options?.emptyMessage);
+    if(showEmptyState) return true;
     const c = setupCanvas(document.getElementById(canvasId));
-    if(!c) return;
+    if(!c) return false;
     const { canvas, ctx, w, h } = c;
     const frame = chartFrame(w,h, options.frameMode || "default");
     const paletteSet = resolveMetricDetailPalette(metricKey);
@@ -625,6 +634,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       drawYLabel(ctx, paletteSet.topFormatter(topValue), frame);
       ctx.restore();
     });
+    return true;
   }
 
   function resolveMetricDetailPalette(metricKey){
@@ -672,7 +682,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         chronologicalSeries.values.map((v)=> Number(v) || 0),
         chronologicalSeries.labels.map((v)=> String(v || "")),
         metricKey || chartModel?.metricKey || "amount",
-        { xLabelType: "month", frameMode }
+        {
+          xLabelType: "month",
+          frameMode,
+          emptyStateEnabled,
+          emptyMessage: drawOptions?.emptyMessage
+        }
       );
       return true;
     }
@@ -722,7 +737,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const compareChart = metricDetail?.compareChart;
     if(!metricKey || !compareChart) return false;
     const canvasIdByMetric = { trips: "c_trips", pounds: "c_lbs", amount: "c_amount_detail", ppl: "c_ppl" };
-    return drawMetricDetailChart(canvasIdByMetric[metricKey], compareChart, metricKey);
+    return drawMetricDetailChart(canvasIdByMetric[metricKey], compareChart, metricKey, {
+      emptyStateEnabled: true
+    });
   }
 
   function drawMetricDetailSecondaryCharts(metricDetail){
@@ -730,7 +747,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const secondaryCharts = Array.isArray(metricDetail?.secondaryCharts) ? metricDetail.secondaryCharts : [];
     secondaryCharts.forEach((chart)=> {
       if(!chart?.canvasId || !chart?.chartModel) return;
-      drawMetricDetailChart(chart.canvasId, chart.chartModel, chart.metricKey || metricKey);
+      drawMetricDetailChart(chart.canvasId, chart.chartModel, chart.metricKey || metricKey, {
+        emptyStateEnabled: true
+      });
     });
     if(metricKey !== "amount" || !document.getElementById("c_dealer")) return;
     const topDealers = dealerRows.slice(0,8);
@@ -746,6 +765,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         barPad: (frame)=> frame.compact ? 3 : 4,
         showBarValueLabels: true,
         categoryLabelsBelowBars: true,
+        emptyStateEnabled: true,
         customLabels: ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
           drawDealerIdentityLabels(topDealers, { ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY });
         },
@@ -781,7 +801,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
   const seasonalityChart = options?.seasonalityChart;
   if(seasonalityChart && document.getElementById("c_seasonality_amount")){
-    drawMetricDetailChart("c_seasonality_amount", seasonalityChart, seasonalityChart.metricKey || "amount");
+    drawMetricDetailChart("c_seasonality_amount", seasonalityChart, seasonalityChart.metricKey || "amount", {
+      emptyStateEnabled: true
+    });
   }
 
   function frameMinBarWidth(count){
@@ -795,14 +817,16 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   drawBarChart("c_amount_monthly", amountValues, monthRowsChronological.map((r)=> r.label), palette.money, formatCompactMoney, formatShortMoney(Math.max(...amountValues, 0)), {
     minBarWidth: frameMinBarWidth(amountValues.length),
     barPad: (frame)=> frame.compact ? 1.1 : 1.5,
-    xLabelType: "month"
+    xLabelType: "month",
+    emptyStateEnabled: true
   });
 
   const pplValues = monthRowsChronological.map((r)=> Number(r.avg) || 0);
   drawBarChart("c_ppl", pplValues, monthRowsChronological.map((r)=> r.label), palette.ppl, formatShortMoney, formatShortMoney(Math.max(...pplValues, 0)), {
     minBarWidth: frameMinBarWidth(pplValues.length),
     barPad: (frame)=> frame.compact ? 1.1 : 1.5,
-    xLabelType: "month"
+    xLabelType: "month",
+    emptyStateEnabled: true
   });
 
   const dealerAmountRows = dealerRows.slice(0,8);
@@ -819,6 +843,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         barPad: (frame)=> frame.compact ? 3 : 4,
         showBarValueLabels: true,
         categoryLabelsBelowBars: true,
+        emptyStateEnabled: true,
         customLabels: ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
           drawDealerIdentityLabels(dealerAmountRows, { ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY });
         },
@@ -841,6 +866,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       barPad: (frame)=> frame.compact ? 3 : 4,
       showBarValueLabels: true,
       categoryLabelsBelowBars: true,
+      emptyStateEnabled: true,
       customLabels: ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
         drawDealerIdentityLabels(dealerRateRows, { ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY });
       },
@@ -851,14 +877,16 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   drawBarChart("c_amount_per_trip", amountPerTripValues, monthRowsChronological.map((r)=> r.label), palette.money, formatCompactMoney, formatShortMoney(Math.max(...amountPerTripValues, 0)), {
     minBarWidth: 4,
     barPad: (frame)=> frame.compact ? 0.8 : 1.2,
-    xLabelType: "month"
+    xLabelType: "month",
+    emptyStateEnabled: true
   });
 
   const lbsValues = monthRowsChronological.map((r)=> Number(r.lbs) || 0);
   drawBarChart("c_lbs", lbsValues, monthRowsChronological.map((r)=> r.label), palette.lbs, formatCompactCount, `${Math.round(Math.max(...lbsValues, 0))}`, {
     minBarWidth: 4,
     barPad: (frame)=> frame.compact ? 0.8 : 1.2,
-    xLabelType: "month"
+    xLabelType: "month",
+    emptyStateEnabled: true
   });
 
   const tripValues = tripsTimelineChronological.map((r)=> Number(r.count) || 0);
@@ -866,7 +894,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     minTop: 1,
     minBarWidth: 4,
     barPad: (frame)=> frame.compact ? 0.8 : 1.2,
-    xLabelType: "month"
+    xLabelType: "month",
+    emptyStateEnabled: true
   });
 
   const rollingMetricKeys = ["trips", "pounds", "amount", "ppl"];
@@ -892,7 +921,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     if(!document.getElementById(canvasId)) return;
     const chartModel = rollingModelsByMetric[metricKey];
     if(chartModel?.chartType !== "rolling-line") return;
-    drawMetricDetailChart(canvasId, chartModel, metricKey);
+    drawMetricDetailChart(canvasId, chartModel, metricKey, {
+      emptyStateEnabled: true
+    });
   });
 
 }

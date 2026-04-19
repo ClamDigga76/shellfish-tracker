@@ -48,6 +48,7 @@ export function createReportsOverviewSectionsSeam(deps){
       <div class="chartHero">${hero}</div>
       <div class="chartContext">${context}</div>
       <canvas class="chart" id="${escapeHtml(canvasId)}" height="${height}"></canvas>
+      <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(canvasId)}" hidden>Not enough data in this range yet.</div>
     </div>
   `;
 
@@ -290,6 +291,7 @@ export function createReportsOverviewSectionsSeam(deps){
           <b>Average amount by month-of-year</b>
           <div class="reportsSeasonalitySub">Month-by-month seasonal pattern across all matching years.</div>
           <canvas class="chart" id="c_seasonality_amount" height="210"></canvas>
+          <div class="reportsChartEmpty" data-chart-empty-for="c_seasonality_amount" hidden>Not enough data in this range yet.</div>
         </div>`
       : "";
     return reportsSection({

@@ -565,6 +565,7 @@ export function createReportsMetricDetailSeam(deps){
             <b>${escapeHtml(detailChartTitle)}</b>
             <div class="${viewModel.detailChartContextClass}">${escapeHtml(detailChartContext)}</div>
             <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
+            <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(meta.chartCanvasId)}" hidden>Not enough data in this range yet.</div>
           </div>
 
           ${secondaryCharts.map((chart)=> `
@@ -572,6 +573,7 @@ export function createReportsMetricDetailSeam(deps){
               <b>${escapeHtml(chart.title)}</b>
               <div class="${viewModel.detailChartContextClass}">${escapeHtml(chart.context)}</div>
               <canvas class="chart" id="${escapeHtml(chart.canvasId)}" height="220"></canvas>
+              <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(chart.canvasId)}" hidden>Not enough data in this range yet.</div>
             </div>
           `).join("")}
         </div>
