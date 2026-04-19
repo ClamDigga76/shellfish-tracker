@@ -53,11 +53,16 @@ export function createTopLevelNavigationTransitionSeam({
   function resetActiveTopLevelView(state, activeView){
     if(!state || typeof state !== "object") return false;
     if(activeView === "home"){
+      let changed = false;
       if(hasActiveMetricDetail(state.homeMetricDetail, state.homeMetricDetailContext)){
         clearHomeMetricDetailState();
-        return true;
+        changed = true;
       }
-      return false;
+      if(state.homeInsightsOpen){
+        state.homeInsightsOpen = false;
+        changed = true;
+      }
+      return changed;
     }
     if(activeView === "reports"){
       if(hasActiveMetricDetail(state.reportsMetricDetail, state.reportsMetricDetailContext)){
