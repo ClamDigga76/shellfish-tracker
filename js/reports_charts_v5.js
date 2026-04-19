@@ -23,21 +23,20 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
   function clear(ctx, w, h){
     ctx.clearRect(0,0,w,h);
-    ctx.fillStyle = "rgba(255,255,255,0.02)";
-    ctx.fillRect(0,0,w,h);
   }
 
   const css = getComputedStyle(document.documentElement);
   const color = (name, fallback)=> (css.getPropertyValue(name) || "").trim() || fallback;
+  const isLightTheme = document.documentElement.getAttribute("data-theme") === "light";
   const palette = {
     money: color("--money", "rgba(76,191,117,0.9)"),
     ppl: color("--ppl", "rgba(255,196,77,0.92)"),
     lbs: color("--lbs", "rgba(77,155,255,0.9)"),
     trips: color("--trips", "rgba(242,245,255,0.92)"),
-    grid: "rgba(255,255,255,0.07)",
+    grid: isLightTheme ? "rgba(21,38,72,0.07)" : "rgba(255,255,255,0.045)",
     label: "rgba(255,255,255,0.8)",
-    axis: "rgba(255,255,255,0.2)",
-    plotBg: "rgba(255,255,255,0.025)"
+    axis: isLightTheme ? "rgba(21,38,72,0.13)" : "rgba(255,255,255,0.11)",
+    plotBg: isLightTheme ? "rgba(21,38,72,0.012)" : "rgba(255,255,255,0.008)"
   };
 
   function chartFrame(w,h, mode = "default"){
