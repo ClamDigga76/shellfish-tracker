@@ -370,7 +370,7 @@
 
 /* v355 overflow guardrail pass */
 .hlTripCardWrap,.reportsHighlightsCard,.reportsHighlightItem,.chartCard,.reportsHeroCard,.reportsHeroStat,.reportsMetricDetailCard,.reportsMetricHeroWrap,.reportsMetricCompare,.homeMetricDetailCard,.homeMetricHeroWrap,.homeMetricCompare,.reportsTopShell,.reportsHighlightsEmpty,.reportsDetailHint{min-width:0;max-width:100%}
-.hlTripCardWrap .tripCardHeadline,.hlTripCardWrap .tripCardMain,.hlTripCardWrap .tripCardHeadlineDealer,.hlTripCardWrap .tripCardSpecies,.hlTripCardWrap .tripCardNotes,.reportsHighlightHeadline,.reportsCompareRow,.chartTitle,.chartSubhead,.chartContext,.reportsHeroHeadline,.reportsHeroSub,.reportsMetricTitle,.reportsMetricContext,.reportsMetricChartContext,.reportsMetricInsight,.homeMetricTitle,.homeMetricContext,.homeMetricChartContext,.homeMetricInsight,.reportsHeroMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+.hlTripCardWrap .tripCardHeadline,.hlTripCardWrap .tripCardMain,.hlTripCardWrap .tripCardHeadlineDealer,.hlTripCardWrap .tripCardSpecies,.hlTripCardWrap .tripCardNotes,.reportsHighlightHeadline,.reportsCompareRow,.chartTitle,.chartSubhead,.chartContext,.reportsHeroHeadline,.reportsHeroSub,.reportsMetricTitle,.reportsMetricContext,.reportsMetricChartContext,.reportsMetricInsight,.homeMetricTitle,.homeMetricContext,.homeMetricLeadIn,.homeMetricChartContext,.homeMetricInsight,.reportsHeroMeta{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 .reportsHighlightMetricRow,.reportsCompareMeta,.reportsMetricCompareRow,.homeMetricCompareRow{min-width:0;max-width:100%}
 .reportsHighlightMetricRow{flex-wrap:wrap}
 .reportsCompareMeta,.reportsMetricCompareRow,.homeMetricCompareRow{flex-wrap:wrap}
@@ -434,6 +434,16 @@
   margin-top:2px;
   padding:2px 0 10px;
   border-bottom:1px solid rgba(255,255,255,.1);
+}
+.homeMetricLeadIn{
+  margin-top:11px;
+  margin-bottom:2px;
+  font-size:14px;
+  line-height:1.5;
+  font-weight:760;
+  letter-spacing:.01em;
+  color:#e5f2ff;
+  text-wrap:pretty;
 }
 .homeMetricSimpleTitle{
   margin:0;
@@ -655,6 +665,7 @@
 :root[data-theme="light"] .reportsMetricChartContext,
 :root[data-theme="light"] .reportsMetricInsight,
 :root[data-theme="light"] .homeMetricContext,
+:root[data-theme="light"] .homeMetricLeadIn,
 :root[data-theme="light"] .homeMetricChartContext,
 :root[data-theme="light"] .homeMetricInsight{color:var(--text-muted-strong);}
 

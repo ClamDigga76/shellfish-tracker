@@ -549,6 +549,7 @@ export function createReportsMetricDetailSeam(deps){
           <div class="homeMetricTitleHeader" aria-label="Metric title">
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
           </div>
+          <div class="homeMetricLeadIn">${escapeHtml(detailInsight)}</div>
         ` : `
           <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to reports</button>
           <div class="${viewModel.detailEyebrowClass}">${escapeHtml(meta.eyebrow)}</div>
@@ -586,7 +587,7 @@ export function createReportsMetricDetailSeam(deps){
           `).join("")}
         </div>
 
-        <div class="${viewModel.detailInsightClass}">${escapeHtml(detailInsight)}</div>
+        ${viewModel.isHomeMetricDetail ? "" : `<div class="${viewModel.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
       </div>
     </section>
   `;
