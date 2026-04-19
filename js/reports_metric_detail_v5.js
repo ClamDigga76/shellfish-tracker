@@ -744,7 +744,7 @@ export function createReportsMetricDetailSeam(deps){
             } : null
           ],
         insight: "Read this compare card with the chart to confirm trip movement in the same latest comparable-month window.",
-        homeInsight: "Start with the month-to-month compare, then scan monthly charts for quick context."
+        homeInsight: "Start with month-to-month compare, then scan monthly charts for context."
       },
       pounds: {
         title: "Pounds breakdown",
@@ -773,7 +773,7 @@ export function createReportsMetricDetailSeam(deps){
             } : null
           ],
         insight: "Use this compare card and chart together so the headline and values stay aligned to one latest comparable-month window.",
-        homeInsight: "Start with the compare chart, then use monthly and area charts to see what drove the change."
+        homeInsight: "Start with compare, then use monthly and area charts to see what drove the shift."
       },
       amount: {
         title: "Amount breakdown",
@@ -814,7 +814,7 @@ export function createReportsMetricDetailSeam(deps){
             }
           ],
         insight: "Start with the compare chart, then use trend and dealer mix for added context.",
-        homeInsight: "Start with compare, then check monthly, dealer, and area charts for where earnings came from."
+        homeInsight: "Start with compare, then check monthly, dealer, and area charts for earnings drivers."
       },
       ppl: {
         title: "Price Per Pound breakdown",
