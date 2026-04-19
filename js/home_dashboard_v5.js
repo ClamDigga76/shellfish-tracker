@@ -306,6 +306,16 @@ export function createHomeDashboardRenderer({
         labels: (Array.isArray(rows) ? rows : []).map((row) => String(row?.label || row?.monthKey || "—")),
         values: (Array.isArray(rows) ? rows : []).map((row) => Number(row?.[valueKey]) || 0)
       });
+      const HOME_INSIGHTS_RATE_MIN_TRIPS = 2;
+      const HOME_INSIGHTS_RATE_MIN_POUNDS = 150;
+      const dealerRowsForPplRank = Array.isArray(dealerRows)
+        ? dealerRows
+          .filter((row) => (Number(row?.trips) || 0) >= HOME_INSIGHTS_RATE_MIN_TRIPS && (Number(row?.lbs) || 0) >= HOME_INSIGHTS_RATE_MIN_POUNDS)
+        : [];
+      const areaRowsForPplRank = Array.isArray(areaRows)
+        ? areaRows
+          .filter((row) => (Number(row?.trips) || 0) >= HOME_INSIGHTS_RATE_MIN_TRIPS && (Number(row?.lbs) || 0) >= HOME_INSIGHTS_RATE_MIN_POUNDS)
+        : [];
       const chartDeck = [
         {
           canvasId: "homeInsightsAmountByArea",
@@ -316,17 +326,6 @@ export function createHomeDashboardRenderer({
           canvasId: "homeInsightsPoundsByArea",
           metricKey: "pounds",
           chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "lbs", metricKey: "pounds", labelMode: "home-area-direct" })
-        },
-        {
-          canvasId: "homeInsightsTripsByMonth",
-          metricKey: "trips",
-          chartModel: {
-            chartType: "time-series",
-            metricKey: "trips",
-            monthKeys: tripsTimeline.map((row) => String(row?.monthKey || "")),
-            labels: tripsTimeline.map((row) => String(row?.shortLabel || row?.label || row?.monthKey || "—")),
-            values: tripsTimeline.map((row) => Number(row?.count) || 0)
-          }
         },
         {
           canvasId: "homeInsightsAmountPerTripByArea",
@@ -341,22 +340,17 @@ export function createHomeDashboardRenderer({
         {
           canvasId: "homeInsightsPplByDealer",
           metricKey: "ppl",
-          chartModel: buildTopRowsChart({ rows: dealerRows, valueKey: "avg", metricKey: "ppl", labelMode: "home-dealer-direct" })
+          chartModel: buildTopRowsChart({ rows: dealerRowsForPplRank, valueKey: "avg", metricKey: "ppl", labelMode: "home-dealer-direct" })
         },
         {
           canvasId: "homeInsightsPplByArea",
           metricKey: "ppl",
-          chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "avg", metricKey: "ppl", labelMode: "home-area-direct" })
+          chartModel: buildTopRowsChart({ rows: areaRowsForPplRank, valueKey: "avg", metricKey: "ppl", labelMode: "home-area-direct" })
         },
         {
           canvasId: "homeInsightsPoundsPerTripByArea",
           metricKey: "pounds",
           chartModel: buildTopRowsChart({ rows: areaRows, valueKey: "poundsPerTrip", metricKey: "pounds", labelMode: "home-area-direct" })
-        },
-        {
-          canvasId: "homeInsightsTripsByDealer",
-          metricKey: "trips",
-          chartModel: buildTopRowsChart({ rows: dealerRows, valueKey: "trips", metricKey: "trips", labelMode: "home-dealer-direct" })
         },
         {
           canvasId: "homeInsightsPplByMonth",
@@ -367,6 +361,16 @@ export function createHomeDashboardRenderer({
           canvasId: "homeInsightsAmountByMonth",
           metricKey: "amount",
           chartModel: buildMonthSeriesChart({ rows: monthRows, valueKey: "amt", metricKey: "amount" })
+        },
+        {
+          canvasId: "homeInsightsPoundsByMonth",
+          metricKey: "pounds",
+          chartModel: buildMonthSeriesChart({ rows: monthRows, valueKey: "lbs", metricKey: "pounds" })
+        },
+        {
+          canvasId: "homeInsightsAmountPerTripByMonth",
+          metricKey: "amount",
+          chartModel: buildMonthSeriesChart({ rows: monthRows, valueKey: "amountPerTrip", metricKey: "amount" })
         },
         {
           canvasId: "homeInsightsPoundsPerTripByMonth",
@@ -389,16 +393,16 @@ export function createHomeDashboardRenderer({
           <div class="reportsChartsStack homeInsightsChartStack">
             ${chartCard({ id: "homeInsightsAmountByArea", title: "Amount by area", explanation: "Shows which fishing areas are making you the most money." })}
             ${chartCard({ id: "homeInsightsPoundsByArea", title: "Pounds by area", explanation: "Shows which areas are producing the most total catch volume." })}
-            ${chartCard({ id: "homeInsightsTripsByMonth", title: "Trips by month", explanation: "Shows whether your fishing activity is rising, falling, or staying steady over time." })}
-            ${chartCard({ id: "homeInsightsAmountPerTripByArea", title: "Amount per trip by area", explanation: "Shows which areas give you the best money return for each trip." })}
+            ${chartCard({ id: "homeInsightsAmountPerTripByArea", title: "Amount Per Trip by area", explanation: "Shows which areas give you the best money return for each trip." })}
             ${chartCard({ id: "homeInsightsAmountByDealer", title: "Amount by dealer", explanation: "Shows which dealers have paid you the most overall." })}
-            ${chartCard({ id: "homeInsightsPplByDealer", title: "Price Per Pound by dealer", explanation: "Shows which dealers are paying the best average rate." })}
-            ${chartCard({ id: "homeInsightsPplByArea", title: "Price Per Pound by area", explanation: "Shows which areas are producing the highest-value catch." })}
-            ${chartCard({ id: "homeInsightsPoundsPerTripByArea", title: "Pounds per trip by area", explanation: "Shows which areas give you the strongest catch volume per trip." })}
-            ${chartCard({ id: "homeInsightsTripsByDealer", title: "Trips by dealer", explanation: "Shows which dealers you rely on most often." })}
-            ${chartCard({ id: "homeInsightsPplByMonth", title: "Price Per Pound by month", explanation: "Shows whether your average pay rate is improving or softening over time." })}
+            ${chartCard({ id: "homeInsightsPplByDealer", title: "Price Per Pound by dealer", explanation: "Shows which dealers are paying the best average rate among groups with at least 2 trips and 150 lbs." })}
+            ${chartCard({ id: "homeInsightsPplByArea", title: "Price Per Pound by area", explanation: "Shows which areas are producing the highest-value catch among groups with at least 2 trips and 150 lbs." })}
+            ${chartCard({ id: "homeInsightsPoundsPerTripByArea", title: "Pounds Per Trip by area", explanation: "Shows which areas give you the strongest catch volume per trip." })}
+            ${chartCard({ id: "homeInsightsPplByMonth", title: "Average Price Per Pound by month", explanation: "Shows whether your average pay rate is improving or softening over time." })}
             ${chartCard({ id: "homeInsightsAmountByMonth", title: "Amount by month", explanation: "Shows whether your total earnings are rising, falling, or holding steady over time." })}
-            ${chartCard({ id: "homeInsightsPoundsPerTripByMonth", title: "Average pounds per trip by month", explanation: "Shows whether each trip is becoming more or less productive over time." })}
+            ${chartCard({ id: "homeInsightsPoundsByMonth", title: "Pounds by month", explanation: "Shows whether your total catch volume is rising, falling, or holding steady over time." })}
+            ${chartCard({ id: "homeInsightsAmountPerTripByMonth", title: "Average Amount Per Trip by month", explanation: "Shows whether each trip is earning more or less on average over time." })}
+            ${chartCard({ id: "homeInsightsPoundsPerTripByMonth", title: "Average Pounds Per Trip by month", explanation: "Shows whether each trip is becoming more or less productive over time." })}
           </div>
         </section>
       `;

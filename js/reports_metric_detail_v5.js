@@ -269,12 +269,12 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
     amount: buildHomeCompareBarChart({ labels, metricKey: "amount", currentValue: period?.current?.amount, previousValue: period?.previous?.amount }),
     amountTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amt" }),
     amountPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "amount", valueKey: "amountPerTrip" }),
-    amountDealerMix: buildHomeTopRowsBarChart({ rows: dealerRows, metricKey: "amount", valueKey: "amt", basisLabel: "Top dealers by amount" }),
+    amountDealerMix: buildHomeTopRowsBarChart({ rows: dealerRows, metricKey: "amount", valueKey: "amt", basisLabel: "Amount by dealer" }),
     amountAreaMix: buildHomeTopRowsBarChart({
       rows: areaRowsByAmount,
       metricKey: "amount",
       valueKey: "amt",
-      basisLabel: "Strongest areas by amount",
+      basisLabel: "Amount by area",
       labelMode: "home-area-direct"
     }),
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
@@ -311,7 +311,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       maxItems: 6,
       labelMode: "home-area-direct"
     }),
-    pplDealerLeaders: buildHomeTopRowsBarChart({ rows: dealerRowsByRate, metricKey: "ppl", valueKey: "avg", basisLabel: "Dealer pay-rate leaders" }),
+    pplDealerLeaders: buildHomeTopRowsBarChart({ rows: dealerRowsByRate, metricKey: "ppl", valueKey: "avg", basisLabel: `Min ${AVG_RATE_MIN_TRIPS} trips + ${AVG_RATE_MIN_POUNDS} lbs to rank` }),
     pplRateVsPoundsTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" })
   };
 }
@@ -652,7 +652,7 @@ export function createReportsMetricDetailSeam(deps){
           metricKey: "trips"
         } : null,
         detailCharts.tripsPoundsPerTripTrend ? {
-          title: "Average pounds per trip by month",
+          title: "Average Pounds Per Trip by month",
           context: "How much each trip landed each month",
           canvasId: "c_trips_pounds_per_trip",
           chartModel: detailCharts.tripsPoundsPerTripTrend,
@@ -660,22 +660,8 @@ export function createReportsMetricDetailSeam(deps){
         } : null
       ],
       pounds: [
-        detailCharts.poundsMonthlyTrend ? {
-          title: "Total pounds by month",
-          context: "Monthly pounds landed",
-          canvasId: "c_pounds_monthly_trend",
-          chartModel: detailCharts.poundsMonthlyTrend,
-          metricKey: "pounds"
-        } : null,
-        detailCharts.poundsPerTripTrend ? {
-          title: "Average pounds per trip by month",
-          context: "Catch per trip by month",
-          canvasId: "c_pounds_per_trip_trend",
-          chartModel: detailCharts.poundsPerTripTrend,
-          metricKey: "pounds"
-        } : null,
         detailCharts.poundsDealerMix?.labels?.length ? {
-          title: "Top dealers by pounds",
+          title: "Pounds by dealer",
           context: "Dealers with the most landed pounds",
           canvasId: "c_pounds_dealer_mix",
           chartModel: detailCharts.poundsDealerMix,
@@ -683,63 +669,15 @@ export function createReportsMetricDetailSeam(deps){
         } : null
       ],
       amount: [
-        detailCharts.amountTrend ? {
-          title: "Total amount by month",
-          context: "Monthly earnings",
-          canvasId: "c_amount_trend",
-          chartModel: detailCharts.amountTrend,
-          metricKey: "amount"
-        } : null,
-        detailCharts.amountPerTripTrend ? {
-          title: "Average amount per trip by month",
-          context: "Average earnings per trip by month",
-          canvasId: "c_amount_per_trip_trend",
-          chartModel: detailCharts.amountPerTripTrend,
-          metricKey: "amount"
-        } : null,
-        detailCharts.amountDealerMix?.labels?.length ? {
-          title: "Top dealers by amount",
-          context: "Dealers paying the most",
-          canvasId: "c_amount_dealer_mix",
-          chartModel: detailCharts.amountDealerMix,
-          metricKey: "amount"
-        } : null,
-        detailCharts.amountAreaMix?.labels?.length ? {
-          title: "Strongest areas by amount",
-          context: "Areas earning the most",
-          canvasId: "c_amount_area_mix",
-          chartModel: detailCharts.amountAreaMix,
-          metricKey: "amount"
-        } : null
+        null
       ],
       ppl: [
-        detailCharts.pplMonthlyTrend ? {
-          title: "Average pay rate by month",
-          context: "Price Per Pound each month",
-          canvasId: "c_ppl_monthly_trend",
-          chartModel: detailCharts.pplMonthlyTrend,
-          metricKey: "ppl"
-        } : null,
         detailCharts.pplRateVsPoundsTrend ? {
           title: "Monthly pounds landed",
           context: "Pounds by month to pair with pay-rate movement",
           canvasId: "c_ppl_rate_vs_pounds",
           chartModel: detailCharts.pplRateVsPoundsTrend,
           metricKey: "pounds"
-        } : null,
-        detailCharts.pplAreaLeaders?.labels?.length ? {
-          title: "Price Per Pound by area",
-          context: "Min 2 trips + 150 lbs to rank",
-          canvasId: "c_ppl_area_leaders",
-          chartModel: detailCharts.pplAreaLeaders,
-          metricKey: "ppl"
-        } : null,
-        detailCharts.pplDealerLeaders?.labels?.length ? {
-          title: "Price Per Pound by dealer",
-          context: "Min 2 trips + 150 lbs to rank",
-          canvasId: "c_ppl_dealer_leaders",
-          chartModel: detailCharts.pplDealerLeaders,
-          metricKey: "ppl"
         } : null
       ]
     };
