@@ -109,6 +109,7 @@ if (indexHtml) {
 }
 
 const appSource = readSource('js/app_v5.js');
+const backupRestoreSource = readSource('js/backup_restore_v5.js');
 const startupAssetManifestSource = readSource('js/startup_asset_manifest_v5.js');
 const runtimeOrchestrationSource = readSource('js/runtime_orchestration_seam_v5.js');
 const homeSource = readSource('js/home_dashboard_v5.js');
@@ -203,6 +204,21 @@ if (appSource) {
     'startup module list versioned loader present',
     /STARTUP_MODULE_URLS\s*=\s*STARTUP_MODULE_PATHS\.map\s*\(\s*getVersionedModuleHref\s*\)/,
     'STARTUP_MODULE_URLS built from getVersionedModuleHref'
+  );
+  checkPattern(
+    appSource,
+    'settings orchestrator backup metadata clear seam wired',
+    /clearBackupRecoveryMetadata:\s*\(\)\s*=>\s*clearBackupRecoveryMetadata\(\)/,
+    'clearBackupRecoveryMetadata: () => clearBackupRecoveryMetadata()'
+  );
+}
+
+if (backupRestoreSource) {
+  checkPattern(
+    backupRestoreSource,
+    'backup recovery metadata clear seam structure present',
+    /function\s+clearBackupRecoveryMetadata\s*\(\)\s*\{[\s\S]*?localStorage\.removeItem\(LS_LAST_BACKUP_META\)[\s\S]*?clearRestoreRollbackSnapshot\s*\(\s*\)/,
+    'clearBackupRecoveryMetadata clears LS_LAST_BACKUP_META and rollback snapshot'
   );
 }
 
