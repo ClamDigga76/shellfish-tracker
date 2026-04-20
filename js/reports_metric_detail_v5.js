@@ -247,7 +247,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
     }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
     poundsMonthlyTrend: buildHomeSharedChartModel({ chartId: "poundsByMonth", monthRows: safeMonths, dealerRows, areaRows }),
-    poundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip", chartType: "month-line" }),
+    poundsPerTripTrend: buildHomeSharedChartModel({ chartId: "poundsPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }),
     poundsDealerMix: buildHomeTopRowsBarChart({
       rows: dealerRowsByPounds,
       metricKey: "pounds",
