@@ -87,6 +87,10 @@ export function createReportsTransitionSeam(deps){
       const tab = root.querySelector(`.chip[data-reports-section="${intent.key}"]`);
       if(safeFocus(tab)) return;
     }
+    if(intent.type === "preset-range-tab"){
+      const presetChip = root.querySelector(`.chip[data-rf="${intent.key}"]`);
+      if(safeFocus(presetChip)) return;
+    }
     if(intent.type === "metric-button"){
       const metricBtn = root.querySelector(`[data-metric-detail="${intent.metricKey}"]`);
       if(safeFocus(metricBtn)) return;
