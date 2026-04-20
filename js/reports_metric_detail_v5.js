@@ -14,6 +14,49 @@ const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
   metricExplanation: ()=> "Uses the same visible month pair in the compare card and chart."
 });
 
+const METRIC_DETAIL_SURFACE_MODES = Object.freeze({
+  home: Object.freeze({
+    mode: "home",
+    detailSurfaceClass: "homeMetricDetail",
+    detailCardClass: "homeMetricDetailCard",
+    detailBackClass: "homeMetricBackBtn",
+    detailEyebrowClass: "homeMetricEyebrow",
+    detailTitleClass: "homeMetricTitle",
+    detailContextClass: "homeMetricContext",
+    detailHeroWrapClass: "homeMetricHeroWrap",
+    detailHeroLabelClass: "homeMetricHeroLabel",
+    detailHeroValueClass: "homeMetricHeroValue",
+    detailCompareClass: "homeMetricCompare",
+    detailCompareTextClass: "homeMetricCompareText",
+    detailCompareRowsClass: "homeMetricCompareRows",
+    detailChartClass: "homeMetricChartBlock",
+    detailChartContextClass: "homeMetricChartContext",
+    detailInsightClass: "homeMetricInsight"
+  }),
+  reports: Object.freeze({
+    mode: "reports",
+    detailSurfaceClass: "reportsMetricDetail",
+    detailCardClass: "reportsMetricDetailCard",
+    detailBackClass: "reportsMetricBackBtn",
+    detailEyebrowClass: "reportsMetricEyebrow",
+    detailTitleClass: "reportsMetricTitle",
+    detailContextClass: "reportsMetricContext",
+    detailHeroWrapClass: "reportsMetricHeroWrap",
+    detailHeroLabelClass: "reportsMetricHeroLabel",
+    detailHeroValueClass: "reportsMetricHeroValue",
+    detailCompareClass: "reportsMetricCompare",
+    detailCompareTextClass: "reportsMetricCompareText",
+    detailCompareRowsClass: "reportsMetricCompareRows",
+    detailChartClass: "reportsMetricChartBlock",
+    detailChartContextClass: "reportsMetricChartContext",
+    detailInsightClass: "reportsMetricInsight"
+  })
+});
+
+function resolveMetricDetailSurfaceMode({ isHomeMetricDetail = false } = {}){
+  return isHomeMetricDetail ? METRIC_DETAIL_SURFACE_MODES.home : METRIC_DETAIL_SURFACE_MODES.reports;
+}
+
 function toneFromDelta(deltaPct, epsilonPct){
   const v = Number(deltaPct) || 0;
   if(Math.abs(v) <= epsilonPct) return "steady";
@@ -539,6 +582,7 @@ export function createReportsMetricDetailSeam(deps){
   };
 
   const renderMetricDetailSection = ({ meta, compareSummary, viewModel })=> {
+    const surfaceMode = viewModel.surfaceMode || resolveMetricDetailSurfaceMode({ isHomeMetricDetail: viewModel.isHomeMetricDetail });
     const homeRangeLabel = String(viewModel.homeScope?.rangeLabel || viewModel.rangeLabel || "").trim();
     const homeTripCount = Number(viewModel.homeScope?.tripCount ?? viewModel.trips?.length) || 0;
     const detailContext = viewModel.isHomeMetricDetail
@@ -561,32 +605,32 @@ export function createReportsMetricDetailSeam(deps){
       : String(compareSummary.text || "");
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
     const renderStandardSupportCard = ()=> `
-      <div class="${viewModel.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
-        <div class="${viewModel.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
-        <div class="${viewModel.detailCompareRowsClass}">
+      <div class="${surfaceMode.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
+        <div class="${surfaceMode.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
+        <div class="${surfaceMode.detailCompareRowsClass}">
           <div class="reportsMetricCompareRow"><span class="reportsMetricCompareLabel">${escapeHtml(meta.primaryBasis?.previousLabel || viewModel.compareFoundation.period?.previousLabel || "Previous")}</span><b class="reportsMetricCompareValue">${escapeHtml(compareSummary.previousValue)}</b></div>
           <div class="reportsMetricCompareRow"><span class="reportsMetricCompareLabel">${escapeHtml(meta.primaryBasis?.currentLabel || viewModel.compareFoundation.period?.currentLabel || "Current")}</span><b class="reportsMetricCompareValue">${escapeHtml(compareSummary.currentValue)}</b></div>
         </div>
         <div class="reportsMetricSupportMetaBlock" aria-label="Support metadata">
-          <div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--model">Comparison type • <b>${escapeHtml(compareContractLabel)}</b></div>
-          <div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--basis">${escapeHtml(compareContractBasis)}</div>
-          ${supportMetaNote ? `<div class="${viewModel.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--note">${escapeHtml(supportMetaNote)}</div>` : ""}
+          <div class="${surfaceMode.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--model">Comparison type • <b>${escapeHtml(compareContractLabel)}</b></div>
+          <div class="${surfaceMode.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--basis">${escapeHtml(compareContractBasis)}</div>
+          ${supportMetaNote ? `<div class="${surfaceMode.detailChartContextClass} reportsMetricSupportMeta reportsMetricSupportMeta--note">${escapeHtml(supportMetaNote)}</div>` : ""}
         </div>
       </div>
     `;
     return `
-    <section class="${viewModel.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
-      <div class="${viewModel.detailCardClass}">
+    <section class="${surfaceMode.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
+      <div class="${surfaceMode.detailCardClass}">
         ${viewModel.isHomeMetricDetail ? `
           <div class="homeMetricTitleHeader" aria-label="Metric title">
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
           </div>
           <div class="homeMetricLeadIn">${escapeHtml(detailInsight)}</div>
         ` : `
-          <button class="btn btn-ghost affordanceBtn ${viewModel.detailBackClass}" type="button" id="reportsMetricBack">← Back to reports</button>
-          <div class="${viewModel.detailEyebrowClass}">${escapeHtml(meta.eyebrow)}</div>
-          <h2 class="${viewModel.detailTitleClass}">${escapeHtml(meta.title)}</h2>
-          <div class="${viewModel.detailContextClass}">${escapeHtml(detailContext)}</div>
+          <button class="btn btn-ghost affordanceBtn ${surfaceMode.detailBackClass}" type="button" id="reportsMetricBack">← Back to reports</button>
+          <div class="${surfaceMode.detailEyebrowClass}">${escapeHtml(meta.eyebrow)}</div>
+          <h2 class="${surfaceMode.detailTitleClass}">${escapeHtml(meta.title)}</h2>
+          <div class="${surfaceMode.detailContextClass}">${escapeHtml(detailContext)}</div>
           <div class="reportsMetricSectionRail" aria-hidden="true">
           <span class="reportsMetricSectionPill">Compared months • ${escapeHtml(compareContractBasis)}</span>
           </div>
@@ -594,9 +638,9 @@ export function createReportsMetricDetailSeam(deps){
 
         ${viewModel.isHomeMetricDetail ? "" : `
         <div class="reportsMetricStoryStack">
-          <div class="${viewModel.detailHeroWrapClass}">
-            <div class="${viewModel.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
-            <div class="${viewModel.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
+          <div class="${surfaceMode.detailHeroWrapClass}">
+            <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
+            <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
           </div>
 
           ${renderStandardSupportCard()}
@@ -604,24 +648,24 @@ export function createReportsMetricDetailSeam(deps){
         `}
 
         <div class="reportsMetricChartsStack">
-          <div class="${viewModel.detailChartClass}">
+          <div class="${surfaceMode.detailChartClass}">
             <b>${escapeHtml(detailChartTitle)}</b>
-            <div class="${viewModel.detailChartContextClass}">${escapeHtml(detailChartContext)}</div>
+            <div class="${surfaceMode.detailChartContextClass}">${escapeHtml(detailChartContext)}</div>
             <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
             <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(meta.chartCanvasId)}" hidden>Not enough data in this range yet.</div>
           </div>
 
           ${secondaryCharts.map((chart)=> `
-            <div class="${viewModel.detailChartClass}">
+            <div class="${surfaceMode.detailChartClass}">
               <b>${escapeHtml(chart.title)}</b>
-              <div class="${viewModel.detailChartContextClass}">${escapeHtml(chart.context)}</div>
+              <div class="${surfaceMode.detailChartContextClass}">${escapeHtml(chart.context)}</div>
               <canvas class="chart" id="${escapeHtml(chart.canvasId)}" height="220"></canvas>
               <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(chart.canvasId)}" hidden>Not enough data in this range yet.</div>
             </div>
           `).join("")}
         </div>
 
-        ${viewModel.isHomeMetricDetail ? "" : `<div class="${viewModel.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
+        ${viewModel.isHomeMetricDetail ? "" : `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
       </div>
     </section>
   `;
@@ -922,6 +966,7 @@ export function createReportsMetricDetailSeam(deps){
 
   return {
     buildHomeMetricDetailFoundation,
+    resolveMetricDetailSurfaceMode,
     buildMetricDetailView,
     buildMetricDetailChartConfig
   };
