@@ -1,3 +1,5 @@
+import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_seam_v5.js";
+
 export function createReportsAdvancedPanelSeam(deps){
   const {
     escapeHtml,
@@ -6,6 +8,11 @@ export function createReportsAdvancedPanelSeam(deps){
     bindDatePill,
     normalizeCustomRangeWithFeedback
   } = deps;
+  const timeframeFilterControls = createTimeframeFilterControlsSeam({
+    escapeHtml,
+    parseReportDateToISO,
+    formatDateDMY: formatReportDateValue
+  });
 
   function renderAdvancedPanel({ reportsFilter, dealers, areas }){
     const rf = reportsFilter || {};
@@ -34,16 +41,15 @@ export function createReportsAdvancedPanelSeam(deps){
         <div class="sep reportsAdvancedDivider"></div>
         <div class="reportsAdvancedGroup">
           <div class="reportsAdvancedGroupLabel">Date range</div>
-          <div class="grid2 reportsAdvancedGrid">
-            <div class="field">
-              <div class="label">From</div>
-              <input class="input" id="repAdvFrom" type="date" value="${escapeHtml(advFromValue)}">
-            </div>
-            <div class="field">
-              <div class="label">To</div>
-              <input class="input" id="repAdvTo" type="date" value="${escapeHtml(advToValue)}">
-            </div>
-          </div>
+          ${timeframeFilterControls.renderCustomRangeRow({
+            mode: "RANGE",
+            fromValue: advFromValue,
+            toValue: advToValue,
+            fromId: "repAdvFrom",
+            toId: "repAdvTo",
+            applyId: "repAdvApply",
+            wrapperClass: "reportsAdvancedRangeRow"
+          })}
         </div>
         <div class="reportsAdvancedGroup">
           <div class="reportsAdvancedGroupLabel">Trip context</div>
@@ -60,7 +66,6 @@ export function createReportsAdvancedPanelSeam(deps){
         </div>
         <div class="row reportsAdvancedActions">
           <button class="btn" id="repAdvReset" type="button">Reset</button>
-          <button class="btn primary" id="repAdvApply" type="button">Apply</button>
         </div>
       </div>
     `;

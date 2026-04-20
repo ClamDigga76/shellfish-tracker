@@ -1,4 +1,5 @@
 import { buildHomeSharedChartModel, getHomeSharedChartDefinition } from "./reports_chart_definitions_v5.js";
+import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_seam_v5.js";
 
 export function createHomeDashboardRenderer({
   state,
@@ -11,6 +12,7 @@ export function createHomeDashboardRenderer({
   renderPageHeader,
   escapeHtml,
   parseReportDateToISO,
+  formatDateDMY,
   formatMoney,
   getApp,
   saveState,
@@ -27,6 +29,12 @@ export function createHomeDashboardRenderer({
   buildReportsAggregationForTrips,
   drawReportsCharts
 }) {
+  const timeframeFilterControls = createTimeframeFilterControlsSeam({
+    escapeHtml,
+    parseReportDateToISO,
+    formatDateDMY
+  });
+
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
 
@@ -180,7 +188,6 @@ export function createHomeDashboardRenderer({
     ` : "";
 
     const f = String((state.homeFilter && state.homeFilter.mode) || "YTD").toUpperCase();
-    const chip = (key, label) => `<button class="chip segBtn ${f === key ? "on is-selected" : ""}" data-hf="${key}" type="button">${label}</button>`;
 
     const tripsSorted = getTripsNewestFirst(trips);
     const newestSavedTrip = tripsSorted[0] || null;
@@ -263,16 +270,11 @@ export function createHomeDashboardRenderer({
       })()
       : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No trip saved yet</div><div class="emptyStateBody">Save your first trip to show it here.</div></div>`;
 
-    const homeFilterLabel = (() => {
-      if (f === "MONTH") return "This Month";
-      if (f === "LAST_MONTH") return "Last Month";
-      if (f === "7D") return "Last 7 Days";
-      if (f === "30D") return "Last 30 Days";
-      if (f === "RANGE") {
-        return `${unified.fromISO || "—"} → ${unified.toISO || "—"}`;
-      }
-      return "YTD";
-    })();
+    const homeFilterLabel = timeframeFilterControls.resolveRangeLabel({
+      mode: f,
+      fromISO: unified.fromISO,
+      toISO: unified.toISO
+    });
     const homeOverviewRangeLabel = homeFilterLabel;
     const isHomeInsightsOpen = !!state.homeInsightsOpen;
     if (isHomeInsightsOpen) {
@@ -350,24 +352,25 @@ export function createHomeDashboardRenderer({
             <button class="btn homeInsightsEntryBtn" id="homeOpenInsights" type="button">Insights</button>
           </div>
           <div class="homeFilterStack">
-            <div class="segWrap timeframeUnifiedControl" role="group" aria-label="Home timeframe filter">
-              ${chip("YTD", "YTD")}
-              ${chip("MONTH", "This Month")}
-              ${chip("LAST_MONTH", "Last Month")}
-              ${chip("7D", "Last 7 Days")}
-              ${chip("30D", "Last 30 Days")}
-              ${chip("RANGE", "Custom Range")}
-            </div>
-            ${f === "RANGE" ? `
-              <div class="row gap10 wrap dateRangeRow">
-                <div class="homeRangeInputs">
-                  <input class="input" id="homeRangeFrom" type="date" value="${escapeHtml(parseReportDateToISO(hf.from))}" />
-                  <input class="input" id="homeRangeTo" type="date" value="${escapeHtml(parseReportDateToISO(hf.to))}" />
-                </div>
-                <button class="btn" id="homeRangeApply">Apply</button>
-              </div>
-              ${homeCustomCorrectionMessages.length ? `<div class="muted small mt8 homeRangeCorrectionNote" aria-live="polite">${homeCustomCorrectionMessages.map((msg) => `<div>${escapeHtml(msg)}</div>`).join("")}</div>` : ``}
-            ` : ``}
+            ${timeframeFilterControls.renderPresetChipRow({
+              items: timeframeFilterControls.HOME_PRESET_FILTER_ITEMS,
+              activeKey: f,
+              dataAttr: "data-hf",
+              ariaLabel: "Home timeframe filter"
+            })}
+            ${timeframeFilterControls.renderCustomRangeRow({
+              mode: f,
+              fromValue: hf.from,
+              toValue: hf.to,
+              fromId: "homeRangeFrom",
+              toId: "homeRangeTo",
+              applyId: "homeRangeApply"
+            })}
+            ${timeframeFilterControls.renderCorrectionMessages({
+              mode: f,
+              messages: homeCustomCorrectionMessages,
+              className: "homeRangeCorrectionNote"
+            })}
           </div>
         </section>
 
@@ -490,13 +493,11 @@ export function createHomeDashboardRenderer({
           from: parseReportDateToISO(state.homeFilter?.from || "") || "",
           to: parseReportDateToISO(state.homeFilter?.to || "") || ""
         };
-        const launchedRangeLabel = launchedHomeFilter.mode === "RANGE"
-          ? `${launchedHomeFilter.from || "—"} → ${launchedHomeFilter.to || "—"}`
-          : (launchedHomeFilter.mode === "MONTH" ? "This Month"
-            : (launchedHomeFilter.mode === "LAST_MONTH" ? "Last Month"
-              : (launchedHomeFilter.mode === "7D" ? "Last 7 Days"
-                : (launchedHomeFilter.mode === "30D" ? "Last 30 Days"
-                  : "YTD"))));
+        const launchedRangeLabel = timeframeFilterControls.resolveRangeLabel({
+          mode: launchedHomeFilter.mode,
+          fromISO: launchedHomeFilter.from,
+          toISO: launchedHomeFilter.to
+        });
         state.homeMetricDetail = metricKey;
         state.homeMetricDetailContext = {
           homeFilter: launchedHomeFilter,
