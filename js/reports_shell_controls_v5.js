@@ -1,3 +1,5 @@
+import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_seam_v5.js";
+
 export function createReportsShellControlsSeam(deps){
   const {
     escapeHtml,
@@ -5,13 +7,12 @@ export function createReportsShellControlsSeam(deps){
     formatDateDMY
   } = deps;
 
-  const REPORTS_PRESET_FILTER_ITEMS = [
-    { key: "YTD", label: "YTD" },
-    { key: "THIS_MONTH", label: "This Month" },
-    { key: "LAST_MONTH", label: "Last Month" },
-    { key: "90D", label: "Last 3 Months" },
-    { key: "ALL", label: "All Time" }
-  ];
+  const timeframeFilterControls = createTimeframeFilterControlsSeam({
+    escapeHtml,
+    parseReportDateToISO,
+    formatDateDMY
+  });
+  const REPORTS_PRESET_FILTER_ITEMS = timeframeFilterControls.REPORTS_PRESET_FILTER_ITEMS;
   const REPORTS_PRESET_MODES = REPORTS_PRESET_FILTER_ITEMS.map((item)=> item.key);
 
   const REPORTS_SECTION_ITEMS = [
@@ -39,40 +40,14 @@ export function createReportsShellControlsSeam(deps){
     REPORTS_SECTION_ITEMS.some((item)=> item.key === reportsSectionKey) ? reportsSectionKey : "insights"
   );
 
-  const buildActiveFilterSummary = (rf)=> {
-    const activeFilterTokens = [];
-    const fromISO = parseReportDateToISO(rf.from);
-    const toISO = parseReportDateToISO(rf.to);
-    if(fromISO || toISO){
-      const fromLabel = fromISO ? formatDateDMY(fromISO) : "Start";
-      const toLabel = toISO ? formatDateDMY(toISO) : "End";
-      activeFilterTokens.push(`Date ${fromLabel} → ${toLabel}`);
-    }
-    const dealerFilter = String(rf.dealer || "").trim();
-    if(dealerFilter) activeFilterTokens.push(`Dealer ${dealerFilter}`);
-    const areaFilter = String(rf.area || "").trim();
-    if(areaFilter) activeFilterTokens.push(`Area ${areaFilter}`);
-    const activeFilterSummaryLabel = activeFilterTokens.length
-      ? `${activeFilterTokens.length} filter${activeFilterTokens.length === 1 ? "" : "s"} on`
-      : "No custom filters";
-    const renderActiveFilterSummary = activeFilterTokens.length
-      ? `
-      <div class="reportsActiveFilterSummary" aria-live="polite" aria-label="Active custom filters">
-        <div class="reportsActiveFilterChipRow">${activeFilterTokens.map((token)=> `<span class="reportsActiveFilterChip">${escapeHtml(token)}</span>`).join("")}</div>
-      </div>
-    `
-      : "";
-
-    return {
-      activeFilterSummaryLabel,
-      renderActiveFilterSummary
-    };
-  };
+  const buildActiveFilterSummary = (rf)=> timeframeFilterControls.buildActiveFilterSummary({ reportsFilter: rf });
 
   const renderCorrectionSummary = ({ filterMode, customRangeCorrectionMessages = [] })=> (
-    filterMode === "RANGE" && customRangeCorrectionMessages.length
-      ? `<div class="reportsRangeCorrectionSummary muted small" aria-live="polite">${customRangeCorrectionMessages.map((msg)=>`<div>${escapeHtml(msg)}</div>`).join("")}</div>`
-      : ""
+    timeframeFilterControls.renderCorrectionMessages({
+      mode: filterMode,
+      messages: customRangeCorrectionMessages,
+      className: "reportsRangeCorrectionSummary"
+    })
   );
 
   const renderReportsTopShell = ({
@@ -88,7 +63,6 @@ export function createReportsShellControlsSeam(deps){
     advPanel = "",
     activeReportsSection = "insights"
   } = {})=> {
-    const chip = ({ key, label })=> `<button class="chip segBtn reportsPrimaryFilterChip ${activePresetFilterKey===key?'on is-selected':''}" data-rf="${key}" type="button" role="tab" aria-selected="${activePresetFilterKey===key ? "true" : "false"}">${label}</button>`;
     const renderReportsSectionChip = (item)=> `<button class="chip reportsSectionChip ${activeReportsSection===item.key?'on is-selected':''}" data-reports-section="${item.key}" type="button" role="tab" id="reports-tab-${item.key}" aria-controls="reportsTransitionRoot" aria-selected="${activeReportsSection===item.key ? 'true' : 'false'}" tabindex="${activeReportsSection===item.key ? "0" : "-1"}">
     <span>${item.label}</span>
   </button>`;
@@ -96,9 +70,15 @@ export function createReportsShellControlsSeam(deps){
     return `
     <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
       <section class="reportsTimeframeShell" aria-label="Reports timeframe controls">
-        <div class="segWrap timeframeUnifiedControl reportsTimeframeControl reportsPrimaryFilterBar" role="tablist" aria-label="Reports quick range filters">
-          ${REPORTS_PRESET_FILTER_ITEMS.map((item)=> chip(item)).join("")}
-        </div>
+        ${timeframeFilterControls.renderPresetChipRow({
+            items: REPORTS_PRESET_FILTER_ITEMS,
+            activeKey: activePresetFilterKey,
+            dataAttr: "data-rf",
+            chipClass: "reportsPrimaryFilterChip",
+            groupClass: "reportsTimeframeControl reportsPrimaryFilterBar",
+            ariaLabel: "Reports quick range filters",
+            role: "tablist"
+          })}
       </section>
 
       <div class="reportsAdvancedShell" aria-label="Reports advanced filters">

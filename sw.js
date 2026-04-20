@@ -35,6 +35,7 @@ const CORE_JS_PATHS = [
   "./js/trips_browse_screen_v5.js",
   "./js/trip_flow_save_seam_v5.js",
   "./js/trip_mutation_lifecycle_v5.js",
+  "./js/timeframe_filter_controls_seam_v5.js",
   "./js/unified_filters_seam_v5.js",
   "./js/root_state_save_seam_v5.js",
   "./js/update_runtime_status_v5.js",
