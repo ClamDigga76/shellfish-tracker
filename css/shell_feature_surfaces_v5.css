@@ -190,13 +190,17 @@
 .settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px var(--card-title-gap)}
 .settingsSectionCard.settingsGroupedCard{margin-bottom:0;padding:0;overflow:hidden}
 .settingsAccordionCard{border-radius:16px}
-.settingsAccordionSummary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 13px;cursor:pointer;list-style:none;background:linear-gradient(180deg, rgba(255,255,255,.045) 0%, rgba(255,255,255,.02) 100%)}
+.settingsAccordionSummary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;cursor:pointer;list-style:none;background:linear-gradient(180deg, rgba(255,255,255,.045) 0%, rgba(255,255,255,.02) 100%)}
 .settingsAccordionSummary::-webkit-details-marker{display:none}
-.settingsAccordionMeta{min-width:0;display:grid;gap:3px}
+.settingsAccordionSummary::-moz-list-bullet{font-size:0}
+.settingsAccordionSummary::marker{display:none;content:""}
+.settingsAccordionMeta{min-width:0;flex:1;display:grid;gap:3px}
 .settingsAccordionSummary .settingsGroupLabel{margin:0}
 .settingsAccordionTitle{font-size:14px;font-weight:840;line-height:1.2}
 .settingsAccordionStatus{line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.settingsAccordionChevron{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--text-muted-strong);background:rgba(8,12,20,.3);transition:transform var(--motion-duration-fast) var(--motion-ease-standard), background var(--motion-duration-fast) var(--motion-ease-standard)}
+.settingsAccordionRight{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 128px;min-width:128px}
+.settingsAccordionPill{display:inline-flex;align-items:center;justify-content:center;max-width:84px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);font-size:10px;font-weight:830;letter-spacing:.03em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(8,12,20,.3);color:var(--text-muted-strong)}
+.settingsAccordionChevron{display:inline-flex;align-items:center;justify-content:center;flex:0 0 28px;width:28px;height:28px;min-width:28px;min-height:28px;border-radius:999px;border:1px solid var(--line);font-size:13px;line-height:1;color:var(--text-muted-strong);background:rgba(8,12,20,.3);transition:transform var(--motion-duration-fast) var(--motion-ease-standard), background var(--motion-duration-fast) var(--motion-ease-standard)}
 .settingsAccordionCard[open] .settingsAccordionChevron{transform:rotate(180deg);background:rgba(255,255,255,.08)}
 .settingsAccordionCard:not([open]) .settingsRow{display:none}
 .settingsRow{padding:13px var(--card-pad-x)}
@@ -249,6 +253,9 @@
 
 @media (max-width:380px){
   .settingsJumpHub{grid-template-columns:1fr}
+  .settingsAccordionSummary{align-items:flex-start}
+  .settingsAccordionRight{flex:0 0 auto;min-width:0}
+  .settingsAccordionPill{max-width:72px}
   .settingsRow--split{align-items:flex-start;flex-direction:column}
   .settingsAccordionStatus{white-space:normal}
   .settingsSelectWrap{max-width:none;margin-left:0}

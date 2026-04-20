@@ -103,9 +103,12 @@ export function createSettingsScreenOrchestrator({
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Updates & Support</div>
             <div class="settingsAccordionTitle">Update status and help access</div>
-            <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Checking version status…</div>
+            <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Version check in progress</div>
           </div>
-          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          <div class="settingsAccordionRight">
+            <span class="settingsAccordionPill" id="updatesStatusPill">Checking</span>
+            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          </div>
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
@@ -141,9 +144,12 @@ export function createSettingsScreenOrchestrator({
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Backup</div>
             <div class="settingsAccordionTitle">Backup, restore, and recovery</div>
-            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Backup status available</div>
+            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Checking backup freshness</div>
           </div>
-          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          <div class="settingsAccordionRight">
+            <span class="settingsAccordionPill" id="safetyStatusPill">Checking</span>
+            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          </div>
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
@@ -181,9 +187,12 @@ export function createSettingsScreenOrchestrator({
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Install App</div>
             <div class="settingsAccordionTitle">Install mode and actions</div>
-            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Checking install state…</div>
+            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Install readiness check in progress</div>
           </div>
-          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          <div class="settingsAccordionRight">
+            <span class="settingsAccordionPill" id="installStatusPill">Checking</span>
+            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          </div>
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
@@ -214,7 +223,10 @@ export function createSettingsScreenOrchestrator({
             <div class="settingsAccordionTitle">Trip list management</div>
             <div class="muted small settingsAccordionStatus" id="dataListsSummaryLine">${areaCount} areas • ${dealerCount} dealers</div>
           </div>
-          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          <div class="settingsAccordionRight">
+            <span class="settingsAccordionPill" id="dataListsStatusPill">${areaCount} / ${dealerCount}</span>
+            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          </div>
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
@@ -246,9 +258,12 @@ export function createSettingsScreenOrchestrator({
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">About</div>
             <div class="settingsAccordionTitle">Version, support, and legal</div>
-            <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build ${displayBuildVersion} • Support available</div>
+            <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build and support details</div>
           </div>
-          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          <div class="settingsAccordionRight">
+            <span class="settingsAccordionPill" id="aboutStatusPill">${displayBuildVersion}</span>
+            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          </div>
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
@@ -289,9 +304,12 @@ export function createSettingsScreenOrchestrator({
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Advanced</div>
             <div class="settingsAccordionTitle">Support bundle and reset tools</div>
-            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle and reset tools</div>
+            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Release checks and reset tools</div>
           </div>
-          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          <div class="settingsAccordionRight">
+            <span class="settingsAccordionPill" id="advancedStatusPill">Support</span>
+            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          </div>
         </summary>
         <div class="settingsRow settingsRow--action mt10">
           <div class="row gap10 wrap">
@@ -438,19 +456,30 @@ export function createSettingsScreenOrchestrator({
     const installSummaryLine = document.getElementById("installSummaryLine");
     const backupSummaryLine = document.getElementById("safetySummaryLine");
     const advancedSummaryLine = document.getElementById("advancedSummaryLine");
+    const updatesStatusPill = document.getElementById("updatesStatusPill");
+    const safetyStatusPill = document.getElementById("safetyStatusPill");
+    const installStatusPill = document.getElementById("installStatusPill");
+    const aboutStatusPill = document.getElementById("aboutStatusPill");
+    const advancedStatusPill = document.getElementById("advancedStatusPill");
 
     if (updatesSummaryLine) {
-      updatesSummaryLine.textContent = "Checking version status…";
+      updatesSummaryLine.textContent = "Version check in progress";
     }
     if (backupSummaryLine) {
-      backupSummaryLine.textContent = "Backup status available";
+      backupSummaryLine.textContent = "Checking backup freshness";
     }
     if (advancedSummaryLine) {
-      advancedSummaryLine.textContent = "Support bundle and reset tools";
+      advancedSummaryLine.textContent = "Release checks and reset tools";
     }
     const aboutSummaryLine = document.getElementById("aboutSummaryLine");
     if (aboutSummaryLine) {
-      aboutSummaryLine.textContent = `Build ${displayBuildVersion} • Support available`;
+      aboutSummaryLine.textContent = "Build and support details";
+    }
+    if (aboutStatusPill) {
+      aboutStatusPill.textContent = displayBuildVersion;
+    }
+    if (advancedStatusPill) {
+      advancedStatusPill.textContent = "Support";
     }
 
     if (installModel) {
@@ -459,7 +488,11 @@ export function createSettingsScreenOrchestrator({
       if (installStatusHint) installStatusHint.textContent = installModel.statusHint;
       if (installSummaryLine) {
         const installActionState = installModel.actionEnabled && installModel.showAction ? "Action needed" : "No action needed";
-        installSummaryLine.textContent = `${installModel.statusPill} • ${installActionState}`;
+        installSummaryLine.textContent = installActionState === "Action needed" ? "Install action available" : "Install setup is up to date";
+      }
+      if (installStatusPill) {
+        const statusPillText = String(installModel.statusPill || "").toLowerCase().includes("installed") ? "Installed" : "Browser";
+        installStatusPill.textContent = statusPillText;
       }
       if (installWhyLine) installWhyLine.innerHTML = `<b>${escapeSettingsHtml(installModel.whyTitle)}</b> ${escapeSettingsHtml(installModel.whyBody)}`;
       if (installStepsLine) installStepsLine.textContent = installModel.stepsLine;
@@ -489,10 +522,18 @@ export function createSettingsScreenOrchestrator({
     const updateBigStatusEl = document.getElementById("updateBigStatus");
     const updateVersionLineEl = document.getElementById("updateVersionLine");
     if (updatesSummaryLine && updateBigStatusEl) {
+      const formatUpdateStatusPill = (statusText) => {
+        const normalized = String(statusText || "").toLowerCase();
+        if (!normalized) return "Checking";
+        if (normalized.includes("new") || normalized.includes("update")) return "Attention";
+        if (normalized.includes("latest") || normalized.includes("current") || normalized.includes("up to date")) return "Up to date";
+        return "Checking";
+      };
       const syncUpdateSummaryLine = () => {
         const status = String(updateBigStatusEl.textContent || "").trim();
         const versionMeta = String(updateVersionLineEl?.textContent || "").trim();
-        updatesSummaryLine.textContent = versionMeta ? `${status} • ${versionMeta}` : (status || "Update status available");
+        updatesSummaryLine.textContent = versionMeta ? `${status} • ${versionMeta}` : (status || "Version status available");
+        if (updatesStatusPill) updatesStatusPill.textContent = formatUpdateStatusPill(status);
       };
       syncUpdateSummaryLine();
       const updateObserver = new MutationObserver(() => syncUpdateSummaryLine());
@@ -518,6 +559,7 @@ export function createSettingsScreenOrchestrator({
     supportRecoverySeam.bindBackupRestoreControls();
     supportRecoverySeam.syncBackupSummaryLine({
       backupSummaryLine,
+      backupStatusPill: safetyStatusPill,
       deletedTripsCount: deletedTrips.length
     });
 
