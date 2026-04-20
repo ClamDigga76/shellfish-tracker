@@ -17,6 +17,7 @@ export const STARTUP_MODULE_PATHS = [
   "./home_dashboard_v5.js",
   "./settings_screen_v5.js",
   "./reports_screen_v5.js",
+  "./chart_story_seam_v5.js",
   "./feedback_seam_v5.js",
   "./trip_screen_shared_helpers_v5.js",
   "./trip_screen_field_bindings_v5.js",

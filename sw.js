@@ -28,6 +28,7 @@ const CORE_JS_PATHS = [
   "./js/home_dashboard_v5.js",
   "./js/settings_screen_v5.js",
   "./js/reports_screen_v5.js",
+  "./js/chart_story_seam_v5.js",
   "./js/feedback_seam_v5.js",
   "./js/trip_screen_shared_helpers_v5.js",
   "./js/trip_screen_field_bindings_v5.js",

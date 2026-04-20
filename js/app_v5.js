@@ -61,6 +61,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { createHomeDashboardRenderer },
   { createSettingsScreenOrchestrator },
   { createReportsScreenRenderer },
+  _chartStorySeamModule,
   { createFeedbackSeam },
   _tripScreenSharedHelpersModule,
   _tripScreenFieldBindingsModule,
