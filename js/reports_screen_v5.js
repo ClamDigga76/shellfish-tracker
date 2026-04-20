@@ -194,6 +194,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       })}
     `;
     getApp().scrollTop = 0;
+    flushReportsAnnouncement();
+    applyReportsFocusIntent(getApp());
 
     reportsBindingsSeam.bindPresetRangeChips({
       root: getApp(),
