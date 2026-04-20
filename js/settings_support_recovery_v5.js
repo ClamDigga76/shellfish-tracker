@@ -76,11 +76,16 @@ export function createSettingsSupportRecoverySeam(deps) {
       `;
   }
 
-  function syncSafetySummaryLine({ safetySummaryLine, deletedTripsCount }) {
-    if (!safetySummaryLine) return;
+  function syncBackupSummaryLine({ backupSummaryLine, deletedTripsCount }) {
+    if (!backupSummaryLine) return;
     const lastBackupLineEl = document.getElementById("lastBackupLine");
+    const rollbackLineEl = document.getElementById("restoreRollbackLine");
     const backupText = String(lastBackupLineEl?.textContent || "").trim() || "Backup status available";
-    safetySummaryLine.textContent = `${backupText} • Recently deleted: ${deletedTripsCount}`;
+    const rollbackText = String(rollbackLineEl?.textContent || "").trim();
+    const summaryParts = [backupText];
+    if (rollbackText) summaryParts.push(rollbackText);
+    summaryParts.push(`Recently deleted: ${deletedTripsCount}`);
+    backupSummaryLine.textContent = summaryParts.join(" • ");
   }
 
   function bindBackupRestoreControls() {
@@ -155,7 +160,7 @@ export function createSettingsSupportRecoverySeam(deps) {
                 return;
               }
               if (safetyChoice === "created") {
-                showToast("Safety backup created");
+                showToast("Backup created");
               }
             }
 
@@ -330,7 +335,7 @@ export function createSettingsSupportRecoverySeam(deps) {
       if (latestReleaseSnapshot?.summary?.updateAligned === false) status += " • Version alignment warning";
       if (latestReleaseSnapshot?.summary?.recoveryReady) status += " • Recovery attention signal";
       releaseSummaryEl.textContent = status;
-      if (advancedSummaryLine) advancedSummaryLine.textContent = `Build ${displayBuildVersion} • ${status}`;
+      if (advancedSummaryLine) advancedSummaryLine.textContent = "Support bundle and reset tools";
     }
 
     async function hydrateReleaseValidationSurface() {
@@ -436,7 +441,7 @@ export function createSettingsSupportRecoverySeam(deps) {
     buildDeletedTripsHtml,
     bindBackupRestoreControls,
     bindDeletedTripRecoveryControls,
-    syncSafetySummaryLine,
+    syncBackupSummaryLine,
     createReleaseValidationController
   };
 }

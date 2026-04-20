@@ -82,8 +82,8 @@ export function createSettingsScreenOrchestrator({
     const dealerCount = Array.isArray(state.dealers) ? state.dealers.length : 0;
     const settingsJumpTargets = [
       { id: "settingsUpdatesSupport", label: "Updates" },
+      { id: "settingsSafetyRecovery", label: "Backup" },
       { id: "settingsInstallApp", label: "Install" },
-      { id: "settingsSafetyRecovery", label: "Safety" },
       { id: "settingsDataLists", label: "Data Lists" },
       { id: "settingsAbout", label: "About" },
       { id: "settingsAdvanced", label: "Advanced" }
@@ -92,7 +92,7 @@ export function createSettingsScreenOrchestrator({
     getApp().innerHTML = `
     ${renderPageHeader("settings")}
     <div class="settingsJumpNavCard card" aria-label="Settings section quick links">
-      <div class="settingsJumpNavRow" role="navigation" aria-label="Jump to section">
+      <div class="settingsJumpHub" role="navigation" aria-label="Jump to section">
         ${settingsJumpTargets.map((target) => `<button class="chip settingsJumpChip" type="button" data-settings-jump="${target.id}">${target.label}</button>`).join("")}
       </div>
     </div>
@@ -135,44 +135,13 @@ export function createSettingsScreenOrchestrator({
       </details>
     </div>
 
-    <div class="settingsGroupBlock" id="settingsInstallApp">
-      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
-        <summary class="settingsAccordionSummary">
-          <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Install App</div>
-            <div class="settingsAccordionTitle">Install mode and actions</div>
-            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Checking install state…</div>
-          </div>
-          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
-        </summary>
-        <div class="settingsRow settingsRow--split">
-          <div>
-            <div class="settingsRowTitle settingsMiniTitle">App mode</div>
-          </div>
-          <span class="settingsValuePill" id="installModePill">Checking…</span>
-        </div>
-        <div class="settingsRow settingsRow--status">
-          <div id="installModeLine" class="settingsUpdateStatus">Checking app mode…</div>
-          <div class="muted settingsBodyTiny" id="installStatusHint"></div>
-        </div>
-        <div class="settingsRow settingsRow--action settingsInstallActions">
-          <button class="btn primary settingsInlineBtn" id="installActionBtn" type="button">Install app</button>
-          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">Open install help</button>
-        </div>
-        <div class="settingsRow settingsRow--minor">
-          <div class="hint" id="installWhyLine"></div>
-          <div class="muted small mt8" id="installStepsLine"></div>
-        </div>
-      </details>
-    </div>
-
     <div class="settingsGroupBlock" id="settingsSafetyRecovery">
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Safety & Recovery</div>
-            <div class="settingsAccordionTitle">Backup and restore tools</div>
-            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Backup freshness</div>
+            <div class="settingsGroupLabel">Backup</div>
+            <div class="settingsAccordionTitle">Backup, restore, and recovery</div>
+            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Backup status available</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
         </summary>
@@ -203,6 +172,37 @@ export function createSettingsScreenOrchestrator({
           <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Rollback / undo last restore</button>
         </div>
         ${deletedTripsHtml}
+      </details>
+    </div>
+
+    <div class="settingsGroupBlock" id="settingsInstallApp">
+      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
+        <summary class="settingsAccordionSummary">
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">Install App</div>
+            <div class="settingsAccordionTitle">Install mode and actions</div>
+            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Checking install state…</div>
+          </div>
+          <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="settingsRow settingsRow--split">
+          <div>
+            <div class="settingsRowTitle settingsMiniTitle">App mode</div>
+          </div>
+          <span class="settingsValuePill" id="installModePill">Checking…</span>
+        </div>
+        <div class="settingsRow settingsRow--status">
+          <div id="installModeLine" class="settingsUpdateStatus">Checking app mode…</div>
+          <div class="muted settingsBodyTiny" id="installStatusHint"></div>
+        </div>
+        <div class="settingsRow settingsRow--action settingsInstallActions">
+          <button class="btn primary settingsInlineBtn" id="installActionBtn" type="button">Install app</button>
+          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">Open install help</button>
+        </div>
+        <div class="settingsRow settingsRow--minor">
+          <div class="hint" id="installWhyLine"></div>
+          <div class="muted small mt8" id="installStepsLine"></div>
+        </div>
       </details>
     </div>
 
@@ -246,7 +246,7 @@ export function createSettingsScreenOrchestrator({
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">About</div>
             <div class="settingsAccordionTitle">Version, support, and legal</div>
-            <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build ${displayBuildVersion}</div>
+            <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build ${displayBuildVersion} • Support available</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
         </summary>
@@ -289,7 +289,7 @@ export function createSettingsScreenOrchestrator({
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Advanced</div>
             <div class="settingsAccordionTitle">Support bundle and reset tools</div>
-            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support tools and release checks</div>
+            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle and reset tools</div>
           </div>
           <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
         </summary>
@@ -436,24 +436,31 @@ export function createSettingsScreenOrchestrator({
     const installHelpBtn = document.getElementById("installHelpBtn");
     const updatesSummaryLine = document.getElementById("updatesSummaryLine");
     const installSummaryLine = document.getElementById("installSummaryLine");
-    const safetySummaryLine = document.getElementById("safetySummaryLine");
+    const backupSummaryLine = document.getElementById("safetySummaryLine");
     const advancedSummaryLine = document.getElementById("advancedSummaryLine");
 
     if (updatesSummaryLine) {
       updatesSummaryLine.textContent = "Checking version status…";
     }
-    if (safetySummaryLine) {
-      safetySummaryLine.textContent = `Recently deleted: ${deletedTrips.length}`;
+    if (backupSummaryLine) {
+      backupSummaryLine.textContent = "Backup status available";
     }
     if (advancedSummaryLine) {
-      advancedSummaryLine.textContent = `Build ${displayBuildVersion} • Release checks not run`;
+      advancedSummaryLine.textContent = "Support bundle and reset tools";
+    }
+    const aboutSummaryLine = document.getElementById("aboutSummaryLine");
+    if (aboutSummaryLine) {
+      aboutSummaryLine.textContent = `Build ${displayBuildVersion} • Support available`;
     }
 
     if (installModel) {
       if (installModePill) installModePill.textContent = installModel.statusPill;
       if (installModeLine) installModeLine.textContent = installModel.statusLine;
       if (installStatusHint) installStatusHint.textContent = installModel.statusHint;
-      if (installSummaryLine) installSummaryLine.textContent = `${installModel.statusPill} • ${installModel.statusHint}`;
+      if (installSummaryLine) {
+        const installActionState = installModel.actionEnabled && installModel.showAction ? "Action needed" : "No action needed";
+        installSummaryLine.textContent = `${installModel.statusPill} • ${installActionState}`;
+      }
       if (installWhyLine) installWhyLine.innerHTML = `<b>${escapeSettingsHtml(installModel.whyTitle)}</b> ${escapeSettingsHtml(installModel.whyBody)}`;
       if (installStepsLine) installStepsLine.textContent = installModel.stepsLine;
       if (installActionBtn) {
@@ -509,8 +516,8 @@ export function createSettingsScreenOrchestrator({
     } catch (_) {}
 
     supportRecoverySeam.bindBackupRestoreControls();
-    supportRecoverySeam.syncSafetySummaryLine({
-      safetySummaryLine,
+    supportRecoverySeam.syncBackupSummaryLine({
+      backupSummaryLine,
       deletedTripsCount: deletedTrips.length
     });
 
