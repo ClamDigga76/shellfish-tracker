@@ -405,31 +405,25 @@ export function createReportsMetricDetailSeam(deps){
     if(confidence === "suppressed") return " Support note: Comparison stays hidden until both months have usable pounds.";
     return "";
   };
-  const getPplSupportNote = (payload)=> {
-    const confidence = String(payload?.confidenceLabel || payload?.trustLabel || "").toLowerCase();
-    if(confidence === "early") return "Early read from lighter month support.";
-    if(confidence === "weak") return "Light read with thin month support.";
-    if(confidence === "suppressed") return "Comparison stays hidden until both months have usable pounds.";
-    return "";
-  };
-  const getPplDetailSupportNote = (payload, variant = "default")=> {
+  const getPplSupportNoteText = ({ metricKey, payload, surface = "default" } = {})=> {
+    if(metricKey !== "ppl") return "";
     const confidence = String(payload?.confidenceLabel || payload?.trustLabel || "").toLowerCase();
     if(confidence === "early"){
-      if(variant === "context") return "Early read from lighter month support in the compared months.";
-      if(variant === "insight") return "Treat this as an early read until support deepens.";
-      if(variant === "supportMeta") return "Early read: lighter month support in the visible pair.";
+      if(surface === "context") return "Early read from lighter month support in the compared months.";
+      if(surface === "insight") return "Treat this as an early read until support deepens.";
+      if(surface === "supportMeta") return "Early read: lighter month support in the visible pair.";
       return "Early read from lighter month support.";
     }
     if(confidence === "weak"){
-      if(variant === "context") return "Light read with thin month support in the compared months.";
-      if(variant === "insight") return "Treat this as a light read until both months carry stronger pounds support.";
-      if(variant === "supportMeta") return "Light read: thin month support in the visible pair.";
+      if(surface === "context") return "Light read with thin month support in the compared months.";
+      if(surface === "insight") return "Treat this as a light read until both months carry stronger pounds support.";
+      if(surface === "supportMeta") return "Light read: thin month support in the visible pair.";
       return "Light read with thin month support.";
     }
     if(confidence === "suppressed"){
-      if(variant === "context") return "Comparison stays hidden until both months have usable pounds.";
-      if(variant === "insight") return "Comparison unlocks once both visible months have usable pounds.";
-      if(variant === "supportMeta") return "Support requirement: usable pounds in both visible months.";
+      if(surface === "context") return "Comparison stays hidden until both months have usable pounds.";
+      if(surface === "insight") return "Comparison unlocks once both visible months have usable pounds.";
+      if(surface === "supportMeta") return "Support requirement: usable pounds in both visible months.";
       return "Comparison stays hidden until both months have usable pounds.";
     }
     return "";
@@ -560,9 +554,7 @@ export function createReportsMetricDetailSeam(deps){
     const compareContractText = viewModel.compareFoundation.period?.suppressed
       ? (viewModel.compareFoundation.period?.explanation || "")
       : "";
-    const pplSupportNoteText = viewModel.metricKey === "ppl"
-      ? getPplDetailSupportNote(meta.comparePayload, "supportMeta")
-      : "";
+    const pplSupportNoteText = getPplSupportNoteText({ metricKey: viewModel.metricKey, payload: meta.comparePayload, surface: "supportMeta" });
     const supportMetaNote = [compareContractText, pplSupportNoteText].filter(Boolean).join(" ");
     const supportAnalysisText = viewModel.isHomeMetricDetail
       ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
@@ -871,8 +863,8 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Price Per Pound • Compare",
         homeChartTitle: "Price Per Pound",
-        chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getRateLeaderThresholdText()}${getPplDetailSupportNote(primaryPayload, "context") ? ` • ${getPplDetailSupportNote(primaryPayload, "context")}` : ""}`,
-        homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getRateLeaderThresholdText()}${getPplDetailSupportNote(primaryPayload, "context") ? ` • ${getPplDetailSupportNote(primaryPayload, "context")}` : ""}`,
+        chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
+        homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.ppl
@@ -885,8 +877,8 @@ export function createReportsMetricDetailSeam(deps){
               metricKey: "ppl"
             } : null
           ],
-        insight: `Use the compare card and chart to read pricing for the latest matched months without mixing full-range averages.${getPplDetailSupportNote(primaryPayload, "insight") ? ` ${getPplDetailSupportNote(primaryPayload, "insight")}` : ""}`,
-        homeInsight: `Start with compare, then scan monthly pounds and dealer-rate charts for pricing context.${getPplDetailSupportNote(primaryPayload, "insight") ? ` ${getPplDetailSupportNote(primaryPayload, "insight")}` : ""}`
+        insight: `Use the compare card and chart to read pricing for the latest matched months without mixing full-range averages.${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "insight" }) ? ` ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "insight" })}` : ""}`,
+        homeInsight: `Start with compare, then scan monthly pounds and dealer-rate charts for pricing context.${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "insight" }) ? ` ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "insight" })}` : ""}`
       }
     };
     return detailMeta[metricKey] || null;
