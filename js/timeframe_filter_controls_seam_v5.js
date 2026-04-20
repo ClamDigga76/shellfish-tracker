@@ -32,14 +32,19 @@ export function createTimeframeFilterControlsSeam({
     includeAriaSelected = false,
     useRovingTabIndex = false
   } = {}){
+    const activeIdx = items.findIndex((item)=> String(activeKey) === String(item.key));
+    const fallbackTabbableIdx = activeIdx >= 0 ? activeIdx : 0;
     return `
       <div class="segWrap timeframeUnifiedControl ${groupClass}" role="${escapeHtml(role)}" aria-label="${escapeHtml(ariaLabel)}">
-        ${items.map((item)=> {
+        ${items.map((item, idx)=> {
           const isSelected = String(activeKey) === String(item.key);
+          const isTabbable = useRovingTabIndex
+            ? (activeIdx >= 0 ? isSelected : idx === fallbackTabbableIdx)
+            : false;
           const itemAttrs = [];
           if(itemRole) itemAttrs.push(`role="${escapeHtml(String(itemRole))}"`);
           if(includeAriaSelected) itemAttrs.push(`aria-selected="${isSelected ? "true" : "false"}"`);
-          if(useRovingTabIndex) itemAttrs.push(`tabindex="${isSelected ? "0" : "-1"}"`);
+          if(useRovingTabIndex) itemAttrs.push(`tabindex="${isTabbable ? "0" : "-1"}"`);
           return `<button class="chip segBtn ${chipClass} ${isSelected ? "on is-selected" : ""}" ${dataAttr}="${escapeHtml(String(item.key))}" type="button" ${itemAttrs.join(" ")}>${escapeHtml(String(item.label || item.key))}</button>`;
         }).join("")}
       </div>

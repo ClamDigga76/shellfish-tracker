@@ -1,6 +1,7 @@
 export function createReportsBindingsSeam(){
   function bindPresetRangeChips({ root, applyPrimaryReportsFilterSelection, saveState, showToast, renderReportsScreen, includeToast = false }){
-    root?.querySelectorAll?.('.chip[data-rf]').forEach((btn)=>{
+    const presetChips = root?.querySelectorAll?.('.chip[data-rf]') || [];
+    presetChips.forEach((btn)=>{
       btn.onclick = ()=>{
         const key = String(btn.getAttribute('data-rf') || 'YTD');
         applyPrimaryReportsFilterSelection(key);
@@ -8,6 +9,32 @@ export function createReportsBindingsSeam(){
         if(includeToast && typeof showToast === 'function') showToast('Filter updated');
         renderReportsScreen();
       };
+
+      btn.addEventListener('keydown', (event)=>{
+        const tabList = Array.from(root.querySelectorAll('.chip[data-rf]'));
+        const currentIdx = tabList.indexOf(btn);
+        if(currentIdx === -1) return;
+        if(event.key === 'ArrowRight' || event.key === 'ArrowLeft'){
+          event.preventDefault();
+          const direction = event.key === 'ArrowRight' ? 1 : -1;
+          const nextIdx = (currentIdx + direction + tabList.length) % tabList.length;
+          const nextTab = tabList[nextIdx];
+          nextTab?.focus();
+          nextTab?.click();
+          return;
+        }
+        if(event.key === 'Home' || event.key === 'End'){
+          event.preventDefault();
+          const target = event.key === 'Home' ? tabList[0] : tabList[tabList.length - 1];
+          target?.focus();
+          target?.click();
+          return;
+        }
+        if(event.key === 'Enter' || event.key === ' '){
+          event.preventDefault();
+          btn.click();
+        }
+      });
     });
   }
 
