@@ -1,3 +1,5 @@
+import { createChartStorySeam } from "./chart_story_seam_v5.js";
+
 export function createReportsOverviewSectionsSeam(deps){
   const {
     escapeHtml,
@@ -7,6 +9,8 @@ export function createReportsOverviewSectionsSeam(deps){
     buildRollingSeriesFromMonthRows,
     getRollingWindowForMetric
   } = deps;
+
+  const chartStorySeam = createChartStorySeam({ escapeHtml });
 
   const reportsSection = ({ title, intro = "", body, extraClass = "" })=> `
     <section class="reportsSection ${extraClass}">
@@ -40,17 +44,6 @@ export function createReportsOverviewSectionsSeam(deps){
     return `${to2(safeValue)}`;
   };
 
-  const renderChartCard = ({ takeaway, title, subhead, hero, context, canvasId, height = 210 })=> `
-    <div class="chartCard">
-      <div class="chartTakeaway tone-${takeaway.tone}">${escapeHtml(takeaway.text)}</div>
-      <div class="chartTitle">${escapeHtml(title)}</div>
-      <div class="chartSubhead">${escapeHtml(subhead)}</div>
-      <div class="chartHero">${hero}</div>
-      <div class="chartContext">${context}</div>
-      <canvas class="chart" id="${escapeHtml(canvasId)}" height="${height}"></canvas>
-      <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(canvasId)}" hidden>Not enough data in this range yet.</div>
-    </div>
-  `;
 
   function renderNoResultsState(context){
     const { fMode, hasValidRange, hasSavedTrips, quarantinedSupportCopy } = context;
@@ -172,7 +165,8 @@ export function createReportsOverviewSectionsSeam(deps){
       ? { text: "Top dealer still leads this range", tone: "up" }
       : { text: "Dealer mix still building", tone: "steady" };
     return [
-      renderChartCard({
+      chartStorySeam.renderChartStoryCard({
+        mode: "rich",
         takeaway: rollingTripsTakeaway,
         title: "Trips • Rolling",
         subhead: "Line • 3-month rolling trips",
@@ -180,7 +174,8 @@ export function createReportsOverviewSectionsSeam(deps){
         context: `<span class="chartContextValue">${escapeHtml(rollingTrips.currentLabel || "Current window")}</span> • ${escapeHtml(buildRollingDirection(rollingTrips))}`,
         canvasId: "c_roll_trips"
       }),
-      renderChartCard({
+      chartStorySeam.renderChartStoryCard({
+        mode: "rich",
         takeaway: rollingPoundsTakeaway,
         title: "Pounds • Rolling",
         subhead: "Line • 3-month rolling pounds",
@@ -188,7 +183,8 @@ export function createReportsOverviewSectionsSeam(deps){
         context: `<span class="chartContextValue">${escapeHtml(rollingPounds.currentLabel || "Current window")}</span> • ${escapeHtml(buildRollingDirection(rollingPounds))}`,
         canvasId: "c_roll_lbs"
       }),
-      renderChartCard({
+      chartStorySeam.renderChartStoryCard({
+        mode: "rich",
         takeaway: rollingAmountTakeaway,
         title: "Amount • Rolling",
         subhead: "Line • 3-month rolling payout",
@@ -196,7 +192,8 @@ export function createReportsOverviewSectionsSeam(deps){
         context: `<span class="chartContextValue">${escapeHtml(rollingAmount.currentLabel || "Current window")}</span> • ${escapeHtml(buildRollingDirection(rollingAmount))}`,
         canvasId: "c_roll_amount"
       }),
-      renderChartCard({
+      chartStorySeam.renderChartStoryCard({
+        mode: "rich",
         takeaway: rollingPplTakeaway,
         title: "Price Per Pound • Rolling",
         subhead: "Line • 3-month rolling Price Per Pound",
@@ -204,7 +201,8 @@ export function createReportsOverviewSectionsSeam(deps){
         context: `<span class="chartContextValue">${escapeHtml(rollingPpl.currentLabel || "Current window")}</span> • ${escapeHtml(buildRollingDirection(rollingPpl))}`,
         canvasId: "c_roll_ppl"
       }),
-      renderChartCard({
+      chartStorySeam.renderChartStoryCard({
+        mode: "rich",
         takeaway: amountPerTripTakeaway,
         title: "Amount/Trip • Monthly",
         subhead: "Bars • average payout per trip",
@@ -212,7 +210,8 @@ export function createReportsOverviewSectionsSeam(deps){
         context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
         canvasId: "c_amount_per_trip"
       }),
-      renderChartCard({
+      chartStorySeam.renderChartStoryCard({
+        mode: "rich",
         takeaway: dealerRateTakeaway,
         title: "Price Per Pound • Dealer",
         subhead: "Bars • dealer Price Per Pound",
@@ -221,7 +220,8 @@ export function createReportsOverviewSectionsSeam(deps){
         canvasId: "c_dealer_rate",
         height: 220
       }),
-      renderChartCard({
+      chartStorySeam.renderChartStoryCard({
+        mode: "rich",
         takeaway: dealerAmountTakeaway,
         title: "Amount • Dealer",
         subhead: "Bars • total payout by dealer",
