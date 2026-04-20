@@ -77,7 +77,10 @@ export function createReportsShellControlsSeam(deps){
             chipClass: "reportsPrimaryFilterChip",
             groupClass: "reportsTimeframeControl reportsPrimaryFilterBar",
             ariaLabel: "Reports quick range filters",
-            role: "tablist"
+            role: "tablist",
+            itemRole: "tab",
+            includeAriaSelected: true,
+            useRovingTabIndex: true
           })}
       </section>
 

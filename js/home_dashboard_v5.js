@@ -46,6 +46,34 @@ export function createHomeDashboardRenderer({
     if (!Array.isArray(state.homeFilter.customRangeCorrectionMessages)) state.homeFilter.customRangeCorrectionMessages = [];
   }
 
+
+  function renderHomeTimeframeControls({ mode = "YTD", homeFilter = {} } = {}){
+    const fMode = String(mode || "YTD").toUpperCase();
+    const correctionMessages = Array.isArray(homeFilter.customRangeCorrectionMessages)
+      ? homeFilter.customRangeCorrectionMessages
+      : [];
+    return `
+      ${timeframeFilterControls.renderPresetChipRow({
+        items: timeframeFilterControls.HOME_PRESET_FILTER_ITEMS,
+        activeKey: fMode,
+        dataAttr: "data-hf",
+        ariaLabel: "Home timeframe filter"
+      })}
+      ${timeframeFilterControls.renderCustomRangeRow({
+        mode: fMode,
+        fromValue: homeFilter.from,
+        toValue: homeFilter.to,
+        fromId: "homeRangeFrom",
+        toId: "homeRangeTo",
+        applyId: "homeRangeApply"
+      })}
+      ${timeframeFilterControls.renderCorrectionMessages({
+        mode: fMode,
+        messages: correctionMessages,
+        className: "homeRangeCorrectionNote"
+      })}
+    `;
+  }
   function fitHomeKpiValues() {
     const root = getApp();
     if (!root) return;
@@ -98,7 +126,6 @@ export function createHomeDashboardRenderer({
     ensureHomeFilter();
     const hf = state.homeFilter || { mode: "YTD", from: "", to: "" };
     const unified = buildUnifiedFilterFromHomeFilter(hf);
-    const homeCustomCorrectionMessages = Array.isArray(hf.customRangeCorrectionMessages) ? hf.customRangeCorrectionMessages : [];
     const trips = applyUnifiedTripFilter(tripsAll, unified).rows;
     const reportsAgg = typeof buildReportsAggregationForTrips === "function"
       ? buildReportsAggregationForTrips(trips)
@@ -352,25 +379,7 @@ export function createHomeDashboardRenderer({
             <button class="btn homeInsightsEntryBtn" id="homeOpenInsights" type="button">Insights</button>
           </div>
           <div class="homeFilterStack">
-            ${timeframeFilterControls.renderPresetChipRow({
-              items: timeframeFilterControls.HOME_PRESET_FILTER_ITEMS,
-              activeKey: f,
-              dataAttr: "data-hf",
-              ariaLabel: "Home timeframe filter"
-            })}
-            ${timeframeFilterControls.renderCustomRangeRow({
-              mode: f,
-              fromValue: hf.from,
-              toValue: hf.to,
-              fromId: "homeRangeFrom",
-              toId: "homeRangeTo",
-              applyId: "homeRangeApply"
-            })}
-            ${timeframeFilterControls.renderCorrectionMessages({
-              mode: f,
-              messages: homeCustomCorrectionMessages,
-              className: "homeRangeCorrectionNote"
-            })}
+            ${renderHomeTimeframeControls({ mode: f, homeFilter: hf })}
           </div>
         </section>
 
