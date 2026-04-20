@@ -86,7 +86,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
   pplByMonth: Object.freeze({
     chartId: "pplByMonth",
     datasetKey: "monthRows",
-    chartType: "time-series",
+    chartType: "month-line",
     metricKey: "ppl",
     valueKey: "avg",
     title: "Average Price Per Pound by month",
@@ -113,7 +113,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
   amountPerTripByMonth: Object.freeze({
     chartId: "amountPerTripByMonth",
     datasetKey: "monthRows",
-    chartType: "time-series",
+    chartType: "month-line",
     metricKey: "amount",
     valueKey: "amountPerTrip",
     title: "Average Amount Per Trip by month",
@@ -122,7 +122,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
   poundsPerTripByMonth: Object.freeze({
     chartId: "poundsPerTripByMonth",
     datasetKey: "monthRows",
-    chartType: "time-series",
+    chartType: "month-line",
     metricKey: "pounds",
     valueKey: "poundsPerTrip",
     title: "Average Pounds Per Trip by month",
@@ -170,7 +170,7 @@ function buildMonthSeriesChart({ definition, rows }) {
   const valueKey = String(definition?.valueKey || "");
   const safeRows = normalizeChronologicalRows(Array.isArray(rows) ? rows : []);
   return {
-    chartType: "time-series",
+    chartType: String(definition?.chartType || "time-series"),
     metricKey: String(definition?.metricKey || ""),
     basisLabel: String(definition?.basisLabel || "Visible range"),
     monthKeys: safeRows.map((row) => String(row?.monthKey || "")),
@@ -201,7 +201,7 @@ export function buildHomeSharedChartModel({
     ? monthRows
     : (definition.datasetKey === "dealerRows" ? dealerRows : areaRows);
   const rankedDataset = definition.rateRanked ? applyRateRankingThreshold(dataset) : dataset;
-  if (definition.chartType === "time-series") {
+  if (definition.chartType === "time-series" || definition.chartType === "month-line") {
     return buildMonthSeriesChart({ definition, rows: rankedDataset });
   }
   return buildTopRowsChart({

@@ -44,12 +44,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const sparse = safeCount > 0 && safeCount <= 3;
     const dense = safeCount >= 10;
     const rolling = chartKind === "rolling-line";
+    const line = chartKind === "rolling-line" || chartKind === "month-line";
     const monthLabels = labelType === "month";
     const compareLabels = labelType === "compare";
     return {
       sparse,
       dense,
       rolling,
+      line,
       monthLabels,
       compareLabels,
       mode
@@ -66,13 +68,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const bottomBase = isHomeInsights ? (compact ? 46 : 50) : (compact ? 54 : 58);
     const left = leftBase + (profile.dense && !compact ? -2 : 0);
     const right = rightBase + (profile.sparse ? (compact ? 4 : 6) : 0) + (profile.dense ? -2 : 0);
-    const top = topBase + (profile.rolling ? (compact ? 4 : 6) : 0) + (profile.sparse && !profile.rolling ? 2 : 0);
+    const top = topBase + (profile.line ? (compact ? 4 : 6) : 0) + (profile.sparse && !profile.line ? 2 : 0);
     const bottom = Math.max(
       compact ? 40 : 44,
       bottomBase
         + (profile.compareLabels && profile.sparse ? (compact ? 3 : 6) : 0)
         + (profile.monthLabels && profile.dense ? (compact ? -8 : -10) : 0)
-        + (profile.rolling ? (compact ? 2 : 4) : 0)
+        + (profile.line ? (compact ? 2 : 4) : 0)
     );
     return {
       compact,
@@ -624,7 +626,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     if(!c) return false;
     const { canvas, ctx, w, h } = c;
     const frame = chartFrame(w,h, options.frameMode || "default", {
-      chartKind: "rolling-line",
+      chartKind: options.chartKind || "rolling-line",
       pointCount: values.length,
       labelType: options.xLabelType || "month"
     });
@@ -691,6 +693,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return true;
   }
 
+
+  function drawMonthLineChart(canvasId, values, labels, metricKey, options = {}){
+    return drawRollingLineChart(canvasId, values, labels, metricKey, {
+      ...options,
+      chartKind: "month-line"
+    });
+  }
+
   function resolveMetricDetailPalette(metricKey){
     if(metricKey === "amount") return { color: palette.money, yFormatter: formatCompactMoney, topFormatter: formatShortMoney };
     if(metricKey === "ppl") return { color: palette.ppl, yFormatter: formatShortMoney, topFormatter: formatShortMoney };
@@ -723,6 +733,26 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         xLabelType: "month",
         frameMode
       });
+      return true;
+    }
+    if(chartModel.chartType === "month-line"){
+      const chronologicalSeries = normalizeChronologicalSeries({
+        monthKeys: Array.isArray(chartModel?.monthKeys) ? chartModel.monthKeys : [],
+        labels: Array.isArray(chartModel?.labels) ? chartModel.labels : [],
+        values: Array.isArray(chartModel?.values) ? chartModel.values : []
+      });
+      drawMonthLineChart(
+        canvasId,
+        chronologicalSeries.values.map((v)=> Number(v) || 0),
+        chronologicalSeries.labels.map((v)=> String(v || "")),
+        metricKey || chartModel?.metricKey || "amount",
+        {
+          xLabelType: "month",
+          frameMode,
+          emptyStateEnabled,
+          emptyMessage: drawOptions?.emptyMessage
+        }
+      );
       return true;
     }
     if(chartModel.chartType === "rolling-line"){
