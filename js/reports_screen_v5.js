@@ -200,6 +200,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       applyPrimaryReportsFilterSelection,
       saveState,
       showToast,
+      queueReportsFocusIntent,
       renderReportsScreen,
       includeToast: true
     });
@@ -391,6 +392,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     root: getApp(),
     applyPrimaryReportsFilterSelection,
     saveState,
+    queueReportsFocusIntent,
     renderReportsScreen
   });
 

@@ -1,13 +1,19 @@
 export function createReportsBindingsSeam(){
-  function bindPresetRangeChips({ root, applyPrimaryReportsFilterSelection, saveState, showToast, renderReportsScreen, includeToast = false }){
+  function bindPresetRangeChips({ root, applyPrimaryReportsFilterSelection, saveState, showToast, renderReportsScreen, queueReportsFocusIntent, includeToast = false }){
     const presetChips = root?.querySelectorAll?.('.chip[data-rf]') || [];
     presetChips.forEach((btn)=>{
-      btn.onclick = ()=>{
-        const key = String(btn.getAttribute('data-rf') || 'YTD');
+      const activatePreset = (key)=>{
+        if(typeof queueReportsFocusIntent === 'function'){
+          queueReportsFocusIntent({ type: 'preset-range-tab', key });
+        }
         applyPrimaryReportsFilterSelection(key);
         saveState();
         if(includeToast && typeof showToast === 'function') showToast('Filter updated');
         renderReportsScreen();
+      };
+      btn.onclick = ()=>{
+        const key = String(btn.getAttribute('data-rf') || 'YTD');
+        activatePreset(key);
       };
 
       btn.addEventListener('keydown', (event)=>{
@@ -19,15 +25,15 @@ export function createReportsBindingsSeam(){
           const direction = event.key === 'ArrowRight' ? 1 : -1;
           const nextIdx = (currentIdx + direction + tabList.length) % tabList.length;
           const nextTab = tabList[nextIdx];
-          nextTab?.focus();
-          nextTab?.click();
+          const key = String(nextTab?.getAttribute('data-rf') || 'YTD');
+          activatePreset(key);
           return;
         }
         if(event.key === 'Home' || event.key === 'End'){
           event.preventDefault();
           const target = event.key === 'Home' ? tabList[0] : tabList[tabList.length - 1];
-          target?.focus();
-          target?.click();
+          const key = String(target?.getAttribute('data-rf') || 'YTD');
+          activatePreset(key);
           return;
         }
         if(event.key === 'Enter' || event.key === ' '){
