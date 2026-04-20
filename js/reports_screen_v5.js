@@ -167,22 +167,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     areas: state.areas
   });
 
-  const detailSurfaceClass = isHomeMetricDetail ? "homeMetricDetail" : "reportsMetricDetail";
-  const detailCardClass = isHomeMetricDetail ? "homeMetricDetailCard" : "reportsMetricDetailCard";
-  const detailBackClass = isHomeMetricDetail ? "homeMetricBackBtn" : "reportsMetricBackBtn";
-  const detailEyebrowClass = isHomeMetricDetail ? "homeMetricEyebrow" : "reportsMetricEyebrow";
-  const detailTitleClass = isHomeMetricDetail ? "homeMetricTitle" : "reportsMetricTitle";
-  const detailContextClass = isHomeMetricDetail ? "homeMetricContext" : "reportsMetricContext";
-  const detailHeroWrapClass = isHomeMetricDetail ? "homeMetricHeroWrap" : "reportsMetricHeroWrap";
-  const detailHeroLabelClass = isHomeMetricDetail ? "homeMetricHeroLabel" : "reportsMetricHeroLabel";
-  const detailHeroValueClass = isHomeMetricDetail ? "homeMetricHeroValue" : "reportsMetricHeroValue";
-  const detailCompareClass = isHomeMetricDetail ? "homeMetricCompare" : "reportsMetricCompare";
-  const detailCompareTextClass = isHomeMetricDetail ? "homeMetricCompareText" : "reportsMetricCompareText";
-  const detailCompareRowsClass = isHomeMetricDetail ? "homeMetricCompareRows" : "reportsMetricCompareRows";
-  const detailChartClass = isHomeMetricDetail ? "homeMetricChartBlock" : "reportsMetricChartBlock";
-  const detailChartContextClass = isHomeMetricDetail ? "homeMetricChartContext" : "reportsMetricChartContext";
-  const detailInsightClass = isHomeMetricDetail ? "homeMetricInsight" : "reportsMetricInsight";
-
   const renderNoResultsState = ()=> reportsOverviewSections.renderNoResultsState({
     fMode,
     hasValidRange,
@@ -286,7 +270,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
   });
   const {
     buildMetricDetailView,
-    buildMetricDetailChartConfig
+    buildMetricDetailChartConfig,
+    resolveMetricDetailSurfaceMode
   } = reportsMetricDetailSeam;
 
   const seasonalityFoundation = isHomeMetricDetail
@@ -345,21 +330,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       rangeLabel,
       trips,
       homeScope: routeContext?.homeScope || null,
-      detailSurfaceClass,
-      detailCardClass,
-      detailBackClass,
-      detailEyebrowClass,
-      detailTitleClass,
-      detailContextClass,
-      detailHeroWrapClass,
-      detailHeroLabelClass,
-      detailHeroValueClass,
-      detailCompareClass,
-      detailCompareTextClass,
-      detailCompareRowsClass,
-      detailChartClass,
-      detailChartContextClass,
-      detailInsightClass
+      surfaceMode: resolveMetricDetailSurfaceMode({ isHomeMetricDetail })
     }
     : null;
 
