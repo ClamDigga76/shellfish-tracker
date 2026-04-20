@@ -43,15 +43,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const safeCount = Math.max(0, Number(pointCount) || 0);
     const sparse = safeCount > 0 && safeCount <= 3;
     const dense = safeCount >= 10;
-    const rolling = chartKind === "rolling-line";
-    const line = chartKind === "rolling-line" || chartKind === "month-line";
+    const rolling = chartKind === "rolling";
     const monthLabels = labelType === "month";
     const compareLabels = labelType === "compare";
     return {
       sparse,
       dense,
       rolling,
-      line,
       monthLabels,
       compareLabels,
       mode
@@ -68,13 +66,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const bottomBase = isHomeInsights ? (compact ? 46 : 50) : (compact ? 54 : 58);
     const left = leftBase + (profile.dense && !compact ? -2 : 0);
     const right = rightBase + (profile.sparse ? (compact ? 4 : 6) : 0) + (profile.dense ? -2 : 0);
-    const top = topBase + (profile.line ? (compact ? 4 : 6) : 0) + (profile.sparse && !profile.line ? 2 : 0);
+    const top = topBase + (profile.sparse ? 2 : 0);
     const bottom = Math.max(
       compact ? 40 : 44,
       bottomBase
         + (profile.compareLabels && profile.sparse ? (compact ? 3 : 6) : 0)
         + (profile.monthLabels && profile.dense ? (compact ? -8 : -10) : 0)
-        + (profile.line ? (compact ? 2 : 4) : 0)
     );
     return {
       compact,
@@ -617,88 +614,23 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return Math.max(relativeExtra, minimumExtra);
   }
 
-  function drawRollingLineChart(canvasId, values, labels, metricKey, options = {}){
+  function drawRollingBarChart(canvasId, values, labels, metricKey, options = {}){
     const showEmptyState = options?.emptyStateEnabled === true
       && !values.some((value)=> Number.isFinite(Number(value)) && Number(value) > 0);
     toggleChartEmptyState(canvasId, showEmptyState, options?.emptyMessage);
     if(showEmptyState) return true;
-    const c = setupCanvas(document.getElementById(canvasId));
-    if(!c) return false;
-    const { canvas, ctx, w, h } = c;
-    const frame = chartFrame(w,h, options.frameMode || "default", {
-      chartKind: options.chartKind || "rolling-line",
-      pointCount: values.length,
-      labelType: options.xLabelType || "month"
-    });
     const paletteSet = resolveMetricDetailPalette(metricKey);
     const topValue = Math.max(...values, metricKey === "trips" ? 1 : 0);
-    const yScale = niceScale(Math.max(topValue, 1), 4);
-    renderAnimatedChart(canvas, values, (animatedVals, alpha)=> {
-      clear(ctx,w,h);
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = palette.plotBg;
-      ctx.fillRect(frame.left, frame.top, w - frame.left - frame.right, h - frame.top - frame.bottom);
-      const geom = drawAxes(ctx,w,h,frame);
-      const points = animatedVals.map((rawValue, index)=> {
-        const safe = Math.max(0, Number(rawValue) || 0);
-        const x = geom.x0 + ((geom.plotW * index) / Math.max(1, animatedVals.length - 1));
-        const y = geom.y0 - ((safe / Math.max(1, yScale.top)) * geom.plotH);
-        return { x, y, value: safe };
-      });
-
-      ctx.strokeStyle = paletteSet.color;
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      points.forEach((pt, index)=> {
-        if(index === 0) ctx.moveTo(pt.x, pt.y);
-        else ctx.lineTo(pt.x, pt.y);
-      });
-      ctx.stroke();
-
-      points.forEach((pt, index)=> {
-        const isCurrent = index === points.length - 1;
-        ctx.beginPath();
-        ctx.fillStyle = isCurrent ? "#ffffff" : paletteSet.color;
-        ctx.strokeStyle = paletteSet.color;
-        ctx.lineWidth = isCurrent ? 2.2 : 1.6;
-        ctx.arc(pt.x, pt.y, isCurrent ? 4.6 : 3.1, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-      });
-
-      const currentPoint = points[points.length - 1];
-      if(currentPoint){
-        drawPointValueChip(ctx, paletteSet.yFormatter(currentPoint.value), currentPoint.x, currentPoint.y, {
-          minX: geom.x0 + 2,
-          maxX: geom.xRight - 2,
-          minY: frame.top + 2,
-          maxY: geom.y0 - 2
-        });
-      }
-
-      drawBottomTicks(ctx, labels, geom, h-10, frame, {
-        alignMode: "index",
-        labelType: options.xLabelType || "month",
-        maxTicks: options.maxTicks || 0
-      });
-      const yLabels = [];
-      for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
-        yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: paletteSet.yFormatter(v) });
-      }
-      drawYTickLabels(ctx, geom, frame, yLabels);
-      drawYLabel(ctx, paletteSet.topFormatter(topValue), frame);
-      ctx.restore();
+    drawBarChart(canvasId, values, labels, paletteSet.color, paletteSet.yFormatter, paletteSet.topFormatter(topValue), {
+      minTop: metricKey === "trips" ? 1 : 0,
+      minBarWidth: frameMinBarWidth(labels.length),
+      barPad: (frame)=> frame.compact ? 0.8 : 1.2,
+      xLabelType: options.xLabelType || "month",
+      frameMode: options.frameMode || "default",
+      emptyStateEnabled: options?.emptyStateEnabled === true,
+      emptyMessage: options?.emptyMessage
     });
     return true;
-  }
-
-
-  function drawMonthLineChart(canvasId, values, labels, metricKey, options = {}){
-    return drawRollingLineChart(canvasId, values, labels, metricKey, {
-      ...options,
-      chartKind: "month-line"
-    });
   }
 
   function resolveMetricDetailPalette(metricKey){
@@ -735,33 +667,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       });
       return true;
     }
-    if(chartModel.chartType === "month-line"){
+    if(chartModel.chartType === "month-line" || chartModel.chartType === "rolling-line"){
       const chronologicalSeries = normalizeChronologicalSeries({
         monthKeys: Array.isArray(chartModel?.monthKeys) ? chartModel.monthKeys : [],
         labels: Array.isArray(chartModel?.labels) ? chartModel.labels : [],
         values: Array.isArray(chartModel?.values) ? chartModel.values : []
       });
-      drawMonthLineChart(
-        canvasId,
-        chronologicalSeries.values.map((v)=> Number(v) || 0),
-        chronologicalSeries.labels.map((v)=> String(v || "")),
-        metricKey || chartModel?.metricKey || "amount",
-        {
-          xLabelType: "month",
-          frameMode,
-          emptyStateEnabled,
-          emptyMessage: drawOptions?.emptyMessage
-        }
-      );
-      return true;
-    }
-    if(chartModel.chartType === "rolling-line"){
-      const chronologicalSeries = normalizeChronologicalSeries({
-        monthKeys: Array.isArray(chartModel?.monthKeys) ? chartModel.monthKeys : [],
-        labels: Array.isArray(chartModel?.labels) ? chartModel.labels : [],
-        values: Array.isArray(chartModel?.values) ? chartModel.values : []
-      });
-      drawRollingLineChart(
+      drawRollingBarChart(
         canvasId,
         chronologicalSeries.values.map((v)=> Number(v) || 0),
         chronologicalSeries.labels.map((v)=> String(v || "")),
@@ -1004,7 +916,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   rollingMetricCards.forEach(({ canvasId, metricKey })=> {
     if(!document.getElementById(canvasId)) return;
     const chartModel = rollingModelsByMetric[metricKey];
-    if(chartModel?.chartType !== "rolling-line") return;
+    if(chartModel?.chartType !== "time-series") return;
     drawMetricDetailChart(canvasId, chartModel, metricKey, {
       emptyStateEnabled: true
     });

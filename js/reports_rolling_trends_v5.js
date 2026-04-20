@@ -55,7 +55,7 @@ export function buildRollingSeriesFromMonthRows({ monthRows, metricKey, windowSi
   const previous = rollingRows[rollingRows.length - 2] || null;
 
   return {
-    chartType: "rolling-line",
+    chartType: "time-series",
     metricKey,
     windowSize: safeWindow,
     basisLabel,
@@ -70,7 +70,7 @@ export function buildRollingSeriesFromMonthRows({ monthRows, metricKey, windowSi
 }
 
 export function describeRollingContext({ chartModel, metricKey, compareTone } = {}){
-  if(!chartModel || chartModel.chartType !== "rolling-line") return "";
+  if(!chartModel || chartModel.chartType !== "time-series" || !(Number(chartModel?.windowSize) >= 2)) return "";
   const values = Array.isArray(chartModel.values) ? chartModel.values.map((value)=> safeNum(value)) : [];
   if(values.length < 2) return "";
   const current = values[values.length - 1];

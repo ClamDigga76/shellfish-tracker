@@ -271,7 +271,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
   return {
     trips: buildHomeCompareBarChart({ labels, metricKey: "trips", currentValue: period?.current?.trips, previousValue: period?.previous?.trips }),
     tripsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
-    tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip", chartType: "month-line" }),
+    tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
     tripsAreaMix: buildHomeTopRowsBarChart({
       rows: areaRowsByTrips,
       metricKey: "trips",
@@ -816,7 +816,7 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.tripsRollingTrend ? {
               title: `Trips • ${detailCharts.tripsRollingTrend.windowSize}-month rolling`,
-              context: "Line • rolling trend with current month marked",
+              context: "Bars • rolling trend with current month highlighted",
               canvasId: "c_trips_rolling_trend",
               chartModel: detailCharts.tripsRollingTrend,
               metricKey: "trips"
@@ -845,7 +845,7 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.poundsRollingTrend ? {
               title: `Pounds • ${detailCharts.poundsRollingTrend.windowSize}-month rolling`,
-              context: "Line • rolling trend with current month marked",
+              context: "Bars • rolling trend with current month highlighted",
               canvasId: "c_pounds_rolling_trend",
               chartModel: detailCharts.poundsRollingTrend,
               metricKey: "pounds"
@@ -874,7 +874,7 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.amountRollingTrend ? {
               title: `Amount • ${detailCharts.amountRollingTrend.windowSize}-month rolling`,
-              context: "Line • rolling trend with current month marked",
+              context: "Bars • rolling trend with current month highlighted",
               canvasId: "c_amount_rolling_trend",
               chartModel: detailCharts.amountRollingTrend,
               metricKey: "amount"
@@ -915,7 +915,7 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.pplRollingTrend ? {
               title: `Price Per Pound • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
-              context: `Line • rolling trend with current month marked • ${getRateLeaderThresholdText()}`,
+              context: `Bars • rolling trend with current month highlighted • ${getRateLeaderThresholdText()}`,
               canvasId: "c_ppl_rolling_trend",
               chartModel: detailCharts.pplRollingTrend,
               metricKey: "ppl"
