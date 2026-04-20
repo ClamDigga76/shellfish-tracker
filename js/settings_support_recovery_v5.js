@@ -76,16 +76,26 @@ export function createSettingsSupportRecoverySeam(deps) {
       `;
   }
 
-  function syncBackupSummaryLine({ backupSummaryLine, deletedTripsCount }) {
+  function syncBackupSummaryLine({ backupSummaryLine, backupStatusPill, deletedTripsCount }) {
     if (!backupSummaryLine) return;
     const lastBackupLineEl = document.getElementById("lastBackupLine");
     const rollbackLineEl = document.getElementById("restoreRollbackLine");
     const backupText = String(lastBackupLineEl?.textContent || "").trim() || "Backup status available";
     const rollbackText = String(rollbackLineEl?.textContent || "").trim();
+    const normalizedBackupText = backupText.toLowerCase();
+    const relativeDayMatch = normalizedBackupText.match(/(\d+)\s*d(?:ay)?s?\s*ago/);
+    const freshnessLabel = normalizedBackupText.includes("today")
+      ? "Today"
+      : normalizedBackupText.includes("never")
+        ? "Needs backup"
+        : (relativeDayMatch ? `${relativeDayMatch[1]}d ago` : "Checking");
     const summaryParts = [backupText];
-    if (rollbackText) summaryParts.push(rollbackText);
-    summaryParts.push(`Recently deleted: ${deletedTripsCount}`);
+    if (rollbackText) summaryParts.push("Rollback ready");
+    summaryParts.push(`${deletedTripsCount} deleted`);
     backupSummaryLine.textContent = summaryParts.join(" • ");
+    if (backupStatusPill) {
+      backupStatusPill.textContent = freshnessLabel;
+    }
   }
 
   function bindBackupRestoreControls() {
@@ -335,7 +345,7 @@ export function createSettingsSupportRecoverySeam(deps) {
       if (latestReleaseSnapshot?.summary?.updateAligned === false) status += " • Version alignment warning";
       if (latestReleaseSnapshot?.summary?.recoveryReady) status += " • Recovery attention signal";
       releaseSummaryEl.textContent = status;
-      if (advancedSummaryLine) advancedSummaryLine.textContent = "Support bundle and reset tools";
+      if (advancedSummaryLine) advancedSummaryLine.textContent = "Release checks and reset tools";
     }
 
     async function hydrateReleaseValidationSurface() {
