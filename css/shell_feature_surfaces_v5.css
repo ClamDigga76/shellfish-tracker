@@ -185,9 +185,8 @@
 /* Settings grouped-list polish (P3) */
 .settingsGroupBlock{margin-bottom:var(--card-stack-gap)}
 .settingsJumpNavCard{margin-top:var(--section-gap-tight);margin-bottom:var(--section-gap-tight);padding:10px 11px}
-.settingsJumpNavRow{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.settingsJumpNavRow::-webkit-scrollbar{display:none}
-.settingsJumpChip{white-space:nowrap;flex:0 0 auto}
+.settingsJumpHub{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.settingsJumpChip{width:100%;justify-content:center;white-space:normal}
 .settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px var(--card-title-gap)}
 .settingsSectionCard.settingsGroupedCard{margin-bottom:0;padding:0;overflow:hidden}
 .settingsAccordionCard{border-radius:16px}
@@ -249,6 +248,7 @@
 .settingsEmail{color:var(--text);text-decoration:underline}
 
 @media (max-width:380px){
+  .settingsJumpHub{grid-template-columns:1fr}
   .settingsRow--split{align-items:flex-start;flex-direction:column}
   .settingsAccordionStatus{white-space:normal}
   .settingsSelectWrap{max-width:none;margin-left:0}
