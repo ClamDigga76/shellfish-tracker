@@ -156,10 +156,10 @@ function buildHomeCompareBarChart({ labels, metricKey, currentValue, previousVal
   };
 }
 
-function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel = "Visible range" }){
+function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel = "Visible range", chartType = "time-series" }){
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows : []);
   return {
-    chartType: "time-series",
+    chartType: String(chartType || "time-series"),
     metricKey,
     basisLabel,
     monthKeys: safeMonths.map((row)=> String(row?.monthKey || "")),
@@ -228,7 +228,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
   return {
     trips: buildHomeCompareBarChart({ labels, metricKey: "trips", currentValue: period?.current?.trips, previousValue: period?.previous?.trips }),
     tripsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
-    tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
+    tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip", chartType: "month-line" }),
     tripsAreaMix: buildHomeTopRowsBarChart({
       rows: areaRowsByTrips,
       metricKey: "trips",
@@ -247,7 +247,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
     }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
     poundsMonthlyTrend: buildHomeSharedChartModel({ chartId: "poundsByMonth", monthRows: safeMonths, dealerRows, areaRows }),
-    poundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
+    poundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip", chartType: "month-line" }),
     poundsDealerMix: buildHomeTopRowsBarChart({
       rows: dealerRowsByPounds,
       metricKey: "pounds",
