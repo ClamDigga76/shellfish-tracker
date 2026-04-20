@@ -1,5 +1,6 @@
 import { buildHomeSharedChartModel, getHomeSharedChartDefinition } from "./reports_chart_definitions_v5.js";
 import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_seam_v5.js";
+import { createChartStorySeam } from "./chart_story_seam_v5.js";
 
 export function createHomeDashboardRenderer({
   state,
@@ -34,6 +35,7 @@ export function createHomeDashboardRenderer({
     parseReportDateToISO,
     formatDateDMY
   });
+  const chartStorySeam = createChartStorySeam({ escapeHtml });
 
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
@@ -319,15 +321,6 @@ export function createHomeDashboardRenderer({
         { chartId: "amountPerTripByMonth", canvasId: "homeInsightsAmountPerTripByMonth" },
         { chartId: "poundsPerTripByMonth", canvasId: "homeInsightsPoundsPerTripByMonth" }
       ];
-      const chartCard = ({ id, title, explanation, context = "" }) => `
-        <article class="card chartCard homeInsightsChartCard">
-          <h3 class="chartTitle">${escapeHtml(title)}</h3>
-          <p class="homeInsightsChartExplanation">${escapeHtml(explanation)}</p>
-          ${context ? `<div class="chartContext">${escapeHtml(context)}</div>` : ""}
-          <canvas class="chart" id="${escapeHtml(id)}" height="256"></canvas>
-          <div class="homeInsightsChartEmpty" data-chart-empty-for="${escapeHtml(id)}" hidden>Not enough data in this range yet.</div>
-        </article>
-      `;
       const chartDeck = homeInsightsCharts.map(({ chartId, canvasId }) => {
         const definition = getHomeSharedChartDefinition(chartId);
         return {
@@ -351,7 +344,15 @@ export function createHomeDashboardRenderer({
           <div class="reportsChartsStack homeInsightsChartStack">
             ${homeInsightsCharts.map(({ chartId, canvasId }) => {
               const definition = getHomeSharedChartDefinition(chartId) || {};
-              return chartCard({ id: canvasId, title: definition.title || "Chart", explanation: definition.explanation || "" });
+              return chartStorySeam.renderChartStoryCard({
+                mode: "lean",
+                canvasId,
+                title: definition.title || "Chart",
+                explanation: definition.explanation || "",
+                cardTag: "article",
+                cardClass: "card chartCard homeInsightsChartCard",
+                emptyClass: "homeInsightsChartEmpty"
+              });
             }).join("")}
           </div>
         </section>
