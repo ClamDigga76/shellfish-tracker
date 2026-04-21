@@ -139,7 +139,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>Choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</li>
         </ol>
         <div style="margin-top:8px"><b>Tip:</b> If Settings says <b>Browser mode</b>, open the Home Screen icon after install to switch into Installed mode.</div>
-        <div style="margin-top:8px"><b>Need help?</b> Email <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</div>
+        <div style="margin-top:8px"><b>Need help?</b> Email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</div>
       </div>
     </div>
 
@@ -151,7 +151,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>If the app looks stale, open <b>Settings</b> and run <b>Reload latest build</b>. If prompted, run <b>Reset cache &amp; reload</b>.</li>
           <li>Use <b>Settings → Install App</b> for a quick mode check, then follow the install steps above when needed.</li>
           <li>If things still seem off after updating, reopen the app, then check current build vs latest build status again.</li>
-          <li>For support, email <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a>.</li>
+          <li>For support, email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</li>
         </ul>
       </div>
     </div>
@@ -186,7 +186,7 @@ export function renderAboutViewHTML({ renderPageHeader, displayBuildVersion }) {
       <div class="sep"></div>
       <div class="muted small">Build: <b>${displayBuildVersion}</b></div>
       <div class="muted small" style="margin-top:8px">Bank the Catch is a mobile-first shellfish tracking app.</div>
-      <div class="muted small" style="margin-top:6px">Support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+      <div class="muted small" style="margin-top:6px">Support: <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a></div>
       <div class="muted small" style="margin-top:6px">Install and backup guides live in Help.</div>
       <div class="muted small" style="margin-top:6px">Legal: <a class="settingsEmail" href="legal/terms.html">Terms</a> • <a class="settingsEmail" href="legal/privacy.html">Privacy</a> • <a class="settingsEmail" href="legal/license.html">License</a></div>
       <div class="row mt12">
