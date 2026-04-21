@@ -276,10 +276,10 @@ export function createSettingsScreenOrchestrator({
           <div id="buildBadge" class="muted small"></div>
         </div>
         <div class="settingsRow settingsRow--minor">
-          <div class="muted small">Bank the Catch • Created by <b>Jeremy Wood</b></div>
-          <div class="muted small mt6">Support: <a class="settingsEmail" href="mailto:jeremywwood76@gmail.com">jeremywwood76@gmail.com</a></div>
+          <div class="muted small">Bank the Catch • Operated by <b>JMW Legacy LLC.</b></div>
+          <div class="muted small mt6">Support: <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a></div>
           <div class="muted small mt6">Need setup or recovery help? Open the <b>Help guide</b>.</div>
-          <div class="muted small mt8">© 2026 Jeremy Wood. All rights reserved.</div>
+          <div class="muted small mt8">© 2026 JMW Legacy LLC. All rights reserved.</div>
         </div>
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
@@ -292,7 +292,7 @@ export function createSettingsScreenOrchestrator({
           <div class="row gap10 wrap">
             <button class="btn" id="openTerms">Terms of Use</button>
             <button class="btn" id="openPrivacy">Privacy Policy</button>
-            <button class="btn" id="openLicense">Open Source License</button>
+            <button class="btn" id="openLicense">Software License</button>
           </div>
         </div>
       </details>
