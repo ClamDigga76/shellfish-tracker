@@ -222,13 +222,13 @@ main#app.screenTransitionIn{opacity:1;transform:translate3d(0,0,0) scale(1);anim
 .tabbtn[aria-current="page"] span{opacity:1;transform:translateY(3px);letter-spacing:.005em}
 .tabbtn:active{transform:scale(.975);filter:brightness(1.04)}
 .tabbtn:active svg{transform:translateY(0) scale(.99)}
-.tabbtn.plus{flex:0 0 64px;min-width:64px;max-width:64px;padding:0;margin-bottom:0;color:#fff;background:linear-gradient(180deg, rgba(108,156,255,1) 0%, rgba(47,109,246,1) 100%);border-radius:999px;border:1px solid rgba(165,202,255,.58);height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 16px 32px rgba(0,0,0,.44), 0 8px 18px rgba(31,111,235,.24), inset 0 1px 0 rgba(255,255,255,.24);transform:translateY(-3px)}
+.tabbtn.plus{flex:0 0 64px;min-width:64px;max-width:64px;padding:0;margin-bottom:0;color:#fff;background:linear-gradient(180deg, rgba(108,156,255,1) 0%, rgba(47,109,246,1) 100%);border-radius:999px;border:1px solid rgba(165,202,255,.58);height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 26px rgba(0,0,0,.42), 0 7px 16px rgba(31,111,235,.24), inset 0 1px 0 rgba(255,255,255,.24);transform:none}
 .tabbtn.plus::after{display:none}
 .tabbtn.plus svg{width:26px;height:26px;stroke:#fff;opacity:1;filter:none;transform:none}
 .tabbtn.plus span{display:none}
 .tabbtn.plus.active,
-.tabbtn.plus[aria-current="page"]{background:linear-gradient(180deg, rgba(124,168,255,1) 0%, rgba(47,109,246,1) 100%);box-shadow:0 20px 38px rgba(31,111,235,.30), 0 12px 25px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.26)}
-.tabbtn.plus:active{transform:translateY(-2px) scale(.98);filter:brightness(.98)}
+.tabbtn.plus[aria-current="page"]{background:linear-gradient(180deg, rgba(124,168,255,1) 0%, rgba(47,109,246,1) 100%);box-shadow:0 15px 30px rgba(31,111,235,.30), 0 10px 22px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.26)}
+.tabbtn.plus:active{transform:scale(.98);filter:brightness(.98)}
 
 /* Modal shell */
 body.scrollLock{overflow:hidden;overscroll-behavior:none}
