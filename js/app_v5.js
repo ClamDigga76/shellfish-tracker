@@ -444,17 +444,19 @@ const entitlementsSeam = createEntitlementsSeam({
   defaultPlan: ENTITLEMENT_PLANS.FREE
 });
 if(entitlementsSeam.ensurePlanState()) markNeedsBootStateSave();
+const entitlements = Object.freeze({
+  PLANS: ENTITLEMENT_PLANS,
+  FEATURES: ENTITLEMENT_FEATURE_KEYS,
+  getCurrentPlan: () => entitlementsSeam.getCurrentPlan(),
+  getAllowedFeatures: (plan) => entitlementsSeam.getAllowedFeatures(plan),
+  isFeatureAllowed: (featureKey, plan) => entitlementsSeam.isFeatureAllowed(featureKey, plan),
+  ensurePlanState: () => entitlementsSeam.ensurePlanState()
+});
 const themeRuntimeSeam = createThemeRuntimeSeam();
 const applyThemeMode = ()=> themeRuntimeSeam.applyThemeMode(state);
 
 try{
-  window.__SHELLFISH_ENTITLEMENTS__ = {
-    PLANS: ENTITLEMENT_PLANS,
-    FEATURES: ENTITLEMENT_FEATURE_KEYS,
-    getCurrentPlan: () => entitlementsSeam.getCurrentPlan(),
-    getAllowedFeatures: () => entitlementsSeam.getAllowedFeatures(),
-    isFeatureAllowed: (featureKey) => entitlementsSeam.isFeatureAllowed(featureKey)
-  };
+  window.__SHELLFISH_ENTITLEMENTS__ = entitlements;
 }catch(_){ }
 
 applyThemeMode();
