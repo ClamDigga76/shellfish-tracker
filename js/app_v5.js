@@ -622,7 +622,9 @@ const { renderHome } = createHomeDashboardRenderer({
     normalizeDealerDisplay,
     resolveTripArea
   }),
-  drawReportsCharts
+  drawReportsCharts,
+  isFeatureAllowed: (featureKey, plan) => entitlements.isFeatureAllowed(featureKey, plan),
+  entitlementFeatureKeys: entitlements.FEATURES
 });
 
 const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrchestrator({
