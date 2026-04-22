@@ -112,7 +112,7 @@ export function renderTabBar({
     const isActive = t.key === activeKey;
     const ariaCurrent = isActive ? ' aria-current="page"' : "";
     return `
-    <button class="tabbtn ${t.isPlus ? "plus" : ""} ${isActive ? "active" : ""}" type="button" data-tab="${escapeHtml(t.key)}" aria-label="${escapeHtml(t.aria || t.label)}"${ariaCurrent}>
+    <button class="tabbtn ${t.isPlus ? "plus" : "standard"} ${isActive ? "active" : ""}" type="button" data-tab="${escapeHtml(t.key)}" aria-label="${escapeHtml(t.aria || t.label)}"${ariaCurrent}>
       ${iconSvg(t.icon)}
       <span>${escapeHtml(t.label)}</span>
     </button>
