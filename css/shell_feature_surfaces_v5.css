@@ -470,6 +470,7 @@
 }
 .homeOverviewCard .reportsHeroStat{
   padding:11px 12px;
+  position:relative;
 }
 .homeOverviewCard .reportsHeroLabel{
   font-size:10px;
@@ -487,6 +488,22 @@
   font-size:11px;
   line-height:1.3;
   font-weight:700;
+}
+.homeOverviewTrend{
+  position:absolute;
+  right:10px;
+  top:10px;
+  font-size:13px;
+  line-height:1;
+  font-weight:900;
+  opacity:.78;
+  pointer-events:none;
+}
+.homeOverviewTrend--up{
+  color:var(--good);
+}
+.homeOverviewTrend--down{
+  color:var(--bad);
 }
 .kpiGroupLabel{
   margin:var(--card-title-gap) 0 var(--card-body-gap);
