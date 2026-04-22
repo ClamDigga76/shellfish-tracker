@@ -8,7 +8,6 @@ export const ENTITLEMENT_PLANS = Object.freeze({
 
 export const ENTITLEMENT_FEATURE_KEYS = Object.freeze({
   REPORTS: "reports",
-  HOME_INSIGHTS: "homeInsights",
   PREMIUM_KPI_CHARTS: "premiumKpiCharts",
   HOME_CUSTOM_RANGE: "homeCustomRange"
 });
@@ -17,7 +16,6 @@ const PLAN_FEATURES = Object.freeze({
   [ENTITLEMENT_PLAN_FREE]: Object.freeze([]),
   [ENTITLEMENT_PLAN_PAID]: Object.freeze([
     ENTITLEMENT_FEATURE_KEYS.REPORTS,
-    ENTITLEMENT_FEATURE_KEYS.HOME_INSIGHTS,
     ENTITLEMENT_FEATURE_KEYS.PREMIUM_KPI_CHARTS,
     ENTITLEMENT_FEATURE_KEYS.HOME_CUSTOM_RANGE
   ])

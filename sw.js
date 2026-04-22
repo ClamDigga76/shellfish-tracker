@@ -4,6 +4,8 @@
 */
 const SW_V = new URL(self.location.href).searchParams.get("v") || "0";
 const CACHE_VERSION = `v${SW_V}`;
+// Legacy compatibility cache namespace:
+// keep the historical shellfish-tracker prefix to avoid breaking update continuity on existing installs.
 const CACHE_NAME = `shellfish-tracker-${CACHE_VERSION}`;
 
 // Core assets. Keep this list short and stable.
@@ -140,7 +142,7 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
-    // Delete old caches
+    // Delete old caches inside the same legacy compatibility namespace.
     const keys = await caches.keys();
     // Purge prior app caches that use the legacy shellfish-tracker prefix; keep only the current build cache.
     await Promise.all(keys.map((k) => (k.startsWith("shellfish-tracker-v") && k !== CACHE_NAME) ? caches.delete(k) : Promise.resolve()));

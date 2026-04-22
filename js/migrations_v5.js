@@ -1,3 +1,5 @@
+// Legacy compatibility storage seam:
+// keep historical key strings unchanged so upgrades/recovery can still find existing user data.
 export const LS_KEY = "shellfish-state";
 export const LEGACY_KEYS = ["shellfish-v1.5.0", "shellfish-v1.4.2"];
 

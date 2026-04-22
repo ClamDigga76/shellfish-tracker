@@ -9,7 +9,7 @@ export function escapeHtml(s){
     .replaceAll("'","&#039;");
 }
 
-// Shellfish Tracker — V4 ESM Branch
+// Bank the Catch — V4 ESM Branch (legacy seam retained in filename versioning)
 // Phase 2A: Extracted pure utilities (no DOM, no state)
 
 export function uid(prefix=""){

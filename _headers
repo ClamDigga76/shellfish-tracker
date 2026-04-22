@@ -1,4 +1,4 @@
-# Netlify headers for Shellfish Tracker (PWA-friendly)
+# Netlify headers for Bank the Catch (PWA-friendly)
 # Keep HTML/manifest/SW fresh so updates are discovered, while allowing assets to cache.
 
 /index.html
