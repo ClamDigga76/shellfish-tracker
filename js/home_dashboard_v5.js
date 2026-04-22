@@ -181,8 +181,16 @@ export function createHomeDashboardRenderer({
     };
 
     const priorRange = resolvePriorRange({ fromISO: unified.fromISO, toISO: unified.toISO });
-    const priorTrips = priorRange
-      ? applyUnifiedTripFilter(tripsAll, { ...unified, ...priorRange }).rows
+    const priorUnifiedFilter = priorRange
+      ? {
+        ...unified,
+        range: "custom",
+        fromISO: priorRange.fromISO,
+        toISO: priorRange.toISO
+      }
+      : null;
+    const priorTrips = priorUnifiedFilter
+      ? applyUnifiedTripFilter(tripsAll, priorUnifiedFilter).rows
       : [];
     const hasPriorComparison = !!(priorRange && priorTrips.length > 0);
     const priorTotalAmount = priorTrips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
