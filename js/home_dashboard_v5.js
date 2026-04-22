@@ -54,8 +54,7 @@ export function createHomeDashboardRenderer({
       if (String(item?.key || "").toUpperCase() !== "RANGE") return item;
       return {
         ...item,
-        label: "Custom Range",
-        labelHtml: `<span class="timeframeChipMainLabel timeframeChipMainLabelWithIcon"><span class="timeframeChipIcon" aria-hidden="true">📅</span><span>Custom Range</span></span>`
+        label: "Custom Range"
       };
     });
     return `
