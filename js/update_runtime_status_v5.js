@@ -17,8 +17,12 @@ export function createUpdateRuntimeStatusSeam({
   let lastReleaseValidationSnapshot = null;
 
   const UPDATE_SIGNAL_SESSION_KEY = "shellfish-update-signal-v1";
+  const UPDATE_SIGNAL_AT_SESSION_KEY = "shellfish-update-signal-at-v1";
+  const REGISTRATION_SIGNAL_SESSION_KEY = "shellfish-registration-signal-v1";
+  const REGISTRATION_SIGNAL_AT_SESSION_KEY = "shellfish-registration-signal-at-v1";
   const UPDATE_ATTEMPT_SESSION_KEY = "shellfish-update-attempt-v1";
   const LAST_GOOD_RUNTIME_KEY = String(windowRef.__SHELLFISH_LAST_GOOD_RUNTIME_KEY__ || "shellfish-last-good-runtime-v1");
+  const PENDING_CONTROL_GRACE_MS = 90 * 1000;
 
   function getLastGoodRuntimeConfirmation(){
     try{
@@ -72,13 +76,36 @@ export function createUpdateRuntimeStatusSeam({
 
   function setLastSwUpdateSignal(value){
     lastSwUpdateSignal = String(value || "");
+    const at = Date.now();
     try{
       sessionStorage.setItem(UPDATE_SIGNAL_SESSION_KEY, lastSwUpdateSignal);
+      sessionStorage.setItem(UPDATE_SIGNAL_AT_SESSION_KEY, String(at));
     }catch(_){ }
+  }
+
+  function setLastSwRegistrationSignal(value){
+    lastSwRegistrationSignal = String(value || "");
+    const at = Date.now();
+    try{
+      sessionStorage.setItem(REGISTRATION_SIGNAL_SESSION_KEY, lastSwRegistrationSignal);
+      sessionStorage.setItem(REGISTRATION_SIGNAL_AT_SESSION_KEY, String(at));
+    }catch(_){ }
+  }
+
+  function getStoredSignalTimestamp(key){
+    try{
+      const raw = Number(sessionStorage.getItem(key) || 0);
+      return Number.isFinite(raw) && raw > 0 ? raw : 0;
+    }catch(_){
+      return 0;
+    }
   }
 
   try{
     lastSwUpdateSignal = String(sessionStorage.getItem(UPDATE_SIGNAL_SESSION_KEY) || "");
+  }catch(_){ }
+  try{
+    lastSwRegistrationSignal = String(sessionStorage.getItem(REGISTRATION_SIGNAL_SESSION_KEY) || "");
   }catch(_){ }
 
   try{
@@ -95,7 +122,7 @@ export function createUpdateRuntimeStatusSeam({
     windowRef.addEventListener("sw-registration-state", (ev)=>{
       const state = String(ev?.detail?.state || "");
       if(!state) return;
-      lastSwRegistrationSignal = state;
+      setLastSwRegistrationSignal(state);
       if(getIsSettingsView()){
         try{ updateUpdateRow(); }catch(_){ }
       }
@@ -298,17 +325,38 @@ export function createUpdateRuntimeStatusSeam({
     );
     details.hasBootCorruptionSignal = /reset cache|stale required asset|wrong required asset|unexpected js payload|corrupted js response|empty js response|incomplete js response/i.test(details.lastBootError);
     details.requiredCoreCacheIncompleteAfterControl = Boolean(details.requiredCoreCacheIncomplete && details.swController);
+    const now = Date.now();
+    const recentAttempt = getStoredUpdateAttempt();
+    const updateSignalAt = getStoredSignalTimestamp(UPDATE_SIGNAL_AT_SESSION_KEY);
+    const registrationSignalAt = getStoredSignalTimestamp(REGISTRATION_SIGNAL_AT_SESSION_KEY);
+    const hasTargetWaitingWorker = Boolean(details.swWaitingVersion && details.buildDigits && details.swWaitingVersion === details.buildDigits);
+    const hasTargetActiveWorker = Boolean(details.swScriptVersion && details.buildDigits && details.swScriptVersion === details.buildDigits);
+    const hasMeaningfulUpdateSignal = ["ready", "applying", "controller-changed"].includes(String(lastSwUpdateSignal || ""));
+    const hasMeaningfulRegistrationSignal = ["registered", "attempted"].includes(String(lastSwRegistrationSignal || ""));
+    const hasRecentLifecycleSignal = Boolean(
+      (hasMeaningfulUpdateSignal && updateSignalAt > 0 && (now - updateSignalAt) <= PENDING_CONTROL_GRACE_MS) ||
+      (hasMeaningfulRegistrationSignal && registrationSignalAt > 0 && (now - registrationSignalAt) <= PENDING_CONTROL_GRACE_MS)
+    );
+    const hasRecentReloadOrUpdateAttempt = Boolean(recentAttempt && (now - recentAttempt.at) <= PENDING_CONTROL_GRACE_MS);
+    const hasGroundedPendingProgress = Boolean(
+      hasTargetWaitingWorker ||
+      hasTargetActiveWorker ||
+      hasRecentLifecycleSignal ||
+      hasRecentReloadOrUpdateAttempt
+    );
     details.requiredCoreCachePendingControl = Boolean(
       details.requiredCoreCacheIncomplete &&
       !details.swController &&
       (details.swRegistrationConfirmed || details.swRegistrationAttempted) &&
       !details.hasExplicitVersionMismatch &&
       !details.swRegistrationError &&
-      !details.hasBootCorruptionSignal
+      !details.hasBootCorruptionSignal &&
+      hasGroundedPendingProgress
     );
     details.needsHardReset = Boolean(
       details.hasExplicitVersionMismatch ||
       details.requiredCoreCacheIncompleteAfterControl ||
+      (details.requiredCoreCacheIncomplete && !details.swController && !details.requiredCoreCachePendingControl) ||
       details.swRegistrationError ||
       details.hasBootCorruptionSignal
     );
@@ -514,7 +562,7 @@ export function createUpdateRuntimeStatusSeam({
     }
 
     if(runtimeDiag.swControlUnconfirmed && !runtimeDiag.hasExplicitVersionMismatch){
-      parts.push("Service worker note: registration exists but this tab is not controlled yet.");
+      parts.push("Service worker note: registration progress is present, but this tab is not controlled yet.");
     }
     if(runtimeDiag.swRegistrationUnconfirmed && !runtimeDiag.hasExplicitVersionMismatch){
       parts.push("Service worker note: registration is not confirmed yet on this device.");
@@ -525,7 +573,7 @@ export function createUpdateRuntimeStatusSeam({
     if(runtimeDiag.needsHardReset){
       parts.push("Recovery note: if Reload latest build does not clear this, use Reset cache & reload for a clean runtime copy.");
     }else if(runtimeDiag.requiredCoreCachePendingControl){
-      parts.push("Recovery note: required core cache will be rechecked after service worker control is established.");
+      parts.push("Recovery note: required core cache is briefly pending while service worker lifecycle progress is in flight.");
     }
     if(runtimeDiag.lastBootError){
       parts.push(`Last boot warning: ${runtimeDiag.lastBootError}`);
@@ -586,7 +634,7 @@ export function createUpdateRuntimeStatusSeam({
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
       if(inlineMsg){
         inlineMsg.textContent = runtimeDiag?.requiredCoreCachePendingControl
-          ? "Required core cache is still settling while service worker control is pending. Reopen or reload after control is confirmed."
+          ? "Required core cache is briefly settling while service worker lifecycle progress is still active. Reopen or reload after control is confirmed."
           : "Run Reload latest build after service worker control is confirmed.";
       }
       return;
