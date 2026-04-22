@@ -45,6 +45,52 @@
 .hlDelta{max-width:100%;font-size:13px;line-height:1.4;font-weight:820;letter-spacing:.01em;color:var(--neutral);text-align:center;text-wrap:pretty}
 .hlDelta.tone-up{color:var(--good)}
 .hlDelta.tone-down{color:var(--bad)}
+
+.homeLastTripHeaderRow{
+  margin-bottom:0;
+}
+.homeLastTripCardWrap{
+  margin-top:4px;
+}
+.homeLastTripEditBtn{
+  appearance:none;
+  -webkit-appearance:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:30px;
+  padding:0 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(8,12,20,.32);
+  color:var(--text-muted-strong);
+  font-size:11px;
+  line-height:1.2;
+  font-weight:740;
+  letter-spacing:.04em;
+  white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+  cursor:pointer;
+  transition:border-color .16s ease,background .16s ease,color .16s ease,transform .16s ease;
+}
+.homeLastTripEditBtn:hover{
+  border-color:rgba(143,186,255,.55);
+  background:rgba(47,109,246,.22);
+  color:#e8f2ff;
+}
+.homeLastTripEditBtn:active{
+  transform:translateY(1px);
+}
+.homeLastTripEditBtn:focus-visible{
+  outline:2px solid rgba(120,184,255,.75);
+  outline-offset:2px;
+}
+@media (max-width:480px){
+  .homeLastTripEditBtn{
+    min-height:32px;
+    padding:0 11px;
+  }
+}
 .reportsTopShell{padding:0 0 16px}
 .reportsTopShell--overview{padding-top:var(--section-gap-tight)}
 .reportsTopShell--detail{padding-top:0}

@@ -308,7 +308,7 @@ export function createHomeDashboardRenderer({
     });
     const homeOverviewRangeLabel = homeFilterLabel;
     const lastTripHeaderActionHtml = hasEditableLatestTrip
-      ? `<button class="btn homeLastTripEditBtn" id="homeLastTripEditBtn" type="button">Edit Trip</button>`
+      ? `<button class="homeLastTripEditBtn" id="homeLastTripEditBtn" type="button">Edit Trip</button>`
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
     const isHomeInsightsOpen = !!state.homeInsightsOpen;
     if (isHomeInsightsOpen) {
