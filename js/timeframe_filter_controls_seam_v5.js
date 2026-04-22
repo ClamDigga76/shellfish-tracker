@@ -5,8 +5,8 @@ export function createTimeframeFilterControlsSeam({
 } = {}){
   const HOME_PRESET_FILTER_ITEMS = [
     { key: "YTD", label: "YTD" },
-    { key: "MONTH", label: "This Month" },
-    { key: "LAST_MONTH", label: "Last Month" },
+    { key: "MONTH", label: "Current Month" },
+    { key: "LAST_MONTH", label: "Previous Month" },
     { key: "7D", label: "Last 7 Days" },
     { key: "30D", label: "Last 30 Days" },
     { key: "RANGE", label: "Custom Range" }
@@ -45,7 +45,12 @@ export function createTimeframeFilterControlsSeam({
           if(itemRole) itemAttrs.push(`role="${escapeHtml(String(itemRole))}"`);
           if(includeAriaSelected) itemAttrs.push(`aria-selected="${isSelected ? "true" : "false"}"`);
           if(useRovingTabIndex) itemAttrs.push(`tabindex="${isTabbable ? "0" : "-1"}"`);
-          return `<button class="chip segBtn ${chipClass} ${isSelected ? "on is-selected" : ""}" ${dataAttr}="${escapeHtml(String(item.key))}" type="button" ${itemAttrs.join(" ")}>${escapeHtml(String(item.label || item.key))}</button>`;
+          const textLabel = String(item.label || item.key);
+          const safeAriaLabel = String(item.ariaLabel || textLabel);
+          const labelHtml = item.labelHtml
+            ? String(item.labelHtml)
+            : `<span class="timeframeChipMainLabel">${escapeHtml(textLabel)}</span>`;
+          return `<button class="chip segBtn ${chipClass} ${isSelected ? "on is-selected" : ""}" ${dataAttr}="${escapeHtml(String(item.key))}" type="button" aria-label="${escapeHtml(safeAriaLabel)}" ${itemAttrs.join(" ")}>${labelHtml}</button>`;
         }).join("")}
       </div>
     `;
@@ -81,10 +86,17 @@ export function createTimeframeFilterControlsSeam({
     return `<div class="muted small mt8 ${className}" aria-live="polite">${safeMessages.map((msg)=> `<div>${escapeHtml(String(msg))}</div>`).join("")}</div>`;
   }
 
-  function resolveRangeLabel({ mode = "YTD", fromISO = "", toISO = "", emptyCustomLabel = "Set dates" } = {}){
+  function resolveRangeLabel({
+    mode = "YTD",
+    fromISO = "",
+    toISO = "",
+    emptyCustomLabel = "Set dates",
+    monthLabel = "This Month",
+    lastMonthLabel = "Last Month"
+  } = {}){
     const normalizedMode = String(mode || "YTD").toUpperCase();
-    if(normalizedMode === "MONTH" || normalizedMode === "THIS_MONTH") return "This Month";
-    if(normalizedMode === "LAST_MONTH") return "Last Month";
+    if(normalizedMode === "MONTH" || normalizedMode === "THIS_MONTH") return monthLabel;
+    if(normalizedMode === "LAST_MONTH") return lastMonthLabel;
     if(normalizedMode === "7D") return "Last 7 Days";
     if(normalizedMode === "30D") return "Last 30 Days";
     if(normalizedMode === "90D") return "Last 3 Months";

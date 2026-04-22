@@ -28,7 +28,9 @@ export function createHomeDashboardRenderer({
   runInstallAction,
   renderStandardReadOnlyTripCard,
   buildReportsAggregationForTrips,
-  drawReportsCharts
+  drawReportsCharts,
+  isFeatureAllowed,
+  entitlementFeatureKeys
 }) {
   const timeframeFilterControls = createTimeframeFilterControlsSeam({
     escapeHtml,
@@ -54,11 +56,27 @@ export function createHomeDashboardRenderer({
     const correctionMessages = Array.isArray(homeFilter.customRangeCorrectionMessages)
       ? homeFilter.customRangeCorrectionMessages
       : [];
+    const isHomeCustomRangeAllowed = typeof isFeatureAllowed === "function"
+      ? !!isFeatureAllowed(entitlementFeatureKeys?.HOME_CUSTOM_RANGE)
+      : true;
+    const homePresetItems = timeframeFilterControls.HOME_PRESET_FILTER_ITEMS.map((item)=> {
+      if (String(item?.key || "").toUpperCase() !== "RANGE") return item;
+      if (isHomeCustomRangeAllowed) return item;
+      return {
+        ...item,
+        ariaLabel: "Custom Range locked. Paid plan required.",
+        labelHtml: `
+          <span class="timeframeChipMainLabel">🔒 Custom Range</span>
+          <span class="timeframeChipSubLabel">Paid</span>
+        `
+      };
+    });
     return `
       ${timeframeFilterControls.renderPresetChipRow({
-        items: timeframeFilterControls.HOME_PRESET_FILTER_ITEMS,
+        items: homePresetItems,
         activeKey: fMode,
         dataAttr: "data-hf",
+        chipClass: "homeTimeframeChip",
         ariaLabel: "Home timeframe filter"
       })}
       ${timeframeFilterControls.renderCustomRangeRow({
@@ -304,7 +322,9 @@ export function createHomeDashboardRenderer({
     const homeFilterLabel = timeframeFilterControls.resolveRangeLabel({
       mode: f,
       fromISO: unified.fromISO,
-      toISO: unified.toISO
+      toISO: unified.toISO,
+      monthLabel: "Current Month",
+      lastMonthLabel: "Previous Month"
     });
     const homeOverviewRangeLabel = homeFilterLabel;
     const lastTripHeaderActionHtml = hasEditableLatestTrip
@@ -460,7 +480,16 @@ export function createHomeDashboardRenderer({
     getApp().querySelectorAll("button.chip[data-hf]").forEach((btn) => {
       btn.addEventListener("click", () => {
         ensureHomeFilter();
-        state.homeFilter.mode = String(btn.getAttribute("data-hf") || "YTD").toUpperCase();
+        const nextMode = String(btn.getAttribute("data-hf") || "YTD").toUpperCase();
+        if (
+          nextMode === "RANGE"
+          && typeof isFeatureAllowed === "function"
+          && !isFeatureAllowed(entitlementFeatureKeys?.HOME_CUSTOM_RANGE)
+        ) {
+          showToast("🔒 Custom Range is a Paid feature. Upgrade to unlock.");
+          return;
+        }
+        state.homeFilter.mode = nextMode;
         if(state.homeFilter.mode !== "RANGE") state.homeFilter.customRangeCorrectionMessages = [];
         saveState();
         showToast("Filter updated");
@@ -520,7 +549,9 @@ export function createHomeDashboardRenderer({
         const launchedRangeLabel = timeframeFilterControls.resolveRangeLabel({
           mode: launchedHomeFilter.mode,
           fromISO: launchedHomeFilter.from,
-          toISO: launchedHomeFilter.to
+          toISO: launchedHomeFilter.to,
+          monthLabel: "Current Month",
+          lastMonthLabel: "Previous Month"
         });
         state.homeMetricDetail = metricKey;
         state.homeMetricDetailContext = {

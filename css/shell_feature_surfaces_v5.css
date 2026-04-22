@@ -678,6 +678,28 @@
     0 0 0 1px rgba(114,144,220,.28),
     0 0 14px rgba(64,143,244,.34);
 }
+.homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip{
+  min-height:45px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:2px;
+  text-align:center;
+  line-height:1.08;
+}
+.timeframeChipMainLabel{
+  display:block;
+  white-space:nowrap;
+}
+.timeframeChipSubLabel{
+  display:block;
+  font-size:10px;
+  font-weight:860;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(198,220,255,.9);
+}
 .homeScreenShell .homeFilterStack > .homeRangeRow{
   margin-top:4px !important;
 }
@@ -703,6 +725,16 @@
   .timeframeUnifiedControl .segBtn{
     font-size:12px;
     padding:8px 6px;
+  }
+  .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip{
+    min-height:43px;
+  }
+  .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip .timeframeChipMainLabel{
+    font-size:11px;
+  }
+  .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip .timeframeChipSubLabel{
+    font-size:9px;
+    letter-spacing:.06em;
   }
 }
 
