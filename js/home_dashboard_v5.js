@@ -54,7 +54,8 @@ export function createHomeDashboardRenderer({
       if (String(item?.key || "").toUpperCase() !== "RANGE") return item;
       return {
         ...item,
-        label: "Custom Range"
+        label: "Custom Range",
+        labelHtml: `<span class="timeframeChipMainLabel timeframeChipMainLabelWithIcon"><span class="timeframeChipIcon" aria-hidden="true">📅</span><span>Custom Range</span></span>`
       };
     });
     return `
@@ -71,7 +72,8 @@ export function createHomeDashboardRenderer({
         toValue: homeFilter.to,
         fromId: "homeRangeFrom",
         toId: "homeRangeTo",
-        applyId: "homeRangeApply"
+        applyId: "homeRangeApply",
+        wrapperClass: "homeRangeRow"
       })}
       ${timeframeFilterControls.renderCorrectionMessages({
         mode: fMode,

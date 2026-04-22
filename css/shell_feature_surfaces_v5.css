@@ -641,11 +641,11 @@
 }
 .dashCard .homeFilterStack{
   gap:8px;
-  margin-top:var(--card-body-gap);
-  margin-bottom:var(--card-stack-gap);
+  margin-top:8px;
+  margin-bottom:10px;
 }
 .homeScreenShell .homeFilterStack{
-  gap:10px;
+  gap:7px;
   margin:0;
 }
 .dashCard .homeFilterStack .timeframeUnifiedControl{
@@ -653,18 +653,21 @@
 }
 .homeScreenShell .timeframeUnifiedControl{
   grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:8px;
-  padding:8px;
-  border:1px solid rgba(176,194,224,.24);
-  border-radius:16px;
-  background:linear-gradient(180deg, rgba(46,60,83,.34) 0%, rgba(24,34,52,.24) 100%);
+  gap:6px;
+  padding:6px;
+  border:1px solid rgba(176,194,224,.17);
+  border-radius:13px;
+  background:linear-gradient(180deg, rgba(32,45,66,.24) 0%, rgba(20,29,45,.16) 100%);
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn{
-  min-height:41px;
-  border-color:rgba(109,117,132,.66);
-  background:linear-gradient(180deg, rgba(78,88,106,.78) 0%, rgba(63,71,87,.94) 100%);
-  color:rgba(205,214,231,.70);
+  min-height:34px;
+  padding:6px 7px;
+  border-radius:9px;
+  border-color:rgba(109,117,132,.48);
+  background:linear-gradient(180deg, rgba(70,79,96,.66) 0%, rgba(56,63,79,.84) 100%);
+  color:rgba(210,219,235,.62);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  font-size:12px;
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn.on,
 .homeScreenShell .timeframeUnifiedControl .segBtn.is-selected{
@@ -679,18 +682,27 @@
     0 0 14px rgba(64,143,244,.34);
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip{
-  min-height:45px;
+  min-height:36px;
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  gap:2px;
+  gap:1px;
   text-align:center;
   line-height:1.08;
 }
 .timeframeChipMainLabel{
   display:block;
   white-space:nowrap;
+}
+.timeframeChipMainLabelWithIcon{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.timeframeChipIcon{
+  font-size:.95em;
+  line-height:1;
 }
 .timeframeChipSubLabel{
   display:block;
@@ -701,7 +713,7 @@
   color:rgba(198,220,255,.9);
 }
 .homeScreenShell .homeFilterStack > .homeRangeRow{
-  margin-top:4px !important;
+  margin-top:2px !important;
 }
 .homeScreenShell .kpiRow{
   gap:10px;
@@ -726,14 +738,18 @@
     font-size:12px;
     padding:8px 6px;
   }
-  .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip{
-    min-height:43px;
-  }
-  .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip .timeframeChipMainLabel{
+  .homeScreenShell .timeframeUnifiedControl .segBtn{
+    padding:5px 6px;
     font-size:11px;
   }
+  .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip{
+    min-height:34px;
+  }
+  .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip .timeframeChipMainLabel{
+    font-size:10px;
+  }
   .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip .timeframeChipSubLabel{
-    font-size:9px;
+    font-size:8px;
     letter-spacing:.06em;
   }
 }
