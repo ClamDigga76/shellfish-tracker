@@ -34,6 +34,12 @@ export function createRuntimeOrchestrationSeam({
       return "unknown";
     }
   }
+  function syncDisplayModeDataset(){
+    try{
+      const mode = getDisplayMode();
+      document.documentElement?.setAttribute("data-display-mode", mode === "standalone" ? "standalone" : "browser");
+    }catch(_){ }
+  }
 
   function getInstallPlatform(){
     const ua = String(navigator.userAgent || "");
@@ -122,6 +128,11 @@ export function createRuntimeOrchestrationSeam({
   }
 
   function bindRuntimeBootHandlers(){
+    syncDisplayModeDataset();
+    try{
+      const displayModeMql = window.matchMedia?.("(display-mode: standalone)");
+      displayModeMql?.addEventListener?.("change", syncDisplayModeDataset);
+    }catch(_){ }
     bindBootErrorHandlers();
     window.addEventListener("sw-update-ready", () => {
       updateRuntimeStatus.markSwUpdateReady();
@@ -134,6 +145,7 @@ export function createRuntimeOrchestrationSeam({
     });
     window.addEventListener("appinstalled", () => {
       deferredInstallPrompt = null;
+      syncDisplayModeDataset();
     });
     bindFatalHandlers();
   }
