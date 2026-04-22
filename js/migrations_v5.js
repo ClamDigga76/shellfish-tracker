@@ -13,7 +13,9 @@ export function buildDefaultAppState() {
     tripsFilter: { mode: "ALL", from: "", to: "" },
     reportsFilter: { mode: "YTD", from: "", to: "" },
     reportsMode: "tables",
-    settings: {},
+    settings: {
+      plan: "free"
+    },
     navStack: []
   };
 }
@@ -101,6 +103,7 @@ export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, th
     st.tripsFilter = { ...defaults.tripsFilter, ...((st.tripsFilter && typeof st.tripsFilter === "object") ? st.tripsFilter : {}) };
 
     st.settings = (st.settings && typeof st.settings === "object") ? st.settings : {};
+    st.settings.plan = String(st.settings.plan || "").trim().toLowerCase() === "paid" ? "paid" : "free";
     st.settings.themeMode = normalizeThemeMode(st.settings.themeMode || themeModeDefault);
 
     if (v < 1) st.schemaVersion = 1;
