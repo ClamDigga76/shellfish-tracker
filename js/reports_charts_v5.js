@@ -645,6 +645,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const { canvas, ctx, w, h } = c;
     const paletteSet = resolveMetricDetailPalette(metricKey);
     const count = Math.max(0, values.length || 0);
+    const axisLabels = (()=> {
+      const safeLabels = Array.isArray(labels) ? labels : [];
+      if(count !== 1) return safeLabels;
+      const singleLabel = safeLabels[safeLabels.length - 1] ?? safeLabels[0] ?? "";
+      return [String(singleLabel || "")];
+    })();
     const xLabelType = options.xLabelType || "month";
     const frame = chartFrame(w, h, options.frameMode || "default", {
       chartKind: "rolling",
@@ -718,7 +724,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ctx.restore();
       }
 
-      drawBottomTicks(ctx, labels, geom, h - 10, frame, {
+      drawBottomTicks(ctx, axisLabels, geom, h - 10, frame, {
         alignMode: "index",
         labelType: xLabelType,
         maxTicks: options.maxTicks || 0
