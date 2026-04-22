@@ -633,6 +633,114 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return true;
   }
 
+  function drawRollingLineChart(canvasId, values, labels, metricKey, options = {}){
+    const showEmptyState = options?.emptyStateEnabled === true
+      && !values.some((value)=> Number.isFinite(Number(value)) && Number(value) > 0);
+    toggleChartEmptyState(canvasId, showEmptyState, options?.emptyMessage);
+    if(showEmptyState) return true;
+    const c = setupCanvas(document.getElementById(canvasId));
+    if(!c) return false;
+    const { canvas, ctx, w, h } = c;
+    const paletteSet = resolveMetricDetailPalette(metricKey);
+    const count = Math.max(0, values.length || 0);
+    const xLabelType = options.xLabelType || "month";
+    const frame = chartFrame(w, h, options.frameMode || "default", {
+      chartKind: "rolling",
+      pointCount: count,
+      labelType: xLabelType
+    });
+    const observedTop = Math.max(...values, metricKey === "trips" ? 1 : 0);
+    const valueHeadroom = computeBarValueHeadroom(observedTop, { frame, chartHeight: h });
+    const targetTop = Math.max(metricKey === "trips" ? 1 : 0, observedTop + (valueHeadroom * 0.5));
+    renderAnimatedChart(canvas, values, (animatedVals, alpha)=>{
+      clear(ctx,w,h);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = palette.plotBg;
+      ctx.fillRect(frame.left, frame.top, w - frame.left - frame.right, h - frame.top - frame.bottom);
+      const geom = drawAxes(ctx,w,h,frame);
+      const yScale = niceScale(targetTop, 4);
+      const lastIndex = Math.max(0, animatedVals.length - 1);
+      const points = animatedVals.map((value, index)=>{
+        const safe = Math.max(0, Number(value) || 0);
+        const ratio = yScale.top > 0 ? (safe / yScale.top) : 0;
+        const x = animatedVals.length <= 1
+          ? geom.x0 + (geom.plotW * 0.5)
+          : geom.x0 + ((geom.plotW * index) / (animatedVals.length - 1));
+        const y = geom.y0 - (ratio * geom.plotH);
+        return { x, y, value: safe, index };
+      });
+      if(points.length){
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(geom.x0, geom.yTop, geom.plotW, geom.plotH);
+        ctx.clip();
+
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, geom.y0);
+        points.forEach((point)=> ctx.lineTo(point.x, point.y));
+        ctx.lineTo(points[points.length - 1].x, geom.y0);
+        ctx.closePath();
+        ctx.save();
+        ctx.globalAlpha = 0.14;
+        ctx.fillStyle = paletteSet.color;
+        ctx.fill();
+        ctx.restore();
+
+        ctx.beginPath();
+        points.forEach((point, pointIndex)=>{
+          if(pointIndex === 0){
+            ctx.moveTo(point.x, point.y);
+          }else{
+            ctx.lineTo(point.x, point.y);
+          }
+        });
+        ctx.strokeStyle = paletteSet.color;
+        ctx.lineWidth = frame.compact ? 2 : 2.4;
+        ctx.stroke();
+
+        const latestPoint = points[lastIndex];
+        if(latestPoint){
+          ctx.fillStyle = paletteSet.color;
+          ctx.beginPath();
+          ctx.arc(latestPoint.x, latestPoint.y, frame.compact ? 3.2 : 3.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.save();
+          ctx.globalAlpha = 0.22;
+          ctx.beginPath();
+          ctx.arc(latestPoint.x, latestPoint.y, frame.compact ? 8 : 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+
+      drawBottomTicks(ctx, labels, geom, h - 10, frame, {
+        alignMode: "index",
+        labelType: xLabelType,
+        maxTicks: options.maxTicks || 0
+      });
+      const yLabels = [];
+      for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
+        yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: paletteSet.yFormatter(v) });
+      }
+      drawYTickLabels(ctx, geom, frame, yLabels);
+      const latestPoint = points[lastIndex];
+      if(latestPoint){
+        const chipText = String(paletteSet.yFormatter(latestPoint.value) || "").trim();
+        drawPointValueChip(ctx, chipText, latestPoint.x, latestPoint.y, {
+          minX: geom.x0 + 2,
+          maxX: geom.xRight - 2,
+          minY: geom.yTop + 2,
+          maxY: geom.y0 - 2
+        });
+      }
+      ctx.restore();
+    });
+    return true;
+  }
+
   function resolveMetricDetailPalette(metricKey){
     if(metricKey === "amount") return { color: palette.money, yFormatter: formatCompactMoney, topFormatter: formatShortMoney };
     if(metricKey === "ppl") return { color: palette.ppl, yFormatter: formatShortMoney, topFormatter: formatShortMoney };
@@ -673,7 +781,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         labels: Array.isArray(chartModel?.labels) ? chartModel.labels : [],
         values: Array.isArray(chartModel?.values) ? chartModel.values : []
       });
-      drawRollingBarChart(
+      drawRollingLineChart(
         canvasId,
         chronologicalSeries.values.map((v)=> Number(v) || 0),
         chronologicalSeries.labels.map((v)=> String(v || "")),
