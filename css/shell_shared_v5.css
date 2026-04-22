@@ -54,8 +54,10 @@
   --cardpad:14px;
   --sh:0 18px 50px rgba(0,0,0,.55);
   --shadow:0 18px 50px rgba(0,0,0,.55);
-  --tabbar-h:46px;
+  --tabbar-h:48px;
   --tabbar-top-pad:7px;
+  --tabbar-dock-inset-top:6px;
+  --tabbar-dock-inset-x:12px;
   --safeTop:env(safe-area-inset-top);
   --safeBottom:env(safe-area-inset-bottom);
   --tabbar-safe:max(0px, var(--safeBottom));
@@ -204,29 +206,29 @@ main#app.screenTransitionIn{opacity:1;transform:translate3d(0,0,0) scale(1);anim
 .celebrationAction{appearance:none;border:1px solid rgba(255,255,255,.24);background:linear-gradient(180deg, rgba(81,140,255,.42) 0%, rgba(47,109,246,.30) 100%);color:var(--text);border-radius:999px;padding:9px 14px;font-weight:800;font-size:13px;line-height:1;cursor:pointer;pointer-events:auto;align-self:center;min-width:96px;max-width:100%;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);transition:transform var(--motion-duration-press) var(--motion-ease-soft), filter var(--motion-duration-press) var(--motion-ease-soft), background var(--motion-duration-press) var(--motion-ease-soft), border-color var(--motion-duration-press) var(--motion-ease-soft);position:relative;z-index:1;white-space:normal}
 .celebrationAction:active{transform:translateY(1px);filter:brightness(.98)}
 
-#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;width:100%;max-width:100vw;height:var(--tabbar-total-h);padding:var(--tabbar-top-pad) 12px var(--tabbar-safe);display:flex;justify-content:space-between;align-items:flex-end;gap:8px;overflow-x:hidden;background:var(--tabbar-edge-fill)}
-#tabbar::before{content:"";position:absolute;left:12px;right:12px;top:var(--tabbar-top-pad);bottom:0;border-radius:22px 22px 0 0;border:1px solid rgba(255,255,255,.12);border-bottom:0;background:linear-gradient(180deg, rgba(15,23,38,.94) 0%, rgba(8,14,26,.95) 100%);box-shadow:0 -16px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06);pointer-events:none}
-.tabbtn{position:relative;z-index:1;flex:1;min-width:0;appearance:none;border:0;background:transparent;color:rgba(232,238,252,.76);padding:9px 7px 5px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:750;font-size:12px;line-height:1;min-height:46px;transition:transform .16s ease,color .18s ease,background .2s ease,opacity .18s ease,filter .18s ease,box-shadow .2s ease}
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9998;width:100%;max-width:100vw;height:var(--tabbar-total-h);padding:calc(var(--tabbar-top-pad) + var(--tabbar-dock-inset-top)) calc(var(--tabbar-dock-inset-x) + 2px) var(--tabbar-safe);display:flex;justify-content:space-between;align-items:flex-end;gap:8px;overflow-x:hidden;background:var(--tabbar-edge-fill)}
+#tabbar::before{content:"";position:absolute;left:var(--tabbar-dock-inset-x);right:var(--tabbar-dock-inset-x);top:var(--tabbar-top-pad);bottom:0;border-radius:22px 22px 0 0;border:1px solid rgba(255,255,255,.12);border-bottom:0;background:linear-gradient(180deg, rgba(15,23,38,.94) 0%, rgba(8,14,26,.95) 100%);box-shadow:0 -16px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06);pointer-events:none}
+.tabbtn{position:relative;z-index:1;flex:1;min-width:0;appearance:none;border:0;background:transparent;color:rgba(232,238,252,.76);padding:8px 7px 4px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:750;font-size:12px;line-height:1;min-height:40px;transition:transform .16s ease,color .18s ease,background .2s ease,opacity .18s ease,filter .18s ease,box-shadow .2s ease}
 .tabbtn::after{display:none}
 .tabbtn svg{width:22px;height:22px;display:block;opacity:.95;transform:translateY(0) scale(1);transform-origin:center;transition:transform .18s ease,opacity .18s ease,stroke .18s ease,filter .18s ease}
 .tabbtn span{position:relative;opacity:.97;transform:translateY(0);transition:transform .18s ease,opacity .18s ease,letter-spacing .18s ease}
-.tabbtn.standard svg{transform:translateY(.5px) scale(1)}
-.tabbtn.standard span{transform:translateY(.5px)}
+.tabbtn.standard svg{transform:translateY(2px) scale(1)}
+.tabbtn.standard span{transform:translateY(2px)}
 .tabbtn.active,
 .tabbtn[aria-current="page"]{color:#eef4ff;background:linear-gradient(180deg, rgba(93,146,255,.22) 0%, rgba(47,109,246,.14) 100%);box-shadow:inset 0 0 0 1px rgba(145,185,255,.34), inset 0 1px 0 rgba(255,255,255,.10)}
 .tabbtn.active svg,
-.tabbtn[aria-current="page"] svg{stroke:#8fbeff;opacity:1;transform:translateY(-1px) scale(1.02);filter:none}
+.tabbtn[aria-current="page"] svg{stroke:#8fbeff;opacity:1;transform:translateY(1px) scale(1.02);filter:none}
 .tabbtn.active span,
-.tabbtn[aria-current="page"] span{opacity:1;transform:translateY(-1px);letter-spacing:.005em}
+.tabbtn[aria-current="page"] span{opacity:1;transform:translateY(1px);letter-spacing:.005em}
 .tabbtn:active{transform:scale(.975);filter:brightness(1.04)}
 .tabbtn:active svg{transform:translateY(0) scale(.99)}
-.tabbtn.plus{flex:0 0 64px;min-width:64px;max-width:64px;padding:0;margin-bottom:0;color:#fff;background:linear-gradient(180deg, rgba(108,156,255,1) 0%, rgba(47,109,246,1) 100%);border-radius:999px;border:1px solid rgba(165,202,255,.58);height:54px;display:flex;align-items:center;justify-content:center;box-shadow:0 18px 36px rgba(0,0,0,.48), 0 10px 22px rgba(31,111,235,.28), inset 0 1px 0 rgba(255,255,255,.24);transform:translateY(-7px)}
+.tabbtn.plus{flex:0 0 64px;min-width:64px;max-width:64px;padding:0;margin-bottom:0;color:#fff;background:linear-gradient(180deg, rgba(108,156,255,1) 0%, rgba(47,109,246,1) 100%);border-radius:999px;border:1px solid rgba(165,202,255,.58);height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 18px 36px rgba(0,0,0,.48), 0 10px 22px rgba(31,111,235,.28), inset 0 1px 0 rgba(255,255,255,.24);transform:translateY(-6px)}
 .tabbtn.plus::after{display:none}
 .tabbtn.plus svg{width:26px;height:26px;stroke:#fff;opacity:1;filter:none;transform:none}
 .tabbtn.plus span{display:none}
 .tabbtn.plus.active,
 .tabbtn.plus[aria-current="page"]{background:linear-gradient(180deg, rgba(124,168,255,1) 0%, rgba(47,109,246,1) 100%);box-shadow:0 20px 38px rgba(31,111,235,.30), 0 12px 25px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.26)}
-.tabbtn.plus:active{transform:translateY(-6px) scale(.98);filter:brightness(.98)}
+.tabbtn.plus:active{transform:translateY(-5px) scale(.98);filter:brightness(.98)}
 
 /* Modal shell */
 body.scrollLock{overflow:hidden;overscroll-behavior:none}
