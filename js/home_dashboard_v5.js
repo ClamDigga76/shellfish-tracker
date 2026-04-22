@@ -145,6 +145,50 @@ export function createHomeDashboardRenderer({
     const avgPpl = totalLbs > 0 ? (weightedRateTotal / totalLbs) : null;
     const avgAmountPerTrip = trips.length ? (totalAmount / trips.length) : null;
     const avgPoundsPerTrip = trips.length ? (totalLbs / trips.length) : null;
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const parseIsoToUtcMs = (iso) => {
+      const safeIso = String(iso || "").trim();
+      if (!safeIso) return null;
+      const utcMs = Date.parse(`${safeIso}T00:00:00Z`);
+      return Number.isFinite(utcMs) ? utcMs : null;
+    };
+    const formatUtcMsToIso = (utcMs) => {
+      if (!Number.isFinite(utcMs)) return "";
+      return new Date(utcMs).toISOString().slice(0, 10);
+    };
+    const resolvePriorRange = ({ fromISO, toISO }) => {
+      const fromMs = parseIsoToUtcMs(fromISO);
+      const toMs = parseIsoToUtcMs(toISO);
+      if (!(Number.isFinite(fromMs) && Number.isFinite(toMs) && toMs >= fromMs)) return null;
+      const spanDays = Math.floor((toMs - fromMs) / msPerDay) + 1;
+      if (!(spanDays > 0)) return null;
+      const priorToMs = fromMs - msPerDay;
+      const priorFromMs = priorToMs - ((spanDays - 1) * msPerDay);
+      return {
+        fromISO: formatUtcMsToIso(priorFromMs),
+        toISO: formatUtcMsToIso(priorToMs)
+      };
+    };
+    const trendToneFromDelta = (delta, epsilon = 0.00001) => {
+      if (!Number.isFinite(delta) || Math.abs(delta) <= epsilon) return "flat";
+      return delta > 0 ? "up" : "down";
+    };
+    const renderOverviewTrendArrow = (tone, label) => {
+      if (tone !== "up" && tone !== "down") return "";
+      const arrow = tone === "up" ? "↗" : "↘";
+      const cssTone = tone === "up" ? "homeOverviewTrend--up" : "homeOverviewTrend--down";
+      return `<span class="homeOverviewTrend ${cssTone}" aria-label="${escapeHtml(label)}">${arrow}</span>`;
+    };
+
+    const priorRange = resolvePriorRange({ fromISO: unified.fromISO, toISO: unified.toISO });
+    const priorTrips = priorRange
+      ? applyUnifiedTripFilter(tripsAll, { ...unified, ...priorRange }).rows
+      : [];
+    const hasPriorComparison = !!(priorRange && priorTrips.length > 0);
+    const priorTotalAmount = priorTrips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
+    const priorTotalLbs = priorTrips.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
+    const priorAvgAmountPerTrip = priorTrips.length ? (priorTotalAmount / priorTrips.length) : null;
+    const priorAvgPoundsPerTrip = priorTrips.length ? (priorTotalLbs / priorTrips.length) : null;
 
     const formatGroupedHomeNumber = (value, { maximumFractionDigits = 2 } = {}) => {
       const numeric = Number(value);
@@ -242,6 +286,12 @@ export function createHomeDashboardRenderer({
     }, new Map());
     const strongestArea = Array.from(areaRollup.values())
       .sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null;
+    const avgAmountTrendTone = hasPriorComparison && Number.isFinite(priorAvgAmountPerTrip)
+      ? trendToneFromDelta((avgAmountPerTrip ?? 0) - priorAvgAmountPerTrip)
+      : "flat";
+    const avgPoundsTrendTone = hasPriorComparison && Number.isFinite(priorAvgPoundsPerTrip)
+      ? trendToneFromDelta((avgPoundsPerTrip ?? 0) - priorAvgPoundsPerTrip)
+      : "flat";
     const installModel = typeof getInstallSurfaceModel === "function" ? getInstallSurfaceModel() : null;
     const showInstallCard = shouldShowBeginnerCard && installModel && !installModel.isInstalled;
     const installCardHTML = showInstallCard ? `
@@ -336,7 +386,7 @@ export function createHomeDashboardRenderer({
               <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
             </button>
             <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="ppl" aria-label="Open average dollars per pound detail">
-              <div class="kpiLabel rate ppl">Price Per Pound</div>
+              <div class="kpiLabel rate ppl">Avg Price Per Lb</div>
               <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
             </button>
           </div>
@@ -360,10 +410,12 @@ export function createHomeDashboardRenderer({
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Average amount / trip</div>
               <div class="reportsHeroValue money">${avgAmountPerTrip === null ? "—" : formatMoney(round2(avgAmountPerTrip))}</div>
+              ${renderOverviewTrendArrow(avgAmountTrendTone, "Average amount trend")}
             </div>
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Average pounds / trip</div>
               <div class="reportsHeroValue lbsBlue">${avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)} lbs`}</div>
+              ${renderOverviewTrendArrow(avgPoundsTrendTone, "Average pounds trend")}
             </div>
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Top dealer</div>
