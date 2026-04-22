@@ -56,19 +56,11 @@ export function createHomeDashboardRenderer({
     const correctionMessages = Array.isArray(homeFilter.customRangeCorrectionMessages)
       ? homeFilter.customRangeCorrectionMessages
       : [];
-    const isHomeCustomRangeAllowed = typeof isFeatureAllowed === "function"
-      ? !!isFeatureAllowed(entitlementFeatureKeys?.HOME_CUSTOM_RANGE)
-      : true;
     const homePresetItems = timeframeFilterControls.HOME_PRESET_FILTER_ITEMS.map((item)=> {
       if (String(item?.key || "").toUpperCase() !== "RANGE") return item;
-      if (isHomeCustomRangeAllowed) return item;
       return {
         ...item,
-        ariaLabel: "Custom Range locked. Paid plan required.",
-        labelHtml: `
-          <span class="timeframeChipMainLabel">🔒 Custom Range</span>
-          <span class="timeframeChipSubLabel">Paid</span>
-        `
+        label: "Custom Range"
       };
     });
     return `
