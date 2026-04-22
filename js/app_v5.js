@@ -46,6 +46,7 @@ registerStartupImportDiagnostics(STARTUP_MODULE_URLS, STARTUP_APP_OWNED_MODULE_U
 const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, isValidISODate },
   { THEME_MODE_DARK, normalizeThemeMode },
   { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback, buildDefaultAppState },
+  { createEntitlementsSeam, ENTITLEMENT_PLANS, ENTITLEMENT_FEATURE_KEYS },
   { ensureNavState, createNavigator },
   { drawReportsCharts },
   { buildReportsAggregationState },
@@ -437,8 +438,25 @@ let state = migrateStateIfNeeded(rootStateSaveSeam.loadState(), {
   normalizeThemeMode,
   themeModeDefault: THEME_MODE_DARK
 });
+const entitlementsSeam = createEntitlementsSeam({
+  getState: () => state,
+  setState: (nextState) => { state = nextState; },
+  defaultPlan: ENTITLEMENT_PLANS.FREE
+});
+if(entitlementsSeam.ensurePlanState()) markNeedsBootStateSave();
 const themeRuntimeSeam = createThemeRuntimeSeam();
 const applyThemeMode = ()=> themeRuntimeSeam.applyThemeMode(state);
+
+try{
+  window.__SHELLFISH_ENTITLEMENTS__ = {
+    PLANS: ENTITLEMENT_PLANS,
+    FEATURES: ENTITLEMENT_FEATURE_KEYS,
+    getCurrentPlan: () => entitlementsSeam.getCurrentPlan(),
+    getAllowedFeatures: () => entitlementsSeam.getAllowedFeatures(),
+    isFeatureAllowed: (featureKey) => entitlementsSeam.isFeatureAllowed(featureKey)
+  };
+}catch(_){ }
+
 applyThemeMode();
 ensureAreas();
 ensureDealers();

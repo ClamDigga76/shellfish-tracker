@@ -13,6 +13,7 @@ const CORE_JS_PATHS = [
   "./js/utils_v5.js",
   "./js/settings.js",
   "./js/migrations_v5.js",
+  "./js/entitlements_seam_v5.js",
   "./js/navigation_v5.js",
   "./js/reports_charts_v5.js",
   "./js/reports_aggregation_v5.js",
