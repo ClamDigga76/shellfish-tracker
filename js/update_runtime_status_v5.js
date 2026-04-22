@@ -296,11 +296,21 @@ export function createUpdateRuntimeStatusSeam({
         (details.swWaitingVersion && buildDigits && details.swWaitingVersion !== buildDigits)
       )
     );
+    details.hasBootCorruptionSignal = /reset cache|stale required asset|wrong required asset|unexpected js payload|corrupted js response|empty js response|incomplete js response/i.test(details.lastBootError);
+    details.requiredCoreCacheIncompleteAfterControl = Boolean(details.requiredCoreCacheIncomplete && details.swController);
+    details.requiredCoreCachePendingControl = Boolean(
+      details.requiredCoreCacheIncomplete &&
+      !details.swController &&
+      (details.swRegistrationConfirmed || details.swRegistrationAttempted) &&
+      !details.hasExplicitVersionMismatch &&
+      !details.swRegistrationError &&
+      !details.hasBootCorruptionSignal
+    );
     details.needsHardReset = Boolean(
       details.hasExplicitVersionMismatch ||
-      details.requiredCoreCacheIncomplete ||
+      details.requiredCoreCacheIncompleteAfterControl ||
       details.swRegistrationError ||
-      /reset cache|stale required asset|wrong required asset|unexpected js payload|corrupted js response|empty js response|incomplete js response/i.test(details.lastBootError)
+      details.hasBootCorruptionSignal
     );
 
     try{
@@ -386,11 +396,13 @@ export function createUpdateRuntimeStatusSeam({
       lines.push(`RequiredCoreCacheExpected: ${Number(runtimeDiag.requiredCoreCacheExpectedCount || 0)}`);
       lines.push(`RequiredCoreCacheFound: ${Number(runtimeDiag.requiredCoreCacheFoundCount || 0)}`);
       lines.push(`RequiredCoreCacheIncomplete: ${runtimeDiag.requiredCoreCacheIncomplete ? "yes" : "no"}`);
+      lines.push(`RequiredCoreCachePendingControl: ${runtimeDiag.requiredCoreCachePendingControl ? "yes" : "no"}`);
+      lines.push(`RequiredCoreCacheAfterControl: ${runtimeDiag.requiredCoreCacheIncompleteAfterControl ? "yes" : "no"}`);
       if(Array.isArray(runtimeDiag.requiredCoreCacheMissing) && runtimeDiag.requiredCoreCacheMissing.length){
         lines.push(`RequiredCoreCacheMissing: ${runtimeDiag.requiredCoreCacheMissing.join(", ")}`);
       }
       lines.push(`HardResetSuggested: ${runtimeDiag.needsHardReset ? "yes" : "no"}`);
-      lines.push(`RecoveryReadiness: ${runtimeDiag.needsHardReset || runtimeDiag.lastBootError || runtimeDiag.requiredCoreCacheIncomplete ? "attention-needed" : "ready"}`);
+      lines.push(`RecoveryReadiness: ${runtimeDiag.needsHardReset || runtimeDiag.lastBootError ? "attention-needed" : (runtimeDiag.requiredCoreCachePendingControl ? "pending-control" : "ready")}`);
       if(runtimeDiag.lastBootError) lines.push(`LastBootWarning: ${String(runtimeDiag.lastBootError)}`);
       if(runtimeDiag.swRegistrationError) lines.push(`SWRegistrationWarning: ${String(runtimeDiag.swRegistrationError)}`);
     }else{
@@ -512,6 +524,8 @@ export function createUpdateRuntimeStatusSeam({
     }
     if(runtimeDiag.needsHardReset){
       parts.push("Recovery note: if Reload latest build does not clear this, use Reset cache & reload for a clean runtime copy.");
+    }else if(runtimeDiag.requiredCoreCachePendingControl){
+      parts.push("Recovery note: required core cache will be rechecked after service worker control is established.");
     }
     if(runtimeDiag.lastBootError){
       parts.push(`Last boot warning: ${runtimeDiag.lastBootError}`);
@@ -570,7 +584,11 @@ export function createUpdateRuntimeStatusSeam({
       statusEl.textContent = "Latest build check is still pending on this device";
       btnPrimary.textContent = "Reload latest build";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-      if(inlineMsg) inlineMsg.textContent = "Run Reload latest build after service worker control is confirmed.";
+      if(inlineMsg){
+        inlineMsg.textContent = runtimeDiag?.requiredCoreCachePendingControl
+          ? "Required core cache is still settling while service worker control is pending. Reopen or reload after control is confirmed."
+          : "Run Reload latest build after service worker control is confirmed.";
+      }
       return;
     }
 
@@ -641,11 +659,12 @@ export function createUpdateRuntimeStatusSeam({
     const updateReady = Boolean(swUpdateReady || runtimeDiag.swWaitingVersion);
     const swControlConfirmed = Boolean(runtimeDiag.swController && runtimeDiag.swRegistrationConfirmed);
     const requiredCoreCacheHealthy = !runtimeDiag.requiredCoreCacheIncomplete;
+    const requiredCoreSettled = requiredCoreCacheHealthy || runtimeDiag.requiredCoreCachePendingControl;
     const updateAligned = Boolean(!runtimeDiag.hasExplicitVersionMismatch && requiredCoreCacheHealthy && swControlConfirmed);
     const lastGoodRuntime = getLastGoodRuntimeConfirmation();
     const hasLastGoodForBuild = Boolean(lastGoodRuntime?.buildVersion && lastGoodRuntime.buildVersion === String(displayBuildVersion || ""));
     const reopenReady = Boolean(swControlConfirmed && requiredCoreCacheHealthy && !runtimeDiag.installedAppLikelyLagging && !runtimeDiag.hasExplicitVersionMismatch && hasLastGoodForBuild);
-    const recoveryReady = Boolean(runtimeDiag.needsHardReset || runtimeDiag.lastBootError || runtimeDiag.requiredCoreCacheIncomplete);
+    const recoveryReady = Boolean(runtimeDiag.needsHardReset || runtimeDiag.lastBootError);
     const cacheLine = runtimeDiag.cacheVersions.length
       ? [...new Set(runtimeDiag.cacheVersions)].map(v=>`v${v}`).join(", ")
       : "(none)";
@@ -656,9 +675,9 @@ export function createUpdateRuntimeStatusSeam({
 
     const checks = [
       { key: "browser_mode", label: "Browser mode opens current release", suggested: "not-run" },
-      { key: "installed_mode", label: "Installed app opens current release", suggested: runtimeDiag.standalone ? (runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging || runtimeDiag.requiredCoreCacheIncomplete ? "fail" : (swControlConfirmed ? "pass" : "not-run")) : "not-run" },
-      { key: "update_pickup", label: "Update pickup after reload", suggested: runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.requiredCoreCacheIncomplete ? "fail" : (swControlConfirmed ? "pass" : "not-run") },
-      { key: "reopen_behavior", label: "Reopen keeps expected build", suggested: runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging || runtimeDiag.requiredCoreCacheIncomplete ? "fail" : (reopenReady ? "pass" : "not-run") },
+      { key: "installed_mode", label: "Installed app opens current release", suggested: runtimeDiag.standalone ? (runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging || (!requiredCoreSettled && runtimeDiag.requiredCoreCacheIncomplete) ? "fail" : (swControlConfirmed ? "pass" : "not-run")) : "not-run" },
+      { key: "update_pickup", label: "Update pickup after reload", suggested: runtimeDiag.hasExplicitVersionMismatch || (!requiredCoreSettled && runtimeDiag.requiredCoreCacheIncomplete) ? "fail" : (swControlConfirmed ? "pass" : "not-run") },
+      { key: "reopen_behavior", label: "Reopen keeps expected build", suggested: runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging || (!requiredCoreSettled && runtimeDiag.requiredCoreCacheIncomplete) ? "fail" : (reopenReady ? "pass" : "not-run") },
       { key: "recovery_reset", label: "Recovery/reset trust flow", suggested: recoveryReady ? "not-run" : "pass" }
     ];
 
@@ -673,6 +692,7 @@ export function createUpdateRuntimeStatusSeam({
       `Required core cache expected: ${runtimeDiag.requiredCoreCacheExpectedCount || 0}`,
       `Required core cache found: ${runtimeDiag.requiredCoreCacheFoundCount || 0}`,
       `Required core cache incomplete: ${runtimeDiag.requiredCoreCacheIncomplete ? "yes" : "no"}`,
+      `Required core pending control: ${runtimeDiag.requiredCoreCachePendingControl ? "yes" : "no"}`,
       `Required core cache missing: ${runtimeDiag.requiredCoreCacheMissing?.length ? runtimeDiag.requiredCoreCacheMissing.join(", ") : "none"}`,
       `Version skew detected: ${runtimeDiag.hasVersionSkew ? "yes" : "no"}`,
       `SW control unconfirmed: ${runtimeDiag.swControlUnconfirmed ? "yes" : "no"}`,
