@@ -1,4 +1,5 @@
 import { createChartStorySeam } from "./chart_story_seam_v5.js";
+import { HOME_SHARED_CHART_IDS, getHomeSharedChartDefinition } from "./reports_chart_definitions_v5.js";
 
 export function createReportsOverviewSectionsSeam(deps){
   const {
@@ -231,6 +232,43 @@ export function createReportsOverviewSectionsSeam(deps){
         height: 220
       })
     ].join("");
+  }
+
+  function buildHighValueChartDeckManifest(){
+    return HOME_SHARED_CHART_IDS.map((chartId)=> {
+      const definition = getHomeSharedChartDefinition(chartId) || {};
+      return {
+        chartId,
+        canvasId: `reportsHighValue${chartId.charAt(0).toUpperCase()}${chartId.slice(1)}`,
+        title: definition.title || "Chart",
+        explanation: definition.explanation || ""
+      };
+    });
+  }
+
+  function renderHighValueSection(){
+    const chartItems = buildHighValueChartDeckManifest();
+    return reportsSection({
+      title: "High Value",
+      intro: "Curated high-signal chart deck.",
+      body: `<div class="reportsHeroCard homeInsightsHero">
+        <div class="reportsHeroEyebrow">High Value deck</div>
+        <h2 class="reportsHeroHeadline">Decision support for your active Reports filters</h2>
+        <p class="reportsHeroSub">This section carries the curated deck from Home and runs it directly from Reports context.</p>
+      </div>
+      <div class="reportsChartsStack homeInsightsChartStack">
+        ${chartItems.map(({ canvasId, title, explanation })=> chartStorySeam.renderChartStoryCard({
+          mode: "lean",
+          canvasId,
+          title,
+          explanation,
+          cardTag: "article",
+          cardClass: "card chartCard homeInsightsChartCard",
+          emptyClass: "homeInsightsChartEmpty"
+        })).join("")}
+      </div>`,
+      extraClass: "reportsSection--high-value"
+    });
   }
 
   function renderSeasonalitySection(context){
@@ -527,6 +565,7 @@ export function createReportsOverviewSectionsSeam(deps){
 
   function renderActiveReportsSection(context){
     const { activeReportsSection, highlightsStrip } = context;
+    if(activeReportsSection === "high-value") return renderHighValueSection();
     if(activeReportsSection === "charts") return reportsSection({
       title: "Charts",
       intro: "Trend direction at a glance.",
@@ -552,6 +591,7 @@ export function createReportsOverviewSectionsSeam(deps){
   return {
     renderNoResultsState,
     renderChartsSection,
+    renderHighValueSection,
     renderSeasonalitySection,
     renderRecordsBlock,
     renderDetailBlock,

@@ -8,6 +8,7 @@ import { createReportsShellControlsSeam } from "./reports_shell_controls_v5.js";
 import { createReportsTransitionSeam } from "./reports_transition_seam_v5.js";
 import { createReportsMetricRouteSeam } from "./reports_metric_route_seam_v5.js";
 import { buildRollingSeriesFromMonthRows, getRollingWindowForMetric } from "./reports_rolling_trends_v5.js";
+import { HOME_SHARED_CHART_IDS, buildHomeSharedChartModel, getHomeSharedChartDefinition } from "./reports_chart_definitions_v5.js";
 
 export function createReportsScreenRenderer(deps){
   const {
@@ -450,6 +451,20 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
 
   if(activeReportsSection === "charts"){
     scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, {});
+    return;
+  }
+
+  if(activeReportsSection === "high-value"){
+    const chartDeck = HOME_SHARED_CHART_IDS.map((chartId)=> {
+      const definition = getHomeSharedChartDefinition(chartId) || {};
+      const canvasId = `reportsHighValue${chartId.charAt(0).toUpperCase()}${chartId.slice(1)}`;
+      return {
+        canvasId,
+        metricKey: String(definition?.metricKey || ""),
+        chartModel: buildHomeSharedChartModel({ chartId, monthRows, dealerRows, areaRows })
+      };
+    });
+    scheduleReportsChartsDraw(monthRows, dealerRows, tripsTimeline, { chartDeck, homeInsightsMode: true });
     return;
   }
 
