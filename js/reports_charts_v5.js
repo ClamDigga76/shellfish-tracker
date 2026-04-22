@@ -226,7 +226,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const slotW = labels.length > 0 ? (geom.plotW / labels.length) : geom.plotW;
       const x = alignMode === "bar-center"
         ? geom.x0 + (slotW * i) + (slotW * 0.5)
-        : geom.x0 + ((geom.plotW * i) / (Math.max(1, labels.length - 1)));
+        : (labels.length === 1
+            ? geom.x0 + (geom.plotW * 0.5)
+            : geom.x0 + ((geom.plotW * i) / (labels.length - 1)));
       const text = formatAxisLabel(lab, { labelType, compact: frame.compact });
       const m = ctx.measureText(text);
       let tx = x - (m.width / 2);
