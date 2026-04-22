@@ -3,6 +3,8 @@ import { APP_ENTRY_MODULE_PATH, BOOTSTRAP_REQUIRED_ASSET_PATHS, BOOTSTRAP_SANITY
 const BOOTSTRAP_URL = new URL(import.meta.url, location.href);
 const APP_VERSION = BOOTSTRAP_URL.searchParams.get("v") || "0";
 const SAFE_MODE_PARAM = "safeMode";
+// Legacy compatibility runtime/session seams:
+// keep these historical key names unchanged for recovery/update trust continuity across versions.
 const SAFE_MODE_SESSION_KEY = "shellfish-safe-mode-session";
 const LAST_GOOD_RUNTIME_KEY = "shellfish-last-good-runtime-v1";
 
@@ -128,6 +130,8 @@ function detectLegacyStateKey() {
 }
 
 const BOOT_BUILD = "v5";
+// Legacy compatibility globals consumed by runtime diagnostics/recovery flows.
+// Names remain __SHELLFISH_* intentionally to preserve continuity with prior shipped runtimes.
 window.__SHELLFISH_BUILD__ = window.__SHELLFISH_BUILD__ || BOOT_BUILD;
 window.__SHELLFISH_BOOT_AT = Date.now();
 window.__SHELLFISH_APP_STARTED = Boolean(window.__SHELLFISH_APP_STARTED);
