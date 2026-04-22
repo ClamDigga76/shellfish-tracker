@@ -398,7 +398,6 @@ export function createHomeDashboardRenderer({
           && !isFeatureAllowed(entitlementFeatureKeys?.HOME_CUSTOM_RANGE)
         ) {
           showToast("🔒 Custom Range is a Paid feature. Upgrade to unlock.");
-          return;
         }
         state.homeFilter.mode = nextMode;
         if(state.homeFilter.mode !== "RANGE") state.homeFilter.customRangeCorrectionMessages = [];
