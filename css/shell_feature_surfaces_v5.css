@@ -404,7 +404,7 @@
   margin-top:0;
 }
 .homeLastTripCardWrap{
-  margin-top:8px;
+  margin-top:6px;
   min-width:0;
 }
 .homeLastTripHeader{
@@ -426,6 +426,14 @@
   border-radius:999px;
   padding:4px 8px;
   background:rgba(8,12,20,.36);
+  white-space:nowrap;
+}
+.homeLastTripEditBtn{
+  padding:4px 9px;
+  min-height:0;
+  font-size:11px;
+  line-height:1.2;
+  letter-spacing:.04em;
   white-space:nowrap;
 }
 .homeLastTripContext{

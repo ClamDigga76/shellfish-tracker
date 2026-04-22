@@ -281,8 +281,10 @@ export function createHomeDashboardRenderer({
       ${installCardHTML}
     ` : ``;
 
+    const newestSavedTripId = String(newestSavedTrip?.id || "").trim();
+    const hasEditableLatestTrip = !!(newestSavedTrip && newestSavedTripId);
     const lastSavedTripContextHtml = newestSavedTrip
-      ? `<div class="homeLastTripContext">Latest saved trip shown below. Edit details in Trips.</div>`
+      ? ``
       : `<div class="homeLastTripContext">Your latest trip appears here after your first save.</div>`;
 
     const lastSavedTripHtml = newestSavedTrip
@@ -305,6 +307,9 @@ export function createHomeDashboardRenderer({
       toISO: unified.toISO
     });
     const homeOverviewRangeLabel = homeFilterLabel;
+    const lastTripHeaderActionHtml = hasEditableLatestTrip
+      ? `<button class="btn homeLastTripEditBtn" id="homeLastTripEditBtn" type="button">Edit Trip</button>`
+      : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
     const isHomeInsightsOpen = !!state.homeInsightsOpen;
     if (isHomeInsightsOpen) {
       const homeInsightsCharts = [
@@ -408,7 +413,7 @@ export function createHomeDashboardRenderer({
         <section class="homeSection homeLastTripShell">
           <div class="homeLastTripHeaderRow">
             <div class="homeLastTripHeader reportsHeroEyebrow">Last Saved Trip</div>
-            <div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>
+            ${lastTripHeaderActionHtml}
           </div>
           ${lastSavedTripContextHtml}
           ${lastSavedTripHtml}
@@ -490,6 +495,15 @@ export function createHomeDashboardRenderer({
         state.reportsMetricDetailContext = null;
         saveState();
         renderHome();
+      };
+    }
+    const homeLastTripEditBtn = document.getElementById("homeLastTripEditBtn");
+    if (homeLastTripEditBtn && hasEditableLatestTrip) {
+      homeLastTripEditBtn.onclick = () => {
+        state.editId = newestSavedTripId;
+        state.view = "edit";
+        saveState();
+        render();
       };
     }
 
