@@ -97,9 +97,18 @@ export const REQUIRED_CORE_CACHE_STATIC_PATHS = [
   "./js/bootstrap_v5.js"
 ];
 
+export const REQUIRED_CORE_CACHE_UNVERSIONED_PATHS = [
+  "./",
+  "./index.html"
+];
+
 export function buildRequiredCoreCachePaths(version) {
+  const unversioned = new Set(REQUIRED_CORE_CACHE_UNVERSIONED_PATHS);
+  const requiredStaticPaths = REQUIRED_CORE_CACHE_STATIC_PATHS.map((path) => (
+    unversioned.has(path) ? path : buildVersionedPath(path, version)
+  ));
   return [
-    ...REQUIRED_CORE_CACHE_STATIC_PATHS.map((path) => buildVersionedPath(path, version)),
+    ...requiredStaticPaths,
     ...SW_CORE_JS_PATHS.map((path) => buildSwCoreVersionedAssetPath(path, version))
   ];
 }
