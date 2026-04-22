@@ -816,7 +816,7 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.tripsRollingTrend ? {
               title: `Trips • ${detailCharts.tripsRollingTrend.windowSize}-month rolling`,
-              context: "Bars • rolling trend with current month highlighted",
+              context: "Line • rolling trend with latest month highlighted",
               canvasId: "c_trips_rolling_trend",
               chartModel: detailCharts.tripsRollingTrend,
               metricKey: "trips"
@@ -845,7 +845,7 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.poundsRollingTrend ? {
               title: `Pounds • ${detailCharts.poundsRollingTrend.windowSize}-month rolling`,
-              context: "Bars • rolling trend with current month highlighted",
+              context: "Line • rolling trend with latest month highlighted",
               canvasId: "c_pounds_rolling_trend",
               chartModel: detailCharts.poundsRollingTrend,
               metricKey: "pounds"
@@ -874,14 +874,14 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.amountRollingTrend ? {
               title: `Amount • ${detailCharts.amountRollingTrend.windowSize}-month rolling`,
-              context: "Bars • rolling trend with current month highlighted",
+              context: "Line • rolling trend with latest month highlighted",
               canvasId: "c_amount_rolling_trend",
               chartModel: detailCharts.amountRollingTrend,
               metricKey: "amount"
             } : null,
             detailCharts.amountTrend ? {
               title: "Amount • Monthly",
-              context: "Bars • full months in the selected Reports date range",
+              context: "Line • full months in the selected Reports date range",
               canvasId: "c_amount_trend",
               chartModel: detailCharts.amountTrend,
               metricKey: "amount"
@@ -915,7 +915,7 @@ export function createReportsMetricDetailSeam(deps){
           : [
             detailCharts.pplRollingTrend ? {
               title: `Price Per Pound • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
-              context: `Bars • rolling trend with current month highlighted • ${getRateLeaderThresholdText()}`,
+              context: `Line • rolling trend with latest month highlighted • ${getRateLeaderThresholdText()}`,
               canvasId: "c_ppl_rolling_trend",
               chartModel: detailCharts.pplRollingTrend,
               metricKey: "ppl"
