@@ -3,6 +3,21 @@ export const HOME_RATE_RANKING_THRESHOLDS = Object.freeze({
   minPounds: 150
 });
 
+export const HOME_SHARED_CHART_IDS = Object.freeze([
+  "amountByArea",
+  "poundsByArea",
+  "amountPerTripByArea",
+  "amountByDealer",
+  "pplByDealer",
+  "pplByArea",
+  "poundsPerTripByArea",
+  "pplByMonth",
+  "amountByMonth",
+  "poundsByMonth",
+  "amountPerTripByMonth",
+  "poundsPerTripByMonth"
+]);
+
 export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
   amountByArea: Object.freeze({
     chartId: "amountByArea",

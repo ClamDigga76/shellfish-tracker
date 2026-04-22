@@ -1,6 +1,4 @@
-import { buildHomeSharedChartModel, getHomeSharedChartDefinition } from "./reports_chart_definitions_v5.js";
 import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_seam_v5.js";
-import { createChartStorySeam } from "./chart_story_seam_v5.js";
 
 export function createHomeDashboardRenderer({
   state,
@@ -27,8 +25,6 @@ export function createHomeDashboardRenderer({
   getInstallSurfaceModel,
   runInstallAction,
   renderStandardReadOnlyTripCard,
-  buildReportsAggregationForTrips,
-  drawReportsCharts,
   isFeatureAllowed,
   entitlementFeatureKeys
 }) {
@@ -37,8 +33,6 @@ export function createHomeDashboardRenderer({
     parseReportDateToISO,
     formatDateDMY
   });
-  const chartStorySeam = createChartStorySeam({ escapeHtml });
-
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
 
@@ -139,13 +133,6 @@ export function createHomeDashboardRenderer({
     const hf = state.homeFilter || { mode: "YTD", from: "", to: "" };
     const unified = buildUnifiedFilterFromHomeFilter(hf);
     const trips = applyUnifiedTripFilter(tripsAll, unified).rows;
-    const reportsAgg = typeof buildReportsAggregationForTrips === "function"
-      ? buildReportsAggregationForTrips(trips)
-      : null;
-    const monthRows = Array.isArray(reportsAgg?.monthRows) ? reportsAgg.monthRows : [];
-    const dealerRows = Array.isArray(reportsAgg?.dealerRows) ? reportsAgg.dealerRows : [];
-    const areaRows = Array.isArray(reportsAgg?.areaRows) ? reportsAgg.areaRows : [];
-    const tripsTimeline = Array.isArray(reportsAgg?.tripsTimeline) ? reportsAgg.tripsTimeline : [];
     const totalAmount = trips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
     const totalLbs = trips.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
     const weightedRateTotal = trips.reduce((sum, trip) => {
@@ -322,80 +309,12 @@ export function createHomeDashboardRenderer({
     const lastTripHeaderActionHtml = hasEditableLatestTrip
       ? `<button class="homeLastTripEditBtn" id="homeLastTripEditBtn" type="button">Edit Trip</button>`
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
-    const isHomeInsightsOpen = !!state.homeInsightsOpen;
-    if (isHomeInsightsOpen) {
-      const homeInsightsCharts = [
-        { chartId: "amountByArea", canvasId: "homeInsightsAmountByArea" },
-        { chartId: "poundsByArea", canvasId: "homeInsightsPoundsByArea" },
-        { chartId: "amountPerTripByArea", canvasId: "homeInsightsAmountPerTripByArea" },
-        { chartId: "amountByDealer", canvasId: "homeInsightsAmountByDealer" },
-        { chartId: "pplByDealer", canvasId: "homeInsightsPplByDealer" },
-        { chartId: "pplByArea", canvasId: "homeInsightsPplByArea" },
-        { chartId: "poundsPerTripByArea", canvasId: "homeInsightsPoundsPerTripByArea" },
-        { chartId: "pplByMonth", canvasId: "homeInsightsPplByMonth" },
-        { chartId: "amountByMonth", canvasId: "homeInsightsAmountByMonth" },
-        { chartId: "poundsByMonth", canvasId: "homeInsightsPoundsByMonth" },
-        { chartId: "amountPerTripByMonth", canvasId: "homeInsightsAmountPerTripByMonth" },
-        { chartId: "poundsPerTripByMonth", canvasId: "homeInsightsPoundsPerTripByMonth" }
-      ];
-      const chartDeck = homeInsightsCharts.map(({ chartId, canvasId }) => {
-        const definition = getHomeSharedChartDefinition(chartId);
-        return {
-          canvasId,
-          metricKey: String(definition?.metricKey || ""),
-          chartModel: buildHomeSharedChartModel({ chartId, monthRows, dealerRows, areaRows })
-        };
-      });
-      getApp().innerHTML = `
-        ${renderPageHeader("home")}
-        <section class="card dashCard homeInsightsSurface" aria-label="Home insights">
-          <div class="homeInsightsTopRow">
-            <button class="btn reportsMetricBackBtn" id="homeInsightsBack" type="button">← Back to Home</button>
-            <div class="homeOverviewScopePill">Range ${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
-          </div>
-          <div class="reportsHeroCard homeInsightsHero">
-            <div class="reportsHeroEyebrow">Home insights</div>
-            <h2 class="reportsHeroHeadline">Decision support for your current Home filter</h2>
-            <p class="reportsHeroSub">Scan a tight set of high-signal charts before planning your next outings.</p>
-          </div>
-          <div class="reportsChartsStack homeInsightsChartStack">
-            ${homeInsightsCharts.map(({ chartId, canvasId }) => {
-              const definition = getHomeSharedChartDefinition(chartId) || {};
-              return chartStorySeam.renderChartStoryCard({
-                mode: "lean",
-                canvasId,
-                title: definition.title || "Chart",
-                explanation: definition.explanation || "",
-                cardTag: "article",
-                cardClass: "card chartCard homeInsightsChartCard",
-                emptyClass: "homeInsightsChartEmpty"
-              });
-            }).join("")}
-          </div>
-        </section>
-      `;
-      const insightsBack = document.getElementById("homeInsightsBack");
-      if (insightsBack) {
-        insightsBack.onclick = () => {
-          state.homeInsightsOpen = false;
-          saveState();
-          renderHome();
-        };
-      }
-      if (typeof drawReportsCharts === "function") {
-        drawReportsCharts(monthRows, dealerRows, tripsTimeline, { chartDeck, homeInsightsMode: true });
-      }
-      return;
-    }
     getApp().innerHTML = `
       ${renderPageHeader("home")}
 
       <div class="card dashCard homeScreenShell">
         ${homeBeginnerCardHTML}
         <section class="homeSection homeFilterSection">
-          <div class="homeInsightsEntryRow">
-            <button class="btn homeInsightsEntryBtn" id="homeOpenInsights" type="button">Insights</button>
-          </div>
           <div class="homeFilterStack">
             ${renderHomeTimeframeControls({ mode: f, homeFilter: hf })}
           </div>
@@ -506,18 +425,6 @@ export function createHomeDashboardRenderer({
     bindDatePill("homeRangeFrom");
     bindDatePill("homeRangeTo");
     fitHomeKpiValues();
-    const homeOpenInsights = document.getElementById("homeOpenInsights");
-    if (homeOpenInsights) {
-      homeOpenInsights.onclick = () => {
-        state.homeInsightsOpen = true;
-        state.homeMetricDetail = "";
-        state.homeMetricDetailContext = null;
-        state.reportsMetricDetail = "";
-        state.reportsMetricDetailContext = null;
-        saveState();
-        renderHome();
-      };
-    }
     const homeLastTripEditBtn = document.getElementById("homeLastTripEditBtn");
     if (homeLastTripEditBtn && hasEditableLatestTrip) {
       homeLastTripEditBtn.onclick = () => {
