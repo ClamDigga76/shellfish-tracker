@@ -2,6 +2,7 @@ export const STARTUP_MODULE_PATHS = [
   "./utils_v5.js",
   "./settings.js",
   "./migrations_v5.js",
+  "./entitlements_seam_v5.js",
   "./navigation_v5.js",
   "./reports_charts_v5.js",
   "./reports_aggregation_v5.js",
