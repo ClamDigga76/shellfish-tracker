@@ -1,5 +1,6 @@
 import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_seam_v5.js";
 import { createFilteredRowsMemo, createRowsComputationMemo } from "./runtime_memo_v5.js";
+import { renderInstallSurface } from "./install_surface_renderer_v5.js";
 
 export function createHomeDashboardRenderer({
   state,
@@ -325,19 +326,15 @@ export function createHomeDashboardRenderer({
       : "flat";
     const installModel = typeof getInstallSurfaceModel === "function" ? getInstallSurfaceModel() : null;
     const showInstallCard = shouldShowBeginnerCard && installModel && !installModel.isInstalled;
-    const installCardHTML = showInstallCard ? `
-      <section class="homeSection homeInstallSection">
-        <div class="noticeBand homeInstallBand" role="status" aria-live="polite">
-          <div class="noticeTitle">Best experience: install the app</div>
-          <div class="muted small noticeBody">${escapeHtml(installModel.statusHint || "Browser mode and Installed mode are both valid. Installed mode is recommended when you want a steadier Home Screen shortcut and app-like use.")}</div>
-          <div class="muted small noticeBody mt8">${escapeHtml(installModel.stepsLine || "Open Settings later if you need install steps again.")}</div>
-          <div class="row mt10 noticeActions">
-            ${installModel.showAction ? `<button class="btn" id="homeInstallAction" type="button" ${installModel.actionEnabled ? '' : 'disabled'}>${escapeHtml(installModel.actionLabel)}</button>` : ``}
-            <button class="btn" id="homeInstallHelp" type="button">Open install help</button>
-          </div>
-        </div>
-      </section>
-    ` : ``;
+    const installCardHTML = showInstallCard
+      ? renderInstallSurface({
+        model: installModel,
+        mode: "compact",
+        escapeHtml,
+        actionId: "homeInstallAction",
+        helpId: "homeInstallHelp"
+      })
+      : ``;
 
     const homeBeginnerCardHTML = shouldShowBeginnerCard ? `
       <section class="homeSection homeBeginnerSection">
