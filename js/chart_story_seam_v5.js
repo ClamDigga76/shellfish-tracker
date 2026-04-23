@@ -10,6 +10,9 @@ export function createChartStorySeam({ escapeHtml }) {
     title,
     explanation = "",
     context = "",
+    titleClass = "chartTitle",
+    explanationClass = "homeInsightsChartExplanation",
+    contextClass = "chartContext",
     height = 256,
     cardTag = "article",
     cardClass = "card chartCard",
@@ -18,9 +21,9 @@ export function createChartStorySeam({ escapeHtml }) {
   }) {
     return `
       <${cardTag} class="${safeEscape(cardClass)}">
-        <h3 class="chartTitle">${safeEscape(title)}</h3>
-        <p class="homeInsightsChartExplanation">${safeEscape(explanation)}</p>
-        ${context ? `<div class="chartContext">${safeEscape(context)}</div>` : ""}
+        <h3 class="${safeEscape(titleClass)}">${safeEscape(title)}</h3>
+        ${explanation ? `<p class="${safeEscape(explanationClass)}">${safeEscape(explanation)}</p>` : ""}
+        ${context ? `<div class="${safeEscape(contextClass)}">${safeEscape(context)}</div>` : ""}
         <canvas class="chart" id="${safeEscape(canvasId)}" height="${safeEscape(height)}"></canvas>
         <div class="${safeEscape(emptyClass)}" data-chart-empty-for="${safeEscape(canvasId)}" hidden>${safeEscape(emptyMessage)}</div>
       </${cardTag}>

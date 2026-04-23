@@ -1,5 +1,6 @@
 import { buildRollingSeriesFromMonthRows, describeRollingContext, getRollingWindowForMetric } from "./reports_rolling_trends_v5.js";
 import { HOME_RATE_RANKING_THRESHOLDS, buildHomeSharedChartModel, getHomeSharedChartDefinition, normalizeChronologicalRows } from "./reports_chart_definitions_v5.js";
+import { createChartStorySeam } from "./chart_story_seam_v5.js";
 
 const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
   fairWindowLabel: "Visible range",
@@ -416,6 +417,7 @@ export function createReportsMetricDetailSeam(deps){
     formatMoney,
     to2
   } = deps;
+  const chartStorySeam = createChartStorySeam({ escapeHtml });
 
   const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
   const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
@@ -604,6 +606,21 @@ export function createReportsMetricDetailSeam(deps){
       ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
       : String(compareSummary.text || "");
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
+    const renderHomeChartCard = (chart)=> chartStorySeam.renderChartStoryCard({
+      mode: "lean",
+      cardTag: "div",
+      cardClass: `${surfaceMode.detailChartClass} homeMetricChartStory`,
+      titleClass: "chartTitle homeMetricChartTitle",
+      explanationClass: "homeInsightsChartExplanation homeMetricChartSupport",
+      contextClass: `${surfaceMode.detailChartContextClass} chartContext`,
+      title: chart.title,
+      explanation: chart.explanation || "",
+      context: chart.context || "",
+      canvasId: chart.canvasId,
+      height: 220,
+      emptyClass: "reportsChartEmpty homeMetricChartEmpty",
+      emptyMessage: chart.emptyMessage || "Not enough data in this range yet."
+    });
     const renderStandardSupportCard = ()=> `
       <div class="${surfaceMode.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
         <div class="${surfaceMode.detailCompareTextClass}">${renderPercentEmphasisText(supportAnalysisText)}</div>
@@ -648,20 +665,33 @@ export function createReportsMetricDetailSeam(deps){
         `}
 
         <div class="reportsMetricChartsStack">
+          ${viewModel.isHomeMetricDetail
+    ? renderHomeChartCard({
+      title: detailChartTitle,
+      explanation: meta.homeChartExplanation || "",
+      context: detailChartContext,
+      canvasId: meta.chartCanvasId
+    })
+    : `
           <div class="${surfaceMode.detailChartClass}">
             <b>${escapeHtml(detailChartTitle)}</b>
             <div class="${surfaceMode.detailChartContextClass}">${escapeHtml(detailChartContext)}</div>
             <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
             <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(meta.chartCanvasId)}" hidden>Not enough data in this range yet.</div>
           </div>
+          `}
 
           ${secondaryCharts.map((chart)=> `
+            ${viewModel.isHomeMetricDetail
+    ? renderHomeChartCard(chart)
+    : `
             <div class="${surfaceMode.detailChartClass}">
               <b>${escapeHtml(chart.title)}</b>
               <div class="${surfaceMode.detailChartContextClass}">${escapeHtml(chart.context)}</div>
               <canvas class="chart" id="${escapeHtml(chart.canvasId)}" height="220"></canvas>
               <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(chart.canvasId)}" hidden>Not enough data in this range yet.</div>
             </div>
+            `}
           `).join("")}
         </div>
 
@@ -808,6 +838,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Trips • Compare",
         homeChartTitle: "Trips",
+        homeChartExplanation: "Month-to-month trip totals for the latest visible pair.",
         chartContext: primaryChart?.basisLabel || "Bars • trip totals for the latest matched months",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_trips",
@@ -837,6 +868,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Pounds • Compare",
         homeChartTitle: "Pounds",
+        homeChartExplanation: "Month-to-month landed pounds for the latest visible pair.",
         chartContext: primaryChart?.basisLabel || "Bars • pound totals for the latest matched months",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_lbs",
@@ -866,6 +898,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Amount • Compare",
         homeChartTitle: "Amount",
+        homeChartExplanation: "Month-to-month earnings for the latest visible pair.",
         chartContext: primaryChart?.basisLabel || "Bars • amount totals for the latest matched months",
         homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
         chartCanvasId: "c_amount_detail",
@@ -907,6 +940,7 @@ export function createReportsMetricDetailSeam(deps){
         primaryBasis,
         chartTitle: "Average Price Per Pound • Compare",
         homeChartTitle: "Average Price Per Pound",
+        homeChartExplanation: "Month-to-month average pay rate for the latest visible pair.",
         chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
         homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
         chartCanvasId: "c_ppl",
