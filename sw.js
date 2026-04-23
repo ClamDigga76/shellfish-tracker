@@ -28,9 +28,6 @@ const CORE_JS_PATHS = [
   "./js/trip_cards_v5.js",
   "./js/help_about_render_v5.js",
   "./js/trip_form_render_v5.js",
-  "./js/home_dashboard_v5.js",
-  "./js/settings_screen_v5.js",
-  "./js/reports_screen_v5.js",
   "./js/chart_story_seam_v5.js",
   "./js/feedback_seam_v5.js",
   "./js/trip_screen_shared_helpers_v5.js",
@@ -47,11 +44,6 @@ const CORE_JS_PATHS = [
   "./js/runtime_orchestration_seam_v5.js",
   "./js/top_level_navigation_transition_seam_v5.js",
   "./js/app_shell_v5.js",
-  "./js/reports_compare_foundations_v5.js",
-  "./js/reports_advanced_panel_v5.js",
-  "./js/reports_highlights_v5.js",
-  "./js/trip_card_renderer_core_v5.js",
-  "./js/reports_chart_definitions_v5.js",
   "./js/app_v5.js",
 ];
 // END GENERATED: CORE_JS_PATHS
@@ -71,8 +63,6 @@ const CORE = [
   "./icons/icon-512-maskable.png",
   `./css/shell_shared_v5.css?v=${SW_V}`,
   `./css/shell_feature_surfaces_v5.css?v=${SW_V}`,
-  `./css/trip_form_v5.css?v=${SW_V}`,
-  `./css/reports_v5.css?v=${SW_V}`,
   `./css/boot_shell_inline_extract_v1.css?v=${SW_V}`,
   `./js/boot_fallback_gate_v1.js?v=${SW_V}`,
   `./js/bootstrap_v5.js?v=${SW_V}`,
@@ -85,8 +75,6 @@ const REQUIRED_CORE = [
   `./manifest.webmanifest?v=${SW_V}`,
   `./css/shell_shared_v5.css?v=${SW_V}`,
   `./css/shell_feature_surfaces_v5.css?v=${SW_V}`,
-  `./css/trip_form_v5.css?v=${SW_V}`,
-  `./css/reports_v5.css?v=${SW_V}`,
   `./css/boot_shell_inline_extract_v1.css?v=${SW_V}`,
   `./js/boot_fallback_gate_v1.js?v=${SW_V}`,
   `./js/bootstrap_v5.js?v=${SW_V}`,
@@ -97,6 +85,9 @@ const REQUIRED_CORE_SET = new Set(REQUIRED_CORE);
 
 function isJS(url) {
   return /\.js($|\?)/i.test(url);
+}
+function isCSS(url) {
+  return /\.css($|\?)/i.test(url);
 }
 function isHTML(url) {
   return /(^\.\/($|index\.html$))|\/($|index\.html$)/i.test(url) || /\.html($|\?)/i.test(url);
@@ -184,10 +175,15 @@ self.addEventListener("fetch", (event) => {
       return cached || fetch(req, { cache: "no-store" });
     }
 
-    // JS: network-first with strict guards to avoid caching HTML.
+    // JS: versioned JS can be cache-first (URL includes build version).
     if (isJS(url.pathname)) {
+      const isVersioned = url.searchParams.has("v");
+      if (isVersioned) {
+        const cachedVersioned = await cache.match(req);
+        if (cachedVersioned && looksLikeJSResponse(cachedVersioned)) return cachedVersioned;
+      }
       try {
-        const net = await fetch(req, { cache: "no-store" });
+        const net = await fetch(req, { cache: isVersioned ? "default" : "no-store" });
         if (net && net.ok && looksLikeJSResponse(net)) {
           await cache.put(req, net.clone());
           return net;
@@ -203,7 +199,20 @@ self.addEventListener("fetch", (event) => {
         }
         return cached;
       }
-      return fetch(req, { cache: "no-store" });
+      return fetch(req, { cache: isVersioned ? "default" : "no-store" });
+    }
+
+    // CSS: versioned stylesheets can be cache-first.
+    if (isCSS(url.pathname) && url.searchParams.has("v")) {
+      const cached = await cache.match(req);
+      if (cached) return cached;
+      try {
+        const net = await fetch(req, { cache: "default" });
+        if (net && net.ok) await cache.put(req, net.clone());
+        return net;
+      } catch (_) {
+        return cached || Response.error();
+      }
     }
 
     // Other static assets: cache-first, then network.

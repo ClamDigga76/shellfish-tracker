@@ -1,4 +1,5 @@
 import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_seam_v5.js";
+import { createFilteredRowsMemo, createRowsComputationMemo } from "./runtime_memo_v5.js";
 
 export function createHomeDashboardRenderer({
   state,
@@ -35,6 +36,45 @@ export function createHomeDashboardRenderer({
   });
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
+
+  const getHomeFilteredTrips = createFilteredRowsMemo((rows, unified)=> applyUnifiedTripFilter(rows, unified));
+  const computeHomeOverview = createRowsComputationMemo((rows)=> {
+    const totalAmount = rows.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
+    const totalLbs = rows.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
+    const weightedRateTotal = rows.reduce((sum, trip) => {
+      const lbs = Number(trip?.pounds) || 0;
+      if (!(lbs > 0)) return sum;
+      const rate = typeof resolveTripPayRate === "function" ? resolveTripPayRate(trip) : computePPL(lbs, Number(trip?.amount) || 0);
+      return (Number.isFinite(rate) && rate > 0) ? (sum + (rate * lbs)) : sum;
+    }, 0);
+    const dealerRollup = rows.reduce((map, trip) => {
+      const dealerName = String(trip?.dealer || "").trim() || "Dealer not set";
+      const next = map.get(dealerName) || { dealer: dealerName, trips: 0, amount: 0, pounds: 0 };
+      next.trips += 1;
+      next.amount += Number(trip?.amount) || 0;
+      next.pounds += Number(trip?.pounds) || 0;
+      map.set(dealerName, next);
+      return map;
+    }, new Map());
+    const areaRollup = rows.reduce((map, trip) => {
+      const areaName = String(trip?.area || "").trim() || "Area not set";
+      const next = map.get(areaName) || { area: areaName, trips: 0, amount: 0, pounds: 0 };
+      next.trips += 1;
+      next.amount += Number(trip?.amount) || 0;
+      next.pounds += Number(trip?.pounds) || 0;
+      map.set(areaName, next);
+      return map;
+    }, new Map());
+    const dealers = Array.from(dealerRollup.values());
+    return {
+      totalAmount,
+      totalLbs,
+      weightedRateTotal,
+      dealers,
+      strongestDealer: dealers.length ? dealers.slice().sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] : null,
+      strongestArea: Array.from(areaRollup.values()).sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null
+    };
+  });
 
   function ensureHomeFilter() {
     if (!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode: "YTD", from: "", to: "" };
@@ -133,15 +173,8 @@ export function createHomeDashboardRenderer({
     ensureHomeFilter();
     const hf = state.homeFilter || { mode: "YTD", from: "", to: "" };
     const unified = buildUnifiedFilterFromHomeFilter(hf);
-    const trips = applyUnifiedTripFilter(tripsAll, unified).rows;
-    const totalAmount = trips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
-    const totalLbs = trips.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
-    const weightedRateTotal = trips.reduce((sum, trip) => {
-      const lbs = Number(trip?.pounds) || 0;
-      if (!(lbs > 0)) return sum;
-      const rate = typeof resolveTripPayRate === "function" ? resolveTripPayRate(trip) : computePPL(lbs, Number(trip?.amount) || 0);
-      return (Number.isFinite(rate) && rate > 0) ? (sum + (rate * lbs)) : sum;
-    }, 0);
+    const trips = getHomeFilteredTrips(tripsAll, unified);
+    const { totalAmount, totalLbs, weightedRateTotal, strongestDealer, strongestArea } = computeHomeOverview(trips);
     const avgPpl = totalLbs > 0 ? (weightedRateTotal / totalLbs) : null;
     const avgAmountPerTrip = trips.length ? (totalAmount / trips.length) : null;
     const avgPoundsPerTrip = trips.length ? (totalLbs / trips.length) : null;
@@ -190,7 +223,7 @@ export function createHomeDashboardRenderer({
       }
       : null;
     const priorTrips = priorUnifiedFilter
-      ? applyUnifiedTripFilter(tripsAll, priorUnifiedFilter).rows
+      ? getHomeFilteredTrips(tripsAll, priorUnifiedFilter)
       : [];
     const hasPriorComparison = !!(priorRange && priorTrips.length > 0);
     const priorTotalAmount = priorTrips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
@@ -270,30 +303,6 @@ export function createHomeDashboardRenderer({
 
     const tripsSorted = getTripsNewestFirst(trips);
     const newestSavedTrip = tripsSorted[0] || null;
-    const dealerRollup = trips.reduce((map, trip) => {
-      const dealerName = String(trip?.dealer || "").trim() || "Dealer not set";
-      const next = map.get(dealerName) || { dealer: dealerName, trips: 0, amount: 0, pounds: 0 };
-      next.trips += 1;
-      next.amount += Number(trip?.amount) || 0;
-      next.pounds += Number(trip?.pounds) || 0;
-      map.set(dealerName, next);
-      return map;
-    }, new Map());
-    const dealers = Array.from(dealerRollup.values());
-    const strongestDealer = dealers.length
-      ? dealers.slice().sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0]
-      : null;
-    const areaRollup = trips.reduce((map, trip) => {
-      const areaName = String(trip?.area || "").trim() || "Area not set";
-      const next = map.get(areaName) || { area: areaName, trips: 0, amount: 0, pounds: 0 };
-      next.trips += 1;
-      next.amount += Number(trip?.amount) || 0;
-      next.pounds += Number(trip?.pounds) || 0;
-      map.set(areaName, next);
-      return map;
-    }, new Map());
-    const strongestArea = Array.from(areaRollup.values())
-      .sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null;
     const avgAmountTrendTone = hasPriorComparison && Number.isFinite(priorAvgAmountPerTrip)
       ? trendToneFromDelta((avgAmountPerTrip ?? 0) - priorAvgAmountPerTrip)
       : "flat";

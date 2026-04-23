@@ -9,6 +9,7 @@ import { createReportsTransitionSeam } from "./reports_transition_seam_v5.js";
 import { createReportsMetricRouteSeam } from "./reports_metric_route_seam_v5.js";
 import { buildRollingSeriesFromMonthRows, getRollingWindowForMetric } from "./reports_rolling_trends_v5.js";
 import { HOME_SHARED_CHART_IDS, buildHomeSharedChartModel, getHomeSharedChartDefinition } from "./reports_chart_definitions_v5.js";
+import { createRowsComputationMemo } from "./runtime_memo_v5.js";
 
 export function createReportsScreenRenderer(deps){
   const {
@@ -94,6 +95,13 @@ export function createReportsScreenRenderer(deps){
     applyUnifiedTripFilter,
     buildUnifiedFilterFromReportsFilter
   });
+
+  const getMemoizedAggregationState = createRowsComputationMemo((rows)=> buildReportsAggregationState({
+    trips: rows,
+    canonicalDealerGroupKey,
+    normalizeDealerDisplay,
+    resolveTripArea
+  }));
 
   const reportsTransitionSeam = createReportsTransitionSeam({
     drawReportsCharts,
@@ -247,12 +255,7 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     tripsTimeline,
     recordPools,
     dealerRangeRows
-  } = buildReportsAggregationState({
-    trips,
-    canonicalDealerGroupKey,
-    normalizeDealerDisplay,
-    resolveTripArea
-  });
+  } = getMemoizedAggregationState(trips);
 
   const getTripMetricValue = (trip, metric)=>{
     const lbsNum = Number(trip?.pounds) || 0;
