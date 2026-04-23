@@ -313,17 +313,6 @@ export function createUpdateRuntimeStatusSeam({
       details.cacheVersions.some(v=>buildDigits && v !== buildDigits) ||
       details.startupModuleVersions.some(v=>buildDigits && v !== buildDigits)
     );
-    details.swControlUnconfirmed = Boolean(!details.swController && (details.swRegistrationConfirmed || details.swRegistrationAttempted));
-    details.swRegistrationUnconfirmed = Boolean(!details.swRegistrationConfirmed);
-    details.hasVersionSkew = details.hasExplicitVersionMismatch;
-    details.installedAppLikelyLagging = Boolean(
-      details.standalone && (
-        details.swControlUnconfirmed ||
-        details.swRegistrationUnconfirmed ||
-        (details.swScriptVersion && buildDigits && details.swScriptVersion !== buildDigits) ||
-        (details.swWaitingVersion && buildDigits && details.swWaitingVersion !== buildDigits)
-      )
-    );
     details.hasBootCorruptionSignal = /reset cache|stale required asset|wrong required asset|unexpected js payload|corrupted js response|empty js response|incomplete js response/i.test(details.lastBootError);
     details.requiredCoreCacheIncompleteAfterControl = Boolean(details.requiredCoreCacheIncomplete && details.swController);
     const now = Date.now();
@@ -340,6 +329,17 @@ export function createUpdateRuntimeStatusSeam({
       details.swRegistrationConfirmed ||
       !!details.swRegistrationError ||
       hasRegistrationStartSignal
+    );
+    details.swRegistrationUnconfirmed = Boolean(details.swRegistrationStarted && !details.swRegistrationConfirmed);
+    details.swControlUnconfirmed = Boolean(details.swRegistrationStarted && !details.swController);
+    details.hasVersionSkew = details.hasExplicitVersionMismatch;
+    details.installedAppLikelyLagging = Boolean(
+      details.standalone && (
+        details.swControlUnconfirmed ||
+        details.swRegistrationUnconfirmed ||
+        (details.swScriptVersion && buildDigits && details.swScriptVersion !== buildDigits) ||
+        (details.swWaitingVersion && buildDigits && details.swWaitingVersion !== buildDigits)
+      )
     );
     const hasRecentLifecycleSignal = Boolean(
       (hasMeaningfulUpdateSignal && updateSignalAt > 0 && (now - updateSignalAt) <= PENDING_CONTROL_GRACE_MS) ||
@@ -361,7 +361,7 @@ export function createUpdateRuntimeStatusSeam({
       !details.hasBootCorruptionSignal &&
       hasGroundedPendingProgress
     );
-    details.requiredCoreCachePreRegistrationSoft = Boolean(
+    details.requiredCoreCachePreRegistration = Boolean(
       details.requiredCoreCacheIncomplete &&
       !details.swController &&
       !details.swRegistrationStarted &&
@@ -596,7 +596,7 @@ export function createUpdateRuntimeStatusSeam({
         parts.push("Service worker note: registration has not started yet in this tab; this can be normal on first open.");
       }
     }
-    if(runtimeDiag.requiredCoreCachePreRegistrationSoft){
+    if(runtimeDiag.requiredCoreCachePreRegistration){
       parts.push("Recovery note: required core cache is incomplete before service worker registration starts; let startup finish, then re-check.");
     }else if(runtimeDiag.requiredCoreCachePostRegistrationUnresolved){
       parts.push("Service worker note: registration is not confirmed yet on this device.");
@@ -667,7 +667,7 @@ export function createUpdateRuntimeStatusSeam({
       btnPrimary.textContent = "Reload latest build";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
       if(inlineMsg){
-        inlineMsg.textContent = runtimeDiag?.requiredCoreCachePreRegistrationSoft
+        inlineMsg.textContent = runtimeDiag?.requiredCoreCachePreRegistration
           ? "Service worker registration has not started yet in this tab. This can be normal on first open; wait for load completion, then re-check."
           : runtimeDiag?.requiredCoreCachePendingControl
           ? "Required core cache is briefly settling while service worker lifecycle progress is still active. Reopen or reload after control is confirmed."
