@@ -177,12 +177,12 @@ function buildHomeMetricPayloads(period){
     amount: buildHomeMetricPayload({ metricKey: "amount", label: "Amount", currentValue: current.amount, previousValue: previous.amount, period }),
     ppl: buildHomeMetricPayload({
       metricKey: "ppl",
-      label: "Price Per Pound",
+      label: "Average Price Per Pound",
       currentValue: current.ppl,
       previousValue: previous.ppl,
       period,
       suppressed: !(current.lbs > 0 && previous.lbs > 0),
-      reason: "Log pounds in both visible months in this range to compare Price Per Pound."
+      reason: "Log pounds in both visible months in this range to compare Average Price Per Pound."
     })
   };
 }
@@ -337,7 +337,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       monthRows: safeMonths,
       metricKey: "ppl",
       windowSize: getRollingWindowForMetric("ppl", { surface: "home" }),
-      basisLabel: `Rolling Price Per Pound trend • visible months in this range • ${rateLeaderSupportLabel}`
+      basisLabel: `Rolling average Price Per Pound trend • visible months in this range • ${rateLeaderSupportLabel}`
     }),
     pplAreaLeaders: buildHomeTopRowsBarChart({
       rows: areaRowsByRate,
@@ -896,8 +896,8 @@ export function createReportsMetricDetailSeam(deps){
         homeInsight: "Start with compare, then check monthly, dealer, and area charts for earnings drivers."
       },
       ppl: {
-        title: "Price Per Pound breakdown",
-        homeTitle: "Price Per Pound",
+        title: "Average Price Per Pound breakdown",
+        homeTitle: "Average Price Per Pound",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
         heroLabel: "Average Price Per Pound this range",
@@ -905,8 +905,8 @@ export function createReportsMetricDetailSeam(deps){
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Price Per Pound • Compare",
-        homeChartTitle: "Price Per Pound",
+        chartTitle: "Average Price Per Pound • Compare",
+        homeChartTitle: "Average Price Per Pound",
         chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
         homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
         chartCanvasId: "c_ppl",
@@ -914,7 +914,7 @@ export function createReportsMetricDetailSeam(deps){
           ? homeSecondaryChartsByMetric.ppl
           : [
             detailCharts.pplRollingTrend ? {
-              title: `Price Per Pound • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
+              title: `Average Price Per Pound • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
               context: `Line • rolling trend with latest month highlighted • ${getRateLeaderThresholdText()}`,
               canvasId: "c_ppl_rolling_trend",
               chartModel: detailCharts.pplRollingTrend,
