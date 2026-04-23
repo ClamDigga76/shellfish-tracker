@@ -1,6 +1,7 @@
 import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_seam_v5.js";
 import { createFilteredRowsMemo, createRowsComputationMemo } from "./runtime_memo_v5.js";
 import { renderInstallSurface } from "./install_surface_renderer_v5.js";
+import { createStatusSurfaceSeam } from "./status_surface_seam_v5.js";
 
 export function createHomeDashboardRenderer({
   state,
@@ -35,6 +36,7 @@ export function createHomeDashboardRenderer({
     parseReportDateToISO,
     formatDateDMY
   });
+  const statusSurfaceSeam = createStatusSurfaceSeam({ escapeHtml });
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
 
@@ -274,19 +276,18 @@ export function createHomeDashboardRenderer({
     const showPwaStorageNote = isStandalone && !pwaNoteDismissed;
     const hasSavedTrips = tripsAll.length > 0;
     const shouldShowBeginnerCard = !hasSavedTrips && !s.onboardingHomeDismissed;
-    const pwaStorageNoteHTML = showPwaStorageNote ? `
-      <div class="noticeBand" role="status" aria-live="polite">
-        <div class="noticeTitle">Installed app check</div>
-        <div class="muted small noticeBody">
-          Browser mode and Installed mode are both valid. Installed mode is recommended for app-like use.
-          Storage can differ by mode or device, so create backup and restore backup when switching phones, browsers, or app modes.
-        </div>
-        <div class="row mt10 noticeActions">
-          <button class="btn" id="pwaNoteHelp">Review safe transfer</button>
-          <button class="btn" id="pwaNoteDismiss">Got it</button>
-        </div>
-      </div>
-    ` : "";
+    const pwaStorageNoteHTML = showPwaStorageNote ? statusSurfaceSeam.renderStatusSurface({
+      variant: "homeTrust",
+      emphasis: "soft",
+      title: "Installed app check",
+      statusPill: "Trust",
+      body: "Browser mode and Installed mode are both valid. Installed mode is recommended for app-like use.",
+      support: "Storage can differ by mode or device, so create backup and restore backup when switching phones, browsers, or app modes.",
+      actions: [
+        { id: "pwaNoteHelp", label: "Review safe transfer" },
+        { id: "pwaNoteDismiss", label: "Got it" }
+      ]
+    }) : "";
 
     const now = Date.now();
     const lastAt = Number(s.lastBackupAt || 0);
@@ -301,18 +302,17 @@ export function createHomeDashboardRenderer({
         || (newCount > 0 && daysSince >= 7)
       );
 
-    const backupReminderHTML = shouldRemind ? `
-      <div class="noticeBand" role="status" aria-live="polite">
-        <div class="noticeTitle">Backup reminder</div>
-        <div class="muted small noticeBody">
-          You have ${newCount > 0 ? newCount : tripsAll.length} trip${(newCount > 1 || (!lastAt && tripsAll.length !== 1)) ? "s" : ""} not yet included in your latest backup.
-        </div>
-        <div class="row mt10 noticeActions">
-          <button class="btn" id="backupNow">💾 Create Backup</button>
-          <button class="btn" id="backupLater">Not now</button>
-        </div>
-      </div>
-    ` : "";
+    const backupReminderHTML = shouldRemind ? statusSurfaceSeam.renderStatusSurface({
+      variant: "homeTrust",
+      emphasis: "warning",
+      title: "Backup reminder",
+      statusPill: "Needs backup",
+      body: `You have ${newCount > 0 ? newCount : tripsAll.length} trip${(newCount > 1 || (!lastAt && tripsAll.length !== 1)) ? "s" : ""} not yet included in your latest backup.`,
+      actions: [
+        { id: "backupNow", label: "💾 Create Backup" },
+        { id: "backupLater", label: "Not now" }
+      ]
+    }) : "";
 
     const f = String((state.homeFilter && state.homeFilter.mode) || "YTD").toUpperCase();
 
@@ -338,21 +338,21 @@ export function createHomeDashboardRenderer({
 
     const homeBeginnerCardHTML = shouldShowBeginnerCard ? `
       <section class="homeSection homeBeginnerSection">
-        <div class="homeBeginnerCard" role="status" aria-live="polite">
-          <div class="homeBeginnerEyebrow">Start here</div>
-          <div class="homeBeginnerTitle">Add a trip to unlock Home.</div>
-          <div class="homeBeginnerBody">Save your first trip, then Home fills in automatically.</div>
-          <div class="homeBeginnerSteps" aria-label="Beginner next steps">
-            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">1</span><span>Add a trip in New Trip.</span></div>
-            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">2</span><span>Return to Home for your latest summary.</span></div>
-            <div class="homeBeginnerStep"><span class="homeBeginnerStepNum">3</span><span>Open Reports after a few more trips.</span></div>
-          </div>
-          <div class="row mt10 noticeActions homeBeginnerActions">
-            <button class="btn primary" id="homeBeginnerPrimary" type="button">＋ New Trip</button>
-            <button class="btn" id="homeBeginnerHelp" type="button">Quick start help</button>
-            <button class="btn btn-ghost homeBeginnerDismiss" id="homeBeginnerDismiss" type="button">Dismiss</button>
-          </div>
-        </div>
+        ${statusSurfaceSeam.renderStatusSurface({
+          variant: "homeBeginner",
+          emphasis: "soft",
+          className: "homeBeginnerCard",
+          eyebrow: "Start here",
+          title: "Add a trip to unlock Home.",
+          body: "Save your first trip, then Home fills in automatically.",
+          supportHtml: `<div class="homeBeginnerSteps" aria-label="Beginner next steps"><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">1</span><span>Add a trip in New Trip.</span></div><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">2</span><span>Return to Home for your latest summary.</span></div><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">3</span><span>Open Reports after a few more trips.</span></div></div>`,
+          actions: [
+            { id: "homeBeginnerPrimary", label: "＋ New Trip", tone: "primary" },
+            { id: "homeBeginnerHelp", label: "Quick start help" },
+            { id: "homeBeginnerDismiss", label: "Dismiss", tone: "btn-ghost", className: "homeBeginnerDismiss" }
+          ],
+          actionsClass: "homeBeginnerActions"
+        })}
       </section>
       ${installCardHTML}
     ` : ``;

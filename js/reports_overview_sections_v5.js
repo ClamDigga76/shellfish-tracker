@@ -1,5 +1,6 @@
 import { createChartStorySeam } from "./chart_story_seam_v5.js";
 import { HOME_SHARED_CHART_IDS, getHomeSharedChartDefinition } from "./reports_chart_definitions_v5.js";
+import { createStatusSurfaceSeam } from "./status_surface_seam_v5.js";
 
 export function createReportsOverviewSectionsSeam(deps){
   const {
@@ -12,6 +13,7 @@ export function createReportsOverviewSectionsSeam(deps){
   } = deps;
 
   const chartStorySeam = createChartStorySeam({ escapeHtml });
+  const statusSurfaceSeam = createStatusSurfaceSeam({ escapeHtml });
 
   const reportsSection = ({ title, intro = "", body, extraClass = "" })=> `
     <section class="reportsSection ${extraClass}">
@@ -63,20 +65,20 @@ export function createReportsOverviewSectionsSeam(deps){
       : body;
     const followup = invalidRange
       ? ""
-      : (beginnerEmpty
-        ? '<div class="emptyStateFollowup">Next step: open New Trip.</div>'
-        : '<div class="emptyStateFollowup">Tip: switch to All Time for your widest view.</div>');
-    return `
-      <div class="emptyState ${beginnerEmpty ? "emptyStateBeginner" : ""}">
-        <div class="emptyStateTitle">${title}</div>
-        <div class="emptyStateBody">${bodyWithQuarantineNote}</div>
-        ${followup}
-        <div class="emptyStateAction cardActionRow">
-          <button class="btn primary" id="reportsEmptyPrimary" type="button">${invalidRange ? "Open advanced filters" : "＋ Add Trip"}</button>
-          <button class="btn btn-ghost" id="reportsEmptySecondary" type="button">${invalidRange || beginnerEmpty ? "Open Help" : "Switch to All Time"}</button>
-        </div>
-      </div>
-    `;
+      : (beginnerEmpty ? "Next step: open New Trip." : "Tip: switch to All Time for your widest view.");
+    return statusSurfaceSeam.renderStatusSurface({
+      variant: "reportsEmpty",
+      emphasis: invalidRange ? "warning" : "default",
+      className: `emptyState ${beginnerEmpty ? "emptyStateBeginner" : ""}`,
+      title,
+      body: bodyWithQuarantineNote,
+      minorNote: followup,
+      actions: [
+        { id: "reportsEmptyPrimary", label: invalidRange ? "Open advanced filters" : "＋ Add Trip", tone: "primary" },
+        { id: "reportsEmptySecondary", label: invalidRange || beginnerEmpty ? "Open Help" : "Switch to All Time", tone: "btn-ghost" }
+      ],
+      actionsClass: "emptyStateAction"
+    });
   }
 
   function renderChartsSection(context){
