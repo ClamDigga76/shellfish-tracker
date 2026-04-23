@@ -1,3 +1,5 @@
+import { createStatusSurfaceSeam } from "./status_surface_seam_v5.js";
+
 export function resolveInstallSummary(model){
   const actionNeeded = !!(model?.actionEnabled && model?.showAction);
   return actionNeeded ? "Install action available" : "Install setup is up to date";
@@ -17,6 +19,7 @@ export function renderInstallSurface({
   if (!model) return "";
 
   const trustNote = "Browser mode and Installed mode can store different local data. Create a backup before switching devices, browsers, or app modes.";
+  const statusSurface = createStatusSurfaceSeam({ escapeHtml });
   const primaryActionHtml = model.showAction
     ? `<button class="btn ${mode === "full" ? "primary settingsInlineBtn" : ""}" id="${escapeHtml(actionId)}" type="button" ${model.actionEnabled ? "" : "disabled"}>${escapeHtml(model.actionLabel)}</button>`
     : "";
@@ -24,21 +27,21 @@ export function renderInstallSurface({
   if (mode === "compact") {
     return `
       <section class="homeSection homeInstallSection">
-        <div class="noticeBand homeInstallBand" role="status" aria-live="polite">
-          <div class="noticeTitle">Best experience: install the app</div>
-          <div class="row gap10 wrap mt6">
-            <span class="settingsValuePill">${escapeHtml(model.statusPill)}</span>
-            <span class="muted small">${escapeHtml(model.statusLine)}</span>
-          </div>
-          <div class="muted small noticeBody mt8">${escapeHtml(model.statusHint)}</div>
-          <div class="muted small noticeBody mt8"><b>${escapeHtml(model.whyTitle)}</b> ${escapeHtml(model.whyBody)}</div>
-          <div class="muted small noticeBody mt8">${escapeHtml(model.stepsLine)}</div>
-          <div class="muted small noticeBody mt8">${escapeHtml(trustNote)}</div>
-          <div class="row mt10 noticeActions">
-            ${primaryActionHtml}
-            <button class="btn" id="${escapeHtml(helpId)}" type="button">Open install help</button>
-          </div>
-        </div>
+        ${statusSurface.renderStatusSurface({
+          variant: "homeInstall",
+          emphasis: "soft",
+          compact: false,
+          className: "homeInstallBand",
+          title: "Best experience: install the app",
+          statusPill: model.statusPill,
+          body: model.statusLine,
+          support: model.statusHint,
+          minorNoteHtml: `<b>${escapeHtml(model.whyTitle)}</b> ${escapeHtml(model.whyBody)}<br>${escapeHtml(model.stepsLine)}<br>${escapeHtml(trustNote)}`,
+          actions: [
+            ...(model.showAction ? [{ id: actionId, label: model.actionLabel, disabled: !model.actionEnabled }] : []),
+            { id: helpId, label: "Open install help" }
+          ]
+        })}
       </section>
     `;
   }

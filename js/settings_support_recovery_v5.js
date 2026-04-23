@@ -5,6 +5,7 @@ import {
   releaseStatusLabel,
   formatReleaseDraftStamp
 } from "./settings_utils_v5.js";
+import { createStatusSurfaceSeam } from "./status_surface_seam_v5.js";
 
 export function createSettingsSupportRecoverySeam(deps) {
   const {
@@ -34,46 +35,66 @@ export function createSettingsSupportRecoverySeam(deps) {
     copyTextWithFeedback
   } = deps;
 
+  const statusSurfaceSeam = createStatusSurfaceSeam({ escapeHtml: escapeSettingsHtml });
+
   function buildDeletedTripsHtml(deletedTrips) {
-    return deletedTrips.length ? `
-        <div class="settingsRow settingsRow--split settingsRow--minor">
-          <div>
-            <div class="settingsRowTitle">Recently Deleted</div>
-            <div class="muted small">Restore a deleted trip here, or clear it for good.</div>
-          </div>
-          <span class="settingsValuePill">${deletedTrips.length}</span>
-        </div>
-        <div class="settingsDeletedList" id="deletedTripsList">
-          ${deletedTrips.map((entry) => {
-            const trip = entry?.trip || {};
-            const dateLabel = String(trip.dateISO || "").trim() ? trip.dateISO : "No date";
-            const dealerLabel = String(trip.dealer || "").trim() || "Unknown dealer";
-            const areaLabel = String(trip.area || "").trim() || "No area";
-            const poundsLabel = Number.isFinite(Number(trip.pounds)) && Number(trip.pounds) > 0 ? `${Number(trip.pounds)} lbs` : "";
-            const deletedLabel = String(entry?.deletedAt || "").trim() || "";
-            return `
-              <div class="settingsDeletedItem">
-                <div class="settingsDeletedMeta">
-                  <div class="settingsDeletedTitle">${escapeSettingsHtml(dealerLabel)}</div>
-                  <div class="muted small">${escapeSettingsHtml(dateLabel)} • ${escapeSettingsHtml(areaLabel)}${poundsLabel ? ` • ${escapeSettingsHtml(poundsLabel)}` : ""}</div>
-                  <div class="muted settingsBodyTiny">Deleted ${escapeSettingsHtml(formatDeletedStamp(deletedLabel))}</div>
-                </div>
-                <div class="settingsDeletedActions">
-                  <button class="btn settingsInlineBtn" type="button" data-restore-trip="${escapeSettingsHtml(String(entry?.id || ""))}">Restore</button>
-                  <button class="btn danger settingsInlineBtn" type="button" data-delete-forever="${escapeSettingsHtml(String(entry?.id || ""))}">Delete forever</button>
-                </div>
-              </div>
-            `;
-          }).join("")}
-        </div>
-        <div class="settingsRow settingsRow--action">
-          <button class="btn danger settingsFlexBtn" id="clearDeletedTrips">Clear all permanently</button>
-        </div>
-      ` : `
-        <div class="settingsRow settingsRow--minor">
-          <div class="muted small">No deleted trips waiting here.</div>
+    const count = Array.isArray(deletedTrips) ? deletedTrips.length : 0;
+    if (!count) {
+      return `
+        <div class="settingsRow settingsRow--minor settingsRow--statusSurface">
+          ${statusSurfaceSeam.renderStatusSurface({
+            variant: "settingsTrust",
+            emphasis: "default",
+            compact: true,
+            className: "settingsDeletedSurface",
+            title: "Recently Deleted",
+            statusPill: "Empty",
+            body: "No deleted trips waiting here.",
+            support: "Deleted trips can be restored here before you clear them permanently."
+          })}
         </div>
       `;
+    }
+    return `
+      <div class="settingsRow settingsRow--minor settingsRow--statusSurface">
+        ${statusSurfaceSeam.renderStatusSurface({
+          variant: "settingsTrust",
+          emphasis: "default",
+          compact: true,
+          className: "settingsDeletedSurface",
+          title: "Recently Deleted",
+          statusPill: String(count),
+          body: "Restore a deleted trip here, or clear it for good.",
+          minorNote: "Recently Deleted is local to this device and backup snapshot."
+        })}
+      </div>
+      <div class="settingsDeletedList" id="deletedTripsList">
+        ${deletedTrips.map((entry) => {
+          const trip = entry?.trip || {};
+          const dateLabel = String(trip.dateISO || "").trim() ? trip.dateISO : "No date";
+          const dealerLabel = String(trip.dealer || "").trim() || "Unknown dealer";
+          const areaLabel = String(trip.area || "").trim() || "No area";
+          const poundsLabel = Number.isFinite(Number(trip.pounds)) && Number(trip.pounds) > 0 ? `${Number(trip.pounds)} lbs` : "";
+          const deletedLabel = String(entry?.deletedAt || "").trim() || "";
+          return `
+            <div class="settingsDeletedItem">
+              <div class="settingsDeletedMeta">
+                <div class="settingsDeletedTitle">${escapeSettingsHtml(dealerLabel)}</div>
+                <div class="muted small">${escapeSettingsHtml(dateLabel)} • ${escapeSettingsHtml(areaLabel)}${poundsLabel ? ` • ${escapeSettingsHtml(poundsLabel)}` : ""}</div>
+                <div class="muted settingsBodyTiny">Deleted ${escapeSettingsHtml(formatDeletedStamp(deletedLabel))}</div>
+              </div>
+              <div class="settingsDeletedActions">
+                <button class="btn settingsInlineBtn" type="button" data-restore-trip="${escapeSettingsHtml(String(entry?.id || ""))}">Restore</button>
+                <button class="btn danger settingsInlineBtn" type="button" data-delete-forever="${escapeSettingsHtml(String(entry?.id || ""))}">Delete forever</button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+      <div class="settingsRow settingsRow--action">
+        <button class="btn danger settingsFlexBtn" id="clearDeletedTrips">Clear all permanently</button>
+      </div>
+    `;
   }
 
   function syncBackupSummaryLine({ backupSummaryLine, backupStatusPill, deletedTripsCount }) {
