@@ -48,12 +48,8 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback, buildDefaultAppState },
   { createEntitlementsSeam, ENTITLEMENT_PLANS, ENTITLEMENT_FEATURE_KEYS },
   { ensureNavState, createNavigator },
-  { drawReportsCharts },
-  { buildReportsAggregationState },
-  { buildReportsSeasonalityFoundation },
   { createQuickChipHelpers },
   { createReportsFilterHelpers },
-  { createSettingsListManagement },
   { createBackupRestoreSubsystem },
   { createTripDataEngine, createTripDraftSaveEngine, computeTripSaveEnabled, appendTripHistoryEvent, AREA_NOT_RECORDED, createTripSharedCollectionsEngine },
   { createTripCardRenderHelpers, normalizeDealerDisplay },
@@ -620,13 +616,6 @@ const { renderHome } = createHomeDashboardRenderer({
   getInstallSurfaceModel: () => getInstallSurfaceModel(),
   runInstallAction: () => runInstallAction(),
   renderStandardReadOnlyTripCard,
-  buildReportsAggregationForTrips: (trips)=> buildReportsAggregationState({
-    trips,
-    canonicalDealerGroupKey,
-    normalizeDealerDisplay,
-    resolveTripArea
-  }),
-  drawReportsCharts,
   isFeatureAllowed: (featureKey, plan) => entitlements.isFeatureAllowed(featureKey, plan),
   entitlementFeatureKeys: entitlements.FEATURES
 });
@@ -702,12 +691,36 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
 
 let reportsScreenRenderer = null;
 let reportsScreenRendererPromise = null;
+let reportsRuntimeDeps = null;
+let reportsRuntimeDepsPromise = null;
+
+async function ensureReportsRuntimeDeps(){
+  if(reportsRuntimeDeps) return reportsRuntimeDeps;
+  if(reportsRuntimeDepsPromise) return reportsRuntimeDepsPromise;
+  reportsRuntimeDepsPromise = Promise.all([
+    importVersionedModule("./reports_charts_v5.js"),
+    importVersionedModule("./reports_aggregation_v5.js"),
+    importVersionedModule("./reports_seasonality_v5.js")
+  ]).then(([chartsModule, aggregationModule, seasonalityModule])=> {
+    reportsRuntimeDeps = {
+      drawReportsCharts: chartsModule.drawReportsCharts,
+      buildReportsAggregationState: aggregationModule.buildReportsAggregationState,
+      buildReportsSeasonalityFoundation: seasonalityModule.buildReportsSeasonalityFoundation
+    };
+    return reportsRuntimeDeps;
+  }).finally(()=> {
+    reportsRuntimeDepsPromise = null;
+  });
+  return reportsRuntimeDepsPromise;
+}
 
 async function ensureReportsScreenRenderer(){
   if(reportsScreenRenderer) return reportsScreenRenderer;
   if(reportsScreenRendererPromise) return reportsScreenRendererPromise;
-  reportsScreenRendererPromise = importVersionedModule("./reports_screen_v5.js")
-    .then(({ createReportsScreenRenderer })=> {
+  reportsScreenRendererPromise = Promise.all([
+    importVersionedModule("./reports_screen_v5.js"),
+    ensureReportsRuntimeDeps()
+  ]).then(([{ createReportsScreenRenderer }, reportsDeps])=> {
       reportsScreenRenderer = createReportsScreenRenderer({
         getState: () => state,
         buildUnifiedFilterFromReportsFilter,
@@ -723,16 +736,16 @@ async function ensureReportsScreenRenderer(){
         saveState: () => saveState(),
         bindDatePill,
         showToast: feedback.showToast,
-        buildReportsAggregationState,
+        buildReportsAggregationState: reportsDeps.buildReportsAggregationState,
         resolveAreaValue,
         resolveTripArea,
-        buildReportsSeasonalityFoundation,
+        buildReportsSeasonalityFoundation: reportsDeps.buildReportsSeasonalityFoundation,
         canonicalDealerGroupKey,
         normalizeDealerDisplay,
         resolveTripPayRate,
         formatMoney,
         to2,
-        drawReportsCharts,
+        drawReportsCharts: reportsDeps.drawReportsCharts,
         computePPL,
         renderStandardReadOnlyTripCard,
         renderApp: () => render()
@@ -760,32 +773,46 @@ function renderHomeMetricDetail(){
 
 
 
-const settingsListManagement = createSettingsListManagement({
-  getState: () => state,
-  setState: (nextState) => { state = nextState; },
-  saveState: () => saveState(),
-  getApp: () => getApp(),
-  ensureAreas: () => ensureAreas(),
-  ensureDealers: () => ensureDealers(),
-  syncAreaState: () => syncAreaState(state),
-  addArea: (rawName) => addArea(rawName),
-  countTripsForArea: (areaName) => countTripsForArea(areaName),
-  deleteArea: (areaName) => deleteArea(areaName),
-  protectedAreaName: AREA_NOT_RECORDED,
-  normalizeKey,
-  escapeHtml,
-  showToast: feedback.showToast,
-  openModal: (options) => openModal(options),
-  closeModal: (options) => closeModal(options),
-  openConfirmModal: (options) => openConfirmModal(options),
-  copyTextWithFeedback: feedback.copyTextWithFeedback,
-  getDebugInfo: () => getDebugInfo(),
-  forceRefreshApp: () => updateRuntimeStatus.forceRefreshApp(),
-  applyThemeMode: () => applyThemeMode(),
-  clearBackupRecoveryMetadata: () => clearBackupRecoveryMetadata(),
-  render: () => render(),
-  buildResetState: () => buildAppDefaultState()
-});
+let settingsListManagement = null;
+let settingsListManagementPromise = null;
+
+async function ensureSettingsListManagement(){
+  if(settingsListManagement) return settingsListManagement;
+  if(settingsListManagementPromise) return settingsListManagementPromise;
+  settingsListManagementPromise = importVersionedModule("./settings_list_management_v5.js")
+    .then(({ createSettingsListManagement })=> {
+      settingsListManagement = createSettingsListManagement({
+        getState: () => state,
+        setState: (nextState) => { state = nextState; },
+        saveState: () => saveState(),
+        getApp: () => getApp(),
+        ensureAreas: () => ensureAreas(),
+        ensureDealers: () => ensureDealers(),
+        syncAreaState: () => syncAreaState(state),
+        addArea: (rawName) => addArea(rawName),
+        countTripsForArea: (areaName) => countTripsForArea(areaName),
+        deleteArea: (areaName) => deleteArea(areaName),
+        protectedAreaName: AREA_NOT_RECORDED,
+        normalizeKey,
+        escapeHtml,
+        showToast: feedback.showToast,
+        openModal: (options) => openModal(options),
+        closeModal: (options) => closeModal(options),
+        openConfirmModal: (options) => openConfirmModal(options),
+        copyTextWithFeedback: feedback.copyTextWithFeedback,
+        getDebugInfo: () => getDebugInfo(),
+        forceRefreshApp: () => updateRuntimeStatus.forceRefreshApp(),
+        applyThemeMode: () => applyThemeMode(),
+        clearBackupRecoveryMetadata: () => clearBackupRecoveryMetadata(),
+        render: () => render(),
+        buildResetState: () => buildAppDefaultState()
+      });
+      return settingsListManagement;
+    }).finally(()=> {
+      settingsListManagementPromise = null;
+    });
+  return settingsListManagementPromise;
+}
 
 let settingsScreenRenderer = null;
 let settingsScreenRendererPromise = null;
@@ -793,15 +820,17 @@ let settingsScreenRendererPromise = null;
 async function ensureSettingsScreenRenderer(){
   if(settingsScreenRenderer) return settingsScreenRenderer;
   if(settingsScreenRendererPromise) return settingsScreenRendererPromise;
-  settingsScreenRendererPromise = importVersionedModule("./settings_screen_v5.js")
-    .then(({ createSettingsScreenOrchestrator })=> {
+  settingsScreenRendererPromise = Promise.all([
+    importVersionedModule("./settings_screen_v5.js"),
+    ensureSettingsListManagement()
+  ]).then(([{ createSettingsScreenOrchestrator }, resolvedSettingsListManagement])=> {
       settingsScreenRenderer = createSettingsScreenOrchestrator({
         getState: () => state,
         getApp: () => getApp(),
         ensureAreas: () => ensureAreas(),
         ensureDealers: () => ensureDealers(),
         renderPageHeader,
-        settingsListManagement,
+        settingsListManagement: resolvedSettingsListManagement,
         displayBuildVersion: DISPLAY_BUILD_VERSION,
         updateBuildBadge: () => updateRuntimeStatus.updateBuildBadge(),
         bindNavHandlers,

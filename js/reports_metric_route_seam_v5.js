@@ -6,6 +6,7 @@ export function createReportsMetricRouteSeam(deps){
     applyUnifiedTripFilter,
     buildUnifiedFilterFromReportsFilter
   } = deps;
+  const getMemoizedFilteredTrips = createMemoizedFilteredTrips(applyUnifiedTripFilter);
 
   function clearStaleHomeDetailForReports({ state, homeMetricOnly = false } = {}){
     if(homeMetricOnly) return false;
@@ -53,7 +54,7 @@ export function createReportsMetricRouteSeam(deps){
     const displayRangeLabel = unifiedFilter.range === "custom"
       ? `${formatDateDMY(resolvedRange.fromISO)} → ${formatDateDMY(resolvedRange.toISO)}`
       : String(resolvedRange.label || "YTD");
-    const filtered = applyUnifiedTripFilter(tripsAll, unifiedFilter);
+    const filtered = getMemoizedFilteredTrips(tripsAll, unifiedFilter);
     const fallbackTripCount = filtered.rows.length;
     const snapshotTripCount = Number(homeScopeSnapshot?.tripCount);
     const tripCount = Number.isFinite(snapshotTripCount) && snapshotTripCount >= 0
@@ -124,13 +125,13 @@ export function createReportsMetricRouteSeam(deps){
       ? homeScope.unifiedFilter
       : buildUnifiedFilterFromReportsFilter(rf);
 
-    const filteredReportsResult = applyUnifiedTripFilter(tripsAll, hasValidRange ? unified : { ...unified, range:"all" });
+    const filteredReportsResult = getMemoizedFilteredTrips(tripsAll, hasValidRange ? unified : { ...unified, range:"all" });
     const trips = isHomeMetricDetail && activeMetricDetail && homeScope
       ? homeScope.trips
       : filteredReportsResult.rows;
 
     const seasonalityUnified = { ...unified, range: "all", fromISO: "", toISO: "" };
-    const seasonalityResult = applyUnifiedTripFilter(tripsAll, seasonalityUnified);
+    const seasonalityResult = getMemoizedFilteredTrips(tripsAll, seasonalityUnified);
     const seasonalityTrips = isHomeMetricDetail && homeScope
       ? homeScope.trips
       : seasonalityResult.rows;
@@ -184,5 +185,21 @@ export function createReportsMetricRouteSeam(deps){
     mapHomeModeToUnifiedRange,
     buildHomeMetricScope,
     resolveMetricRouteContext
+  };
+}
+
+function createMemoizedFilteredTrips(applyUnifiedTripFilter){
+  let lastRowsRef = null;
+  let lastFilterKey = "";
+  let lastResult = null;
+  return function memoized(rows, filter){
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const filterKey = JSON.stringify(filter || {});
+    if(safeRows === lastRowsRef && filterKey === lastFilterKey && lastResult) return lastResult;
+    const next = applyUnifiedTripFilter(safeRows, filter);
+    lastRowsRef = safeRows;
+    lastFilterKey = filterKey;
+    lastResult = next;
+    return next;
   };
 }

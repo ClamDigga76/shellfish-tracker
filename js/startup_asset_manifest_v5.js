@@ -4,12 +4,8 @@ export const STARTUP_MODULE_PATHS = [
   "./migrations_v5.js",
   "./entitlements_seam_v5.js",
   "./navigation_v5.js",
-  "./reports_charts_v5.js",
-  "./reports_aggregation_v5.js",
-  "./reports_seasonality_v5.js",
   "./quick_chips_v5.js",
   "./reports_filters_v5.js",
-  "./settings_list_management_v5.js",
   "./backup_restore_v5.js",
   "./trip_shared_engine_v5.js",
   "./trip_cards_v5.js",
@@ -37,9 +33,6 @@ export const STARTUP_MODULE_PATHS = [
 export const APP_ENTRY_MODULE_PATH = "./app_v5.js";
 
 export const BOOTSTRAP_REQUIRED_ASSET_PATHS = [
-  "./utils_v5.js",
-  "./settings.js",
-  "./migrations_v5.js",
   APP_ENTRY_MODULE_PATH
 ];
 

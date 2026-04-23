@@ -17,12 +17,8 @@ const CORE_JS_PATHS = [
   "./js/migrations_v5.js",
   "./js/entitlements_seam_v5.js",
   "./js/navigation_v5.js",
-  "./js/reports_charts_v5.js",
-  "./js/reports_aggregation_v5.js",
-  "./js/reports_seasonality_v5.js",
   "./js/quick_chips_v5.js",
   "./js/reports_filters_v5.js",
-  "./js/settings_list_management_v5.js",
   "./js/backup_restore_v5.js",
   "./js/trip_shared_engine_v5.js",
   "./js/trip_cards_v5.js",
@@ -53,15 +49,6 @@ const CORE = [
   "./",
   "./index.html",
   `./manifest.webmanifest?v=${SW_V}`,
-  "./legal/terms.html",
-  "./legal/privacy.html",
-  "./legal/license.html",
-  "./icons/favicon-32.png",
-  "./icons/icon-180.png",
-  "./icons/icon-192.png",
-  "./icons/icon-192-maskable.png",
-  "./icons/icon-512.png",
-  "./icons/icon-512-maskable.png",
   `./css/shell_shared_v5.css?v=${SW_V}`,
   `./css/shell_feature_surfaces_v5.css?v=${SW_V}`,
   `./css/boot_shell_inline_extract_v1.css?v=${SW_V}`,
@@ -107,7 +94,10 @@ self.addEventListener("install", (event) => {
     for (const url of CORE) {
       const required = REQUIRED_CORE_SET.has(url);
       try {
-        const r = await fetch(url, { cache: "no-store" });
+        const installFetchCacheMode = /[?&]v=/.test(String(url || "")) && (isJS(url) || isCSS(url))
+          ? "default"
+          : "no-store";
+        const r = await fetch(url, { cache: installFetchCacheMode });
         if (!r.ok) {
           if (required) requiredFailures.push(`${url} (HTTP ${r.status})`);
           continue;
