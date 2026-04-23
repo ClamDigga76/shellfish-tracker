@@ -685,7 +685,7 @@
   .reportsMetricHeroWrap{padding-top:12px}
   .reportsMetricCompare{padding-left:12px}
   .reportsMetricChartsStack{margin-top:18px;gap:15px}
-  .reportsMetricChartBlock,.homeMetricChartBlock{padding-top:14px}
+  .reportsMetricChartBlock,.homeMetricChartBlock{padding-top:14px;padding-bottom:2px}
   .reportsMetricInsight,.homeMetricInsight{margin-top:18px;padding-top:14px}
 }
 .reportsHighlightValue,.reportsMiniPreview,.reportsCompareMeta > span,.reportsCompareMeta > b,.reportsMetricCompareLabel,.reportsMetricCompareValue,.homeMetricCompareLabel,.homeMetricCompareValue{min-width:0;max-width:100%}

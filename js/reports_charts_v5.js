@@ -49,6 +49,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return {
       sparse,
       dense,
+      pointCount: safeCount,
       rolling,
       monthLabels,
       compareLabels,
@@ -67,9 +68,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const left = leftBase + (profile.dense && !compact ? -2 : 0);
     const right = rightBase + (profile.sparse ? (compact ? 4 : 6) : 0) + (profile.dense ? -2 : 0);
     const top = topBase + (profile.sparse ? 2 : 0);
+    const compareCountBoost = profile.compareLabels && profile.pointCount > 0
+      ? (profile.pointCount <= 2
+          ? (compact ? 14 : 12)
+          : (profile.pointCount <= 5 ? (compact ? 10 : 8) : (compact ? 5 : 2)))
+      : 0;
     const categoryLabelBoost = profile.compareLabels
-      ? (profile.sparse ? (compact ? 6 : 9) : 0)
-      : (compact ? 5 : 7);
+      ? compareCountBoost
+      : (compact ? 6 : 8);
     const bottom = Math.max(
       compact ? 44 : 48,
       bottomBase
@@ -440,10 +446,17 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const lines = resolveAreaLabelLayout(ctx, { label: fullLabel, maxW: maxLabelW });
       if(!lines.length) return;
       const lineHeight = frame.compact ? 10 : 11;
-      const preferredBelowY = Number(categoryLabelY) > 0
-        ? categoryLabelY
-        : (lines.length > 1 ? canvasHeight - 20 : canvasHeight - 10);
-      const baseY = preferredBelowY - ((lines.length - 1) * lineHeight);
+      const preferredBottomLineY = Number(categoryLabelY) > 0
+        ? (categoryLabelY + (frame.compact ? 2 : 1))
+        : (canvasHeight - (frame.compact ? 8 : 9));
+      const minBottomLineY = geom.y0
+        + (frame.compact ? 13 : 14)
+        + ((lines.length - 1) * lineHeight);
+      const bottomLineY = Math.min(
+        canvasHeight - (frame.compact ? 6 : 7),
+        Math.max(preferredBottomLineY, minBottomLineY)
+      );
+      const baseY = bottomLineY - ((lines.length - 1) * lineHeight);
       lines.forEach((line, lineIndex)=>{
         const left = bar ? bar.x : (geom.x0 + i * barW);
         const width = bar ? bar.width : barW;
@@ -622,8 +635,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         drawBarValueLabels(renderedBars, { ctx, frame, formatter: options.barValueFormatter || yLabelFormatter });
       }
       const defaultCategoryLabelY = Math.min(
-        h - 8,
-        geom.y0 + (frame.compact ? 16 : 18)
+        h - (frame.compact ? 6 : 7),
+        geom.y0
+          + (frame.compact ? 19 : 20)
+          + (frame.profile?.compareLabels && frame.profile?.pointCount <= 2 ? (frame.compact ? 4 : 3) : 0)
+          + (frame.profile?.compareLabels && frame.profile?.pointCount > 2 && frame.profile?.pointCount <= 5 ? (frame.compact ? 2 : 1) : 0)
       );
       const categoryLabelY = options.categoryLabelsBelowBars ? defaultCategoryLabelY : (h - 10);
       if(options.customLabels){
