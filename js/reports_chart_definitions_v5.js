@@ -49,8 +49,8 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     valueKey: "amountPerTrip",
     labelMode: "home-area-direct",
     maxItems: 6,
-    title: "Amount Per Trip by area",
-    explanation: "Shows which areas give you the best money return for each trip."
+    title: "Average Amount Per Trip by area",
+    explanation: "Shows which areas give you the best average money return for each trip."
   }),
   amountByDealer: Object.freeze({
     chartId: "amountByDealer",
@@ -72,8 +72,8 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     labelMode: "home-dealer-direct",
     maxItems: 6,
     rateRanked: true,
-    title: "Price Per Pound by dealer",
-    explanation: "Shows which dealers are paying the best average rate among groups with at least 2 trips and 150 lbs."
+    title: "Average Price Per Pound by dealer",
+    explanation: "Shows which dealers are paying the highest average rate among groups with at least 2 trips and 150 lbs."
   }),
   pplByArea: Object.freeze({
     chartId: "pplByArea",
@@ -84,8 +84,8 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     labelMode: "home-area-direct",
     maxItems: 6,
     rateRanked: true,
-    title: "Price Per Pound by area",
-    explanation: "Shows which areas are producing the highest-value catch among groups with at least 2 trips and 150 lbs."
+    title: "Average Price Per Pound by area",
+    explanation: "Shows which areas are producing the highest average value catch among groups with at least 2 trips and 150 lbs."
   }),
   poundsPerTripByArea: Object.freeze({
     chartId: "poundsPerTripByArea",
@@ -95,8 +95,8 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     valueKey: "poundsPerTrip",
     labelMode: "home-area-direct",
     maxItems: 6,
-    title: "Pounds Per Trip by area",
-    explanation: "Shows which areas give you the strongest catch volume per trip."
+    title: "Average Pounds Per Trip by area",
+    explanation: "Shows which areas give you the strongest average catch volume per trip."
   }),
   pplByMonth: Object.freeze({
     chartId: "pplByMonth",
