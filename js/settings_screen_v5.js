@@ -1,5 +1,6 @@
 import { createSettingsSupportRecoverySeam } from "./settings_support_recovery_v5.js";
 import { escapeSettingsHtml } from "./settings_utils_v5.js";
+import { renderInstallSurface, resolveInstallSummary, resolveInstallStatusPill } from "./install_surface_renderer_v5.js";
 
 export function createSettingsScreenOrchestrator({
   getState,
@@ -88,6 +89,9 @@ export function createSettingsScreenOrchestrator({
       { id: "settingsAbout", label: "About" },
       { id: "settingsAdvanced", label: "Advanced" }
     ];
+    const installModel = typeof getInstallSurfaceModel === "function"
+      ? getInstallSurfaceModel()
+      : null;
 
     getApp().innerHTML = `
     ${renderPageHeader("settings")}
@@ -194,24 +198,13 @@ export function createSettingsScreenOrchestrator({
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
         </summary>
-        <div class="settingsRow settingsRow--split">
-          <div>
-            <div class="settingsRowTitle settingsMiniTitle">App mode</div>
-          </div>
-          <span class="settingsValuePill" id="installModePill">Checking…</span>
-        </div>
-        <div class="settingsRow settingsRow--status">
-          <div id="installModeLine" class="settingsUpdateStatus">Checking app mode…</div>
-          <div class="muted settingsBodyTiny" id="installStatusHint"></div>
-        </div>
-        <div class="settingsRow settingsRow--action settingsInstallActions">
-          <button class="btn primary settingsInlineBtn" id="installActionBtn" type="button">Install app</button>
-          <button class="btn settingsInlineBtn" id="installHelpBtn" type="button">Open install help</button>
-        </div>
-        <div class="settingsRow settingsRow--minor">
-          <div class="hint" id="installWhyLine"></div>
-          <div class="muted small mt8" id="installStepsLine"></div>
-        </div>
+        ${renderInstallSurface({
+          model: installModel,
+          mode: "full",
+          escapeHtml: escapeSettingsHtml,
+          actionId: "installActionBtn",
+          helpId: "installHelpBtn"
+        })}
       </details>
     </div>
 
@@ -442,14 +435,6 @@ export function createSettingsScreenOrchestrator({
       pushView(state, "help");
     };
 
-    const installModel = typeof getInstallSurfaceModel === "function"
-      ? getInstallSurfaceModel()
-      : null;
-    const installModePill = document.getElementById("installModePill");
-    const installModeLine = document.getElementById("installModeLine");
-    const installStatusHint = document.getElementById("installStatusHint");
-    const installWhyLine = document.getElementById("installWhyLine");
-    const installStepsLine = document.getElementById("installStepsLine");
     const installActionBtn = document.getElementById("installActionBtn");
     const installHelpBtn = document.getElementById("installHelpBtn");
     const updatesSummaryLine = document.getElementById("updatesSummaryLine");
@@ -482,40 +467,32 @@ export function createSettingsScreenOrchestrator({
       advancedStatusPill.textContent = "Support";
     }
 
-    if (installModel) {
-      if (installModePill) installModePill.textContent = installModel.statusPill;
-      if (installModeLine) installModeLine.textContent = installModel.statusLine;
-      if (installStatusHint) installStatusHint.textContent = installModel.statusHint;
-      if (installSummaryLine) {
-        const installActionState = installModel.actionEnabled && installModel.showAction ? "Action needed" : "No action needed";
-        installSummaryLine.textContent = installActionState === "Action needed" ? "Install action available" : "Install setup is up to date";
-      }
-      if (installStatusPill) {
-        const statusPillText = String(installModel.statusPill || "").toLowerCase().includes("installed") ? "Installed" : "Browser";
-        installStatusPill.textContent = statusPillText;
-      }
-      if (installWhyLine) installWhyLine.innerHTML = `<b>${escapeSettingsHtml(installModel.whyTitle)}</b> ${escapeSettingsHtml(installModel.whyBody)}`;
-      if (installStepsLine) installStepsLine.textContent = installModel.stepsLine;
-      if (installActionBtn) {
-        installActionBtn.textContent = installModel.actionLabel;
-        installActionBtn.disabled = !installModel.actionEnabled;
-        installActionBtn.hidden = !installModel.showAction;
-        installActionBtn.onclick = async () => {
-          if (typeof runInstallAction !== "function") return;
-          const result = await runInstallAction();
-          if (result?.message) showToast(result.message);
-          renderSettings();
-        };
-      }
-      if (installHelpBtn) {
-        installHelpBtn.onclick = () => {
-          state.helpJump = "install";
-          state.view = "help";
-          state.lastAction = "nav:help-install";
-          saveState();
-          render();
-        };
-      }
+    if (installSummaryLine) {
+      installSummaryLine.textContent = installModel
+        ? resolveInstallSummary(installModel)
+        : "Install readiness check in progress";
+    }
+    if (installStatusPill) {
+      installStatusPill.textContent = installModel
+        ? resolveInstallStatusPill(installModel)
+        : "Checking";
+    }
+    if (installActionBtn && installModel) {
+      installActionBtn.onclick = async () => {
+        if (typeof runInstallAction !== "function") return;
+        const result = await runInstallAction();
+        if (result?.message) showToast(result.message);
+        renderSettings();
+      };
+    }
+    if (installHelpBtn) {
+      installHelpBtn.onclick = () => {
+        state.helpJump = "install";
+        state.view = "help";
+        state.lastAction = "nav:help-install";
+        saveState();
+        render();
+      };
     }
 
     updateUpdateRow();
