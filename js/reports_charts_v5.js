@@ -67,10 +67,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const left = leftBase + (profile.dense && !compact ? -2 : 0);
     const right = rightBase + (profile.sparse ? (compact ? 4 : 6) : 0) + (profile.dense ? -2 : 0);
     const top = topBase + (profile.sparse ? 2 : 0);
+    const categoryLabelBoost = profile.compareLabels
+      ? (profile.sparse ? (compact ? 6 : 9) : 0)
+      : (compact ? 5 : 7);
     const bottom = Math.max(
-      compact ? 40 : 44,
+      compact ? 44 : 48,
       bottomBase
-        + (profile.compareLabels && profile.sparse ? (compact ? 3 : 6) : 0)
+        + categoryLabelBoost
         + (profile.monthLabels && profile.dense ? (compact ? -8 : -10) : 0)
     );
     return {
@@ -216,7 +219,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const labelType = options.labelType || "category";
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
-    let lastRight = -Infinity;
+    const edgeInset = frame.compact ? 6 : 8;
+    const minGap = frame.compact ? 10 : 8;
+    const placed = [];
     const tickIndexes = new Set([0, Math.max(0, labels.length - 1)]);
     labels.forEach((_, i)=> {
       if(i % step === 0) tickIndexes.add(i);
@@ -232,13 +237,21 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const text = formatAxisLabel(lab, { labelType, compact: frame.compact });
       const m = ctx.measureText(text);
       let tx = x - (m.width / 2);
-      tx = Math.max(2, Math.min(geom.xRight - m.width, tx));
-      if(tx <= lastRight + (frame.compact ? 9 : 7)){
+      const minX = geom.x0 + edgeInset;
+      const maxX = geom.xRight - m.width - edgeInset;
+      tx = Math.max(minX, Math.min(maxX, tx));
+      const right = tx + m.width;
+      const lastPlaced = placed[placed.length - 1];
+      if(lastPlaced && tx < lastPlaced.right + minGap){
         if(i !== labels.length - 1) return;
-        tx = Math.max(2, geom.xRight - m.width);
+        const forcedTx = Math.max(minX, maxX);
+        if(forcedTx < lastPlaced.right + minGap){
+          return;
+        }
+        tx = forcedTx;
       }
       ctx.fillText(text, tx, y);
-      lastRight = tx + m.width;
+      placed.push({ tx, right: tx + m.width, i });
     });
   }
 
@@ -290,14 +303,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   }
 
   function compactDealerTag(name){
-    const normalized = normalizeDealerLabel(name);
-    if(normalized.length <= 6) return normalized;
-    const words = normalized.split(" ").filter(Boolean);
-    if(words.length > 1){
-      const initials = words.map((part)=> part[0]).join("").slice(0,3);
-      if(initials.length >= 2) return initials.toUpperCase();
-    }
-    return normalized.slice(0, 5).trimEnd() + "…";
+    return normalizeDealerLabel(name);
   }
 
   function normalizeAreaLabel(name){
@@ -359,8 +365,40 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   function shortenAreaLabelRecognizable(label){
     const src = String(label || "").trim();
     if(!src) return "";
-    if(src.length <= 12) return src;
-    return `${src.slice(0, 12).trimEnd()}…`;
+    if(src.length <= 14) return src;
+    const words = src.split(/\s+/).filter(Boolean);
+    if(words.length >= 2){
+      const first = words[0];
+      const second = words[1];
+      const combined = `${first} ${second.length > 6 ? `${second.slice(0, 6)}…` : second}`;
+      if(combined.length <= 16) return combined;
+      return `${first.slice(0, 10).trimEnd()}…`;
+    }
+    return `${src.slice(0, 13).trimEnd()}…`;
+  }
+
+  function buildDealerLabelVariants(name){
+    const normalized = normalizeDealerLabel(name);
+    if(!normalized) return [];
+    const words = normalized.split(/\s+/).filter(Boolean);
+    const variants = [normalized];
+    if(words.length > 1){
+      variants.push(`${words[0]} ${words[1]}`);
+      const withoutStopWords = words.filter((word)=> !["the", "co", "company", "inc", "llc", "&"].includes(word.toLowerCase()));
+      if(withoutStopWords.length >= 2){
+        variants.push(`${withoutStopWords[0]} ${withoutStopWords[1]}`);
+      }
+      const compactWords = words
+        .slice(0, 2)
+        .map((word)=> word.length > 8 ? `${word.slice(0, 8)}…` : word)
+        .join(" ");
+      variants.push(compactWords);
+      const initials = words.map((part)=> part[0]).join("").slice(0,3).toUpperCase();
+      if(initials.length >= 2) variants.push(initials);
+    }else{
+      variants.push(words[0].length > 10 ? `${words[0].slice(0, 10)}…` : words[0]);
+    }
+    return Array.from(new Set(variants.map((value)=> String(value || "").trim()).filter(Boolean)));
   }
 
   function resolveAreaLabelLayout(ctx, { label, maxW }){
@@ -425,8 +463,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const bar = bars[i] || null;
       const labelWidthBase = bar?.width || barW;
       const maxLabelW = Math.max(20, labelWidthBase - 2);
-      const base = frame.compact ? compactDealerTag(r.name || "") : normalizeDealerLabel(r.name || "");
-      const lab = fitLabel(ctx, base, maxLabelW);
+      const candidates = frame.compact
+        ? buildDealerLabelVariants(compactDealerTag(r.name || ""))
+        : buildDealerLabelVariants(normalizeDealerLabel(r.name || ""));
+      const preferred = candidates.find((candidate)=> ctx.measureText(candidate).width <= maxLabelW);
+      const lab = preferred || fitLabel(ctx, candidates[0] || "", maxLabelW);
       const left = bar ? bar.x : (geom.x0 + i * barW);
       const width = bar ? bar.width : barW;
       const tx = left + ((width - ctx.measureText(lab).width) / 2);
