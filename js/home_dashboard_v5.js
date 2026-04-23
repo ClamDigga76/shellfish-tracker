@@ -38,6 +38,16 @@ export function createHomeDashboardRenderer({
   let homeKpiFitRaf = 0;
 
   const getHomeFilteredTrips = createFilteredRowsMemo((rows, unified)=> applyUnifiedTripFilter(rows, unified));
+  const getHomeRangeTotals = createRowsComputationMemo((rows)=> {
+    const totalAmount = rows.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
+    const totalLbs = rows.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
+    return {
+      totalAmount,
+      totalLbs,
+      avgAmountPerTrip: rows.length ? (totalAmount / rows.length) : null,
+      avgPoundsPerTrip: rows.length ? (totalLbs / rows.length) : null
+    };
+  });
   const computeHomeOverview = createRowsComputationMemo((rows)=> {
     const totalAmount = rows.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
     const totalLbs = rows.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
@@ -176,8 +186,10 @@ export function createHomeDashboardRenderer({
     const trips = getHomeFilteredTrips(tripsAll, unified);
     const { totalAmount, totalLbs, weightedRateTotal, strongestDealer, strongestArea } = computeHomeOverview(trips);
     const avgPpl = totalLbs > 0 ? (weightedRateTotal / totalLbs) : null;
-    const avgAmountPerTrip = trips.length ? (totalAmount / trips.length) : null;
-    const avgPoundsPerTrip = trips.length ? (totalLbs / trips.length) : null;
+    const {
+      avgAmountPerTrip,
+      avgPoundsPerTrip
+    } = getHomeRangeTotals(trips);
     const msPerDay = 24 * 60 * 60 * 1000;
     const parseIsoToUtcMs = (iso) => {
       const safeIso = String(iso || "").trim();
@@ -226,10 +238,12 @@ export function createHomeDashboardRenderer({
       ? getHomeFilteredTrips(tripsAll, priorUnifiedFilter)
       : [];
     const hasPriorComparison = !!(priorRange && priorTrips.length > 0);
-    const priorTotalAmount = priorTrips.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
-    const priorTotalLbs = priorTrips.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
-    const priorAvgAmountPerTrip = priorTrips.length ? (priorTotalAmount / priorTrips.length) : null;
-    const priorAvgPoundsPerTrip = priorTrips.length ? (priorTotalLbs / priorTrips.length) : null;
+    const {
+      totalAmount: priorTotalAmount,
+      totalLbs: priorTotalLbs,
+      avgAmountPerTrip: priorAvgAmountPerTrip,
+      avgPoundsPerTrip: priorAvgPoundsPerTrip
+    } = getHomeRangeTotals(priorTrips);
 
     const formatGroupedHomeNumber = (value, { maximumFractionDigits = 2 } = {}) => {
       const numeric = Number(value);
