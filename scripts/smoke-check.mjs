@@ -186,12 +186,14 @@ if (homeSource) {
   checkPattern(homeSource, 'home header wiring present', /renderPageHeader\s*\(\s*["']home["']\s*\)/, 'renderPageHeader("home")');
 }
 
-if (startupAssetManifestSource) {
-  checkIncludesAny(startupAssetManifestSource, 'home renderer import wired', [
+const rendererWiringSource = `${appSource || ''}\n${startupAssetManifestSource || ''}`;
+
+if (rendererWiringSource) {
+  checkIncludesAny(rendererWiringSource, 'home renderer import wired', [
     '"./home_dashboard_v5.js"',
     "'./home_dashboard_v5.js'",
   ]);
-  checkIncludesAny(startupAssetManifestSource, 'settings renderer import wired', [
+  checkIncludesAny(rendererWiringSource, 'settings renderer import wired', [
     '"./settings_screen_v5.js"',
     "'./settings_screen_v5.js'",
   ]);
@@ -202,10 +204,10 @@ if (appSource) {
     appSource,
     'top-level renderers instantiated in app boot',
     [
-      /{\s*[^}]*\brenderHome\b[^}]*}\s*=\s*createHomeDashboardRenderer\s*\(/,
-      /{\s*[^}]*\brenderSettings\b[^}]*}\s*=\s*createSettingsScreenOrchestrator\s*\(/,
+      /({\s*[^}]*\brenderHome\b[^}]*}\s*=\s*createHomeDashboardRenderer\s*\()|(function\s+renderHome\s*\()/,
+      /({\s*[^}]*\brenderSettings\b[^}]*}\s*=\s*createSettingsScreenOrchestrator\s*\()|(function\s+renderSettings\s*\()/,
       /{\s*[^}]*\brenderAllTrips\b[^}]*}\s*=\s*createTripsBrowseScreenRenderer\s*\(/,
-      /{\s*[^}]*\brenderReports\b[^}]*}\s*=\s*createReportsScreenRenderer\s*\(/,
+      /({\s*[^}]*\brenderReports\b[^}]*}\s*=\s*createReportsScreenRenderer\s*\()|(function\s+renderReports\s*\()/,
     ],
     'renderer factory wiring for home/settings/trips/reports'
   );

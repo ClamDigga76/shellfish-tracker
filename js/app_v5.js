@@ -60,8 +60,6 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { renderHelpViewHTML, renderAboutViewHTML },
   { renderTripEntryForm },
   { createHomeDashboardRenderer },
-  { createSettingsScreenOrchestrator },
-  { createReportsScreenRenderer },
   _chartStorySeamModule,
   { createFeedbackSeam },
   _tripScreenSharedHelpersModule,
@@ -591,6 +589,12 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
   ...tripsUnifiedFilterBridge
 });
 
+function renderSurfaceLoading(viewKey, title = "Loading…"){
+  const app = getApp();
+  if(!app) return;
+  app.innerHTML = `${renderPageHeader(viewKey)}<main class="container"><section class="card"><p class="muted">${escapeHtml(title)}</p></section></main>`;
+}
+
 const { renderHome } = createHomeDashboardRenderer({
   state,
   buildUnifiedFilterFromHomeFilter,
@@ -696,35 +700,64 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
 
 
 
-const { renderReports, renderHomeMetricDetail } = createReportsScreenRenderer({
-  getState: () => state,
-  buildUnifiedFilterFromReportsFilter,
-  applyUnifiedTripFilter,
-  parseReportDateToISO,
-  formatReportDateValue,
-  escapeHtml,
-  resolveUnifiedRange,
-  formatDateDMY,
-  normalizeCustomRangeWithFeedback,
-  getApp: () => getApp(),
-  renderPageHeader,
-  saveState: () => saveState(),
-  bindDatePill,
-  showToast: feedback.showToast,
-  buildReportsAggregationState,
-  resolveAreaValue,
-  resolveTripArea,
-  buildReportsSeasonalityFoundation,
-  canonicalDealerGroupKey,
-  normalizeDealerDisplay,
-  resolveTripPayRate,
-  formatMoney,
-  to2,
-  drawReportsCharts,
-  computePPL,
-  renderStandardReadOnlyTripCard,
-  renderApp: () => render()
-});
+let reportsScreenRenderer = null;
+let reportsScreenRendererPromise = null;
+
+async function ensureReportsScreenRenderer(){
+  if(reportsScreenRenderer) return reportsScreenRenderer;
+  if(reportsScreenRendererPromise) return reportsScreenRendererPromise;
+  reportsScreenRendererPromise = importVersionedModule("./reports_screen_v5.js")
+    .then(({ createReportsScreenRenderer })=> {
+      reportsScreenRenderer = createReportsScreenRenderer({
+        getState: () => state,
+        buildUnifiedFilterFromReportsFilter,
+        applyUnifiedTripFilter,
+        parseReportDateToISO,
+        formatReportDateValue,
+        escapeHtml,
+        resolveUnifiedRange,
+        formatDateDMY,
+        normalizeCustomRangeWithFeedback,
+        getApp: () => getApp(),
+        renderPageHeader,
+        saveState: () => saveState(),
+        bindDatePill,
+        showToast: feedback.showToast,
+        buildReportsAggregationState,
+        resolveAreaValue,
+        resolveTripArea,
+        buildReportsSeasonalityFoundation,
+        canonicalDealerGroupKey,
+        normalizeDealerDisplay,
+        resolveTripPayRate,
+        formatMoney,
+        to2,
+        drawReportsCharts,
+        computePPL,
+        renderStandardReadOnlyTripCard,
+        renderApp: () => render()
+      });
+      return reportsScreenRenderer;
+    })
+    .finally(()=> {
+      reportsScreenRendererPromise = null;
+    });
+  return reportsScreenRendererPromise;
+}
+
+function renderReports(options){
+  if(reportsScreenRenderer?.renderReports) return reportsScreenRenderer.renderReports(options);
+  renderSurfaceLoading("reports", "Loading Reports…");
+  void ensureReportsScreenRenderer().then(()=> {
+    if(String(state.view || "home") === "reports" || options?.homeMetricOnly) render();
+  }).catch((error)=> showFatal(error));
+}
+
+function renderHomeMetricDetail(){
+  if(reportsScreenRenderer?.renderHomeMetricDetail) return reportsScreenRenderer.renderHomeMetricDetail();
+  return renderReports({ homeMetricOnly: true });
+}
+
 
 
 const settingsListManagement = createSettingsListManagement({
@@ -754,45 +787,70 @@ const settingsListManagement = createSettingsListManagement({
   buildResetState: () => buildAppDefaultState()
 });
 
-const { renderSettings } = createSettingsScreenOrchestrator({
-  getState: () => state,
-  getApp: () => getApp(),
-  ensureAreas: () => ensureAreas(),
-  ensureDealers: () => ensureDealers(),
-  renderPageHeader,
-  settingsListManagement,
-  displayBuildVersion: DISPLAY_BUILD_VERSION,
-  updateBuildBadge: () => updateRuntimeStatus.updateBuildBadge(),
-  bindNavHandlers,
-  pushView,
-  updateUpdateRow: () => updateRuntimeStatus.updateUpdateRow(),
-  updateBuildInfo: () => updateRuntimeStatus.updateBuildInfo(),
-  updateBackupHealthWarning: () => updateBackupHealthWarning(),
-  updateLastBackupLine: () => updateLastBackupLine(),
-  updateRestoreRollbackLine: () => updateRestoreRollbackLine(),
-  exportBackup: () => exportBackup(),
-  parseBackupFileForRestore: (file) => parseBackupFileForRestore(file),
-  openRestorePreviewModal: (preview) => openRestorePreviewModal(preview),
-  openReplaceSafetyBackupModal: () => openReplaceSafetyBackupModal(),
-  importBackupFromFile: (file, options) => importBackupFromFile(file, options),
-  restoreFromRollbackSnapshot: () => restoreFromRollbackSnapshot(),
-  saveState: () => saveState(),
-  clearPendingTripUndo: () => clearPendingTripUndo(),
-  openConfirmModal: (options) => openConfirmModal(options),
-  restoreDeletedTrip: (deletedEntryId) => restoreDeletedTrip(deletedEntryId),
-  permanentlyDeleteDeletedTrip: (deletedEntryId) => permanentlyDeleteDeletedTrip(deletedEntryId),
-  clearDeletedTripsBin: () => clearDeletedTripsBin(),
-  applyThemeMode: () => applyThemeMode(),
-  render: () => render(),
-  openRestoreErrorModal: (error) => openRestoreErrorModal(error),
-  openRestoreResultModal: (result) => openRestoreResultModal(result),
-  showToast: (msg) => showToast(msg),
-  getInstallSurfaceModel: () => getInstallSurfaceModel(),
-  runInstallAction: () => runInstallAction(),
-  getReleaseValidationSnapshot: () => updateRuntimeStatus.getReleaseValidationSnapshot(),
-  formatReleaseValidationLedger: (snapshot, selectedResults, notes) => updateRuntimeStatus.formatReleaseValidationLedger(snapshot, selectedResults, notes),
-  copyTextWithFeedback: (text) => copyTextWithFeedback(text)
-});
+let settingsScreenRenderer = null;
+let settingsScreenRendererPromise = null;
+
+async function ensureSettingsScreenRenderer(){
+  if(settingsScreenRenderer) return settingsScreenRenderer;
+  if(settingsScreenRendererPromise) return settingsScreenRendererPromise;
+  settingsScreenRendererPromise = importVersionedModule("./settings_screen_v5.js")
+    .then(({ createSettingsScreenOrchestrator })=> {
+      settingsScreenRenderer = createSettingsScreenOrchestrator({
+        getState: () => state,
+        getApp: () => getApp(),
+        ensureAreas: () => ensureAreas(),
+        ensureDealers: () => ensureDealers(),
+        renderPageHeader,
+        settingsListManagement,
+        displayBuildVersion: DISPLAY_BUILD_VERSION,
+        updateBuildBadge: () => updateRuntimeStatus.updateBuildBadge(),
+        bindNavHandlers,
+        pushView,
+        updateUpdateRow: () => updateRuntimeStatus.updateUpdateRow(),
+        updateBuildInfo: () => updateRuntimeStatus.updateBuildInfo(),
+        updateBackupHealthWarning: () => updateBackupHealthWarning(),
+        updateLastBackupLine: () => updateLastBackupLine(),
+        updateRestoreRollbackLine: () => updateRestoreRollbackLine(),
+        exportBackup: () => exportBackup(),
+        parseBackupFileForRestore: (file) => parseBackupFileForRestore(file),
+        openRestorePreviewModal: (preview) => openRestorePreviewModal(preview),
+        openReplaceSafetyBackupModal: () => openReplaceSafetyBackupModal(),
+        importBackupFromFile: (file, options) => importBackupFromFile(file, options),
+        restoreFromRollbackSnapshot: () => restoreFromRollbackSnapshot(),
+        saveState: () => saveState(),
+        clearPendingTripUndo: () => clearPendingTripUndo(),
+        openConfirmModal: (options) => openConfirmModal(options),
+        restoreDeletedTrip: (deletedEntryId) => restoreDeletedTrip(deletedEntryId),
+        permanentlyDeleteDeletedTrip: (deletedEntryId) => permanentlyDeleteDeletedTrip(deletedEntryId),
+        clearDeletedTripsBin: () => clearDeletedTripsBin(),
+        applyThemeMode: () => applyThemeMode(),
+        render: () => render(),
+        openRestoreErrorModal: (error) => openRestoreErrorModal(error),
+        openRestoreResultModal: (result) => openRestoreResultModal(result),
+        showToast: (msg) => showToast(msg),
+        getInstallSurfaceModel: () => getInstallSurfaceModel(),
+        runInstallAction: () => runInstallAction(),
+        getReleaseValidationSnapshot: () => updateRuntimeStatus.getReleaseValidationSnapshot(),
+        formatReleaseValidationLedger: (snapshot, selectedResults, notes) => updateRuntimeStatus.formatReleaseValidationLedger(snapshot, selectedResults, notes),
+        copyTextWithFeedback: (text) => copyTextWithFeedback(text)
+      });
+      return settingsScreenRenderer;
+    })
+    .finally(()=> {
+      settingsScreenRendererPromise = null;
+    });
+  return settingsScreenRendererPromise;
+}
+
+function renderSettings(){
+  if(settingsScreenRenderer?.renderSettings) return settingsScreenRenderer.renderSettings();
+  renderSurfaceLoading("settings", "Loading Settings…");
+  void ensureSettingsScreenRenderer().then(()=> {
+    if(String(state.view || "home") === "settings") render();
+  }).catch((error)=> showFatal(error));
+}
+
+
 
 
 function renderHelp(){

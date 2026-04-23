@@ -35,8 +35,10 @@ async function __assertAssetExists(path) {
   } catch (_) {}
 
   let r;
+  const isVersionedStaticAsset = /[?&]v=/.test(String(path || "")) && /\.(js|css)($|\?)/i.test(String(path || ""));
+  const bootstrapFetchCacheMode = isVersionedStaticAsset ? "default" : "no-store";
   try {
-    r = await fetch(path, { cache: "no-store" });
+    r = await fetch(path, { cache: bootstrapFetchCacheMode });
   } catch (e) {
     try {
       window.__BOOT_DIAG__.assetChecks.push({ url: String(path), ok: false, status: 0, contentType: "", note: "fetch failed" });

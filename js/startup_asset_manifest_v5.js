@@ -16,8 +16,6 @@ export const STARTUP_MODULE_PATHS = [
   "./help_about_render_v5.js",
   "./trip_form_render_v5.js",
   "./home_dashboard_v5.js",
-  "./settings_screen_v5.js",
-  "./reports_screen_v5.js",
   "./chart_story_seam_v5.js",
   "./feedback_seam_v5.js",
   "./trip_screen_shared_helpers_v5.js",
@@ -42,7 +40,6 @@ export const BOOTSTRAP_REQUIRED_ASSET_PATHS = [
   "./utils_v5.js",
   "./settings.js",
   "./migrations_v5.js",
-  "./navigation_v5.js",
   APP_ENTRY_MODULE_PATH
 ];
 
@@ -60,11 +57,6 @@ export const STARTUP_APP_OWNED_MODULE_PATHS = [
 // enforced by scripts/preflight-verify.mjs to prevent drift.
 export const SW_CORE_JS_PATHS = [
   ...STARTUP_MODULE_PATHS,
-  "./reports_compare_foundations_v5.js",
-  "./reports_advanced_panel_v5.js",
-  "./reports_highlights_v5.js",
-  "./trip_card_renderer_core_v5.js",
-  "./reports_chart_definitions_v5.js",
   APP_ENTRY_MODULE_PATH
 ];
 
@@ -90,8 +82,6 @@ export const REQUIRED_CORE_CACHE_STATIC_PATHS = [
   "./manifest.webmanifest",
   "./css/shell_shared_v5.css",
   "./css/shell_feature_surfaces_v5.css",
-  "./css/trip_form_v5.css",
-  "./css/reports_v5.css",
   "./css/boot_shell_inline_extract_v1.css",
   "./js/boot_fallback_gate_v1.js",
   "./js/bootstrap_v5.js"
