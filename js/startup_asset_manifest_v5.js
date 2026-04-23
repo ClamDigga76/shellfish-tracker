@@ -15,6 +15,7 @@ export const STARTUP_MODULE_PATHS = [
   "./trip_cards_v5.js",
   "./help_about_render_v5.js",
   "./trip_form_render_v5.js",
+  "./home_dashboard_v5.js",
   "./chart_story_seam_v5.js",
   "./feedback_seam_v5.js",
   "./trip_screen_shared_helpers_v5.js",

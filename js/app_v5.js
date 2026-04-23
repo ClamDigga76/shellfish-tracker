@@ -59,6 +59,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { createTripCardRenderHelpers, normalizeDealerDisplay },
   { renderHelpViewHTML, renderAboutViewHTML },
   { renderTripEntryForm },
+  { createHomeDashboardRenderer },
   _chartStorySeamModule,
   { createFeedbackSeam },
   _tripScreenSharedHelpersModule,
@@ -588,70 +589,47 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
   ...tripsUnifiedFilterBridge
 });
 
-let homeDashboardRenderer = null;
-let homeDashboardRendererPromise = null;
-
 function renderSurfaceLoading(viewKey, title = "Loading…"){
   const app = getApp();
   if(!app) return;
   app.innerHTML = `${renderPageHeader(viewKey)}<main class="container"><section class="card"><p class="muted">${escapeHtml(title)}</p></section></main>`;
 }
 
-async function ensureHomeDashboardRenderer(){
-  if(homeDashboardRenderer) return homeDashboardRenderer;
-  if(homeDashboardRendererPromise) return homeDashboardRendererPromise;
-  homeDashboardRendererPromise = importVersionedModule("./home_dashboard_v5.js")
-    .then(({ createHomeDashboardRenderer })=> {
-      homeDashboardRenderer = createHomeDashboardRenderer({
-        state,
-        buildUnifiedFilterFromHomeFilter,
-        applyUnifiedTripFilter,
-        computePPL,
-        resolveTripPayRate,
-        round2: to2,
-        getTripsNewestFirst,
-        renderPageHeader,
-        escapeHtml,
-        parseReportDateToISO,
-        formatDateDMY,
-        formatMoney,
-        getApp,
-        saveState: () => saveState(),
-        render,
-        bindDatePill,
-        normalizeCustomRangeWithFeedback,
-        showToast,
-        tipMsg: typeof tipMsg !== "undefined" ? tipMsg : undefined,
-        exportBackup,
-        renderHomeMetricDetail: () => renderHomeMetricDetail(),
-        getInstallSurfaceModel: () => getInstallSurfaceModel(),
-        runInstallAction: () => runInstallAction(),
-        renderStandardReadOnlyTripCard,
-        buildReportsAggregationForTrips: (trips)=> buildReportsAggregationState({
-          trips,
-          canonicalDealerGroupKey,
-          normalizeDealerDisplay,
-          resolveTripArea
-        }),
-        drawReportsCharts,
-        isFeatureAllowed: (featureKey, plan) => entitlements.isFeatureAllowed(featureKey, plan),
-        entitlementFeatureKeys: entitlements.FEATURES
-      });
-      return homeDashboardRenderer;
-    })
-    .finally(()=> {
-      homeDashboardRendererPromise = null;
-    });
-  return homeDashboardRendererPromise;
-}
-
-function renderHome(){
-  if(homeDashboardRenderer?.renderHome) return homeDashboardRenderer.renderHome();
-  renderSurfaceLoading("home", "Loading Home…");
-  void ensureHomeDashboardRenderer().then(()=> {
-    if(String(state.view || "home") === "home") render();
-  }).catch((error)=> showFatal(error));
-}
+const { renderHome } = createHomeDashboardRenderer({
+  state,
+  buildUnifiedFilterFromHomeFilter,
+  applyUnifiedTripFilter,
+  computePPL,
+  resolveTripPayRate,
+  round2: to2,
+  getTripsNewestFirst,
+  renderPageHeader,
+  escapeHtml,
+  parseReportDateToISO,
+  formatDateDMY,
+  formatMoney,
+  getApp,
+  saveState: () => saveState(),
+  render,
+  bindDatePill,
+  normalizeCustomRangeWithFeedback,
+  showToast,
+  tipMsg: typeof tipMsg !== "undefined" ? tipMsg : undefined,
+  exportBackup,
+  renderHomeMetricDetail: () => renderHomeMetricDetail(),
+  getInstallSurfaceModel: () => getInstallSurfaceModel(),
+  runInstallAction: () => runInstallAction(),
+  renderStandardReadOnlyTripCard,
+  buildReportsAggregationForTrips: (trips)=> buildReportsAggregationState({
+    trips,
+    canonicalDealerGroupKey,
+    normalizeDealerDisplay,
+    resolveTripArea
+  }),
+  drawReportsCharts,
+  isFeatureAllowed: (featureKey, plan) => entitlements.isFeatureAllowed(featureKey, plan),
+  entitlementFeatureKeys: entitlements.FEATURES
+});
 
 const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrchestrator({
   state,

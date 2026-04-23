@@ -186,12 +186,14 @@ if (homeSource) {
   checkPattern(homeSource, 'home header wiring present', /renderPageHeader\s*\(\s*["']home["']\s*\)/, 'renderPageHeader("home")');
 }
 
-if (appSource) {
-  checkIncludesAny(appSource, 'home renderer import wired', [
+const rendererWiringSource = `${appSource || ''}\n${startupAssetManifestSource || ''}`;
+
+if (rendererWiringSource) {
+  checkIncludesAny(rendererWiringSource, 'home renderer import wired', [
     '"./home_dashboard_v5.js"',
     "'./home_dashboard_v5.js'",
   ]);
-  checkIncludesAny(appSource, 'settings renderer import wired', [
+  checkIncludesAny(rendererWiringSource, 'settings renderer import wired', [
     '"./settings_screen_v5.js"',
     "'./settings_screen_v5.js'",
   ]);
