@@ -215,6 +215,7 @@ export function createUpdateRuntimeStatusSeam({
       startupModuleVersions: [],
       lastBootError: "",
       swRegistrationAttempted: false,
+      swRegistrationStarted: false,
       swRegistrationConfirmed: false,
       swRegistrationScope: "",
       swRegistrationError: "",
@@ -332,7 +333,14 @@ export function createUpdateRuntimeStatusSeam({
     const hasTargetWaitingWorker = Boolean(details.swWaitingVersion && details.buildDigits && details.swWaitingVersion === details.buildDigits);
     const hasTargetActiveWorker = Boolean(details.swScriptVersion && details.buildDigits && details.swScriptVersion === details.buildDigits);
     const hasMeaningfulUpdateSignal = ["ready", "applying", "controller-changed"].includes(String(lastSwUpdateSignal || ""));
-    const hasMeaningfulRegistrationSignal = ["registered", "attempted"].includes(String(lastSwRegistrationSignal || ""));
+    const hasMeaningfulRegistrationSignal = ["registered", "attempted", "error"].includes(String(lastSwRegistrationSignal || ""));
+    const hasRegistrationStartSignal = ["registered", "attempted", "error"].includes(String(lastSwRegistrationSignal || ""));
+    details.swRegistrationStarted = Boolean(
+      details.swRegistrationAttempted ||
+      details.swRegistrationConfirmed ||
+      !!details.swRegistrationError ||
+      hasRegistrationStartSignal
+    );
     const hasRecentLifecycleSignal = Boolean(
       (hasMeaningfulUpdateSignal && updateSignalAt > 0 && (now - updateSignalAt) <= PENDING_CONTROL_GRACE_MS) ||
       (hasMeaningfulRegistrationSignal && registrationSignalAt > 0 && (now - registrationSignalAt) <= PENDING_CONTROL_GRACE_MS)
@@ -347,16 +355,33 @@ export function createUpdateRuntimeStatusSeam({
     details.requiredCoreCachePendingControl = Boolean(
       details.requiredCoreCacheIncomplete &&
       !details.swController &&
-      (details.swRegistrationConfirmed || details.swRegistrationAttempted) &&
+      details.swRegistrationStarted &&
       !details.hasExplicitVersionMismatch &&
       !details.swRegistrationError &&
       !details.hasBootCorruptionSignal &&
       hasGroundedPendingProgress
     );
+    details.requiredCoreCachePreRegistrationSoft = Boolean(
+      details.requiredCoreCacheIncomplete &&
+      !details.swController &&
+      !details.swRegistrationStarted &&
+      !details.hasExplicitVersionMismatch &&
+      !details.swRegistrationError &&
+      !details.hasBootCorruptionSignal
+    );
+    details.requiredCoreCachePostRegistrationUnresolved = Boolean(
+      details.requiredCoreCacheIncomplete &&
+      !details.swController &&
+      details.swRegistrationStarted &&
+      !details.requiredCoreCachePendingControl &&
+      !details.hasExplicitVersionMismatch &&
+      !details.swRegistrationError &&
+      !details.hasBootCorruptionSignal
+    );
     details.needsHardReset = Boolean(
       details.hasExplicitVersionMismatch ||
       details.requiredCoreCacheIncompleteAfterControl ||
-      (details.requiredCoreCacheIncomplete && !details.swController && !details.requiredCoreCachePendingControl) ||
+      details.requiredCoreCachePostRegistrationUnresolved ||
       details.swRegistrationError ||
       details.hasBootCorruptionSignal
     );
@@ -565,6 +590,15 @@ export function createUpdateRuntimeStatusSeam({
       parts.push("Service worker note: registration progress is present, but this tab is not controlled yet.");
     }
     if(runtimeDiag.swRegistrationUnconfirmed && !runtimeDiag.hasExplicitVersionMismatch){
+      if(runtimeDiag.swRegistrationStarted){
+        parts.push("Service worker note: registration started on this device, but confirmation is still pending.");
+      }else{
+        parts.push("Service worker note: registration has not started yet in this tab; this can be normal on first open.");
+      }
+    }
+    if(runtimeDiag.requiredCoreCachePreRegistrationSoft){
+      parts.push("Recovery note: required core cache is incomplete before service worker registration starts; let startup finish, then re-check.");
+    }else if(runtimeDiag.requiredCoreCachePostRegistrationUnresolved){
       parts.push("Service worker note: registration is not confirmed yet on this device.");
     }
     if(runtimeDiag.installedAppLikelyLagging){
@@ -633,7 +667,9 @@ export function createUpdateRuntimeStatusSeam({
       btnPrimary.textContent = "Reload latest build";
       btnPrimary.onclick = async ()=>{ await swCheckNow(); };
       if(inlineMsg){
-        inlineMsg.textContent = runtimeDiag?.requiredCoreCachePendingControl
+        inlineMsg.textContent = runtimeDiag?.requiredCoreCachePreRegistrationSoft
+          ? "Service worker registration has not started yet in this tab. This can be normal on first open; wait for load completion, then re-check."
+          : runtimeDiag?.requiredCoreCachePendingControl
           ? "Required core cache is briefly settling while service worker lifecycle progress is still active. Reopen or reload after control is confirmed."
           : "Run Reload latest build after service worker control is confirmed.";
       }
