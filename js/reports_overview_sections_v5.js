@@ -47,6 +47,22 @@ export function createReportsOverviewSectionsSeam(deps){
     return `${to2(safeValue)}`;
   };
 
+  function renderCompactStatusNotice({
+    title,
+    body,
+    emphasis = "default",
+    className = ""
+  } = {}){
+    return statusSurfaceSeam.renderStatusSurface({
+      variant: "reportsEmpty",
+      emphasis,
+      compact: true,
+      className: `emptyState ${className}`.trim(),
+      title,
+      body
+    });
+  }
+
 
   function renderNoResultsState(context){
     const { fMode, hasValidRange, hasSavedTrips, quarantinedSupportCopy } = context;
@@ -452,11 +468,10 @@ export function createReportsOverviewSectionsSeam(deps){
         <div class="sep"></div>
 
         ${renderHLItem("Lowest Price Per Pound in Range", minPpl, "ppl", "min")}
-      ` : `
-        <div class="emptyState compact">
-          <div class="emptyStateTitle">Price Per Pound insights unavailable</div>
-          <div class="emptyStateBody">Add trips with both pounds and amount in this range to populate this view.</div>
-        </div>`}
+      ` : renderCompactStatusNotice({
+        title: "Price Per Pound insights unavailable",
+        body: "Add trips with both pounds and amount in this range to populate this view."
+      })}
     `;
 
     return reportsSection({
@@ -494,11 +509,10 @@ export function createReportsOverviewSectionsSeam(deps){
     });
 
     const renderSummaryAggList = (rows, emptyMsg)=>{
-      if(!rows.length) return `
-        <div class="emptyState compact">
-          <div class="emptyStateTitle">Insights pending</div>
-          <div class="emptyStateBody">${escapeHtml(emptyMsg||"Add trips to unlock these insights.")}</div>
-        </div>`;
+      if(!rows.length) return renderCompactStatusNotice({
+        title: "Insights pending",
+        body: emptyMsg || "Add trips to unlock these insights."
+      });
       return rows.map((r)=> `
         <div class="trow">
           <div>
@@ -530,12 +544,10 @@ export function createReportsOverviewSectionsSeam(deps){
 
     const renderDealerPriceRangeComparison = ()=>{
       if(!Array.isArray(dealerRangeRows) || !dealerRangeRows.length){
-        return `
-          <div class="emptyState compact">
-            <div class="emptyStateTitle">Dealer range comparison unavailable</div>
-            <div class="emptyStateBody">Add priced trips with dealer info to populate this table.</div>
-          </div>
-        `;
+        return renderCompactStatusNotice({
+          title: "Dealer range comparison unavailable",
+          body: "Add priced trips with dealer info to populate this table."
+        });
       }
       return dealerRangeRows.map((row, idx)=> `
         <div class="trow">
