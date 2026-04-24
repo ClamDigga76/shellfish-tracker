@@ -596,6 +596,16 @@
 .kpiCard .kpiLabel{
   color:var(--text-muted-strong);
 }
+.kpiCard .kpiHint{
+  margin:-2px 0 2px;
+  font-size:10px;
+  line-height:1.15;
+  color:var(--text-muted-strong);
+  opacity:.86;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
 .kpiCard .kpiValue{
   font-variant-numeric:tabular-nums;
 }
@@ -800,6 +810,9 @@
   .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip .timeframeChipSubLabel{
     font-size:8px;
     letter-spacing:.06em;
+  }
+  .homeScreenShell .kpiCard .kpiHint{
+    font-size:9px;
   }
 }
 
