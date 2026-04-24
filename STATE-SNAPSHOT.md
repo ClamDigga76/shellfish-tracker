@@ -15,6 +15,7 @@ Use these fields when relevant:
 - **Version:** current VibeCoder version or pack state
 - **Lane:** current primary lane
 - **Entry state:** current entry-state classification
+- **Execution surface:** where the pass is being executed or handed off
 - **Active item:** the one main item in focus
 - **Authority files:** law, wrapper, and most relevant helpers
 - **Guardrails:** active temporary rules or special cautions
@@ -22,11 +23,21 @@ Use these fields when relevant:
 - **Next recommended pass:** the most grounded next move
 - **Do not widen:** what should stay out of the next pass
 
+## Execution surface examples
+Use short labels such as:
+
+- ChatGPT
+- ChatGPT + GitHub app
+- Codex Local
+- Codex Worktree
+- GitHub PR review
+
 ## Compact template
 ```text
 Version:
 Lane:
 Entry state:
+Execution surface:
 Active item:
 Authority files:
 Guardrails:
