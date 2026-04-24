@@ -105,6 +105,15 @@ assertRepoCheck(!quickChipsSource.includes('dealerPinnedCustom'), 'quick chips s
 assertRepoCheck(!quickChipsSource.includes('openQuickChipCustomizeModal'), 'quick chips source does not export customize modal behavior');
 assertRepoCheck(!quickChipsSource.includes('bindQuickChipLongPress'), 'quick chips source does not export long-press customize behavior');
 
+const backupRestoreSource = readFileSync('js/backup_restore_v5.js', 'utf8');
+assertRepoCheck(/backupId:\s*safeBackupId/.test(backupRestoreSource), 'backup export payload includes backupId');
+assertRepoCheck(backupRestoreSource.includes('Bank-the-Catch-Backup-'), 'backup filename uses Bank-the-Catch-Backup prefix');
+assertRepoCheck(backupRestoreSource.includes('1-trip') && backupRestoreSource.includes('-trips'), 'backup filename uses trip/trips count language');
+assertRepoCheck(!backupRestoreSource.includes('bank-the-catch_backup_'), 'legacy build-oriented backup filename pattern removed');
+assertRepoCheck(backupRestoreSource.includes('obj.schemaVersion ?? obj.schema ?? 0'), 'restore supports schemaVersion ?? schema compatibility');
+assertRepoCheck(backupRestoreSource.includes('delete safeSettings.quickChips.areaPinnedCustom;'), 'backup export sanitizes stale areaPinnedCustom quick-chip map');
+assertRepoCheck(backupRestoreSource.includes('delete safeSettings.quickChips.dealerPinnedCustom;'), 'backup export sanitizes stale dealerPinnedCustom quick-chip map');
+
 const tripSharedModule = await import('../js/trip_shared_engine_v5.js');
 const { createTripSharedCollectionsEngine, AREA_NOT_RECORDED } = tripSharedModule;
 
