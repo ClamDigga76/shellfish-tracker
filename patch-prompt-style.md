@@ -1,7 +1,7 @@
 # patch-prompt-style.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible Slim Core
 
 ## Purpose
-This file defines the default **Web Codex / browser sandbox** patch prompt style.
+This file defines the default **browser-based Codex / web sandbox** patch prompt style.
 
 ## Source-of-truth reminder
 `AGENTS.md` is the source of truth for workflow rules.
@@ -16,10 +16,10 @@ Use this order:
 3. Repro (if this is a bug, regression, or visible trust seam)
 4. Done when
 5. Not in this patch
-6. Files edited
+6. Likely files / surfaces
 7. Repo connection recommendation
-8. Codex Task Prompt
-9. Commit message
+8. Plain-language patch layer (from `AGENTS.md`) when useful
+9. Codex Task Prompt (include Suggested commit message inside this section)
 10. Changelog
 11. Rollback rope
 
@@ -34,6 +34,12 @@ For project/workflow support patches:
 For presentation/UI formatting patches:
 - include a short human visual verification note in Done when or Validation
 - keep full visual-check policy in `testing-checklist.md` (do not duplicate it here)
+
+Include a short success handoff note when useful:
+- what changed
+- what stayed stable
+- what checks were run
+- what immediate next action is
 
 ## 4.5 execution reminders
 When useful:

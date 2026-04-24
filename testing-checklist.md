@@ -29,6 +29,12 @@ For project-files/docs/workflow patches:
 - no runtime preflight required
 - verify wording clarity, hierarchy, and non-conflicting guidance
 - verify referenced helper files exist
+- verify anti-drift anchoring language is consistent with `AGENTS.md`
+- verify likely files / surfaces language is used consistently
+- verify `Pull` expectations stay aligned across `AGENTS.md` and helper docs
+- verify helper docs point back to `AGENTS.md` instead of owning duplicated law
+- verify `Refresh` output contract stays compact and does not widen scope
+- verify `STATE-SNAPSHOT.md` uses execution-surface wording compactly when relevant
 
 ## Presentation/UI formatting patch checks
 For presentation/UI formatting patches, after repo and smoke checks pass:
