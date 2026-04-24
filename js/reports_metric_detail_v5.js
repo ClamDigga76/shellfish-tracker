@@ -178,12 +178,12 @@ function buildHomeMetricPayloads(period){
     amount: buildHomeMetricPayload({ metricKey: "amount", label: "Amount", currentValue: current.amount, previousValue: previous.amount, period }),
     ppl: buildHomeMetricPayload({
       metricKey: "ppl",
-      label: "Average Price Per Pound",
+      label: "Avg $ / lb",
       currentValue: current.ppl,
       previousValue: previous.ppl,
       period,
       suppressed: !(current.lbs > 0 && previous.lbs > 0),
-      reason: "Log pounds in both visible months in this range to compare Average Price Per Pound."
+      reason: "Log pounds in both visible months in this range to compare Avg $ / lb."
     })
   };
 }
@@ -338,7 +338,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       monthRows: safeMonths,
       metricKey: "ppl",
       windowSize: getRollingWindowForMetric("ppl", { surface: "home" }),
-      basisLabel: `Rolling average Price Per Pound trend • visible months in this range • ${rateLeaderSupportLabel}`
+      basisLabel: `Rolling Avg $ / lb trend • visible months in this range • ${rateLeaderSupportLabel}`
     }),
     pplAreaLeaders: buildHomeTopRowsBarChart({
       rows: areaRowsByRate,
@@ -551,12 +551,12 @@ export function createReportsMetricDetailSeam(deps){
         const cause = poundsPayload?.compareTone === "up" && pplPayload?.compareTone !== "up"
           ? "higher pounds landed"
           : (pplPayload?.compareTone === "up" && poundsPayload?.compareTone !== "up"
-            ? "stronger Price Per Pound"
+            ? "stronger Avg $ / lb"
             : (poundsPayload?.compareTone === "down" && pplPayload?.compareTone !== "down"
               ? "lighter pounds landed"
               : (pplPayload?.compareTone === "down" && poundsPayload?.compareTone !== "down"
-                ? "softer Price Per Pound"
-                : "a combined shift in pounds and Price Per Pound")));
+                ? "softer Avg $ / lb"
+                : "a combined shift in pounds and Avg $ / lb")));
         const evidence = `Evidence: amount per trip was ${toneWord(amountPerTripTone)} and amount per day was ${toneWord(amountPerDayTone)}.`;
         return `${metricMoveLead("Amount")} mainly from ${cause}. ${evidence}`;
       },
@@ -567,7 +567,7 @@ export function createReportsMetricDetailSeam(deps){
           : (tone === "down" ? "softer pricing" : "stable pricing");
         const amountDirection = toneWord(amountPayload?.compareTone, { up: "up", down: "down", steady: "flat" });
         const poundsDirection = toneWord(poundsPayload?.compareTone, { up: "up", down: "down", steady: "flat" });
-        return `${metricMoveLead("Price Per Pound")}${pctMove} mainly from ${cause}. Evidence: amount was ${amountDirection} while pounds were ${poundsDirection}.`;
+        return `${metricMoveLead("Avg $ / lb")}${pctMove} mainly from ${cause}. Evidence: amount was ${amountDirection} while pounds were ${poundsDirection}.`;
       }
     };
     const summaryText = (summaryBuilders[metricKey] || summaryBuilders.amount)();
@@ -822,7 +822,7 @@ export function createReportsMetricDetailSeam(deps){
       ],
       ppl: [
         detailCharts.pplMonthlyTrend ? {
-          title: sharedChartTitle("pplByMonth", "Average Price Per Pound by month"),
+          title: sharedChartTitle("pplByMonth", "Avg $ / lb by month"),
           context: `Monthly average pay rate • ${detailCharts.pplMonthlyTrend?.basisLabel || getRateLeaderThresholdText()}`,
           canvasId: "c_ppl_monthly_trend",
           chartModel: detailCharts.pplMonthlyTrend,
@@ -941,7 +941,7 @@ export function createReportsMetricDetailSeam(deps){
         homeInsight: "Start with compare, then check monthly, dealer, and area charts for earnings drivers."
       },
       ppl: {
-        title: "Average Price Per Pound breakdown",
+        title: "Avg $ / lb breakdown",
         homeTitle: "Avg $ / lb",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
@@ -950,17 +950,17 @@ export function createReportsMetricDetailSeam(deps){
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,
-        chartTitle: "Average Price Per Pound • Compare",
+        chartTitle: "Avg $ / lb • Compare",
         homeChartTitle: "Avg $ / lb",
         homeChartExplanation: `Month-to-month average pay rate for the latest visible pair. ${getPplFormulaText({ metricKey, surface: "short" })}`,
-        chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getPplFormulaText({ metricKey, surface: "short" })} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
+        chartContext: `${primaryChart?.basisLabel || "Bars • Avg $ / lb for the latest matched months"} • ${getPplFormulaText({ metricKey, surface: "short" })} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
         homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getPplFormulaText({ metricKey, surface: "short" })} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.ppl
           : [
             detailCharts.pplRollingTrend ? {
-              title: `Average Price Per Pound • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
+              title: `Avg $ / lb • ${detailCharts.pplRollingTrend.windowSize}-month rolling`,
               context: `Line • rolling trend with latest month highlighted • ${getRateLeaderThresholdText()}`,
               canvasId: "c_ppl_rolling_trend",
               chartModel: detailCharts.pplRollingTrend,
