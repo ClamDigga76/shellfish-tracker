@@ -40,6 +40,27 @@ These files support the workflow, but do not outrank this file:
 - `codex-app-style.md`
 - `testing-checklist.md`
 
+## Anti-drift anchoring rule
+Before planning or executing a pass, re-anchor to current authority and scope.
+
+Minimum anchor set:
+- user request and done criteria
+- this `AGENTS.md`
+- active lane and single active change
+- pass boundaries (`Not in this pass`)
+
+If drift appears mid-pass, pause and re-anchor before continuing.
+
+## Automatic check priority
+Run only the checks that match the lane and changed surfaces.
+
+Priority order:
+1. hierarchy and authority consistency checks for docs/workflow changes
+2. targeted repo checks directly tied to touched files
+3. broader checks only when risk, scope, or user request requires them
+
+Do not default to runtime preflight for docs-only passes.
+
 ## Default workflow
 Use this sequence for normal work:
 
@@ -59,6 +80,17 @@ Do not turn one pass into multiple meaningful changes unless the user clearly wa
 ## Official command layer
 Keep the official command set small.
 
+### `Read pack`
+Read the compact workflow pack and restate the active operating frame.
+
+Default output:
+- current authority order
+- current lane and active change
+- command map and intended use
+- key guardrails likely to matter for this pass
+
+Use this when re-entering work, after interruptions, or when command drift is suspected.
+
 ### `Refresh`
 Refresh the VibeCoder project state.
 
@@ -68,7 +100,13 @@ It should:
 - re-sync the active Parking Lot, Suggestions, and guardrails
 - re-establish current lane, scope, and next best move
 
-It does not automatically mean repo or runtime re-check.
+Output contract (compact):
+- authority check result
+- lane + active item
+- guardrail reminders
+- next best move
+
+`Refresh` is project-state sync only. It does not automatically imply runtime validation, repo fetch, or environment diagnostics.
 
 ### `Pull <item>`
 Default execution command.
@@ -76,14 +114,18 @@ Default execution command.
 Use it to do the real working pass for one Parking Lot item or one safe combined batch.
 
 Default output:
-- audit result when relevant
+- quick audit result when relevant
 - Goal
 - Now → Change → Better
 - Done when
 - Not in this pass
+- repo-aware assumptions when needed
 - likely files or surfaces
-- implementation-ready or handoff-ready output in the right lane shape
-- checks, commit/handoff details, and next action when relevant
+- patch-ready or handoff-ready output in the right lane shape
+- relevant checks only
+- small changelog
+- rollback rope
+- next action when relevant
 
 ### `Do <item>`
 Compatibility alias for `Pull <item>`.
@@ -104,6 +146,37 @@ Produce the compact current-state snapshot from `STATE-SNAPSHOT.md`.
 
 ### `Audit <item>`
 Run a focused consistency, compatibility, logic, repo-truth, or drift audit without building the full pull sheet.
+
+## Plain-language patch translation rule
+When a patch plan is technical, include a plain-language translation.
+
+Keep it short and practical:
+- what changed
+- why it matters
+- what stays the same
+- what to verify next
+
+## Success tail rule
+End execution responses with a short success tail when relevant:
+- what changed
+- what stayed stable
+- what checks were run
+- what the immediate next action is
+
+## Initiative rule
+Take the smallest safe initiative that unblocks momentum inside the approved scope.
+
+Do not widen scope silently.
+If a useful adjacent idea appears, park it as a Suggestion unless the user explicitly pulls it into the active pass.
+
+## Practical success target
+Prefer “usefully correct and easy to adopt” over “maximal rewrite.”
+
+A pass is practically successful when it is:
+- scoped tightly
+- understandable on first read
+- reversible with low risk
+- verified at the right depth for the lane
 
 ## Jeremy response layer
 Use this tone when replying to Jeremy:
