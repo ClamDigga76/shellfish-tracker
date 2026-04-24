@@ -473,6 +473,11 @@ export function createReportsMetricDetailSeam(deps){
     }
     return "";
   };
+  const getPplFormulaText = ({ metricKey, surface = "default" } = {})=> {
+    if(metricKey !== "ppl") return "";
+    if(surface === "short") return "Avg $ / lb = total amount ÷ total pounds.";
+    return "Total amount ÷ total pounds. Weighted by pounds across selected trips.";
+  };
 
   const buildMetricCompareSummary = ({ metricKey, payload, compareFoundation, isHomeMetricDetail })=> {
     if(compareFoundation.period?.suppressed || !payload || payload.suppressed){
@@ -601,7 +606,8 @@ export function createReportsMetricDetailSeam(deps){
       ? (viewModel.compareFoundation.period?.explanation || "")
       : "";
     const pplSupportNoteText = getPplSupportNoteText({ metricKey: viewModel.metricKey, payload: meta.comparePayload, surface: "supportMeta" });
-    const supportMetaNote = [compareContractText, pplSupportNoteText].filter(Boolean).join(" ");
+    const pplFormulaText = getPplFormulaText({ metricKey: viewModel.metricKey });
+    const supportMetaNote = [compareContractText, pplFormulaText, pplSupportNoteText].filter(Boolean).join(" ");
     const supportAnalysisText = viewModel.isHomeMetricDetail
       ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
       : String(compareSummary.text || "");
@@ -930,19 +936,19 @@ export function createReportsMetricDetailSeam(deps){
       },
       ppl: {
         title: "Average Price Per Pound breakdown",
-        homeTitle: "Average Price Per Pound",
+        homeTitle: "Avg $ / lb",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
-        heroLabel: "Average Price Per Pound this range",
+        heroLabel: "Avg $ / lb this range",
         heroValue: resolveHeroValue("ppl"),
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Average Price Per Pound • Compare",
-        homeChartTitle: "Average Price Per Pound",
-        homeChartExplanation: "Month-to-month average pay rate for the latest visible pair.",
-        chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
-        homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
+        homeChartTitle: "Avg $ / lb",
+        homeChartExplanation: `Month-to-month average pay rate for the latest visible pair. ${getPplFormulaText({ metricKey, surface: "short" })}`,
+        chartContext: `${primaryChart?.basisLabel || "Bars • average Price Per Pound for the latest matched months"} • ${getPplFormulaText({ metricKey, surface: "short" })} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
+        homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getPplFormulaText({ metricKey, surface: "short" })} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.ppl
