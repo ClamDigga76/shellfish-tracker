@@ -1,6 +1,7 @@
 import { createSettingsSupportRecoverySeam } from "./settings_support_recovery_v5.js";
 import { escapeSettingsHtml } from "./settings_utils_v5.js";
 import { renderInstallSurface, resolveInstallSummary, resolveInstallStatusPill } from "./install_surface_renderer_v5.js";
+import { createStatusSurfaceSeam } from "./status_surface_seam_v5.js";
 
 export function createSettingsScreenOrchestrator({
   getState,
@@ -41,6 +42,7 @@ export function createSettingsScreenOrchestrator({
   formatReleaseValidationLedger,
   copyTextWithFeedback
 }) {
+  const statusSurfaceSeam = createStatusSurfaceSeam({ escapeHtml: escapeSettingsHtml });
   const supportRecoverySeam = createSettingsSupportRecoverySeam({
     displayBuildVersion,
     showToast,
@@ -92,6 +94,17 @@ export function createSettingsScreenOrchestrator({
     const installModel = typeof getInstallSurfaceModel === "function"
       ? getInstallSurfaceModel()
       : null;
+    const backupTrustSurfaceHtml = statusSurfaceSeam.renderStatusSurface({
+      variant: "settingsTrust",
+      emphasis: "soft",
+      compact: true,
+      className: "settingsBackupTrustSurface",
+      title: "Backup trust baseline",
+      statusPill: "Recommended",
+      body: "Create a backup before major updates, Replace restore, or switching phones, browsers, or app modes.",
+      support: "Keep one current copy and one older copy in iCloud Drive or Google Drive.",
+      minorNote: "Erase All Data also clears backup freshness and rollback status shown on this device."
+    });
 
     getApp().innerHTML = `
     ${renderPageHeader("settings")}
@@ -170,13 +183,9 @@ export function createSettingsScreenOrchestrator({
           <button class="btn settingsFlexBtn" id="restoreBackup">📥 Restore Backup</button>
           <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
         </div>
-        <div class="settingsRow settingsRow--minor">
-          <div class="hint"><b>Recommended:</b> Create a backup before major updates, Replace restore, or switching phones, browsers, or app modes.</div>
-          <div class="muted small mt8">Keep one current copy and one older copy in iCloud Drive or Google Drive.</div>
-        </div>
+        <div class="settingsRow settingsRow--minor settingsRow--statusSurface">${backupTrustSurfaceHtml}</div>
         <div class="settingsRow settingsRow--status">
           <div class="muted small" id="restoreRollbackLine"></div>
-          <div class="muted settingsBodyTiny mt6">Erase All Data also clears backup freshness and rollback status shown on this device.</div>
         </div>
         <div class="settingsRow settingsRow--action">
           <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Rollback / undo last restore</button>
