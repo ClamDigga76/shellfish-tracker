@@ -175,6 +175,12 @@ export function computePPL(pounds, amount){
   return p > 0 ? to2(a / p) : 0;
 }
 
+export function computeAggregatePPL(pounds, amount){
+  const p = Number(pounds);
+  const a = Number(amount);
+  return Number.isFinite(p) && p > 0 && Number.isFinite(a) ? (a / p) : 0;
+}
+
 export function resolveTripPayRate(trip){
   const explicitRate = Number(trip?.payRate ?? trip?.rate ?? trip?.pricePerPound ?? 0);
   if(Number.isFinite(explicitRate) && explicitRate > 0) return explicitRate;

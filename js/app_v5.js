@@ -43,7 +43,7 @@ function registerStartupImportDiagnostics(startupModuleUrls, startupAppOwnedModu
 
 registerStartupImportDiagnostics(STARTUP_MODULE_URLS, STARTUP_APP_OWNED_MODULE_URLS);
 
-const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, isValidISODate },
+const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY, computePPL, computeAggregatePPL, resolveTripPayRate, deriveTripSettlement, parseMDYToISO: parseUsDateToISODate, parseNum, parseMoney, likelyDuplicate, normalizeKey, canonicalDealerGroupKey, escapeHtml, getTripsNewestFirst, isValidISODate },
   { THEME_MODE_DARK, normalizeThemeMode },
   { LS_KEY, migrateLegacyStateIfNeeded, migrateStateIfNeeded, loadStateWithLegacyFallback, buildDefaultAppState },
   { createEntitlementsSeam, ENTITLEMENT_PLANS, ENTITLEMENT_FEATURE_KEYS },
@@ -595,8 +595,7 @@ const { renderHome } = createHomeDashboardRenderer({
   state,
   buildUnifiedFilterFromHomeFilter,
   applyUnifiedTripFilter,
-  computePPL,
-  resolveTripPayRate,
+  computeAggregatePPL,
   round2: to2,
   getTripsNewestFirst,
   renderPageHeader,
