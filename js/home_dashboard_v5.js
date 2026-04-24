@@ -415,7 +415,6 @@ export function createHomeDashboardRenderer({
             </button>
             <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="ppl" aria-label="Open average dollars per pound detail">
               <div class="kpiLabel rate ppl">Avg $ / lb</div>
-              <div class="kpiHint" aria-hidden="true">Total amount ÷ total pounds</div>
               <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
             </button>
           </div>

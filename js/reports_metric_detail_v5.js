@@ -476,6 +476,8 @@ export function createReportsMetricDetailSeam(deps){
   const getPplFormulaText = ({ metricKey, surface = "default" } = {})=> {
     if(metricKey !== "ppl") return "";
     if(surface === "short") return "Avg $ / lb = total amount ÷ total pounds.";
+    if(surface === "formula") return "Total amount ÷ total pounds";
+    if(surface === "weighted") return "Weighted by pounds across selected trips";
     return "Total amount ÷ total pounds. Weighted by pounds across selected trips.";
   };
 
@@ -607,6 +609,8 @@ export function createReportsMetricDetailSeam(deps){
       : "";
     const pplSupportNoteText = getPplSupportNoteText({ metricKey: viewModel.metricKey, payload: meta.comparePayload, surface: "supportMeta" });
     const pplFormulaText = getPplFormulaText({ metricKey: viewModel.metricKey });
+    const pplTitleFormulaLine = getPplFormulaText({ metricKey: viewModel.metricKey, surface: "formula" });
+    const pplTitleWeightedLine = getPplFormulaText({ metricKey: viewModel.metricKey, surface: "weighted" });
     const supportMetaNote = [compareContractText, pplFormulaText, pplSupportNoteText].filter(Boolean).join(" ");
     const supportAnalysisText = viewModel.isHomeMetricDetail
       ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
@@ -647,6 +651,8 @@ export function createReportsMetricDetailSeam(deps){
         ${viewModel.isHomeMetricDetail ? `
           <div class="homeMetricTitleHeader" aria-label="Metric title">
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
+            ${pplTitleFormulaLine ? `<div class="homeMetricTitleFormula">${escapeHtml(pplTitleFormulaLine)}</div>` : ""}
+            ${pplTitleWeightedLine ? `<div class="homeMetricTitleFormula homeMetricTitleFormula--secondary">${escapeHtml(pplTitleWeightedLine)}</div>` : ""}
           </div>
           <div class="homeMetricLeadIn">${escapeHtml(detailInsight)}</div>
         ` : `
