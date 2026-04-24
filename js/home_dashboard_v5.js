@@ -7,8 +7,7 @@ export function createHomeDashboardRenderer({
   state,
   buildUnifiedFilterFromHomeFilter,
   applyUnifiedTripFilter,
-  computePPL,
-  resolveTripPayRate,
+  computeAggregatePPL,
   round2,
   getTripsNewestFirst,
   renderPageHeader,
@@ -54,12 +53,6 @@ export function createHomeDashboardRenderer({
   const computeHomeOverview = createRowsComputationMemo((rows)=> {
     const totalAmount = rows.reduce((s, t) => s + (Number(t?.amount) || 0), 0);
     const totalLbs = rows.reduce((s, t) => s + (Number(t?.pounds) || 0), 0);
-    const weightedRateTotal = rows.reduce((sum, trip) => {
-      const lbs = Number(trip?.pounds) || 0;
-      if (!(lbs > 0)) return sum;
-      const rate = typeof resolveTripPayRate === "function" ? resolveTripPayRate(trip) : computePPL(lbs, Number(trip?.amount) || 0);
-      return (Number.isFinite(rate) && rate > 0) ? (sum + (rate * lbs)) : sum;
-    }, 0);
     const dealerRollup = rows.reduce((map, trip) => {
       const dealerName = String(trip?.dealer || "").trim() || "Dealer not set";
       const next = map.get(dealerName) || { dealer: dealerName, trips: 0, amount: 0, pounds: 0 };
@@ -82,7 +75,6 @@ export function createHomeDashboardRenderer({
     return {
       totalAmount,
       totalLbs,
-      weightedRateTotal,
       dealers,
       strongestDealer: dealers.length ? dealers.slice().sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] : null,
       strongestArea: Array.from(areaRollup.values()).sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null
@@ -187,8 +179,8 @@ export function createHomeDashboardRenderer({
     const hf = state.homeFilter || { mode: "YTD", from: "", to: "" };
     const unified = buildUnifiedFilterFromHomeFilter(hf);
     const trips = getHomeFilteredTrips(tripsAll, unified);
-    const { totalAmount, totalLbs, weightedRateTotal, strongestDealer, strongestArea } = computeHomeOverview(trips);
-    const avgPpl = totalLbs > 0 ? (weightedRateTotal / totalLbs) : null;
+    const { totalAmount, totalLbs, strongestDealer, strongestArea } = computeHomeOverview(trips);
+    const avgPpl = totalLbs > 0 ? computeAggregatePPL(totalLbs, totalAmount) : null;
     const {
       avgAmountPerTrip,
       avgPoundsPerTrip

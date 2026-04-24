@@ -1,4 +1,4 @@
-import { resolveTripPayRate } from "./utils_v5.js";
+import { computeAggregatePPL, resolveTripPayRate } from "./utils_v5.js";
 
 export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, normalizeDealerDisplay, resolveTripArea }){
   const safeTrips = Array.isArray(trips) ? trips : [];
@@ -21,32 +21,28 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
     const lbs = Number(t?.pounds) || 0;
     const amt = Number(t?.amount) || 0;
     const rate = resolveTripPayRate(t);
-    const weightedRate = (Number.isFinite(rate) && rate > 0 && lbs > 0) ? (rate * lbs) : 0;
     const iso = String(t?.dateISO || "");
 
-    const dealerAgg = byDealer.get(dealerKey) || { name: dealerName, trips: 0, lbs: 0, amt: 0, rateWeightedLbsTotal: 0, _days: new Set() };
+    const dealerAgg = byDealer.get(dealerKey) || { name: dealerName, trips: 0, lbs: 0, amt: 0, _days: new Set() };
     dealerAgg.trips += 1;
     dealerAgg.lbs += lbs;
     dealerAgg.amt += amt;
-    dealerAgg.rateWeightedLbsTotal += weightedRate;
     if(/^\d{4}-\d{2}-\d{2}$/.test(iso)) dealerAgg._days.add(iso);
     byDealer.set(dealerKey, dealerAgg);
 
-    const areaAgg = byArea.get(areaKey) || { name: area, trips: 0, lbs: 0, amt: 0, rateWeightedLbsTotal: 0, _days: new Set() };
+    const areaAgg = byArea.get(areaKey) || { name: area, trips: 0, lbs: 0, amt: 0, _days: new Set() };
     areaAgg.trips += 1;
     areaAgg.lbs += lbs;
     areaAgg.amt += amt;
-    areaAgg.rateWeightedLbsTotal += weightedRate;
     if(/^\d{4}-\d{2}-\d{2}$/.test(iso)) areaAgg._days.add(iso);
     byArea.set(areaKey, areaAgg);
 
     if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){
       const monthKey = iso.slice(0, 7);
-      const monthAgg = byMonth.get(monthKey) || { trips: 0, lbs: 0, amt: 0, rateWeightedLbsTotal: 0, _days: new Set() };
+      const monthAgg = byMonth.get(monthKey) || { trips: 0, lbs: 0, amt: 0, _days: new Set() };
       monthAgg.trips += 1;
       monthAgg.lbs += lbs;
       monthAgg.amt += amt;
-      monthAgg.rateWeightedLbsTotal += weightedRate;
       monthAgg._days.add(iso);
       byMonth.set(monthKey, monthAgg);
 
@@ -193,12 +189,11 @@ function finalizeAggregateRow(row){
   const trips = Number(row?.trips) || 0;
   const lbs = Number(row?.lbs) || 0;
   const amt = Number(row?.amt) || 0;
-  const rateWeightedLbsTotal = Number(row?.rateWeightedLbsTotal) || 0;
   const fishingDays = row?._days instanceof Set ? row._days.size : (Number(row?.fishingDays) || 0);
   return {
     ...row,
     fishingDays,
-    avg: lbs > 0 ? rateWeightedLbsTotal / lbs : 0,
+    avg: computeAggregatePPL(lbs, amt),
     poundsPerTrip: trips > 0 ? lbs / trips : 0,
     amountPerTrip: trips > 0 ? amt / trips : 0,
     poundsPerDay: fishingDays > 0 ? lbs / fishingDays : 0,
@@ -295,7 +290,6 @@ function buildMeaningfulLowRecordPool({ rows, valueFromTrip, highTrip, highValue
 export function summarizeTripsByMonthWindow(rows, monthKey, dayLimit){
   let amount = 0;
   let lbs = 0;
-  let rateWeightedLbsTotal = 0;
   let tripsCount = 0;
   const days = new Set();
 
@@ -307,9 +301,6 @@ export function summarizeTripsByMonthWindow(rows, monthKey, dayLimit){
     if(dayLimit && day > dayLimit) return;
     amount += Number(t?.amount) || 0;
     lbs += Number(t?.pounds) || 0;
-    const tripLbs = Number(t?.pounds) || 0;
-    const tripRate = resolveTripPayRate(t);
-    if(tripLbs > 0 && tripRate > 0) rateWeightedLbsTotal += tripRate * tripLbs;
     tripsCount += 1;
     days.add(iso);
   });
@@ -321,7 +312,7 @@ export function summarizeTripsByMonthWindow(rows, monthKey, dayLimit){
     lbs,
     trips: tripsCount,
     uniqueDays: days.size,
-    ppl: lbs > 0 ? rateWeightedLbsTotal / lbs : 0,
+    ppl: computeAggregatePPL(lbs, amount),
     amountPerTrip: tripsCount > 0 ? amount / tripsCount : 0,
     poundsPerTrip: tripsCount > 0 ? lbs / tripsCount : 0,
     amountPerDay: days.size > 0 ? amount / days.size : 0,
@@ -349,16 +340,14 @@ export function buildEntityPeriodRows({ trips, entityType, period }){
     if(!map.has(key)){
       map.set(key, {
         name,
-        current: { amount: 0, lbs: 0, rateWeightedLbsTotal: 0, trips: 0, uniqueDays: 0, _days: new Set() },
-        previous: { amount: 0, lbs: 0, rateWeightedLbsTotal: 0, trips: 0, uniqueDays: 0, _days: new Set() }
+        current: { amount: 0, lbs: 0, trips: 0, uniqueDays: 0, _days: new Set() },
+        previous: { amount: 0, lbs: 0, trips: 0, uniqueDays: 0, _days: new Set() }
       });
     }
     const row = map.get(key);
     const lbs = Number(t?.pounds) || 0;
-    const rate = resolveTripPayRate(t);
     row[bucket].amount += Number(t?.amount) || 0;
     row[bucket].lbs += lbs;
-    row[bucket].rateWeightedLbsTotal += (Number.isFinite(rate) && rate > 0 && lbs > 0) ? (rate * lbs) : 0;
     row[bucket].trips += 1;
     row[bucket]._days.add(iso);
   });
@@ -397,7 +386,7 @@ function finalizeEntityPeriodBucket(bucket){
   return {
     amount,
     lbs,
-    ppl: lbs > 0 ? (Number(bucket?.rateWeightedLbsTotal) || 0) / lbs : 0,
+    ppl: computeAggregatePPL(lbs, amount),
     trips: Number(bucket?.trips) || 0,
     uniqueDays: bucket?._days instanceof Set ? bucket._days.size : (Number(bucket?.uniqueDays) || 0),
     amountPerTrip: bucket?.trips > 0 ? amount / bucket.trips : 0
