@@ -61,7 +61,7 @@ export function migrateLegacyStateIfNeeded(storage = localStorage) {
   }
 }
 
-export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, themeModeDefault }) {
+export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, themeModeDefault, normalizeKey }) {
   try {
     const defaults = buildDefaultAppState();
     const parsedState = (st && typeof st === "object") ? st : {};
@@ -107,6 +107,42 @@ export function migrateStateIfNeeded(st, { normalizeTrip, normalizeThemeMode, th
     st.settings = (st.settings && typeof st.settings === "object") ? st.settings : {};
     st.settings.plan = String(st.settings.plan || "").trim().toLowerCase() === "paid" ? "paid" : "free";
     st.settings.themeMode = normalizeThemeMode(st.settings.themeMode || themeModeDefault);
+
+    const normalizeValue = (value) => String(value || "").replace(/\s+/g, " ").trim();
+    const keyOf = (value) => {
+      const normalized = normalizeValue(value);
+      if (!normalized) return "";
+      if (typeof normalizeKey === "function") return normalizeKey(normalized);
+      return normalized.toLowerCase();
+    };
+    const dedupeByKey = (values, { protectedMap = null } = {}) => {
+      const seen = new Set();
+      const out = [];
+      for (const raw of (Array.isArray(values) ? values : [])) {
+        const value = normalizeValue(raw);
+        if (!value) continue;
+        const key = keyOf(value);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        out.push((protectedMap && protectedMap[key]) ? protectedMap[key] : value);
+      }
+      return out;
+    };
+
+    const areaNotRecorded = "Area Not Recorded";
+    const areaNotRecordedKey = keyOf(areaNotRecorded);
+    st.areas = dedupeByKey([...(Array.isArray(st.areas) ? st.areas : []), areaNotRecorded], {
+      protectedMap: { [areaNotRecordedKey]: areaNotRecorded }
+    });
+    st.dealers = dedupeByKey(Array.isArray(st.dealers) ? st.dealers : []);
+
+    const quickChips = (st.settings.quickChips && typeof st.settings.quickChips === "object") ? st.settings.quickChips : (st.settings.quickChips = {});
+    quickChips.areaPinned = dedupeByKey(Array.isArray(quickChips.areaPinned) ? quickChips.areaPinned : [], {
+      protectedMap: { [areaNotRecordedKey]: areaNotRecorded }
+    });
+    quickChips.dealerPinned = dedupeByKey(Array.isArray(quickChips.dealerPinned) ? quickChips.dealerPinned : []);
+    delete quickChips.areaPinnedCustom;
+    delete quickChips.dealerPinnedCustom;
 
     if (v < 1) st.schemaVersion = 1;
     return st;

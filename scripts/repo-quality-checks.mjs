@@ -99,6 +99,39 @@ const homeDashboardSource = readFileSync('js/home_dashboard_v5.js', 'utf8');
 assertRepoCheck(!homeDashboardSource.includes('weightedRateTotal'), 'home aggregate overview does not use weightedRateTotal');
 assertRepoCheck(!homeDashboardSource.includes('resolveTripPayRate('), 'home aggregate Avg $/lb path does not call resolveTripPayRate()');
 
+const quickChipsSource = readFileSync('js/quick_chips_v5.js', 'utf8');
+assertRepoCheck(!quickChipsSource.includes('areaPinnedCustom'), 'quick chips source does not include areaPinnedCustom');
+assertRepoCheck(!quickChipsSource.includes('dealerPinnedCustom'), 'quick chips source does not include dealerPinnedCustom');
+assertRepoCheck(!quickChipsSource.includes('openQuickChipCustomizeModal'), 'quick chips source does not export customize modal behavior');
+assertRepoCheck(!quickChipsSource.includes('bindQuickChipLongPress'), 'quick chips source does not export long-press customize behavior');
+
+const tripSharedModule = await import('../js/trip_shared_engine_v5.js');
+const { createTripSharedCollectionsEngine, AREA_NOT_RECORDED } = tripSharedModule;
+
+const normalizeRepoKey = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+const collectionState = {
+  areas: [' Area  5 ', 'area 5', 'Area Not  Recorded'],
+  dealers: ['Dealer One', ' dealer   one '],
+  trips: [
+    { area: '  AREA 5 ', dealer: 'DEALER ONE' },
+    { area: 'Area 6', dealer: 'Dealer Two' },
+    { area: 'area not recorded', dealer: ' Dealer Two ' }
+  ]
+};
+const collections = createTripSharedCollectionsEngine({
+  getState: () => collectionState,
+  normalizeKey: normalizeRepoKey,
+  normalizeTripRow: (trip) => trip,
+  escapeHtml: (value) => String(value || '')
+});
+collections.syncAreaState(collectionState);
+collections.ensureDealers();
+
+assertRepoCheck(collectionState.areas.includes(AREA_NOT_RECORDED), 'Area Not Recorded remains present after area reconciliation');
+assertRepoCheck(collectionState.areas.filter((area) => normalizeRepoKey(area) === normalizeRepoKey('area 5')).length === 1, 'area reconciliation dedupes by normalized key');
+assertRepoCheck(collectionState.dealers.filter((dealer) => normalizeRepoKey(dealer) === normalizeRepoKey('dealer one')).length === 1, 'dealer reconciliation dedupes by normalized key');
+assertRepoCheck(collectionState.dealers.some((dealer) => normalizeRepoKey(dealer) === normalizeRepoKey('dealer two')), 'dealer reconciliation includes dealers from saved trips');
+
 if (failed) {
   console.error('\nRepo quality checks failed.');
   process.exit(1);

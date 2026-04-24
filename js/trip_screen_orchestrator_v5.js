@@ -60,8 +60,6 @@ export function createTripScreenOrchestrator({
   parseReportDateToISO,
   findDuplicateTrip,
   to2,
-  openQuickChipCustomizeModal,
-  bindQuickChipLongPress,
   bindAreaChips,
   bindQuickChips,
   clearPendingTripUndo,
@@ -102,10 +100,6 @@ function renderNewTrip(){
   const dealerOptions = buildDealerOptionsHtml(draft.dealer, dealerListForSelect, dealerAddSentinel);
   const areaOptions = buildAreaOptionsHtml(draft.area, areaAddSentinel);
 
-const getBarSelectChoices = (kind)=>{
-  if(kind === "dealer") return [...dealerListForSelect];
-  return Array.isArray(state.areas) ? [...state.areas] : [];
-};
 
 const newTripFormHtml = renderTripEntryForm({
       mode: "new",
@@ -546,13 +540,6 @@ if(topAreaWrap && elArea){
   topAreaWrap.addEventListener("click", (e)=>{
     const btn = e.target.closest("button[data-area]");
     if(!btn) return;
-    if(btn.__suppressNextClick){
-      btn.__suppressNextClick = false;
-      e.preventDefault();
-      e.stopPropagation();
-      if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
-      return;
-    }
     const a = String(btn.getAttribute("data-area") || "").trim();
     applyDraftValue({ key: "area", value: a, inputEl: elArea });
   });
@@ -563,41 +550,11 @@ if(topDealerWrap && elDealer){
   topDealerWrap.addEventListener("click", (e)=>{
     const btn = e.target.closest("button[data-dealer]");
     if(!btn) return;
-    if(btn.__suppressNextClick){
-      btn.__suppressNextClick = false;
-      e.preventDefault();
-      e.stopPropagation();
-      if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
-      return;
-    }
     const d = String(btn.getAttribute("data-dealer") || "").trim();
     applyDraftValue({ key: "dealer", value: d, inputEl: elDealer });
   });
 }
 
-  bindQuickChipLongPress(topAreaWrap, (btn)=>{
-    const slot = Number(btn?.getAttribute("data-chip-index") || -1);
-    if(slot < 0) return;
-    openQuickChipCustomizeModal({
-      kind: "area",
-      chipIndex: slot,
-      currentValue: String(btn?.getAttribute("data-area") || ""),
-      choices: getBarSelectChoices("area"),
-      onSaved: ()=>renderNewTrip()
-    });
-  });
-
-  bindQuickChipLongPress(topDealerWrap, (btn)=>{
-    const slot = Number(btn?.getAttribute("data-chip-index") || -1);
-    if(slot < 0) return;
-    openQuickChipCustomizeModal({
-      kind: "dealer",
-      chipIndex: slot,
-      currentValue: String(btn?.getAttribute("data-dealer") || ""),
-      choices: getBarSelectChoices("dealer"),
-      onSaved: ()=>renderNewTrip()
-    });
-  });
 
   // Initial state
   updateSaveEnabled();
@@ -956,27 +913,6 @@ if(elDealerLive){
     });
   }
 
-  bindQuickChipLongPress(topAreaWrapR, (btn)=>{
-    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
-    if(chipIndex < 0) return;
-    openQuickChipCustomizeModal({
-      kind: "area",
-      chipIndex,
-      currentValue: String(btn?.getAttribute("data-area") || ""),
-      onSaved: ()=>renderReviewTrip()
-    });
-  });
-
-  bindQuickChipLongPress(topDealerWrapR, (btn)=>{
-    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
-    if(chipIndex < 0) return;
-    openQuickChipCustomizeModal({
-      kind: "dealer",
-      chipIndex,
-      currentValue: String(btn?.getAttribute("data-dealer") || ""),
-      onSaved: ()=>renderReviewTrip()
-    });
-  });
 
   // Ensure pill reflects whatever is currently in the inputs.
   updateReviewDerived();
@@ -1261,13 +1197,6 @@ function renderEditTrip(){
     topDealerWrapE.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-dealer]");
       if(!btn) return;
-      if(btn.__suppressNextClick){
-        btn.__suppressNextClick = false;
-        e.preventDefault();
-        e.stopPropagation();
-        if(typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
-        return;
-      }
       const nextDealer = String(btn.getAttribute("data-dealer") || "").trim();
       if(!nextDealer) return;
       elDealer.value = nextDealer;
@@ -1290,27 +1219,6 @@ function renderEditTrip(){
   elArea?.addEventListener("change", ()=>handleSelectAddNew("area", elArea));
 
 
-  bindQuickChipLongPress(topDealerWrapE, (btn)=>{
-    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
-    if(chipIndex < 0) return;
-    openQuickChipCustomizeModal({
-      kind: "dealer",
-      chipIndex,
-      currentValue: String(btn?.getAttribute("data-dealer") || ""),
-      choices: [...dealerListForSelect],
-      onSaved: ()=>renderEditTrip()
-    });
-  });
-  bindQuickChipLongPress(topAreaWrapE, (btn)=>{
-    const chipIndex = Number(btn?.getAttribute("data-chip-index") || -1);
-    if(chipIndex < 0) return;
-    openQuickChipCustomizeModal({
-      kind: "area",
-      chipIndex,
-      currentValue: String(btn?.getAttribute("data-area") || ""),
-      onSaved: ()=>renderEditTrip()
-    });
-  });
   bindDatePill("e_date");
 
   bindNavHandlers(state);

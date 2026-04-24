@@ -391,6 +391,26 @@ export function createTripSharedCollectionsEngine({ getState, normalizeKey, norm
     return [...new Set((arr || []).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
   }
 
+  function normalizeCollectionValue(rawValue) {
+    return String(rawValue || "").replace(/\s+/g, " ").trim();
+  }
+
+  function dedupeValuesByNormalizedKey(values, { protectedMap = null } = {}) {
+    const out = [];
+    const seen = new Set();
+    for (const raw of (Array.isArray(values) ? values : [])) {
+      const value = normalizeCollectionValue(raw);
+      if (!value) continue;
+      const normalized = normalizeKey(value);
+      if (!normalized) continue;
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+      const canonical = (protectedMap && protectedMap[normalized]) ? protectedMap[normalized] : value;
+      out.push(canonical);
+    }
+    return out;
+  }
+
   function resolveAreaValue(value) {
     const rawValue = String(value || "").trim();
     return { areaId: "", canonicalName: rawValue, rawValue, key: normalizeKey(rawValue), matchedBy: rawValue ? "raw" : "empty", record: null };
@@ -411,8 +431,18 @@ export function createTripSharedCollectionsEngine({ getState, normalizeKey, norm
   function syncAreaState(nextState = getStateRef()) {
     const source = (nextState && typeof nextState === "object") ? nextState : getStateRef();
     if (!Array.isArray(source.areas)) source.areas = [];
-    const tripAreas = Array.isArray(source.trips) ? source.trips.map((trip) => String(trip?.area || "").trim()) : [];
-    source.areas = uniqueSorted([...source.areas, ...tripAreas, AREA_NOT_RECORDED]);
+    const areaNotRecordedKey = normalizeKey(AREA_NOT_RECORDED);
+    const tripAreas = Array.isArray(source.trips)
+      ? source.trips.map((trip) => {
+          const candidate = normalizeCollectionValue(trip?.area || "");
+          if (!candidate) return "";
+          return normalizeKey(candidate) === areaNotRecordedKey ? AREA_NOT_RECORDED : candidate;
+        })
+      : [];
+    source.areas = uniqueSorted(dedupeValuesByNormalizedKey(
+      [...source.areas, ...tripAreas, AREA_NOT_RECORDED],
+      { protectedMap: { [areaNotRecordedKey]: AREA_NOT_RECORDED } }
+    ));
     if (source && typeof source === "object" && Object.prototype.hasOwnProperty.call(source, "areaRegistry")) delete source.areaRegistry;
     return source.areas;
   }
@@ -456,17 +486,8 @@ export function createTripSharedCollectionsEngine({ getState, normalizeKey, norm
   function ensureDealers() {
     const state = getStateRef();
     if (!Array.isArray(state.dealers)) state.dealers = [];
-    const seen = new Set();
-    const out = [];
-    for (const d of state.dealers) {
-      const v = String(d || "").trim();
-      if (!v) continue;
-      const k = normalizeKey(v);
-      if (seen.has(k)) continue;
-      seen.add(k);
-      out.push(v);
-    }
-    state.dealers = out;
+    const tripDealers = Array.isArray(state.trips) ? state.trips.map((trip) => normalizeCollectionValue(trip?.dealer || "")) : [];
+    state.dealers = uniqueSorted(dedupeValuesByNormalizedKey([...state.dealers, ...tripDealers]));
   }
 
   function getFilterOptionsFromTrips() {
@@ -491,7 +512,7 @@ export function createTripSharedCollectionsEngine({ getState, normalizeKey, norm
         ? (resolveTripArea(t).canonicalName || String(t?.area || "").trim())
         : String(t?.[field] || "").trim();
       if (!raw) continue;
-      const key = raw.toLowerCase();
+      const key = normalizeKey(raw);
       if (seen.has(key)) continue;
       seen.add(key);
       out.push(raw);
@@ -513,13 +534,13 @@ export function createTripSharedCollectionsEngine({ getState, normalizeKey, norm
   }
 
   function getValuesWithLegacyEntry(kind, legacyValue, values) {
-    const list = Array.isArray(values) ? values.slice() : [];
-    const legacy = String(legacyValue || "").trim();
+    const list = dedupeValuesByNormalizedKey(Array.isArray(values) ? values.slice() : []);
+    const legacy = normalizeCollectionValue(legacyValue);
     if (!legacy) return list;
     const legacyKey = normalizeKey(legacy);
     const hasLegacy = list.some((item) => normalizeKey(String(item || "").trim()) === legacyKey);
     if (!hasLegacy) list.unshift(legacy);
-    return list;
+    return dedupeValuesByNormalizedKey(list);
   }
 
   function getDealerSelectList(topDealers, selectedDealer = "") {
@@ -540,10 +561,10 @@ export function createTripSharedCollectionsEngine({ getState, normalizeKey, norm
   function buildAreaOptionsHtml(selectedArea, addSentinel) {
     const state = getStateRef();
     ensureAreas();
-    const selectedCanonical = resolveAreaValue(selectedArea).canonicalName || selectedArea;
+    const selectedCanonical = normalizeCollectionValue(resolveAreaValue(selectedArea).canonicalName || selectedArea);
     return ["", ...getValuesWithLegacyEntry("area", selectedCanonical, Array.isArray(state.areas) ? state.areas : [])].map((area) => {
       const label = area ? area : "—";
-      const sel = (String(selectedCanonical || "") === String(area || "")) ? "selected" : "";
+      const sel = (normalizeKey(String(selectedCanonical || "")) === normalizeKey(String(area || ""))) ? "selected" : "";
       return `<option value="${escapeHtml(String(area || ""))}" ${sel}>${label}</option>`;
     }).concat(`<option value="${addSentinel}">+ Add new Area</option>`).join("");
   }
