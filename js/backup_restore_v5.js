@@ -6,7 +6,6 @@ export function createBackupRestoreSubsystem(deps){
     ensureDealers,
     SCHEMA_VERSION,
     APP_VERSION,
-    VERSION,
     LS_LAST_BACKUP_META,
     LS_RESTORE_ROLLBACK_SNAPSHOT,
     formatDateDMY,
@@ -46,20 +45,41 @@ export function createBackupRestoreSubsystem(deps){
   function __writeJSONLocal(key, value){
     localStorage.setItem(key, JSON.stringify(value));
   }
-  function buildBackupPayloadFromState(st, exportedAtISO){
+  function __generateBackupId(){
+    const fromUid = (typeof uid === "function") ? String(uid()).trim() : "";
+    if(fromUid) return `btc-${fromUid}`;
+    return `btc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  function __sanitizeBackupSettings(settings){
+    const safeSettings = (settings && typeof settings === "object") ? __cloneData(settings) : {};
+    delete safeSettings.listMgmtLastError;
+    delete safeSettings.migratedAt;
+    delete safeSettings.migratedFrom;
+    if(safeSettings.quickChips && typeof safeSettings.quickChips === "object"){
+      delete safeSettings.quickChips.areaPinnedCustom;
+      delete safeSettings.quickChips.dealerPinnedCustom;
+    }
+    return safeSettings;
+  }
+
+  function buildBackupPayloadFromState(st, exportedAtISO, backupId){
     const safeState = (st && typeof st === "object") ? st : {};
     const trips = Array.isArray(safeState.trips) ? safeState.trips : [];
     const areas = Array.isArray(safeState.areas) ? safeState.areas : [];
     const dealers = Array.isArray(safeState.dealers) ? safeState.dealers : [];
     const deletedTrips = Array.isArray(safeState.deletedTrips) ? safeState.deletedTrips : [];
+    const safeBackupId = String(backupId || __generateBackupId());
     return {
       app: "Bank the Catch",
       schema: SCHEMA_VERSION, // legacy
       schemaVersion: SCHEMA_VERSION,
       version: APP_VERSION, // legacy
       appVersion: APP_VERSION,
+      backupId: safeBackupId,
       exportedAt: exportedAtISO || new Date().toISOString(),
       backupMeta: {
+        backupId: safeBackupId,
         tripCount: trips.length,
         areaCount: areas.length,
         dealerCount: dealers.length,
@@ -71,24 +91,24 @@ export function createBackupRestoreSubsystem(deps){
         areas,
         dealers,
         deletedTrips,
-        settings: (safeState.settings && typeof safeState.settings === "object") ? safeState.settings : {}
+        settings: __sanitizeBackupSettings(safeState.settings)
       }
     };
   }
 
-  function __ymdLocal(){
-    const d = new Date();
+  function __ymdLocal(dateLike){
+    const d = (dateLike && !Number.isNaN(new Date(dateLike).getTime())) ? new Date(dateLike) : new Date();
     const pad = (n)=> String(n).padStart(2,"0");
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   }
 
-  function __buildNum(){
-    const m = /v5\.(\d+)/.exec(String(VERSION||""));
-    return m ? m[1] : "0";
+  function __tripCountLabel(tripCount){
+    const n = Number.isFinite(Number(tripCount)) ? Math.max(0, Number(tripCount)) : 0;
+    return n === 1 ? "1-trip" : `${n}-trips`;
   }
 
-  function __backupFilename(){
-    return `bank-the-catch_backup_${__ymdLocal()}_build${__buildNum()}.json`;
+  function __backupFilename({ exportedAtISO, tripCount }={}){
+    return `Bank-the-Catch-Backup-${__ymdLocal(exportedAtISO)}-${__tripCountLabel(tripCount)}.json`;
   }
 
   function __setLastBackupMeta(meta){
@@ -111,7 +131,7 @@ export function createBackupRestoreSubsystem(deps){
       const at = Number(s?.lastBackupAt || 0);
       const tc = Number(s?.lastBackupTripCount ?? (Array.isArray(getState()?.trips) ? getState().trips.length : 0));
       if(at > 0){
-        return { iso: new Date(at).toISOString(), tripCount: tc, build: __buildNum() };
+        return { iso: new Date(at).toISOString(), tripCount: tc };
       }
     }catch(_){ }
 
@@ -304,9 +324,7 @@ export function createBackupRestoreSubsystem(deps){
       const days = Math.max(0, Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)));
       freshness = days <= 0 ? "today" : (days === 1 ? "1 day ago" : `${days} days ago`);
     }
-    const buildNum = String(meta.build || "").trim();
-    const buildStr = buildNum ? ` • Build ${buildNum}` : "";
-    el.textContent = `Last backup: ${dateStr}${freshness ? ` (${freshness})` : ""} — ${tripsStr}${buildStr}`;
+    el.textContent = `Last backup: ${dateStr}${freshness ? ` (${freshness})` : ""} — ${tripsStr}`;
   }
 
   function downloadBackupPayload(payload, prefixOrFilename="bank-the-catch_backup"){
@@ -324,9 +342,10 @@ export function createBackupRestoreSubsystem(deps){
   async function exportBackup(){
     const state = getState();
     const exportedAtISO = new Date().toISOString();
-    const payload = buildBackupPayloadFromState(state, exportedAtISO);
+    const backupId = __generateBackupId();
+    const payload = buildBackupPayloadFromState(state, exportedAtISO, backupId);
     const tripCount = Array.isArray(payload?.data?.trips) ? payload.data.trips.length : (Array.isArray(state.trips) ? state.trips.length : 0);
-    const fname = __backupFilename();
+    const fname = __backupFilename({ exportedAtISO: payload.exportedAt, tripCount });
     let shareWasCanceled = false;
     let shareCancelError = null;
     const commitSuccessfulExport = (method)=>{
@@ -336,7 +355,7 @@ export function createBackupRestoreSubsystem(deps){
         state.settings.lastBackupTripCount = tripCount;
         saveState();
       }catch(_){ }
-      __setLastBackupMeta({ iso: exportedAtISO, tripCount, build: __buildNum(), filename: fname });
+      __setLastBackupMeta({ iso: exportedAtISO, tripCount, backupId, filename: fname });
       try{ updateLastBackupLine(); }catch(_){ }
       try{ updateBackupHealthWarning(); }catch(_){ }
       return { ok:true, method, filename: fname, tripCount };
@@ -376,7 +395,9 @@ export function createBackupRestoreSubsystem(deps){
     const schemaVersion = Number(obj.schemaVersion ?? obj.schema ?? 0) || 0;
     const appVersion = String(obj.appVersion ?? obj.version ?? "");
     const exportedAt = String(obj.exportedAt || "");
-    const backupMeta = (obj.backupMeta && typeof obj.backupMeta === "object") ? obj.backupMeta : {};
+    const backupMeta = (obj.backupMeta && typeof obj.backupMeta === "object") ? __cloneData(obj.backupMeta) : {};
+    const backupId = String(obj.backupId ?? backupMeta.backupId ?? "").trim();
+    if(backupId && !String(backupMeta.backupId || "").trim()) backupMeta.backupId = backupId;
     const data = (obj.data && typeof obj.data === "object") ? obj.data : obj;
 
     const trips = Array.isArray(data.trips) ? data.trips : [];
@@ -384,7 +405,7 @@ export function createBackupRestoreSubsystem(deps){
     const dealers = Array.isArray(data.dealers) ? data.dealers : [];
     const settings = (data.settings && typeof data.settings === "object") ? data.settings : {};
     const deletedTrips = Array.isArray(data.deletedTrips) ? data.deletedTrips : [];
-    const normalized = { schemaVersion, appVersion, exportedAt, backupMeta, data:{ trips, areas, dealers, deletedTrips, settings } };
+    const normalized = { schemaVersion, appVersion, exportedAt, backupId, backupMeta, data:{ trips, areas, dealers, deletedTrips, settings } };
     const { errors, warnings } = validateNormalizedBackupPayload(normalized);
     return { ok: errors.length === 0, errors, warnings, normalized };
   }
@@ -539,6 +560,7 @@ export function createBackupRestoreSubsystem(deps){
           exportedAt: String(normalized?.exportedAt || ""),
           appVersion: String(normalized?.appVersion || ""),
           schemaVersion: Number(normalized?.schemaVersion || 0) || 0,
+          backupId: String(normalized?.backupId || normalized?.backupMeta?.backupId || ""),
           createdBy: String(normalized?.backupMeta?.createdBy || ""),
           sourceTripCount: Number(normalized?.backupMeta?.tripCount || 0) || 0
         },
@@ -649,6 +671,7 @@ export function createBackupRestoreSubsystem(deps){
             <div class="row" style="justify-content:space-between"><span class="muted">Exported</span><b>${escapeHtml(__formatRestoreMetaDate(preview?.metadata?.exportedAt))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Build/Version</span><b>${escapeHtml(String(preview?.metadata?.appVersion || "unknown"))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Schema</span><b>${escapeHtml(String(preview?.metadata?.schemaVersion || "unknown"))}</b></div>
+            <div class="row" style="justify-content:space-between"><span class="muted">Backup ID</span><b>${escapeHtml(String(preview?.metadata?.backupId || "not included"))}</b></div>
             <div class="row" style="justify-content:space-between"><span class="muted">Created by</span><b>${escapeHtml(String(preview?.metadata?.createdBy || "unknown"))}</b></div>
           </div>
           ${warningHtml}
