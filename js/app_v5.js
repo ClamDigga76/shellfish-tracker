@@ -85,9 +85,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;
-const QUICK_CHIP_LONG_PRESS_MS = 500;
 const DEFAULT_TRIP_SPECIES = "Soft-shell Clams";
-const QUICK_CHIP_MOVE_CANCEL_PX = 10;
 const SCHEMA_VERSION = 1;
 const DELETED_TRIPS_LIMIT = 25;
 const formatDateDMY = createFormatDateDMY(formatDateLegacyDMY);
@@ -430,7 +428,8 @@ migrateLegacyStateIfNeeded(localStorage);
 let state = migrateStateIfNeeded(rootStateSaveSeam.loadState(), {
   normalizeTrip,
   normalizeThemeMode,
-  themeModeDefault: THEME_MODE_DARK
+  themeModeDefault: THEME_MODE_DARK,
+  normalizeKey
 });
 const entitlementsSeam = createEntitlementsSeam({
   getState: () => state,
@@ -537,20 +536,14 @@ const {
   renderTopAreaChips,
   renderTopDealerChips,
   resolveQuickChipItems,
-  openQuickChipCustomizeModal,
   bindQuickChips,
-  bindAreaChips,
-  bindQuickChipLongPress
+  bindAreaChips
 } = createQuickChipHelpers({
   getState: () => state,
   saveState: () => saveState(),
   getLastUniqueFromTrips: (kind, maxN) => getLastUniqueFromTrips(kind, maxN),
   normalizeKey,
-  escapeHtml,
-  openModal,
-  closeModal,
-  longPressMs: QUICK_CHIP_LONG_PRESS_MS,
-  moveCancelPx: QUICK_CHIP_MOVE_CANCEL_PX
+  escapeHtml
 });
 
 
@@ -666,8 +659,6 @@ const { renderNewTrip, renderReviewTrip, renderEditTrip } = createTripScreenOrch
   parseReportDateToISO,
   findDuplicateTrip,
   to2,
-  openQuickChipCustomizeModal,
-  bindQuickChipLongPress,
   bindAreaChips,
   bindQuickChips,
   clearPendingTripUndo,
