@@ -185,9 +185,13 @@ body[data-display-mode="standalone"] .tabbtn[aria-current="page"] span{
   transform:translateY(0);
 }
 
-:root[data-display-mode="standalone"] .tabbtn.plus{
-  -webkit-mask-image:linear-gradient(180deg, transparent 0 6px, #000 6px 100%);
-  mask-image:linear-gradient(180deg, transparent 0 6px, #000 6px 100%);
+:root[data-display-mode="standalone"] #tabbar .tabbtn.plus,
+body[data-display-mode="standalone"] #tabbar .tabbtn.plus{
+  -webkit-mask-image:none;
+  mask-image:none;
+  transform:translateY(0);
+  height:46px;
+  border-radius:22px;
 }
 :root[data-display-mode="standalone"] #toast{
   bottom:calc(var(--tabbar-total-h) + 8px);
