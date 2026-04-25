@@ -154,16 +154,35 @@ body[data-display-mode="standalone"] #tabbar::after{
   bottom:0;
   height:var(--tabbar-painted-h);
   background:linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);
-  backdrop-filter:none;
-  -webkit-backdrop-filter:none;
+  backdrop-filter:blur(6px) saturate(1.02);
+  -webkit-backdrop-filter:blur(6px) saturate(1.02);
   z-index:0;
   pointer-events:none;
 }
 
+:root[data-display-mode="standalone"] #tabbar .tabbtn:not(.plus),
+body[data-display-mode="standalone"] #tabbar .tabbtn:not(.plus){
+  padding-top:8px;
+  padding-bottom:5px;
+}
 
 :root[data-display-mode="standalone"] .tabbtn.active,
-:root[data-display-mode="standalone"] .tabbtn[aria-current="page"]{
+:root[data-display-mode="standalone"] .tabbtn[aria-current="page"],
+body[data-display-mode="standalone"] .tabbtn.active,
+body[data-display-mode="standalone"] .tabbtn[aria-current="page"]{
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), inset 0 1px 0 rgba(255,255,255,.10);
+}
+:root[data-display-mode="standalone"] .tabbtn.active svg,
+:root[data-display-mode="standalone"] .tabbtn[aria-current="page"] svg,
+body[data-display-mode="standalone"] .tabbtn.active svg,
+body[data-display-mode="standalone"] .tabbtn[aria-current="page"] svg{
+  transform:translateY(0) scale(1.04);
+}
+:root[data-display-mode="standalone"] .tabbtn.active span,
+:root[data-display-mode="standalone"] .tabbtn[aria-current="page"] span,
+body[data-display-mode="standalone"] .tabbtn.active span,
+body[data-display-mode="standalone"] .tabbtn[aria-current="page"] span{
+  transform:translateY(0);
 }
 
 :root[data-display-mode="standalone"] .tabbtn.plus{
