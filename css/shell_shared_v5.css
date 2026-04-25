@@ -92,9 +92,9 @@
   color-scheme:dark;
 }
 :root[data-display-mode="standalone"]{
-  --tabbar-h:44px;
+  --tabbar-h:38px;
   --tabbar-top-pad:0px;
-  --tabbar-control-safe:max(8px, calc(var(--tabbar-safe) * 0.25));
+  --tabbar-control-safe:max(6px, calc(var(--tabbar-safe) * 0.15));
   --shell-page-gutter:6px;
   --shell-max-width:100vw;
   --shell-overlay-max-width:100vw;
@@ -126,6 +126,17 @@
 }
 :root[data-display-mode="standalone"] #toast{
   bottom:calc(var(--tabbar-total-h) + 8px);
+}
+
+:root[data-display-mode="standalone"] .tabbtn{
+  min-height:38px;
+  padding-top:3px;
+  padding-bottom:2px;
+  gap:2px;
+}
+:root[data-display-mode="standalone"] .tabbtn.plus{
+  height:48px;
+  transform:translateY(-3px);
 }
 :root[data-display-mode="standalone"] .modalRoot,
 :root[data-display-mode="standalone"] .celebrationRoot{
