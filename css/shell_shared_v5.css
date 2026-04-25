@@ -115,9 +115,22 @@
   padding-bottom:calc(var(--tabbar-total-h) + var(--bottom-overlay-h) + max(6px, var(--bottom-overlay-gap)));
 }
 :root[data-display-mode="standalone"] #tabbar{
+  bottom:var(--tabbar-safe);
+  height:var(--tabbar-h);
+  padding-bottom:0;
   padding-left:6px;
   padding-right:6px;
   box-shadow:0 -8px 20px rgba(0,0,0,.14);
+}
+:root[data-display-mode="standalone"] #tabbar::after{
+  content:"";
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:calc(-1 * var(--tabbar-safe));
+  height:var(--tabbar-safe);
+  background:var(--bg);
+  pointer-events:none;
 }
 :root[data-display-mode="standalone"] #toast{
   bottom:calc(var(--tabbar-total-h) + 8px);
