@@ -117,7 +117,8 @@
 :root[data-display-mode="standalone"] main#app{
   padding-bottom:calc(var(--tabbar-total-h) + var(--bottom-overlay-h) + max(6px, var(--bottom-overlay-gap)));
 }
-:root[data-display-mode="standalone"] #tabbar{
+:root[data-display-mode="standalone"] #tabbar,
+body[data-display-mode="standalone"] #tabbar{
   bottom:0;
   height:var(--tabbar-total-h);
   padding-bottom:var(--tabbar-control-safe);
@@ -128,12 +129,14 @@
   -webkit-backdrop-filter:none;
   box-shadow:0 -8px 20px rgba(0,0,0,.14);
 }
-:root[data-display-mode="standalone"] #tabbar::before{
+:root[data-display-mode="standalone"] #tabbar::before,
+body[data-display-mode="standalone"] #tabbar::before{
   top:auto;
   bottom:calc(var(--tabbar-painted-h) - 1px);
   z-index:0;
 }
-:root[data-display-mode="standalone"] #tabbar::after{
+:root[data-display-mode="standalone"] #tabbar::after,
+body[data-display-mode="standalone"] #tabbar::after{
   content:"";
   position:absolute;
   left:0;
