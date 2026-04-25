@@ -95,7 +95,8 @@
   --tabbar-h:44px;
   --tabbar-top-pad:0px;
   --tabbar-control-safe:max(6px, calc(var(--tabbar-safe) * 0.15));
-  --tabbar-painted-h:calc(var(--tabbar-h) + var(--tabbar-control-safe));
+  --tabbar-paint-lift:4px;
+  --tabbar-painted-h:calc(var(--tabbar-h) + var(--tabbar-control-safe) + var(--tabbar-paint-lift));
   --shell-page-gutter:6px;
   --shell-max-width:100vw;
   --shell-overlay-max-width:100vw;
