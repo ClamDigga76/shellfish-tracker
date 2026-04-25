@@ -1,4 +1,4 @@
-/* Shared shell/foundation styles extracted from index.html (v291) */
+/* Shared shell/foundation styles extracted from index.html (v292) */
 :root{
   color-scheme:dark;
   --color-bg:#0b0f16;
@@ -92,9 +92,10 @@
   color-scheme:dark;
 }
 :root[data-display-mode="standalone"]{
-  --tabbar-h:38px;
+  --tabbar-h:44px;
   --tabbar-top-pad:0px;
   --tabbar-control-safe:max(6px, calc(var(--tabbar-safe) * 0.15));
+  --tabbar-painted-h:calc(var(--tabbar-h) + var(--tabbar-control-safe) + 8px);
   --shell-page-gutter:6px;
   --shell-max-width:100vw;
   --shell-overlay-max-width:100vw;
@@ -122,21 +123,29 @@
   padding-bottom:var(--tabbar-control-safe);
   padding-left:6px;
   padding-right:6px;
+  background:transparent;
   box-shadow:0 -8px 20px rgba(0,0,0,.14);
+}
+:root[data-display-mode="standalone"] #tabbar::before{
+  top:auto;
+  bottom:calc(var(--tabbar-painted-h) - 1px);
+  z-index:0;
+}
+:root[data-display-mode="standalone"] #tabbar::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:var(--tabbar-painted-h);
+  background:linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);
+  backdrop-filter:blur(14px) saturate(1.08);
+  -webkit-backdrop-filter:blur(14px) saturate(1.08);
+  z-index:0;
+  pointer-events:none;
 }
 :root[data-display-mode="standalone"] #toast{
   bottom:calc(var(--tabbar-total-h) + 8px);
-}
-
-:root[data-display-mode="standalone"] .tabbtn{
-  min-height:38px;
-  padding-top:3px;
-  padding-bottom:2px;
-  gap:2px;
-}
-:root[data-display-mode="standalone"] .tabbtn.plus{
-  height:48px;
-  transform:translateY(-3px);
 }
 :root[data-display-mode="standalone"] .modalRoot,
 :root[data-display-mode="standalone"] .celebrationRoot{
