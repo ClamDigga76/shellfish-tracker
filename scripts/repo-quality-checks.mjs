@@ -98,6 +98,7 @@ assertRepoCheck(Number.isFinite(zeroPpl) && zeroPpl === 0, 'computeAggregatePPL 
 const homeDashboardSource = readFileSync('js/home_dashboard_v5.js', 'utf8');
 assertRepoCheck(!homeDashboardSource.includes('weightedRateTotal'), 'home aggregate overview does not use weightedRateTotal');
 assertRepoCheck(!homeDashboardSource.includes('resolveTripPayRate('), 'home aggregate Avg $/lb path does not call resolveTripPayRate()');
+const utilsSource = readFileSync('js/utils_v5.js', 'utf8');
 
 const quickChipsSource = readFileSync('js/quick_chips_v5.js', 'utf8');
 assertRepoCheck(!quickChipsSource.includes('areaPinnedCustom'), 'quick chips source does not include areaPinnedCustom');
@@ -113,6 +114,23 @@ assertRepoCheck(!backupRestoreSource.includes('bank-the-catch_backup_'), 'legacy
 assertRepoCheck(backupRestoreSource.includes('obj.schemaVersion ?? obj.schema ?? 0'), 'restore supports schemaVersion ?? schema compatibility');
 assertRepoCheck(backupRestoreSource.includes('delete safeSettings.quickChips.areaPinnedCustom;'), 'backup export sanitizes stale areaPinnedCustom quick-chip map');
 assertRepoCheck(backupRestoreSource.includes('delete safeSettings.quickChips.dealerPinnedCustom;'), 'backup export sanitizes stale dealerPinnedCustom quick-chip map');
+assertRepoCheck(backupRestoreSource.includes('data: {\n        trips,'), 'backup payload preserves trips collection for restore');
+
+const tripMutationLifecycleSource = readFileSync('js/trip_mutation_lifecycle_v5.js', 'utf8');
+assertRepoCheck(tripMutationLifecycleSource.includes('const amountNum = settlement.calculatedAmount;'), 'trip commit amount remains settlement.calculatedAmount');
+assertRepoCheck(tripMutationLifecycleSource.includes('calculatedAmount: to2(settlement.calculatedAmount),'), 'trip commit persists calculatedAmount settlement field');
+assertRepoCheck(tripMutationLifecycleSource.includes('writtenCheckAmount: to2(settlement.writtenCheckAmount),'), 'trip commit persists writtenCheckAmount settlement field');
+assertRepoCheck(tripMutationLifecycleSource.includes('dealerAdjustment: to2(settlement.dealerAdjustment),'), 'trip commit persists dealerAdjustment settlement field');
+
+assertRepoCheck(homeDashboardSource.includes('rows.reduce((s, t) => s + (Number(t?.amount) || 0), 0)'), 'home totals still aggregate trip.amount');
+
+const reportsAggregationSource = readFileSync('js/reports_aggregation_v5.js', 'utf8');
+assertRepoCheck(reportsAggregationSource.includes('const amt = Number(t?.amount) || 0;'), 'reports aggregation amt still reads trip.amount');
+
+assertRepoCheck(utilsSource.includes('String(to2(t.amount)),'), 'CSV export Amount column still uses trip.amount');
+assertRepoCheck(utilsSource.includes('calculatedAmount,'), 'deriveTripSettlement still exposes calculatedAmount');
+assertRepoCheck(utilsSource.includes('writtenCheckAmount,'), 'deriveTripSettlement still exposes writtenCheckAmount');
+assertRepoCheck(utilsSource.includes('dealerAdjustment,'), 'deriveTripSettlement still exposes dealerAdjustment');
 
 const tripSharedModule = await import('../js/trip_shared_engine_v5.js');
 const { createTripSharedCollectionsEngine, AREA_NOT_RECORDED } = tripSharedModule;
