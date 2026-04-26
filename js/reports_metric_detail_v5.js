@@ -627,7 +627,7 @@ export function createReportsMetricDetailSeam(deps){
       explanation: chart.explanation || "",
       context: chart.context || "",
       canvasId: chart.canvasId,
-      height: 220,
+      height: 290,
       emptyClass: `reportsChartEmpty reportsChartEmpty--standard ${forHome ? "homeMetricChartEmpty" : "reportsMetricChartEmpty"}`.trim(),
       emptyMessage: chart.emptyMessage || "Not enough data in this range yet."
     });
