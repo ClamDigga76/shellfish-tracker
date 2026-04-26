@@ -8,12 +8,24 @@ export function createReportsHighlightsSeam(deps){
   } = deps;
 
   const safeNum = (v)=> Number(v) || 0;
-  const pctText = (value)=> `${Math.abs(Math.round(safeNum(value) * 100))}%`;
-  const signedPctText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${Math.round(safeNum(value) * 100)}%`;
+  const formatPercentNumber = (percentValue)=> {
+    const absPercent = Math.abs(safeNum(percentValue));
+    const rounded = absPercent < 10
+      ? Math.round(absPercent * 10) / 10
+      : Math.round(absPercent);
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1).replace(/\.0$/, "");
+  };
+  const pctText = (value)=> `${formatPercentNumber(safeNum(value) * 100)}%`;
+  const signedPctText = (value)=> {
+    const ratioValue = safeNum(value);
+    const signedPercent = ratioValue * 100;
+    const sign = signedPercent > 0 ? "+" : (signedPercent < 0 ? "-" : "");
+    return `${sign}${formatPercentNumber(signedPercent)}%`;
+  };
   const signedMoneyText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${formatMoney(to2(safeNum(value)))}`;
   const signedRateText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${formatMoney(to2(safeNum(value)))}/lb`;
   const signedLbsText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${to2(safeNum(value))} lbs`;
-  const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
+  const PERCENT_TOKEN_RE = /([+-]?\d+(?:\.\d+)?%)/g;
   const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
   const buildPeriodLabel = (period)=> `${period?.currentLabel || "Current"} vs ${period?.previousLabel || "Prior"}`;
   const buildComparableWindowLabel = (period)=> period?.compareDayRangeLabel

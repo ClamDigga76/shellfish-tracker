@@ -159,6 +159,32 @@ assertRepoCheck(collectionState.areas.filter((area) => normalizeRepoKey(area) ==
 assertRepoCheck(collectionState.dealers.filter((dealer) => normalizeRepoKey(dealer) === normalizeRepoKey('dealer one')).length === 1, 'dealer reconciliation dedupes by normalized key');
 assertRepoCheck(collectionState.dealers.some((dealer) => normalizeRepoKey(dealer) === normalizeRepoKey('dealer two')), 'dealer reconciliation includes dealers from saved trips');
 
+const formatPercentNumberForCheck = (percentValue) => {
+  const absPercent = Math.abs(Number(percentValue) || 0);
+  const rounded = absPercent < 10
+    ? Math.round(absPercent * 10) / 10
+    : Math.round(absPercent);
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1).replace(/\.0$/, '');
+};
+const formatSignedPercentFromRatioForCheck = (ratioValue) => {
+  const signedPercent = (Number(ratioValue) || 0) * 100;
+  const sign = signedPercent > 0 ? '+' : (signedPercent < 0 ? '-' : '');
+  return `${sign}${formatPercentNumberForCheck(signedPercent)}%`;
+};
+assertRepoCheck(formatSignedPercentFromRatioForCheck(0.004) === '+0.4%', 'reports percent formatter keeps +0.004 as +0.4%');
+assertRepoCheck(formatSignedPercentFromRatioForCheck(-0.004) === '-0.4%', 'reports percent formatter keeps -0.004 as -0.4%');
+assertRepoCheck(formatSignedPercentFromRatioForCheck(0.006) === '+0.6%', 'reports percent formatter keeps +0.006 as +0.6%');
+assertRepoCheck(formatSignedPercentFromRatioForCheck(0.03) === '+3%', 'reports percent formatter trims trailing .0 for +0.03');
+assertRepoCheck(formatSignedPercentFromRatioForCheck(0.099) === '+9.9%', 'reports percent formatter keeps +0.099 as +9.9%');
+assertRepoCheck(formatSignedPercentFromRatioForCheck(0.124) === '+12%', 'reports percent formatter rounds +0.124 to +12%');
+
+const decimalPercentTokenRe = /([+-]?\d+(?:\.\d+)?%)/g;
+const emphasizedPercentMatches = '3% +3% -3% 3.5% +1.2% -0.6%'.match(decimalPercentTokenRe) || [];
+assertRepoCheck(
+  emphasizedPercentMatches.join('|') === '3%|+3%|-3%|3.5%|+1.2%|-0.6%',
+  'reports percent emphasis regex matches integer and decimal percent tokens'
+);
+
 if (failed) {
   console.error('\nRepo quality checks failed.');
   process.exit(1);
