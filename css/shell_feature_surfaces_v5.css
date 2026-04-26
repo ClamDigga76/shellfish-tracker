@@ -424,11 +424,13 @@
   color:var(--text-muted-strong);
 }
 .homeScreenShell .homeOverviewCard{
-  padding:15px 15px 14px;
+  padding:16px 16px 15px;
   border-radius:18px;
-  border:1px solid rgba(126,200,255,.22);
-  background:linear-gradient(180deg, rgba(47,109,246,.16) 0%, rgba(20,29,47,.66) 62%, rgba(10,15,24,.52) 100%);
-  box-shadow:0 12px 28px rgba(0,0,0,.18);
+  border:1px solid rgba(123,180,255,.28);
+  background:
+    radial-gradient(120% 90% at 6% 0%, rgba(78,139,255,.24) 0%, rgba(78,139,255,0) 58%),
+    linear-gradient(180deg, rgba(24,37,64,.92) 0%, rgba(13,21,37,.9) 62%, rgba(9,15,27,.9) 100%);
+  box-shadow:0 14px 30px rgba(1,7,22,.4), inset 0 1px 0 rgba(205,225,255,.08);
   margin-bottom:0;
 }
 .homeScreenShell .homeLastTripShell{
@@ -505,16 +507,19 @@
   font-size:11px;
   line-height:1.2;
   letter-spacing:.04em;
-  color:var(--text-muted-strong);
-  border:1px solid rgba(255,255,255,.16);
+  color:rgba(216,227,248,.86);
+  border:1px solid rgba(166,193,238,.28);
   border-radius:999px;
   padding:4px 8px;
-  background:rgba(8,12,20,.30);
+  background:rgba(9,17,31,.54);
   white-space:nowrap;
 }
 .homeOverviewCard .reportsHeroStat{
-  padding:11px 12px;
+  padding:12px 12px;
   position:relative;
+  border-radius:13px;
+  border:1px solid rgba(124,166,235,.24);
+  background:linear-gradient(180deg, rgba(16,29,53,.72) 0%, rgba(12,21,39,.72) 100%);
 }
 .homeOverviewCard .reportsHeroLabel{
   font-size:10px;
@@ -532,6 +537,9 @@
   font-size:11px;
   line-height:1.3;
   font-weight:700;
+}
+.homeOverviewCard .reportsHeroMeta.homeOverviewMetaPounds{
+  color:var(--lbs);
 }
 .homeOverviewTrend{
   position:absolute;

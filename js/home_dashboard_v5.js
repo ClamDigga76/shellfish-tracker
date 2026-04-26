@@ -75,7 +75,7 @@ export function createHomeDashboardRenderer({
       totalLbs,
       dealers,
       strongestDealer: dealers.length ? dealers.slice().sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] : null,
-      strongestArea: Array.from(areaRollup.values()).sort((a, b) => b.amount - a.amount || b.pounds - a.pounds || b.trips - a.trips)[0] || null
+      strongestArea: Array.from(areaRollup.values()).sort((a, b) => b.pounds - a.pounds || b.amount - a.amount || b.trips - a.trips)[0] || null
     };
   });
 
@@ -271,6 +271,12 @@ export function createHomeDashboardRenderer({
       }
     };
 
+    const formatHomePounds = (value, { maximumFractionDigits = 0 } = {}) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return "0 lbs";
+      return `${formatGroupedHomeNumber(numeric, { maximumFractionDigits })} lbs`;
+    };
+
     const lbsVal = round2(totalLbs);
     const lbsStr = formatGroupedHomeNumber(lbsVal);
     const tripsStr = formatGroupedHomeNumber(trips.length, { maximumFractionDigits: 0 });
@@ -463,7 +469,7 @@ export function createHomeDashboardRenderer({
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Strongest area</div>
               <div class="reportsHeroValue">${escapeHtml(strongestArea?.area || "—")}</div>
-              <div class="reportsHeroMeta money">${strongestArea ? formatMoney(round2(strongestArea.amount)) : "No trips in range"}</div>
+              <div class="reportsHeroMeta homeOverviewMetaPounds">${strongestArea ? formatHomePounds(round2(strongestArea.pounds)) : "No trips in range"}</div>
             </div>
           </div>
         </section>
