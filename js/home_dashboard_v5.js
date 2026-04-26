@@ -484,11 +484,13 @@ export function createHomeDashboardRenderer({
         ensureHomeFilter();
         const nextMode = String(btn.getAttribute("data-hf") || "YTD").toUpperCase();
         const isFuturePaidPreview = nextMode === "LAST_YEAR" || nextMode === "ALL" || nextMode === "RANGE";
-        if (isFuturePaidPreview) showToast("Builder mode: future Paid feature — unlocked for testing.");
+        const filterToastMessage = isFuturePaidPreview
+          ? "Builder mode: future Paid feature — unlocked for testing."
+          : "Filter updated";
         state.homeFilter.mode = nextMode;
         if(state.homeFilter.mode !== "RANGE") state.homeFilter.customRangeCorrectionMessages = [];
         saveState();
-        showToast("Filter updated");
+        showToast(filterToastMessage);
         renderHome();
       });
     });
