@@ -464,13 +464,13 @@ export function createReportsOverviewSectionsSeam(deps){
         ? `${rawDeltaText} • ${deltaPct}% ${compareWord} vs previous record`
         : "";
       return `
-        <div class="hlStatCard">
-          <div class="hlTopRow hlTopRow--stacked">
+        <div class="hlStatCard recordsStoryItem">
+          <div class="hlTopRow hlTopRow--stacked recordsStoryTop">
             <div class="hlHdr">${escapeHtml(label)}</div>
             <div class="hlValue ${metricClass}">${escapeHtml(metricText)}</div>
             ${hasCompare ? `<div class="hlDelta tone-${compareTone}">${escapeHtml(compareText)}</div>` : ""}
           </div>
-          <div class="hlTripCardWrap">
+          <div class="hlTripCardWrap recordsStoryTrip">
             <div class="hlTripCardHdr">Record trip</div>
             ${typeof renderStandardReadOnlyTripCard === "function" ? renderStandardReadOnlyTripCard(t, { variant: "standard" }) : ""}
           </div>
@@ -480,20 +480,20 @@ export function createReportsOverviewSectionsSeam(deps){
 
     const highLowBody = `
       ${renderHLItem("Most Pounds in Range", maxLbs, "lbs", "max")}
-      <div class="sep"></div>
+      <div class="sep recordsStorySep"></div>
 
       ${renderHLItem("Least Pounds in Range", minLbs, "lbs", "min")}
-      <div class="sep"></div>
+      <div class="sep recordsStorySep"></div>
 
       ${renderHLItem("Highest Amount in Range", maxAmt, "amount", "max")}
-      <div class="sep"></div>
+      <div class="sep recordsStorySep"></div>
 
       ${renderHLItem("Lowest Amount in Range", minAmt, "amount", "min")}
-      <div class="sep"></div>
+      <div class="sep recordsStorySep"></div>
 
       ${pplRows.length ? `
         ${renderHLItem("Highest Price Per Pound in Range", maxPpl, "ppl", "max")}
-        <div class="sep"></div>
+        <div class="sep recordsStorySep"></div>
 
         ${renderHLItem("Lowest Price Per Pound in Range", minPpl, "ppl", "min")}
       ` : renderCompactStatusNotice({
