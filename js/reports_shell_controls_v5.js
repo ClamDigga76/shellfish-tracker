@@ -17,7 +17,7 @@ export function createReportsShellControlsSeam(deps){
 
   const REPORTS_SECTION_ITEMS = [
     { key: "insights", label: "Insights", intro: "Top takeaways for this range." },
-    { key: "high-value", label: "High Value", intro: "Curated high-signal chart deck." },
+    { key: "high-value", label: "High Value Drivers", intro: "Area, dealer, rate, and productivity drivers." },
     { key: "charts", label: "Charts", intro: "Trend direction at a glance." },
     { key: "seasonality", label: "Seasonality", intro: "Matched windows across years." },
     { key: "records", label: "Records", intro: "High and low trip records." },
