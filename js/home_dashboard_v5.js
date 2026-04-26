@@ -417,7 +417,7 @@ export function createHomeDashboardRenderer({
             </button>
             <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="pounds" aria-label="Open pounds detail">
               <div class="kpiLabel lbsBlue">Pounds</div>
-              <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr} lbs</span></div>
+              <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr}</span></div>
             </button>
             <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="amount" aria-label="Open amount detail">
               <div class="kpiLabel money">Amount</div>
@@ -452,7 +452,7 @@ export function createHomeDashboardRenderer({
             </div>
             <div class="reportsHeroStat">
               <div class="reportsHeroLabel">Average pounds / trip</div>
-              <div class="reportsHeroValue lbsBlue">${avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)} lbs`}</div>
+              <div class="reportsHeroValue lbsBlue">${avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)}`}</div>
               ${renderOverviewTrendArrow(avgPoundsTrendTone, "Average pounds trend")}
             </div>
             <div class="reportsHeroStat">
