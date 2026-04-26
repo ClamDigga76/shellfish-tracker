@@ -15,7 +15,7 @@
   width:100%;
   max-width:100%;
   border-radius:14px;
-  border:1px solid rgba(173,196,233,.14);
+  border:0;
   background:linear-gradient(180deg,rgba(12,20,34,.96),rgba(8,14,25,.97));
 }
 .hlHdr{
@@ -274,7 +274,7 @@
   margin-top:10px;
   border-radius:14px;
   background:linear-gradient(180deg,rgba(11,20,35,.97),rgba(8,14,25,.98));
-  border:1px solid rgba(173,196,233,.16);
+  border:0;
   box-shadow:none;
 }
 @media (max-width:430px){
@@ -759,9 +759,9 @@
 .chartCard .chart,.reportsHeroGrid,.reportsHighlightsGrid,.reportsCompareBars,.reportsMetricCompareRows,.homeMetricCompareRows{min-width:0;max-width:100%}
 
 
-:root[data-theme="light"] .chart{border-color:rgba(37,53,92,.1);background:linear-gradient(180deg, rgba(255,255,255,.78), rgba(239,244,255,.56));}
+:root[data-theme="light"] .chart{border:0;background:linear-gradient(180deg, rgba(255,255,255,.78), rgba(239,244,255,.56));}
 :root[data-theme="light"] .chartCard,:root[data-theme="light"] .chartCard--standard{border:0;background:transparent;box-shadow:none;}
-:root[data-theme="light"] .chartCard .chart{border-color:rgba(37,53,92,.14);background:linear-gradient(180deg, rgba(255,255,255,.76), rgba(234,241,255,.58));}
+:root[data-theme="light"] .chartCard .chart{border:0;background:linear-gradient(180deg, rgba(255,255,255,.76), rgba(234,241,255,.58));}
 :root[data-theme="light"] .reportsHighlightsHdr,
 :root[data-theme="light"] .reportsHeroEyebrow,
 :root[data-theme="light"] .reportsHeroLabel,
@@ -808,7 +808,7 @@
 :root[data-theme="light"] .homeMetricTitleFormula--secondary{color:#5f6d89;}
 :root[data-theme="light"] .homeMetricMetaItem{border-color:rgba(37,53,92,.18);background:rgba(37,53,92,.06);}
 :root[data-theme="light"] .homeMetricMetaLabel{color:#5f6d89;}
-:root[data-theme="light"] .homeMetricChartStory .chart{border-color:rgba(37,53,92,.14);background:linear-gradient(180deg,rgba(255,255,255,.76),rgba(234,241,255,.58));}
+:root[data-theme="light"] .homeMetricChartStory .chart{border:0;background:linear-gradient(180deg,rgba(255,255,255,.76),rgba(234,241,255,.58));}
 :root[data-theme="light"] .homeMetricChartStory .homeMetricChartSupport,
 :root[data-theme="light"] .homeMetricChartStory .homeMetricChartContext.chartContext{color:#4d5f7f;}
 :root[data-theme="light"] .homeMetricChartStory .homeMetricChartEmpty::before{color:#5d7091;}
