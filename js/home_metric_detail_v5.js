@@ -132,6 +132,11 @@ export function createHomeMetricDetailRenderer(deps){
     `;
     getApp().scrollTop = 0;
 
+    const transitionRoot = document.getElementById("reportsTransitionRoot");
+    if(transitionRoot){
+      requestAnimationFrame(()=> transitionRoot.classList.add("is-ready"));
+    }
+
     const metricDetailChartConfig = reportsMetricDetailSeam.buildMetricDetailChartConfig(metricDetailViewModel) || {};
     drawReportsCharts(monthRows, dealerRows, tripsTimeline, {
       metricDetail: {
