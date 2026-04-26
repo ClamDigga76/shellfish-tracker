@@ -683,6 +683,8 @@ let reportsScreenRenderer = null;
 let reportsScreenRendererPromise = null;
 let reportsRuntimeDeps = null;
 let reportsRuntimeDepsPromise = null;
+let homeMetricDetailRenderer = null;
+let homeMetricDetailRendererPromise = null;
 
 async function ensureReportsRuntimeDeps(){
   if(reportsRuntimeDeps) return reportsRuntimeDeps;
@@ -748,6 +750,39 @@ async function ensureReportsScreenRenderer(){
   return reportsScreenRendererPromise;
 }
 
+async function ensureHomeMetricDetailRenderer(){
+  if(homeMetricDetailRenderer) return homeMetricDetailRenderer;
+  if(homeMetricDetailRendererPromise) return homeMetricDetailRendererPromise;
+  homeMetricDetailRendererPromise = Promise.all([
+    importVersionedModule("./home_metric_detail_v5.js"),
+    ensureReportsRuntimeDeps()
+  ]).then(([{ createHomeMetricDetailRenderer }, reportsDeps])=> {
+    homeMetricDetailRenderer = createHomeMetricDetailRenderer({
+      getState: () => state,
+      getApp: () => getApp(),
+      saveState: () => saveState(),
+      renderApp: () => render(),
+      applyUnifiedTripFilter,
+      buildUnifiedFilterFromReportsFilter,
+      parseReportDateToISO,
+      resolveUnifiedRange,
+      formatDateDMY,
+      buildReportsAggregationState: reportsDeps.buildReportsAggregationState,
+      canonicalDealerGroupKey,
+      normalizeDealerDisplay,
+      resolveTripArea,
+      drawReportsCharts: reportsDeps.drawReportsCharts,
+      escapeHtml,
+      formatMoney,
+      to2
+    });
+    return homeMetricDetailRenderer;
+  }).finally(()=> {
+    homeMetricDetailRendererPromise = null;
+  });
+  return homeMetricDetailRendererPromise;
+}
+
 function renderReports(options){
   if(reportsScreenRenderer?.renderReports) return reportsScreenRenderer.renderReports(options);
   renderSurfaceLoading("reports", "Loading Reports…");
@@ -757,8 +792,11 @@ function renderReports(options){
 }
 
 function renderHomeMetricDetail(){
-  if(reportsScreenRenderer?.renderHomeMetricDetail) return reportsScreenRenderer.renderHomeMetricDetail();
-  return renderReports({ homeMetricOnly: true });
+  if(homeMetricDetailRenderer?.renderHomeMetricDetail) return homeMetricDetailRenderer.renderHomeMetricDetail();
+  renderSurfaceLoading("home", "Loading Home detail…");
+  void ensureHomeMetricDetailRenderer().then(()=> {
+    if(String(state.view || "home") === "home" && String(state.homeMetricDetail || "").trim()) render();
+  }).catch((error)=> showFatal(error));
 }
 
 
