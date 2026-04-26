@@ -68,9 +68,14 @@ export function createUnifiedFiltersSeam({
 
       if(legacyMode === "ALL") range = "all";
       else if(legacyMode === "YTD") range = "ytd";
-      else if(legacyMode === "MONTH") range = "mtd";
+      else if(legacyMode === "MONTH" || legacyMode === "THIS_MONTH") range = "mtd";
+      else if(legacyMode === "LAST_MONTH") range = "last_month";
+      else if(legacyMode === "LAST_YEAR") range = "last_year";
       else if(legacyMode === "7D") range = "7d";
-      else if(legacyMode === "RANGE") {
+      else if(legacyMode === "30D") range = "30d";
+      else if(legacyMode === "90D") range = "90d";
+      else if(legacyMode === "12M") range = "12m";
+      else if(legacyMode === "RANGE" || legacyMode === "CUSTOM") {
         range = "custom";
         fromISO = parseUsDateToISODate?.(String(pick?.from||"")) || "";
         toISO = parseUsDateToISODate?.(String(pick?.to||"")) || "";
@@ -118,6 +123,7 @@ export function createUnifiedFiltersSeam({
 
     if(filter.range === "all") return { fromISO:"1900-01-01", toISO:now, label:"All Time" };
     if(filter.range === "ytd") return { fromISO:`${y}-01-01`, toISO:now, label:"YTD" };
+    if(filter.range === "last_year") return { fromISO:`${Number(y)-1}-01-01`, toISO:`${Number(y)-1}-12-31`, label:"Previous Year" };
     if(filter.range === "mtd") return { fromISO:`${y}-${String(new Date().getMonth()+1).padStart(2,"0")}-01`, toISO:now, label:"This Month" };
     if(filter.range === "last_month"){
       const d = new Date();
@@ -157,6 +163,7 @@ export function createUnifiedFiltersSeam({
     if(m === "YTD") return "ytd";
     if(m === "MONTH" || m === "THIS_MONTH") return "mtd";
     if(m === "LAST_MONTH") return "last_month";
+    if(m === "LAST_YEAR") return "last_year";
     if(m === "7D") return "7d";
     if(m === "12M") return "12m";
     if(m === "90D") return "90d";
