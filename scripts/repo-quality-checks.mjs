@@ -126,6 +126,25 @@ assertRepoCheck(homeDashboardSource.includes('rows.reduce((s, t) => s + (Number(
 
 const reportsAggregationSource = readFileSync('js/reports_aggregation_v5.js', 'utf8');
 assertRepoCheck(reportsAggregationSource.includes('const amt = Number(t?.amount) || 0;'), 'reports aggregation amt still reads trip.amount');
+const reportsMetricDetailSource = readFileSync('js/reports_metric_detail_v5.js', 'utf8');
+assertRepoCheck(
+  reportsMetricDetailSource.includes('chartModel?.metricKey')
+    && reportsMetricDetailSource.includes('chartDef?.metricKey')
+    && reportsMetricDetailSource.includes('|| targetMetricKey'),
+  'home free chart cards resolve metric key from chart model before card/parent fallback'
+);
+assertRepoCheck(
+  reportsMetricDetailSource.includes('pplRateVsPoundsTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "lbs" })'),
+  'Avg $/lb pounds-support chart keeps pounds metric key'
+);
+assertRepoCheck(
+  reportsMetricDetailSource.includes('if(isCompareBars && (!hasRealComparablePeriod || isHomeCompareSuppressed)) return null;'),
+  'home free compare chart cards are suppressed when no real prior month comparison exists'
+);
+assertRepoCheck(
+  reportsMetricDetailSource.includes(': (primaryBasisByMetric?.[metricKey]?.primaryChart || detailCharts?.[metricKey] || null)'),
+  'reports metric detail primary compare chart path remains unchanged'
+);
 
 assertRepoCheck(utilsSource.includes('String(to2(t.amount)),'), 'CSV export Amount column still uses trip.amount');
 assertRepoCheck(utilsSource.includes('calculatedAmount,'), 'deriveTripSettlement still exposes calculatedAmount');
