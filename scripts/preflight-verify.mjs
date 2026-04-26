@@ -20,7 +20,10 @@ import {
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
 const expectedArg = args.find((arg) => arg.startsWith("--expect-version="));
-const expectedVersionOverride = expectedArg ? expectedArg.split("=")[1] : null;
+const expectedVersionOverrideRaw = expectedArg ? expectedArg.split("=")[1] : null;
+const expectedVersionOverride = expectedVersionOverrideRaw
+  ? String(expectedVersionOverrideRaw).replace(/^v/i, "")
+  : null;
 
 const checks = [];
 
