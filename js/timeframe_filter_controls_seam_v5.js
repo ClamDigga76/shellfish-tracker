@@ -97,6 +97,7 @@ export function createTimeframeFilterControlsSeam({
     const normalizedMode = String(mode || "YTD").toUpperCase();
     if(normalizedMode === "MONTH" || normalizedMode === "THIS_MONTH") return monthLabel;
     if(normalizedMode === "LAST_MONTH") return lastMonthLabel;
+    if(normalizedMode === "LAST_YEAR") return "Previous Year";
     if(normalizedMode === "7D") return "Last 7 Days";
     if(normalizedMode === "30D") return "Last 30 Days";
     if(normalizedMode === "90D") return "Last 3 Months";
