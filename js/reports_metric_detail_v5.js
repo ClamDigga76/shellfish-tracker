@@ -479,9 +479,17 @@ export function createReportsMetricDetailSeam(deps){
   } = deps;
   const chartStorySeam = createChartStorySeam({ escapeHtml });
 
-  const PERCENT_TOKEN_RE = /([+-]?\d+%)/g;
+  const PERCENT_TOKEN_RE = /([+-]?\d+(?:\.\d+)?%)/g;
   const renderPercentEmphasisText = (text)=> escapeHtml(String(text || "")).replace(PERCENT_TOKEN_RE, '<span class="reportsPercentEmphasis">$1</span>');
   const formatPeriodPair = (previousLabel, currentLabel)=> `${String(previousLabel || "Previous")} → ${String(currentLabel || "Current")}`;
+  const formatPercentNumber = (percentValue)=> {
+    const absPercent = Math.abs(Number(percentValue) || 0);
+    const rounded = absPercent < 10
+      ? Math.round(absPercent * 10) / 10
+      : Math.round(absPercent);
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1).replace(/\.0$/, "");
+  };
+  const formatUnsignedPercentFromRatio = (ratioValue)=> `${formatPercentNumber((Number(ratioValue) || 0) * 100)}%`;
   const toMaxTwoSentences = (text)=> {
     const parts = String(text || "").trim().split(/(?<=[.!?])\s+/).filter(Boolean);
     if(!parts.length) return "";
@@ -556,7 +564,7 @@ export function createReportsMetricDetailSeam(deps){
     const currentLabel = period.currentLabel || "Current";
     const previousLabel = period.previousLabel || "Previous";
     const safeNum = (value)=> Number(value) || 0;
-    const pctText = (value)=> `${Math.abs(Math.round((Number(value) || 0) * 100))}%`;
+    const pctText = (value)=> formatUnsignedPercentFromRatio(value);
     const amountPayload = compareFoundation.metrics?.amount || null;
     const poundsPayload = compareFoundation.metrics?.pounds || null;
     const tripsPayload = compareFoundation.metrics?.trips || null;
