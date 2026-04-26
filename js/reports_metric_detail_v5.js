@@ -1,5 +1,5 @@
 import { buildRollingSeriesFromMonthRows, describeRollingContext, getRollingWindowForMetric } from "./reports_rolling_trends_v5.js";
-import { HOME_RATE_RANKING_THRESHOLDS, buildHomeSharedChartModel, getHomeSharedChartDefinition, normalizeChronologicalRows } from "./reports_chart_definitions_v5.js";
+import { HOME_RATE_RANKING_THRESHOLDS, buildHomeSharedChartModel, normalizeChronologicalRows } from "./reports_chart_definitions_v5.js";
 import { createChartStorySeam } from "./chart_story_seam_v5.js";
 
 const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
@@ -51,6 +51,37 @@ const METRIC_DETAIL_SURFACE_MODES = Object.freeze({
     detailChartClass: "reportsMetricChartBlock",
     detailChartContextClass: "reportsMetricChartContext",
     detailInsightClass: "reportsMetricInsight"
+  })
+});
+
+const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
+  trips: Object.freeze({
+    helperLine: "Trips logged in your selected Home range.",
+    primaryChartKey: "tripsMonthlyTrend",
+    primaryChartTitle: "Trips over time",
+    primaryChartContext: "Simple trip trend across visible months",
+    teaserText: "Unlock Reports to compare your highest and lowest days, areas, and dealers."
+  }),
+  pounds: Object.freeze({
+    helperLine: "Total pounds landed in your selected Home range.",
+    primaryChartKey: "poundsMonthlyTrend",
+    primaryChartTitle: "Pounds over time",
+    primaryChartContext: "Simple pounds trend across visible months",
+    teaserText: "Unlock Reports to see which areas produce the strongest catches."
+  }),
+  amount: Object.freeze({
+    helperLine: "Total paid amount from trips in your selected Home range.",
+    primaryChartKey: "amountTrend",
+    primaryChartTitle: "Paid over time",
+    primaryChartContext: "Simple paid trend across visible months",
+    teaserText: "Unlock Reports to compare dealers, price trends, and deeper money insights."
+  }),
+  ppl: Object.freeze({
+    helperLine: "Calculated from total paid ÷ total pounds.",
+    primaryChartKey: "pplMonthlyTrendFree",
+    primaryChartTitle: "Price per pound over time",
+    primaryChartContext: "Simple Avg $ / lb trend across visible months",
+    teaserText: "Unlock Reports to compare dealer pay rates and price-per-pound trends."
   })
 });
 
@@ -316,6 +347,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
       ...buildHomeSharedChartModel({ chartId: "pplByMonth", monthRows: safeMonths, dealerRows, areaRows }),
       basisLabel: `Visible months in this range • ${rateLeaderSupportLabel}`
     },
+    pplMonthlyTrendFree: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg", basisLabel: "Visible months in this range" }),
     tripsRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "trips",
@@ -590,6 +622,29 @@ export function createReportsMetricDetailSeam(deps){
     };
   };
 
+  const formatHomeSnapshotValue = ({ metricKey, value })=> {
+    const safeValue = Number(value);
+    if(!Number.isFinite(safeValue)) return "—";
+    if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
+    if(metricKey === "pounds") return `${to2(safeValue)} lbs`;
+    if(metricKey === "amount") return formatMoney(to2(safeValue));
+    if(metricKey === "ppl") return safeValue > 0 ? `${formatMoney(to2(safeValue))}/lb` : "—";
+    return `${to2(safeValue)}`;
+  };
+
+  const buildHomeSnapshotItems = ({ metricKey, chartModel })=> {
+    const values = Array.isArray(chartModel?.values) ? chartModel.values.map((value)=> Number(value) || 0) : [];
+    if(!values.length) return [];
+    const latest = values[values.length - 1];
+    const highest = values.reduce((max, value)=> Math.max(max, value), values[0]);
+    const average = values.reduce((sum, value)=> sum + value, 0) / values.length;
+    return [
+      { label: "Highest", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
+      { label: "Latest", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
+      { label: "Average", value: formatHomeSnapshotValue({ metricKey, value: average }) }
+    ];
+  };
+
   const renderMetricDetailSection = ({ meta, compareSummary, viewModel })=> {
     const surfaceMode = viewModel.surfaceMode || resolveMetricDetailSurfaceMode({ isHomeMetricDetail: viewModel.isHomeMetricDetail });
     const homeRangeLabel = String(viewModel.homeScope?.rangeLabel || viewModel.rangeLabel || "").trim();
@@ -616,6 +671,7 @@ export function createReportsMetricDetailSeam(deps){
       ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
       : String(compareSummary.text || "");
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
+    const homeSnapshotItems = Array.isArray(meta.homeSnapshotItems) ? meta.homeSnapshotItems.filter((item)=> item?.label && item?.value) : [];
     const renderSharedChartCard = ({ chart, forHome = false })=> chartStorySeam.renderChartStoryCard({
       mode: "lean",
       cardTag: "div",
@@ -654,7 +710,21 @@ export function createReportsMetricDetailSeam(deps){
             ${pplTitleFormulaLine ? `<div class="homeMetricTitleFormula">${escapeHtml(pplTitleFormulaLine)}</div>` : ""}
             ${pplTitleWeightedLine ? `<div class="homeMetricTitleFormula homeMetricTitleFormula--secondary">${escapeHtml(pplTitleWeightedLine)}</div>` : ""}
           </div>
+          <div class="${surfaceMode.detailHeroWrapClass}">
+            <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
+            <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
+          </div>
           <div class="homeMetricLeadIn">${escapeHtml(detailInsight)}</div>
+          ${homeSnapshotItems.length ? `
+          <div class="homeMetricMetaRow" aria-label="Snapshot values">
+            ${homeSnapshotItems.map((item)=> `
+              <div class="homeMetricMetaItem">
+                <span class="homeMetricMetaLabel">${escapeHtml(item.label)}</span>
+                <span class="homeMetricMetaValue">${escapeHtml(item.value)}</span>
+              </div>
+            `).join("")}
+          </div>
+          ` : ""}
         ` : `
           <button class="btn btn-ghost affordanceBtn ${surfaceMode.detailBackClass}" type="button" id="reportsMetricBack">← Back to reports</button>
           <div class="${surfaceMode.detailEyebrowClass}">${escapeHtml(meta.eyebrow)}</div>
@@ -703,7 +773,9 @@ export function createReportsMetricDetailSeam(deps){
           `).join("")}
         </div>
 
-        ${viewModel.isHomeMetricDetail ? "" : `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
+        ${viewModel.isHomeMetricDetail
+    ? `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(meta.homeTeaser || "")}</div>`
+    : `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
       </div>
     </section>
   `;
@@ -720,6 +792,7 @@ export function createReportsMetricDetailSeam(deps){
     const primaryBasis = primaryBasisByMetric?.[metricKey] || null;
     const primaryPayload = primaryBasis?.comparePayload || compareFoundation.metrics?.[metricKey] || null;
     const primaryChart = primaryBasis?.primaryChart || detailCharts?.[metricKey] || null;
+    const resolveHomeFreeConfig = (targetMetricKey)=> HOME_FREE_KPI_DETAIL_CONFIG[targetMetricKey] || null;
     const formatHeroFromPrimaryBasis = (targetMetric, basis)=> {
       const value = Number(basis?.currentValue);
       if(!Number.isFinite(value)) return "—";
@@ -745,96 +818,18 @@ export function createReportsMetricDetailSeam(deps){
         ? formatHomeKpiHeroValue(targetMetric, viewModel.trips)
         : formatHeroFromPrimaryBasis(targetMetric, primaryBasis)
     );
-    const sharedChartTitle = (chartId, fallback)=> String(getHomeSharedChartDefinition(chartId)?.title || fallback);
     const homeSecondaryChartsByMetric = {
-      trips: [
-        detailCharts.tripsAreaMix?.labels?.length ? {
-          title: "Trips by area",
-          context: "Where you fished most in this range",
-          canvasId: "c_trips_area_mix",
-          chartModel: detailCharts.tripsAreaMix,
-          metricKey: "trips"
-        } : null,
-        detailCharts.tripsDealerMix?.labels?.length ? {
-          title: "Trips by dealer",
-          context: "Who you sold to most in this range",
-          canvasId: "c_trips_dealer_mix",
-          chartModel: detailCharts.tripsDealerMix,
-          metricKey: "trips"
-        } : null,
-        detailCharts.tripsMonthlyTrend ? {
-          title: "Trips by month",
-          context: "Monthly trip counts",
-          canvasId: "c_trips_monthly_trend",
-          chartModel: detailCharts.tripsMonthlyTrend,
-          metricKey: "trips"
-        } : null,
-        detailCharts.tripsPoundsPerTripTrend ? {
-          title: "Average Pounds Per Trip by month",
-          context: "How much each trip landed each month",
-          canvasId: "c_trips_pounds_per_trip",
-          chartModel: detailCharts.tripsPoundsPerTripTrend,
-          metricKey: "pounds"
-        } : null
-      ],
-      pounds: [
-        detailCharts.poundsMonthlyTrend ? {
-          title: sharedChartTitle("poundsByMonth", "Pounds by month"),
-          context: "Monthly landed pounds",
-          canvasId: "c_pounds_monthly_trend",
-          chartModel: detailCharts.poundsMonthlyTrend,
-          metricKey: "pounds"
-        } : null,
-        detailCharts.poundsPerTripTrend ? {
-          title: "Average Pounds Per Trip by month",
-          context: "How much each trip landed each month",
-          canvasId: "c_pounds_per_trip_trend",
-          chartModel: detailCharts.poundsPerTripTrend,
-          metricKey: "pounds"
-        } : null,
-        detailCharts.poundsDealerMix?.labels?.length ? {
-          title: "Pounds by dealer",
-          context: "Dealers with the most landed pounds",
-          canvasId: "c_pounds_dealer_mix",
-          chartModel: detailCharts.poundsDealerMix,
-          metricKey: "pounds"
-        } : null
-      ],
-      amount: [
-        detailCharts.amountTrend ? {
-          title: sharedChartTitle("amountByMonth", "Amount by month"),
-          context: "Monthly earnings totals",
-          canvasId: "c_amount_monthly_trend",
-          chartModel: detailCharts.amountTrend,
-          metricKey: "amount"
-        } : null,
-        detailCharts.amountPerTripTrend ? {
-          title: sharedChartTitle("amountPerTripByMonth", "Average Amount Per Trip by month"),
-          context: "How much each trip earned each month",
-          canvasId: "c_amount_per_trip_trend",
-          chartModel: detailCharts.amountPerTripTrend,
-          metricKey: "amount"
-        } : null
-      ],
-      ppl: [
-        detailCharts.pplMonthlyTrend ? {
-          title: sharedChartTitle("pplByMonth", "Avg $ / lb by month"),
-          context: `Monthly average pay rate • ${detailCharts.pplMonthlyTrend?.basisLabel || getRateLeaderThresholdText()}`,
-          canvasId: "c_ppl_monthly_trend",
-          chartModel: detailCharts.pplMonthlyTrend,
-          metricKey: "ppl"
-        } : null,
-        detailCharts.pplRateVsPoundsTrend ? {
-          title: "Monthly pounds landed",
-          context: "Pounds by month to pair with pay-rate movement",
-          canvasId: "c_ppl_rate_vs_pounds",
-          chartModel: detailCharts.pplRateVsPoundsTrend,
-          metricKey: "pounds"
-        } : null
-      ]
+      trips: [],
+      pounds: [],
+      amount: [],
+      ppl: []
     };
     const detailMeta = {
       trips: {
+        ...(function(){
+          const homeFreeConfig = resolveHomeFreeConfig("trips");
+          const homePrimaryChart = homeFreeConfig?.primaryChartKey ? detailCharts?.[homeFreeConfig.primaryChartKey] || null : null;
+          return {
         title: "Trips breakdown",
         homeTitle: "Trips",
         homeTitleToneClass: "homeMetricSimpleTitle--trips",
@@ -845,10 +840,10 @@ export function createReportsMetricDetailSeam(deps){
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Trips • Compare",
-        homeChartTitle: "Trips",
-        homeChartExplanation: "Month-to-month trip totals for the latest visible pair.",
+        homeChartTitle: homeFreeConfig?.primaryChartTitle || "Trips",
+        homeChartExplanation: homeFreeConfig?.helperLine || "Trips logged in your selected Home range.",
         chartContext: primaryChart?.basisLabel || "Bars • trip totals for the latest matched months",
-        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
+        homeChartContext: homeFreeConfig?.primaryChartContext || "Simple trip trend across visible months",
         chartCanvasId: "c_trips",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.trips
@@ -862,9 +857,17 @@ export function createReportsMetricDetailSeam(deps){
             } : null
           ],
         insight: "Read the compare card with the chart to confirm trip movement in the same latest matched months.",
-        homeInsight: "Start with month-to-month compare, then scan monthly charts for context."
+        homeInsight: homeFreeConfig?.helperLine || "Trips logged in your selected Home range.",
+        homeTeaser: homeFreeConfig?.teaserText || "",
+        homeSnapshotItems: buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart })
+          };
+        })(),
       },
       pounds: {
+        ...(function(){
+          const homeFreeConfig = resolveHomeFreeConfig("pounds");
+          const homePrimaryChart = homeFreeConfig?.primaryChartKey ? detailCharts?.[homeFreeConfig.primaryChartKey] || null : null;
+          return {
         title: "Pounds breakdown",
         homeTitle: "Pounds",
         homeTitleToneClass: "homeMetricSimpleTitle--pounds",
@@ -875,10 +878,10 @@ export function createReportsMetricDetailSeam(deps){
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Pounds • Compare",
-        homeChartTitle: "Pounds",
-        homeChartExplanation: "Month-to-month landed pounds for the latest visible pair.",
+        homeChartTitle: homeFreeConfig?.primaryChartTitle || "Pounds",
+        homeChartExplanation: homeFreeConfig?.helperLine || "Total pounds landed in your selected Home range.",
         chartContext: primaryChart?.basisLabel || "Bars • pound totals for the latest matched months",
-        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
+        homeChartContext: homeFreeConfig?.primaryChartContext || "Simple pounds trend across visible months",
         chartCanvasId: "c_lbs",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.pounds
@@ -892,9 +895,17 @@ export function createReportsMetricDetailSeam(deps){
             } : null
           ],
         insight: "Use the compare card and chart together so the headline and values stay aligned to the latest matched months.",
-        homeInsight: "Start with compare, then use monthly and area charts to see what drove the shift."
+        homeInsight: homeFreeConfig?.helperLine || "Total pounds landed in your selected Home range.",
+        homeTeaser: homeFreeConfig?.teaserText || "",
+        homeSnapshotItems: buildHomeSnapshotItems({ metricKey: "pounds", chartModel: homePrimaryChart })
+          };
+        })(),
       },
       amount: {
+        ...(function(){
+          const homeFreeConfig = resolveHomeFreeConfig("amount");
+          const homePrimaryChart = homeFreeConfig?.primaryChartKey ? detailCharts?.[homeFreeConfig.primaryChartKey] || null : null;
+          return {
         title: "Amount breakdown",
         homeTitle: "Amount",
         homeTitleToneClass: "homeMetricSimpleTitle--amount",
@@ -905,10 +916,10 @@ export function createReportsMetricDetailSeam(deps){
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Amount • Compare",
-        homeChartTitle: "Amount",
-        homeChartExplanation: "Month-to-month earnings for the latest visible pair.",
+        homeChartTitle: homeFreeConfig?.primaryChartTitle || "Amount",
+        homeChartExplanation: homeFreeConfig?.helperLine || "Total paid amount from trips in your selected Home range.",
         chartContext: primaryChart?.basisLabel || "Bars • amount totals for the latest matched months",
-        homeChartContext: primaryChart?.basisLabel || "Latest visible month vs the month before",
+        homeChartContext: homeFreeConfig?.primaryChartContext || "Simple paid trend across visible months",
         chartCanvasId: "c_amount_detail",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.amount
@@ -934,9 +945,17 @@ export function createReportsMetricDetailSeam(deps){
             }
           ],
         insight: "Start with the compare chart, then use trend and dealer mix for added context.",
-        homeInsight: "Start with compare, then check monthly, dealer, and area charts for earnings drivers."
+        homeInsight: homeFreeConfig?.helperLine || "Total paid amount from trips in your selected Home range.",
+        homeTeaser: homeFreeConfig?.teaserText || "",
+        homeSnapshotItems: buildHomeSnapshotItems({ metricKey: "amount", chartModel: homePrimaryChart })
+          };
+        })(),
       },
       ppl: {
+        ...(function(){
+          const homeFreeConfig = resolveHomeFreeConfig("ppl");
+          const homePrimaryChart = homeFreeConfig?.primaryChartKey ? detailCharts?.[homeFreeConfig.primaryChartKey] || null : null;
+          return {
         title: "Avg $ / lb breakdown",
         homeTitle: "Avg $ / lb",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
@@ -947,10 +966,10 @@ export function createReportsMetricDetailSeam(deps){
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Avg $ / lb • Compare",
-        homeChartTitle: "Avg $ / lb",
-        homeChartExplanation: `Month-to-month average pay rate for the latest visible pair. ${getPplFormulaText({ metricKey, surface: "short" })}`,
+        homeChartTitle: homeFreeConfig?.primaryChartTitle || "Avg $ / lb",
+        homeChartExplanation: homeFreeConfig?.helperLine || "Calculated from total paid ÷ total pounds.",
         chartContext: `${primaryChart?.basisLabel || "Bars • Avg $ / lb for the latest matched months"} • ${getPplFormulaText({ metricKey, surface: "short" })} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
-        homeChartContext: `${primaryChart?.basisLabel || "Latest visible month vs the month before"} • ${getPplFormulaText({ metricKey, surface: "short" })} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
+        homeChartContext: homeFreeConfig?.primaryChartContext || "Simple Avg $ / lb trend across visible months",
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
           ? homeSecondaryChartsByMetric.ppl
@@ -964,7 +983,11 @@ export function createReportsMetricDetailSeam(deps){
             } : null
           ],
         insight: `Use the compare card and chart to read pricing for the latest matched months without mixing full-range averages.${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "insight" }) ? ` ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "insight" })}` : ""}`,
-        homeInsight: `Start with compare, then scan monthly pounds and dealer-rate charts for pricing context.${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "insight" }) ? ` ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "insight" })}` : ""}`
+        homeInsight: homeFreeConfig?.helperLine || "Calculated from total paid ÷ total pounds.",
+        homeTeaser: homeFreeConfig?.teaserText || "",
+        homeSnapshotItems: buildHomeSnapshotItems({ metricKey: "ppl", chartModel: homePrimaryChart })
+          };
+        })()
       }
     };
     return detailMeta[metricKey] || null;
@@ -990,6 +1013,8 @@ export function createReportsMetricDetailSeam(deps){
     } = viewModel;
     const meta = buildMetricDetailMeta(viewModel);
     if(!meta) return null;
+    const homeFreeConfig = viewModel?.isHomeMetricDetail ? HOME_FREE_KPI_DETAIL_CONFIG[metricKey] || null : null;
+    const homePrimaryChart = homeFreeConfig?.primaryChartKey ? detailCharts?.[homeFreeConfig.primaryChartKey] || null : null;
     const secondaryCharts = Array.isArray(meta.secondaryCharts)
       ? meta.secondaryCharts
         .filter((chart)=> chart && chart.canvasId)
@@ -1001,7 +1026,9 @@ export function createReportsMetricDetailSeam(deps){
       : [];
     return {
       metricKey: String(metricKey || ""),
-      compareChart: primaryBasisByMetric?.[metricKey]?.primaryChart || detailCharts?.[metricKey] || null,
+      compareChart: viewModel?.isHomeMetricDetail
+        ? (homePrimaryChart || primaryBasisByMetric?.[metricKey]?.primaryChart || detailCharts?.[metricKey] || null)
+        : (primaryBasisByMetric?.[metricKey]?.primaryChart || detailCharts?.[metricKey] || null),
       secondaryCharts
     };
   };
