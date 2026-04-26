@@ -34,7 +34,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     lbs: color("--lbs", "rgba(77,155,255,0.9)"),
     trips: color("--trips", "rgba(242,245,255,0.92)"),
     grid: isLightTheme ? "rgba(21,38,72,0.07)" : "rgba(255,255,255,0.045)",
-    label: "rgba(255,255,255,0.8)",
+    label: isLightTheme ? "rgba(24,35,59,0.78)" : "rgba(255,255,255,0.84)",
     axis: isLightTheme ? "rgba(21,38,72,0.13)" : "rgba(255,255,255,0.11)",
     plotBg: isLightTheme ? "rgba(21,38,72,0.012)" : "rgba(255,255,255,0.008)"
   };
@@ -61,10 +61,10 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const compact = w < 360;
     const isHomeInsights = mode === "home-insights";
     const profile = resolveFrameProfile({ mode, ...context });
-    const leftBase = isHomeInsights ? (compact ? 38 : 44) : (compact ? 46 : 54);
-    const rightBase = isHomeInsights ? (compact ? 8 : 10) : (compact ? 12 : 16);
-    const topBase = isHomeInsights ? (compact ? 18 : 20) : (compact ? 26 : 28);
-    const bottomBase = isHomeInsights ? (compact ? 46 : 50) : (compact ? 54 : 58);
+    const leftBase = isHomeInsights ? (compact ? 36 : 44) : (compact ? 42 : 54);
+    const rightBase = isHomeInsights ? (compact ? 8 : 10) : (compact ? 10 : 16);
+    const topBase = isHomeInsights ? (compact ? 18 : 20) : (compact ? 24 : 28);
+    const bottomBase = isHomeInsights ? (compact ? 52 : 50) : (compact ? 62 : 58);
     const left = leftBase + (profile.dense && !compact ? -2 : 0);
     const right = rightBase + (profile.sparse ? (compact ? 4 : 6) : 0) + (profile.dense ? -2 : 0);
     const top = topBase + (profile.sparse ? 2 : 0);
@@ -226,7 +226,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     const edgeInset = frame.compact ? 6 : 8;
-    const minGap = frame.compact ? 10 : 8;
+    const minGap = frame.compact ? 12 : 8;
     const placed = [];
     const tickIndexes = new Set([0, Math.max(0, labels.length - 1)]);
     labels.forEach((_, i)=> {
@@ -491,20 +491,26 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
   function drawBarValueLabels(bars, { ctx, frame, formatter }){
     if(!Array.isArray(bars) || !bars.length) return;
-    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.fillStyle = isLightTheme ? "rgba(16,30,58,0.86)" : "rgba(255,255,255,0.92)";
     ctx.font = frame.tickFont;
     ctx.textBaseline = "alphabetic";
     const textHeight = Math.max(10, Math.ceil(Number.parseFloat(frame.tickFont) || 11));
     const safeTopBaseline = frame.top + textHeight + 2;
     const barGap = frame.compact ? 7 : 8;
+    let lastRight = -Infinity;
+    const minLabelGap = frame.compact ? 8 : 6;
     bars.forEach((bar)=>{
       if(!bar || !(bar.height > 0)) return;
       const raw = typeof formatter === "function" ? formatter(bar.value) : String(Math.round(Number(bar.value) || 0));
       const text = String(raw || "").trim();
       if(!text) return;
-      const x = Math.max(2, bar.x + ((bar.width - ctx.measureText(text).width) / 2));
+      const textW = ctx.measureText(text).width;
+      if(bars.length >= 5 && bar.width < (textW + 4) && bar.index % 2 === 1) return;
+      const x = Math.max(2, bar.x + ((bar.width - textW) / 2));
+      if(bars.length >= 4 && x < lastRight + minLabelGap) return;
       const y = Math.max(safeTopBaseline, bar.y - barGap);
       ctx.fillText(text, x, y);
+      lastRight = x + textW;
     });
   }
 
@@ -525,7 +531,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     let chipY = y - 18;
     chipX = Math.max(minX, Math.min(maxX - chipW, chipX));
     chipY = Math.max(minY, Math.min(maxY - chipH, chipY));
-    ctx.fillStyle = "rgba(6,12,22,0.82)";
+    ctx.fillStyle = isLightTheme ? "rgba(16,30,58,0.78)" : "rgba(6,12,22,0.82)";
     ctx.fillRect(chipX, chipY, chipW, chipH);
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.fillText(text, chipX + padX, chipY + chipH - padY);

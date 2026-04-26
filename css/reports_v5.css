@@ -670,10 +670,17 @@
   display:grid;
   gap:18px;
 }
+.homeMetricDetail .reportsMetricChartsStack{
+  gap:20px;
+  padding-bottom:calc(10px + var(--bottom-overlay-gap, 10px));
+}
 .homeMetricChartBlock{
   margin-top:0;
   padding-top:16px;
   border-top:1px solid rgba(126,200,255,.14);
+}
+.homeMetricChartStory{
+  padding:2px 0 4px;
 }
 .homeMetricChartStory .homeMetricChartTitle{
   margin-top:0;
@@ -682,15 +689,40 @@
   line-height:1.24;
   letter-spacing:.08px;
 }
+.homeMetricChartStory .chart{
+  margin-top:12px;
+  border-radius:16px;
+  border:1px solid rgba(126,200,255,.2);
+  background:linear-gradient(180deg,rgba(126,200,255,.08),rgba(126,200,255,.03));
+}
 .homeMetricChartStory .homeMetricChartSupport{
-  margin-top:4px;
+  margin-top:5px;
   color:#c4d9ef;
+  line-height:1.42;
 }
 .homeMetricChartStory .homeMetricChartContext.chartContext{
-  margin-top:3px;
+  margin-top:5px;
+  font-size:12px;
+  line-height:1.42;
+  color:#cde2f8;
 }
 .homeMetricChartStory .homeMetricChartEmpty{
-  margin-top:8px;
+  margin-top:11px;
+  padding:11px 12px;
+  border-radius:12px;
+  border-color:rgba(126,200,255,.28);
+  color:#cee6fb;
+  background:rgba(126,200,255,.08);
+}
+.homeMetricChartStory .homeMetricChartEmpty::before{
+  content:"Chart waiting for enough points";
+  display:block;
+  margin-bottom:3px;
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-weight:800;
+  color:#9fcef2;
 }
 .homeMetricInsight{
   margin-top:21px;
@@ -720,7 +752,12 @@
   .reportsMetricHeroWrap{padding-top:12px}
   .reportsMetricCompare{padding-left:12px}
   .reportsMetricChartsStack{margin-top:20px;gap:16px}
+  .homeMetricDetail .reportsMetricChartsStack{gap:17px;padding-bottom:calc(8px + var(--bottom-overlay-gap, 10px))}
   .reportsMetricChartBlock,.homeMetricChartBlock{padding-top:14px;padding-bottom:2px}
+  .homeMetricChartStory .chart{margin-top:11px}
+  .homeMetricChartStory .homeMetricChartTitle{font-size:16px}
+  .homeMetricChartStory .homeMetricChartSupport{font-size:11.5px}
+  .homeMetricChartStory .homeMetricChartContext.chartContext{font-size:11.5px}
   .reportsMetricInsight,.homeMetricInsight{margin-top:19px;padding-top:15px}
   .homeMetricCompareText{font-size:12.5px;line-height:1.5}
   .homeMetricSupportMeta{font-size:10px;line-height:1.34}
@@ -778,6 +815,15 @@
 :root[data-theme="light"] .homeMetricTitleFormula--secondary{color:#5f6d89;}
 :root[data-theme="light"] .homeMetricMetaItem{border-color:rgba(37,53,92,.18);background:rgba(37,53,92,.06);}
 :root[data-theme="light"] .homeMetricMetaLabel{color:#5f6d89;}
+:root[data-theme="light"] .homeMetricChartStory .chart{border-color:rgba(37,53,92,.14);background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(232,241,255,.58));}
+:root[data-theme="light"] .homeMetricChartStory .homeMetricChartSupport,
+:root[data-theme="light"] .homeMetricChartStory .homeMetricChartContext.chartContext{color:#4d5f7f;}
+:root[data-theme="light"] .homeMetricChartStory .homeMetricChartEmpty{
+  border-color:rgba(37,53,92,.2);
+  background:rgba(37,53,92,.05);
+  color:#526384;
+}
+:root[data-theme="light"] .homeMetricChartStory .homeMetricChartEmpty::before{color:#5d7091;}
 :root[data-theme="light"] .homeMetricMetaValue{color:#344054;}
 :root[data-theme="light"] .reportsMiniPreviewBar,
 :root[data-theme="light"] .reportsCompareBarTrack{background:rgba(37,53,92,.12);}
