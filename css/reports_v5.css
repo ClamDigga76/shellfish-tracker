@@ -2,7 +2,10 @@
 .reportsTransitionRoot.is-ready{opacity:1;transform:translateY(0) scale(1)}
 .reportsTransitionRoot.is-leaving{opacity:0;transform:translateY(-6px) scale(.992);pointer-events:none}
 .reportsTransitionRoot--detail{margin-top:0}
-.homeMetricOnlyShell{padding-top:8px}
+.homeMetricOnlyShell{
+  padding-top:8px;
+  padding-bottom:calc(18px + var(--tabbar-total-h, 0px) + var(--bottom-overlay-h, 0px) + var(--bottom-overlay-gap, 10px));
+}
 .chart{transition:opacity var(--motion-duration-screen, 180ms) var(--motion-ease-soft, ease),transform var(--motion-duration-screen, 180ms) var(--motion-ease-standard, cubic-bezier(.22,.61,.36,1));transform-origin:center bottom}
 @media (prefers-reduced-motion: reduce){
   .reportsTransitionRoot,.chart{transition:none;transform:none;opacity:1}
