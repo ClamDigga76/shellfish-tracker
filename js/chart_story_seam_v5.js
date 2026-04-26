@@ -15,8 +15,8 @@ export function createChartStorySeam({ escapeHtml }) {
     contextClass = "chartContext",
     height = 256,
     cardTag = "article",
-    cardClass = "card chartCard",
-    emptyClass = "reportsChartEmpty",
+    cardClass = "card chartCard chartCard--standard",
+    emptyClass = "reportsChartEmpty reportsChartEmpty--standard",
     emptyMessage = DEFAULT_EMPTY_MESSAGE
   }) {
     return `
@@ -39,8 +39,8 @@ export function createChartStorySeam({ escapeHtml }) {
     context,
     height = 210,
     cardTag = "div",
-    cardClass = "chartCard",
-    emptyClass = "reportsChartEmpty",
+    cardClass = "chartCard chartCard--standard",
+    emptyClass = "reportsChartEmpty reportsChartEmpty--standard",
     emptyMessage = DEFAULT_EMPTY_MESSAGE
   }) {
     const tone = String(takeaway?.tone || "steady");

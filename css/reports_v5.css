@@ -361,33 +361,16 @@
 .homeInsightsChartStack{gap:8px}
 .homeInsightsChartStack .homeInsightsChartCard{
   padding:11px 0 13px;
-  background:transparent;
-  border:0;
-  border-radius:0;
-  box-shadow:none;
 }
 .homeInsightsChartStack .homeInsightsChartCard + .homeInsightsChartCard{
   border-top:1px solid rgba(255,255,255,.07);
 }
 .homeInsightsChartStack .homeInsightsChartCard .chart{
   margin-top:10px;
-  border:0;
-  border-radius:0;
-  background:transparent;
 }
 .homeInsightsChartExplanation{margin:5px 0 0;font-size:12px;line-height:1.38;color:#aab5c8;font-weight:640}
 .homeInsightsChartCard .chartContext{margin-top:4px}
-.homeInsightsChartEmpty{
-  margin-top:10px;
-  padding:10px 12px;
-  border:1px dashed rgba(255,255,255,.14);
-  border-radius:10px;
-  font-size:12px;
-  line-height:1.35;
-  color:#b4bfd2;
-  background:rgba(255,255,255,.03);
-}
-.reportsChartEmpty{
+.reportsChartEmpty,.reportsChartEmpty--standard,.homeInsightsChartEmpty{
   margin-top:10px;
   padding:10px 12px;
   border:1px dashed rgba(255,255,255,.14);
@@ -691,9 +674,6 @@
 }
 .homeMetricChartStory .chart{
   margin-top:12px;
-  border-radius:16px;
-  border:1px solid rgba(126,200,255,.2);
-  background:linear-gradient(180deg,rgba(126,200,255,.08),rgba(126,200,255,.03));
 }
 .homeMetricChartStory .homeMetricChartSupport{
   margin-top:5px;
@@ -709,10 +689,6 @@
 .homeMetricChartStory .homeMetricChartEmpty{
   margin-top:11px;
   padding:11px 12px;
-  border-radius:12px;
-  border-color:rgba(126,200,255,.28);
-  color:#cee6fb;
-  background:rgba(126,200,255,.08);
 }
 .homeMetricChartStory .homeMetricChartEmpty::before{
   content:"Chart waiting for enough points";
@@ -818,11 +794,6 @@
 :root[data-theme="light"] .homeMetricChartStory .chart{border-color:rgba(37,53,92,.14);background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(232,241,255,.58));}
 :root[data-theme="light"] .homeMetricChartStory .homeMetricChartSupport,
 :root[data-theme="light"] .homeMetricChartStory .homeMetricChartContext.chartContext{color:#4d5f7f;}
-:root[data-theme="light"] .homeMetricChartStory .homeMetricChartEmpty{
-  border-color:rgba(37,53,92,.2);
-  background:rgba(37,53,92,.05);
-  color:#526384;
-}
 :root[data-theme="light"] .homeMetricChartStory .homeMetricChartEmpty::before{color:#5d7091;}
 :root[data-theme="light"] .homeMetricMetaValue{color:#344054;}
 :root[data-theme="light"] .reportsMiniPreviewBar,
