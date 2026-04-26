@@ -252,38 +252,66 @@ export function createReportsOverviewSectionsSeam(deps){
     ].join("");
   }
 
+  const HIGH_VALUE_DRIVERS_GROUPS = Object.freeze([
+    {
+      label: "Area Drivers",
+      chartIds: ["amountByArea", "poundsByArea", "amountPerTripByArea", "poundsPerTripByArea"]
+    },
+    {
+      label: "Dealer Drivers",
+      chartIds: ["amountByDealer", "pplByDealer"]
+    },
+    {
+      label: "Rate Drivers",
+      chartIds: ["pplByArea"]
+    },
+    {
+      label: "Monthly Context",
+      chartIds: ["amountByMonth", "poundsByMonth", "pplByMonth", "amountPerTripByMonth", "poundsPerTripByMonth"]
+    }
+  ]);
+
   function buildHighValueChartDeckManifest(){
-    return HOME_SHARED_CHART_IDS.map((chartId)=> {
-      const definition = getHomeSharedChartDefinition(chartId) || {};
-      return {
-        chartId,
-        canvasId: `reportsHighValue${chartId.charAt(0).toUpperCase()}${chartId.slice(1)}`,
-        title: definition.title || "Chart",
-        explanation: definition.explanation || ""
-      };
-    });
+    const validChartIds = new Set(HOME_SHARED_CHART_IDS);
+    return HIGH_VALUE_DRIVERS_GROUPS.map((group)=> ({
+      label: group.label,
+      charts: group.chartIds
+        .filter((chartId)=> validChartIds.has(chartId))
+        .map((chartId)=> {
+          const definition = getHomeSharedChartDefinition(chartId) || {};
+          return {
+            chartId,
+            canvasId: `reportsHighValue${chartId.charAt(0).toUpperCase()}${chartId.slice(1)}`,
+            title: definition.title || "Chart",
+            explanation: definition.explanation || ""
+          };
+        })
+    })).filter((group)=> group.charts.length);
   }
 
   function renderHighValueSection(){
-    const chartItems = buildHighValueChartDeckManifest();
+    const chartGroups = buildHighValueChartDeckManifest();
     return reportsSection({
-      title: "High Value",
-      intro: "Curated high-signal chart deck.",
+      title: "High Value Drivers",
+      intro: "See which areas, dealers, rates, and productivity patterns are driving value in the active Reports filters.",
       body: `<div class="reportsHeroCard homeInsightsHero">
-        <div class="reportsHeroEyebrow">High Value deck</div>
-        <h2 class="reportsHeroHeadline">Decision support for your active Reports filters</h2>
-        <p class="reportsHeroSub">This section carries the curated deck from Home and runs it directly from Reports context.</p>
+        <div class="reportsHeroEyebrow">High Value Drivers deck</div>
+        <h2 class="reportsHeroHeadline">Decision support for your active Reports filters.</h2>
+        <p class="reportsHeroSub">Use this deck to spot where money, pounds, rate, and productivity are coming from.</p>
       </div>
       <div class="reportsChartsStack homeInsightsChartStack">
-        ${chartItems.map(({ canvasId, title, explanation })=> chartStorySeam.renderChartStoryCard({
-          mode: "lean",
-          canvasId,
-          title,
-          explanation,
-          cardTag: "article",
-          cardClass: "chartCard chartCard--standard homeInsightsChartCard",
-          emptyClass: "reportsChartEmpty reportsChartEmpty--standard homeInsightsChartEmpty"
-        })).join("")}
+        ${chartGroups.map(({ label, charts })=> `
+          <div class="muted small">${escapeHtml(label)}</div>
+          ${charts.map(({ canvasId, title, explanation })=> chartStorySeam.renderChartStoryCard({
+            mode: "lean",
+            canvasId,
+            title,
+            explanation,
+            cardTag: "article",
+            cardClass: "chartCard chartCard--standard homeInsightsChartCard",
+            emptyClass: "reportsChartEmpty reportsChartEmpty--standard homeInsightsChartEmpty"
+          })).join("")}
+        `).join("")}
       </div>`,
       extraClass: "reportsSection--high-value"
     });
