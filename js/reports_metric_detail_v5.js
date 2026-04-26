@@ -876,12 +876,23 @@ export function createReportsMetricDetailSeam(deps){
       const chartDefs = configuredCharts.length
         ? configuredCharts
         : [{ key: homeFreeConfig?.primaryChartKey, title: fallbackTitle, context: fallbackContext }];
+      const metricPayload = compareFoundation?.metrics?.[targetMetricKey] || null;
+      const hasRealComparablePeriod = compareFoundation?.period?.comparable === true;
+      const isHomeCompareSuppressed = compareFoundation?.period?.suppressed === true || metricPayload?.suppressed === true;
       return chartDefs
         .map((chartDef, index)=> {
           const chartKey = String(chartDef?.key || "").trim();
           if(!chartKey) return null;
           const chartModel = detailCharts?.[chartKey] || null;
           if(!isUsableHomeChartModel(chartModel)) return null;
+          const isCompareBars = String(chartModel?.chartType || "").toLowerCase() === "compare-bars";
+          if(isCompareBars && (!hasRealComparablePeriod || isHomeCompareSuppressed)) return null;
+          const resolvedMetricKey = String(
+            chartModel?.metricKey
+              || chartDef?.metricKey
+              || targetMetricKey
+              || ""
+          ).trim();
           return {
             title: String(chartDef?.title || fallbackTitle || "Chart"),
             explanation: index === 0 ? String(homeFreeConfig?.helperLine || "") : "",
@@ -890,7 +901,7 @@ export function createReportsMetricDetailSeam(deps){
               ? HOME_PRIMARY_CANVAS_BY_METRIC[targetMetricKey]
               : `c_${targetMetricKey}_home_${index + 1}`,
             chartModel,
-            metricKey: targetMetricKey
+            metricKey: resolvedMetricKey || String(targetMetricKey || "")
           };
         })
         .filter(Boolean);
