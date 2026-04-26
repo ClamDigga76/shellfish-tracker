@@ -11,7 +11,13 @@
   .reportsTransitionRoot,.chart{transition:none;transform:none;opacity:1}
 }
 
-.chart{width:100%;max-width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.012)}
+.chart{
+  width:100%;
+  max-width:100%;
+  border-radius:14px;
+  border:1px solid rgba(173,196,233,.14);
+  background:linear-gradient(180deg,rgba(12,20,34,.96),rgba(8,14,25,.97));
+}
 .hlHdr{
   font-size:13px;
   font-weight:800;
@@ -244,11 +250,11 @@
   .reportsHighlightAction{margin-top:11px;padding-top:7px;font-size:10px}
 }
 
-.chartCard .chart{margin-top:10px}
+.chartCard .chart{margin-top:8px}
 
 
 .chartCard,.chartCard--standard{
-  padding:4px 0 2px;
+  padding:2px 0 0;
   border:0;
   border-radius:0;
   background:transparent;
@@ -263,9 +269,16 @@
 .chartHero{margin-top:8px;font-size:35px;line-height:1.01;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums;color:#fff}
 .chartContext{margin-top:5px;font-size:11px;line-height:1.34;color:#a8b3c6;font-weight:640}
 .chartContextValue{font-weight:760;color:#d6ddeb}
-.chartCard .chart{display:block;margin-top:12px;border-radius:16px;background:linear-gradient(180deg,rgba(23,33,50,.94),rgba(12,20,34,.95));border:1px solid rgba(176,194,224,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.chartCard .chart{
+  display:block;
+  margin-top:10px;
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(11,20,35,.97),rgba(8,14,25,.98));
+  border:1px solid rgba(173,196,233,.16);
+  box-shadow:none;
+}
 @media (max-width:430px){
-  .chartCard,.chartCard--standard{padding:3px 0 1px}
+  .chartCard,.chartCard--standard{padding:1px 0 0}
   .chartTakeaway{font-size:9px;padding:0 8px}
   .chartTitle{font-size:17px;margin-top:9px}
   .chartSubhead{font-size:10px}
@@ -369,7 +382,7 @@
   padding:0;
 }
 .homeInsightsChartStack .homeInsightsChartCard .chart{
-  margin-top:12px;
+  margin-top:10px;
 }
 .homeInsightsChartExplanation{margin:5px 0 0;font-size:12px;line-height:1.38;color:#aab5c8;font-weight:640}
 .homeInsightsChartCard .chartContext{margin-top:4px}
@@ -676,7 +689,7 @@
   letter-spacing:.08px;
 }
 .homeMetricChartStory .chart{
-  margin-top:12px;
+  margin-top:10px;
 }
 .homeMetricChartStory .homeMetricChartSupport{
   margin-top:5px;
@@ -733,7 +746,7 @@
   .reportsMetricChartsStack{margin-top:20px;gap:16px}
   .homeMetricDetail .reportsMetricChartsStack{gap:17px;padding-bottom:calc(8px + var(--bottom-overlay-gap, 10px))}
   .reportsMetricChartBlock,.homeMetricChartBlock{padding-top:14px;padding-bottom:2px}
-  .homeMetricChartStory .chart{margin-top:11px}
+  .homeMetricChartStory .chart{margin-top:9px}
   .homeMetricChartStory .homeMetricChartTitle{font-size:16px}
   .homeMetricChartStory .homeMetricChartSupport{font-size:11.5px}
   .homeMetricChartStory .homeMetricChartContext.chartContext{font-size:11.5px}
