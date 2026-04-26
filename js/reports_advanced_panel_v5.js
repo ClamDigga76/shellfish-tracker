@@ -108,7 +108,6 @@ export function createReportsAdvancedPanelSeam(deps){
           if(wantsCustomRange) state.reportsFilter.mode = "RANGE";
 
           saveState();
-          showToast("Filter updated");
           renderReports();
           return;
         }
@@ -129,7 +128,6 @@ export function createReportsAdvancedPanelSeam(deps){
         if(wantsCustomRange) state.reportsFilter.mode = "RANGE";
 
         saveState();
-        showToast("Filter updated");
         renderReports();
       };
     }

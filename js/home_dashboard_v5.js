@@ -486,11 +486,11 @@ export function createHomeDashboardRenderer({
         const isFuturePaidPreview = nextMode === "LAST_YEAR" || nextMode === "ALL" || nextMode === "RANGE";
         const filterToastMessage = isFuturePaidPreview
           ? "Builder mode: future Paid feature — unlocked for testing."
-          : "Filter updated";
+          : "";
         state.homeFilter.mode = nextMode;
         if(state.homeFilter.mode !== "RANGE") state.homeFilter.customRangeCorrectionMessages = [];
         saveState();
-        showToast(filterToastMessage);
+        if (filterToastMessage) showToast(filterToastMessage);
         renderHome();
       });
     });

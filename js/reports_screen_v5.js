@@ -211,7 +211,6 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       showToast,
       queueReportsFocusIntent,
       renderReportsScreen,
-      includeToast: true
     });
 
     reportsBindingsSeam.bindReportsAdvancedPanelWrapper({
