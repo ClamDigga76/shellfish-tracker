@@ -214,9 +214,9 @@
 
 /* Settings grouped-list polish (P3) */
 .settingsGroupBlock{margin-bottom:var(--card-stack-gap)}
-.settingsJumpNavCard{margin-top:var(--section-gap-tight);margin-bottom:var(--section-gap-tight);padding:10px 11px}
-.settingsJumpHub{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.settingsJumpChip{width:100%;justify-content:center;white-space:normal}
+.settingsJumpNavCard{margin-top:var(--section-gap-tight);margin-bottom:var(--card-stack-gap);padding:9px 10px;border-color:rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(255,255,255,.045) 0%, rgba(255,255,255,.018) 100%)}
+.settingsJumpHub{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.settingsJumpChip{width:100%;justify-content:center;white-space:normal;min-height:34px;padding:7px 10px;border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.03);font-size:12px;font-weight:720;color:var(--text-muted-strong)}
 .settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px var(--card-title-gap)}
 .settingsSectionCard.settingsGroupedCard{margin-bottom:0;padding:0;overflow:hidden}
 .settingsAccordionCard{border-radius:16px}
@@ -227,13 +227,13 @@
 .settingsAccordionMeta{min-width:0;flex:1;display:grid;gap:3px}
 .settingsAccordionSummary .settingsGroupLabel{margin:0}
 .settingsAccordionTitle{font-size:14px;font-weight:840;line-height:1.2}
-.settingsAccordionStatus{line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.settingsAccordionStatus{line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--text-muted-strong)}
 .settingsAccordionRight{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 128px;min-width:128px}
-.settingsAccordionPill{display:inline-flex;align-items:center;justify-content:center;max-width:84px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);font-size:10px;font-weight:830;letter-spacing:.03em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(8,12,20,.3);color:var(--text-muted-strong)}
+.settingsAccordionPill{display:inline-flex;align-items:center;justify-content:center;max-width:84px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);font-size:10px;font-weight:830;letter-spacing:.03em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(8,12,20,.26);color:var(--text-muted-strong)}
 .settingsAccordionChevron{display:inline-flex;align-items:center;justify-content:center;flex:0 0 28px;width:28px;height:28px;min-width:28px;min-height:28px;border-radius:999px;border:1px solid var(--line);font-size:13px;line-height:1;color:var(--text-muted-strong);background:rgba(8,12,20,.3);transition:transform var(--motion-duration-fast) var(--motion-ease-standard), background var(--motion-duration-fast) var(--motion-ease-standard)}
 .settingsAccordionCard[open] .settingsAccordionChevron{transform:rotate(180deg);background:rgba(255,255,255,.08)}
 .settingsAccordionCard:not([open]) .settingsRow{display:none}
-.settingsRow{padding:13px var(--card-pad-x)}
+.settingsRow{padding:12px var(--card-pad-x)}
 .settingsRow + .settingsRow{border-top:1px solid var(--line)}
 .settingsRow--split{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .settingsRow--field{padding-top:11px;padding-bottom:11px}
@@ -360,7 +360,7 @@
   cursor:default;
 }
 .homeScreenShell .homeSection{
-  margin-bottom:var(--section-gap-tight);
+  margin-bottom:var(--card-stack-gap);
 }
 .homeScreenShell .homeSection:last-child{
   margin-bottom:0;
@@ -371,6 +371,12 @@
   border:none;
   background:none;
   box-shadow:none;
+}
+.homeScreenShell .homeFilterSection{
+  margin-bottom:var(--card-stack-gap);
+}
+.homeScreenShell .homeKpiSection{
+  margin-bottom:var(--card-stack-gap);
 }
 .homeInsightsEntryRow{
   display:flex;
@@ -423,6 +429,7 @@
   border:1px solid rgba(126,200,255,.22);
   background:linear-gradient(180deg, rgba(47,109,246,.16) 0%, rgba(20,29,47,.66) 62%, rgba(10,15,24,.52) 100%);
   box-shadow:0 12px 28px rgba(0,0,0,.18);
+  margin-bottom:0;
 }
 .homeScreenShell .homeLastTripShell{
   padding:13px 14px 14px;
@@ -445,7 +452,7 @@
 }
 .homeLastTripHeaderRow{
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   justify-content:space-between;
   gap:10px;
 }
@@ -461,12 +468,17 @@
   white-space:nowrap;
 }
 .homeLastTripEditBtn{
-  padding:4px 9px;
+  padding:2px 7px;
   min-height:0;
-  font-size:11px;
+  font-size:10px;
   line-height:1.2;
-  letter-spacing:.04em;
+  letter-spacing:.03em;
   white-space:nowrap;
+  border-color:rgba(255,255,255,.14);
+  background:rgba(8,12,20,.22);
+  color:var(--text-muted-strong);
+  font-weight:700;
+  box-shadow:none;
 }
 .homeLastTripContext{
   margin-top:7px;
@@ -714,31 +726,31 @@
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:6px;
   padding:6px;
-  border:1px solid rgba(176,194,224,.17);
+  border:1px solid rgba(176,194,224,.13);
   border-radius:13px;
-  background:linear-gradient(180deg, rgba(32,45,66,.24) 0%, rgba(20,29,45,.16) 100%);
+  background:linear-gradient(180deg, rgba(32,45,66,.18) 0%, rgba(20,29,45,.1) 100%);
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn{
   min-height:34px;
   padding:6px 7px;
   border-radius:9px;
-  border-color:rgba(109,117,132,.48);
-  background:linear-gradient(180deg, rgba(70,79,96,.66) 0%, rgba(56,63,79,.84) 100%);
-  color:rgba(210,219,235,.62);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  border-color:rgba(109,117,132,.32);
+  background:linear-gradient(180deg, rgba(66,76,95,.42) 0%, rgba(51,58,74,.56) 100%);
+  color:rgba(210,219,235,.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
   font-size:12px;
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn.on,
 .homeScreenShell .timeframeUnifiedControl .segBtn.is-selected{
   color:rgba(235,246,255,.98);
   background:
-    linear-gradient(180deg, rgba(92,141,221,.52) 0%, rgba(50,71,127,.96) 64%, rgba(42,60,110,.98) 100%);
-  border-color:rgba(114,144,220,.96);
+    linear-gradient(180deg, rgba(92,141,221,.58) 0%, rgba(50,71,127,.9) 64%, rgba(42,60,110,.95) 100%);
+  border-color:rgba(114,144,220,.86);
   box-shadow:
     inset 0 1px 0 rgba(216,232,255,.28),
     inset 0 -1px 0 rgba(20,33,63,.36),
-    0 0 0 1px rgba(114,144,220,.28),
-    0 0 14px rgba(64,143,244,.34);
+    0 0 0 1px rgba(114,144,220,.22),
+    0 0 10px rgba(64,143,244,.24);
 }
 .homeScreenShell .timeframeUnifiedControl.homeTimeframeRowQuick{
   grid-template-columns:repeat(4,minmax(0,1fr));
@@ -757,6 +769,9 @@
   gap:1px;
   text-align:center;
   line-height:1.08;
+}
+.homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip:not(.on):not(.is-selected){
+  color:rgba(210,219,235,.68);
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChipLocked{
   border-color:rgba(187,162,108,.56);
@@ -804,9 +819,9 @@
   margin-bottom:0;
 }
 .homeScreenShell .kpiCard{
-  border-color:rgba(255,255,255,.08);
-  background:rgba(255,255,255,.03);
-  box-shadow:none;
+  border-color:rgba(255,255,255,.11);
+  background:rgba(255,255,255,.04);
+  box-shadow:0 6px 14px rgba(0,0,0,.16);
 }
 .homeScreenShell .reportsHeroStat{
   border-color:rgba(255,255,255,.08);
