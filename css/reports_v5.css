@@ -112,58 +112,96 @@
   margin-top:0;
   display:flex;
   grid-template-columns:none;
-  gap:8px;
+  gap:7px;
   overflow-x:auto;
   overflow-y:hidden;
   flex-wrap:nowrap;
   scrollbar-width:none;
   -webkit-overflow-scrolling:touch;
-  padding:8px;
-  border:1px solid rgba(176,194,224,.24);
-  border-radius:16px;
-  background:linear-gradient(180deg, rgba(46,60,83,.34) 0%, rgba(24,34,52,.24) 100%);
+  padding:7px;
+  border:1px solid rgba(176,194,224,.16);
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(34,48,70,.2) 0%, rgba(21,30,47,.13) 100%);
 }
 .reportsPrimaryFilterBar::-webkit-scrollbar{display:none}
 .reportsTimeframeShell .reportsPrimaryFilterBar .reportsPrimaryFilterChip{
   flex:0 0 auto;
   width:auto;
   min-width:max-content;
-  min-height:41px;
-  padding:8px 12px;
-  border-color:rgba(109,117,132,.66);
-  background:linear-gradient(180deg, rgba(78,88,106,.78) 0%, rgba(63,71,87,.94) 100%);
-  color:rgba(205,214,231,.70);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  min-height:38px;
+  padding:8px 11px;
+  border-radius:10px;
+  border-color:rgba(109,117,132,.38);
+  background:linear-gradient(180deg, rgba(66,76,95,.5) 0%, rgba(51,58,74,.64) 100%);
+  color:rgba(210,219,235,.76);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  font-size:12px;
 }
 .reportsTimeframeShell .reportsPrimaryFilterBar .reportsPrimaryFilterChip.on,
 .reportsTimeframeShell .reportsPrimaryFilterBar .reportsPrimaryFilterChip.is-selected{
   color:rgba(235,246,255,.98);
   background:
-    linear-gradient(180deg, rgba(92,141,221,.52) 0%, rgba(50,71,127,.96) 64%, rgba(42,60,110,.98) 100%);
-  border-color:rgba(114,144,220,.96);
+    linear-gradient(180deg, rgba(92,141,221,.56) 0%, rgba(50,71,127,.9) 64%, rgba(42,60,110,.95) 100%);
+  border-color:rgba(114,144,220,.86);
   box-shadow:
     inset 0 1px 0 rgba(216,232,255,.28),
     inset 0 -1px 0 rgba(20,33,63,.36),
-    0 0 0 1px rgba(114,144,220,.28),
-    0 0 14px rgba(64,143,244,.34);
+    0 0 0 1px rgba(114,144,220,.24),
+    0 0 10px rgba(64,143,244,.25);
 }
 .reportsTimeframeShell .reportsPrimaryFilterBar .reportsPrimaryFilterChip:focus-visible{
   outline:2px solid rgba(120,184,255,.75);
   outline-offset:2px;
 }
-.repAdvToggle{min-width:0;padding-inline:12px}
-.reportsAdvancedShell{margin-top:8px;display:grid;gap:7px}
+.repAdvToggle{
+  min-width:0;
+  width:100%;
+  min-height:38px;
+  padding:8px 11px;
+  border-radius:10px;
+  border-color:rgba(109,117,132,.38);
+  background:linear-gradient(180deg, rgba(66,76,95,.5) 0%, rgba(51,58,74,.64) 100%);
+  color:rgba(210,219,235,.76);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.repAdvToggle.on,
+.repAdvToggle.is-selected{
+  color:rgba(235,246,255,.98);
+  background:
+    linear-gradient(180deg, rgba(92,141,221,.56) 0%, rgba(50,71,127,.9) 64%, rgba(42,60,110,.95) 100%);
+  border-color:rgba(114,144,220,.86);
+  box-shadow:
+    inset 0 1px 0 rgba(216,232,255,.28),
+    inset 0 -1px 0 rgba(20,33,63,.36),
+    0 0 0 1px rgba(114,144,220,.24),
+    0 0 10px rgba(64,143,244,.25);
+}
+.reportsAdvancedShell{margin-top:7px;display:grid;gap:8px}
 .reportsAdvancedDisclosure{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left}
 .reportsAdvancedDisclosureTitle{font-weight:800}
 .reportsAdvancedDisclosureState{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .reportsAdvancedDisclosure.on .reportsAdvancedDisclosureState,
 .reportsAdvancedDisclosure.is-selected .reportsAdvancedDisclosureState{color:currentColor}
-.reportsActiveFilterSummary{display:grid;gap:5px;padding:6px 2px 1px}
-.reportsRangeCorrectionSummary{display:grid;gap:4px;padding:2px 2px 0}
+.reportsActiveFilterSummary{display:grid;gap:6px;padding:4px 1px 0}
+.reportsRangeCorrectionSummary{display:grid;gap:4px;padding:3px 2px 0}
 .reportsActiveFilterSummaryTitle{font-size:10px;font-weight:820;letter-spacing:.08em;text-transform:uppercase;color:#9ea8bc}
-.reportsActiveFilterChipRow{display:flex;flex-wrap:wrap;gap:6px}
-.reportsActiveFilterChip{display:inline-flex;align-items:center;min-height:22px;padding:0 9px;border-radius:999px;font-size:11px;line-height:1.2;font-weight:730;color:#e6edf8;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12)}
-.reportsAdvancedInlinePanel{display:grid;gap:11px;padding:1px 0 2px}
+.reportsActiveFilterChipRow{display:flex;flex-wrap:wrap;gap:7px}
+.reportsActiveFilterChip{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:0 10px;
+  border-radius:999px;
+  font-size:11px;
+  line-height:1.2;
+  font-weight:760;
+  letter-spacing:.01em;
+  color:#eaf1ff;
+  background:linear-gradient(180deg, rgba(102,121,154,.28) 0%, rgba(72,87,114,.28) 100%);
+  border:1px solid rgba(151,176,220,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+}
+.reportsAdvancedInlinePanel{display:grid;gap:11px;padding:3px 0 2px}
 .reportsAdvancedShell .sep{margin-top:0}
 .reportsAdvancedDivider{opacity:.6}
 .reportsAdvancedGroup{display:grid;gap:6px}
@@ -405,14 +443,14 @@
   .reportsTimeframeShell{margin-top:0}
   .reportsNavShell{margin-top:7px}
   .reportsShellRow--topline{margin-bottom:6px}
-  .reportsTimeframeShell .timeframeUnifiedControl.reportsPrimaryFilterBar{gap:7px;padding:7px}
-  .reportsTimeframeShell .reportsPrimaryFilterBar .reportsPrimaryFilterChip{min-height:41px;padding:8px 11px}
+  .reportsTimeframeShell .timeframeUnifiedControl.reportsPrimaryFilterBar{gap:6px;padding:6px}
+  .reportsTimeframeShell .reportsPrimaryFilterBar .reportsPrimaryFilterChip{min-height:37px;padding:8px 10px}
   .reportsSectionSwitch{gap:6px;padding-top:5px}
   .reportsSectionChip{min-height:38px;padding:8px 12px}
-  .repAdvToggle{width:100%}
-  .reportsAdvancedDisclosureState{font-size:10px}
+  .repAdvToggle{width:100%;min-height:37px}
+  .reportsAdvancedDisclosureState{font-size:9px}
   .reportsAdvancedShell{margin-top:7px}
-  .reportsActiveFilterChip{font-size:10px}
+  .reportsActiveFilterChip{font-size:10px;min-height:23px;padding:0 9px}
   .reportsAdvancedInlinePanel{gap:10px}
   .reportsMetricCompareText .reportsPercentEmphasis,.homeMetricCompareText .reportsPercentEmphasis{font-size:1.08em}
   .reportsTopShell{padding-bottom:15px}
@@ -833,8 +871,15 @@
 :root[data-theme="light"] .reportsCompareRow--support.tone-steady .reportsPercentEmphasis{color:#344054;background:rgba(148,163,184,.2);box-shadow:inset 0 0 0 1px rgba(100,116,139,.2);}
 :root[data-theme="light"] .reportsNavLabel{color:rgba(24,35,59,.62);}
 :root[data-theme="light"] .reportsTopLabel{color:rgba(24,35,59,.62);}
+:root[data-theme="light"] .reportsTimeframeShell .timeframeUnifiedControl.reportsPrimaryFilterBar{border-color:rgba(37,53,92,.14);background:linear-gradient(180deg, rgba(255,255,255,.8) 0%, rgba(240,246,255,.7) 100%);}
+:root[data-theme="light"] .reportsTimeframeShell .reportsPrimaryFilterBar .reportsPrimaryFilterChip,
+:root[data-theme="light"] .repAdvToggle{color:rgba(35,51,84,.82);border-color:rgba(37,53,92,.2);background:linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(235,242,255,.82) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.72);}
+:root[data-theme="light"] .reportsTimeframeShell .reportsPrimaryFilterBar .reportsPrimaryFilterChip.on,
+:root[data-theme="light"] .reportsTimeframeShell .reportsPrimaryFilterBar .reportsPrimaryFilterChip.is-selected,
+:root[data-theme="light"] .repAdvToggle.on,
+:root[data-theme="light"] .repAdvToggle.is-selected{color:#f8fbff;border-color:rgba(47,109,246,.66);background:linear-gradient(180deg, rgba(99,151,255,.95) 0%, rgba(54,106,214,.94) 63%, rgba(38,78,168,.95) 100%);box-shadow:inset 0 1px 0 rgba(225,237,255,.58),inset 0 -1px 0 rgba(24,50,112,.4),0 0 0 1px rgba(47,109,246,.2),0 0 10px rgba(47,109,246,.22);}
 :root[data-theme="light"] .reportsAdvancedDisclosureState{color:rgba(24,35,59,.56);}
-:root[data-theme="light"] .reportsActiveFilterChip{color:#1f2d44;background:rgba(37,53,92,.08);border-color:rgba(37,53,92,.14);}
+:root[data-theme="light"] .reportsActiveFilterChip{color:#1f2d44;background:linear-gradient(180deg, rgba(47,109,246,.12) 0%, rgba(37,53,92,.08) 100%);border-color:rgba(47,109,246,.24);}
 :root[data-theme="light"] .reportsHeroCard{background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(237,243,255,.94));border-color:rgba(37,53,92,.14);box-shadow:0 12px 26px rgba(28,46,89,.10);}
 :root[data-theme="light"] .reportsHeroStat{border-color:rgba(37,53,92,.12);background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(241,246,255,.82));}
 :root[data-theme="light"] .reportsHeroStat--tap:hover{border-color:rgba(47,109,246,.32);background:rgba(47,109,246,.08);}
