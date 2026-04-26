@@ -23,6 +23,7 @@ export function createReportsMetricRouteSeam(deps){
     if(normalized === "ALL") return "all";
     if(normalized === "MONTH" || normalized === "THIS_MONTH") return "mtd";
     if(normalized === "LAST_MONTH") return "last_month";
+    if(normalized === "LAST_YEAR") return "last_year";
     if(normalized === "7D" || normalized === "LAST_7_DAYS") return "7d";
     if(normalized === "30D") return "30d";
     if(normalized === "90D") return "90d";
@@ -82,6 +83,7 @@ export function createReportsMetricRouteSeam(deps){
     }
     if(fMode === "THIS_MONTH") return "This Month";
     if(fMode === "LAST_MONTH") return "Last Month";
+    if(fMode === "LAST_YEAR") return "Previous Year";
     if(fMode === "90D") return "Last 3 Months";
     if(fMode === "ALL") return "All Time";
     return "YTD";

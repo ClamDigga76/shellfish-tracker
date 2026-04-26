@@ -185,6 +185,68 @@ assertRepoCheck(
   'reports percent emphasis regex matches integer and decimal percent tokens'
 );
 
+
+const unifiedFiltersModule = await import('../js/unified_filters_seam_v5.js');
+const reportsMetricRouteModule = await import('../js/reports_metric_route_seam_v5.js');
+const tripsUnifiedFilterBridgeModule = await import('../js/trips_unified_filter_bridge_v5.js');
+const { createUnifiedFiltersSeam } = unifiedFiltersModule;
+const { createReportsMetricRouteSeam } = reportsMetricRouteModule;
+const { createTripsUnifiedFilterBridge } = tripsUnifiedFilterBridgeModule;
+
+const unifiedSeamForRangeTruth = createUnifiedFiltersSeam({
+  getState: () => ({}),
+  parseUsDateToISODate: (value) => String(value || ''),
+  parseReportDateToISO: (value) => String(value || ''),
+  isoToday: () => '2026-04-26',
+  ensureAreas: () => {},
+  resolveAreaValue: (value) => ({ canonicalName: String(value || '') }),
+  resolveTripArea: (trip) => ({ canonicalName: String(trip?.area || '') }),
+  normalizeTripRow: (trip) => trip,
+  canonicalizeTripArea: (trip) => trip,
+  isValidISODate: (iso) => /^\d{4}-\d{2}-\d{2}$/.test(String(iso || ''))
+});
+
+const lastYearRange = unifiedSeamForRangeTruth.resolveUnifiedRange({ range: 'last_year' });
+assertRepoCheck(lastYearRange.label === 'Previous Year', 'resolveUnifiedRange last_year label is Previous Year');
+assertRepoCheck(lastYearRange.fromISO === '2025-01-01' && lastYearRange.toISO === '2025-12-31', 'resolveUnifiedRange last_year uses previous calendar year bounds');
+const ytdRange = unifiedSeamForRangeTruth.resolveUnifiedRange({ range: 'ytd' });
+assertRepoCheck(ytdRange.label === 'YTD', 'resolveUnifiedRange ytd label remains YTD');
+assertRepoCheck(ytdRange.fromISO === '2026-01-01' && ytdRange.toISO === '2026-04-26', 'resolveUnifiedRange ytd bounds remain current year to today');
+
+const reportsRouteSeam = createReportsMetricRouteSeam({
+  parseReportDateToISO: (value) => String(value || ''),
+  resolveUnifiedRange: (filter) => unifiedSeamForRangeTruth.resolveUnifiedRange(filter),
+  formatDateDMY: (iso) => iso,
+  applyUnifiedTripFilter: (rows) => ({ rows: Array.isArray(rows) ? rows : [], range: { fromISO: '', toISO: '' } }),
+  buildUnifiedFilterFromReportsFilter: (rf) => ({ range: String(rf?.mode || '').toLowerCase(), fromISO: '', toISO: '' })
+});
+assertRepoCheck(reportsRouteSeam.mapHomeModeToUnifiedRange('LAST_YEAR') === 'last_year', 'mapHomeModeToUnifiedRange maps LAST_YEAR to last_year');
+assertRepoCheck(reportsRouteSeam.mapHomeModeToUnifiedRange('YTD') === 'ytd', 'mapHomeModeToUnifiedRange keeps YTD mapping');
+
+const tripsBridge = createTripsUnifiedFilterBridge({
+  ensureUnifiedFilters: () => {},
+  applyUnifiedTripFilter: (_rows, filter) => ({
+    rows: [],
+    range: filter?.range === 'last_year'
+      ? { fromISO: '2025-01-01', toISO: '2025-12-31' }
+      : { fromISO: '2026-01-01', toISO: '2026-04-26' },
+    transparency: { excludedQuarantinedCount: 0, quarantinedTotalCount: 0, hasExcludedQuarantined: false }
+  }),
+  resolveUnifiedRange: (filter) => unifiedSeamForRangeTruth.resolveUnifiedRange(filter),
+  getTripsNewestFirst: (rows) => rows,
+  resolveAreaValue: (value) => ({ canonicalName: String(value || '') })
+});
+const lastYearTripsResult = tripsBridge.getTripsFilteredRows({
+  trips: [],
+  filters: { active: { range: 'last_year', fromISO: '', toISO: '', dealer: 'all', area: 'all', species: 'all', text: '' } }
+});
+assertRepoCheck(lastYearTripsResult.range.label === 'Previous Year', 'Trips range label displays Previous Year for last_year');
+const ytdTripsResult = tripsBridge.getTripsFilteredRows({
+  trips: [],
+  filters: { active: { range: 'ytd', fromISO: '', toISO: '', dealer: 'all', area: 'all', species: 'all', text: '' } }
+});
+assertRepoCheck(ytdTripsResult.range.label === 'YTD', 'Trips range label keeps YTD for ytd');
+
 if (failed) {
   console.error('\nRepo quality checks failed.');
   process.exit(1);

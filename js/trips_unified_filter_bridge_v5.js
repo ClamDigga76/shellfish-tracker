@@ -24,6 +24,7 @@ export function createTripsUnifiedFilterBridge({
     const rangeMap = {
       "All Time": "All Time",
       "YTD": "YTD",
+      "Previous Year": "Previous Year",
       "Last 12 months": "Last 12 Months",
       "Last 90 days": "Last 90 Days",
       "Last 30 days": "Last 30 Days",
