@@ -435,7 +435,7 @@
 /* v572 Home Insights chart expansion + flattened chrome */
 .homeMetricDetail{
   margin-top:4px;
-  padding-bottom:calc(34px + var(--safeBottom, 0px));
+  padding-bottom:calc(20px + var(--tabbar-total-h, 0px) + var(--bottom-overlay-h, 0px) + var(--bottom-overlay-gap, 10px));
 }
 .homeMetricDetailCard{
   padding:16px 14px 20px;
@@ -692,7 +692,7 @@
 .homeMetricInsight{
   margin-top:21px;
   padding-top:16px;
-  padding-bottom:calc(22px + var(--safeBottom, 0px));
+  padding-bottom:calc(18px + var(--tabbar-total-h, 0px));
   font-size:13.5px;
   line-height:1.5;
 }
@@ -704,7 +704,7 @@
 .reportsMetricCompare,.homeMetricCompare{margin-top:0;padding-top:2px}
 .reportsMetricChartContext,.homeMetricChartContext{margin-top:5px;line-height:1.4}
 @media (max-width:430px){
-  .homeMetricDetail{padding-bottom:calc(34px + var(--safeBottom, 0px))}
+  .homeMetricDetail{padding-bottom:calc(20px + var(--tabbar-total-h, 0px) + var(--bottom-overlay-h, 0px) + var(--bottom-overlay-gap, 10px))}
   .homeMetricDetailCard{padding:14px 12px 16px;border-radius:18px}
   .reportsMetricBackBtn,.homeMetricBackBtn{margin-bottom:11px}
   .reportsMetricTitle,.homeMetricTitle{margin-top:7px}
