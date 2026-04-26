@@ -15,7 +15,7 @@ export function createChartStorySeam({ escapeHtml }) {
     contextClass = "chartContext",
     height = 256,
     cardTag = "article",
-    cardClass = "card chartCard chartCard--standard",
+    cardClass = "chartCard chartCard--standard",
     emptyClass = "reportsChartEmpty reportsChartEmpty--standard",
     emptyMessage = DEFAULT_EMPTY_MESSAGE
   }) {
