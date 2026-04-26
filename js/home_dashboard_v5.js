@@ -26,9 +26,7 @@ export function createHomeDashboardRenderer({
   renderHomeMetricDetail,
   getInstallSurfaceModel,
   runInstallAction,
-  renderStandardReadOnlyTripCard,
-  isFeatureAllowed,
-  entitlementFeatureKeys
+  renderStandardReadOnlyTripCard
 }) {
   const timeframeFilterControls = createTimeframeFilterControlsSeam({
     escapeHtml,
@@ -95,20 +93,40 @@ export function createHomeDashboardRenderer({
     const correctionMessages = Array.isArray(homeFilter.customRangeCorrectionMessages)
       ? homeFilter.customRangeCorrectionMessages
       : [];
-    const homePresetItems = timeframeFilterControls.HOME_PRESET_FILTER_ITEMS.map((item)=> {
-      if (String(item?.key || "").toUpperCase() !== "RANGE") return item;
-      return {
-        ...item,
-        label: "Custom Range"
-      };
-    });
+    const quickFilterByKey = new Map(
+      timeframeFilterControls.HOME_PRESET_FILTER_ITEMS.map((item)=> [String(item?.key || "").toUpperCase(), item])
+    );
+    const homeQuickItems = [
+      { key: "YTD", label: "YTD" },
+      { key: "MONTH", label: "This Month" },
+      { key: "LAST_MONTH", label: "Last Month" },
+      { key: "30D", label: "30 Days" }
+    ].map((item)=> ({ ...quickFilterByKey.get(String(item.key || "").toUpperCase()), ...item }));
+    const homeFuturePaidItems = [
+      { key: "LAST_YEAR", label: "Previous Year" },
+      { key: "ALL", label: "All Time" },
+      { key: "RANGE", label: "Custom" }
+    ].map((item)=> ({
+      ...quickFilterByKey.get(String(item.key || "").toUpperCase()),
+      ...item,
+      labelHtml: `<span class="timeframeChipMainLabelWithIcon"><span class="timeframeChipIcon" aria-hidden="true">🔒</span><span class="timeframeChipMainLabel">${escapeHtml(item.label)}</span></span>`
+    }));
     return `
       ${timeframeFilterControls.renderPresetChipRow({
-        items: homePresetItems,
+        items: homeQuickItems,
         activeKey: fMode,
         dataAttr: "data-hf",
         chipClass: "homeTimeframeChip",
+        groupClass: "homeTimeframeRow homeTimeframeRowQuick",
         ariaLabel: "Home timeframe filter"
+      })}
+      ${timeframeFilterControls.renderPresetChipRow({
+        items: homeFuturePaidItems,
+        activeKey: fMode,
+        dataAttr: "data-hf",
+        chipClass: "homeTimeframeChip homeTimeframeChipLocked",
+        groupClass: "homeTimeframeRow homeTimeframeRowLocked",
+        ariaLabel: "Home future paid filter preview"
       })}
       ${timeframeFilterControls.renderCustomRangeRow({
         mode: fMode,
@@ -465,13 +483,8 @@ export function createHomeDashboardRenderer({
       btn.addEventListener("click", () => {
         ensureHomeFilter();
         const nextMode = String(btn.getAttribute("data-hf") || "YTD").toUpperCase();
-        if (
-          nextMode === "RANGE"
-          && typeof isFeatureAllowed === "function"
-          && !isFeatureAllowed(entitlementFeatureKeys?.HOME_CUSTOM_RANGE)
-        ) {
-          showToast("🔒 Custom Range is a Paid feature. Upgrade to unlock.");
-        }
+        const isFuturePaidPreview = nextMode === "LAST_YEAR" || nextMode === "ALL" || nextMode === "RANGE";
+        if (isFuturePaidPreview) showToast("Builder mode: future Paid feature — unlocked for testing.");
         state.homeFilter.mode = nextMode;
         if(state.homeFilter.mode !== "RANGE") state.homeFilter.customRangeCorrectionMessages = [];
         saveState();
