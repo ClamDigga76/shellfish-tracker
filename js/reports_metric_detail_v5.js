@@ -616,19 +616,19 @@ export function createReportsMetricDetailSeam(deps){
       ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
       : String(compareSummary.text || "");
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
-    const renderHomeChartCard = (chart)=> chartStorySeam.renderChartStoryCard({
+    const renderSharedChartCard = ({ chart, forHome = false })=> chartStorySeam.renderChartStoryCard({
       mode: "lean",
       cardTag: "div",
-      cardClass: `${surfaceMode.detailChartClass} homeMetricChartStory`,
-      titleClass: "chartTitle homeMetricChartTitle",
-      explanationClass: "homeInsightsChartExplanation homeMetricChartSupport",
+      cardClass: `${surfaceMode.detailChartClass} chartCard chartCard--standard ${forHome ? "homeMetricChartStory" : "reportsMetricChartStory"}`.trim(),
+      titleClass: `chartTitle ${forHome ? "homeMetricChartTitle" : "reportsMetricChartTitle"}`.trim(),
+      explanationClass: `homeInsightsChartExplanation ${forHome ? "homeMetricChartSupport" : "reportsMetricChartSupport"}`.trim(),
       contextClass: `${surfaceMode.detailChartContextClass} chartContext`,
       title: chart.title,
       explanation: chart.explanation || "",
       context: chart.context || "",
       canvasId: chart.canvasId,
       height: 220,
-      emptyClass: "reportsChartEmpty homeMetricChartEmpty",
+      emptyClass: `reportsChartEmpty reportsChartEmpty--standard ${forHome ? "homeMetricChartEmpty" : "reportsMetricChartEmpty"}`.trim(),
       emptyMessage: chart.emptyMessage || "Not enough data in this range yet."
     });
     const renderStandardSupportCard = ()=> `
@@ -678,32 +678,28 @@ export function createReportsMetricDetailSeam(deps){
 
         <div class="reportsMetricChartsStack">
           ${viewModel.isHomeMetricDetail
-    ? renderHomeChartCard({
-      title: detailChartTitle,
-      explanation: meta.homeChartExplanation || "",
-      context: detailChartContext,
-      canvasId: meta.chartCanvasId
+    ? renderSharedChartCard({
+      forHome: true,
+      chart: {
+        title: detailChartTitle,
+        explanation: meta.homeChartExplanation || "",
+        context: detailChartContext,
+        canvasId: meta.chartCanvasId
+      }
     })
-    : `
-          <div class="${surfaceMode.detailChartClass}">
-            <b>${escapeHtml(detailChartTitle)}</b>
-            <div class="${surfaceMode.detailChartContextClass}">${escapeHtml(detailChartContext)}</div>
-            <canvas class="chart" id="${escapeHtml(meta.chartCanvasId)}" height="220"></canvas>
-            <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(meta.chartCanvasId)}" hidden>Not enough data in this range yet.</div>
-          </div>
-          `}
+    : renderSharedChartCard({
+      forHome: false,
+      chart: {
+        title: detailChartTitle,
+        context: detailChartContext,
+        canvasId: meta.chartCanvasId
+      }
+    })}
 
           ${secondaryCharts.map((chart)=> `
             ${viewModel.isHomeMetricDetail
-    ? renderHomeChartCard(chart)
-    : `
-            <div class="${surfaceMode.detailChartClass}">
-              <b>${escapeHtml(chart.title)}</b>
-              <div class="${surfaceMode.detailChartContextClass}">${escapeHtml(chart.context)}</div>
-              <canvas class="chart" id="${escapeHtml(chart.canvasId)}" height="220"></canvas>
-              <div class="reportsChartEmpty" data-chart-empty-for="${escapeHtml(chart.canvasId)}" hidden>Not enough data in this range yet.</div>
-            </div>
-            `}
+    ? renderSharedChartCard({ chart, forHome: true })
+    : renderSharedChartCard({ chart, forHome: false })}
           `).join("")}
         </div>
 
