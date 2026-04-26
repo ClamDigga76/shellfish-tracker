@@ -542,30 +542,30 @@ export function createReportsOverviewSectionsSeam(deps){
         body: emptyMsg || "Add trips to unlock these insights."
       });
       return rows.map((r)=> `
-        <div class="trow">
-          <div>
-            <div class="tname">${escapeHtml(r.name)}</div>
-            <div class="tsub">${r.trips} trips • ${r.fishingDays || 0} days • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
-            <div class="tsub">${renderSummaryAverageLine(r)}</div>
+        <div class="trow reportsSummaryRow">
+          <div class="reportsSummaryMain">
+            <div class="tname reportsSummaryName">${escapeHtml(r.name)}</div>
+            <div class="tsub reportsSummaryMeta">${r.trips} trips • ${r.fishingDays || 0} days • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
+            <div class="tsub reportsSummaryAvg">${renderSummaryAverageLine(r)}</div>
           </div>
-          <div class="tright">
-            <div><span class="ppl">Price Per Pound</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
-            <div><b class="money">${formatMoney(r.amt)}</b></div>
+          <div class="tright reportsSummaryRight">
+            <div class="reportsSummaryPrice"><span class="ppl">Price Per Pound</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
+            <div class="reportsSummaryAmount"><b class="money">${formatMoney(r.amt)}</b></div>
           </div>
         </div>
       `).join("");
     };
 
     const renderMonthList = ()=> monthRows.map((r)=> `
-      <div class="trow">
-        <div>
-          <div class="tname">${escapeHtml(r.label)}</div>
-          <div class="tsub">${r.trips} trips • ${r.fishingDays || 0} days • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
-          <div class="tsub">${renderSummaryAverageLine(r)}</div>
+      <div class="trow reportsSummaryRow">
+        <div class="reportsSummaryMain">
+          <div class="tname reportsSummaryName">${escapeHtml(r.label)}</div>
+          <div class="tsub reportsSummaryMeta">${r.trips} trips • ${r.fishingDays || 0} days • <span class="lbsBlue">${to2(r.lbs)} lbs</span></div>
+          <div class="tsub reportsSummaryAvg">${renderSummaryAverageLine(r)}</div>
         </div>
-        <div class="tright">
-          <div><b class="money">${formatMoney(r.amt)}</b></div>
-          <div><span class="ppl">Price Per Pound</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
+        <div class="tright reportsSummaryRight">
+          <div class="reportsSummaryAmount"><b class="money">${formatMoney(r.amt)}</b></div>
+          <div class="reportsSummaryPrice"><span class="ppl">Price Per Pound</span> <b class="rate ppl">${formatMoney(r.avg)}</b></div>
         </div>
       </div>
     `).join("");
