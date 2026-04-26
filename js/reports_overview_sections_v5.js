@@ -281,7 +281,7 @@ export function createReportsOverviewSectionsSeam(deps){
           title,
           explanation,
           cardTag: "article",
-          cardClass: "card chartCard chartCard--standard homeInsightsChartCard",
+          cardClass: "chartCard chartCard--standard homeInsightsChartCard",
           emptyClass: "reportsChartEmpty reportsChartEmpty--standard homeInsightsChartEmpty"
         })).join("")}
       </div>`,

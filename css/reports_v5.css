@@ -248,11 +248,11 @@
 
 
 .chartCard,.chartCard--standard{
-  padding:14px 14px 15px;
-  border:1px solid rgba(255,255,255,.16);
-  border-radius:18px;
-  background:linear-gradient(180deg, rgba(26,36,54,.92) 0%, rgba(15,23,37,.94) 100%);
-  box-shadow:0 12px 26px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.05);
+  padding:4px 0 2px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
 }
 .chartTakeaway{display:inline-flex;align-items:center;min-height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:830;letter-spacing:.07em;text-transform:uppercase;background:rgba(190,196,210,.11);color:#c7cfdd}
 .chartTakeaway.tone-up{background:rgba(46,160,67,.16);color:var(--good)}
@@ -263,9 +263,9 @@
 .chartHero{margin-top:8px;font-size:35px;line-height:1.01;font-weight:920;letter-spacing:.15px;font-variant-numeric:tabular-nums;color:#fff}
 .chartContext{margin-top:5px;font-size:11px;line-height:1.34;color:#a8b3c6;font-weight:640}
 .chartContextValue{font-weight:760;color:#d6ddeb}
-.chartCard .chart{display:block;margin-top:14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.026),rgba(255,255,255,.012));border:1px solid rgba(255,255,255,.09)}
+.chartCard .chart{display:block;margin-top:12px;border-radius:16px;background:linear-gradient(180deg,rgba(23,33,50,.94),rgba(12,20,34,.95));border:1px solid rgba(176,194,224,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 @media (max-width:430px){
-  .chartCard,.chartCard--standard{padding:12px 12px 13px}
+  .chartCard,.chartCard--standard{padding:3px 0 1px}
   .chartTakeaway{font-size:9px;padding:0 8px}
   .chartTitle{font-size:17px;margin-top:9px}
   .chartSubhead{font-size:10px}
@@ -360,16 +360,16 @@
 .reportsSectionHead p{margin:6px 0 0;font-size:12px;line-height:1.4;color:var(--text-muted-strong);font-weight:650}
 .reportsSection .card:last-child{margin-bottom:0}
 .reportsSection--highlights .reportsHighlightsCard{margin-bottom:0}
-.reportsChartsStack,.reportsTablesStack{display:grid;gap:12px}
+.reportsChartsStack,.reportsTablesStack{display:grid;gap:14px}
 .reportsChartsStack .chartCard,.reportsTablesStack .card{margin-bottom:0}
 .reportsChartsStack .chartCard{position:relative}
 .reportsChartsStack .chartCard + .chartCard::before{display:none}
 .homeInsightsChartStack{gap:8px}
 .homeInsightsChartStack .homeInsightsChartCard{
-  padding:14px 14px 15px;
+  padding:0;
 }
 .homeInsightsChartStack .homeInsightsChartCard .chart{
-  margin-top:14px;
+  margin-top:12px;
 }
 .homeInsightsChartExplanation{margin:5px 0 0;font-size:12px;line-height:1.38;color:#aab5c8;font-weight:640}
 .homeInsightsChartCard .chartContext{margin-top:4px}
@@ -666,7 +666,7 @@
   border-top:0;
 }
 .homeMetricChartStory{
-  padding:14px 14px 15px;
+  padding:0;
 }
 .homeMetricChartStory .homeMetricChartTitle{
   margin-top:0;
@@ -747,7 +747,7 @@
 
 
 :root[data-theme="light"] .chart{border-color:rgba(37,53,92,.1);background:linear-gradient(180deg, rgba(255,255,255,.78), rgba(239,244,255,.56));}
-:root[data-theme="light"] .chartCard,:root[data-theme="light"] .chartCard--standard{border-color:rgba(37,53,92,.16);background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(240,245,255,.9));box-shadow:0 10px 20px rgba(28,46,89,.12),inset 0 1px 0 rgba(255,255,255,.72);}
+:root[data-theme="light"] .chartCard,:root[data-theme="light"] .chartCard--standard{border:0;background:transparent;box-shadow:none;}
 :root[data-theme="light"] .chartCard .chart{border-color:rgba(37,53,92,.14);background:linear-gradient(180deg, rgba(255,255,255,.76), rgba(234,241,255,.58));}
 :root[data-theme="light"] .reportsHighlightsHdr,
 :root[data-theme="light"] .reportsHeroEyebrow,
