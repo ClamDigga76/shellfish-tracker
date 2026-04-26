@@ -61,23 +61,23 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const compact = w < 360;
     const isHomeInsights = mode === "home-insights";
     const profile = resolveFrameProfile({ mode, ...context });
-    const leftBase = isHomeInsights ? (compact ? 36 : 44) : (compact ? 42 : 54);
-    const rightBase = isHomeInsights ? (compact ? 8 : 10) : (compact ? 10 : 16);
-    const topBase = isHomeInsights ? (compact ? 18 : 20) : (compact ? 24 : 28);
-    const bottomBase = isHomeInsights ? (compact ? 52 : 50) : (compact ? 62 : 58);
+    const leftBase = isHomeInsights ? (compact ? 34 : 40) : (compact ? 38 : 50);
+    const rightBase = isHomeInsights ? (compact ? 7 : 8) : (compact ? 8 : 12);
+    const topBase = isHomeInsights ? (compact ? 16 : 18) : (compact ? 20 : 24);
+    const bottomBase = isHomeInsights ? (compact ? 46 : 44) : (compact ? 54 : 50);
     const left = leftBase + (profile.dense && !compact ? -2 : 0);
     const right = rightBase + (profile.sparse ? (compact ? 4 : 6) : 0) + (profile.dense ? -2 : 0);
     const top = topBase + (profile.sparse ? 2 : 0);
     const compareCountBoost = profile.compareLabels && profile.pointCount > 0
       ? (profile.pointCount <= 2
-          ? (compact ? 14 : 12)
-          : (profile.pointCount <= 5 ? (compact ? 10 : 8) : (compact ? 5 : 2)))
+          ? (compact ? 11 : 9)
+          : (profile.pointCount <= 5 ? (compact ? 8 : 6) : (compact ? 4 : 1)))
       : 0;
     const categoryLabelBoost = profile.compareLabels
       ? compareCountBoost
-      : (compact ? 6 : 8);
+      : (compact ? 5 : 7);
     const bottom = Math.max(
-      compact ? 44 : 48,
+      compact ? 40 : 44,
       bottomBase
         + categoryLabelBoost
         + (profile.monthLabels && profile.dense ? (compact ? -8 : -10) : 0)
@@ -615,8 +615,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ? Math.max(
           options.minBarWidth || 4,
           Math.min(
-            barW * (count === 1 ? 0.36 : 0.5),
-            frame.compact ? 68 : 84
+            barW * (count === 1 ? 0.44 : 0.58),
+            frame.compact ? 74 : 96
           )
         )
         : 0;
