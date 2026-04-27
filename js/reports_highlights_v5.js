@@ -8,18 +8,23 @@ export function createReportsHighlightsSeam(deps){
   } = deps;
 
   const safeNum = (v)=> Number(v) || 0;
-  const formatPercentNumber = (percentValue)=> {
+  const roundedPercentNumber = (percentValue)=> {
     const absPercent = Math.abs(safeNum(percentValue));
-    const rounded = absPercent < 10
+    return absPercent < 10
       ? Math.round(absPercent * 10) / 10
       : Math.round(absPercent);
+  };
+  const formatPercentNumber = (percentValue)=> {
+    const rounded = roundedPercentNumber(percentValue);
     return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1).replace(/\.0$/, "");
   };
   const pctText = (value)=> `${formatPercentNumber(safeNum(value) * 100)}%`;
   const signedPctText = (value)=> {
     const ratioValue = safeNum(value);
     const signedPercent = ratioValue * 100;
-    const sign = signedPercent > 0 ? "+" : (signedPercent < 0 ? "-" : "");
+    const roundedMagnitude = roundedPercentNumber(signedPercent);
+    if(roundedMagnitude === 0) return "0%";
+    const sign = signedPercent > 0 ? "+" : "-";
     return `${sign}${formatPercentNumber(signedPercent)}%`;
   };
   const signedMoneyText = (value)=> `${safeNum(value) > 0 ? "+" : ""}${formatMoney(to2(safeNum(value)))}`;
