@@ -83,6 +83,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   ...STARTUP_MODULE_PATHS.map(importVersionedModule),
   ...STARTUP_APP_OWNED_MODULE_PATHS.map(importVersionedModule)
 ]);
+const { createTripShareCardSeam } = _tripShareCardModule;
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;
@@ -609,6 +610,7 @@ const { renderHome } = createHomeDashboardRenderer({
   getInstallSurfaceModel: () => getInstallSurfaceModel(),
   runInstallAction: () => runInstallAction(),
   renderStandardReadOnlyTripCard,
+  createTripShareCardSeam,
   isFeatureAllowed: (featureKey, plan) => entitlements.isFeatureAllowed(featureKey, plan),
   entitlementFeatureKeys: entitlements.FEATURES
 });

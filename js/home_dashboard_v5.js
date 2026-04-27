@@ -2,7 +2,6 @@ import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_s
 import { createFilteredRowsMemo, createRowsComputationMemo } from "./runtime_memo_v5.js";
 import { renderInstallSurface } from "./install_surface_renderer_v5.js";
 import { createStatusSurfaceSeam } from "./status_surface_seam_v5.js";
-import { createTripShareCardSeam } from "./share_card_v5.js";
 
 export function createHomeDashboardRenderer({
   state,
@@ -27,7 +26,8 @@ export function createHomeDashboardRenderer({
   renderHomeMetricDetail,
   getInstallSurfaceModel,
   runInstallAction,
-  renderStandardReadOnlyTripCard
+  renderStandardReadOnlyTripCard,
+  createTripShareCardSeam
 }) {
   const timeframeFilterControls = createTimeframeFilterControlsSeam({
     escapeHtml,
@@ -542,7 +542,7 @@ export function createHomeDashboardRenderer({
           if (result?.ok && result.method === "share") {
             showToast("Share opened");
           } else if (result?.ok && result.method === "download") {
-            showToast("Share not supported here. PNG downloaded.");
+            showToast("Share not supported here. Image downloaded.");
           } else if (result?.reason === "share-canceled") {
             showToast("Share canceled");
           } else {
