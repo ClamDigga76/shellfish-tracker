@@ -147,9 +147,14 @@ export function createUpdateRuntimeStatusSeam({
     const { hardReset = false } = options;
     const statusEl = documentRef.getElementById("updateBigStatus");
     const btnCheck = documentRef.getElementById("updatePrimary");
+    const btnSummary = documentRef.getElementById("settingsUpdateSummaryAction");
     try{
       if(statusEl) statusEl.textContent = hardReset ? "Resetting cache & reloading…" : (swUpdateReady ? "Reloading latest build…" : "Checking latest build…");
       if(btnCheck) btnCheck.disabled = true;
+      if(btnSummary){
+        btnSummary.disabled = true;
+        btnSummary.textContent = "Checking";
+      }
       await forceRefreshApp({ hardReset });
     }catch(_){
       try{
@@ -629,12 +634,39 @@ export function createUpdateRuntimeStatusSeam({
   async function updateUpdateRow(){
     const statusEl = documentRef.getElementById("updateBigStatus");
     const btnPrimary = documentRef.getElementById("updatePrimary");
+    const btnSummary = documentRef.getElementById("settingsUpdateSummaryAction");
     const inlineMsg = documentRef.getElementById("updateInlineMsg");
-    if(!statusEl || !btnPrimary) return;
+    const applyUpdateAction = ({ primaryLabel, summaryLabel, disabled = false, action, statusText, inlineText })=>{
+      if(statusEl && statusText){
+        statusEl.textContent = statusText;
+      }
+      if(btnPrimary){
+        btnPrimary.textContent = primaryLabel;
+        btnPrimary.disabled = disabled;
+        btnPrimary.onclick = typeof action === "function" ? action : null;
+      }
+      if(btnSummary){
+        btnSummary.textContent = summaryLabel;
+        btnSummary.disabled = disabled;
+        btnSummary.onclick = typeof action === "function" ? action : null;
+        btnSummary.title = primaryLabel;
+      }
+      if(inlineMsg){
+        inlineMsg.textContent = inlineText || "";
+      }
+    };
+    if(!statusEl || (!btnPrimary && !btnSummary)) return;
 
     if(inlineMsg){
       inlineMsg.style.display = "block";
       inlineMsg.textContent = "";
+    }
+
+    if(!btnPrimary && btnSummary){
+      // Guardrail: keep closed-row action inert if runtime update action binding is unavailable.
+      btnSummary.textContent = "Check";
+      btnSummary.disabled = true;
+      btnSummary.title = "Update action unavailable";
     }
 
     let runtimeDiag = null;
@@ -643,69 +675,78 @@ export function createUpdateRuntimeStatusSeam({
     }catch(_){ }
 
     if(swUpdateReady){
-      statusEl.textContent = "Latest build ready on this device";
-      btnPrimary.textContent = "Reload latest build";
-      btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-      if(inlineMsg) inlineMsg.textContent = "Latest build is ready to apply on this device.";
+      applyUpdateAction({
+        statusText: "Latest build ready on this device",
+        primaryLabel: "Reload latest build",
+        summaryLabel: "Apply",
+        action: async ()=>{ await swCheckNow(); },
+        inlineText: "Latest build is ready to apply on this device."
+      });
       return;
     }
 
     if(runtimeDiag?.needsHardReset){
-      statusEl.textContent = "Could not confirm latest build on this device";
-      btnPrimary.textContent = "Reset cache & reload";
-      btnPrimary.onclick = async ()=>{ await swCheckNow({ hardReset: true }); };
-      if(inlineMsg){
-        inlineMsg.textContent = runtimeDiag.requiredCoreCacheIncomplete
+      applyUpdateAction({
+        statusText: "Could not confirm latest build on this device",
+        primaryLabel: "Reset cache & reload",
+        summaryLabel: "Reset",
+        action: async ()=>{ await swCheckNow({ hardReset: true }); },
+        inlineText: runtimeDiag.requiredCoreCacheIncomplete
           ? `Required core cache is incomplete (${runtimeDiag.requiredCoreCacheFoundCount}/${runtimeDiag.requiredCoreCacheExpectedCount}). Use Reset cache & reload to recover.`
-          : "Use Reset cache & reload for a clean fetch if Reload latest build still looks stale.";
-      }
+          : "Use Reset cache & reload for a clean fetch if Reload latest build still looks stale."
+      });
       return;
     }
 
     if(runtimeDiag?.swControlUnconfirmed || runtimeDiag?.swRegistrationUnconfirmed){
-      statusEl.textContent = "Latest build check is still pending on this device";
-      btnPrimary.textContent = "Reload latest build";
-      btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-      if(inlineMsg){
-        inlineMsg.textContent = runtimeDiag?.requiredCoreCachePreRegistration
+      applyUpdateAction({
+        statusText: "Latest build check is still pending on this device",
+        primaryLabel: "Reload latest build",
+        summaryLabel: "Check",
+        action: async ()=>{ await swCheckNow(); },
+        inlineText: runtimeDiag?.requiredCoreCachePreRegistration
           ? "Service worker registration has not started yet in this tab. This can be normal on first open; wait for load completion, then re-check."
           : runtimeDiag?.requiredCoreCachePendingControl
           ? "Required core cache is briefly settling while service worker lifecycle progress is still active. Reopen or reload after control is confirmed."
-          : "Run Reload latest build after service worker control is confirmed.";
-      }
+          : "Run Reload latest build after service worker control is confirmed."
+      });
       return;
     }
 
     if(runtimeDiag?.installedAppLikelyLagging){
-      statusEl.textContent = "Installed app may be on an older build";
-      btnPrimary.textContent = "Reload latest build";
-      btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-      if(inlineMsg) inlineMsg.textContent = "Reload, then fully close and reopen the Home Screen app.";
+      applyUpdateAction({
+        statusText: "Installed app may be on an older build",
+        primaryLabel: "Reload latest build",
+        summaryLabel: "Reload",
+        action: async ()=>{ await swCheckNow(); },
+        inlineText: "Reload, then fully close and reopen the Home Screen app."
+      });
       return;
     }
 
     const recentAttempt = getStoredUpdateAttempt();
     const lastGoodRuntime = getLastGoodRuntimeConfirmation();
     const lastGoodMatchesBuild = Boolean(lastGoodRuntime?.buildVersion && lastGoodRuntime.buildVersion === displayBuildVersion);
-    statusEl.textContent = runtimeDiag?.requiredCoreCacheIncomplete ? "Core cache integrity needs attention" : "Up to date on this device";
-    btnPrimary.textContent = "Reload latest build";
-    btnPrimary.onclick = async ()=>{ await swCheckNow(); };
-    if(inlineMsg){
-      if(lastGoodMatchesBuild && recentAttempt){
-        inlineMsg.textContent = `Current build confirmed here (${displayBuildVersion}) after ${recentAttempt.mode === "hard-reset" ? "Reset cache & reload" : "Reload latest build"} at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)}.`;
-      }else if(lastGoodMatchesBuild){
-        const modeLabel = lastGoodRuntime.mode === "installed-standalone" ? "installed app" : "browser tab";
-        inlineMsg.textContent = `Current build confirmed here (${displayBuildVersion}) at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)} in ${modeLabel} mode.`;
-      }else if(recentAttempt){
-        inlineMsg.textContent = `Reload was requested after ${recentAttempt.mode === "hard-reset" ? "Reset cache & reload" : "Reload latest build"}. Run Reload latest build again if this still looks old.`;
-      }else if(lastSwUpdateSignal === "dismissed"){
-        inlineMsg.textContent = "You can load the latest build here any time if you chose Not now.";
-      }else if(lastSwUpdateSignal === "applying"){
-        inlineMsg.textContent = "Update was requested. If this still looks old, run Reload latest build once.";
-      }else{
-        inlineMsg.textContent = "Use this after a release if the app still looks old.";
-      }
+    let stableInlineText = "Use this after a release if the app still looks old.";
+    if(lastGoodMatchesBuild && recentAttempt){
+      stableInlineText = `Current build confirmed here (${displayBuildVersion}) after ${recentAttempt.mode === "hard-reset" ? "Reset cache & reload" : "Reload latest build"} at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)}.`;
+    }else if(lastGoodMatchesBuild){
+      const modeLabel = lastGoodRuntime.mode === "installed-standalone" ? "installed app" : "browser tab";
+      stableInlineText = `Current build confirmed here (${displayBuildVersion}) at ${formatLedgerStamp(lastGoodRuntime.confirmedAt)} in ${modeLabel} mode.`;
+    }else if(recentAttempt){
+      stableInlineText = `Reload was requested after ${recentAttempt.mode === "hard-reset" ? "Reset cache & reload" : "Reload latest build"}. Run Reload latest build again if this still looks old.`;
+    }else if(lastSwUpdateSignal === "dismissed"){
+      stableInlineText = "You can load the latest build here any time if you chose Not now.";
+    }else if(lastSwUpdateSignal === "applying"){
+      stableInlineText = "Update was requested. If this still looks old, run Reload latest build once.";
     }
+    applyUpdateAction({
+      statusText: runtimeDiag?.requiredCoreCacheIncomplete ? "Core cache integrity needs attention" : "Up to date on this device",
+      primaryLabel: "Reload latest build",
+      summaryLabel: runtimeDiag?.requiredCoreCacheIncomplete ? "Check" : "Reload",
+      action: async ()=>{ await swCheckNow(); },
+      inlineText: stableInlineText
+    });
   }
 
   async function updateBuildBadge(){
