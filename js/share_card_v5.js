@@ -121,7 +121,7 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.fillStyle = "#f4f8ff";
   let logoDrawn = false;
   try {
-    const logo = await loadImage("./docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png?v=694");
+    const logo = await loadImage("./docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png?v=695");
     const logoWidth = 360;
     const ratio = logo.naturalWidth > 0 ? (logo.naturalHeight / logo.naturalWidth) : 0.23;
     const logoHeight = Math.max(62, Math.round(logoWidth * ratio));

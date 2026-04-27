@@ -549,7 +549,7 @@ export function createHomeDashboardRenderer({
             <div class="homeScreenshotCardPreviewWrap">
               <div class="homeScreenshotCardPreviewSurface">
                 <div class="homeScreenshotCardPreviewHeader">
-                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png?v=694" alt="Bank the Catch" loading="lazy" decoding="async" />
+                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png?v=695" alt="Bank the Catch" loading="lazy" decoding="async" />
                   <div class="homeScreenshotCardPreviewBrandFallback" id="homeScreenshotCardPreviewBrandFallback">Bank the Catch</div>
                 </div>
                 <div class="homeScreenshotCardPreviewLabel">Last Saved Trip</div>
