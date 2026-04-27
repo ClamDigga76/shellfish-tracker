@@ -207,6 +207,70 @@ body[data-display-mode="standalone"] #tabbar .tabbtn.plus:active{
   padding-bottom:calc(10px + var(--safeBottom));
 }
 
+@media (max-width:520px){
+  :root[data-display-mode="browser"]{
+    --shell-page-gutter:4px;
+    --shell-max-width:100vw;
+    --shell-overlay-max-width:100vw;
+    --tabbar-top-pad:0px;
+    --tabbar-safe:max(8px, var(--safeBottom));
+    --bottom-overlay-gap:12px;
+  }
+  :root[data-display-mode="browser"] body{
+    padding:10px var(--shell-page-gutter) 10px;
+  }
+  :root[data-display-mode="browser"] .phone{
+    width:100%;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.09);
+    box-shadow:0 8px 24px rgba(0,0,0,.24);
+  }
+  :root[data-display-mode="browser"] main#app{
+    padding-bottom:calc(var(--tabbar-total-h) + var(--bottom-overlay-h) + max(10px, var(--bottom-overlay-gap)));
+  }
+  :root[data-display-mode="browser"] #tabbar{
+    padding-left:6px;
+    padding-right:6px;
+    background:transparent;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    box-shadow:0 -8px 22px rgba(0,0,0,.16);
+  }
+  :root[data-display-mode="browser"] #tabbar::before{
+    top:auto;
+    bottom:calc(var(--tabbar-total-h) - 1px);
+  }
+  :root[data-display-mode="browser"] #tabbar::after{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:var(--tabbar-total-h);
+    background:linear-gradient(180deg, var(--glass) 0%, var(--bg) 100%);
+    backdrop-filter:blur(6px) saturate(1.02);
+    -webkit-backdrop-filter:blur(6px) saturate(1.02);
+    pointer-events:none;
+    z-index:0;
+  }
+  :root[data-display-mode="browser"] #tabbar .tabbtn.plus{
+    height:48px;
+    border-radius:20px;
+    transform:translateY(-2px);
+  }
+  :root[data-display-mode="browser"] #tabbar .tabbtn.plus:active{
+    transform:translateY(-1px) scale(.98);
+  }
+  :root[data-display-mode="browser"] #toast{
+    bottom:calc(var(--tabbar-total-h) + 10px);
+  }
+  :root[data-display-mode="browser"] .modalRoot,
+  :root[data-display-mode="browser"] .celebrationRoot{
+    padding:12px;
+    padding-bottom:calc(12px + var(--safeBottom));
+  }
+}
+
 
 /* Semantic metric colors */
 .trips,
