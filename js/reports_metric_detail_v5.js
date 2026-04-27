@@ -7,11 +7,11 @@ const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
   compareModel: "home-full-month",
   compareModelLabel: "Month view",
   supportLabel: "Visible range",
-  support: "Comparing the latest two visible months in this range.",
+  support: "Comparing the latest two visible months in the selected period.",
   explanation: "",
   missingReason: "Show one more visible month to unlock month-to-month detail.",
   missingSuppressionCode: "missing-home-months",
-  missingExplanation: "Add one more visible month in this range and this comparison will appear.",
+  missingExplanation: "Add one more visible month in the selected period and this comparison will appear.",
   metricExplanation: ()=> "Uses the same visible month pair in the compare card and chart."
 });
 
@@ -56,7 +56,7 @@ const METRIC_DETAIL_SURFACE_MODES = Object.freeze({
 
 const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
   trips: Object.freeze({
-    helperLine: "Trips logged in your selected Home range.",
+    helperLine: "Trips logged in the selected period.",
     primaryChartKey: "tripsMonthlyTrend",
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "tripsMonthlyTrend", title: "Trips over time", context: "Simple trip trend across visible months" }),
@@ -66,22 +66,22 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     teaserText: "Unlock Reports to compare your highest and lowest days, areas, and dealers."
   }),
   pounds: Object.freeze({
-    helperLine: "Total pounds landed in your selected Home range.",
+    helperLine: "Total pounds landed in the selected period.",
     primaryChartKey: "poundsMonthlyTrend",
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "poundsMonthlyTrend", title: "Pounds over time", context: "Simple pounds trend across visible months" }),
       Object.freeze({ key: "pounds", title: "Latest vs previous month", context: "Bars • pounds for the latest visible month pair" }),
-      Object.freeze({ key: "poundsPerTripTrend", title: "Pounds per trip over time", context: "How trip efficiency moved across visible months" })
+      Object.freeze({ key: "poundsPerTripTrend", title: "Avg pounds per trip over time", context: "How Avg pounds per trip moved across visible months" })
     ]),
     teaserText: "Unlock Reports to see which areas produce the strongest catches."
   }),
   amount: Object.freeze({
-    helperLine: "Total paid amount from trips in your selected Home range.",
+    helperLine: "Total paid amount from trips in the selected period.",
     primaryChartKey: "amountTrend",
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "amountTrend", title: "Paid over time", context: "Simple paid trend across visible months" }),
       Object.freeze({ key: "amount", title: "Latest vs previous month", context: "Bars • paid totals for the latest visible month pair" }),
-      Object.freeze({ key: "amountPerTripTrend", title: "Amount per trip over time", context: "Average paid per trip across visible months" })
+      Object.freeze({ key: "amountPerTripTrend", title: "Avg amount per trip over time", context: "Average paid per trip across visible months" })
     ]),
     teaserText: "Unlock Reports to compare dealers, price trends, and deeper money insights."
   }),
@@ -89,7 +89,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     helperLine: "Calculated from total paid ÷ total pounds.",
     primaryChartKey: "pplMonthlyTrendFree",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "pplMonthlyTrendFree", title: "Price per pound over time", context: "Simple Avg $ / lb trend across visible months" }),
+      Object.freeze({ key: "pplMonthlyTrendFree", title: "Avg $ / lb over time", context: "Simple Avg $ / lb trend across visible months" }),
       Object.freeze({ key: "ppl", title: "Latest vs previous month", context: "Bars • Avg $ / lb for the latest visible month pair" }),
       Object.freeze({ key: "pplRateVsPoundsTrend", title: "Pounds support over time", context: "Monthly pounds context behind Avg $ / lb movement" })
     ]),
@@ -173,7 +173,7 @@ function buildHomeSuppressedPeriod({ currentMonth, previousMonth, current, previ
     explanation: HOME_METRIC_DETAIL_COMPARE_CONTRACT.missingExplanation,
     currentLabel: currentMonth?.label || "Current month",
     previousLabel: previousMonth?.label || "Previous month",
-    ...buildHomeCompareContractFields({ support: "Visible months in this range" }),
+    ...buildHomeCompareContractFields({ support: "Visible months in the selected period" }),
     current,
     previous
   };
@@ -226,7 +226,7 @@ function buildHomeMetricPayloads(period){
       previousValue: previous.ppl,
       period,
       suppressed: !(current.lbs > 0 && previous.lbs > 0),
-      reason: "Log pounds in both visible months in this range to compare Avg $ / lb."
+      reason: "Log pounds in both visible months in the selected period to compare Avg $ / lb."
     })
   };
 }
@@ -330,7 +330,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
   return {
     trips: buildHomeCompareBarChart({ labels, metricKey: "trips", currentValue: period?.current?.trips, previousValue: period?.previous?.trips }),
     tripsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
-    tripsCumulativeTrend: buildHomeCumulativeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips", basisLabel: "Visible months in this range" }),
+    tripsCumulativeTrend: buildHomeCumulativeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips", basisLabel: "Visible months in the selected period" }),
     tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
     tripsAreaMix: buildHomeTopRowsBarChart({
       rows: areaRowsByTrips,
@@ -373,32 +373,32 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period }){
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),
     pplMonthlyTrend: {
       ...buildHomeSharedChartModel({ chartId: "pplByMonth", monthRows: safeMonths, dealerRows, areaRows }),
-      basisLabel: `Visible months in this range • ${rateLeaderSupportLabel}`
+      basisLabel: `Visible months in the selected period • ${rateLeaderSupportLabel}`
     },
-    pplMonthlyTrendFree: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg", basisLabel: "Visible months in this range" }),
+    pplMonthlyTrendFree: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg", basisLabel: "Visible months in the selected period" }),
     tripsRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "trips",
       windowSize: getRollingWindowForMetric("trips", { surface: "home" }),
-      basisLabel: "Rolling trips trend • visible months in this range"
+      basisLabel: "Rolling trips trend • visible months in the selected period"
     }),
     poundsRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "pounds",
       windowSize: getRollingWindowForMetric("pounds", { surface: "home" }),
-      basisLabel: "Rolling pounds trend • visible months in this range"
+      basisLabel: "Rolling pounds trend • visible months in the selected period"
     }),
     amountRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "amount",
       windowSize: getRollingWindowForMetric("amount", { surface: "home" }),
-      basisLabel: "Rolling amount trend • visible months in this range"
+      basisLabel: "Rolling amount trend • visible months in the selected period"
     }),
     pplRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "ppl",
       windowSize: getRollingWindowForMetric("ppl", { surface: "home" }),
-      basisLabel: `Rolling Avg $ / lb trend • visible months in this range • ${rateLeaderSupportLabel}`
+      basisLabel: `Rolling Avg $ / lb trend • visible months in the selected period • ${rateLeaderSupportLabel}`
     }),
     pplAreaLeaders: buildHomeTopRowsBarChart({
       rows: areaRowsByRate,
@@ -741,7 +741,7 @@ export function createReportsMetricDetailSeam(deps){
       canvasId: chart.canvasId,
       height: 290,
       emptyClass: `reportsChartEmpty reportsChartEmpty--standard ${forHome ? "homeMetricChartEmpty" : "reportsMetricChartEmpty"}`.trim(),
-      emptyMessage: chart.emptyMessage || "Not enough data in this range yet."
+      emptyMessage: chart.emptyMessage || "Not enough data in the selected period yet."
     });
     const renderStandardSupportCard = ()=> `
       <div class="${surfaceMode.detailCompareClass} tone-${escapeHtml(compareSummary.tone)}">
@@ -856,18 +856,18 @@ export function createReportsMetricDetailSeam(deps){
       const avgItem = safeSnapshotItems.find((item)=> String(item?.label || "").toLowerCase() === "average");
       if(targetMetricKey === "trips"){
         return latestItem
-          ? `You logged ${heroValue} in this range; latest month was ${latestItem.value}.`
-          : `You logged ${heroValue} in this range.`;
+          ? `You logged ${heroValue} in the selected period; latest visible month was ${latestItem.value}.`
+          : `You logged ${heroValue} in the selected period.`;
       }
       if(targetMetricKey === "pounds"){
         return avgItem
           ? `Total landed is ${heroValue}, running about ${avgItem.value} per visible month.`
-          : `Total landed is ${heroValue} in this selected range.`;
+          : `Total landed is ${heroValue} in the selected period.`;
       }
       if(targetMetricKey === "amount"){
         return latestItem
-          ? `${heroValue} paid in this range, with ${latestItem.value} in the latest month shown.`
-          : `${heroValue} paid in this selected range.`;
+          ? `${heroValue} paid in the selected period, with ${latestItem.value} in the latest visible month.`
+          : `${heroValue} paid in the selected period.`;
       }
       if(targetMetricKey === "ppl"){
         return latestItem
@@ -967,14 +967,14 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Trips",
         homeTitleToneClass: "homeMetricSimpleTitle--trips",
         eyebrow: "Metric breakdown",
-        heroLabel: "Trips this range",
+        heroLabel: "Trips in selected period",
         heroValue,
         heroClass: "trips",
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Trips • Compare",
         homeChartTitle: homeChartCards[0]?.title || "Trips over time",
-        homeChartExplanation: homeFreeConfig?.helperLine || "Trips logged in your selected Home range.",
+        homeChartExplanation: homeFreeConfig?.helperLine || "Trips logged in the selected period.",
         chartContext: primaryChart?.basisLabel || "Bars • trip totals for the latest matched months",
         homeChartContext: homeChartCards[0]?.context || "Simple trip trend across visible months",
         chartCanvasId: "c_trips",
@@ -990,7 +990,7 @@ export function createReportsMetricDetailSeam(deps){
             } : null
           ],
         insight: "Read the compare card with the chart to confirm trip movement in the same latest matched months.",
-        homeInsight: homeFreeConfig?.helperLine || "Trips logged in your selected Home range.",
+        homeInsight: homeFreeConfig?.helperLine || "Trips logged in the selected period.",
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
@@ -1014,14 +1014,14 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Pounds",
         homeTitleToneClass: "homeMetricSimpleTitle--pounds",
         eyebrow: "Metric breakdown",
-        heroLabel: "Pounds this range",
+        heroLabel: "Pounds in selected period",
         heroValue,
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Pounds • Compare",
         homeChartTitle: homeChartCards[0]?.title || "Pounds over time",
-        homeChartExplanation: homeFreeConfig?.helperLine || "Total pounds landed in your selected Home range.",
+        homeChartExplanation: homeFreeConfig?.helperLine || "Total pounds landed in the selected period.",
         chartContext: primaryChart?.basisLabel || "Bars • pound totals for the latest matched months",
         homeChartContext: homeChartCards[0]?.context || "Simple pounds trend across visible months",
         chartCanvasId: "c_lbs",
@@ -1037,7 +1037,7 @@ export function createReportsMetricDetailSeam(deps){
             } : null
           ],
         insight: "Use the compare card and chart together so the headline and values stay aligned to the latest matched months.",
-        homeInsight: homeFreeConfig?.helperLine || "Total pounds landed in your selected Home range.",
+        homeInsight: homeFreeConfig?.helperLine || "Total pounds landed in the selected period.",
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
@@ -1061,14 +1061,14 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Amount",
         homeTitleToneClass: "homeMetricSimpleTitle--amount",
         eyebrow: "Metric breakdown",
-        heroLabel: "Amount this range",
+        heroLabel: "Amount in selected period",
         heroValue,
         heroClass: "money",
         comparePayload: primaryPayload,
         primaryBasis,
         chartTitle: "Amount • Compare",
         homeChartTitle: homeChartCards[0]?.title || "Paid over time",
-        homeChartExplanation: homeFreeConfig?.helperLine || "Total paid amount from trips in your selected Home range.",
+        homeChartExplanation: homeFreeConfig?.helperLine || "Total paid amount from trips in the selected period.",
         chartContext: primaryChart?.basisLabel || "Bars • amount totals for the latest matched months",
         homeChartContext: homeChartCards[0]?.context || "Simple paid trend across visible months",
         chartCanvasId: "c_amount_detail",
@@ -1096,7 +1096,7 @@ export function createReportsMetricDetailSeam(deps){
             }
           ],
         insight: "Start with the compare chart, then use trend and dealer mix for added context.",
-        homeInsight: homeFreeConfig?.helperLine || "Total paid amount from trips in your selected Home range.",
+        homeInsight: homeFreeConfig?.helperLine || "Total paid amount from trips in the selected period.",
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
@@ -1120,7 +1120,7 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Avg $ / lb",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
-        heroLabel: "Avg $ / lb this range",
+        heroLabel: "Avg $ / lb in selected period",
         heroValue,
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
