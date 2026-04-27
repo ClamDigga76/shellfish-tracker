@@ -541,18 +541,27 @@
 }
 .homeScreenshotCardPreviewHeader{
   display:grid;
+  justify-items:center;
   gap:6px;
+  padding:10px 10px 9px;
+  border:1px solid rgba(132,182,255,.2);
+  border-radius:13px;
+  background:linear-gradient(180deg, rgba(12,22,41,.72) 0%, rgba(8,15,29,.62) 100%);
+  box-shadow:inset 0 1px 0 rgba(223,236,255,.08), 0 7px 16px rgba(0,0,0,.16);
 }
 .homeScreenshotCardPreviewLogo{
   display:block;
-  width:min(240px, 100%);
+  justify-self:center;
+  margin-inline:auto;
+  width:min(228px, 100%);
   height:auto;
   max-width:100%;
-  filter:drop-shadow(0 2px 8px rgba(42,113,255,.22));
+  filter:drop-shadow(0 1px 6px rgba(34,104,231,.22)) drop-shadow(0 0 16px rgba(255,212,120,.14));
 }
 .homeScreenshotCardPreviewBrandFallback{
   display:none;
   margin:0;
+  text-align:center;
   font-size:13px;
   line-height:1.2;
   letter-spacing:.03em;
@@ -586,33 +595,31 @@
 }
 .homeScreenshotCardPreviewActions{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:7px;
-  padding-top:2px;
+  grid-template-columns:1fr;
+  gap:6px;
+  padding-top:3px;
   border-top:1px solid rgba(145,191,255,.14);
 }
 .homeScreenshotCardPreviewActions .btn{
-  min-height:38px;
+  width:100%;
+  min-height:36px;
   padding:7px 10px;
   font-size:12px;
-  font-weight:700;
+  font-weight:680;
   box-shadow:none;
-  border-color:rgba(159,190,242,.26);
-}
-.homeScreenshotCardPreviewActions .btn:first-child{
-  grid-column:1 / -1;
 }
 .homeScreenshotCardPreviewActions .btn.btn-ghost{
   color:var(--text-muted-strong);
-  background:rgba(10,16,30,.38);
+  border-color:rgba(159,190,242,.24);
+  background:rgba(10,16,30,.34);
 }
 .homeScreenshotCardPreviewActions .btn.primary{
-  background:linear-gradient(180deg, rgba(52,123,224,.82) 0%, rgba(30,74,152,.84) 100%);
-  border-color:rgba(126,178,255,.5);
+  border-color:rgba(126,178,255,.42);
+  background:linear-gradient(180deg, rgba(47,109,198,.72) 0%, rgba(25,66,136,.76) 100%);
 }
 @media (max-width:380px){
   .homeScreenshotCardPreviewLogo{
-    width:min(210px, 100%);
+    width:min(204px, 100%);
   }
 }
 
