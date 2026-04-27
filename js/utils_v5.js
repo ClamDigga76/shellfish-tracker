@@ -287,7 +287,11 @@ export function toCSV(trips){
   const clean = (v) => String(v ?? "").replace(/[\r\n]+/g, " ").trim();
 
   for(const t of trips){
-    const ppl = resolveTripPayRate(t);
+    const pounds = Number(t?.pounds ?? t?.lbs ?? 0);
+    const amount = Number(t?.amount ?? t?.total ?? 0);
+    const ppl = (Number.isFinite(pounds) && pounds > 0 && Number.isFinite(amount) && amount > 0)
+      ? amount / pounds
+      : resolveTripPayRate(t);
     const cells = [
       clean(formatISODateToDisplayDMY(t.dateISO)),
       clean(normalizeDealerForExport(t.dealer)),

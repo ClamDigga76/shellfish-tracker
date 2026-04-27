@@ -52,7 +52,7 @@ function assertRepoCheck(condition, message) {
 
 const utilsModule = await import('../js/utils_v5.js');
 const reportsAggregationModule = await import('../js/reports_aggregation_v5.js');
-const { computeAggregatePPL } = utilsModule;
+const { computeAggregatePPL, deriveTripSettlement, toCSV } = utilsModule;
 const {
   buildReportsAggregationState,
   summarizeTripsByMonthWindow,
@@ -95,6 +95,16 @@ assertRepoCheck(Math.abs((Number(compareRows?.[0]?.current?.ppl) || 0) - 2.5) < 
 const zeroPpl = computeAggregatePPL(0, 250);
 assertRepoCheck(Number.isFinite(zeroPpl) && zeroPpl === 0, 'computeAggregatePPL zero-pound rows avoid NaN/Infinity');
 
+const settlementSample = deriveTripSettlement({ amount: 100.25, writtenCheckAmount: 100 });
+assertRepoCheck(settlementSample.calculatedAmount === 100.25, 'deriveTripSettlement keeps calculatedAmount as calculated settlement amount');
+assertRepoCheck(settlementSample.writtenCheckAmount === 100, 'deriveTripSettlement keeps writtenCheckAmount as dealer check amount');
+assertRepoCheck(settlementSample.dealerAdjustment === -0.25, 'deriveTripSettlement dealerAdjustment equals writtenCheckAmount - calculatedAmount');
+
+const csvPreview = toCSV([{ dateISO: '2026-03-01', dealer: 'Dealer C', pounds: 40, amount: 160, payRate: 3.25, area: 'Harbor' }]);
+const csvDataLine = (String(csvPreview || '').split('\r\n')[1] || '').split(',');
+assertRepoCheck(csvDataLine[3] === '160', 'CSV Amount column exports trip.amount');
+assertRepoCheck(csvDataLine[4] === '4', 'CSV PricePerLb resolves from amount ÷ pounds when payRate is stale');
+
 const homeDashboardSource = readFileSync('js/home_dashboard_v5.js', 'utf8');
 assertRepoCheck(!homeDashboardSource.includes('weightedRateTotal'), 'home aggregate overview does not use weightedRateTotal');
 assertRepoCheck(!homeDashboardSource.includes('resolveTripPayRate('), 'home aggregate Avg $/lb path does not call resolveTripPayRate()');
@@ -121,11 +131,18 @@ assertRepoCheck(tripMutationLifecycleSource.includes('const amountNum = settleme
 assertRepoCheck(tripMutationLifecycleSource.includes('calculatedAmount: to2(settlement.calculatedAmount),'), 'trip commit persists calculatedAmount settlement field');
 assertRepoCheck(tripMutationLifecycleSource.includes('writtenCheckAmount: to2(settlement.writtenCheckAmount),'), 'trip commit persists writtenCheckAmount settlement field');
 assertRepoCheck(tripMutationLifecycleSource.includes('dealerAdjustment: to2(settlement.dealerAdjustment),'), 'trip commit persists dealerAdjustment settlement field');
+assertRepoCheck(tripMutationLifecycleSource.includes('adjustmentClass: settlement.adjustmentClass,'), 'trip commit persists adjustmentClass settlement field');
 
 assertRepoCheck(homeDashboardSource.includes('rows.reduce((s, t) => s + (Number(t?.amount) || 0), 0)'), 'home totals still aggregate trip.amount');
 
 const reportsAggregationSource = readFileSync('js/reports_aggregation_v5.js', 'utf8');
 assertRepoCheck(reportsAggregationSource.includes('const amt = Number(t?.amount) || 0;'), 'reports aggregation amt still reads trip.amount');
+
+const tripSharedEngineSource = readFileSync('js/trip_shared_engine_v5.js', 'utf8');
+assertRepoCheck(tripSharedEngineSource.includes('const settlement = deriveTripSettlement({'), 'normalizeTripRow derives settlement fields from resolved amount');
+assertRepoCheck(tripSharedEngineSource.includes('calculatedAmount: Number.isFinite(settlement.calculatedAmount) ? settlement.calculatedAmount : 0,'), 'normalizeTripRow persists calculatedAmount settlement field');
+assertRepoCheck(tripSharedEngineSource.includes('writtenCheckAmount: Number.isFinite(settlement.writtenCheckAmount) ? settlement.writtenCheckAmount : 0,'), 'normalizeTripRow persists writtenCheckAmount settlement field');
+assertRepoCheck(tripSharedEngineSource.includes('dealerAdjustment: Number.isFinite(settlement.dealerAdjustment) ? settlement.dealerAdjustment : 0,'), 'normalizeTripRow persists dealerAdjustment settlement field');
 const reportsMetricDetailSource = readFileSync('js/reports_metric_detail_v5.js', 'utf8');
 assertRepoCheck(
   reportsMetricDetailSource.includes('chartModel?.metricKey')
@@ -147,6 +164,11 @@ assertRepoCheck(
 );
 
 assertRepoCheck(utilsSource.includes('String(to2(t.amount)),'), 'CSV export Amount column still uses trip.amount');
+assertRepoCheck(
+  utilsSource.includes('const ppl = (Number.isFinite(pounds) && pounds > 0 && Number.isFinite(amount) && amount > 0)')
+    && utilsSource.includes(': resolveTripPayRate(t);'),
+  'CSV PricePerLb prefers amount ÷ pounds and falls back to resolved trip pay rate'
+);
 assertRepoCheck(utilsSource.includes('calculatedAmount,'), 'deriveTripSettlement still exposes calculatedAmount');
 assertRepoCheck(utilsSource.includes('writtenCheckAmount,'), 'deriveTripSettlement still exposes writtenCheckAmount');
 assertRepoCheck(utilsSource.includes('dealerAdjustment,'), 'deriveTripSettlement still exposes dealerAdjustment');
