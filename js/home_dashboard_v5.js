@@ -27,7 +27,9 @@ export function createHomeDashboardRenderer({
   getInstallSurfaceModel,
   runInstallAction,
   renderStandardReadOnlyTripCard,
-  createTripShareCardSeam
+  createTripShareCardSeam,
+  openModal,
+  closeModal
 }) {
   const timeframeFilterControls = createTimeframeFilterControlsSeam({
     escapeHtml,
@@ -40,6 +42,7 @@ export function createHomeDashboardRenderer({
     round2,
     formatMoney
   });
+  let screenshotCardPreviewBusy = false;
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
 
@@ -408,7 +411,7 @@ export function createHomeDashboardRenderer({
     });
     const homeOverviewRangeLabel = homeFilterLabel;
     const lastTripHeaderActionHtml = hasEditableLatestTrip
-      ? `<div class="homeLastTripActions"><button class="homeLastTripEditBtn" id="homeLastTripEditBtn" type="button">Edit Trip</button><button class="homeLastTripShareBtn" id="homeLastTripShareBtn" type="button">Share Card</button></div>`
+      ? `<div class="homeLastTripActions"><button class="homeLastTripEditBtn" id="homeLastTripEditBtn" type="button">Edit Trip</button><button class="homeLastTripShareBtn" id="homeLastTripShareBtn" type="button">Screenshot Card</button></div>`
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
     getApp().innerHTML = `
       ${renderPageHeader("home")}
@@ -535,25 +538,82 @@ export function createHomeDashboardRenderer({
     }
     const homeLastTripShareBtn = document.getElementById("homeLastTripShareBtn");
     if (homeLastTripShareBtn && newestSavedTrip) {
-      homeLastTripShareBtn.onclick = async () => {
-        homeLastTripShareBtn.disabled = true;
+      const runScreenshotCardAction = async (action) => {
+        if (screenshotCardPreviewBusy) return;
+        screenshotCardPreviewBusy = true;
+        const closeBtn = document.getElementById("homeScreenshotCardClose");
+        const saveBtn = document.getElementById("homeScreenshotCardSave");
+        const shareBtn = document.getElementById("homeScreenshotCardShare");
+        [closeBtn, saveBtn, shareBtn].forEach((button) => {
+          if (button instanceof HTMLButtonElement) button.disabled = true;
+        });
         try {
-          const result = await tripShareCardSeam.shareTripCard(newestSavedTrip);
-          if (result?.ok && result.method === "share") {
+          const actionResult = action === "save"
+            ? await tripShareCardSeam.saveTripCardImage(newestSavedTrip)
+            : await tripShareCardSeam.shareTripCardImage(newestSavedTrip);
+          if (actionResult?.ok && actionResult.method === "share") {
             showToast("Share opened");
-          } else if (result?.ok && result.method === "download") {
-            showToast("Share not supported here. Image downloaded.");
-          } else if (result?.reason === "share-canceled") {
+          } else if (actionResult?.ok && actionResult.method === "download") {
+            showToast(action === "save" ? "Image saved" : "Share not supported here. Image saved.");
+          } else if (actionResult?.reason === "share-canceled") {
             showToast("Share canceled");
           } else {
-            showToast("Could not create share card");
+            showToast(`Could not ${action === "save" ? "save image" : "share image"}`);
           }
         } catch (_error) {
-          showToast("Share card failed");
+          showToast(action === "save" ? "Save image failed" : "Share image failed");
         } finally {
-          homeLastTripShareBtn.disabled = false;
+          screenshotCardPreviewBusy = false;
+          [closeBtn, saveBtn, shareBtn].forEach((button) => {
+            if (button instanceof HTMLButtonElement) button.disabled = false;
+          });
         }
       };
+      const openScreenshotCardPreview = () => {
+        if (typeof renderStandardReadOnlyTripCard !== "function") {
+          showToast("Trip preview unavailable");
+          return;
+        }
+        if (typeof openModal !== "function") return;
+        openModal({
+          title: "Screenshot Card",
+          html: `
+            <div class="homeScreenshotCardPreviewWrap">
+              <div class="homeScreenshotCardPreviewHeader">
+                <div class="homeScreenshotCardPreviewBrand">Bank the Catch</div>
+                <div class="homeScreenshotCardPreviewLabel">Last Saved Trip</div>
+              </div>
+              <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(newestSavedTrip, { variant: "standard" })}</div>
+              <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>
+              <div class="homeScreenshotCardPreviewActions">
+                <button class="btn" id="homeScreenshotCardClose" type="button">Close</button>
+                <button class="btn" id="homeScreenshotCardSave" type="button">Save Image</button>
+                <button class="btn primary" id="homeScreenshotCardShare" type="button">Share Image</button>
+              </div>
+            </div>
+          `,
+          backdropClose: true,
+          escClose: true,
+          showCloseButton: false,
+          onOpen: () => {
+            const previewCloseBtn = document.getElementById("homeScreenshotCardClose");
+            if (previewCloseBtn) {
+              previewCloseBtn.onclick = () => {
+                if (typeof closeModal === "function") closeModal();
+              };
+            }
+            const previewSaveBtn = document.getElementById("homeScreenshotCardSave");
+            if (previewSaveBtn) {
+              previewSaveBtn.onclick = () => runScreenshotCardAction("save");
+            }
+            const previewShareBtn = document.getElementById("homeScreenshotCardShare");
+            if (previewShareBtn) {
+              previewShareBtn.onclick = () => runScreenshotCardAction("share");
+            }
+          }
+        });
+      };
+      homeLastTripShareBtn.onclick = () => openScreenshotCardPreview();
     }
 
     getApp().querySelectorAll("[data-kpi-detail]").forEach((btn) => {

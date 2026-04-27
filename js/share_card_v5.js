@@ -207,7 +207,7 @@ function downloadBlob(blob, filename) {
 }
 
 export function createTripShareCardSeam({ parseReportDateToISO, round2, formatMoney }) {
-  async function shareTripCard(trip) {
+  async function buildTripCardImage(trip) {
     if (!trip || !trip.id) return { ok: false, reason: "missing-trip" };
     const appVersion = String(window?.APP_VERSION || "").trim();
     const blob = await buildShareCardBlob({
@@ -219,6 +219,21 @@ export function createTripShareCardSeam({ parseReportDateToISO, round2, formatMo
     });
     const safeDate = (parseReportDateToISO(trip?.dateISO || "") || "trip").replace(/[^0-9-]/g, "");
     const fileName = `bank-the-catch-trip-${safeDate || "card"}.png`;
+    return { ok: true, blob, fileName };
+  }
+
+  async function saveTripCardImage(trip) {
+    const imageResult = await buildTripCardImage(trip);
+    if (!imageResult?.ok) return imageResult;
+    const { blob, fileName } = imageResult;
+    downloadBlob(blob, fileName);
+    return { ok: true, method: "download" };
+  }
+
+  async function shareTripCardImage(trip) {
+    const imageResult = await buildTripCardImage(trip);
+    if (!imageResult?.ok) return imageResult;
+    const { blob, fileName } = imageResult;
 
     let canShareFiles = false;
     if (typeof navigator !== "undefined" && navigator?.canShare) {
@@ -253,5 +268,9 @@ export function createTripShareCardSeam({ parseReportDateToISO, round2, formatMo
     };
   }
 
-  return { shareTripCard };
+  async function shareTripCard(trip) {
+    return shareTripCardImage(trip);
+  }
+
+  return { buildTripCardImage, saveTripCardImage, shareTripCardImage, shareTripCard };
 }
