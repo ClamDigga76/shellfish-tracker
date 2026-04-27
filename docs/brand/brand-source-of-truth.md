@@ -38,3 +38,12 @@ The checksum file is stored in standard `sha256sum --check` format for direct ve
 ## Storage/location rule
 If a raw source board image is committed, keep it under `docs/brand/reference/` only.
 Do not promote this docs source board directly into runtime/public app assets.
+
+## Source-input reference copies
+The committed source-input files in `docs/brand/reference/source-inputs/` are the repo reference copies to use for future export passes:
+
+- `btc-horizontal-logo-source-2026-04-27.jpg`
+- `btc-square-app-icon-source-2026-04-27.jpg`
+- `btc-wide-logo-lockup-source-2026-04-27.jpg`
+
+If these binaries are not yet present in git, stage/upload them to that folder using the exact names above before any icon/export generation pass.
