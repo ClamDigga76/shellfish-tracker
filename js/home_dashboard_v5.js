@@ -42,7 +42,6 @@ export function createHomeDashboardRenderer({
     round2,
     formatMoney
   });
-  let screenshotCardPreviewBusy = false;
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
 
@@ -538,37 +537,6 @@ export function createHomeDashboardRenderer({
     }
     const homeLastTripShareBtn = document.getElementById("homeLastTripShareBtn");
     if (homeLastTripShareBtn && newestSavedTrip) {
-      const runScreenshotCardAction = async (action) => {
-        if (screenshotCardPreviewBusy) return;
-        screenshotCardPreviewBusy = true;
-        const closeBtn = document.getElementById("homeScreenshotCardClose");
-        const saveBtn = document.getElementById("homeScreenshotCardSave");
-        const shareBtn = document.getElementById("homeScreenshotCardShare");
-        [closeBtn, saveBtn, shareBtn].forEach((button) => {
-          if (button instanceof HTMLButtonElement) button.disabled = true;
-        });
-        try {
-          const actionResult = action === "save"
-            ? await tripShareCardSeam.saveTripCardImage(newestSavedTrip)
-            : await tripShareCardSeam.shareTripCardImage(newestSavedTrip);
-          if (actionResult?.ok && actionResult.method === "share") {
-            showToast("Share opened");
-          } else if (actionResult?.ok && actionResult.method === "download") {
-            showToast(action === "save" ? "Image saved" : "Share not supported here. Image saved.");
-          } else if (actionResult?.reason === "share-canceled") {
-            showToast("Share canceled");
-          } else {
-            showToast(`Could not ${action === "save" ? "save image" : "share image"}`);
-          }
-        } catch (_error) {
-          showToast(action === "save" ? "Save image failed" : "Share image failed");
-        } finally {
-          screenshotCardPreviewBusy = false;
-          [closeBtn, saveBtn, shareBtn].forEach((button) => {
-            if (button instanceof HTMLButtonElement) button.disabled = false;
-          });
-        }
-      };
       const openScreenshotCardPreview = () => {
         if (typeof renderStandardReadOnlyTripCard !== "function") {
           showToast("Trip preview unavailable");
@@ -581,7 +549,7 @@ export function createHomeDashboardRenderer({
             <div class="homeScreenshotCardPreviewWrap">
               <div class="homeScreenshotCardPreviewSurface">
                 <div class="homeScreenshotCardPreviewHeader">
-                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png?v=693" alt="Bank the Catch" loading="lazy" decoding="async" />
+                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png?v=694" alt="Bank the Catch" loading="lazy" decoding="async" />
                   <div class="homeScreenshotCardPreviewBrandFallback" id="homeScreenshotCardPreviewBrandFallback">Bank the Catch</div>
                 </div>
                 <div class="homeScreenshotCardPreviewLabel">Last Saved Trip</div>
@@ -589,9 +557,7 @@ export function createHomeDashboardRenderer({
                 <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>
               </div>
               <div class="homeScreenshotCardPreviewActions">
-                <button class="btn btn-ghost" id="homeScreenshotCardClose" type="button">Close</button>
-                <button class="btn btn-ghost" id="homeScreenshotCardSave" type="button">Save Image</button>
-                <button class="btn primary" id="homeScreenshotCardShare" type="button">Share Image</button>
+                <button class="btn btn-ghost homeScreenshotCardPreviewCloseBtn" id="homeScreenshotCardClose" type="button">Close</button>
               </div>
             </div>
           `,
@@ -612,14 +578,6 @@ export function createHomeDashboardRenderer({
               previewCloseBtn.onclick = () => {
                 if (typeof closeModal === "function") closeModal();
               };
-            }
-            const previewSaveBtn = document.getElementById("homeScreenshotCardSave");
-            if (previewSaveBtn) {
-              previewSaveBtn.onclick = () => runScreenshotCardAction("save");
-            }
-            const previewShareBtn = document.getElementById("homeScreenshotCardShare");
-            if (previewShareBtn) {
-              previewShareBtn.onclick = () => runScreenshotCardAction("share");
             }
           }
         });

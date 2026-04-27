@@ -531,32 +531,49 @@
   gap:11px;
 }
 .homeScreenshotCardPreviewSurface{
-  border:1px solid rgba(121,173,255,.24);
+  border:1px solid rgba(133,176,246,.34);
   border-radius:16px;
   padding:12px 12px 10px;
-  background:linear-gradient(180deg, rgba(19,33,58,.66) 0%, rgba(9,16,31,.62) 100%);
-  box-shadow:0 10px 22px rgba(0,0,0,.2), inset 0 1px 0 rgba(214,231,255,.08);
+  background:
+    radial-gradient(130% 82% at 50% -2%, rgba(255,208,104,.2) 0%, rgba(255,208,104,0) 56%),
+    radial-gradient(125% 94% at 50% 0%, rgba(91,152,255,.22) 0%, rgba(91,152,255,0) 60%),
+    linear-gradient(180deg, rgba(17,33,63,.8) 0%, rgba(8,17,35,.82) 100%);
+  box-shadow:0 12px 24px rgba(0,0,0,.26), inset 0 1px 0 rgba(214,231,255,.09), inset 0 -1px 0 rgba(255,214,120,.07);
   display:grid;
   gap:9px;
 }
 .homeScreenshotCardPreviewHeader{
+  position:relative;
   display:grid;
   justify-items:center;
   gap:6px;
-  padding:10px 10px 9px;
-  border:1px solid rgba(132,182,255,.2);
+  padding:11px 10px 10px;
+  border:1px solid rgba(151,194,255,.3);
   border-radius:13px;
-  background:linear-gradient(180deg, rgba(12,22,41,.72) 0%, rgba(8,15,29,.62) 100%);
-  box-shadow:inset 0 1px 0 rgba(223,236,255,.08), 0 7px 16px rgba(0,0,0,.16);
+  background:
+    radial-gradient(74% 120% at 50% 8%, rgba(255,210,108,.26) 0%, rgba(255,210,108,0) 56%),
+    radial-gradient(106% 140% at 50% 0%, rgba(82,150,255,.3) 0%, rgba(82,150,255,0) 60%),
+    linear-gradient(180deg, rgba(13,25,49,.9) 0%, rgba(8,15,30,.84) 100%);
+  box-shadow:inset 0 1px 0 rgba(223,236,255,.12), inset 0 -1px 0 rgba(255,212,112,.08), 0 8px 16px rgba(0,0,0,.2);
+}
+.homeScreenshotCardPreviewHeader::after{
+  content:"";
+  position:absolute;
+  inset:1px;
+  border-radius:12px;
+  background:radial-gradient(60% 75% at 50% 30%, rgba(255,214,122,.1) 0%, rgba(255,214,122,0) 100%);
+  pointer-events:none;
 }
 .homeScreenshotCardPreviewLogo{
+  position:relative;
+  z-index:1;
   display:block;
   justify-self:center;
   margin-inline:auto;
   width:min(228px, 100%);
   height:auto;
   max-width:100%;
-  filter:drop-shadow(0 1px 6px rgba(34,104,231,.22)) drop-shadow(0 0 16px rgba(255,212,120,.14));
+  filter:drop-shadow(0 1px 7px rgba(30,96,216,.26)) drop-shadow(0 0 18px rgba(255,213,122,.22));
 }
 .homeScreenshotCardPreviewBrandFallback{
   display:none;
@@ -594,28 +611,23 @@
   opacity:.96;
 }
 .homeScreenshotCardPreviewActions{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:6px;
-  padding-top:3px;
+  display:flex;
+  justify-content:center;
+  padding-top:2px;
   border-top:1px solid rgba(145,191,255,.14);
 }
 .homeScreenshotCardPreviewActions .btn{
-  width:100%;
-  min-height:36px;
-  padding:7px 10px;
-  font-size:12px;
-  font-weight:680;
+  min-height:32px;
+  padding:6px 14px;
+  font-size:11px;
+  font-weight:640;
   box-shadow:none;
 }
-.homeScreenshotCardPreviewActions .btn.btn-ghost{
+.homeScreenshotCardPreviewActions .homeScreenshotCardPreviewCloseBtn{
+  min-width:84px;
   color:var(--text-muted-strong);
   border-color:rgba(159,190,242,.24);
-  background:rgba(10,16,30,.34);
-}
-.homeScreenshotCardPreviewActions .btn.primary{
-  border-color:rgba(126,178,255,.42);
-  background:linear-gradient(180deg, rgba(47,109,198,.72) 0%, rgba(25,66,136,.76) 100%);
+  background:rgba(9,16,30,.4);
 }
 @media (max-width:380px){
   .homeScreenshotCardPreviewLogo{
