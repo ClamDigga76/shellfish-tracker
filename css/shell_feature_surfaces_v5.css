@@ -528,56 +528,92 @@
 .homeScreenshotCardPreviewWrap{
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:11px;
+}
+.homeScreenshotCardPreviewSurface{
+  border:1px solid rgba(121,173,255,.24);
+  border-radius:16px;
+  padding:12px 12px 10px;
+  background:linear-gradient(180deg, rgba(19,33,58,.66) 0%, rgba(9,16,31,.62) 100%);
+  box-shadow:0 10px 22px rgba(0,0,0,.2), inset 0 1px 0 rgba(214,231,255,.08);
+  display:grid;
+  gap:9px;
 }
 .homeScreenshotCardPreviewHeader{
-  border:1px solid rgba(121,173,255,.3);
-  border-radius:14px;
-  padding:10px 12px;
-  background:linear-gradient(180deg, rgba(25,41,73,.78) 0%, rgba(11,20,37,.74) 100%);
+  display:grid;
+  gap:6px;
 }
-.homeScreenshotCardPreviewBrand{
+.homeScreenshotCardPreviewLogo{
+  display:block;
+  width:min(240px, 100%);
+  height:auto;
+  max-width:100%;
+  filter:drop-shadow(0 2px 8px rgba(42,113,255,.22));
+}
+.homeScreenshotCardPreviewBrandFallback{
+  display:none;
   margin:0;
-  font-size:14px;
+  font-size:13px;
   line-height:1.2;
-  letter-spacing:.05em;
-  text-transform:uppercase;
+  letter-spacing:.03em;
   color:#edf5ff;
-  font-weight:900;
+  font-weight:820;
 }
 .homeScreenshotCardPreviewLabel{
-  margin-top:3px;
-  font-size:11px;
+  margin-top:0;
+  font-size:10px;
   line-height:1.25;
-  letter-spacing:.05em;
+  letter-spacing:.08em;
   color:var(--text-muted-strong);
   text-transform:uppercase;
-  font-weight:800;
+  font-weight:760;
 }
 .homeScreenshotCardPreviewCard{
   border-radius:14px;
   overflow:hidden;
   border:1px solid rgba(145,191,255,.24);
+  background:rgba(7,14,27,.58);
 }
 .homeScreenshotCardPreviewFooter{
-  font-size:11px;
+  font-size:10px;
   line-height:1.35;
-  letter-spacing:.04em;
-  color:var(--text-muted-strong);
-  text-transform:uppercase;
-  font-weight:700;
+  letter-spacing:.03em;
+  color:#8ec2ff;
+  font-weight:650;
+  text-align:center;
+  text-shadow:0 0 10px rgba(88,165,255,.2);
+  opacity:.96;
 }
 .homeScreenshotCardPreviewActions{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:8px;
+  gap:7px;
+  padding-top:2px;
+  border-top:1px solid rgba(145,191,255,.14);
 }
 .homeScreenshotCardPreviewActions .btn{
-  min-height:42px;
-  font-size:13px;
+  min-height:38px;
+  padding:7px 10px;
+  font-size:12px;
+  font-weight:700;
+  box-shadow:none;
+  border-color:rgba(159,190,242,.26);
 }
 .homeScreenshotCardPreviewActions .btn:first-child{
   grid-column:1 / -1;
+}
+.homeScreenshotCardPreviewActions .btn.btn-ghost{
+  color:var(--text-muted-strong);
+  background:rgba(10,16,30,.38);
+}
+.homeScreenshotCardPreviewActions .btn.primary{
+  background:linear-gradient(180deg, rgba(52,123,224,.82) 0%, rgba(30,74,152,.84) 100%);
+  border-color:rgba(126,178,255,.5);
+}
+@media (max-width:380px){
+  .homeScreenshotCardPreviewLogo{
+    width:min(210px, 100%);
+  }
 }
 
 .homeOverviewCard .reportsHeroEyebrow{

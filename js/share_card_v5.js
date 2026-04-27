@@ -119,8 +119,21 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   }
 
   ctx.fillStyle = "#f4f8ff";
-  ctx.font = "700 52px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-  ctx.fillText("Bank the Catch", innerX + 164, innerY + 110);
+  let logoDrawn = false;
+  try {
+    const logo = await loadImage("./docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png?v=692");
+    const logoWidth = 360;
+    const ratio = logo.naturalWidth > 0 ? (logo.naturalHeight / logo.naturalWidth) : 0.23;
+    const logoHeight = Math.max(62, Math.round(logoWidth * ratio));
+    ctx.drawImage(logo, innerX + 164, innerY + 62, logoWidth, logoHeight);
+    logoDrawn = true;
+  } catch (_error) {
+    logoDrawn = false;
+  }
+  if (!logoDrawn) {
+    ctx.font = "700 52px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.fillText("Bank the Catch", innerX + 164, innerY + 110);
+  }
 
   ctx.fillStyle = "rgba(198,219,255,0.92)";
   ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
@@ -177,9 +190,13 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
     ctx.fillText(metric.value, cardX + 26, y + 76);
   });
 
-  ctx.fillStyle = "rgba(200,222,255,0.9)";
-  ctx.font = "500 24px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillStyle = "#86beff";
+  ctx.shadowColor = "rgba(95,171,255,0.25)";
+  ctx.shadowBlur = 8;
+  ctx.font = "600 24px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
   ctx.fillText("Logged with Bank the Catch", innerX + 58, innerY + innerH - 60);
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
 
   const blob = await new Promise((resolve, reject) => {
     canvas.toBlob((nextBlob) => {
