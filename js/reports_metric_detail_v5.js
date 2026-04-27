@@ -692,7 +692,7 @@ export function createReportsMetricDetailSeam(deps){
     const detailChartContext = viewModel.isHomeMetricDetail
       ? meta.homeChartContext
       : (meta.primaryBasis?.basisLabel || meta.chartContext);
-    const detailInsight = viewModel.isHomeMetricDetail ? meta.homeInsight : meta.insight;
+    const detailInsight = viewModel.isHomeMetricDetail ? (meta.homeInsightCompact || meta.homeInsight) : meta.insight;
     const compareContractLabel = viewModel.compareFoundation.period?.compareModelLabel || "Comparison";
     const compareContractBasis = viewModel.compareFoundation.period?.currentLabel && viewModel.compareFoundation.period?.previousLabel
       ? formatPeriodPair(viewModel.compareFoundation.period.previousLabel, viewModel.compareFoundation.period.currentLabel)
@@ -711,6 +711,23 @@ export function createReportsMetricDetailSeam(deps){
     const secondaryCharts = Array.isArray(meta.secondaryCharts) ? meta.secondaryCharts.filter(Boolean) : [];
     const hasHomePrimaryChart = viewModel.isHomeMetricDetail && !!meta.homePrimaryChartModel;
     const homeSnapshotItems = Array.isArray(meta.homeSnapshotItems) ? meta.homeSnapshotItems.filter((item)=> item?.label && item?.value) : [];
+    const renderHomeHeroValue = ()=> {
+      const rawHeroValue = String(meta.heroValue || "").trim();
+      if(!rawHeroValue || rawHeroValue === "—") return `<span class="homeMetricHeroMain">—</span>`;
+      if(viewModel.metricKey === "pounds"){
+        const poundsMatch = rawHeroValue.match(/^(.+?)\s*(lbs)$/i);
+        if(poundsMatch){
+          return `<span class="homeMetricHeroMain">${escapeHtml(poundsMatch[1])}</span><span class="homeMetricHeroUnit">${escapeHtml(poundsMatch[2])}</span>`;
+        }
+      }
+      if(viewModel.metricKey === "ppl"){
+        const pplMatch = rawHeroValue.match(/^(.+?)(\/lb)$/i);
+        if(pplMatch){
+          return `<span class="homeMetricHeroMain">${escapeHtml(pplMatch[1])}</span><span class="homeMetricHeroUnit">${escapeHtml(pplMatch[2])}</span>`;
+        }
+      }
+      return `<span class="homeMetricHeroMain">${escapeHtml(rawHeroValue)}</span>`;
+    };
     const renderSharedChartCard = ({ chart, forHome = false })=> chartStorySeam.renderChartStoryCard({
       mode: "lean",
       cardTag: "div",
@@ -751,7 +768,7 @@ export function createReportsMetricDetailSeam(deps){
           </div>
           <div class="${surfaceMode.detailHeroWrapClass}">
             <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
-            <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>
+            <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${renderHomeHeroValue()}</div>
           </div>
           <div class="homeMetricLeadIn">${escapeHtml(detailInsight)}</div>
           ${homeSnapshotItems.length ? `
@@ -832,6 +849,33 @@ export function createReportsMetricDetailSeam(deps){
     const primaryPayload = primaryBasis?.comparePayload || compareFoundation.metrics?.[metricKey] || null;
     const primaryChart = primaryBasis?.primaryChart || detailCharts?.[metricKey] || null;
     const resolveHomeFreeConfig = (targetMetricKey)=> HOME_FREE_KPI_DETAIL_CONFIG[targetMetricKey] || null;
+    const buildHomeCompactInsight = ({ targetMetricKey, heroValue, snapshotItems })=> {
+      const safeSnapshotItems = Array.isArray(snapshotItems) ? snapshotItems : [];
+      const latestItem = safeSnapshotItems.find((item)=> String(item?.label || "").toLowerCase() === "latest")
+        || safeSnapshotItems[0];
+      const avgItem = safeSnapshotItems.find((item)=> String(item?.label || "").toLowerCase() === "average");
+      if(targetMetricKey === "trips"){
+        return latestItem
+          ? `You logged ${heroValue} in this range; latest month was ${latestItem.value}.`
+          : `You logged ${heroValue} in this range.`;
+      }
+      if(targetMetricKey === "pounds"){
+        return avgItem
+          ? `Total landed is ${heroValue}, running about ${avgItem.value} per visible month.`
+          : `Total landed is ${heroValue} in this selected range.`;
+      }
+      if(targetMetricKey === "amount"){
+        return latestItem
+          ? `${heroValue} paid in this range, with ${latestItem.value} in the latest month shown.`
+          : `${heroValue} paid in this selected range.`;
+      }
+      if(targetMetricKey === "ppl"){
+        return latestItem
+          ? `Your weighted rate is ${heroValue} (${getPplFormulaText({ metricKey: targetMetricKey, surface: "short" })}); latest month is ${latestItem.value}.`
+          : `Your weighted rate is ${heroValue} (${getPplFormulaText({ metricKey: targetMetricKey, surface: "short" })}).`;
+      }
+      return "";
+    };
     const formatHeroFromPrimaryBasis = (targetMetric, basis)=> {
       const value = Number(basis?.currentValue);
       if(!Number.isFinite(value)) return "—";
@@ -916,13 +960,15 @@ export function createReportsMetricDetailSeam(deps){
             fallbackContext: "Simple trip trend across visible months"
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
+          const heroValue = resolveHeroValue("trips");
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart });
           return {
         title: "Trips breakdown",
         homeTitle: "Trips",
         homeTitleToneClass: "homeMetricSimpleTitle--trips",
         eyebrow: "Metric breakdown",
         heroLabel: "Trips this range",
-        heroValue: resolveHeroValue("trips"),
+        heroValue,
         heroClass: "trips",
         comparePayload: primaryPayload,
         primaryBasis,
@@ -947,7 +993,8 @@ export function createReportsMetricDetailSeam(deps){
         homeInsight: homeFreeConfig?.helperLine || "Trips logged in your selected Home range.",
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
-        homeSnapshotItems: buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart })
+        homeSnapshotItems,
+        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "trips", heroValue, snapshotItems: homeSnapshotItems })
           };
         })(),
       },
@@ -960,13 +1007,15 @@ export function createReportsMetricDetailSeam(deps){
             fallbackContext: "Simple pounds trend across visible months"
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
+          const heroValue = resolveHeroValue("pounds");
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "pounds", chartModel: homePrimaryChart });
           return {
         title: "Pounds breakdown",
         homeTitle: "Pounds",
         homeTitleToneClass: "homeMetricSimpleTitle--pounds",
         eyebrow: "Metric breakdown",
         heroLabel: "Pounds this range",
-        heroValue: resolveHeroValue("pounds"),
+        heroValue,
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
         primaryBasis,
@@ -991,7 +1040,8 @@ export function createReportsMetricDetailSeam(deps){
         homeInsight: homeFreeConfig?.helperLine || "Total pounds landed in your selected Home range.",
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
-        homeSnapshotItems: buildHomeSnapshotItems({ metricKey: "pounds", chartModel: homePrimaryChart })
+        homeSnapshotItems,
+        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "pounds", heroValue, snapshotItems: homeSnapshotItems })
           };
         })(),
       },
@@ -1004,13 +1054,15 @@ export function createReportsMetricDetailSeam(deps){
             fallbackContext: "Simple paid trend across visible months"
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
+          const heroValue = resolveHeroValue("amount");
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "amount", chartModel: homePrimaryChart });
           return {
         title: "Amount breakdown",
         homeTitle: "Amount",
         homeTitleToneClass: "homeMetricSimpleTitle--amount",
         eyebrow: "Metric breakdown",
         heroLabel: "Amount this range",
-        heroValue: resolveHeroValue("amount"),
+        heroValue,
         heroClass: "money",
         comparePayload: primaryPayload,
         primaryBasis,
@@ -1047,7 +1099,8 @@ export function createReportsMetricDetailSeam(deps){
         homeInsight: homeFreeConfig?.helperLine || "Total paid amount from trips in your selected Home range.",
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
-        homeSnapshotItems: buildHomeSnapshotItems({ metricKey: "amount", chartModel: homePrimaryChart })
+        homeSnapshotItems,
+        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "amount", heroValue, snapshotItems: homeSnapshotItems })
           };
         })(),
       },
@@ -1060,13 +1113,15 @@ export function createReportsMetricDetailSeam(deps){
             fallbackContext: "Simple Avg $ / lb trend across visible months"
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
+          const heroValue = resolveHeroValue("ppl");
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "ppl", chartModel: homePrimaryChart });
           return {
         title: "Avg $ / lb breakdown",
         homeTitle: "Avg $ / lb",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
         heroLabel: "Avg $ / lb this range",
-        heroValue: resolveHeroValue("ppl"),
+        heroValue,
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
         primaryBasis,
@@ -1091,7 +1146,8 @@ export function createReportsMetricDetailSeam(deps){
         homeInsight: homeFreeConfig?.helperLine || "Calculated from total paid ÷ total pounds.",
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
-        homeSnapshotItems: buildHomeSnapshotItems({ metricKey: "ppl", chartModel: homePrimaryChart })
+        homeSnapshotItems,
+        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "ppl", heroValue, snapshotItems: homeSnapshotItems })
           };
         })()
       }
