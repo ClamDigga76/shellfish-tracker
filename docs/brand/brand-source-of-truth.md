@@ -12,6 +12,8 @@ The latest uploaded branding board is now the official Bank the Catch visual sou
 
 This decision **replaces prior branding references** for implementation planning and future exported asset work.
 
+The checksum file is stored in standard `sha256sum --check` format for direct verification.
+
 ## What is current in the locked source
 - Full premium Bank the Catch logo
 - Square BTC app icon with **smaller BTC lettering**
