@@ -582,7 +582,7 @@ export function createHomeDashboardRenderer({
               <div class="homeScreenshotCardPreviewSurface">
                 <div class="homeScreenshotCardPreviewHeader">
                   <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png?v=692" alt="Bank the Catch" loading="lazy" decoding="async" />
-                  <div class="homeScreenshotCardPreviewBrandFallback" id="homeScreenshotCardPreviewBrandFallback" aria-hidden="true">Bank the Catch</div>
+                  <div class="homeScreenshotCardPreviewBrandFallback" id="homeScreenshotCardPreviewBrandFallback">Bank the Catch</div>
                 </div>
                 <div class="homeScreenshotCardPreviewLabel">Last Saved Trip</div>
                 <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(newestSavedTrip, { variant: "standard" })}</div>
