@@ -1,8 +1,17 @@
 /* Feature-surface styles extracted from shell_shared_v5.css (v580) */
 .tripsFiltersCard{padding:var(--card-pad-y) var(--card-pad-x)}
+.tripsFiltersSummaryRow{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.tripsFiltersSummaryBlock{min-width:0;display:grid;gap:4px}
+.tripsFiltersSummaryLine{font-size:13px;line-height:1.35;font-weight:730;color:var(--text)}
+.tripsFiltersSummaryCount{line-height:1.25}
+.tripsFiltersSummaryActions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px}
+.tripsFiltersToggleBtn{min-width:94px}
+.tripsFiltersBody{margin-top:var(--card-body-gap);padding-top:var(--card-body-gap);border-top:1px solid var(--line);display:grid;gap:var(--card-body-gap)}
 .tripsFiltersGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;align-items:end}
 .tripsFilterField{min-width:0}
 .tripsFilterField--disabled{opacity:.72}
+.tripsFilterField--future{opacity:.58}
+.tripsFilterFutureLabel{font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:var(--text-muted)}
 .tripsFilterActions{margin-top:var(--card-body-gap);padding-top:var(--card-body-gap);border-top:1px solid var(--line);display:flex;align-items:center;gap:8px}
 .tripsFilterActionExport{flex:1;min-width:0}
 .tripsFilterActionExport .btn{width:100%}
@@ -209,6 +218,8 @@
 }
 
 @media (max-width:380px){
+  .tripsFiltersSummaryRow{flex-direction:column;align-items:stretch}
+  .tripsFiltersSummaryActions{justify-content:flex-start}
   .tripsFiltersGrid{grid-template-columns:1fr}
 }
 
