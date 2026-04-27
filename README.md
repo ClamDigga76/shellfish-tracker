@@ -56,6 +56,9 @@ Start here:
 - `RUNTIME-PULL-LOCK.md` — runtime re-sync / anti-drift helper
 - `PARKING-LOT-GUIDE.md` — Parking Lot / Suggestions behavior
 - `testing-checklist.md` — verification loop
+- `docs/PARKING-LOT.md` — active parking lot items and status
+- `docs/brand/brand-source-of-truth.md` — current brand source-image lock
+- `docs/brand/reference/README.md` — docs-only brand source staging rules
 
 ## Release-candidate note
 
