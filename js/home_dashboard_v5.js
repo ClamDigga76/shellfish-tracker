@@ -579,15 +579,18 @@ export function createHomeDashboardRenderer({
           title: "Screenshot Card",
           html: `
             <div class="homeScreenshotCardPreviewWrap">
-              <div class="homeScreenshotCardPreviewHeader">
-                <div class="homeScreenshotCardPreviewBrand">Bank the Catch</div>
+              <div class="homeScreenshotCardPreviewSurface">
+                <div class="homeScreenshotCardPreviewHeader">
+                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png?v=692" alt="Bank the Catch" loading="lazy" decoding="async" />
+                  <div class="homeScreenshotCardPreviewBrandFallback" id="homeScreenshotCardPreviewBrandFallback">Bank the Catch</div>
+                </div>
                 <div class="homeScreenshotCardPreviewLabel">Last Saved Trip</div>
+                <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(newestSavedTrip, { variant: "standard" })}</div>
+                <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>
               </div>
-              <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(newestSavedTrip, { variant: "standard" })}</div>
-              <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>
               <div class="homeScreenshotCardPreviewActions">
-                <button class="btn" id="homeScreenshotCardClose" type="button">Close</button>
-                <button class="btn" id="homeScreenshotCardSave" type="button">Save Image</button>
+                <button class="btn btn-ghost" id="homeScreenshotCardClose" type="button">Close</button>
+                <button class="btn btn-ghost" id="homeScreenshotCardSave" type="button">Save Image</button>
                 <button class="btn primary" id="homeScreenshotCardShare" type="button">Share Image</button>
               </div>
             </div>
@@ -596,6 +599,14 @@ export function createHomeDashboardRenderer({
           escClose: true,
           showCloseButton: false,
           onOpen: () => {
+            const previewLogo = document.getElementById("homeScreenshotCardPreviewLogo");
+            const previewBrandFallback = document.getElementById("homeScreenshotCardPreviewBrandFallback");
+            if (previewLogo && previewBrandFallback) {
+              previewLogo.addEventListener("error", () => {
+                previewLogo.style.display = "none";
+                previewBrandFallback.style.display = "block";
+              }, { once: true });
+            }
             const previewCloseBtn = document.getElementById("homeScreenshotCardClose");
             if (previewCloseBtn) {
               previewCloseBtn.onclick = () => {
