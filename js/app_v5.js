@@ -611,6 +611,8 @@ const { renderHome } = createHomeDashboardRenderer({
   runInstallAction: () => runInstallAction(),
   renderStandardReadOnlyTripCard,
   createTripShareCardSeam,
+  openModal,
+  closeModal,
   isFeatureAllowed: (featureKey, plan) => entitlements.isFeatureAllowed(featureKey, plan),
   entitlementFeatureKeys: entitlements.FEATURES
 });

@@ -525,6 +525,60 @@
   font-size:11px;
   line-height:1.45;
 }
+.homeScreenshotCardPreviewWrap{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.homeScreenshotCardPreviewHeader{
+  border:1px solid rgba(121,173,255,.3);
+  border-radius:14px;
+  padding:10px 12px;
+  background:linear-gradient(180deg, rgba(25,41,73,.78) 0%, rgba(11,20,37,.74) 100%);
+}
+.homeScreenshotCardPreviewBrand{
+  margin:0;
+  font-size:14px;
+  line-height:1.2;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:#edf5ff;
+  font-weight:900;
+}
+.homeScreenshotCardPreviewLabel{
+  margin-top:3px;
+  font-size:11px;
+  line-height:1.25;
+  letter-spacing:.05em;
+  color:var(--text-muted-strong);
+  text-transform:uppercase;
+  font-weight:800;
+}
+.homeScreenshotCardPreviewCard{
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid rgba(145,191,255,.24);
+}
+.homeScreenshotCardPreviewFooter{
+  font-size:11px;
+  line-height:1.35;
+  letter-spacing:.04em;
+  color:var(--text-muted-strong);
+  text-transform:uppercase;
+  font-weight:700;
+}
+.homeScreenshotCardPreviewActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.homeScreenshotCardPreviewActions .btn{
+  min-height:42px;
+  font-size:13px;
+}
+.homeScreenshotCardPreviewActions .btn:first-child{
+  grid-column:1 / -1;
+}
 
 .homeOverviewCard .reportsHeroEyebrow{
   font-size:14px;
