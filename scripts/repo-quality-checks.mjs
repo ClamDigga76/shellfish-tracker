@@ -166,6 +166,11 @@ assertRepoCheck(
   'home free compare chart cards are suppressed when no real prior month comparison exists'
 );
 assertRepoCheck(
+  reportsMetricDetailSource.includes('const latestItem = safeSnapshotItems.find((item)=> String(item?.label || "").toLowerCase() === "latest")')
+    && reportsMetricDetailSource.includes('|| safeSnapshotItems[0];'),
+  'home compact insight resolves Latest snapshot item before falling back to first snapshot item'
+);
+assertRepoCheck(
   reportsMetricDetailSource.includes(': (primaryBasisByMetric?.[metricKey]?.primaryChart || detailCharts?.[metricKey] || null)'),
   'reports metric detail primary compare chart path remains unchanged'
 );
