@@ -851,7 +851,8 @@ export function createReportsMetricDetailSeam(deps){
     const resolveHomeFreeConfig = (targetMetricKey)=> HOME_FREE_KPI_DETAIL_CONFIG[targetMetricKey] || null;
     const buildHomeCompactInsight = ({ targetMetricKey, heroValue, snapshotItems })=> {
       const safeSnapshotItems = Array.isArray(snapshotItems) ? snapshotItems : [];
-      const latestItem = safeSnapshotItems[0];
+      const latestItem = safeSnapshotItems.find((item)=> String(item?.label || "").toLowerCase() === "latest")
+        || safeSnapshotItems[0];
       const avgItem = safeSnapshotItems.find((item)=> String(item?.label || "").toLowerCase() === "average");
       if(targetMetricKey === "trips"){
         return latestItem
