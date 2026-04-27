@@ -455,6 +455,16 @@ export function createSettingsScreenOrchestrator({
     const installStatusPill = document.getElementById("installStatusPill");
     const aboutStatusPill = document.getElementById("aboutStatusPill");
     const advancedStatusPill = document.getElementById("advancedStatusPill");
+    const dataListsSummaryLine = document.getElementById("dataListsSummaryLine");
+    const dataListsStatusPill = document.getElementById("dataListsStatusPill");
+
+    const dataListsSummaryText = `${areaCount} areas • ${dealerCount} dealers`;
+    const dataListsPillText = `${areaCount}A/${dealerCount}D`;
+    if (dataListsSummaryLine) dataListsSummaryLine.textContent = dataListsSummaryText;
+    if (dataListsStatusPill) {
+      dataListsStatusPill.textContent = dataListsPillText;
+      dataListsStatusPill.title = dataListsSummaryText;
+    }
 
     if (updatesSummaryLine) {
       updatesSummaryLine.textContent = "Version check in progress";
@@ -471,9 +481,11 @@ export function createSettingsScreenOrchestrator({
     }
     if (aboutStatusPill) {
       aboutStatusPill.textContent = displayBuildVersion;
+      aboutStatusPill.title = `Current build ${displayBuildVersion}`;
     }
     if (advancedStatusPill) {
       advancedStatusPill.textContent = "Support";
+      advancedStatusPill.title = "Support tools and reset actions";
     }
 
     if (installSummaryLine) {
@@ -485,6 +497,7 @@ export function createSettingsScreenOrchestrator({
       installStatusPill.textContent = installModel
         ? resolveInstallStatusPill(installModel)
         : "Checking";
+      installStatusPill.title = installSummaryLine?.textContent || "Install readiness status";
     }
     if (installActionBtn && installModel) {
       installActionBtn.onclick = async () => {
@@ -515,11 +528,19 @@ export function createSettingsScreenOrchestrator({
         if (normalized.includes("latest") || normalized.includes("current") || normalized.includes("up to date")) return "Up to date";
         return "Checking";
       };
+      const extractVersionToken = (versionMetaText) => {
+        const match = String(versionMetaText || "").match(/\bv\d+\b/i);
+        return match ? match[0].toLowerCase() : "";
+      };
       const syncUpdateSummaryLine = () => {
         const status = String(updateBigStatusEl.textContent || "").trim();
         const versionMeta = String(updateVersionLineEl?.textContent || "").trim();
         updatesSummaryLine.textContent = versionMeta ? `${status} • ${versionMeta}` : (status || "Version status available");
-        if (updatesStatusPill) updatesStatusPill.textContent = formatUpdateStatusPill(status);
+        if (updatesStatusPill) {
+          const versionToken = extractVersionToken(versionMeta);
+          updatesStatusPill.textContent = versionToken || formatUpdateStatusPill(status);
+          updatesStatusPill.title = updatesSummaryLine.textContent || "Update status";
+        }
       };
       syncUpdateSummaryLine();
       const updateObserver = new MutationObserver(() => syncUpdateSummaryLine());

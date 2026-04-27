@@ -137,6 +137,11 @@ assertRepoCheck(homeDashboardSource.includes('rows.reduce((s, t) => s + (Number(
 
 const reportsAggregationSource = readFileSync('js/reports_aggregation_v5.js', 'utf8');
 assertRepoCheck(reportsAggregationSource.includes('const amt = Number(t?.amount) || 0;'), 'reports aggregation amt still reads trip.amount');
+const settingsScreenSource = readFileSync('js/settings_screen_v5.js', 'utf8');
+const settingsFeatureCssSource = readFileSync('css/shell_feature_surfaces_v5.css', 'utf8');
+assertRepoCheck(settingsScreenSource.includes('data-settings-accordion'), 'settings screen keeps grouped accordion data-settings-accordion hooks');
+assertRepoCheck(settingsScreenSource.includes('settingsAccordionSummary'), 'settings screen keeps settings accordion summary surface');
+assertRepoCheck(settingsFeatureCssSource.includes('.settingsAccordionSummary') && settingsFeatureCssSource.includes('.settingsAccordionPill'), 'settings feature CSS keeps compact accordion summary and pill selectors');
 
 const tripSharedEngineSource = readFileSync('js/trip_shared_engine_v5.js', 'utf8');
 assertRepoCheck(tripSharedEngineSource.includes('const settlement = deriveTripSettlement({'), 'normalizeTripRow derives settlement fields from resolved amount');
