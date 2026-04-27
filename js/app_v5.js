@@ -56,6 +56,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   { renderHelpViewHTML, renderAboutViewHTML },
   { renderTripEntryForm },
   { createHomeDashboardRenderer },
+  _tripShareCardModule,
   _chartStorySeamModule,
   { createFeedbackSeam },
   _tripScreenSharedHelpersModule,

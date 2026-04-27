@@ -2,6 +2,7 @@ import { createTimeframeFilterControlsSeam } from "./timeframe_filter_controls_s
 import { createFilteredRowsMemo, createRowsComputationMemo } from "./runtime_memo_v5.js";
 import { renderInstallSurface } from "./install_surface_renderer_v5.js";
 import { createStatusSurfaceSeam } from "./status_surface_seam_v5.js";
+import { createTripShareCardSeam } from "./share_card_v5.js";
 
 export function createHomeDashboardRenderer({
   state,
@@ -34,6 +35,11 @@ export function createHomeDashboardRenderer({
     formatDateDMY
   });
   const statusSurfaceSeam = createStatusSurfaceSeam({ escapeHtml });
+  const tripShareCardSeam = createTripShareCardSeam({
+    parseReportDateToISO,
+    round2,
+    formatMoney
+  });
   let homeKpiFitBound = false;
   let homeKpiFitRaf = 0;
 
@@ -402,7 +408,7 @@ export function createHomeDashboardRenderer({
     });
     const homeOverviewRangeLabel = homeFilterLabel;
     const lastTripHeaderActionHtml = hasEditableLatestTrip
-      ? `<button class="homeLastTripEditBtn" id="homeLastTripEditBtn" type="button">Edit Trip</button>`
+      ? `<div class="homeLastTripActions"><button class="homeLastTripEditBtn" id="homeLastTripEditBtn" type="button">Edit Trip</button><button class="homeLastTripShareBtn" id="homeLastTripShareBtn" type="button">Share Card</button></div>`
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
     getApp().innerHTML = `
       ${renderPageHeader("home")}
@@ -525,6 +531,28 @@ export function createHomeDashboardRenderer({
         state.view = "edit";
         saveState();
         render();
+      };
+    }
+    const homeLastTripShareBtn = document.getElementById("homeLastTripShareBtn");
+    if (homeLastTripShareBtn && newestSavedTrip) {
+      homeLastTripShareBtn.onclick = async () => {
+        homeLastTripShareBtn.disabled = true;
+        try {
+          const result = await tripShareCardSeam.shareTripCard(newestSavedTrip);
+          if (result?.ok && result.method === "share") {
+            showToast("Share opened");
+          } else if (result?.ok && result.method === "download") {
+            showToast("Share not supported here. PNG downloaded.");
+          } else if (result?.reason === "share-canceled") {
+            showToast("Share canceled");
+          } else {
+            showToast("Could not create share card");
+          }
+        } catch (_error) {
+          showToast("Share card failed");
+        } finally {
+          homeLastTripShareBtn.disabled = false;
+        }
       };
     }
 

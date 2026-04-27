@@ -477,6 +477,11 @@
   justify-content:space-between;
   gap:10px;
 }
+.homeLastTripActions{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
 .homeLastTripRangePill{
   font-size:11px;
   line-height:1.2;
@@ -499,6 +504,19 @@
   background:rgba(8,12,20,.22);
   color:var(--text-muted-strong);
   font-weight:700;
+  box-shadow:none;
+}
+.homeLastTripShareBtn{
+  padding:2px 8px;
+  min-height:0;
+  font-size:10px;
+  line-height:1.2;
+  letter-spacing:.03em;
+  white-space:nowrap;
+  border-color:rgba(255,198,112,.42);
+  background:linear-gradient(180deg, rgba(36,86,174,.56) 0%, rgba(15,37,79,.62) 100%);
+  color:#edf5ff;
+  font-weight:760;
   box-shadow:none;
 }
 .homeLastTripContext{
