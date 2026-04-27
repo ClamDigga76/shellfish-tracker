@@ -5,7 +5,7 @@
 ### BRAND-0 — Brand Source Image Lock
 - **Status:** Locked (completed in docs lane)
 - **Locked on:** 2026-04-27
-- **Source of truth:** The latest uploaded branding image attached to `Pull BRAND-0`.
+- **Source of truth:** `docs/brand/reference/bank-the-catch-brand-authority-2026-04-27.md` (with checksum in `docs/brand/reference/bank-the-catch-brand-authority-2026-04-27.sha256`).
 - **Decision:** This latest image is now the official Bank the Catch visual source of truth and **replaces all older branding references**.
 - **Implementation rule:** Future exported app assets must be derived from this locked image (or files exported from it), not older mockups.
 - **Current variants confirmed in the locked source:**

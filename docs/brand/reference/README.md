@@ -3,7 +3,8 @@
 Use this folder for raw or exported **reference-only** branding boards that support docs and planning.
 
 ## Current official source image
-- Official source: latest uploaded/current branding image from `Pull BRAND-0`
+- Official source artifact: `bank-the-catch-brand-authority-2026-04-27.md`
+- SHA-256: see `bank-the-catch-brand-authority-2026-04-27.sha256`
 - Status: locked as source of truth on 2026-04-27
 - Replaces: older logo/app-icon reference boards and earlier layout ideas
 

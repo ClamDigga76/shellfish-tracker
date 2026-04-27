@@ -3,7 +3,8 @@
 ## Lock record
 - **Item:** BRAND-0 — Brand Source Image Lock
 - **Date locked:** 2026-04-27
-- **Authority image:** The latest uploaded/current branding image attached to `Pull BRAND-0`.
+- **Authority artifact:** `docs/brand/reference/bank-the-catch-brand-authority-2026-04-27.md`
+- **Checksum file:** `docs/brand/reference/bank-the-catch-brand-authority-2026-04-27.sha256`
 - **Scope:** Visual source-of-truth guidance only (docs/workflow lane).
 
 ## Official decision

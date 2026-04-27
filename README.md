@@ -59,6 +59,7 @@ Start here:
 - `docs/PARKING-LOT.md` — active parking lot items and status
 - `docs/brand/brand-source-of-truth.md` — current brand source-image lock
 - `docs/brand/reference/README.md` — docs-only brand source staging rules
+- `docs/brand/reference/bank-the-catch-brand-authority-2026-04-27.md` — immutable brand authority artifact
 
 ## Release-candidate note
 
