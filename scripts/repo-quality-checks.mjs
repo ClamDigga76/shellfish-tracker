@@ -141,6 +141,8 @@ const settingsScreenSource = readFileSync('js/settings_screen_v5.js', 'utf8');
 const settingsFeatureCssSource = readFileSync('css/shell_feature_surfaces_v5.css', 'utf8');
 assertRepoCheck(settingsScreenSource.includes('data-settings-accordion'), 'settings screen keeps grouped accordion data-settings-accordion hooks');
 assertRepoCheck(settingsScreenSource.includes('settingsAccordionSummary'), 'settings screen keeps settings accordion summary surface');
+const settingsVersionTokenMatch = String('Version v5.679 • Browser').match(/\bv\d+(?:\.\d+){1,3}\b/i);
+assertRepoCheck(settingsVersionTokenMatch?.[0]?.toLowerCase() === 'v5.679', 'settings update version token parsing avoids partial v5 match and keeps v5.679 token');
 assertRepoCheck(settingsFeatureCssSource.includes('.settingsAccordionSummary') && settingsFeatureCssSource.includes('.settingsAccordionPill'), 'settings feature CSS keeps compact accordion summary and pill selectors');
 
 const tripSharedEngineSource = readFileSync('js/trip_shared_engine_v5.js', 'utf8');

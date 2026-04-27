@@ -529,7 +529,7 @@ export function createSettingsScreenOrchestrator({
         return "Checking";
       };
       const extractVersionToken = (versionMetaText) => {
-        const match = String(versionMetaText || "").match(/\bv\d+\b/i);
+        const match = String(versionMetaText || "").match(/\bv\d+(?:\.\d+){1,3}\b/i);
         return match ? match[0].toLowerCase() : "";
       };
       const syncUpdateSummaryLine = () => {
