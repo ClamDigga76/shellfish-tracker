@@ -229,7 +229,9 @@
 .settingsAccordionTitle{font-size:13px;font-weight:840;line-height:1.16}
 .settingsAccordionStatus{line-height:1.22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-size:11px;color:var(--text-muted-strong)}
 .settingsAccordionRight{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:0 0 120px;min-width:120px}
+.settingsAccordionRight--updates{flex:0 0 auto;min-width:0;gap:5px}
 .settingsAccordionPill{display:inline-flex;align-items:center;justify-content:center;max-width:86px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);font-size:10px;font-weight:830;letter-spacing:.03em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(8,12,20,.26);color:var(--text-muted-strong)}
+.settingsSummaryActionBtn{min-height:26px;padding:4px 9px;font-size:10px;font-weight:780;line-height:1.05;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
 .settingsAccordionChevron{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;height:24px;min-width:24px;min-height:24px;border-radius:999px;border:1px solid var(--line);font-size:12px;line-height:1;color:var(--text-muted-strong);background:rgba(8,12,20,.3);transition:transform var(--motion-duration-fast) var(--motion-ease-standard), background var(--motion-duration-fast) var(--motion-ease-standard)}
 .settingsAccordionCard[open] .settingsAccordionChevron{transform:rotate(180deg);background:rgba(255,255,255,.08)}
 .settingsAccordionCard:not([open]) .settingsRow{display:none}
@@ -291,6 +293,7 @@
   .settingsAccordionStatus{font-size:10px;line-height:1.25}
   .settingsAccordionRight{flex:0 0 auto;min-width:0;gap:5px}
   .settingsAccordionPill{max-width:76px;padding:2px 7px;font-size:9px}
+  .settingsSummaryActionBtn{min-height:24px;padding:3px 8px;font-size:9px}
   .settingsAccordionChevron{flex-basis:22px;width:22px;height:22px;min-width:22px;min-height:22px}
   .settingsRow{padding:9px 10px}
   .settingsRow--split{align-items:flex-start;flex-direction:column}

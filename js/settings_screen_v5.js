@@ -122,7 +122,8 @@ export function createSettingsScreenOrchestrator({
             <div class="settingsAccordionTitle">Update status and help access</div>
             <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Version check in progress</div>
           </div>
-          <div class="settingsAccordionRight">
+          <div class="settingsAccordionRight settingsAccordionRight--updates">
+            <button class="btn settingsSummaryActionBtn" id="settingsUpdateSummaryAction" type="button" aria-label="Run update action">Check</button>
             <span class="settingsAccordionPill" id="updatesStatusPill">Checking</span>
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
@@ -451,6 +452,7 @@ export function createSettingsScreenOrchestrator({
     const backupSummaryLine = document.getElementById("safetySummaryLine");
     const advancedSummaryLine = document.getElementById("advancedSummaryLine");
     const updatesStatusPill = document.getElementById("updatesStatusPill");
+    const settingsUpdateSummaryAction = document.getElementById("settingsUpdateSummaryAction");
     const safetyStatusPill = document.getElementById("safetyStatusPill");
     const installStatusPill = document.getElementById("installStatusPill");
     const aboutStatusPill = document.getElementById("aboutStatusPill");
@@ -468,6 +470,12 @@ export function createSettingsScreenOrchestrator({
 
     if (updatesSummaryLine) {
       updatesSummaryLine.textContent = "Version check in progress";
+    }
+    if (settingsUpdateSummaryAction) {
+      settingsUpdateSummaryAction.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+      });
     }
     if (backupSummaryLine) {
       backupSummaryLine.textContent = "Checking backup freshness";
