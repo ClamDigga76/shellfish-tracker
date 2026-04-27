@@ -167,6 +167,7 @@ let swJs = "";
 let appJs = "";
 let runtimeStatusJs = "";
 let manifestWebmanifest = "";
+let shellSharedCss = "";
 let canonicalVersion = "";
 
 try {
@@ -176,6 +177,7 @@ try {
   appJs = read("js/app_v5.js");
   runtimeStatusJs = read("js/update_runtime_status_v5.js");
   manifestWebmanifest = read("manifest.webmanifest");
+  shellSharedCss = read("css/shell_shared_v5.css");
 } catch (error) {
   fail("core files load", String(error.message || error));
 }
@@ -516,6 +518,28 @@ if (runtimeStatusJs) {
     pass("settings version guardrail messaging present");
   } else {
     fail("settings version guardrail messaging present");
+  }
+}
+
+if (shellSharedCss) {
+  const standalonePlusRestRule =
+    ':root[data-display-mode="standalone"] #tabbar .tabbtn.plus,\nbody[data-display-mode="standalone"] #tabbar .tabbtn.plus{';
+  const standalonePlusActiveRule =
+    ':root[data-display-mode="standalone"] #tabbar .tabbtn.plus:active,\nbody[data-display-mode="standalone"] #tabbar .tabbtn.plus:active{';
+
+  if (shellSharedCss.includes(standalonePlusRestRule)) {
+    pass("standalone plus rest selector pair present");
+  } else {
+    fail("standalone plus rest selector pair present");
+  }
+
+  if (
+    shellSharedCss.includes(standalonePlusActiveRule) &&
+    shellSharedCss.includes("transform:translateY(1px) scale(.98);")
+  ) {
+    pass("standalone plus active press feedback guardrail");
+  } else {
+    fail("standalone plus active press feedback guardrail");
   }
 }
 

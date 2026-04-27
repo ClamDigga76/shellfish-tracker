@@ -193,6 +193,11 @@ body[data-display-mode="standalone"] #tabbar .tabbtn.plus{
   height:46px;
   border-radius:22px;
 }
+:root[data-display-mode="standalone"] #tabbar .tabbtn.plus:active,
+body[data-display-mode="standalone"] #tabbar .tabbtn.plus:active{
+  transform:translateY(1px) scale(.98);
+  filter:brightness(.98);
+}
 :root[data-display-mode="standalone"] #toast{
   bottom:calc(var(--tabbar-total-h) + 8px);
 }
