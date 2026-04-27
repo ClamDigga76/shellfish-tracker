@@ -4,7 +4,7 @@
 .reportsTransitionRoot--detail{margin-top:0}
 .homeMetricOnlyShell{
   padding-top:8px;
-  padding-bottom:calc(18px + var(--tabbar-total-h, 0px) + var(--bottom-overlay-h, 0px) + var(--bottom-overlay-gap, 10px));
+  padding-bottom:calc(8px + var(--tabbar-total-h, 0px) + var(--bottom-overlay-h, 0px) + var(--bottom-overlay-gap, 6px));
 }
 .chart{transition:opacity var(--motion-duration-screen, 180ms) var(--motion-ease-soft, ease),transform var(--motion-duration-screen, 180ms) var(--motion-ease-standard, cubic-bezier(.22,.61,.36,1));transform-origin:center bottom}
 @media (prefers-reduced-motion: reduce){
@@ -551,7 +551,7 @@
 /* v572 Home Insights chart expansion + flattened chrome */
 .homeMetricDetail{
   margin-top:0;
-  padding:0 14px calc(10px + var(--tabbar-total-h, 0px) + var(--bottom-overlay-h, 0px) + var(--bottom-overlay-gap, 8px));
+  padding:0 14px calc(4px + var(--tabbar-total-h, 0px) + var(--bottom-overlay-h, 0px) + var(--bottom-overlay-gap, 6px));
 }
 .homeMetricDetailCard{
   padding:10px 0 8px;
@@ -801,7 +801,7 @@
 }
 .homeMetricDetail .reportsMetricChartsStack{
   gap:12px;
-  padding-bottom:calc(4px + var(--bottom-overlay-gap, 8px));
+  padding-bottom:calc(2px + var(--bottom-overlay-gap, 6px));
 }
 .homeMetricChartBlock{
   margin-top:0;
@@ -849,7 +849,7 @@
 .homeMetricInsight{
   margin-top:10px;
   padding-top:10px;
-  padding-bottom:calc(8px + var(--tabbar-total-h, 0px));
+  padding-bottom:calc(4px + var(--tabbar-total-h, 0px));
   font-size:12.5px;
   line-height:1.42;
 }
@@ -861,7 +861,7 @@
 .reportsMetricCompare,.homeMetricCompare{margin-top:0;padding-top:2px}
 .reportsMetricChartContext,.homeMetricChartContext{margin-top:5px;line-height:1.4}
 @media (max-width:430px){
-  .homeMetricDetail{padding:0 12px calc(10px + var(--tabbar-total-h, 0px) + var(--bottom-overlay-h, 0px) + var(--bottom-overlay-gap, 8px))}
+  .homeMetricDetail{padding:0 12px calc(4px + var(--tabbar-total-h, 0px) + var(--bottom-overlay-h, 0px) + var(--bottom-overlay-gap, 6px))}
   .homeMetricDetailCard{padding:8px 0 8px;border-radius:0}
   .reportsMetricBackBtn,.homeMetricBackBtn{margin-bottom:11px}
   .reportsMetricTitle,.homeMetricTitle{margin-top:7px}
@@ -874,7 +874,7 @@
   .reportsMetricHeroWrap{padding-top:12px}
   .reportsMetricCompare{padding-left:12px}
   .reportsMetricChartsStack{margin-top:12px;gap:12px}
-  .homeMetricDetail .reportsMetricChartsStack{gap:12px;padding-bottom:calc(4px + var(--bottom-overlay-gap, 8px))}
+  .homeMetricDetail .reportsMetricChartsStack{gap:12px;padding-bottom:calc(2px + var(--bottom-overlay-gap, 6px))}
   .reportsMetricChartBlock,.homeMetricChartBlock{padding-top:14px;padding-bottom:2px}
   .homeMetricChartStory .chart{margin-top:9px}
   .homeMetricChartStory .homeMetricChartTitle{font-size:16px}
