@@ -1033,7 +1033,8 @@ function renderEditTrip(){
     amount: Number(t.amount || 0),
     writtenCheckAmount: Number(t.writtenCheckAmount || 0)
   });
-  const settlementExpandedE = settlementPreviewE.hasDifference || Boolean(draft.writtenCheckAmount);
+  const settlementExpandedE = false;
+  const editSpeciesMetadataText = String(draft.species || DEFAULT_TRIP_SPECIES).trim() || DEFAULT_TRIP_SPECIES;
 
   const topAreasE = resolveQuickChipItems("area", getLastUniqueFromTrips("area", 2), 2);
   const topDealersE = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
@@ -1081,10 +1082,11 @@ function renderEditTrip(){
       showSpeciesField: false,
       showNotesField: false,
       metricStateHelperId: "tripMetricStateHelperEdit",
-      metricStateHelperText: getMetricHelperText(["pounds", "rate"]),
+      metricStateHelperText: "",
       areaGuidanceText: "If the exact area is unknown, choose Area Not Recorded to keep this trip complete.",
       dealerValue: draft.dealer,
-      areaValue: draft.area
+      areaValue: draft.area,
+      speciesMetadataText: editSpeciesMetadataText
     }).replace("card formCard", "formCard");
 
   getApp().innerHTML = `

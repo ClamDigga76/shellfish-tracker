@@ -131,6 +131,10 @@ body[data-view="edit"] .chip-selector{border:1px solid var(--border);background:
 
 /* Edit Trip keeps action dock above tab bar */
 body[data-view="edit"] main#app{--bottom-overlay-h:80px;--bottom-overlay-gap:10px}
+body[data-view="edit"] #editTripForm{
+  padding-bottom:calc(var(--tabbar-total-h) + var(--bottom-overlay-h) + 28px);
+  scroll-padding-bottom:calc(var(--tabbar-total-h) + var(--bottom-overlay-h) + 28px);
+}
 body[data-view="edit"] .trip-action-dock{position:fixed;left:50%;width:min(430px, 100vw);transform:translateX(-50%);bottom:calc(var(--tabbar-total-h) + var(--bottom-overlay-gap));z-index:9997;pointer-events:none;margin-top:0;padding:0 10px}
 body[data-view="edit"] .tripActionBar{pointer-events:auto;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:linear-gradient(180deg, rgba(15,23,42,.72) 0%, rgba(15,23,42,.52) 100%);box-shadow:0 10px 20px rgba(0,0,0,.2);padding:8px}
 body[data-view="edit"] .tripActionRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
