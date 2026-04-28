@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#softGlow)">
+    <path d="M128 306 C177 277, 233 278, 297 303 S403 338, 438 324" stroke="#F0F6FF" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <path d="M144 332 C191 307, 245 309, 299 331 S396 354, 427 342" stroke="#F0F6FF" stroke-width="11" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M98 264 C101 236, 115 220, 131 201" stroke="#F0F6FF" stroke-width="10" stroke-linecap="round" opacity="0.88"/>
+    <path d="M120 267 C125 238, 144 213, 159 195" stroke="#F0F6FF" stroke-width="10" stroke-linecap="round" opacity="0.88"/>
+    <ellipse cx="264" cy="224" rx="122" ry="70" transform="rotate(-18 264 224)" fill="rgba(240,246,255,0.05)" stroke="#F0F6FF" stroke-width="10"/>
+    <path d="M159 239 C199 203, 291 182, 347 219" stroke="#F0F6FF" stroke-width="3" opacity="0.48"/>
+    <path d="M169 249 C208 216, 285 198, 337 229" stroke="#F0F6FF" stroke-width="3" opacity="0.34"/>
+    <path d="M179 259 C215 230, 279 215, 327 239" stroke="#F0F6FF" stroke-width="3" opacity="0.22"/>
+  </g>
+</svg>
