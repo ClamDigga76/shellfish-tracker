@@ -531,14 +531,14 @@
   gap:11px;
 }
 .homeScreenshotCardPreviewSurface{
-  border:1px solid rgba(133,176,246,.34);
+  border:1px solid rgba(123,170,239,.24);
   border-radius:16px;
   padding:12px 12px 10px;
   background:
-    radial-gradient(130% 82% at 50% -2%, rgba(255,208,104,.2) 0%, rgba(255,208,104,0) 56%),
-    radial-gradient(125% 94% at 50% 0%, rgba(91,152,255,.22) 0%, rgba(91,152,255,0) 60%),
-    linear-gradient(180deg, rgba(17,33,63,.8) 0%, rgba(8,17,35,.82) 100%);
-  box-shadow:0 12px 24px rgba(0,0,0,.26), inset 0 1px 0 rgba(214,231,255,.09), inset 0 -1px 0 rgba(255,214,120,.07);
+    radial-gradient(132% 86% at 50% -6%, rgba(255,206,104,.16) 0%, rgba(255,206,104,0) 54%),
+    radial-gradient(130% 94% at 50% 2%, rgba(85,150,255,.2) 0%, rgba(85,150,255,0) 64%),
+    linear-gradient(180deg, rgba(16,31,58,.76) 0%, rgba(8,17,34,.8) 100%);
+  box-shadow:0 10px 22px rgba(0,0,0,.24), inset 0 1px 0 rgba(214,231,255,.07), inset 0 -1px 0 rgba(255,214,120,.05);
   display:grid;
   gap:9px;
 }
@@ -548,11 +548,11 @@
   display:grid;
   justify-items:center;
   gap:6px;
-  padding:11px 10px 10px;
-  border:1px solid rgba(60,102,176,.22);
+  padding:10px 10px 9px;
+  border:1px solid rgba(85,136,212,.18);
   border-radius:13px;
-  background:#030F2A;
-  box-shadow:inset 0 1px 0 rgba(143,186,255,.08), inset 0 -1px 0 rgba(2,11,32,.84), 0 8px 16px rgba(1,6,18,.3);
+  background:linear-gradient(180deg, rgba(9,28,66,.68) 0%, rgba(6,20,48,.6) 100%);
+  box-shadow:inset 0 1px 0 rgba(172,208,255,.07), inset 0 -1px 0 rgba(5,16,40,.44);
 }
 .homeScreenshotCardPreviewHeader::before{
   content:"";
@@ -561,9 +561,9 @@
   z-index:0;
   border-radius:inherit;
   background:
-    linear-gradient(180deg, rgba(3,15,42,.98) 0%, rgba(2,11,32,1) 100%),
-    radial-gradient(116% 84% at 50% 10%, rgba(255,205,102,.08) 0%, rgba(255,205,102,0) 58%),
-    radial-gradient(118% 88% at 50% 22%, rgba(20,80,180,.24) 0%, rgba(20,80,180,0) 66%);
+    linear-gradient(135deg, rgba(8,24,58,.84) 0%, rgba(6,22,60,.62) 36%, rgba(4,31,94,.52) 66%, rgba(6,26,62,.56) 100%),
+    radial-gradient(116% 84% at 16% 8%, rgba(255,201,108,.11) 0%, rgba(255,201,108,0) 52%),
+    radial-gradient(122% 90% at 84% 16%, rgba(58,146,255,.2) 0%, rgba(58,146,255,0) 66%);
   pointer-events:none;
 }
 .homeScreenshotCardPreviewHeader::after{
@@ -572,7 +572,7 @@
   inset:1px;
   z-index:0;
   border-radius:12px;
-  background:radial-gradient(82% 68% at 50% 16%, rgba(20,80,180,.2) 0%, rgba(20,80,180,0) 72%);
+  background:radial-gradient(92% 66% at 50% 20%, rgba(64,151,255,.16) 0%, rgba(64,151,255,0) 72%);
   pointer-events:none;
 }
 .homeScreenshotCardPreviewLogo{
@@ -581,10 +581,10 @@
   display:block;
   justify-self:center;
   margin-inline:auto;
-  width:min(228px, 100%);
+  width:min(216px, 100%);
   height:auto;
   max-width:100%;
-  filter:drop-shadow(0 2px 8px rgba(12,56,134,.24)) drop-shadow(0 0 10px rgba(255,205,102,.1));
+  filter:drop-shadow(0 2px 7px rgba(11,52,126,.2)) drop-shadow(0 0 8px rgba(255,204,106,.08));
 }
 .homeScreenshotCardPreviewBrandFallback{
   position:relative;
@@ -644,7 +644,7 @@
 }
 @media (max-width:380px){
   .homeScreenshotCardPreviewLogo{
-    width:min(204px, 100%);
+    width:min(196px, 100%);
   }
 }
 

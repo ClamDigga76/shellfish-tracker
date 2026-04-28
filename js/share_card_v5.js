@@ -121,11 +121,11 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.fillStyle = "#f4f8ff";
   let logoDrawn = false;
   try {
-    const logo = await loadImage("./assets/brand/btc-logo-horizontal.png?v=714");
-    const logoWidth = 360;
+    const logo = await loadImage("./assets/brand/backgrounds/btc-share-logo-wide.png?v=715");
+    const logoWidth = 334;
     const ratio = logo.naturalWidth > 0 ? (logo.naturalHeight / logo.naturalWidth) : 0.23;
     const logoHeight = Math.max(62, Math.round(logoWidth * ratio));
-    ctx.drawImage(logo, innerX + 164, innerY + 62, logoWidth, logoHeight);
+    ctx.drawImage(logo, innerX + 164, innerY + 66, logoWidth, logoHeight);
     logoDrawn = true;
   } catch (_error) {
     logoDrawn = false;
