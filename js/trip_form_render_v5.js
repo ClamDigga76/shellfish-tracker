@@ -48,7 +48,7 @@ export function renderTripEntryForm({
   const notesLockBadge = `
     <button class="tripTopLockPill" id="newTripLockedNotesInfo" type="button" aria-label="Notes are locked for this screen">
       <span aria-hidden="true">🔒</span>
-      <span>Notes locked</span>
+      <span>Notes</span>
     </button>
   `;
   const dealerDisplayValue = String(dealerValue || "").trim() || "Select dealer";
@@ -151,7 +151,7 @@ export function renderTripEntryForm({
                   <label class="sr-only" for="${escapeHtml(amountId)}">Amount</label>
                   <div class="inputWrap inputWrap--prefix">
                     <span class="moneyPrefix moneyGreen" aria-hidden="true">$</span>
-                    <input class="input inputWithPrefix tripCalcInput" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountValue ?? ""))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                    <input class="input inputWithPrefix tripCalcInput" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="" value="${escapeHtml(String(amountValue ?? ""))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                   </div>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export function renderTripEntryForm({
               <label class="fieldLabel overline center">Species</label>
               <div class="tripSpeciesMetadataRow" role="note" aria-label="Species is locked">
                 <span class="tripSpeciesMetadataLock" aria-hidden="true">🔒</span>
-                <span class="tripSpeciesMetadataText">Soft-shell Clams · Locked</span>
+                <span class="tripSpeciesMetadataText">Soft-shell Clams</span>
               </div>
             </div>
             ` : ""}
