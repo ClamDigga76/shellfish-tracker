@@ -64,31 +64,30 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   if (!ctx) throw new Error("canvas-unavailable");
 
   const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, "#050d21");
-  gradient.addColorStop(0.46, "#0a1f4a");
-  gradient.addColorStop(0.78, "#0b2862");
-  gradient.addColorStop(1, "#060f2b");
+  gradient.addColorStop(0, "#000f2c");
+  gradient.addColorStop(0.58, "#031c45");
+  gradient.addColorStop(1, "#062c63");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const topGlow = ctx.createRadialGradient(830, 140, 48, 830, 140, 520);
-  topGlow.addColorStop(0, "rgba(255,206,116,0.42)");
-  topGlow.addColorStop(0.44, "rgba(255,206,116,0.18)");
-  topGlow.addColorStop(1, "rgba(255,206,116,0)");
+  topGlow.addColorStop(0, "rgba(6,44,99,0.24)");
+  topGlow.addColorStop(0.44, "rgba(6,44,99,0.1)");
+  topGlow.addColorStop(1, "rgba(6,44,99,0)");
   ctx.fillStyle = topGlow;
   ctx.fillRect(0, 0, canvas.width, 620);
 
   const blueBloom = ctx.createRadialGradient(228, 264, 34, 228, 264, 516);
-  blueBloom.addColorStop(0, "rgba(72,161,255,0.32)");
-  blueBloom.addColorStop(0.56, "rgba(72,161,255,0.14)");
-  blueBloom.addColorStop(1, "rgba(72,161,255,0)");
+  blueBloom.addColorStop(0, "rgba(3,28,69,0.28)");
+  blueBloom.addColorStop(0.56, "rgba(3,28,69,0.12)");
+  blueBloom.addColorStop(1, "rgba(3,28,69,0)");
   ctx.fillStyle = blueBloom;
   ctx.fillRect(0, 0, canvas.width, 720);
 
   const accentGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-  accentGradient.addColorStop(0, "rgba(48,148,255,0.46)");
-  accentGradient.addColorStop(0.58, "rgba(96,173,255,0.2)");
-  accentGradient.addColorStop(1, "rgba(255,205,102,0.52)");
+  accentGradient.addColorStop(0, "rgba(98,155,238,0.24)");
+  accentGradient.addColorStop(0.58, "rgba(98,155,238,0.12)");
+  accentGradient.addColorStop(1, "rgba(98,155,238,0.2)");
   ctx.fillStyle = accentGradient;
   ctx.fillRect(0, 0, canvas.width, 14);
 
@@ -99,9 +98,9 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   const heroHeight = 280;
 
   drawRoundedRect(ctx, innerX, innerY, innerW, innerH, 42);
-  ctx.fillStyle = "rgba(7,14,32,0.48)";
+  ctx.fillStyle = "rgba(2,12,38,0.56)";
   ctx.fill();
-  ctx.strokeStyle = "rgba(150,197,255,0.44)";
+  ctx.strokeStyle = "rgba(124,172,243,0.36)";
   ctx.lineWidth = 2;
   ctx.stroke();
 
@@ -110,25 +109,26 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.clip();
 
   const heroGradient = ctx.createLinearGradient(innerX, innerY, innerX + innerW, innerY + heroHeight);
-  heroGradient.addColorStop(0, "rgba(6,18,45,0.98)");
-  heroGradient.addColorStop(0.48, "rgba(5,34,86,0.94)");
-  heroGradient.addColorStop(1, "rgba(6,24,64,0.9)");
+  heroGradient.addColorStop(0, "rgba(0,15,44,0.99)");
+  heroGradient.addColorStop(0.6, "rgba(0,15,44,0.97)");
+  heroGradient.addColorStop(0.88, "rgba(3,28,69,0.94)");
+  heroGradient.addColorStop(1, "rgba(6,44,99,0.9)");
   ctx.fillStyle = heroGradient;
   ctx.fillRect(innerX, innerY, innerW, heroHeight);
 
-  ctx.fillStyle = "rgba(115,175,255,0.17)";
+  ctx.fillStyle = "rgba(88,152,236,0.14)";
   ctx.beginPath();
   ctx.ellipse(innerX + innerW - 140, innerY + 98, 228, 124, -0.26, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(255,204,112,0.13)";
+  ctx.fillStyle = "rgba(6,44,99,0.12)";
   ctx.beginPath();
   ctx.ellipse(innerX + innerW - 40, innerY + 42, 190, 70, -0.5, 0, Math.PI * 2);
   ctx.fill();
 
   let logoDrawn = false;
   try {
-    const logo = await loadImage("./assets/brand/backgrounds/btc-share-logo-wide.png?v=716");
+    const logo = await loadImage("./assets/brand/backgrounds/btc-share-logo-wide.png?v=717");
     const heroPadX = 34;
     const heroPadTop = 34;
     const drawW = innerW - (heroPadX * 2);
@@ -140,8 +140,8 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
     ctx.drawImage(logo, innerX + heroPadX, drawY, drawW, drawH);
 
     const logoFade = ctx.createLinearGradient(0, drawY + drawH - 78, 0, drawY + drawH + 16);
-    logoFade.addColorStop(0, "rgba(7,31,79,0)");
-    logoFade.addColorStop(1, "rgba(7,31,79,0.74)");
+    logoFade.addColorStop(0, "rgba(0,15,44,0)");
+    logoFade.addColorStop(1, "rgba(0,15,44,0.62)");
     ctx.fillStyle = logoFade;
     ctx.fillRect(innerX + heroPadX, drawY + drawH - 78, drawW, 104);
     ctx.restore();
