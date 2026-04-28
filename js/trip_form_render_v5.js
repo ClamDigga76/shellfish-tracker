@@ -38,7 +38,7 @@ export function renderTripEntryForm({
   settlementHintText = "",
   areaGuidanceText = "If you don't know the area yet, choose Area Not Recorded.",
   metricStateHelperId = "",
-  metricStateHelperText = "Pounds × Pay Rate = Amount"
+  metricStateHelperText = "Pounds × $/LB = Amount."
 }) {
   const isEdit = mode === "edit";
   const isNew = mode === "new";
@@ -48,11 +48,12 @@ export function renderTripEntryForm({
     <button class="tripTopLockPill" id="newTripLockedNotesInfo" type="button" aria-label="Notes are locked for this screen">
       <span aria-hidden="true">🔒</span>
       <span>Notes</span>
+      <small>Locked</small>
     </button>
   `;
   const lockedSpeciesValue = `<div class="tripLockedValue"><span aria-hidden="true">🔒</span><span>Soft-shell Clams</span><small>Locked</small></div>`;
   const settlementToggle = settlementRevealId
-    ? `<button class="tripSettlementReveal" id="${escapeHtml(settlementRevealId)}" type="button" aria-expanded="${settlementExpanded ? "true" : "false"}">${settlementExpanded ? "Hide check details" : "Check Total"}</button>`
+    ? `<button class="tripSettlementReveal" id="${escapeHtml(settlementRevealId)}" type="button" aria-expanded="${settlementExpanded ? "true" : "false"}"><span>${settlementExpanded ? "Hide check details" : "Check total different?"}</span><span class="tripSettlementChevron" aria-hidden="true">${settlementExpanded ? "▾" : "▸"}</span></button>`
     : "";
   const settlementDetails = settlementRevealId && writtenCheckAmountId ? `
     <div class="tripSettlementPanel${settlementExpanded ? " is-open" : ""}" data-settlement-panel>
@@ -75,13 +76,28 @@ export function renderTripEntryForm({
     <div class="card formCard tripFormFoundation ${escapeHtml(extraCardClass)}">
       <form id="${escapeHtml(formId)}">
         <section class="trip-section">
-          <div class="field${isNew ? " tripTopFieldRow" : ""}">
-            <div class="dateRow">
-              <span class="dateIcon">${dateIconHtml}</span>
-              <input class="input datePill" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
+          ${isNew ? `
+            <div class="tripGuidedHeader">
+              <div class="tripGuidedHeaderTop">
+                <div class="dateRow">
+                  <span class="dateIcon">${dateIconHtml}</span>
+                  <input class="input datePill" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
+                </div>
+                ${notesLockBadge}
+              </div>
+              <div class="tripGuidedStatusRow">
+                <span class="tripGuidedStatusLabel">Species</span>
+                ${lockedSpeciesValue}
+              </div>
             </div>
-            ${isNew ? notesLockBadge : ""}
-          </div>
+          ` : `
+            <div class="field">
+              <div class="dateRow">
+                <span class="dateIcon">${dateIconHtml}</span>
+                <input class="input datePill" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
+              </div>
+            </div>
+          `}
         </section>
 
         ${showSpeciesField ? `
@@ -94,33 +110,26 @@ export function renderTripEntryForm({
             </div>
           </div>
         </section>
-        ` : (isNew ? `
-        <section class="trip-section">
-          <div class="field">
-            <label class="fieldLabel overline center">SPECIES</label>
-            ${lockedSpeciesValue}
-          </div>
-        </section>
-        ` : "")}
+        ` : ""}
 
         <section class="trip-section">
-          <div class="tripMetricsRow">
-            <div class="field tripMetricField">
-              <label class="fieldLabel overline tripMetricLabel tripMetricLabel--pounds center" for="${escapeHtml(poundsId)}">POUNDS</label>
-              <div class="inputWrap inputWrap--suffix">
-                <input class="input inputWithSuffix" id="${escapeHtml(poundsId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(poundsValue ?? ""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
-                <span class="unitSuffix lbsBlue" aria-hidden="true">lbs</span>
+          <div class="tripCalculatorHero">
+            <div class="tripCalculatorFields">
+              <div class="field tripMetricField">
+                <label class="fieldLabel overline tripMetricLabel tripMetricLabel--pounds center" for="${escapeHtml(poundsId)}">POUNDS</label>
+                <div class="inputWrap inputWrap--suffix">
+                  <input class="input inputWithSuffix" id="${escapeHtml(poundsId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(poundsValue ?? ""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+                  <span class="unitSuffix lbsBlue" aria-hidden="true">lbs</span>
+                </div>
+              </div>
+              <div class="field tripMetricField">
+                <label class="fieldLabel overline tripMetricLabel tripMetricLabel--price center" for="${escapeHtml(rateId)}">$/LB</label>
+                <div class="inputWrap inputWrap--rate">
+                  <input class="input" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(rateValue ?? computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                </div>
               </div>
             </div>
-            <div class="tripMetricSymbol" aria-hidden="true">×</div>
-            <div class="field tripMetricField">
-              <label class="fieldLabel overline tripMetricLabel tripMetricLabel--price center" for="${escapeHtml(rateId)}">$/LB</label>
-              <div class="inputWrap inputWrap--rate">
-                <input class="input" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(rateValue ?? computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
-              </div>
-            </div>
-            <div class="tripMetricSymbol" aria-hidden="true">=</div>
-            <div class="field tripMetricField">
+            <div class="tripAmountResult">
               <label class="fieldLabel overline tripMetricLabel tripMetricLabel--amount center" for="${escapeHtml(amountId)}">AMOUNT</label>
               <div class="inputWrap inputWrap--prefix">
                 <span class="moneyPrefix moneyGreen" aria-hidden="true">$</span>
@@ -133,26 +142,26 @@ export function renderTripEntryForm({
           ${settlementDetails}
         </section>
 
-        <section class="trip-section">
-          <div class="field">
-            <label class="fieldLabel overline center" for="${escapeHtml(dealerId)}">DEALER</label>
-            ${topDealerChipsHtml}
-            <div class="selectRowWrap">
-              <select class="input" id="${escapeHtml(dealerId)}" autocomplete="organization" enterkeyhint="next">${dealerOptions}</select>
-              <span class="chev">›</span>
+        <section class="trip-section tripDetailsSection">
+          <div class="tripDetailsCard">
+            <div class="field">
+              <label class="fieldLabel overline center" for="${escapeHtml(dealerId)}">DEALER</label>
+              ${topDealerChipsHtml}
+              <div class="selectRowWrap">
+                <select class="input" id="${escapeHtml(dealerId)}" autocomplete="organization" enterkeyhint="next">${dealerOptions}</select>
+                <span class="chev">›</span>
+              </div>
             </div>
-          </div>
-        </section>
 
-        <section class="trip-section">
-          <div class="field">
-            <label class="fieldLabel overline center" for="${escapeHtml(areaId)}">AREA</label>
-            ${topAreaChipsHtml}
-            <div class="selectRowWrap">
-              <select class="input" id="${escapeHtml(areaId)}" enterkeyhint="done">${areaOptions}</select>
-              <span class="chev">›</span>
+            <div class="field tripDetailsAreaField">
+              <label class="fieldLabel overline center" for="${escapeHtml(areaId)}">AREA</label>
+              ${topAreaChipsHtml}
+              <div class="selectRowWrap">
+                <select class="input" id="${escapeHtml(areaId)}" enterkeyhint="done">${areaOptions}</select>
+                <span class="chev">›</span>
+              </div>
+              <div class="tripAreaGuidance">${escapeHtml(areaGuidanceText)}</div>
             </div>
-            <div class="tripAreaGuidance">${escapeHtml(areaGuidanceText)}</div>
           </div>
         </section>
 
@@ -165,11 +174,8 @@ export function renderTripEntryForm({
         </section>
         ` : ""}
 
-      </form>
-
-      <section class="trip-action-dock" aria-label="Trip form actions">
-        <div class="tripActionBar">
-          ${isNew ? `
+        ${isNew ? `
+          <section class="trip-section tripInlineActions" aria-label="Trip form actions">
             <div class="tripActionPrimaryRow">
               <button class="btn primary" id="saveTrip" type="submit" form="${escapeHtml(formId)}" disabled>${escapeHtml(primaryActionLabel)}</button>
             </div>
@@ -177,15 +183,21 @@ export function renderTripEntryForm({
               <button class="tripDockSecondaryAction" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
               ${tertiaryTextButton}
             </div>
-          ` : `
-            <div class="tripActionRow${tertiaryActionLabel ? " tripActionRow--three" : ""}">
-              <button class="btn primary" id="saveEdit" type="submit" form="${escapeHtml(formId)}">${escapeHtml(primaryActionLabel)}</button>
-              <button class="btn" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
-              ${tertiaryButton}
-            </div>
-          `}
+          </section>
+        ` : ""}
+      </form>
+
+      ${isEdit ? `
+      <section class="trip-action-dock" aria-label="Trip form actions">
+        <div class="tripActionBar">
+          <div class="tripActionRow${tertiaryActionLabel ? " tripActionRow--three" : ""}">
+            <button class="btn primary" id="saveEdit" type="submit" form="${escapeHtml(formId)}">${escapeHtml(primaryActionLabel)}</button>
+            <button class="btn" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
+            ${tertiaryButton}
+          </div>
         </div>
       </section>
+      ` : ""}
     </div>
   `;
 }
