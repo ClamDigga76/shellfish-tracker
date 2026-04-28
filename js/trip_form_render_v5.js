@@ -166,17 +166,6 @@ export function renderTripEntryForm({
 
         <section class="trip-section tripDetailsSection">
           <div class="tripDetailsCard">
-            ${isNew ? `
-            <div class="field tripSpeciesReadOnlyField" aria-label="Trip species context">
-              <label class="fieldLabel overline center">Species</label>
-              <div class="tripSelectPreview tripSelectPreview--readonly">
-                <div class="tripSelectedValueRow tripSelectedValueRow--readonly">
-                  <span class="tripSelectedValueText">Soft-shell Clams</span>
-                  <span class="tripContextBadge tripContextBadge--locked">Fixed</span>
-                </div>
-              </div>
-            </div>
-            ` : ""}
             <div class="field">
               <label class="fieldLabel overline center" for="${escapeHtml(dealerId)}">Dealer</label>
               <div class="tripSectionSubhead">Who are you selling to?</div>
@@ -205,6 +194,16 @@ export function renderTripEntryForm({
               </div>
               <div class="tripAreaGuidance">${escapeHtml(areaGuidanceText)}</div>
             </div>
+
+            ${isNew ? `
+            <div class="field tripSpeciesMetadataField" aria-label="Trip species context">
+              <label class="fieldLabel overline center">Species</label>
+              <div class="tripSpeciesMetadataRow" role="note" aria-label="Species is locked">
+                <span class="tripSpeciesMetadataLock" aria-hidden="true">🔒</span>
+                <span class="tripSpeciesMetadataText">Soft-shell Clams · Locked</span>
+              </div>
+            </div>
+            ` : ""}
           </div>
         </section>
 
