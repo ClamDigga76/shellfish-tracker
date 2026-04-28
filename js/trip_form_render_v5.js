@@ -45,7 +45,6 @@ export function renderTripEntryForm({
 }) {
   const isEdit = mode === "edit";
   const isNew = mode === "new";
-  const tertiaryButton = tertiaryActionLabel ? `<button class="btn danger" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : "";
   const notesLockBadge = `
     <button class="tripTopLockPill" id="newTripLockedNotesInfo" type="button" aria-label="Notes are locked for this screen">
       <span aria-hidden="true">🔒</span>
@@ -231,11 +230,13 @@ export function renderTripEntryForm({
 
       ${isEdit ? `
       <section class="trip-action-dock" aria-label="Trip form actions">
-        <div class="tripActionBar">
-          <div class="tripActionRow${tertiaryActionLabel ? " tripActionRow--three" : ""}">
+        <div class="tripActionBar tripActionBar--editHierarchy">
+          <div class="tripActionPrimaryRow">
             <button class="btn primary" id="saveEdit" type="submit" form="${escapeHtml(formId)}">${escapeHtml(primaryActionLabel)}</button>
-            <button class="btn" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
-            ${tertiaryButton}
+          </div>
+          <div class="tripActionTextRow tripActionTextRow--edit">
+            <button class="tripDockSecondaryAction" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
+            ${tertiaryActionLabel ? `<button class="tripDockSecondaryAction tripDockSecondaryAction--danger" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : ""}
           </div>
         </div>
       </section>
