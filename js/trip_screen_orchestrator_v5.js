@@ -1082,7 +1082,9 @@ function renderEditTrip(){
       showNotesField: false,
       metricStateHelperId: "tripMetricStateHelperEdit",
       metricStateHelperText: getMetricHelperText(["pounds", "rate"]),
-      areaGuidanceText: "If the exact area is unknown, choose Area Not Recorded to keep this trip complete."
+      areaGuidanceText: "If the exact area is unknown, choose Area Not Recorded to keep this trip complete.",
+      dealerValue: draft.dealer,
+      areaValue: draft.area
     }).replace("card formCard", "formCard");
 
   getApp().innerHTML = `
@@ -1103,6 +1105,11 @@ function renderEditTrip(){
   const elRate = document.getElementById("rateValueEdit");
   const elWrittenCheckAmount = document.getElementById("e_written_check_amount");
   const elSettlementToggle = document.getElementById("e_checkDiffToggle");
+  const elPoundsSummary = document.getElementById("e_pounds_summary");
+  const elRateSummary = document.getElementById("rateValueEdit_summary");
+  const elAmountSummary = document.getElementById("e_amount_summary");
+  const elDealerPreviewValue = document.getElementById("e_dealer_preview_value");
+  const elAreaPreviewValue = document.getElementById("e_area_preview_value");
   const topDealerWrapE = document.getElementById("topDealersE");
   const topAreaWrapE = document.getElementById("topAreasE");
 
@@ -1121,6 +1128,23 @@ function renderEditTrip(){
     metricSync
   });
   const updateRateLine = metricSync.updateDerivedField;
+  const updateCalculatorSummary = ()=>{
+    const poundsNum = parseNum(elPounds?.value);
+    const rateNum = parseNum(elRate?.value);
+    const amountNum = parseMoney(elAmount?.value);
+    if(elPoundsSummary) elPoundsSummary.textContent = Number.isFinite(poundsNum) && poundsNum > 0 ? poundsNum.toFixed(1) : "0.0";
+    if(elRateSummary) elRateSummary.textContent = `$${Number.isFinite(rateNum) && rateNum > 0 ? rateNum.toFixed(2) : "0.00"}`;
+    if(elAmountSummary) elAmountSummary.textContent = `$${Number.isFinite(amountNum) && amountNum > 0 ? amountNum.toFixed(2) : "0.00"}`;
+  };
+  const updateSelectedPreview = (kind, value)=>{
+    const nextText = String(value || "").trim();
+    if(kind === "dealer" && elDealerPreviewValue){
+      elDealerPreviewValue.textContent = nextText || "Select dealer";
+    }
+    if(kind === "area" && elAreaPreviewValue){
+      elAreaPreviewValue.textContent = nextText || "Select area";
+    }
+  };
   const updateSettlementLine = createSettlementLineUpdater({
     elWrittenCheckAmount,
     elAmount,
@@ -1240,6 +1264,7 @@ function renderEditTrip(){
     const nextArea = String(a||"").trim();
     if(!nextArea) return;
     elArea.value = nextArea;
+    updateSelectedPreview("area", nextArea);
     updateSaveEnabled();
   });
   if(topDealerWrapE && elDealer){
@@ -1249,6 +1274,7 @@ function renderEditTrip(){
       const nextDealer = String(btn.getAttribute("data-dealer") || "").trim();
       if(!nextDealer) return;
       elDealer.value = nextDealer;
+      updateSelectedPreview("dealer", nextDealer);
       updateSaveEnabled();
     });
   }
@@ -1260,12 +1286,19 @@ function renderEditTrip(){
       onAdded: (addedValue)=>{
         if(!selectEl) return;
         selectEl.value = String(addedValue || "").trim();
+        updateSelectedPreview(kind, selectEl.value);
         updateSaveEnabled();
       }
     });
   };
-  elDealer?.addEventListener("change", ()=>handleSelectAddNew("dealer", elDealer));
-  elArea?.addEventListener("change", ()=>handleSelectAddNew("area", elArea));
+  elDealer?.addEventListener("change", ()=>{
+    handleSelectAddNew("dealer", elDealer);
+    updateSelectedPreview("dealer", elDealer?.value);
+  });
+  elArea?.addEventListener("change", ()=>{
+    handleSelectAddNew("area", elArea);
+    updateSelectedPreview("area", elArea?.value);
+  });
 
 
   bindDatePill("e_date");
@@ -1301,6 +1334,9 @@ function renderEditTrip(){
   updateRateLine();
   updateSettlementLine();
   updateMetricStateHelper();
+  updateCalculatorSummary();
+  updateSelectedPreview("dealer", elDealer?.value);
+  updateSelectedPreview("area", elArea?.value);
 
   // Big-number keypad + better formatting (match New Trip)
   bindEntryNumericField({
@@ -1315,11 +1351,13 @@ function renderEditTrip(){
       updateSaveEnabled();
       updateRateLine();
       updateSettlementLine();
+      updateCalculatorSummary();
     },
     onAfterBlur: ()=>{
       updateSaveEnabled();
       updateRateLine();
       updateSettlementLine();
+      updateCalculatorSummary();
     }
   });
 
@@ -1339,11 +1377,13 @@ function renderEditTrip(){
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
+      updateCalculatorSummary();
     },
     onAfterBlur: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
+      updateCalculatorSummary();
     }
   });
 
@@ -1360,11 +1400,13 @@ function renderEditTrip(){
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
+      updateCalculatorSummary();
     },
     onAfterBlur: ()=>{
       updateRateLine();
       updateSaveEnabled();
       updateSettlementLine();
+      updateCalculatorSummary();
     }
   });
   bindEntryNumericField({
@@ -1385,8 +1427,8 @@ function renderEditTrip(){
 
   [elDate, elDealer, elPounds, elAmount, elWrittenCheckAmount, elArea, elSpecies, elNotes].forEach(el=>{
     if(!el) return;
-    el.addEventListener("input", ()=>{ updateSaveEnabled(); updateRateLine(); updateSettlementLine(); });
-    el.addEventListener("change", ()=>{ updateSaveEnabled(); updateRateLine(); updateSettlementLine(); });
+    el.addEventListener("input", ()=>{ updateSaveEnabled(); updateRateLine(); updateSettlementLine(); updateCalculatorSummary(); });
+    el.addEventListener("change", ()=>{ updateSaveEnabled(); updateRateLine(); updateSettlementLine(); updateCalculatorSummary(); });
   });
 
   const editTripForm = document.getElementById("editTripForm");

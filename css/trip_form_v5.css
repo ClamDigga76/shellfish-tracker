@@ -62,7 +62,10 @@ body[data-view="edit"] .chip-selector{border:1px solid var(--border);background:
 .tripSummaryOp{font-weight:800;color:rgba(255,255,255,.75);font-size:22px;line-height:1}
 .tripCalculatorFields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tripCalculatorFields--compact{grid-template-columns:1fr 1fr minmax(0,1.05fr);align-items:end}
-.tripAmountResult{padding:10px;border:1px solid rgba(59,187,113,.3);border-radius:12px;background:linear-gradient(180deg, rgba(59,187,113,.13) 0%, rgba(59,187,113,.06) 100%)}
+.tripAmountResult{padding:8px 10px;border:1px solid rgba(59,187,113,.3);border-radius:12px;background:linear-gradient(180deg, rgba(59,187,113,.16) 0%, rgba(59,187,113,.06) 100%)}
+.tripAmountResult .tripMetricLabel{margin-bottom:6px}
+.tripAmountResult .inputWrap{background:rgba(4,24,13,.28);border-radius:10px}
+.tripAmountResult .input{font-weight:800}
 .tripMetricField{display:flex;flex-direction:column;align-items:stretch;min-width:0}
 .tripMetricLabel{margin:0 0 7px;line-height:1.1;text-align:center;white-space:nowrap}
 .tripMetricLabel--pounds{color:var(--lbsBlue)}
@@ -128,7 +131,10 @@ body[data-view="edit"] .tripActionRow.tripActionRow--three{grid-template-columns
   .tripCalculatorSummary{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:5px}
   .tripSummaryMetricValue{font-size:clamp(1rem,5.2vw,1.35rem)}
   .tripSummaryOp{font-size:18px}
-  .tripCalculatorFields--compact{grid-template-columns:1fr}
+  .tripCalculatorFields--compact{grid-template-columns:1fr 1fr;align-items:end}
+  .tripAmountResult{grid-column:1 / -1;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;padding:8px 10px}
+  .tripAmountResult .tripMetricLabel{margin:0;text-align:left;white-space:nowrap}
+  .tripAmountResult .inputWrap{min-width:0}
   .trip-inline-actions .tripActionTextRow,
   .tripInlineActions .tripActionTextRow{gap:14px}
   .trip-edit-indicator{margin-bottom:9px;padding:9px 8px 7px}
