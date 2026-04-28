@@ -97,8 +97,8 @@ function renderNewTrip(){
   const topDealers = resolveQuickChipItems("dealer", getLastUniqueFromTrips("dealer", 2), 2);
 
   const dealerListForSelect = getDealerSelectList(topDealers, draft.dealer);
-  const dealerOptions = buildDealerOptionsHtml(draft.dealer, dealerListForSelect, dealerAddSentinel);
-  const areaOptions = buildAreaOptionsHtml(draft.area, areaAddSentinel);
+  const dealerOptions = buildDealerOptionsHtml(draft.dealer, dealerListForSelect, dealerAddSentinel, { blankLabel: "Select dealer" });
+  const areaOptions = buildAreaOptionsHtml(draft.area, areaAddSentinel, { blankLabel: "Select area" });
 
 
 const newTripFormHtml = renderTripEntryForm({
@@ -162,6 +162,13 @@ const newTripFormHtml = renderTripEntryForm({
   const elSettlementToggle = document.getElementById("t_checkDiffToggle");
   bindDatePill("t_date");
 
+  const elLockedNotesInfo = document.getElementById("newTripLockedNotesInfo");
+  if(elLockedNotesInfo){
+    elLockedNotesInfo.addEventListener("click", ()=>{
+      showToast("Notes are locked for this version. Use Notes later for tide, weather, crew, dealer details, or anything you want attached to a trip.");
+    });
+  }
+
   const metricSync = createTripMetricSyncEngine({
     parseNum,
     parseMoney,
@@ -194,7 +201,7 @@ const newTripFormHtml = renderTripEntryForm({
       const willOpen = !panel.classList.contains("is-open");
       panel.classList.toggle("is-open", willOpen);
       elSettlementToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
-      elSettlementToggle.textContent = willOpen ? "Hide check details" : "Check differs";
+      elSettlementToggle.textContent = willOpen ? "Hide check details" : "Check Total";
       state.draft = { ...(state.draft || draft), settlementExpanded: willOpen };
       saveDraft();
       if(willOpen) elWrittenCheckAmount?.focus();
@@ -1090,7 +1097,7 @@ function renderEditTrip(){
       const willOpen = !panel.classList.contains("is-open");
       panel.classList.toggle("is-open", willOpen);
       elSettlementToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
-      elSettlementToggle.textContent = willOpen ? "Hide check details" : "Check differs";
+      elSettlementToggle.textContent = willOpen ? "Hide check details" : "Check Total";
       if(willOpen) elWrittenCheckAmount?.focus();
     });
   }

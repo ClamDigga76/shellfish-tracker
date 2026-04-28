@@ -260,13 +260,17 @@ body[data-view="new"] .tripTopLockPill{
   align-items:center;
   gap:6px;
   padding:11px 12px;
-  border:1px solid rgba(255,255,255,.14);
+  border:1px solid rgba(212,175,55,.34);
   border-radius:12px;
-  color:var(--muted);
-  background:rgba(255,255,255,.03);
+  color:rgba(255,223,140,.94);
+  background:linear-gradient(180deg, rgba(8,15,28,.76) 0%, rgba(8,15,28,.52) 100%);
   font-size:12px;
   font-weight:700;
   white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  cursor:pointer;
+  appearance:none;
+  -webkit-appearance:none;
 }
 body[data-view="new"] .tripLockedValue{
   margin-top:8px;
@@ -275,15 +279,20 @@ body[data-view="new"] .tripLockedValue{
   align-items:center;
   gap:8px;
   padding:12px 13px;
-  border:1px solid rgba(255,255,255,.14);
+  border:1px solid rgba(212,175,55,.28);
   border-radius:12px;
-  background:rgba(255,255,255,.03);
+  background:linear-gradient(180deg, rgba(8,15,28,.7) 0%, rgba(8,15,28,.48) 100%);
   color:var(--text);
   font-weight:700;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+body[data-view="new"] .tripTopLockPill > span:first-child,
+body[data-view="new"] .tripLockedValue > span:first-child{
+  color:rgba(255,210,96,.95);
 }
 body[data-view="new"] .tripLockedValue small{
   margin-left:auto;
-  color:var(--muted);
+  color:rgba(255,223,140,.8);
   font-size:11px;
   font-weight:600;
 }

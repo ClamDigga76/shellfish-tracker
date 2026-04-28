@@ -558,20 +558,22 @@ export function createTripSharedCollectionsEngine({ getState, normalizeKey, norm
     return out;
   }
 
-  function buildAreaOptionsHtml(selectedArea, addSentinel) {
+  function buildAreaOptionsHtml(selectedArea, addSentinel, options = {}) {
     const state = getStateRef();
     ensureAreas();
     const selectedCanonical = normalizeCollectionValue(resolveAreaValue(selectedArea).canonicalName || selectedArea);
     return ["", ...getValuesWithLegacyEntry("area", selectedCanonical, Array.isArray(state.areas) ? state.areas : [])].map((area) => {
-      const label = area ? area : "—";
+      const blankLabel = String(options?.blankLabel || "—");
+      const label = area ? area : blankLabel;
       const sel = (normalizeKey(String(selectedCanonical || "")) === normalizeKey(String(area || ""))) ? "selected" : "";
       return `<option value="${escapeHtml(String(area || ""))}" ${sel}>${label}</option>`;
     }).concat(`<option value="${addSentinel}">+ Add new Area</option>`).join("");
   }
 
-  function buildDealerOptionsHtml(selectedDealer, dealerList, addSentinel) {
+  function buildDealerOptionsHtml(selectedDealer, dealerList, addSentinel, options = {}) {
     return ["", ...(Array.isArray(dealerList) ? dealerList : [])].map((dealer) => {
-      const label = dealer ? dealer : "—";
+      const blankLabel = String(options?.blankLabel || "—");
+      const label = dealer ? dealer : blankLabel;
       const sel = (normalizeKey(String(selectedDealer || "")) === normalizeKey(String(dealer || ""))) ? "selected" : "";
       const value = String(dealer || "").replaceAll('"', "&quot;");
       return `<option value="${value}" ${sel}>${escapeHtml(label)}</option>`;
