@@ -64,80 +64,109 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   if (!ctx) throw new Error("canvas-unavailable");
 
   const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, "#071326");
-  gradient.addColorStop(0.55, "#0d1f3b");
-  gradient.addColorStop(1, "#050a14");
+  gradient.addColorStop(0, "#050d21");
+  gradient.addColorStop(0.46, "#0a1f4a");
+  gradient.addColorStop(0.78, "#0b2862");
+  gradient.addColorStop(1, "#060f2b");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  const topGlow = ctx.createRadialGradient(830, 140, 48, 830, 140, 520);
+  topGlow.addColorStop(0, "rgba(255,206,116,0.42)");
+  topGlow.addColorStop(0.44, "rgba(255,206,116,0.18)");
+  topGlow.addColorStop(1, "rgba(255,206,116,0)");
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, canvas.width, 620);
+
+  const blueBloom = ctx.createRadialGradient(228, 264, 34, 228, 264, 516);
+  blueBloom.addColorStop(0, "rgba(72,161,255,0.32)");
+  blueBloom.addColorStop(0.56, "rgba(72,161,255,0.14)");
+  blueBloom.addColorStop(1, "rgba(72,161,255,0)");
+  ctx.fillStyle = blueBloom;
+  ctx.fillRect(0, 0, canvas.width, 720);
+
   const accentGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-  accentGradient.addColorStop(0, "rgba(46,143,255,0.45)");
-  accentGradient.addColorStop(1, "rgba(255,202,88,0.5)");
+  accentGradient.addColorStop(0, "rgba(48,148,255,0.46)");
+  accentGradient.addColorStop(0.58, "rgba(96,173,255,0.2)");
+  accentGradient.addColorStop(1, "rgba(255,205,102,0.52)");
   ctx.fillStyle = accentGradient;
   ctx.fillRect(0, 0, canvas.width, 14);
-
-  ctx.fillStyle = "rgba(124,170,255,0.18)";
-  ctx.beginPath();
-  ctx.arc(920, 230, 200, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "rgba(255,190,88,0.12)";
-  ctx.beginPath();
-  ctx.arc(210, 1120, 240, 0, Math.PI * 2);
-  ctx.fill();
 
   const innerX = 54;
   const innerY = 54;
   const innerW = canvas.width - (innerX * 2);
   const innerH = canvas.height - (innerY * 2);
+  const heroHeight = 280;
 
   drawRoundedRect(ctx, innerX, innerY, innerW, innerH, 42);
-  ctx.fillStyle = "rgba(8,15,27,0.62)";
+  ctx.fillStyle = "rgba(7,14,32,0.48)";
   ctx.fill();
-  ctx.strokeStyle = "rgba(144,191,255,0.42)";
+  ctx.strokeStyle = "rgba(150,197,255,0.44)";
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  const iconSize = 84;
-  const iconX = innerX + 54;
-  const iconY = innerY + 52;
-  try {
-    const iconVersion = appVersion ? `?v=${encodeURIComponent(String(appVersion))}` : "";
-    const icon = await loadImage(`./icons/icon-192.png${iconVersion}`);
-    drawRoundedRect(ctx, iconX - 2, iconY - 2, iconSize + 4, iconSize + 4, 22);
-    ctx.fillStyle = "rgba(13,28,52,0.9)";
-    ctx.fill();
-    ctx.save();
-    drawRoundedRect(ctx, iconX, iconY, iconSize, iconSize, 20);
-    ctx.clip();
-    ctx.drawImage(icon, iconX, iconY, iconSize, iconSize);
-    ctx.restore();
-  } catch (_error) {
-    ctx.fillStyle = "#79adff";
-    ctx.font = "700 44px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-    ctx.fillText("BC", iconX + 12, iconY + 56);
-  }
+  ctx.save();
+  drawRoundedRect(ctx, innerX, innerY, innerW, innerH, 42);
+  ctx.clip();
 
-  ctx.fillStyle = "#f4f8ff";
+  const heroGradient = ctx.createLinearGradient(innerX, innerY, innerX + innerW, innerY + heroHeight);
+  heroGradient.addColorStop(0, "rgba(6,18,45,0.98)");
+  heroGradient.addColorStop(0.48, "rgba(5,34,86,0.94)");
+  heroGradient.addColorStop(1, "rgba(6,24,64,0.9)");
+  ctx.fillStyle = heroGradient;
+  ctx.fillRect(innerX, innerY, innerW, heroHeight);
+
+  ctx.fillStyle = "rgba(115,175,255,0.17)";
+  ctx.beginPath();
+  ctx.ellipse(innerX + innerW - 140, innerY + 98, 228, 124, -0.26, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,204,112,0.13)";
+  ctx.beginPath();
+  ctx.ellipse(innerX + innerW - 40, innerY + 42, 190, 70, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
   let logoDrawn = false;
   try {
-    const logo = await loadImage("./assets/brand/backgrounds/btc-share-logo-wide.png?v=715");
-    const logoWidth = 334;
-    const ratio = logo.naturalWidth > 0 ? (logo.naturalHeight / logo.naturalWidth) : 0.23;
-    const logoHeight = Math.max(62, Math.round(logoWidth * ratio));
-    ctx.drawImage(logo, innerX + 164, innerY + 66, logoWidth, logoHeight);
+    const logo = await loadImage("./assets/brand/backgrounds/btc-share-logo-wide.png?v=716");
+    const heroPadX = 34;
+    const heroPadTop = 34;
+    const drawW = innerW - (heroPadX * 2);
+    const sourceRatio = logo.naturalWidth > 0 ? (logo.naturalHeight / logo.naturalWidth) : 0.34;
+    const drawH = Math.max(170, Math.round(drawW * sourceRatio));
+    const drawY = innerY + heroPadTop;
+    ctx.save();
+    ctx.globalAlpha = 0.98;
+    ctx.drawImage(logo, innerX + heroPadX, drawY, drawW, drawH);
+
+    const logoFade = ctx.createLinearGradient(0, drawY + drawH - 78, 0, drawY + drawH + 16);
+    logoFade.addColorStop(0, "rgba(7,31,79,0)");
+    logoFade.addColorStop(1, "rgba(7,31,79,0.74)");
+    ctx.fillStyle = logoFade;
+    ctx.fillRect(innerX + heroPadX, drawY + drawH - 78, drawW, 104);
+    ctx.restore();
     logoDrawn = true;
   } catch (_error) {
     logoDrawn = false;
   }
+
   if (!logoDrawn) {
-    ctx.font = "700 52px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-    ctx.fillText("Bank the Catch", innerX + 164, innerY + 110);
+    ctx.fillStyle = "#f4f8ff";
+    ctx.font = "700 66px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.fillText("Bank the Catch", innerX + 82, innerY + 146);
   }
 
-  ctx.fillStyle = "rgba(198,219,255,0.92)";
+  const heroDivider = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
+  heroDivider.addColorStop(0, "rgba(130,184,255,0)");
+  heroDivider.addColorStop(0.5, "rgba(130,184,255,0.38)");
+  heroDivider.addColorStop(1, "rgba(130,184,255,0)");
+  ctx.fillStyle = heroDivider;
+  ctx.fillRect(innerX + 12, innerY + heroHeight - 1, innerW - 24, 2);
+  ctx.restore();
+
+  ctx.fillStyle = "rgba(198,219,255,0.94)";
   ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-  ctx.fillText("Last Saved Trip", innerX + 164, innerY + 152);
+  ctx.fillText("Last Saved Trip", innerX + 58, innerY + heroHeight + 56);
 
   const fields = buildShareCardFields({ trip, parseReportDateToISO, round2, formatMoney });
   const topMetrics = [
@@ -152,7 +181,7 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ];
 
   const cardX = innerX + 52;
-  const cardY = innerY + 212;
+  const cardY = innerY + heroHeight + 82;
   const cardW = innerW - 104;
   const rowH = 126;
 
@@ -190,7 +219,7 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
     ctx.fillText(metric.value, cardX + 26, y + 76);
   });
 
-  ctx.fillStyle = "#86beff";
+  ctx.fillStyle = "#8dc3ff";
   ctx.shadowColor = "rgba(95,171,255,0.25)";
   ctx.shadowBlur = 8;
   ctx.font = "600 24px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
