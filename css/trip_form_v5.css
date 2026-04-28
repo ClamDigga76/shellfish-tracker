@@ -130,8 +130,8 @@ body[data-view="edit"] .chip-selector{border:1px solid var(--border);background:
 .editModePillIcon{font-size:12px;line-height:1}
 
 body[data-view="edit"] #editTripForm{
-  padding-bottom:calc(var(--tabbar-total-h) + 18px);
-  scroll-padding-bottom:calc(var(--tabbar-total-h) + 18px);
+  padding-bottom:18px;
+  scroll-padding-bottom:18px;
 }
 body[data-view="edit"] .tripInlineActions .tripActionPrimaryRow .btn.primary{width:100%;min-height:56px}
 body[data-view="edit"] .tripInlineActions .tripActionTextRow{margin-top:9px;display:flex;justify-content:center;align-items:center;gap:22px}
