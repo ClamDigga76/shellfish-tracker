@@ -81,12 +81,12 @@ export function renderTripEntryForm({
           ${isNew ? `
             <div class="tripGuidedHeader tripGuidedHeader--compact">
               <div class="tripGuidedHeaderTop tripGuidedHeaderTop--compact">
-                <div class="dateRow">
+                <div class="dateRow dateRow--guidedCompact">
                   <span class="dateIcon">${dateIconHtml}</span>
-                  <input class="input datePill" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
-                </div>
-                <div class="tripLockChipRow">
-                  ${notesLockBadge}
+                  <input class="input datePill datePill--guidedCompact" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
+                  <div class="tripLockChipRow tripLockChipRow--inline">
+                    ${notesLockBadge}
+                  </div>
                 </div>
               </div>
             </div>
@@ -167,7 +167,7 @@ export function renderTripEntryForm({
             ${isNew ? `
             <div class="tripContextRow" aria-label="Trip species context">
               <span class="tripContextLabel">Species</span>
-              <span class="tripContextValue">Soft-shell Clams <span class="tripContextDivider" aria-hidden="true">·</span> <span class="tripContextBadge">Fixed</span></span>
+              <span class="tripContextValue tripContextValue--locked"><span class="tripContextValueText">Soft-shell Clams</span> <span class="tripContextDivider" aria-hidden="true">·</span> <span class="tripContextBadge tripContextBadge--locked">Fixed</span></span>
             </div>
             ` : ""}
             <div class="field">
