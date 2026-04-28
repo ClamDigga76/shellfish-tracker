@@ -36,19 +36,33 @@ body[data-view="edit"] .chip-selector{border:1px solid var(--border);background:
 .datePillWrap.is-empty > input[type="date"]::-webkit-calendar-picker-indicator{opacity:.95}
 
 .tripGuidedHeader{padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:linear-gradient(180deg, rgba(17,26,45,.55) 0%, rgba(17,26,45,.28) 100%)}
+.tripGuidedHeader.tripGuidedHeader--compact{padding:8px 10px;border-color:rgba(255,255,255,.1);border-radius:12px;background:linear-gradient(180deg, rgba(17,26,45,.45) 0%, rgba(17,26,45,.24) 100%)}
 .tripGuidedHeaderTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
-.tripTopLockPill{display:inline-flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid rgba(212,175,55,.34);border-radius:12px;color:rgba(255,223,140,.94);background:linear-gradient(180deg, rgba(8,15,28,.76) 0%, rgba(8,15,28,.52) 100%);font-size:12px;font-weight:700;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);cursor:pointer}
-.tripTopLockPill small{font-size:10px;color:rgba(255,223,140,.84);font-weight:600}
+.tripGuidedHeaderTop--compact{grid-template-columns:minmax(0,1fr) auto;gap:6px}
+.tripLockChipRow{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.tripTopLockPill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid rgba(212,175,55,.34);border-radius:999px;color:rgba(255,223,140,.94);background:linear-gradient(180deg, rgba(8,15,28,.76) 0%, rgba(8,15,28,.52) 100%);font-size:11px;font-weight:700;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);cursor:pointer}
 .tripGuidedStatusRow{margin-top:10px;display:flex;align-items:center;gap:8px}
-.tripGuidedStatusLabel{font-size:11px;letter-spacing:.09em;color:var(--muted);text-transform:uppercase;font-weight:700}
-.tripLockedValue{min-height:40px;display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid rgba(212,175,55,.28);border-radius:12px;background:linear-gradient(180deg, rgba(8,15,28,.7) 0%, rgba(8,15,28,.48) 100%);color:var(--text);font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.tripLockedValue{min-height:34px;display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid rgba(212,175,55,.28);border-radius:999px;background:linear-gradient(180deg, rgba(8,15,28,.7) 0%, rgba(8,15,28,.48) 100%);color:var(--text);font-weight:700;font-size:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .tripTopLockPill > span:first-child,
 .tripLockedValue > span:first-child{color:rgba(255,210,96,.95)}
-.tripLockedValue small{margin-left:auto;color:rgba(255,223,140,.8);font-size:11px;font-weight:600}
 
+.tripSectionHeader{margin:0 0 8px}
+.tripSectionHeader h3{margin:0;color:var(--text);font-size:1.12rem}
+.tripSectionHeader p{margin:4px 0 0;color:var(--muted);font-size:12px}
 .tripCalculatorHero{padding:12px;border:1px solid rgba(47,109,246,.34);border-radius:16px;background:radial-gradient(160% 110% at 50% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 62%),linear-gradient(180deg, rgba(47,109,246,.18) 0%, rgba(47,109,246,.08) 52%, rgba(255,255,255,.03) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 12px 26px rgba(3,10,26,.26)}
+.tripCalculatorSummary{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;margin-bottom:10px}
+.tripSummaryMetric{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0}
+.tripSummaryMetricLabel{font-size:11px;letter-spacing:.08em;font-weight:800}
+.tripSummaryMetricValue{font-size:clamp(1.2rem,4vw,2rem);line-height:1.05;font-weight:900;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.tripSummaryMetricUnit{font-size:11px;color:var(--muted);font-weight:700}
+.tripSummaryMetric--pounds .tripSummaryMetricLabel{color:var(--lbsBlue)}
+.tripSummaryMetric--rate .tripSummaryMetricLabel{color:var(--ppl)}
+.tripSummaryMetric--amount .tripSummaryMetricLabel,
+.tripSummaryMetric--amount .tripSummaryMetricValue{color:var(--good)}
+.tripSummaryOp{font-weight:800;color:rgba(255,255,255,.75);font-size:22px;line-height:1}
 .tripCalculatorFields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tripAmountResult{margin-top:10px;padding:10px;border:1px solid rgba(59,187,113,.3);border-radius:12px;background:linear-gradient(180deg, rgba(59,187,113,.13) 0%, rgba(59,187,113,.06) 100%)}
+.tripCalculatorFields--compact{grid-template-columns:1fr 1fr minmax(0,1.05fr);align-items:end}
+.tripAmountResult{padding:10px;border:1px solid rgba(59,187,113,.3);border-radius:12px;background:linear-gradient(180deg, rgba(59,187,113,.13) 0%, rgba(59,187,113,.06) 100%)}
 .tripMetricField{display:flex;flex-direction:column;align-items:stretch;min-width:0}
 .tripMetricLabel{margin:0 0 7px;line-height:1.1;text-align:center;white-space:nowrap}
 .tripMetricLabel--pounds{color:var(--lbsBlue)}
@@ -67,12 +81,20 @@ body[data-view="edit"] .chip-selector{border:1px solid var(--border);background:
 .rate.ppl{color:var(--ppl)!important;font-weight:800}
 
 .tripDetailsCard{padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.015) 100%)}
+.tripSectionSubhead{margin:0 0 8px;text-align:center;color:var(--muted);font-size:12px}
+.tripSelectPreview{position:relative}
+.tripSelectPreview .tripSelectedValueRow{min-height:50px;border:1px solid rgba(255,255,255,.15);border-radius:13px;background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);display:flex;align-items:center;gap:10px;padding:10px 12px}
+.tripSelectedValueIcon{font-size:18px;opacity:.95}
+.tripSelectedValueText{font-size:clamp(1.02rem,4.1vw,1.45rem);font-weight:800;line-height:1.15;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tripSelectedValueChevron{opacity:.82;font-size:22px;line-height:1}
+.tripSelectPreview select{position:absolute;inset:0;opacity:0;cursor:pointer}
 .tripDetailsAreaField{padding-top:12px;border-top:1px solid rgba(255,255,255,.1)}
 
 .tripInlineActions .tripActionPrimaryRow .btn.primary{width:100%}
-.tripInlineActions .tripActionTextRow{margin-top:8px;display:flex;justify-content:center;gap:18px}
+.tripInlineActions .tripActionTextRow{margin-top:10px;display:flex;justify-content:center;gap:18px}
 .tripDockSecondaryAction{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:700;padding:4px 0}
 .tripDockSecondaryAction:active{transform:translateY(1px)}
+.tripAutosaveLine{margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:12px}
 
 .edit-mode{background:linear-gradient(180deg, rgba(255,77,79,.10) 0%, rgba(255,77,79,.04) 34%, rgba(255,255,255,.03) 100%)}
 .edit-mode .tripCalculatorHero{border-color:rgba(255,120,120,.34);background:radial-gradient(160% 110% at 50% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 62%),linear-gradient(180deg, rgba(255,77,79,.16) 0%, rgba(255,77,79,.08) 52%, rgba(255,255,255,.03) 100%)}
@@ -102,8 +124,11 @@ body[data-view="edit"] .tripActionRow.tripActionRow--three{grid-template-columns
 
 @media (max-width:420px){
   .tripGuidedHeaderTop{grid-template-columns:minmax(0,1fr)}
-  .tripTopLockPill{justify-content:center}
-  .tripCalculatorFields{grid-template-columns:1fr}
+  .tripLockChipRow{justify-content:flex-start}
+  .tripCalculatorSummary{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:5px}
+  .tripSummaryMetricValue{font-size:clamp(1rem,5.2vw,1.35rem)}
+  .tripSummaryOp{font-size:18px}
+  .tripCalculatorFields--compact{grid-template-columns:1fr}
   .trip-inline-actions .tripActionTextRow,
   .tripInlineActions .tripActionTextRow{gap:14px}
   .trip-edit-indicator{margin-bottom:9px;padding:9px 8px 7px}

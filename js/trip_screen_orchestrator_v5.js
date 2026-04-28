@@ -131,16 +131,18 @@ const newTripFormHtml = renderTripEntryForm({
       rateValue: rateVal,
       notesValue: draft.notes,
       primaryActionLabel: "Save Trip",
-      secondaryActionLabel: "Cancel",
-      secondaryActionId: "navCancel",
-      tertiaryActionLabel: "Clear Draft",
-      tertiaryActionId: "clearDraft",
+      secondaryActionLabel: "Clear Draft",
+      secondaryActionId: "clearDraft",
+      tertiaryActionLabel: "",
+      tertiaryActionId: "",
       dateIconHtml: iconSvg("calendar"),
       showSpeciesField: false,
       showNotesField: false,
       metricStateHelperId: "tripMetricStateHelperNew",
-      metricStateHelperText: "Enter pounds and $/LB. Amount calculates automatically.",
-      areaGuidanceText: "If the exact area is unknown, choose Area Not Recorded to save this trip accurately."
+      metricStateHelperText: "Amount = Pounds × $/LB (auto-calculated).",
+      areaGuidanceText: "If the exact area is unknown, choose Area Not Recorded.",
+      dealerValue: draft.dealer,
+      areaValue: draft.area
     }).replace("card formCard", "formCard");
 
 ;getApp().innerHTML = `

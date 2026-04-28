@@ -50,8 +50,8 @@ export function createTripMetricSyncEngine({ parseNum, parseMoney, syncTargets }
 }
 
 const METRIC_HELPER_TEXT_BY_PAIR = Object.freeze({
-  "pounds+rate": "Pounds × Pay Rate = Amount (auto-calculated).",
-  "pounds+amount": "Pay Rate is auto-calculated from Pounds + Amount."
+  "pounds+rate": "Amount = Pounds × $/LB (auto-calculated).",
+  "pounds+amount": "$/LB is auto-calculated from Pounds + Amount."
 });
 
 export function getMetricHelperText(lockPair = []) {
