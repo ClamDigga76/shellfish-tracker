@@ -51,11 +51,11 @@ export function renderTripEntryForm({
       <span>Notes locked</span>
     </button>
   `;
-  const lockedSpeciesValue = `<div class="tripLockedValue"><span aria-hidden="true">🔒</span><span>Species locked</span></div>`;
   const dealerDisplayValue = String(dealerValue || "").trim() || "Select dealer";
   const areaDisplayValue = String(areaValue || "").trim() || "Select area";
+  const metricHelperText = String(metricStateHelperText || "").trim();
   const settlementToggle = settlementRevealId
-    ? `<button class="tripSettlementReveal" id="${escapeHtml(settlementRevealId)}" type="button" aria-expanded="${settlementExpanded ? "true" : "false"}"><span>${settlementExpanded ? "Hide check details" : "Check total different?"}</span><span class="tripSettlementChevron" aria-hidden="true">${settlementExpanded ? "▾" : "▸"}</span></button>`
+    ? `<button class="tripSettlementReveal tripSettlementReveal--compact" id="${escapeHtml(settlementRevealId)}" type="button" aria-expanded="${settlementExpanded ? "true" : "false"}"><span>${settlementExpanded ? "Hide check details" : "Check total differs?"}</span><span class="tripSettlementChevron" aria-hidden="true">${settlementExpanded ? "▾" : "▸"}</span></button>`
     : "";
   const settlementDetails = settlementRevealId && writtenCheckAmountId ? `
     <div class="tripSettlementPanel${settlementExpanded ? " is-open" : ""}" data-settlement-panel>
@@ -86,7 +86,6 @@ export function renderTripEntryForm({
                   <input class="input datePill" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
                 </div>
                 <div class="tripLockChipRow">
-                  ${lockedSpeciesValue}
                   ${notesLockBadge}
                 </div>
               </div>
@@ -117,6 +116,7 @@ export function renderTripEntryForm({
           <div class="tripSectionHeader">
             <h3>Catch Details</h3>
             <p>Enter pounds and $/LB — we’ll do the math.</p>
+            ${settlementToggle}
           </div>
           <div class="tripCalculatorHero">
             <div class="tripCalculatorColumns" aria-label="Catch details calculator">
@@ -158,13 +158,18 @@ export function renderTripEntryForm({
               </div>
             </div>
           </div>
-          <div class="tripMetricStateHelper" id="${escapeHtml(metricStateHelperId)}" aria-live="polite">${escapeHtml(metricStateHelperText)}</div>
-          ${settlementToggle}
+          ${metricHelperText ? `<div class="tripMetricStateHelper" id="${escapeHtml(metricStateHelperId)}" aria-live="polite">${escapeHtml(metricStateHelperText)}</div>` : ""}
           ${settlementDetails}
         </section>
 
         <section class="trip-section tripDetailsSection">
           <div class="tripDetailsCard">
+            ${isNew ? `
+            <div class="tripContextRow" aria-label="Trip species context">
+              <span class="tripContextLabel">Species</span>
+              <span class="tripContextValue">Soft-shell Clams <span class="tripContextDivider" aria-hidden="true">·</span> <span class="tripContextBadge">Fixed</span></span>
+            </div>
+            ` : ""}
             <div class="field">
               <label class="fieldLabel overline center" for="${escapeHtml(dealerId)}">Dealer</label>
               <div class="tripSectionSubhead">Who are you selling to?</div>
