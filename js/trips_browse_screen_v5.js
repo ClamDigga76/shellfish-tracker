@@ -15,7 +15,6 @@ export function createTripsBrowseScreenRenderer(deps){
     showToast,
     ensureTripsFilter,
     getTripsFilteredRows,
-    tripsActiveLabel,
     resetTripsFilters
   } = deps;
 
@@ -38,9 +37,10 @@ export function createTripsBrowseScreenRenderer(deps){
     );
     const isFiltersExpanded = ui.tripsFiltersExpanded === true;
     const resolvedRangeLabel = r.label || "YTD";
-    const dealerSummary = String(tf.dealer || "all") === "all" ? "All dealers" : `Dealer: ${tf.dealer}`;
-    const areaSummary = String(tf.area || "all") === "all" ? "All areas" : `Area: ${tf.area}`;
-    const tripsShownLabel = `${sorted.length} ${sorted.length === 1 ? "trip" : "trips"} shown`;
+    const dealerSummary = String(tf.dealer || "all") === "all" ? "All dealers" : `${tf.dealer}`;
+    const areaSummary = String(tf.area || "all") === "all" ? "All areas" : `${tf.area}`;
+    const tripsCountSummary = `${sorted.length} ${sorted.length === 1 ? "trip" : "trips"}`;
+    const sortSummary = "Newest first";
     const excludedQuarantinedCount = Number(transparency?.excludedQuarantinedCount || 0);
     const quarantinedSupportNote = excludedQuarantinedCount > 0
       ? `<div class="muted small mt8 tripsQuarantineSupportNote" role="status">Some trips are excluded from date filters because their date is invalid (quarantined): ${excludedQuarantinedCount}.</div>`
@@ -63,8 +63,8 @@ export function createTripsBrowseScreenRenderer(deps){
       <div class="card tripsFiltersCard tripsBrowseFiltersCard">
         <div class="tripsFiltersSummaryRow">
           <div class="tripsFiltersSummaryBlock">
-            <div class="tripsFiltersSummaryLine">Showing: ${escapeHtml(`${resolvedRangeLabel} · ${dealerSummary} · ${areaSummary}`)}</div>
-            <div class="muted small tripsFiltersSummaryCount">${escapeHtml(tripsShownLabel)}</div>
+            <div class="tripsFiltersSummaryPrimary">${escapeHtml(`${resolvedRangeLabel} · ${tripsCountSummary}`)}</div>
+            <div class="tripsFiltersSummarySecondary" title="${escapeHtml(`${dealerSummary} · ${areaSummary} · ${sortSummary}`)}">${escapeHtml(`${dealerSummary} · ${areaSummary} · ${sortSummary}`)}</div>
           </div>
           <div class="tripsFiltersSummaryActions">
             <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody">${isFiltersExpanded ? "Hide filters" : "Filters"}</button>
@@ -122,9 +122,6 @@ export function createTripsBrowseScreenRenderer(deps){
           </div>
         ` : ""}
 
-        <div class="muted small mt8 tripsFilterSummary">
-          <b>${escapeHtml(tripsActiveLabel(tf, r.label))}</b>
-        </div>
         ${!isFiltersExpanded ? customRangeCorrectionHtml : ""}
         ${quarantinedSupportNote}
       </div>

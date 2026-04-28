@@ -1,11 +1,11 @@
 /* Feature-surface styles extracted from shell_shared_v5.css (v580) */
-.tripsFiltersCard{padding:var(--card-pad-y) var(--card-pad-x)}
-.tripsFiltersSummaryRow{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.tripsFiltersSummaryBlock{min-width:0;display:grid;gap:4px}
-.tripsFiltersSummaryLine{font-size:13px;line-height:1.35;font-weight:730;color:var(--text)}
-.tripsFiltersSummaryCount{line-height:1.25}
-.tripsFiltersSummaryActions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px}
-.tripsFiltersToggleBtn{min-width:94px}
+.tripsFiltersCard{padding:12px 14px}
+.tripsFiltersSummaryRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tripsFiltersSummaryBlock{min-width:0;display:grid;gap:3px;flex:1}
+.tripsFiltersSummaryPrimary{font-size:14px;line-height:1.3;font-weight:760;color:var(--text)}
+.tripsFiltersSummarySecondary{font-size:12px;line-height:1.25;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tripsFiltersSummaryActions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px;flex:0 0 auto}
+.tripsFiltersToggleBtn{min-width:72px;min-height:36px;padding:0 12px;border-radius:999px;font-size:12px;font-weight:700;line-height:1}
 .tripsFiltersBody{margin-top:var(--card-body-gap);padding-top:var(--card-body-gap);border-top:1px solid var(--line);display:grid;gap:var(--card-body-gap)}
 .tripsFiltersGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;align-items:end}
 .tripsFilterField{min-width:0}
