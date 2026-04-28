@@ -548,8 +548,8 @@ export function createHomeDashboardRenderer({
           html: `
             <div class="homeScreenshotCardPreviewWrap">
               <div class="homeScreenshotCardPreviewSurface">
-                <div class="homeScreenshotCardPreviewHeader">
-                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="assets/brand/backgrounds/btc-share-logo-wide.png?v=715" alt="Bank the Catch" loading="lazy" decoding="async" />
+                <div class="homeScreenshotCardPreviewHero">
+                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="assets/brand/backgrounds/btc-share-logo-wide.png?v=716" alt="Bank the Catch" loading="lazy" decoding="async" />
                   <div class="homeScreenshotCardPreviewBrandFallback" id="homeScreenshotCardPreviewBrandFallback">Bank the Catch</div>
                 </div>
                 <div class="homeScreenshotCardPreviewLabel">Last Saved Trip</div>
