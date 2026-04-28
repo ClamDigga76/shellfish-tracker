@@ -138,24 +138,27 @@ export function renderTripEntryForm({
               </div>
             </div>
             <div class="tripCalculatorFields tripCalculatorFields--compact">
-              <div class="field tripMetricField">
-                <label class="fieldLabel overline tripMetricLabel tripMetricLabel--pounds center" for="${escapeHtml(poundsId)}">Enter pounds</label>
+              <div class="tripCalcChip tripCalcChip--pounds">
+                <label class="sr-only" for="${escapeHtml(poundsId)}">Enter pounds</label>
+                <span class="tripCalcChipIcon" aria-hidden="true">⚖️</span>
                 <div class="inputWrap inputWrap--suffix">
-                  <input class="input inputWithSuffix" id="${escapeHtml(poundsId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.0" value="${escapeHtml(String(poundsValue ?? ""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+                  <input class="input inputWithSuffix tripCalcInput" id="${escapeHtml(poundsId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="Enter pounds" value="${escapeHtml(String(poundsValue ?? ""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
                   <span class="unitSuffix lbsBlue" aria-hidden="true">lbs</span>
                 </div>
               </div>
-              <div class="field tripMetricField">
-                <label class="fieldLabel overline tripMetricLabel tripMetricLabel--price center" for="${escapeHtml(rateId)}">Enter $/LB</label>
+              <div class="tripCalcChip tripCalcChip--rate">
+                <label class="sr-only" for="${escapeHtml(rateId)}">Enter $/LB</label>
+                <span class="tripCalcChipIcon" aria-hidden="true">💲</span>
                 <div class="inputWrap inputWrap--rate">
-                  <input class="input" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(rateValue ?? computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                  <input class="input tripCalcInput" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="Enter rate" value="${escapeHtml(String(rateValue ?? computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                 </div>
               </div>
-              <div class="tripAmountResult">
-                <label class="fieldLabel overline tripMetricLabel tripMetricLabel--amount center" for="${escapeHtml(amountId)}">AMOUNT</label>
+              <div class="tripCalcChip tripCalcChip--amount">
+                <label class="sr-only" for="${escapeHtml(amountId)}">Amount</label>
+                <span class="tripCalcChipIcon" aria-hidden="true">💵</span>
                 <div class="inputWrap inputWrap--prefix">
                   <span class="moneyPrefix moneyGreen" aria-hidden="true">$</span>
-                  <input class="input inputWithPrefix" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountValue ?? ""))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                  <input class="input inputWithPrefix tripCalcInput" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountValue ?? ""))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                 </div>
               </div>
             </div>
