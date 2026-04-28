@@ -533,13 +533,13 @@
 .homeScreenshotCardPreviewSurface{
   position:relative;
   overflow:hidden;
-  border:1px solid rgba(98,144,214,.28);
+  border:1px solid color-mix(in srgb, var(--btc-logo-blue-highlight) 30%, transparent);
   border-radius:16px;
   padding:14px 12px 10px;
   background:
-    radial-gradient(130% 96% at 86% 8%, rgba(6,44,99,.28) 0%, rgba(6,44,99,0) 54%),
-    radial-gradient(116% 84% at 12% 2%, rgba(3,28,69,.34) 0%, rgba(3,28,69,0) 60%),
-    linear-gradient(160deg, #000f2c 0%, #000f2c 56%, #031c45 82%, #062c63 100%);
+    radial-gradient(130% 96% at 86% 8%, color-mix(in srgb, var(--btc-logo-blue-shadow) 42%, transparent) 0%, transparent 54%),
+    radial-gradient(116% 84% at 12% 2%, color-mix(in srgb, var(--btc-logo-blue-deep) 36%, transparent) 0%, transparent 60%),
+    linear-gradient(160deg, var(--btc-logo-panel-navy) 0%, var(--btc-logo-panel-navy) 56%, var(--btc-logo-blue-shadow) 82%, var(--btc-logo-blue) 100%);
   box-shadow:0 10px 22px rgba(0,0,0,.24), inset 0 1px 0 rgba(214,231,255,.05);
   display:grid;
   gap:10px;
@@ -559,6 +559,8 @@
   display:grid;
   justify-items:center;
   padding:14px 6px 16px;
+  border-radius:12px;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--btc-logo-blue-shine) 12%, transparent) 0%, color-mix(in srgb, var(--btc-logo-panel-navy) 16%, transparent) 100%);
 }
 .homeScreenshotCardPreviewHero::after{
   content:"";
@@ -578,7 +580,7 @@
   width:min(216px, 100%);
   height:auto;
   max-width:100%;
-  filter:drop-shadow(0 2px 7px rgba(11,52,126,.2)) drop-shadow(0 0 8px rgba(255,204,106,.08));
+  filter:drop-shadow(0 2px 7px color-mix(in srgb, var(--btc-logo-blue-shadow) 40%, transparent)) drop-shadow(0 0 8px color-mix(in srgb, var(--btc-logo-gold) 30%, transparent));
 }
 .homeScreenshotCardPreviewBrandFallback{
   position:relative;

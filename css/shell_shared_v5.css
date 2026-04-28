@@ -39,6 +39,13 @@
   --analytics-accent:rgba(47,109,246,.18);
   --analytics-surface-top:rgba(255,255,255,.075);
   --analytics-surface-bottom:rgba(255,255,255,.03);
+  --btc-logo-blue:#2E5FBF;
+  --btc-logo-blue-highlight:#4181E3;
+  --btc-logo-blue-shine:#69B7EC;
+  --btc-logo-blue-shadow:#142D89;
+  --btc-logo-blue-deep:#102A8C;
+  --btc-logo-panel-navy:#040F2B;
+  --btc-logo-gold:#C1B68A;
   --money:var(--good);
   --lbs:var(--lbsBlue);
   --ppl:var(--pplYellow);
