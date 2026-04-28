@@ -106,6 +106,14 @@ body[data-view="edit"] .chip-selector{
   font-size:12px;
   line-height:1.35;
 }
+.tripCheckTotalLabel{
+  margin-top:7px;
+  text-align:center;
+  color:var(--text);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.02em;
+}
 .tripAreaGuidance{
   margin-top:8px;
   text-align:center;
@@ -232,10 +240,69 @@ body[data-view="edit"] .tripActionBar{
   box-shadow:0 10px 20px rgba(0,0,0,.2);
   padding:8px;
 }
+body[data-view="new"] .tripActionBar{
+  background:linear-gradient(180deg, rgba(9,15,26,.72) 0%, rgba(9,15,26,.48) 100%);
+  backdrop-filter:blur(8px);
+}
 body[data-view="new"] .tripActionRow,
 body[data-view="edit"] .tripActionRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 body[data-view="new"] .tripActionRow.tripActionRow--three,
 body[data-view="edit"] .tripActionRow.tripActionRow--three{grid-template-columns:1fr 1fr 1fr}
+body[data-view="new"] #newTripForm{padding-bottom:calc(var(--bottom-overlay-h) + 72px)}
+body[data-view="new"] .tripTopFieldRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+}
+body[data-view="new"] .tripTopLockPill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:11px 12px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  color:var(--muted);
+  background:rgba(255,255,255,.03);
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;
+}
+body[data-view="new"] .tripLockedValue{
+  margin-top:8px;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:12px 13px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  font-weight:700;
+}
+body[data-view="new"] .tripLockedValue small{
+  margin-left:auto;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:600;
+}
+body[data-view="new"] .tripActionPrimaryRow .btn.primary{width:100%}
+body[data-view="new"] .tripActionTextRow{
+  margin-top:6px;
+  display:flex;
+  justify-content:center;
+  gap:18px;
+}
+body[data-view="new"] .tripDockSecondaryAction{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+  padding:4px 0;
+}
+body[data-view="new"] .tripDockSecondaryAction:active{transform:translateY(1px)}
 
 /* New Trip: suffix units + save disabled */
 .inputWrap{position:relative;min-width:0;overflow:hidden}
@@ -274,4 +341,6 @@ body[data-view="edit"] .tripActionRow.tripActionRow--three{grid-template-columns
   .inputWrap .moneyPrefix{font-size:11px}
   .inputWrap--suffix .inputWithSuffix{padding-right:40px}
   .inputWrap--prefix .inputWithPrefix{padding-left:26px;padding-right:9px}
+  body[data-view="new"] .tripTopLockPill{padding:11px 10px;font-size:11px}
+  body[data-view="new"] .tripActionTextRow{gap:14px}
 }

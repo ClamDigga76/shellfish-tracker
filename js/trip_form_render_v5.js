@@ -41,7 +41,16 @@ export function renderTripEntryForm({
   metricStateHelperText = "Pounds × Pay Rate = Amount"
 }) {
   const isEdit = mode === "edit";
+  const isNew = mode === "new";
   const tertiaryButton = tertiaryActionLabel ? `<button class="btn danger" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : "";
+  const tertiaryTextButton = tertiaryActionLabel ? `<button class="tripDockSecondaryAction" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : "";
+  const notesLockBadge = `
+    <div class="tripTopLockPill" aria-label="Notes are locked for this screen">
+      <span aria-hidden="true">🔒</span>
+      <span>Notes</span>
+    </div>
+  `;
+  const lockedSpeciesValue = `<div class="tripLockedValue"><span aria-hidden="true">🔒</span><span>Soft-shell Clams</span><small>Locked</small></div>`;
   const settlementToggle = settlementRevealId
     ? `<button class="tripSettlementReveal" id="${escapeHtml(settlementRevealId)}" type="button" aria-expanded="${settlementExpanded ? "true" : "false"}">${settlementExpanded ? "Hide check details" : "Check differs"}</button>`
     : "";
@@ -66,13 +75,33 @@ export function renderTripEntryForm({
     <div class="card formCard tripFormFoundation ${escapeHtml(extraCardClass)}">
       <form id="${escapeHtml(formId)}">
         <section class="trip-section">
-          <div class="field">
+          <div class="field${isNew ? " tripTopFieldRow" : ""}">
             <div class="dateRow">
               <span class="dateIcon">${dateIconHtml}</span>
               <input class="input datePill" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
             </div>
+            ${isNew ? notesLockBadge : ""}
           </div>
         </section>
+
+        ${showSpeciesField ? `
+        <section class="trip-section">
+          <div class="field">
+            <label class="fieldLabel overline center" for="${escapeHtml(speciesId)}">SPECIES</label>
+            <div class="selectRowWrap">
+              <select class="input" id="${escapeHtml(speciesId)}" enterkeyhint="next">${speciesOptions}</select>
+              <span class="chev">›</span>
+            </div>
+          </div>
+        </section>
+        ` : (isNew ? `
+        <section class="trip-section">
+          <div class="field">
+            <label class="fieldLabel overline center">SPECIES</label>
+            ${lockedSpeciesValue}
+          </div>
+        </section>
+        ` : "")}
 
         <section class="trip-section">
           <div class="tripMetricsRow">
@@ -100,21 +129,10 @@ export function renderTripEntryForm({
             </div>
           </div>
           <div class="tripMetricStateHelper" id="${escapeHtml(metricStateHelperId)}" aria-live="polite">${escapeHtml(metricStateHelperText)}</div>
+          ${isNew ? `<div class="tripCheckTotalLabel">Check Total</div>` : ""}
           ${settlementToggle}
           ${settlementDetails}
         </section>
-
-        ${showSpeciesField ? `
-        <section class="trip-section">
-          <div class="field">
-            <label class="fieldLabel overline center" for="${escapeHtml(speciesId)}">SPECIES</label>
-            <div class="selectRowWrap">
-              <select class="input" id="${escapeHtml(speciesId)}" enterkeyhint="next">${speciesOptions}</select>
-              <span class="chev">›</span>
-            </div>
-          </div>
-        </section>
-        ` : ""}
 
         <section class="trip-section">
           <div class="field">
@@ -152,11 +170,21 @@ export function renderTripEntryForm({
 
       <section class="trip-action-dock" aria-label="Trip form actions">
         <div class="tripActionBar">
-          <div class="tripActionRow${tertiaryActionLabel ? " tripActionRow--three" : ""}">
-            <button class="btn primary" id="${isEdit ? "saveEdit" : "saveTrip"}" type="submit" form="${escapeHtml(formId)}" ${isEdit ? "" : "disabled"}>${escapeHtml(primaryActionLabel)}</button>
-            <button class="btn${isEdit ? "" : " danger"}" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
-            ${tertiaryButton}
-          </div>
+          ${isNew ? `
+            <div class="tripActionPrimaryRow">
+              <button class="btn primary" id="saveTrip" type="submit" form="${escapeHtml(formId)}" disabled>${escapeHtml(primaryActionLabel)}</button>
+            </div>
+            <div class="tripActionTextRow">
+              <button class="tripDockSecondaryAction" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
+              ${tertiaryTextButton}
+            </div>
+          ` : `
+            <div class="tripActionRow${tertiaryActionLabel ? " tripActionRow--three" : ""}">
+              <button class="btn primary" id="saveEdit" type="submit" form="${escapeHtml(formId)}">${escapeHtml(primaryActionLabel)}</button>
+              <button class="btn" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
+              ${tertiaryButton}
+            </div>
+          `}
         </div>
       </section>
     </div>

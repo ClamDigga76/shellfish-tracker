@@ -139,7 +139,7 @@ const newTripFormHtml = renderTripEntryForm({
       showSpeciesField: false,
       showNotesField: false,
       metricStateHelperId: "tripMetricStateHelperNew",
-      metricStateHelperText: getMetricHelperText(["pounds", "rate"]),
+      metricStateHelperText: "Amount auto-calculates from pounds and $/lb.",
       areaGuidanceText: "If the exact area is unknown, choose Area Not Recorded to save this trip accurately."
     }).replace("card formCard", "formCard");
 
