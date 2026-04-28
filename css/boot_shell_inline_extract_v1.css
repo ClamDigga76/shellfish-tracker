@@ -258,6 +258,72 @@ header{padding:14px 18px 12px}
 .metaRow{display:flex;gap:8px;align-items:center;margin-bottom:4px}
 .tmeta{color:var(--muted);font-size:13px}
 .dot{color:var(--muted);font-size:12px;opacity:.5}
+
+/* Branded app boot splash */
+.bootSplash{
+  margin:0 auto;
+  max-width:560px;
+  padding:18px 16px;
+  text-align:center;
+  border-color:color-mix(in srgb, var(--btc-logo-blue) 45%, var(--border));
+  background:
+    radial-gradient(120% 80% at 50% -12%, color-mix(in srgb, var(--btc-logo-blue-highlight) 35%, transparent) 0%, transparent 65%),
+    radial-gradient(85% 65% at 50% 100%, color-mix(in srgb, var(--btc-logo-gold) 18%, transparent) 0%, transparent 78%),
+    linear-gradient(180deg, color-mix(in srgb, var(--btc-logo-panel-navy) 92%, #000 8%) 0%, color-mix(in srgb, var(--btc-logo-panel-navy) 74%, #000 26%) 100%);
+  box-shadow:
+    0 12px 32px rgba(0,0,0,.38),
+    inset 0 0 0 1px color-mix(in srgb, var(--btc-logo-blue-highlight) 18%, transparent);
+}
+.bootSplashBrand{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin-bottom:12px;
+}
+.bootSplashLogo{
+  width:min(240px, 78vw);
+  max-height:84px;
+  height:auto;
+  object-fit:contain;
+  filter:drop-shadow(0 8px 24px color-mix(in srgb, var(--btc-logo-blue-highlight) 40%, transparent));
+}
+.bootSplashContent h1{
+  margin:0 0 8px;
+  font-size:clamp(23px, 5.4vw, 30px);
+  letter-spacing:.2px;
+}
+.bootSplashContent .muted{
+  color:var(--muted);
+  margin:0 0 14px;
+}
+.bootSplashRecovery{
+  margin-top:6px;
+}
+.bootSplashRecovery ul{
+  list-style:none;
+  padding:0;
+  margin:8px 0 10px;
+  display:grid;
+  gap:8px;
+}
+.bootSplashRecovery a{
+  display:block;
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid color-mix(in srgb, var(--btc-logo-blue-highlight) 40%, var(--border));
+  background:color-mix(in srgb, var(--btc-logo-blue) 16%, transparent);
+  color:var(--text);
+  text-decoration:none;
+  font-weight:700;
+}
+.bootSplashRecovery a:active{
+  transform:translateY(1px);
+  filter:brightness(.96);
+}
+.bootSplashRecovery .small{
+  margin:0;
+}
 .catchCard{
   width:100%;
   text-align:left;
