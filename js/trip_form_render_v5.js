@@ -114,9 +114,11 @@ export function renderTripEntryForm({
 
         <section class="trip-section">
           <div class="tripSectionHeader">
-            <h3>Catch Details</h3>
+            <div class="tripSectionHeaderTop">
+              <h3>Catch Details</h3>
+              ${settlementToggle}
+            </div>
             <p>Enter pounds and $/LB — we’ll do the math.</p>
-            ${settlementToggle}
           </div>
           <div class="tripCalculatorHero">
             <div class="tripCalculatorColumns" aria-label="Catch details calculator">
@@ -165,9 +167,14 @@ export function renderTripEntryForm({
         <section class="trip-section tripDetailsSection">
           <div class="tripDetailsCard">
             ${isNew ? `
-            <div class="tripContextRow" aria-label="Trip species context">
-              <span class="tripContextLabel">Species</span>
-              <span class="tripContextValue tripContextValue--locked"><span class="tripContextValueText">Soft-shell Clams</span> <span class="tripContextDivider" aria-hidden="true">·</span> <span class="tripContextBadge tripContextBadge--locked">Fixed</span></span>
+            <div class="field tripSpeciesReadOnlyField" aria-label="Trip species context">
+              <label class="fieldLabel overline center">Species</label>
+              <div class="tripSelectPreview tripSelectPreview--readonly">
+                <div class="tripSelectedValueRow tripSelectedValueRow--readonly">
+                  <span class="tripSelectedValueText">Soft-shell Clams</span>
+                  <span class="tripContextBadge tripContextBadge--locked">Fixed</span>
+                </div>
+              </div>
             </div>
             ` : ""}
             <div class="field">
