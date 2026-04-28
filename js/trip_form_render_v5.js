@@ -215,32 +215,19 @@ export function renderTripEntryForm({
         </section>
         ` : ""}
 
-        ${isNew ? `
+        ${(isNew || isEdit) ? `
           <section class="trip-section tripInlineActions" aria-label="Trip form actions">
             <div class="tripActionPrimaryRow">
-              <button class="btn primary" id="saveTrip" type="submit" form="${escapeHtml(formId)}" disabled>${escapeHtml(primaryActionLabel)}</button>
+              <button class="btn primary" id="${isEdit ? "saveEdit" : "saveTrip"}" type="submit" form="${escapeHtml(formId)}"${isNew ? " disabled" : ""}>${escapeHtml(primaryActionLabel)}</button>
             </div>
             <div class="tripActionTextRow">
               <button class="tripDockSecondaryAction" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
+              ${isEdit && tertiaryActionLabel ? `<button class="tripDockSecondaryAction tripDockSecondaryAction--danger" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : ""}
             </div>
-            <div class="tripAutosaveLine"><span aria-hidden="true">🔒</span><span>Your draft is saved automatically</span></div>
+            ${isNew ? `<div class="tripAutosaveLine"><span aria-hidden="true">🔒</span><span>Your draft is saved automatically</span></div>` : ""}
           </section>
         ` : ""}
       </form>
-
-      ${isEdit ? `
-      <section class="trip-action-dock" aria-label="Trip form actions">
-        <div class="tripActionBar tripActionBar--editHierarchy">
-          <div class="tripActionPrimaryRow">
-            <button class="btn primary" id="saveEdit" type="submit" form="${escapeHtml(formId)}">${escapeHtml(primaryActionLabel)}</button>
-          </div>
-          <div class="tripActionTextRow tripActionTextRow--edit">
-            <button class="tripDockSecondaryAction" id="${escapeHtml(secondaryActionId)}" type="button">${escapeHtml(secondaryActionLabel)}</button>
-            ${tertiaryActionLabel ? `<button class="tripDockSecondaryAction tripDockSecondaryAction--danger" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : ""}
-          </div>
-        </div>
-      </section>
-      ` : ""}
     </div>
   `;
 }
