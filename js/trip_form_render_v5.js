@@ -40,7 +40,8 @@ export function renderTripEntryForm({
   metricStateHelperId = "",
   metricStateHelperText = "Amount = Pounds × $/LB (auto-calculated).",
   dealerValue = "",
-  areaValue = ""
+  areaValue = "",
+  speciesMetadataText = "Soft-shell Clams"
 }) {
   const isEdit = mode === "edit";
   const isNew = mode === "new";
@@ -78,15 +79,17 @@ export function renderTripEntryForm({
     <div class="card formCard tripFormFoundation ${escapeHtml(extraCardClass)}">
       <form id="${escapeHtml(formId)}">
         <section class="trip-section">
-          ${isNew ? `
+          ${(isNew || isEdit) ? `
             <div class="tripGuidedHeader tripGuidedHeader--compact">
               <div class="tripGuidedHeaderTop tripGuidedHeaderTop--compact">
                 <div class="dateRow dateRow--guidedCompact">
                   <span class="dateIcon">${dateIconHtml}</span>
                   <input class="input datePill datePill--guidedCompact" id="${escapeHtml(dateId)}" type="date" enterkeyhint="next" value="${escapeHtml(String(dateValue || "").slice(0,10))}" />
-                  <div class="tripLockChipRow tripLockChipRow--inline">
-                    ${notesLockBadge}
-                  </div>
+                  ${isNew ? `
+                    <div class="tripLockChipRow tripLockChipRow--inline">
+                      ${notesLockBadge}
+                    </div>
+                  ` : ""}
                 </div>
               </div>
             </div>
@@ -192,12 +195,12 @@ export function renderTripEntryForm({
               <div class="tripAreaGuidance">${escapeHtml(areaGuidanceText)}</div>
             </div>
 
-            ${isNew ? `
+            ${(isNew || isEdit) ? `
             <div class="field tripSpeciesMetadataField" aria-label="Trip species context">
               <label class="fieldLabel overline center">Species</label>
-              <div class="tripSpeciesMetadataRow" role="note" aria-label="Species is locked">
+              <div class="tripSpeciesMetadataRow" role="note" aria-label="Species is locked and read only" aria-readonly="true">
                 <span class="tripSpeciesMetadataLock" aria-hidden="true">🔒</span>
-                <span class="tripSpeciesMetadataText">Soft-shell Clams</span>
+                <span class="tripSpeciesMetadataText">${escapeHtml(String(speciesMetadataText || "Soft-shell Clams"))}</span>
               </div>
             </div>
             ` : ""}
