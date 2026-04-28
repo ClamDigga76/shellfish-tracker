@@ -121,3 +121,19 @@ Docs/reference-source only (non-runtime references found):
 - `docs/brand/reference/source-inputs/btc-horizontal-logo-source-2026-04-27.jpg`
 - `docs/brand/reference/source-inputs/btc-square-app-icon-source-2026-04-27.jpg`
 - `docs/brand/reference/source-inputs/btc-wide-logo-lockup-source-2026-04-27.jpg`
+
+---
+
+## 5) Runtime cleanup note (2026-04-28, patch BRAND-ASSET-PATHS-AND-RETIRE-1)
+
+Follow-up runtime cleanup rewired Screenshot Card logo usage to `assets/brand/btc-logo-horizontal.png?v=714` and retired these previously listed candidates after confirming no active runtime/code/manifest/CSS references remained:
+
+- `docs/brand/reference/source-inputs/bank-the-catch-app-icon.png`
+- `docs/brand/reference/source-inputs/bank-the-catch-logo-full.png`
+- `docs/brand/reference/source-inputs/bank-the-catch-logo-horizontal.png`
+- `icons/hero.svg`
+- `icons/icon-152.png`
+- `icons/icon-167.png`
+
+The source/reference JPEGs remain in `docs/brand/reference/source-inputs/`.
+
