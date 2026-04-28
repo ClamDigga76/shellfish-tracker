@@ -13,6 +13,7 @@ export function createTripsUnifiedFilterBridge({
     // Guardrails for Trips-visible selectors.
     if(state.tripsFilter.dealer == null) state.tripsFilter.dealer = "all";
     if(state.tripsFilter.area == null) state.tripsFilter.area = "all";
+    if(state.tripsFilter.sort !== "oldest") state.tripsFilter.sort = "newest";
   }
 
   function getTripsFilteredRows(state){
@@ -28,7 +29,8 @@ export function createTripsUnifiedFilterBridge({
       "Last 12 months": "Last 12 Months",
       "Last 90 days": "Last 90 Days",
       "Last 30 days": "Last 30 Days",
-      "Last 7 Days": "Last 7 Days"
+      "Last 7 Days": "Last 7 Days",
+      "This Month": "Current Month"
     };
     const r = {
       startISO: filtered.range.fromISO,
@@ -42,6 +44,7 @@ export function createTripsUnifiedFilterBridge({
 
     // Stable sort: newest first (shared with Home and other trip views)
     rows = getTripsNewestFirst(rows);
+    if(tf.sort === "oldest") rows = rows.slice().reverse();
 
     return { rows, range:r, tf, transparency: filtered.transparency || { excludedQuarantinedCount: 0, quarantinedTotalCount: 0, hasExcludedQuarantined: false } };
   }
@@ -56,7 +59,7 @@ export function createTripsUnifiedFilterBridge({
 
   function resetTripsFilters(state){
     state.filters = state.filters || {};
-    state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", species:"all", text:"", customRangeCorrectionMessages:[] };
+    state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", sort:"newest", species:"all", text:"", customRangeCorrectionMessages:[] };
     state.tripsFilter = state.filters.active;
   }
 
