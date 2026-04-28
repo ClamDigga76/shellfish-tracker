@@ -45,14 +45,14 @@ export function renderTripEntryForm({
   const tertiaryButton = tertiaryActionLabel ? `<button class="btn danger" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : "";
   const tertiaryTextButton = tertiaryActionLabel ? `<button class="tripDockSecondaryAction" id="${escapeHtml(tertiaryActionId)}" type="button">${escapeHtml(tertiaryActionLabel)}</button>` : "";
   const notesLockBadge = `
-    <div class="tripTopLockPill" aria-label="Notes are locked for this screen">
+    <button class="tripTopLockPill" id="newTripLockedNotesInfo" type="button" aria-label="Notes are locked for this screen">
       <span aria-hidden="true">🔒</span>
       <span>Notes</span>
-    </div>
+    </button>
   `;
   const lockedSpeciesValue = `<div class="tripLockedValue"><span aria-hidden="true">🔒</span><span>Soft-shell Clams</span><small>Locked</small></div>`;
   const settlementToggle = settlementRevealId
-    ? `<button class="tripSettlementReveal" id="${escapeHtml(settlementRevealId)}" type="button" aria-expanded="${settlementExpanded ? "true" : "false"}">${settlementExpanded ? "Hide check details" : "Check differs"}</button>`
+    ? `<button class="tripSettlementReveal" id="${escapeHtml(settlementRevealId)}" type="button" aria-expanded="${settlementExpanded ? "true" : "false"}">${settlementExpanded ? "Hide check details" : "Check Total"}</button>`
     : "";
   const settlementDetails = settlementRevealId && writtenCheckAmountId ? `
     <div class="tripSettlementPanel${settlementExpanded ? " is-open" : ""}" data-settlement-panel>
@@ -114,7 +114,7 @@ export function renderTripEntryForm({
             </div>
             <div class="tripMetricSymbol" aria-hidden="true">×</div>
             <div class="field tripMetricField">
-              <label class="fieldLabel overline tripMetricLabel tripMetricLabel--price center" for="${escapeHtml(rateId)}">PRICE</label>
+              <label class="fieldLabel overline tripMetricLabel tripMetricLabel--price center" for="${escapeHtml(rateId)}">$/LB</label>
               <div class="inputWrap inputWrap--rate">
                 <input class="input" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(rateValue ?? computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
               </div>
@@ -129,7 +129,6 @@ export function renderTripEntryForm({
             </div>
           </div>
           <div class="tripMetricStateHelper" id="${escapeHtml(metricStateHelperId)}" aria-live="polite">${escapeHtml(metricStateHelperText)}</div>
-          ${isNew ? `<div class="tripCheckTotalLabel">Check Total</div>` : ""}
           ${settlementToggle}
           ${settlementDetails}
         </section>
