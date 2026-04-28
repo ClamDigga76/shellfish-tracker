@@ -533,14 +533,14 @@
 .homeScreenshotCardPreviewSurface{
   position:relative;
   overflow:hidden;
-  border:1px solid rgba(128,172,238,.24);
+  border:1px solid rgba(98,144,214,.28);
   border-radius:16px;
   padding:14px 12px 10px;
   background:
-    radial-gradient(120% 88% at 88% 6%, rgba(255,205,112,.22) 0%, rgba(255,205,112,0) 46%),
-    radial-gradient(135% 110% at 14% 2%, rgba(70,147,255,.24) 0%, rgba(70,147,255,0) 52%),
-    linear-gradient(162deg, rgba(8,18,43,.95) 0%, rgba(7,25,64,.93) 38%, rgba(6,37,94,.9) 67%, rgba(5,18,49,.92) 100%);
-  box-shadow:0 10px 22px rgba(0,0,0,.24), inset 0 1px 0 rgba(214,231,255,.07), inset 0 -1px 0 rgba(255,214,120,.05);
+    radial-gradient(130% 96% at 86% 8%, rgba(6,44,99,.28) 0%, rgba(6,44,99,0) 54%),
+    radial-gradient(116% 84% at 12% 2%, rgba(3,28,69,.34) 0%, rgba(3,28,69,0) 60%),
+    linear-gradient(160deg, #000f2c 0%, #000f2c 56%, #031c45 82%, #062c63 100%);
+  box-shadow:0 10px 22px rgba(0,0,0,.24), inset 0 1px 0 rgba(214,231,255,.05);
   display:grid;
   gap:10px;
 }
@@ -550,8 +550,8 @@
   inset:0;
   pointer-events:none;
   background:
-    radial-gradient(96% 46% at 50% 18%, rgba(78,159,255,.16) 0%, rgba(78,159,255,0) 68%),
-    linear-gradient(180deg, rgba(188,220,255,.11) 0, rgba(188,220,255,0) 54%);
+    radial-gradient(92% 42% at 50% 18%, rgba(78,159,255,.12) 0%, rgba(78,159,255,0) 70%),
+    linear-gradient(180deg, rgba(164,204,255,.07) 0, rgba(164,204,255,0) 56%);
 }
 .homeScreenshotCardPreviewHero{
   position:relative;
@@ -567,7 +567,7 @@
   right:-12px;
   bottom:0;
   height:1px;
-  background:linear-gradient(90deg, rgba(130,184,255,0) 0%, rgba(130,184,255,.34) 52%, rgba(130,184,255,0) 100%);
+  background:linear-gradient(90deg, rgba(130,184,255,0) 0%, rgba(130,184,255,.22) 52%, rgba(130,184,255,0) 100%);
 }
 .homeScreenshotCardPreviewLogo{
   position:relative;
@@ -609,7 +609,7 @@
   border-radius:14px;
   overflow:hidden;
   border:1px solid rgba(145,191,255,.24);
-  background:linear-gradient(180deg, rgba(10,20,38,.64) 0%, rgba(7,16,31,.7) 100%);
+  background:linear-gradient(180deg, rgba(8,20,46,.62) 0%, rgba(5,14,34,.7) 100%);
 }
 .homeScreenshotCardPreviewFooter{
   position:relative;
