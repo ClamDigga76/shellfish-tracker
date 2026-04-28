@@ -7,6 +7,14 @@
 .tripsFiltersSummaryActions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px;flex:0 0 auto}
 .tripsFiltersToggleBtn{min-width:72px;min-height:36px;padding:0 12px;border-radius:999px;font-size:12px;font-weight:700;line-height:1}
 .tripsFiltersBody{margin-top:var(--card-body-gap);padding-top:var(--card-body-gap);border-top:1px solid var(--line);display:grid;gap:var(--card-body-gap)}
+
+.tripsFiltersPanelTitle{font-size:14px;font-weight:800;line-height:1.25;color:var(--text)}
+.tripsFiltersSection{display:grid;gap:6px}
+.tripsFiltersSectionLabel{font-size:11px;font-weight:760;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted-strong)}
+.tripsFiltersQuickRange{display:flex;flex-wrap:wrap;gap:8px}
+.tripsFilterChip{min-height:38px;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--text-muted-strong)}
+.tripsFilterChip.is-selected{border-color:rgba(126,169,255,.5);background:rgba(47,109,246,.22);color:var(--text)}
+.tripsFilterApplyRow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:2px}
 .tripsFiltersGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;align-items:end}
 .tripsFilterField{min-width:0}
 .tripsFilterField--disabled{opacity:.72}
