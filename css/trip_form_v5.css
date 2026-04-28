@@ -68,26 +68,24 @@ body[data-view="edit"] .chip-selector{border:1px solid var(--border);background:
 .tripCalcStack--amount .tripSummaryMetricValue{color:var(--good)}
 .tripSummaryOp{font-weight:800;color:rgba(255,255,255,.75);font-size:22px;line-height:1}
 .tripSummaryOp + .tripCalcStack{padding-left:6px;border-left:1px solid rgba(255,255,255,.12)}
-.tripCalcChip{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 10px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:linear-gradient(180deg, rgba(20,32,56,.78) 0%, rgba(15,23,42,.62) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);width:100%;margin-top:6px}
-.tripCalcChipIcon{font-size:15px;line-height:1;opacity:.92}
-.tripCalcInput{background:transparent!important;border:0!important;padding:0 2px!important;min-height:28px;height:28px;font-size:1rem;font-weight:800}
+.tripCalcChip{display:flex;align-items:center;gap:4px;min-height:46px;padding:8px 9px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:linear-gradient(180deg, rgba(20,32,56,.78) 0%, rgba(15,23,42,.62) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);width:100%;margin-top:6px}
+.tripCalcInput{background:transparent!important;border:0!important;padding:0 4px!important;min-height:30px;height:30px;font-size:1.02rem;font-weight:800}
 .tripCalcChip .inputWrap{width:100%}
 .tripCalcChip .moneyPrefix{left:0}
 .tripCalcChip .inputWithPrefix{padding-left:20px!important}
 .tripCalcChip--pounds{border-color:rgba(88,140,255,.45);background:linear-gradient(180deg, rgba(39,69,136,.34) 0%, rgba(22,33,64,.45) 100%)}
-.tripCalcChip--pounds .tripCalcChipIcon,
 .tripCalcChip--pounds .tripCalcInput,
 .tripCalcChip--pounds .tripCalcInput::placeholder{color:var(--lbsBlue)}
 .tripCalcChip--rate{border-color:rgba(255,218,95,.42);background:linear-gradient(180deg, rgba(89,71,18,.28) 0%, rgba(33,30,18,.45) 100%)}
-.tripCalcChip--rate .tripCalcChipIcon,
 .tripCalcChip--rate .tripCalcInput,
 .tripCalcChip--rate .tripCalcInput::placeholder{color:var(--ppl)}
 .tripCalcChip--amount{border-color:rgba(59,187,113,.4);background:linear-gradient(180deg, rgba(26,74,47,.4) 0%, rgba(15,49,34,.5) 100%)}
-.tripCalcChip--amount .tripCalcChipIcon,
 .tripCalcChip--amount .tripCalcInput,
 .tripCalcChip--amount .moneyPrefix{color:var(--good)!important}
 .tripCalcChip--amount .tripCalcInput{font-weight:900}
 .tripCalcChip--amount .tripCalcInput::placeholder{font-weight:700;opacity:.95}
+.tripCalcChip .tripCalcInput:focus{outline:none;box-shadow:none}
+.tripCalcChip:focus-within{border-color:rgba(255,255,255,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 2px rgba(255,255,255,.08)}
 .tripMetricStateHelper{margin-top:9px;text-align:center;color:var(--muted);font-size:12px;line-height:1.35}
 .tripMetricStateHelper:empty{display:none}
 .tripAreaGuidance{margin-top:8px;text-align:center;color:var(--muted);font-size:12px;line-height:1.35}
@@ -145,8 +143,8 @@ body[data-view="edit"] .tripActionRow.tripActionRow--three{grid-template-columns
 .inputWrap .unitSuffix{right:12px;max-width:calc(100% - 16px)}
 .inputWrap .moneyPrefix{left:12px;max-width:calc(100% - 16px)}
 .inputWrap--suffix .inputWithSuffix{padding-right:44px;text-overflow:ellipsis;overflow:hidden}
-.inputWrap--prefix .inputWithPrefix{padding-left:28px;padding-right:10px;text-overflow:ellipsis;overflow:hidden}
-.inputWrap--rate .input{padding-left:12px;padding-right:12px;text-overflow:ellipsis;overflow:hidden}
+.inputWrap--prefix .inputWithPrefix{padding-left:24px;padding-right:6px;text-overflow:ellipsis;overflow:hidden}
+.inputWrap--rate .input{padding-left:8px;padding-right:8px;text-overflow:ellipsis;overflow:hidden}
 .moneyGreen{color:var(--good)!important}
 .btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}
 
@@ -160,13 +158,12 @@ body[data-view="edit"] .tripActionRow.tripActionRow--three{grid-template-columns
   .tripSummaryMetricValue{font-size:clamp(1rem,5.2vw,1.35rem)}
   .tripSummaryOp{font-size:16px}
   .tripSummaryOp + .tripCalcStack{padding-left:4px}
-  .tripCalcChip{min-height:42px;padding:7px 8px}
-  .tripCalcChipIcon{font-size:14px}
+  .tripCalcChip{min-height:44px;padding:7px 7px}
   .tripCalcInput{font-size:.94rem}
   .trip-inline-actions .tripActionTextRow,
   .tripInlineActions .tripActionTextRow{gap:14px}
   .trip-edit-indicator{margin-bottom:9px;padding:9px 8px 7px}
   .inputWrap .unitSuffix,
   .inputWrap .moneyPrefix{font-size:11px}
-  .inputWrap--prefix .inputWithPrefix{padding-left:26px;padding-right:9px}
+  .inputWrap--prefix .inputWithPrefix{padding-left:23px;padding-right:7px}
 }
