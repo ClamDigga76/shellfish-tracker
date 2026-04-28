@@ -122,19 +122,19 @@ export function renderTripEntryForm({
             <div class="tripCalculatorSummary" aria-hidden="true">
               <div class="tripSummaryMetric tripSummaryMetric--pounds">
                 <span class="tripSummaryMetricLabel">POUNDS</span>
-                <span class="tripSummaryMetricValue">${escapeHtml(String(poundsValue || "0.0"))}</span>
+                <span class="tripSummaryMetricValue" id="${escapeHtml(poundsId)}_summary">${escapeHtml(String(poundsValue || "0.0"))}</span>
                 <span class="tripSummaryMetricUnit">lbs</span>
               </div>
               <span class="tripSummaryOp">×</span>
               <div class="tripSummaryMetric tripSummaryMetric--rate">
                 <span class="tripSummaryMetricLabel">$/LB</span>
-                <span class="tripSummaryMetricValue">$${escapeHtml(String(rateValue || "0.00"))}</span>
+                <span class="tripSummaryMetricValue" id="${escapeHtml(rateId)}_summary">$${escapeHtml(String(rateValue || "0.00"))}</span>
                 <span class="tripSummaryMetricUnit">$/lb</span>
               </div>
               <span class="tripSummaryOp">=</span>
               <div class="tripSummaryMetric tripSummaryMetric--amount">
                 <span class="tripSummaryMetricLabel">AMOUNT</span>
-                <span class="tripSummaryMetricValue">$${escapeHtml(String(amountValue || "0.00"))}</span>
+                <span class="tripSummaryMetricValue" id="${escapeHtml(amountId)}_summary">$${escapeHtml(String(amountValue || "0.00"))}</span>
               </div>
             </div>
             <div class="tripCalculatorFields tripCalculatorFields--compact">
@@ -174,7 +174,7 @@ export function renderTripEntryForm({
               <div class="selectRowWrap tripSelectPreview">
                 <div class="tripSelectedValueRow">
                   <span class="tripSelectedValueIcon" aria-hidden="true">🏪</span>
-                  <span class="tripSelectedValueText">${escapeHtml(dealerDisplayValue)}</span>
+                  <span class="tripSelectedValueText" id="${escapeHtml(dealerId)}_preview_value">${escapeHtml(dealerDisplayValue)}</span>
                   <span class="tripSelectedValueChevron" aria-hidden="true">›</span>
                 </div>
                 <select class="input" id="${escapeHtml(dealerId)}" autocomplete="organization" enterkeyhint="next">${dealerOptions}</select>
@@ -188,7 +188,7 @@ export function renderTripEntryForm({
               <div class="selectRowWrap tripSelectPreview">
                 <div class="tripSelectedValueRow">
                   <span class="tripSelectedValueIcon" aria-hidden="true">📍</span>
-                  <span class="tripSelectedValueText">${escapeHtml(areaDisplayValue)}</span>
+                  <span class="tripSelectedValueText" id="${escapeHtml(areaId)}_preview_value">${escapeHtml(areaDisplayValue)}</span>
                   <span class="tripSelectedValueChevron" aria-hidden="true">›</span>
                 </div>
                 <select class="input" id="${escapeHtml(areaId)}" enterkeyhint="done">${areaOptions}</select>

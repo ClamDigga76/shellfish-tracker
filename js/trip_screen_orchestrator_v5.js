@@ -162,6 +162,11 @@ const newTripFormHtml = renderTripEntryForm({
   const elRate = document.getElementById("rateValue");
   const elWrittenCheckAmount = document.getElementById("t_written_check_amount");
   const elSettlementToggle = document.getElementById("t_checkDiffToggle");
+  const elPoundsSummary = document.getElementById("t_pounds_summary");
+  const elRateSummary = document.getElementById("rateValue_summary");
+  const elAmountSummary = document.getElementById("t_amount_summary");
+  const elDealerPreviewValue = document.getElementById("t_dealer_preview_value");
+  const elAreaPreviewValue = document.getElementById("t_area_preview_value");
   bindDatePill("t_date");
 
   const elLockedNotesInfo = document.getElementById("newTripLockedNotesInfo");
@@ -186,6 +191,23 @@ const newTripFormHtml = renderTripEntryForm({
     metricSync
   });
   const updateRateLine = metricSync.updateDerivedField;
+  const updateCalculatorSummary = ()=>{
+    const poundsNum = parseNum(elPounds?.value);
+    const rateNum = parseNum(elRate?.value);
+    const amountNum = parseMoney(elAmount?.value);
+    if(elPoundsSummary) elPoundsSummary.textContent = Number.isFinite(poundsNum) && poundsNum > 0 ? poundsNum.toFixed(1) : "0.0";
+    if(elRateSummary) elRateSummary.textContent = `$${Number.isFinite(rateNum) && rateNum > 0 ? rateNum.toFixed(2) : "0.00"}`;
+    if(elAmountSummary) elAmountSummary.textContent = `$${Number.isFinite(amountNum) && amountNum > 0 ? amountNum.toFixed(2) : "0.00"}`;
+  };
+  const updateSelectedPreview = (kind, value)=>{
+    const nextText = String(value || "").trim();
+    if(kind === "dealer" && elDealerPreviewValue){
+      elDealerPreviewValue.textContent = nextText || "Select dealer";
+    }
+    if(kind === "area" && elAreaPreviewValue){
+      elAreaPreviewValue.textContent = nextText || "Select area";
+    }
+  };
   const updateSettlementLine = createSettlementLineUpdater({
     elWrittenCheckAmount,
     elAmount,
@@ -196,6 +218,9 @@ const newTripFormHtml = renderTripEntryForm({
     hintSelector: "#newTripForm .tripSettlementHint"
   });
   updateMetricStateHelper();
+  updateCalculatorSummary();
+  updateSelectedPreview("dealer", elDealer?.value);
+  updateSelectedPreview("area", elArea?.value);
   if(elSettlementToggle){
     elSettlementToggle.addEventListener("click", ()=>{
       const panel = document.querySelector("#newTripForm [data-settlement-panel]");
@@ -328,11 +353,13 @@ const newTripFormHtml = renderTripEntryForm({
     onAfterInput: ()=>{
       updateSaveEnabled();
       updateRateLine();
+      updateCalculatorSummary();
       updateSettlementLine();
     },
     onAfterBlur: ()=>{
       updateSaveEnabled();
       updateRateLine();
+      updateCalculatorSummary();
       updateSettlementLine();
     }
   });
@@ -352,11 +379,13 @@ const newTripFormHtml = renderTripEntryForm({
     onAfterInput: ()=>{
       updateRateLine();
       updateSaveEnabled();
+      updateCalculatorSummary();
       updateSettlementLine();
     },
     onAfterBlur: ()=>{
       updateRateLine();
       updateSaveEnabled();
+      updateCalculatorSummary();
       updateSettlementLine();
     }
   });
@@ -373,11 +402,13 @@ const newTripFormHtml = renderTripEntryForm({
     onAfterInput: ()=>{
       updateRateLine();
       updateSaveEnabled();
+      updateCalculatorSummary();
       updateSettlementLine();
     },
     onAfterBlur: ()=>{
       updateRateLine();
       updateSaveEnabled();
+      updateCalculatorSummary();
       updateSettlementLine();
     }
   });
@@ -487,11 +518,13 @@ const btnClear = document.getElementById("clearDraft");
       const nextValue = String(value || "").trim();
       if(!nextValue || !inputEl) return;
       inputEl.value = nextValue;
+      if(key === "dealer" || key === "area") updateSelectedPreview(key, nextValue);
       state.draft = state.draft || {};
       state.draft[key] = nextValue;
       saveDraft();
       updateSaveEnabled();
       updateRateLine();
+      updateCalculatorSummary();
     }
   });
   const { persistDraft, persistDraftInput, applyDraftValue } = createDraftHelpers();
@@ -541,10 +574,12 @@ const btnClear = document.getElementById("clearDraft");
   };
 
   elDealer?.addEventListener("change", ()=>{
-    handleSelectAddNew("dealer", elDealer);
+    if(handleSelectAddNew("dealer", elDealer)) return;
+    updateSelectedPreview("dealer", elDealer?.value);
   });
   elArea?.addEventListener("change", ()=>{
-    handleSelectAddNew("area", elArea);
+    if(handleSelectAddNew("area", elArea)) return;
+    updateSelectedPreview("area", elArea?.value);
   });
 
 if(topAreaWrap && elArea){
@@ -570,6 +605,7 @@ if(topDealerWrap && elDealer){
   // Initial state
   updateSaveEnabled();
   updateRateLine();
+  updateCalculatorSummary();
   updateSettlementLine();
   updateMetricStateHelper();
 }
