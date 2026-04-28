@@ -38,7 +38,7 @@ export function renderTripEntryForm({
   settlementHintText = "",
   areaGuidanceText = "If you don't know the area yet, choose Area Not Recorded.",
   metricStateHelperId = "",
-  metricStateHelperText = "Pounds × $/LB = Amount.",
+  metricStateHelperText = "Amount = Pounds × $/LB (auto-calculated).",
   dealerValue = "",
   areaValue = ""
 }) {
@@ -119,46 +119,44 @@ export function renderTripEntryForm({
             <p>Enter pounds and $/LB — we’ll do the math.</p>
           </div>
           <div class="tripCalculatorHero">
-            <div class="tripCalculatorSummary" aria-hidden="true">
-              <div class="tripSummaryMetric tripSummaryMetric--pounds">
+            <div class="tripCalculatorColumns" aria-label="Catch details calculator">
+              <div class="tripCalcStack tripCalcStack--pounds">
                 <span class="tripSummaryMetricLabel">POUNDS</span>
                 <span class="tripSummaryMetricValue" id="${escapeHtml(poundsId)}_summary">${escapeHtml(String(poundsValue || "0.0"))}</span>
                 <span class="tripSummaryMetricUnit">lbs</span>
+                <div class="tripCalcChip tripCalcChip--pounds">
+                  <label class="sr-only" for="${escapeHtml(poundsId)}">Enter pounds</label>
+                  <span class="tripCalcChipIcon" aria-hidden="true">⚖️</span>
+                  <div class="inputWrap inputWrap--suffix">
+                    <input class="input inputWithSuffix tripCalcInput" id="${escapeHtml(poundsId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="Enter pounds" value="${escapeHtml(String(poundsValue ?? ""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+                    <span class="unitSuffix lbsBlue" aria-hidden="true">lbs</span>
+                  </div>
+                </div>
               </div>
-              <span class="tripSummaryOp">×</span>
-              <div class="tripSummaryMetric tripSummaryMetric--rate">
+              <span class="tripSummaryOp" aria-hidden="true">×</span>
+              <div class="tripCalcStack tripCalcStack--rate">
                 <span class="tripSummaryMetricLabel">$/LB</span>
                 <span class="tripSummaryMetricValue" id="${escapeHtml(rateId)}_summary">$${escapeHtml(String(rateValue || "0.00"))}</span>
                 <span class="tripSummaryMetricUnit">$/lb</span>
+                <div class="tripCalcChip tripCalcChip--rate">
+                  <label class="sr-only" for="${escapeHtml(rateId)}">Enter $/LB</label>
+                  <span class="tripCalcChipIcon" aria-hidden="true">💲</span>
+                  <div class="inputWrap inputWrap--rate">
+                    <input class="input tripCalcInput" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="Enter rate" value="${escapeHtml(String(rateValue ?? computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                  </div>
+                </div>
               </div>
-              <span class="tripSummaryOp">=</span>
-              <div class="tripSummaryMetric tripSummaryMetric--amount">
+              <span class="tripSummaryOp" aria-hidden="true">=</span>
+              <div class="tripCalcStack tripCalcStack--amount">
                 <span class="tripSummaryMetricLabel">AMOUNT</span>
                 <span class="tripSummaryMetricValue" id="${escapeHtml(amountId)}_summary">$${escapeHtml(String(amountValue || "0.00"))}</span>
-              </div>
-            </div>
-            <div class="tripCalculatorFields tripCalculatorFields--compact">
-              <div class="tripCalcChip tripCalcChip--pounds">
-                <label class="sr-only" for="${escapeHtml(poundsId)}">Enter pounds</label>
-                <span class="tripCalcChipIcon" aria-hidden="true">⚖️</span>
-                <div class="inputWrap inputWrap--suffix">
-                  <input class="input inputWithSuffix tripCalcInput" id="${escapeHtml(poundsId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="Enter pounds" value="${escapeHtml(String(poundsValue ?? ""))}" required min="0" step="0.1" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
-                  <span class="unitSuffix lbsBlue" aria-hidden="true">lbs</span>
-                </div>
-              </div>
-              <div class="tripCalcChip tripCalcChip--rate">
-                <label class="sr-only" for="${escapeHtml(rateId)}">Enter $/LB</label>
-                <span class="tripCalcChipIcon" aria-hidden="true">💲</span>
-                <div class="inputWrap inputWrap--rate">
-                  <input class="input tripCalcInput" id="${escapeHtml(rateId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="Enter rate" value="${escapeHtml(String(rateValue ?? computePPL(Number(poundsValue || 0), Number(amountValue || 0)).toFixed(2)))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
-                </div>
-              </div>
-              <div class="tripCalcChip tripCalcChip--amount">
-                <label class="sr-only" for="${escapeHtml(amountId)}">Amount</label>
-                <span class="tripCalcChipIcon" aria-hidden="true">💵</span>
-                <div class="inputWrap inputWrap--prefix">
-                  <span class="moneyPrefix moneyGreen" aria-hidden="true">$</span>
-                  <input class="input inputWithPrefix tripCalcInput" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountValue ?? ""))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                <div class="tripCalcChip tripCalcChip--amount">
+                  <label class="sr-only" for="${escapeHtml(amountId)}">Amount</label>
+                  <span class="tripCalcChipIcon" aria-hidden="true">💵</span>
+                  <div class="inputWrap inputWrap--prefix">
+                    <span class="moneyPrefix moneyGreen" aria-hidden="true">$</span>
+                    <input class="input inputWithPrefix tripCalcInput" id="${escapeHtml(amountId)}" type="text" inputmode="decimal" enterkeyhint="next" placeholder="0.00" value="${escapeHtml(String(amountValue ?? ""))}" min="0" step="0.01" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                  </div>
                 </div>
               </div>
             </div>
