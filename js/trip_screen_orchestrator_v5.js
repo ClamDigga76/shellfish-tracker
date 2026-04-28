@@ -139,7 +139,7 @@ const newTripFormHtml = renderTripEntryForm({
       showSpeciesField: false,
       showNotesField: false,
       metricStateHelperId: "tripMetricStateHelperNew",
-      metricStateHelperText: "Amount auto-calculates from pounds and $/lb.",
+      metricStateHelperText: "Enter pounds and $/LB. Amount calculates automatically.",
       areaGuidanceText: "If the exact area is unknown, choose Area Not Recorded to save this trip accurately."
     }).replace("card formCard", "formCard");
 
@@ -201,7 +201,9 @@ const newTripFormHtml = renderTripEntryForm({
       const willOpen = !panel.classList.contains("is-open");
       panel.classList.toggle("is-open", willOpen);
       elSettlementToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
-      elSettlementToggle.textContent = willOpen ? "Hide check details" : "Check Total";
+      elSettlementToggle.innerHTML = willOpen
+        ? "<span>Hide check details</span><span class=\"tripSettlementChevron\" aria-hidden=\"true\">▾</span>"
+        : "<span>Check total different?</span><span class=\"tripSettlementChevron\" aria-hidden=\"true\">▸</span>";
       state.draft = { ...(state.draft || draft), settlementExpanded: willOpen };
       saveDraft();
       if(willOpen) elWrittenCheckAmount?.focus();
@@ -1097,7 +1099,9 @@ function renderEditTrip(){
       const willOpen = !panel.classList.contains("is-open");
       panel.classList.toggle("is-open", willOpen);
       elSettlementToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
-      elSettlementToggle.textContent = willOpen ? "Hide check details" : "Check Total";
+      elSettlementToggle.innerHTML = willOpen
+        ? "<span>Hide check details</span><span class=\"tripSettlementChevron\" aria-hidden=\"true\">▾</span>"
+        : "<span>Check total different?</span><span class=\"tripSettlementChevron\" aria-hidden=\"true\">▸</span>";
       if(willOpen) elWrittenCheckAmount?.focus();
     });
   }

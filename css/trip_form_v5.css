@@ -1,4 +1,4 @@
-/* New Trip / Edit Trip local styles extracted from index.html (v292) */
+/* New Trip / Edit Trip local styles */
 body[data-view="new"] .formCard,
 body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transparent;box-shadow:none}
 #newTripForm{display:flex;flex-direction:column;gap:0}
@@ -7,31 +7,16 @@ body[data-view="edit"] .formCard{padding:0;margin:0;border:0;background:transpar
 .tripFormFoundation{padding:10px 10px 12px}
 .tripFormFoundation .trip-section{padding:var(--section-gap-tight) 0}
 .tripFormFoundation .trip-section + .trip-section{border-top:1px solid var(--divider-color)}
-.tripFormFoundation .trip-section > .field > .fieldLabel.center{
-  display:block;
-  width:100%;
-  text-align:center;
-}
+.tripFormFoundation .trip-section > .field > .fieldLabel.center{display:block;width:100%;text-align:center}
 .overline,.fieldLabel{letter-spacing:.12em}
 .chipRow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
 
-/* Restore compact quick-chip sizing on New/Edit Trip only */
 body[data-view="new"] .areachips,
 body[data-view="edit"] .areachips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 body[data-view="new"] .areachip,
 body[data-view="edit"] .areachip,
 body[data-view="new"] .chip-selector,
-body[data-view="edit"] .chip-selector{
-  border:1px solid var(--border);
-  background:var(--glass);
-  color:var(--text);
-  padding:8px 10px;
-  border-radius:999px;
-  font-weight:800;
-  font-size:13px;
-  min-height:auto;
-  cursor:pointer;
-}
+body[data-view="edit"] .chip-selector{border:1px solid var(--border);background:var(--glass);color:var(--text);padding:8px 10px;border-radius:999px;font-weight:800;font-size:13px;min-height:auto;cursor:pointer}
 
 .selectRowWrap{position:relative}
 .selectRowWrap select{width:100%;appearance:none;-webkit-appearance:none;padding-right:44px}
@@ -50,284 +35,63 @@ body[data-view="edit"] .chip-selector{
 .datePillWrap.is-empty > input[type="date"]::-webkit-datetime-edit{color:transparent}
 .datePillWrap.is-empty > input[type="date"]::-webkit-calendar-picker-indicator{opacity:.95}
 
-.tripMetricsRow{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 10px minmax(0,.84fr) 10px minmax(0,1.08fr);
-  column-gap:4px;
-  row-gap:0;
-  align-items:end;
-  margin-top:2px;
-  padding:14px 9px 11px;
-  border:1px solid rgba(47,109,246,.34);
-  border-radius:16px;
-  background:
-    radial-gradient(160% 110% at 50% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 62%),
-    linear-gradient(180deg, rgba(47,109,246,.18) 0%, rgba(47,109,246,.08) 52%, rgba(255,255,255,.03) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.16),
-    0 12px 26px rgba(3,10,26,.26);
-  position:relative;
-  overflow:hidden;
-}
-.tripMetricsRow::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:inherit;
-  pointer-events:none;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
-}
-.tripMetricsRow .field{min-width:0}
-.tripMetricsRow .fieldLabel{font-size:10.5px;letter-spacing:.09em;text-align:center}
-.tripMetricsRow .input{padding-left:7px;padding-right:7px}
-.tripMetricsRow #rateValue,
-.tripMetricsRow #rateValueEdit{font-weight:800;color:var(--ppl);background:var(--ppl-bg)}
+.tripGuidedHeader{padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:linear-gradient(180deg, rgba(17,26,45,.55) 0%, rgba(17,26,45,.28) 100%)}
+.tripGuidedHeaderTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.tripTopLockPill{display:inline-flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid rgba(212,175,55,.34);border-radius:12px;color:rgba(255,223,140,.94);background:linear-gradient(180deg, rgba(8,15,28,.76) 0%, rgba(8,15,28,.52) 100%);font-size:12px;font-weight:700;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);cursor:pointer}
+.tripTopLockPill small{font-size:10px;color:rgba(255,223,140,.84);font-weight:600}
+.tripGuidedStatusRow{margin-top:10px;display:flex;align-items:center;gap:8px}
+.tripGuidedStatusLabel{font-size:11px;letter-spacing:.09em;color:var(--muted);text-transform:uppercase;font-weight:700}
+.tripLockedValue{min-height:40px;display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid rgba(212,175,55,.28);border-radius:12px;background:linear-gradient(180deg, rgba(8,15,28,.7) 0%, rgba(8,15,28,.48) 100%);color:var(--text);font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.tripTopLockPill > span:first-child,
+.tripLockedValue > span:first-child{color:rgba(255,210,96,.95)}
+.tripLockedValue small{margin-left:auto;color:rgba(255,223,140,.8);font-size:11px;font-weight:600}
+
+.tripCalculatorHero{padding:12px;border:1px solid rgba(47,109,246,.34);border-radius:16px;background:radial-gradient(160% 110% at 50% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 62%),linear-gradient(180deg, rgba(47,109,246,.18) 0%, rgba(47,109,246,.08) 52%, rgba(255,255,255,.03) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 12px 26px rgba(3,10,26,.26)}
+.tripCalculatorFields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tripAmountResult{margin-top:10px;padding:10px;border:1px solid rgba(59,187,113,.3);border-radius:12px;background:linear-gradient(180deg, rgba(59,187,113,.13) 0%, rgba(59,187,113,.06) 100%)}
 .tripMetricField{display:flex;flex-direction:column;align-items:stretch;min-width:0}
 .tripMetricLabel{margin:0 0 7px;line-height:1.1;text-align:center;white-space:nowrap}
 .tripMetricLabel--pounds{color:var(--lbsBlue)}
 .tripMetricLabel--price{color:var(--ppl)}
 .tripMetricLabel--amount{color:var(--good)}
-.tripMetricSymbol{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:var(--muted);
-  font-size:13px;
-  font-weight:800;
-  opacity:.58;
-  padding-bottom:12px;
-  text-shadow:0 1px 0 rgba(0,0,0,.18);
-  user-select:none;
-}
-.tripMetricStateHelper{
-  margin-top:9px;
-  text-align:center;
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.35;
-}
-.tripCheckTotalLabel{
-  margin-top:7px;
-  text-align:center;
-  color:var(--text);
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:.02em;
-}
-.tripAreaGuidance{
-  margin-top:8px;
-  text-align:center;
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.35;
-}
-.tripSettlementReveal{
-  margin-top:8px;
-  border:0;
-  background:transparent;
-  color:var(--muted);
-  font-weight:700;
-  font-size:12px;
-  text-decoration:underline;
-  text-underline-offset:2px;
-  padding:4px 2px 0;
-}
-.tripSettlementPanel{
-  display:none;
-  margin-top:10px;
-  padding:10px;
-  border:1px dashed rgba(255,255,255,.18);
-  border-radius:10px;
-  background:rgba(255,255,255,.03);
-}
+.tripMetricStateHelper{margin-top:9px;text-align:center;color:var(--muted);font-size:12px;line-height:1.35}
+.tripAreaGuidance{margin-top:8px;text-align:center;color:var(--muted);font-size:12px;line-height:1.35}
+
+.tripSettlementReveal{width:100%;margin-top:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:var(--text);font-weight:700;font-size:13px;padding:10px 12px;border-radius:12px;display:flex;align-items:center;justify-content:space-between}
+.tripSettlementChevron{opacity:.75}
+.tripSettlementPanel{display:none;margin-top:10px;padding:10px;border:1px dashed rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.03)}
 .tripSettlementPanel.is-open{display:block}
-.tripSettlementSummary{
-  margin-top:8px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  color:var(--muted);
-  font-size:12px;
-}
-.tripSettlementHint{
-  margin-top:6px;
-  color:var(--muted);
-  font-size:12px;
-}
+.tripSettlementSummary{margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}
+.tripSettlementHint{margin-top:6px;color:var(--muted);font-size:12px}
 .rate{color:var(--muted);font-weight:700}
 .rate.ppl{color:var(--ppl)!important;font-weight:800}
 
-.actionsNew .btn.primary{width:100%}
+.tripDetailsCard{padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.015) 100%)}
+.tripDetailsAreaField{padding-top:12px;border-top:1px solid rgba(255,255,255,.1)}
 
-#newTripForm .trip-section{padding:var(--section-gap-tight) 0}
-#newTripForm .trip-section + .trip-section{border-top:1px solid var(--divider-color)}
-.edit-mode{
-  background:linear-gradient(180deg, rgba(255,77,79,.10) 0%, rgba(255,77,79,.04) 34%, rgba(255,255,255,.03) 100%);
-}
-.edit-mode .tripMetricsRow{
-  border-color:rgba(255,120,120,.34);
-  background:
-    radial-gradient(160% 110% at 50% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 62%),
-    linear-gradient(180deg, rgba(255,77,79,.16) 0%, rgba(255,77,79,.08) 52%, rgba(255,255,255,.03) 100%);
-}
-.trip-edit-indicator{
-  margin:2px 0 10px;
-  padding:10px 10px 8px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.015) 100%);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:7px;
-}
-.edit-trip-title{
-  margin:0;
-  color:var(--text);
-  font-size:clamp(1.2rem, 4.9vw, 1.55rem);
-  font-weight:800;
-  letter-spacing:.02em;
-  line-height:1.2;
-  text-align:center;
-}
-.editModePill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  padding:6px 11px;
-  border-radius:999px;
-  border:1px solid rgba(47,109,246,.48);
-  background:rgba(47,109,246,.14);
-  color:var(--text);
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:.02em;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.2);
-}
-.editModePillIcon{
-  font-size:12px;
-  line-height:1;
-}
-.actionsNew .btnRow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.actionsNew .btnRow2 .btn{width:100%}
+.tripInlineActions .tripActionPrimaryRow .btn.primary{width:100%}
+.tripInlineActions .tripActionTextRow{margin-top:8px;display:flex;justify-content:center;gap:18px}
+.tripDockSecondaryAction{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:700;padding:4px 0}
+.tripDockSecondaryAction:active{transform:translateY(1px)}
 
-/* New/Edit Trip action dock: shared shell bottom-overlay contract above tab bar */
-body[data-view="new"] main#app,
-body[data-view="edit"] main#app{
-  --bottom-overlay-h:80px;
-  --bottom-overlay-gap:10px;
-}
-body[data-view="new"] .trip-action-dock,
-body[data-view="edit"] .trip-action-dock{
-  position:fixed;
-  left:50%;
-  width:min(430px, 100vw);
-  transform:translateX(-50%);
-  bottom:calc(var(--tabbar-total-h) + var(--bottom-overlay-gap));
-  z-index:9997;
-  pointer-events:none;
-  margin-top:0;
-  padding:0 10px;
-}
-body[data-view="new"] .tripActionBar,
-body[data-view="edit"] .tripActionBar{
-  pointer-events:auto;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:16px;
-  background:linear-gradient(180deg, rgba(15,23,42,.72) 0%, rgba(15,23,42,.52) 100%);
-  box-shadow:0 10px 20px rgba(0,0,0,.2);
-  padding:8px;
-}
-body[data-view="new"] .tripActionBar{
-  background:linear-gradient(180deg, rgba(9,15,26,.72) 0%, rgba(9,15,26,.48) 100%);
-  backdrop-filter:blur(8px);
-}
-body[data-view="new"] .tripActionRow,
+.edit-mode{background:linear-gradient(180deg, rgba(255,77,79,.10) 0%, rgba(255,77,79,.04) 34%, rgba(255,255,255,.03) 100%)}
+.edit-mode .tripCalculatorHero{border-color:rgba(255,120,120,.34);background:radial-gradient(160% 110% at 50% 0%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 62%),linear-gradient(180deg, rgba(255,77,79,.16) 0%, rgba(255,77,79,.08) 52%, rgba(255,255,255,.03) 100%)}
+.trip-edit-indicator{margin:2px 0 10px;padding:10px 10px 8px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.015) 100%);display:flex;flex-direction:column;align-items:center;gap:7px}
+.edit-trip-title{margin:0;color:var(--text);font-size:clamp(1.2rem, 4.9vw, 1.55rem);font-weight:800;letter-spacing:.02em;line-height:1.2;text-align:center}
+.editModePill{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 11px;border-radius:999px;border:1px solid rgba(47,109,246,.48);background:rgba(47,109,246,.14);color:var(--text);font-size:12px;font-weight:700;letter-spacing:.02em;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.editModePillIcon{font-size:12px;line-height:1}
+
+/* Edit Trip keeps action dock above tab bar */
+body[data-view="edit"] main#app{--bottom-overlay-h:80px;--bottom-overlay-gap:10px}
+body[data-view="edit"] .trip-action-dock{position:fixed;left:50%;width:min(430px, 100vw);transform:translateX(-50%);bottom:calc(var(--tabbar-total-h) + var(--bottom-overlay-gap));z-index:9997;pointer-events:none;margin-top:0;padding:0 10px}
+body[data-view="edit"] .tripActionBar{pointer-events:auto;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:linear-gradient(180deg, rgba(15,23,42,.72) 0%, rgba(15,23,42,.52) 100%);box-shadow:0 10px 20px rgba(0,0,0,.2);padding:8px}
 body[data-view="edit"] .tripActionRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-body[data-view="new"] .tripActionRow.tripActionRow--three,
 body[data-view="edit"] .tripActionRow.tripActionRow--three{grid-template-columns:1fr 1fr 1fr}
-body[data-view="new"] #newTripForm{padding-bottom:calc(var(--bottom-overlay-h) + 72px)}
-body[data-view="new"] .tripTopFieldRow{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:8px;
-  align-items:center;
-}
-body[data-view="new"] .tripTopLockPill{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:11px 12px;
-  border:1px solid rgba(212,175,55,.34);
-  border-radius:12px;
-  color:rgba(255,223,140,.94);
-  background:linear-gradient(180deg, rgba(8,15,28,.76) 0%, rgba(8,15,28,.52) 100%);
-  font-size:12px;
-  font-weight:700;
-  white-space:nowrap;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
-  cursor:pointer;
-  appearance:none;
-  -webkit-appearance:none;
-}
-body[data-view="new"] .tripLockedValue{
-  margin-top:8px;
-  min-height:44px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:12px 13px;
-  border:1px solid rgba(212,175,55,.28);
-  border-radius:12px;
-  background:linear-gradient(180deg, rgba(8,15,28,.7) 0%, rgba(8,15,28,.48) 100%);
-  color:var(--text);
-  font-weight:700;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
-}
-body[data-view="new"] .tripTopLockPill > span:first-child,
-body[data-view="new"] .tripLockedValue > span:first-child{
-  color:rgba(255,210,96,.95);
-}
-body[data-view="new"] .tripLockedValue small{
-  margin-left:auto;
-  color:rgba(255,223,140,.8);
-  font-size:11px;
-  font-weight:600;
-}
-body[data-view="new"] .tripActionPrimaryRow .btn.primary{width:100%}
-body[data-view="new"] .tripActionTextRow{
-  margin-top:6px;
-  display:flex;
-  justify-content:center;
-  gap:18px;
-}
-body[data-view="new"] .tripDockSecondaryAction{
-  border:0;
-  background:transparent;
-  color:var(--muted);
-  font-size:12px;
-  font-weight:700;
-  padding:4px 0;
-}
-body[data-view="new"] .tripDockSecondaryAction:active{transform:translateY(1px)}
 
-/* New Trip: suffix units + save disabled */
 .inputWrap{position:relative;min-width:0;overflow:hidden}
 .inputWrap .input{min-width:0;width:100%}
 .inputWrap .unitSuffix,
-.inputWrap .moneyPrefix{
-  position:absolute;
-  top:50%;
-  transform:translateY(-50%);
-  font-weight:800;
-  opacity:.95;
-  pointer-events:none;
-  z-index:2;
-  white-space:nowrap;
-  line-height:1;
-}
+.inputWrap .moneyPrefix{position:absolute;top:50%;transform:translateY(-50%);font-weight:800;opacity:.95;pointer-events:none;z-index:2;white-space:nowrap;line-height:1}
 .inputWrap .unitSuffix{right:12px;max-width:calc(100% - 16px)}
 .inputWrap .moneyPrefix{left:12px;max-width:calc(100% - 16px)}
 .inputWrap--suffix .inputWithSuffix{padding-right:44px;text-overflow:ellipsis;overflow:hidden}
@@ -337,19 +101,14 @@ body[data-view="new"] .tripDockSecondaryAction:active{transform:translateY(1px)}
 .btn[disabled]{opacity:.55;filter:saturate(.8);box-shadow:none;cursor:not-allowed}
 
 @media (max-width:420px){
-  .tripMetricsRow{
-    grid-template-columns:minmax(0,1fr) 8px minmax(0,.78fr) 8px minmax(0,1.05fr);
-    column-gap:3px;
-    padding:12px 7px 9px;
-  }
-  .tripMetricSymbol{font-size:11px;padding-bottom:10px;opacity:.48}
-  .tripMetricsRow .fieldLabel{font-size:10px;letter-spacing:.05em}
-  .tripMetricsRow .input{padding-left:6px;padding-right:6px}
+  .tripGuidedHeaderTop{grid-template-columns:minmax(0,1fr)}
+  .tripTopLockPill{justify-content:center}
+  .tripCalculatorFields{grid-template-columns:1fr}
+  .trip-inline-actions .tripActionTextRow,
+  .tripInlineActions .tripActionTextRow{gap:14px}
   .trip-edit-indicator{margin-bottom:9px;padding:9px 8px 7px}
   .inputWrap .unitSuffix,
   .inputWrap .moneyPrefix{font-size:11px}
   .inputWrap--suffix .inputWithSuffix{padding-right:40px}
   .inputWrap--prefix .inputWithPrefix{padding-left:26px;padding-right:9px}
-  body[data-view="new"] .tripTopLockPill{padding:11px 10px;font-size:11px}
-  body[data-view="new"] .tripActionTextRow{gap:14px}
 }
