@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+
+  <defs>
+    <linearGradient id="gradBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5ED4FF"/>
+      <stop offset="55%" stop-color="#2E8BFF"/>
+      <stop offset="100%" stop-color="#2247FF"/>
+    </linearGradient>
+    <linearGradient id="gradGold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFD56A"/>
+      <stop offset="100%" stop-color="#D7A32E"/>
+    </linearGradient>
+    <linearGradient id="gradGrass" x1="0" y1="1" x2="0.9" y2="0">
+      <stop offset="0%" stop-color="#2E6B21"/>
+      <stop offset="100%" stop-color="#8CCB43"/>
+    </linearGradient>
+    <radialGradient id="bgGlow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#0B2550" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#03142B" stop-opacity="1"/>
+    </radialGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlowSmall" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+<rect width="512" height="512" rx="48" fill="url(#bgGlow)"/>
+<path d="M151 310 C200 281, 254 282, 318 307 S399 342, 434 328" stroke="url(#gradBlue)" stroke-width="16" stroke-linecap="round" fill="none" filter="url(#softGlowSmall)"/>
+<path d="M166 335 C214 310, 268 311, 322 334 S392 357, 423 345" stroke="url(#gradBlue)" stroke-width="11" stroke-linecap="round" fill="none" opacity="0.95"/>
+<path d="M122 266 C124 237, 139 223, 154 205" stroke="url(#gradGrass)" stroke-width="11" stroke-linecap="round"/>
+<path d="M144 269 C147 239, 166 214, 181 197" stroke="url(#gradGrass)" stroke-width="11" stroke-linecap="round"/>
+<path d="M191 164 A152 152 0 0 1 388 230" stroke="url(#gradBlue)" stroke-width="8" fill="none"/>
+<path d="M388 230 A152 152 0 0 1 407 300" stroke="url(#gradGold)" stroke-width="8" fill="none"/>
+<ellipse cx="271" cy="233" rx="126" ry="71" transform="rotate(-18 271 233)" fill="url(#gradBlue)" fill-opacity="0.14" stroke="url(#gradBlue)" stroke-width="8"/>
+<path d="M149 250 C184 198, 311 162, 388 211" stroke="url(#gradGold)" stroke-width="4" fill="none" opacity="0.9"/>
+<path d="M166 238 C208 205, 295 186, 342 220" stroke="#EAF6FF" stroke-opacity="0.6" stroke-width="2"/>
+<path d="M174 248 C213 219, 286 202, 331 231" stroke="#EAF6FF" stroke-opacity="0.38" stroke-width="2"/>
+<path d="M183 258 C218 234, 279 219, 319 244" stroke="#EAF6FF" stroke-opacity="0.24" stroke-width="2"/>
+</svg>

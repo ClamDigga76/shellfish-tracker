@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+
+  <defs>
+    <linearGradient id="gradBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5ED4FF"/>
+      <stop offset="55%" stop-color="#2E8BFF"/>
+      <stop offset="100%" stop-color="#2247FF"/>
+    </linearGradient>
+    <linearGradient id="gradGold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFD56A"/>
+      <stop offset="100%" stop-color="#D7A32E"/>
+    </linearGradient>
+    <linearGradient id="gradGrass" x1="0" y1="1" x2="0.9" y2="0">
+      <stop offset="0%" stop-color="#2E6B21"/>
+      <stop offset="100%" stop-color="#8CCB43"/>
+    </linearGradient>
+    <radialGradient id="bgGlow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#0B2550" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#03142B" stop-opacity="1"/>
+    </radialGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlowSmall" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+<rect width="512" height="512" rx="48" fill="url(#bgGlow)"/>
+<ellipse cx="262" cy="236" rx="142" ry="80" transform="rotate(-18 262 236)" stroke="url(#gradBlue)" stroke-width="16" filter="url(#softGlowSmall)"/>
+<path d="M146 230 C196 188, 302 166, 360 210" stroke="url(#gradBlue)" stroke-width="4" opacity="0.55"/>
+<path d="M154 241 C203 203, 300 182, 353 221" stroke="url(#gradBlue)" stroke-width="4" opacity="0.4"/>
+<path d="M162 252 C210 216, 297 197, 346 233" stroke="url(#gradBlue)" stroke-width="4" opacity="0.32"/>
+</svg>
