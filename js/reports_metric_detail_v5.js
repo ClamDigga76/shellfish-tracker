@@ -698,16 +698,26 @@ export function createReportsMetricDetailSeam(deps){
     }
     if(metricKey === "amount"){
       const avgTrip = tripCount > 0 ? (safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0) / tripCount) : 0;
-      const highestTripAmount = tripCount > 0
-        ? safeTrips.reduce((max, trip)=> Math.max(max, Number(trip?.amount) || 0), 0)
-        : 0;
+      const tripAmountValues = safeTrips
+        .map((trip)=> {
+          const rawAmount = trip?.amount;
+          const parsedAmount = Number(rawAmount);
+          return Number.isFinite(parsedAmount) ? parsedAmount : null;
+        })
+        .filter((amount)=> amount != null);
+      const highestTripAmount = tripAmountValues.length
+        ? tripAmountValues.reduce((max, amount)=> Math.max(max, amount), tripAmountValues[0])
+        : null;
       const latestTripAmount = safeTrips.length
-        ? (Number(safeTrips[safeTrips.length - 1]?.amount) || 0)
-        : 0;
+        ? (()=> {
+          const parsedAmount = Number(safeTrips[safeTrips.length - 1]?.amount);
+          return Number.isFinite(parsedAmount) ? parsedAmount : null;
+        })()
+        : null;
       return [
-        { label: "Highest paid trip", value: formatHomeSnapshotValue({ metricKey, value: highestTripAmount || highest }) },
+        { label: "Highest paid trip", value: formatHomeSnapshotValue({ metricKey, value: highestTripAmount ?? highest }) },
         { label: "Avg / trip", value: formatMoney(to2(avgTrip)) },
-        { label: "Latest paid", value: formatHomeSnapshotValue({ metricKey, value: latestTripAmount || latest }) },
+        { label: "Latest paid", value: formatHomeSnapshotValue({ metricKey, value: latestTripAmount ?? latest }) },
         { label: "Trips counted", value: `${tripCount} trips` }
       ];
     }
