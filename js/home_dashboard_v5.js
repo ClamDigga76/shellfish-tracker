@@ -544,7 +544,6 @@ export function createHomeDashboardRenderer({
         }
         if (typeof openModal !== "function") return;
         openModal({
-          title: "Screenshot Card",
           html: `
             <div class="homeScreenshotCardPreviewWrap">
               <div class="homeScreenshotCardPreviewSurface">
