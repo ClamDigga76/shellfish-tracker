@@ -60,7 +60,7 @@ export function createTripsBrowseScreenRenderer(deps){
             <div class="tripsFiltersSummarySecondary" title="${escapeHtml(`${dealerSummary} · ${areaSummary} · ${sortSummary}`)}">${escapeHtml(`${dealerSummary} · ${areaSummary} · ${sortSummary}`)}</div>
           </div>
           <div class="tripsFiltersSummaryActions">
-            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody">${isFiltersExpanded ? "Hide filters" : "Filters"}</button>
+            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true">≡</span><span>${isFiltersExpanded ? "Hide filters" : "Filters"}</span></button>
           </div>
         </div>
 
