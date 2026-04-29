@@ -10,9 +10,25 @@ export function createTripsUnifiedFilterBridge({
     ensureUnifiedFilters();
     state.tripsFilter = state.filters.active;
 
-    // Guardrails for Trips-visible selectors.
+    // Guardrails for Trips-visible selectors and free-tier legacy state cleanup.
     if(state.tripsFilter.dealer == null) state.tripsFilter.dealer = "all";
     if(state.tripsFilter.area == null) state.tripsFilter.area = "all";
+
+    const allowedRanges = new Set(["mtd", "ytd", "all", "custom"]);
+    if(!allowedRanges.has(state.tripsFilter.range)) state.tripsFilter.range = "ytd";
+
+    // Unsupported free-tier legacy fields should not silently filter Trips.
+    state.tripsFilter.species = "all";
+    state.tripsFilter.text = "";
+
+    // Preserve legacy custom date path only when explicitly in custom range mode.
+    if(state.tripsFilter.range !== "custom") {
+      state.tripsFilter.fromISO = "";
+      state.tripsFilter.toISO = "";
+      state.tripsFilter.customRangeCorrectionMessages = [];
+    }
+
+    // Stable sort: only oldest is non-default.
     if(state.tripsFilter.sort !== "oldest") state.tripsFilter.sort = "newest";
   }
 

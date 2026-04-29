@@ -28,10 +28,10 @@ export function createTripsBrowseScreenRenderer(deps){
       (tf.range || "ytd") !== "ytd" ||
       String(tf.dealer || "all") !== "all" ||
       String(tf.area || "all") !== "all" ||
-      String(tf.species || "all") !== "all" ||
-      String(tf.fromISO || "").trim() !== "" ||
-      String(tf.toISO || "").trim() !== "" ||
-      String(tf.text || "").trim() !== "" ||
+      ((tf.range === "custom") && (
+        String(tf.fromISO || "").trim() !== "" ||
+        String(tf.toISO || "").trim() !== ""
+      )) ||
       String(tf.sort || "newest") !== "newest"
     );
     const isFiltersExpanded = ui.tripsFiltersExpanded === true;
