@@ -156,7 +156,7 @@ export function createSettingsScreenOrchestrator({
           <summary class="muted settingsBodyTiny">Technical details</summary>
           <div class="muted settingsBodyTiny settingsBuildInfo" id="buildInfoDetails"></div>
         </details>
-        <div class="settingsRow settingsRow--split settingsRow--minor">
+        <div class="settingsRow settingsRow--split settingsRow--minor settingsHelpGuideRow">
           <div>
             <div class="settingsRowTitle">Help guide</div>
             <div class="muted small">Open full help for install, backup, updates, and support.</div>
@@ -590,6 +590,25 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
       backupStatusPill: safetyStatusPill,
       deletedTripsCount: deletedTrips.length
     });
+    const lastBackupLineEl = document.getElementById("lastBackupLine");
+    const restoreRollbackLineEl = document.getElementById("restoreRollbackLine");
+    if (backupSummaryLine && (lastBackupLineEl || restoreRollbackLineEl)) {
+      const syncBackupSummary = () => {
+        supportRecoverySeam.syncBackupSummaryLine({
+          backupSummaryLine,
+          backupStatusPill: safetyStatusPill,
+          deletedTripsCount: deletedTrips.length
+        });
+      };
+      const backupSummaryObserver = new MutationObserver(() => syncBackupSummary());
+      if (lastBackupLineEl) {
+        backupSummaryObserver.observe(lastBackupLineEl, { childList: true, characterData: true, subtree: true });
+      }
+      if (restoreRollbackLineEl) {
+        backupSummaryObserver.observe(restoreRollbackLineEl, { childList: true, characterData: true, subtree: true });
+      }
+      setTimeout(syncBackupSummary, 0);
+    }
 
     supportRecoverySeam.bindDeletedTripRecoveryControls();
 

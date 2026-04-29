@@ -1126,3 +1126,10 @@
   border-color:rgba(126,169,255,.28);
   background:linear-gradient(180deg, rgba(47,109,246,.12) 0%, rgba(255,255,255,.04) 100%);
 }
+
+.settingsHelpGuideRow{align-items:flex-start}
+.settingsHelpGuideRow .settingsInlineBtn{align-self:flex-start}
+@media (max-width:560px){
+  .settingsHelpGuideRow{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  .settingsHelpGuideRow .settingsInlineBtn{width:100%;justify-content:center}
+}

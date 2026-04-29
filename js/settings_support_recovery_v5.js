@@ -107,9 +107,13 @@ export function createSettingsSupportRecoverySeam(deps) {
     const relativeDayMatch = normalizedBackupText.match(/(\d+)\s*d(?:ay)?s?\s*ago/);
     const freshnessLabel = normalizedBackupText.includes("today")
       ? "Today"
-      : normalizedBackupText.includes("never")
-        ? "Needs backup"
-        : (relativeDayMatch ? `${relativeDayMatch[1]}d ago` : "Checking");
+      : (normalizedBackupText.includes("stale") || normalizedBackupText.includes("old"))
+        ? "Stale"
+        : (normalizedBackupText.includes("never") || normalizedBackupText.includes("no backup"))
+          ? "None yet"
+          : (relativeDayMatch
+              ? (Number(relativeDayMatch[1]) <= 1 ? "Backed up" : `${relativeDayMatch[1]}d ago`)
+              : "Checking");
     const summaryParts = [backupText];
     if (rollbackText) summaryParts.push("Rollback ready");
     summaryParts.push(`${deletedTripsCount} deleted`);
