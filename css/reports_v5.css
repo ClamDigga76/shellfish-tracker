@@ -661,7 +661,7 @@
   color:#eff7ff;
   text-wrap:pretty;
 }
-.homeMetricSimpleTitle{margin:0;font-size:clamp(22px,6.8vw,28px);line-height:1.13;font-weight:820;letter-spacing:.08px}
+.homeMetricSimpleTitle{margin:0;font-size:clamp(20px,6.1vw,24px);line-height:1.13;font-weight:820;letter-spacing:.08px}
 .homeMetricTitleFormula{
   margin-top:6px;
   font-size:13px;
@@ -1080,5 +1080,20 @@
 .homeMetricReportsNudge{margin-top:8px;font-size:12px;color:#9fb2cf}
 @media (max-width:480px){.homeMetricMetaRow--grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}}
 
+
+.homeMetricTopBar .homeMetricBackBtn{
+  padding:0;
+  min-height:34px;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  color:#9fb4d4;
+  font-size:12px;
+  font-weight:650;
+  letter-spacing:0;
+}
+.homeMetricTopBar .homeMetricBackBtn:hover,
+.homeMetricTopBar .homeMetricBackBtn:active{background:transparent;color:#c8dbf7}
+.homeMetricTopBar .homeMetricBackBtn:focus-visible{outline:2px solid rgba(126,200,255,.45);outline-offset:2px;border-radius:6px}
 .homeMetricTopBar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
 .homeMetricMetaRow--grid .homeMetricMetaItem:last-child:nth-child(odd){grid-column:auto}
