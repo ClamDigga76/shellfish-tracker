@@ -500,7 +500,7 @@ export function createReportsMetricDetailSeam(deps){
     const safeValue = Number(value);
     if(!Number.isFinite(safeValue)) return "—";
     if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
-    if(metricKey === "pounds") return `${Math.round(safeValue).toLocaleString()} lbs`;
+    if(metricKey === "pounds") return `${to2(safeValue)} lbs`;
     if(metricKey === "amount") return formatMoney(to2(safeValue));
     if(metricKey === "ppl") return `${formatMoney(to2(safeValue))}/lb`;
     return `${to2(safeValue)}`;
@@ -919,7 +919,7 @@ export function createReportsMetricDetailSeam(deps){
       const value = Number(basis?.currentValue);
       if(!Number.isFinite(value)) return "—";
       if(targetMetric === "trips") return `${Math.round(value)} trips`;
-      if(targetMetric === "pounds") return `${Math.round(value).toLocaleString()} lbs`;
+      if(targetMetric === "pounds") return `${to2(value)} lbs`;
       if(targetMetric === "amount") return formatMoney(to2(value));
       if(targetMetric === "ppl") return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
       return `${to2(value)}`;
