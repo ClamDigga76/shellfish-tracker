@@ -301,7 +301,7 @@ const lastYearTripsResult = tripsBridge.getTripsFilteredRows({
   trips: [],
   filters: { active: { range: 'last_year', fromISO: '', toISO: '', dealer: 'all', area: 'all', species: 'all', text: '' } }
 });
-assertRepoCheck(lastYearTripsResult.range.label === 'Previous Year', 'Trips range label displays Previous Year for last_year');
+assertRepoCheck(lastYearTripsResult.range.label === 'YTD', 'Trips unsupported last_year normalizes to YTD label');
 const ytdTripsResult = tripsBridge.getTripsFilteredRows({
   trips: [],
   filters: { active: { range: 'ytd', fromISO: '', toISO: '', dealer: 'all', area: 'all', species: 'all', text: '' } }
