@@ -1085,6 +1085,8 @@
 
 .homeMetricContextChip{margin:6px auto 10px;display:inline-flex;padding:4px 10px;border-radius:999px;border:1px solid rgba(154,177,220,.35);background:rgba(28,45,74,.38);font-size:11px;color:#cdd9ef}
 .homeMetricMetaRow--grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.homeMetricMetaRow--grid .homeMetricMetaItem:last-child:nth-child(odd){grid-column:1 / -1}
+
 .homeMetricMeaningNote{margin-top:10px;font-size:12px;color:#cdd6e6;line-height:1.45}
 .homeMetricReportsNudge{margin-top:8px;font-size:12px;color:#9fb2cf}
 @media (max-width:480px){.homeMetricMetaRow--grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}}
