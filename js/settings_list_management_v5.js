@@ -28,42 +28,51 @@ export function createSettingsListManagement(deps){
   const PROTECTED_AREA_NAME = String(protectedAreaName || "Area Not Recorded").trim();
   const PROTECTED_AREA_KEY = normalizeKey(PROTECTED_AREA_NAME);
   const BUILT_IN_SPECIES_NAME = "Soft-shell clams";
+  const LIST_MODE_AREAS = "areas";
+  const LIST_MODE_DEALERS = "dealers";
+  const LIST_MODE_SPECIES = "species";
 
   function isProtectedAreaName(rawAreaName){
     const areaKey = normalizeKey(String(rawAreaName || "").trim());
     return !!(areaKey && areaKey === PROTECTED_AREA_KEY);
   }
 
+  function normalizeListMode(mode){
+    const normalized = String(mode || LIST_MODE_AREAS).toLowerCase();
+    if(normalized === LIST_MODE_DEALERS || normalized === LIST_MODE_SPECIES) return normalized;
+    return LIST_MODE_AREAS;
+  }
+
   function renderListMgmtPanel(mode){
     const state = getState();
-    const m = String(mode || "areas").toLowerCase();
+    const m = normalizeListMode(mode);
     if(!Array.isArray(state.areas)) state.areas = [];
     if(!Array.isArray(state.dealers)) state.dealers = [];
 
     const areaValues = Array.isArray(syncAreaState()) ? syncAreaState() : [];
     const editableAreaValues = areaValues.filter((areaName)=> !isProtectedAreaName(areaName));
     const areaRows2 = editableAreaValues.length ? editableAreaValues.map((areaName)=>`
-      <div class="row" style="justify-content:space-between;align-items:center;gap:10px;margin-top:10px">
-        <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(areaName)}</b></div>
-        <div class="row" style="gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      <div class="row listMgmtRow">
+        <div class="listMgmtLabel"><b>${escapeHtml(areaName)}</b></div>
+        <div class="row listMgmtActions">
           <button class="smallbtn" data-rename-area-name="${escapeHtml(areaName)}" type="button">Rename</button>
           <button class="smallbtn danger" data-del-area-name="${escapeHtml(areaName)}" type="button">Delete</button>
         </div>
       </div>`).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No areas yet</div><div class="emptyStateBody">Add your first area below so New Trip choices are ready.</div></div>`;
 
     const dealerRows2 = state.dealers.length ? state.dealers.map((d, i)=>`
-      <div class="row" style="justify-content:space-between;align-items:center;gap:10px;margin-top:10px">
-        <div class="pill" style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${escapeHtml(d)}</b></div>
-        <div class="row" style="gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      <div class="row listMgmtRow">
+        <div class="pill listMgmtPillLabel"><b>${escapeHtml(d)}</b></div>
+        <div class="row listMgmtActions">
           <button class="smallbtn" data-rename-dealer="${i}" type="button">Rename</button>
           <button class="smallbtn danger" data-del-dealer="${i}" type="button">Delete</button>
         </div>
       </div>
     `).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No dealers yet</div><div class="emptyStateBody">Add your first dealer below so trip entry stays fast.</div></div>`;
 
-    if(m === "species"){
+    if(m === LIST_MODE_SPECIES){
       return `
-        <div style="margin-top:12px">
+        <div class="listMgmtPanelWrap">
           <div class="settingsSpeciesLockedSection tripsLockedPreviewSection" role="status" aria-live="polite">
             <div class="settingsSpeciesLockedList tripsLockedPreviewList">
               <div class="settingsSpeciesLockedRow tripsLockedPreviewRow">
@@ -83,18 +92,18 @@ export function createSettingsListManagement(deps){
       `;
     }
 
-    return (m === "dealers") ? `
-      <div style="margin-top:12px">
-        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-          <input class="input" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" autocomplete="organization" enterkeyhint="done" style="flex:1;min-width:180px" />
+    return (m === LIST_MODE_DEALERS) ? `
+      <div class="listMgmtPanelWrap">
+        <div class="row listMgmtAddRow">
+          <input class="input listMgmtAddInput" id="newDealer" placeholder="Add dealer (ex: Machias Bay Seafood)" autocomplete="organization" enterkeyhint="done" />
           <button class="btn primary" id="addDealer" type="button">Add</button>
         </div>
         ${dealerRows2}
       </div>
     ` : `
-      <div style="margin-top:12px">
-        <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
-          <input class="input" id="newArea" placeholder="Add area (ex: The Cove)" autocomplete="off" enterkeyhint="done" style="flex:1;min-width:180px" />
+      <div class="listMgmtPanelWrap">
+        <div class="row listMgmtAddRow">
+          <input class="input listMgmtAddInput" id="newArea" placeholder="Add area (ex: The Cove)" autocomplete="off" enterkeyhint="done" />
           <button class="btn primary" id="addArea" type="button">Add</button>
         </div>
         ${areaRows2}
@@ -276,11 +285,11 @@ export function createSettingsListManagement(deps){
     const state = getState();
     const sc = getScroller();
     const prev = preserveScroll ? (sc ? sc.scrollTop : 0) : 0;
-    const m = String(mode || "areas").toLowerCase();
+    const m = normalizeListMode(mode);
     state.settings = state.settings || {};
     if(!Array.isArray(state.areas)) state.areas = [];
     if(!Array.isArray(state.dealers)) state.dealers = [];
-    state.settings.listMode = (m === "dealers" || m === "species") ? m : "areas";
+    state.settings.listMode = m;
     saveState();
 
     getApp().querySelectorAll("button.chip[data-listmode]").forEach((b)=>{
