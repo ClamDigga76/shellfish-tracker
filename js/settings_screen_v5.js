@@ -253,10 +253,7 @@ export function createSettingsScreenOrchestrator({
           <div class="segWrap">
             <button class="chip segBtn ${listMode === "areas" ? "on is-selected" : ""}" data-listmode="areas" type="button">Areas</button>
             <button class="chip segBtn ${listMode === "dealers" ? "on is-selected" : ""}" data-listmode="dealers" type="button">Dealers</button>
-            <button class="chip segBtn settingsStackedSegBtn" type="button" disabled aria-disabled="true" title="Coming soon">
-              <div>Species</div>
-              <div class="muted tiny settingsSoonNote">Coming soon</div>
-            </button>
+            <button class="chip segBtn ${listMode === "species" ? "on is-selected" : ""}" data-listmode="species" type="button">Species</button>
           </div>
         </div>
         <div class="settingsRow settingsRow--field">
