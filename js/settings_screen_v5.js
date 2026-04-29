@@ -96,9 +96,9 @@ export function createSettingsScreenOrchestrator({
       { id: "settingsUpdatesSupport", label: "Updates" },
       { id: "settingsSafetyRecovery", label: "Backup" },
       { id: "settingsInstallApp", label: "Install" },
-      { id: "settingsDataLists", label: "Data Lists" },
+      { id: "settingsDataLists", label: "Areas" },
       { id: "settingsAbout", label: "About" },
-      { id: "settingsAdvanced", label: "Advanced" }
+      { id: "settingsAdvanced", label: "Support" }
     ];
     const installModel = typeof getInstallSurfaceModel === "function"
       ? getInstallSurfaceModel()
@@ -232,8 +232,8 @@ export function createSettingsScreenOrchestrator({
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Data Lists</div>
-            <div class="settingsAccordionTitle">Trip list management</div>
+            <div class="settingsGroupLabel">Areas & Dealers</div>
+            <div class="settingsAccordionTitle">Manage trip choices</div>
             <div class="muted small settingsAccordionStatus" id="dataListsSummaryLine">${areaCount} areas • ${dealerCount} dealers</div>
           </div>
           <div class="settingsAccordionRight">
@@ -315,9 +315,9 @@ export function createSettingsScreenOrchestrator({
       <details class="card settingsSectionCard settingsGroupedCard settingsAdvancedCard settingsAccordionCard" id="advancedBox" data-settings-accordion>
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Advanced</div>
-            <div class="settingsAccordionTitle">Support bundle and reset tools</div>
-            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle and reset tools</div>
+            <div class="settingsGroupLabel">Support & Reset</div>
+            <div class="settingsAccordionTitle">Support bundle, safe reload, and erase tools</div>
+            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle, safe reload, and erase tools</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill" id="advancedStatusPill">Support</span>
