@@ -100,8 +100,8 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
             </div>
 
-            <div class="tripsFiltersSection tripsLockedPreviewSection" aria-label="Advanced Filters">
-              <div class="tripsFiltersSectionLabel">Advanced Filters</div>
+            <div class="tripsFiltersSection tripsLockedPreviewSection" aria-label="Premium Filters">
+              <div class="tripsFiltersSectionLabel">Premium Filters</div>
               <div class="tripsLockedPreviewList">
                 <div class="tripsLockedPreviewRow">
                   <span class="tripsLockedPreviewIcon" aria-hidden="true">🔒</span>
