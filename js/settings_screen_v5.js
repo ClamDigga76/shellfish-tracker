@@ -128,8 +128,8 @@ export function createSettingsScreenOrchestrator({
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Updates & Support</div>
-            <div class="settingsAccordionTitle">Update status and help access</div>
+            <div class="settingsGroupLabel">Updates</div>
+            <div class="settingsAccordionTitle">App version and update status</div>
             <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Version check in progress</div>
           </div>
           <div class="settingsAccordionRight settingsAccordionRight--updates">
@@ -171,7 +171,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Backup</div>
-            <div class="settingsAccordionTitle">Backup, restore, and recovery</div>
+            <div class="settingsAccordionTitle">Backup, restore, and deleted trips</div>
             <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Checking backup freshness</div>
           </div>
           <div class="settingsAccordionRight">
@@ -209,8 +209,8 @@ export function createSettingsScreenOrchestrator({
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Install App</div>
-            <div class="settingsAccordionTitle">Install mode and actions</div>
+            <div class="settingsGroupLabel">Install</div>
+            <div class="settingsAccordionTitle">Browser/install mode</div>
             <div class="muted small settingsAccordionStatus" id="installSummaryLine">Install readiness check in progress</div>
           </div>
           <div class="settingsAccordionRight">
@@ -493,7 +493,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     if (advancedSummaryLine) {
       advancedSummaryLine.textContent = shouldShowReleaseValidation
         ? "Release checks and reset tools"
-        : "Support bundle and reset tools";
+        : "Support bundle, safe reload, and erase tools";
     }
     const aboutSummaryLine = document.getElementById("aboutSummaryLine");
     if (aboutSummaryLine) {
