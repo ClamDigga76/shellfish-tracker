@@ -33,6 +33,23 @@
 .tripsFilterSummary{padding-top:2px;line-height:1.35}
 
 .tripsBrowseFiltersCard{padding:var(--card-pad-y) var(--card-pad-x)}
+
+.tripsBrowseFiltersCard.tripsFiltersCard{padding:10px 12px}
+.tripsBrowseFiltersCard .tripsFiltersBody{margin-top:8px;padding-top:8px;gap:8px}
+.tripsBrowseFiltersCard .tripsFiltersSection{gap:5px}
+.tripsBrowseFiltersCard .tripsFiltersQuickRange{gap:6px}
+.tripsBrowseFiltersCard .tripsFilterChip{min-height:35px;padding:7px 11px;font-size:12px}
+.tripsBrowseFiltersCard .tripsFiltersBody .select{min-height:36px;padding:7px 11px;font-size:13px}
+.tripsBrowseFiltersCard .tripsFilterApplyRow{gap:6px;padding-top:0;margin-top:2px}
+.tripsBrowseFiltersCard .tripsFilterApplyRow .btn{min-height:35px;padding:0 12px}
+.tripsBrowseFiltersCard .tripsLockedPreviewSection{margin-top:1px}
+.tripsBrowseFiltersCard .tripsLockedPreviewList{display:grid;gap:6px}
+.tripsBrowseFiltersCard .tripsLockedPreviewRow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 9px;border-radius:12px;border:1px solid rgba(124,167,255,.3);background:linear-gradient(180deg, rgba(18,32,66,.58) 0%, rgba(10,20,44,.42) 100%)}
+.tripsBrowseFiltersCard .tripsLockedPreviewIcon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;border-radius:999px;background:rgba(255,214,102,.18);border:1px solid rgba(255,214,102,.36)}
+.tripsBrowseFiltersCard .tripsLockedPreviewMeta{min-width:0;display:grid;gap:2px}
+.tripsBrowseFiltersCard .tripsLockedPreviewTitle{font-size:12px;line-height:1.2;font-weight:760;color:var(--text)}
+.tripsBrowseFiltersCard .tripsLockedPreviewText{font-size:11px;line-height:1.3;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tripsBrowseFiltersCard .tripsLockedPreviewPill{display:inline-flex;align-items:center;justify-content:center;min-height:20px;padding:0 8px;border-radius:999px;border:1px solid rgba(126,169,255,.45);background:rgba(47,109,246,.2);font-size:10px;line-height:1;font-weight:770;letter-spacing:.03em;text-transform:uppercase;color:var(--text-muted-strong)}
 .tripsFiltersEyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong)}
 .tripsFiltersTitle{font-size:17px;font-weight:860;line-height:1.2;margin-top:2px}
 .tripsBrowseList{display:grid;gap:var(--card-stack-gap)}
