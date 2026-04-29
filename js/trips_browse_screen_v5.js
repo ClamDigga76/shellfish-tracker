@@ -75,20 +75,22 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
             </div>
 
-            <div class="tripsFiltersSection">
-              <div class="tripsFiltersSectionLabel">Dealer</div>
-              <select id="flt_dealer" class="select">
-                <option value="all" ${tf.dealer==="all"?"selected":""}>All dealers</option>
-                ${opt.dealers.map(d=>`<option value="${escapeHtml(d)}" ${tf.dealer===d?"selected":""}>${escapeHtml(d)}</option>`).join("")}
-              </select>
-            </div>
+            <div class="tripsFiltersPairedFields">
+              <div class="tripsFiltersSection">
+                <div class="tripsFiltersSectionLabel">Dealer</div>
+                <select id="flt_dealer" class="select">
+                  <option value="all" ${tf.dealer==="all"?"selected":""}>All dealers</option>
+                  ${opt.dealers.map(d=>`<option value="${escapeHtml(d)}" ${tf.dealer===d?"selected":""}>${escapeHtml(d)}</option>`).join("")}
+                </select>
+              </div>
 
-            <div class="tripsFiltersSection">
-              <div class="tripsFiltersSectionLabel">Area</div>
-              <select id="flt_area" class="select">
-                <option value="all" ${tf.area==="all"?"selected":""}>All areas</option>
-                ${opt.areas.map(a=>`<option value="${escapeHtml(a)}" ${tf.area===a?"selected":""}>${escapeHtml(a)}</option>`).join("")}
-              </select>
+              <div class="tripsFiltersSection">
+                <div class="tripsFiltersSectionLabel">Area</div>
+                <select id="flt_area" class="select">
+                  <option value="all" ${tf.area==="all"?"selected":""}>All areas</option>
+                  ${opt.areas.map(a=>`<option value="${escapeHtml(a)}" ${tf.area===a?"selected":""}>${escapeHtml(a)}</option>`).join("")}
+                </select>
+              </div>
             </div>
 
             <div class="tripsFiltersSection">
@@ -116,7 +118,7 @@ export function createTripsBrowseScreenRenderer(deps){
                     <div class="tripsLockedPreviewTitle">High-Value Trips</div>
                     <div class="tripsLockedPreviewText">Find your strongest earning or pound days</div>
                   </div>
-                  <span class="tripsLockedPreviewPill">Upgrade</span>
+                  <span class="tripsLockedPreviewPill">Locked</span>
                 </div>
                 <div class="tripsLockedPreviewRow" aria-hidden="true">
                   <span class="tripsLockedPreviewIcon" aria-hidden="true">🔒</span>
