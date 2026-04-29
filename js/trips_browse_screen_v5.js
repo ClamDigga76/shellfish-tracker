@@ -41,6 +41,9 @@ export function createTripsBrowseScreenRenderer(deps){
     const tripsCountSummary = `${sorted.length} ${sorted.length === 1 ? "trip" : "trips"}`;
     const sortSummary = tf.sort === "oldest" ? "Oldest first" : "Newest first";
     const excludedQuarantinedCount = Number(transparency?.excludedQuarantinedCount || 0);
+    const totalTripsCount = Array.isArray(state.trips) ? state.trips.length : 0;
+    const hasAnyTrips = totalTripsCount > 0;
+    const isDefaultYtdEmpty = !hasActiveTripsFilters && hasAnyTrips && sorted.length === 0 && String(tf.range || "ytd") === "ytd";
     const quarantinedSupportNote = excludedQuarantinedCount > 0
       ? `<div class="muted small mt8 tripsQuarantineSupportNote" role="status">Some trips are excluded from date filters because their date is invalid (quarantined): ${excludedQuarantinedCount}.</div>`
       : "";
@@ -139,16 +142,35 @@ export function createTripsBrowseScreenRenderer(deps){
       </div>
     `;
 
+    let emptyStateTitle = "No trips match these filters";
+    let emptyStateBody = "Try resetting filters or changing the range, dealer, area, or sort.";
+    let emptyStateActions = `
+      <button class="btn" id="tripsEmptyReset" type="button">Reset filters</button>
+      <button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>
+    `;
+
+    if (!hasAnyTrips) {
+      emptyStateTitle = "No trips logged yet";
+      emptyStateBody = "Add your first trip to start building your catch log.";
+      emptyStateActions = `<button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>`;
+    } else if (isDefaultYtdEmpty) {
+      emptyStateTitle = "No YTD trips yet";
+      emptyStateBody = "You have trips saved, but none in this year-to-date view.";
+      emptyStateActions = `
+        <button class="btn" id="tripsEmptyShowAll" type="button">Show All Time</button>
+        <button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>
+      `;
+    }
+
     const rows = sorted.length
       ? sorted.map(t=> renderTripsBrowseInteractiveTripCard(t)).join("")
       : `
         <div class="emptyState tripsEmptyState">
-          <div class="emptyStateTitle">No trips in this Trips view</div>
-          <div class="emptyStateBody">No trips match this view yet. Add a trip, or clear filters if needed.</div>
+          <div class="emptyStateTitle">${emptyStateTitle}</div>
+          <div class="emptyStateBody">${emptyStateBody}</div>
           ${excludedQuarantinedCount > 0 ? `<div class="emptyStateFollowup">Some trips are excluded from date filters because their date is invalid (quarantined): ${excludedQuarantinedCount}.</div>` : ""}
           <div class="emptyStateAction">
-            <button class="btn good" id="tripsEmptyAdd" type="button">＋ Add Trip</button>
-            <button class="btn" id="tripsEmptyReset" type="button">Clear filters</button>
+            ${emptyStateActions}
           </div>
         </div>`;
 
@@ -227,7 +249,17 @@ export function createTripsBrowseScreenRenderer(deps){
       tripsEmptyReset.onclick = () => {
         resetTripsFilters(state);
         saveState();
-        showToast("Filters cleared");
+        showToast("Filters reset");
+        renderAllTrips();
+      };
+    }
+
+    const tripsEmptyShowAll = document.getElementById("tripsEmptyShowAll");
+    if (tripsEmptyShowAll) {
+      tripsEmptyShowAll.onclick = () => {
+        tf.range = "all";
+        tf.customRangeCorrectionMessages = [];
+        scheduleStateSave();
         renderAllTrips();
       };
     }
