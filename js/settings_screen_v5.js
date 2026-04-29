@@ -582,29 +582,25 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     } catch (_) {}
 
     supportRecoverySeam.bindBackupRestoreControls();
-    supportRecoverySeam.syncBackupSummaryLine({
-      backupSummaryLine,
-      backupStatusPill: safetyStatusPill,
-      deletedTripsCount: deletedTrips.length
-    });
+    const syncBackupSummaryLine = () => {
+      supportRecoverySeam.syncBackupSummaryLine({
+        backupSummaryLine,
+        backupStatusPill: safetyStatusPill,
+        deletedTripsCount: deletedTrips.length
+      });
+    };
+    syncBackupSummaryLine();
     const lastBackupLineEl = document.getElementById("lastBackupLine");
     const restoreRollbackLineEl = document.getElementById("restoreRollbackLine");
     if (backupSummaryLine && (lastBackupLineEl || restoreRollbackLineEl)) {
-      const syncBackupSummary = () => {
-        supportRecoverySeam.syncBackupSummaryLine({
-          backupSummaryLine,
-          backupStatusPill: safetyStatusPill,
-          deletedTripsCount: deletedTrips.length
-        });
-      };
-      const backupSummaryObserver = new MutationObserver(() => syncBackupSummary());
+      const backupSummaryObserver = new MutationObserver(() => syncBackupSummaryLine());
       if (lastBackupLineEl) {
         backupSummaryObserver.observe(lastBackupLineEl, { childList: true, characterData: true, subtree: true });
       }
       if (restoreRollbackLineEl) {
         backupSummaryObserver.observe(restoreRollbackLineEl, { childList: true, characterData: true, subtree: true });
       }
-      setTimeout(syncBackupSummary, 0);
+      setTimeout(syncBackupSummaryLine, 0);
     }
 
     supportRecoverySeam.bindDeletedTripRecoveryControls();
