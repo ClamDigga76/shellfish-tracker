@@ -969,7 +969,7 @@ export function createReportsMetricDetailSeam(deps){
       if(!Number.isFinite(value)) return "—";
       if(targetMetric === "trips") return `${Math.round(value)} trips`;
       if(targetMetric === "pounds") return `${to2(value)} lbs`;
-      if(targetMetric === "amount") return formatHomeMoneyValue(Math.round(value));
+      if(targetMetric === "amount") return formatMoney(to2(value));
       if(targetMetric === "ppl") return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
       return `${to2(value)}`;
     };
