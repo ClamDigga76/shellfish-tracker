@@ -66,7 +66,6 @@ export function createTripsBrowseScreenRenderer(deps){
 
         ${isFiltersExpanded ? `
           <div id="tripsFiltersBody" class="tripsFiltersBody">
-            <div class="tripsFiltersPanelTitle">Filters</div>
 
             <div class="tripsFiltersSection">
               <div class="tripsFiltersSectionLabel">Quick Range</div>
@@ -104,29 +103,26 @@ export function createTripsBrowseScreenRenderer(deps){
             <div class="tripsFiltersSection tripsLockedPreviewSection" aria-label="Advanced Filters">
               <div class="tripsFiltersSectionLabel">Advanced Filters</div>
               <div class="tripsLockedPreviewList">
-                <div class="tripsLockedPreviewRow" aria-hidden="true">
+                <div class="tripsLockedPreviewRow">
                   <span class="tripsLockedPreviewIcon" aria-hidden="true">🔒</span>
                   <div class="tripsLockedPreviewMeta">
                     <div class="tripsLockedPreviewTitle">Custom Range</div>
                     <div class="tripsLockedPreviewText">Pick exact start and end dates</div>
                   </div>
-                  <span class="tripsLockedPreviewPill">Locked</span>
                 </div>
-                <div class="tripsLockedPreviewRow" aria-hidden="true">
+                <div class="tripsLockedPreviewRow">
                   <span class="tripsLockedPreviewIcon" aria-hidden="true">🔒</span>
                   <div class="tripsLockedPreviewMeta">
                     <div class="tripsLockedPreviewTitle">High-Value Trips</div>
                     <div class="tripsLockedPreviewText">Find your strongest earning or pound days</div>
                   </div>
-                  <span class="tripsLockedPreviewPill">Locked</span>
                 </div>
-                <div class="tripsLockedPreviewRow" aria-hidden="true">
+                <div class="tripsLockedPreviewRow">
                   <span class="tripsLockedPreviewIcon" aria-hidden="true">🔒</span>
                   <div class="tripsLockedPreviewMeta">
                     <div class="tripsLockedPreviewTitle">Advanced Ranges</div>
                     <div class="tripsLockedPreviewText">Filter by pounds, amount, or price per lb</div>
                   </div>
-                  <span class="tripsLockedPreviewPill">Locked</span>
                 </div>
               </div>
             </div>
