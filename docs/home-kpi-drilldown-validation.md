@@ -39,3 +39,14 @@ Cross-surface contract:
 3. Mark each item pass/fail/not-run.
 4. Add notes only for fails or edge observations.
 5. Save the ledger output into release notes or QA handoff.
+
+
+## Contract checks after HOME-KPI-DETAIL-PRO-FIX-1
+- Compact header/back appears at top of Home KPI detail.
+- Hero value remains primary visual focus and title is reduced.
+- Home pounds text shows rounded pounds (no raw decimals).
+- Snapshot section renders 4 true cards in a 2x2 layout for every KPI.
+- Meaning note is visible before chart-heavy content.
+- Reports nudge is visible in summary stack before charts.
+- Reports metric detail still opens and preserves fractional precision behavior.
+- Mobile layout has no stretched third card pretending to be 2x2.

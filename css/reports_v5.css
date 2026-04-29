@@ -463,9 +463,9 @@
 .reportsMetricInsight{margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.11);font-size:13px;line-height:1.4;color:#c0c8d8}
 .homeMetricDetail{margin-top:0}
 .homeMetricDetailCard{padding:0;background:transparent;border:0;border-radius:0;box-shadow:none}
-.homeMetricBackBtn{margin-bottom:10px;border-color:rgba(126,200,255,.28);background:rgba(126,200,255,.08)}
+.homeMetricBackBtn{margin:0;border-color:rgba(126,200,255,.28);background:rgba(126,200,255,.08)}
 .homeMetricEyebrow{font-size:11px;font-weight:860;letter-spacing:.13em;text-transform:uppercase;color:#8fd6ff}
-.homeMetricTitle{margin:6px 0 0;font-size:27px;line-height:1.14;letter-spacing:.2px}
+.homeMetricTitle{margin:4px 0 0;font-size:22px;line-height:1.16;letter-spacing:.14px}
 .homeMetricContext{margin-top:4px;font-size:12px;color:#c9e7ff;font-weight:700}
 .homeMetricDetail .reportsMetricSectionPill{background:rgba(126,200,255,.15);color:#d6efff}
 .homeMetricChartBlock{margin-top:13px}
@@ -1090,3 +1090,6 @@
 .homeMetricMeaningNote{margin-top:10px;font-size:12px;color:#cdd6e6;line-height:1.45}
 .homeMetricReportsNudge{margin-top:8px;font-size:12px;color:#9fb2cf}
 @media (max-width:480px){.homeMetricMetaRow--grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}}
+
+.homeMetricTopBar{display:flex;align-items:center;justify-content:flex-start;margin:0 0 8px}
+.homeMetricMetaRow--grid .homeMetricMetaItem:last-child:nth-child(odd){grid-column:auto}

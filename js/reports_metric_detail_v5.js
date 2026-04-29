@@ -500,7 +500,7 @@ export function createReportsMetricDetailSeam(deps){
     const safeValue = Number(value);
     if(!Number.isFinite(safeValue)) return "—";
     if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
-    if(metricKey === "pounds") return `${to2(safeValue)} lbs`;
+    if(metricKey === "pounds") return `${Math.round(safeValue).toLocaleString()} lbs`;
     if(metricKey === "amount") return formatMoney(to2(safeValue));
     if(metricKey === "ppl") return `${formatMoney(to2(safeValue))}/lb`;
     return `${to2(safeValue)}`;
@@ -662,22 +662,55 @@ export function createReportsMetricDetailSeam(deps){
     const safeValue = Number(value);
     if(!Number.isFinite(safeValue)) return "—";
     if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
-    if(metricKey === "pounds") return `${to2(safeValue)} lbs`;
+    if(metricKey === "pounds") return `${Math.round(safeValue).toLocaleString()} lbs`;
     if(metricKey === "amount") return formatMoney(to2(safeValue));
     if(metricKey === "ppl") return safeValue > 0 ? `${formatMoney(to2(safeValue))}/lb` : "—";
     return `${to2(safeValue)}`;
   };
 
-  const buildHomeSnapshotItems = ({ metricKey, chartModel })=> {
+  const buildHomeSnapshotItems = ({ metricKey, chartModel, trips })=> {
     const values = Array.isArray(chartModel?.values) ? chartModel.values.map((value)=> Number(value) || 0) : [];
-    if(!values.length) return [];
-    const latest = values[values.length - 1];
-    const highest = values.reduce((max, value)=> Math.max(max, value), values[0]);
-    const average = values.reduce((sum, value)=> sum + value, 0) / values.length;
+    const safeTrips = Array.isArray(trips) ? trips : [];
+    if(!values.length && !safeTrips.length) return [];
+    const latest = values.length ? values[values.length - 1] : 0;
+    const highest = values.length ? values.reduce((max, value)=> Math.max(max, value), values[0]) : 0;
+    const average = values.length ? (values.reduce((sum, value)=> sum + value, 0) / values.length) : 0;
+    const tripCount = safeTrips.length;
+    if(metricKey === "trips") return [
+      { label: "Latest trip", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
+      { label: "Busiest month", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
+      { label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
+      { label: "Trips counted", value: `${tripCount} trips` }
+    ];
+    if(metricKey === "pounds") return [
+      { label: "Best catch", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
+      { label: "Latest recorded", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
+      { label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
+      { label: "Trips counted", value: `${tripCount} trips` }
+    ];
+    if(metricKey === "amount"){
+      const avgTrip = tripCount > 0 ? (safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0) / tripCount) : 0;
+      return [
+        { label: "Highest paid", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
+        { label: "Latest paid", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
+        { label: "Avg / trip", value: formatMoney(to2(avgTrip)) },
+        { label: "Trips counted", value: `${tripCount} trips` }
+      ];
+    }
+    if(metricKey === "ppl"){
+      const poundsSupport = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0);
+      return [
+        { label: "Best rate", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
+        { label: "Latest rate", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
+        { label: "Period average", value: formatHomeSnapshotValue({ metricKey, value: average }) },
+        { label: "Pounds support", value: `${Math.round(poundsSupport).toLocaleString()} lbs` }
+      ];
+    }
     return [
       { label: "Highest", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
       { label: "Latest", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
-      { label: "Average", value: formatHomeSnapshotValue({ metricKey, value: average }) }
+      { label: "Average", value: formatHomeSnapshotValue({ metricKey, value: average }) },
+      { label: "Items counted", value: `${values.length}` }
     ];
   };
 
@@ -761,6 +794,7 @@ export function createReportsMetricDetailSeam(deps){
     <section class="${surfaceMode.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
       <div class="${surfaceMode.detailCardClass}">
         ${viewModel.isHomeMetricDetail ? `
+          <div class="homeMetricTopBar"><button class="btn btn-ghost affordanceBtn ${surfaceMode.detailBackClass}" type="button" id="reportsMetricBack">← Back</button></div>
           <div class="homeMetricTitleHeader" aria-label="Metric title">
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
             ${pplTitleFormulaLine ? `<div class="homeMetricTitleFormula">${escapeHtml(pplTitleFormulaLine)}</div>` : ""}
@@ -770,7 +804,6 @@ export function createReportsMetricDetailSeam(deps){
             <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
             <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${renderHomeHeroValue()}</div>
           </div>
-          <button class="btn btn-ghost affordanceBtn ${surfaceMode.detailBackClass}" type="button" id="reportsMetricBack">← Back</button>
           <div class="homeMetricContextChip">${escapeHtml(detailContext)}</div>
           <div class="homeMetricLeadIn">${escapeHtml(detailInsight)}</div>
           ${homeSnapshotItems.length ? `
@@ -804,6 +837,10 @@ export function createReportsMetricDetailSeam(deps){
         </div>
         `}
 
+        ${viewModel.isHomeMetricDetail
+    ? `<div class="homeMetricMeaningNote">${escapeHtml(meta.homeMeaningNote || "")}</div><div class="${surfaceMode.detailInsightClass}">${escapeHtml(meta.homeTeaser || "")}</div><div class="homeMetricReportsNudge">Want deeper comparisons? Reports can compare dealers, areas, months, and trends.</div>`
+    : ``}
+
         <div class="reportsMetricChartsStack">
           ${viewModel.isHomeMetricDetail
     ? (hasHomePrimaryChart ? renderSharedChartCard({
@@ -832,7 +869,7 @@ export function createReportsMetricDetailSeam(deps){
         </div>
 
         ${viewModel.isHomeMetricDetail
-    ? `<div class="homeMetricMeaningNote">${escapeHtml(meta.homeMeaningNote || "")}</div><div class="${surfaceMode.detailInsightClass}">${escapeHtml(meta.homeTeaser || "")}</div><div class="homeMetricReportsNudge">Want deeper comparisons? Reports can compare dealers, areas, months, and trends.</div>`
+    ? ``
     : `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
       </div>
     </section>
@@ -858,23 +895,23 @@ export function createReportsMetricDetailSeam(deps){
       const avgItem = safeSnapshotItems.find((item)=> String(item?.label || "").toLowerCase() === "average");
       if(targetMetricKey === "trips"){
         return latestItem
-          ? `You logged ${heroValue} in the selected period; latest visible month was ${latestItem.value}.`
-          : `You logged ${heroValue} in the selected period.`;
+          ? `${heroValue} trips logged in this selected period.`
+          : `${heroValue} trips logged in this selected period.`;
       }
       if(targetMetricKey === "pounds"){
         return avgItem
-          ? `Total landed is ${heroValue}, running about ${avgItem.value} per visible month.`
+          ? `${heroValue} landed across ${Math.max(1, safeSnapshotItems.length ? safeSnapshotItems.length : 1)} months shown. Average pace: ${avgItem ? avgItem.value.replace('.00','') : '—'} /month.`
           : `Total landed is ${heroValue} in the selected period.`;
       }
       if(targetMetricKey === "amount"){
         return latestItem
-          ? `${heroValue} paid in the selected period, with ${latestItem.value} in the latest visible month.`
-          : `${heroValue} paid in the selected period.`;
+          ? `${heroValue} received in this selected period. Average trip value: ${safeSnapshotItems.find((i)=>i.label==='Avg / trip')?.value || '—'}/trip.`
+          : `${heroValue} received in this selected period.`;
       }
       if(targetMetricKey === "ppl"){
         return latestItem
-          ? `Your weighted rate is ${heroValue} (${getPplFormulaText({ metricKey: targetMetricKey, surface: "short" })}); latest month is ${latestItem.value}.`
-          : `Your weighted rate is ${heroValue} (${getPplFormulaText({ metricKey: targetMetricKey, surface: "short" })}).`;
+          ? `Average rate is based on total paid ÷ total pounds. Backed by ${safeSnapshotItems.find((i)=>i.label==='Pounds support')?.value || '—'}.`
+          : `Average rate is based on total paid ÷ total pounds.`;
       }
       return "";
     };
@@ -882,7 +919,7 @@ export function createReportsMetricDetailSeam(deps){
       const value = Number(basis?.currentValue);
       if(!Number.isFinite(value)) return "—";
       if(targetMetric === "trips") return `${Math.round(value)} trips`;
-      if(targetMetric === "pounds") return `${to2(value)} lbs`;
+      if(targetMetric === "pounds") return `${Math.round(value).toLocaleString()} lbs`;
       if(targetMetric === "amount") return formatMoney(to2(value));
       if(targetMetric === "ppl") return value > 0 ? `${formatMoney(to2(value))}/lb` : "—";
       return `${to2(value)}`;
@@ -963,7 +1000,7 @@ export function createReportsMetricDetailSeam(deps){
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("trips");
-          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart });
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart, trips: viewModel.trips });
           return {
         title: "Trips breakdown",
         homeTitle: "Trips",
@@ -1011,7 +1048,7 @@ export function createReportsMetricDetailSeam(deps){
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("pounds");
-          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "pounds", chartModel: homePrimaryChart });
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "pounds", chartModel: homePrimaryChart, trips: viewModel.trips });
           return {
         title: "Pounds breakdown",
         homeTitle: "Pounds",
@@ -1059,7 +1096,7 @@ export function createReportsMetricDetailSeam(deps){
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("amount");
-          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "amount", chartModel: homePrimaryChart });
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "amount", chartModel: homePrimaryChart, trips: viewModel.trips });
           return {
         title: "Amount breakdown",
         homeTitle: "Amount",
@@ -1119,7 +1156,7 @@ export function createReportsMetricDetailSeam(deps){
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("ppl");
-          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "ppl", chartModel: homePrimaryChart });
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "ppl", chartModel: homePrimaryChart, trips: viewModel.trips });
           return {
         title: "Avg $ / lb breakdown",
         homeTitle: "Avg $ / lb",
