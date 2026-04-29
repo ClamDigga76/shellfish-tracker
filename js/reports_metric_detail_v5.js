@@ -682,27 +682,49 @@ export function createReportsMetricDetailSeam(deps){
       { label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
       { label: "Trips counted", value: `${tripCount} trips` }
     ];
-    if(metricKey === "pounds") return [
-      { label: "Best catch", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
-      { label: "Latest recorded", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
-      { label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
-      { label: "Trips counted", value: `${tripCount} trips` }
-    ];
+    if(metricKey === "pounds"){
+      const tripPounds = safeTrips.map((trip)=> Number(trip?.pounds) || 0).filter((value)=> value > 0);
+      const hasTripBest = tripPounds.length > 0;
+      const bestTripPounds = hasTripBest ? tripPounds.reduce((max, value)=> Math.max(max, value), tripPounds[0]) : 0;
+      const avgTripPounds = tripCount > 0
+        ? (safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0) / tripCount)
+        : 0;
+      return [
+        { label: hasTripBest ? "Best trip" : "Top month", value: formatHomeSnapshotValue({ metricKey, value: hasTripBest ? bestTripPounds : highest }) },
+        { label: "Avg / trip", value: formatHomeSnapshotValue({ metricKey, value: avgTripPounds }) },
+        { label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
+        { label: "Trips counted", value: `${tripCount} trips` }
+      ];
+    }
     if(metricKey === "amount"){
       const avgTrip = tripCount > 0 ? (safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0) / tripCount) : 0;
+      const highestTripAmount = tripCount > 0
+        ? safeTrips.reduce((max, trip)=> Math.max(max, Number(trip?.amount) || 0), 0)
+        : 0;
+      const latestTripAmount = safeTrips.length
+        ? (Number(safeTrips[safeTrips.length - 1]?.amount) || 0)
+        : 0;
       return [
-        { label: "Highest paid", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
-        { label: "Latest paid", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
+        { label: "Highest paid trip", value: formatHomeSnapshotValue({ metricKey, value: highestTripAmount || highest }) },
         { label: "Avg / trip", value: formatMoney(to2(avgTrip)) },
+        { label: "Latest paid", value: formatHomeSnapshotValue({ metricKey, value: latestTripAmount || latest }) },
         { label: "Trips counted", value: `${tripCount} trips` }
       ];
     }
     if(metricKey === "ppl"){
       const poundsSupport = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0);
+      const tripRates = safeTrips
+        .map((trip)=> {
+          const pounds = Number(trip?.pounds) || 0;
+          const amount = Number(trip?.amount) || 0;
+          return pounds > 0 ? amount / pounds : 0;
+        })
+        .filter((rate)=> rate > 0);
+      const bestTripRate = tripRates.length ? tripRates.reduce((max, rate)=> Math.max(max, rate), tripRates[0]) : 0;
       return [
-        { label: "Best rate", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
+        { label: tripRates.length ? "Best trip rate" : "Top month", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }) },
         { label: "Latest rate", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
-        { label: "Period average", value: formatHomeSnapshotValue({ metricKey, value: average }) },
+        { label: "Period avg", value: formatHomeSnapshotValue({ metricKey, value: average }) },
         { label: "Pounds support", value: `${Math.round(poundsSupport).toLocaleString()} lbs` }
       ];
     }
@@ -794,18 +816,16 @@ export function createReportsMetricDetailSeam(deps){
     <section class="${surfaceMode.detailSurfaceClass}" aria-label="${escapeHtml(meta.title)}">
       <div class="${surfaceMode.detailCardClass}">
         ${viewModel.isHomeMetricDetail ? `
-          <div class="homeMetricTopBar"><button class="btn btn-ghost affordanceBtn ${surfaceMode.detailBackClass}" type="button" id="reportsMetricBack">← Back</button></div>
+          <div class="homeMetricTopBar"><button class="btn btn-ghost affordanceBtn ${surfaceMode.detailBackClass}" type="button" id="reportsMetricBack">← Home</button><div class="homeMetricContextChip">${escapeHtml(detailContext)}</div></div>
           <div class="homeMetricTitleHeader" aria-label="Metric title">
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
             ${pplTitleFormulaLine ? `<div class="homeMetricTitleFormula">${escapeHtml(pplTitleFormulaLine)}</div>` : ""}
             ${pplTitleWeightedLine ? `<div class="homeMetricTitleFormula homeMetricTitleFormula--secondary">${escapeHtml(pplTitleWeightedLine)}</div>` : ""}
           </div>
           <div class="${surfaceMode.detailHeroWrapClass}">
-            <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
             <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${renderHomeHeroValue()}</div>
+            <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
           </div>
-          <div class="homeMetricContextChip">${escapeHtml(detailContext)}</div>
-          <div class="homeMetricLeadIn">${escapeHtml(detailInsight)}</div>
           ${homeSnapshotItems.length ? `
           <div class="homeMetricMetaRow homeMetricMetaRow--grid" aria-label="Snapshot values">
             ${homeSnapshotItems.map((item)=> `
@@ -838,7 +858,7 @@ export function createReportsMetricDetailSeam(deps){
         `}
 
         ${viewModel.isHomeMetricDetail
-    ? `<div class="homeMetricMeaningNote">${escapeHtml(meta.homeMeaningNote || "")}</div><div class="${surfaceMode.detailInsightClass}">${escapeHtml(meta.homeTeaser || "")}</div><div class="homeMetricReportsNudge">Want deeper comparisons? Reports can compare dealers, areas, months, and trends.</div>`
+    ? `<div class="homeMetricMeaningNote">${escapeHtml(meta.homeMeaningNote || "")}</div>`
     : ``}
 
         <div class="reportsMetricChartsStack">
@@ -1003,10 +1023,10 @@ export function createReportsMetricDetailSeam(deps){
           const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart, trips: viewModel.trips });
           return {
         title: "Trips breakdown",
-        homeTitle: "Trips",
+        homeTitle: "Trips Logged",
         homeTitleToneClass: "homeMetricSimpleTitle--trips",
         eyebrow: "Metric breakdown",
-        heroLabel: "Trips logged",
+        heroLabel: "Work entries",
         heroValue,
         heroClass: "trips",
         comparePayload: primaryPayload,
@@ -1034,7 +1054,7 @@ export function createReportsMetricDetailSeam(deps){
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
         homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "trips", heroValue, snapshotItems: homeSnapshotItems }),
-        homeMeaningNote: "Trips show how many work entries were logged in this selected period."
+        homeMeaningNote: "Trips show how often work was logged in this period."
           };
         })(),
       },
@@ -1051,7 +1071,7 @@ export function createReportsMetricDetailSeam(deps){
           const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "pounds", chartModel: homePrimaryChart, trips: viewModel.trips });
           return {
         title: "Pounds breakdown",
-        homeTitle: "Pounds",
+        homeTitle: "Pounds Landed",
         homeTitleToneClass: "homeMetricSimpleTitle--pounds",
         eyebrow: "Metric breakdown",
         heroLabel: "Pounds landed",
@@ -1082,7 +1102,7 @@ export function createReportsMetricDetailSeam(deps){
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
         homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "pounds", heroValue, snapshotItems: homeSnapshotItems }),
-        homeMeaningNote: "Pounds show production strength before price is factored in."
+        homeMeaningNote: "Pounds show production before price is factored in."
           };
         })(),
       },
@@ -1099,10 +1119,10 @@ export function createReportsMetricDetailSeam(deps){
           const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "amount", chartModel: homePrimaryChart, trips: viewModel.trips });
           return {
         title: "Amount breakdown",
-        homeTitle: "Amount",
+        homeTitle: "Pay Received",
         homeTitleToneClass: "homeMetricSimpleTitle--amount",
         eyebrow: "Metric breakdown",
-        heroLabel: "Pay received",
+        heroLabel: "Total pay",
         heroValue,
         heroClass: "money",
         comparePayload: primaryPayload,
@@ -1159,10 +1179,10 @@ export function createReportsMetricDetailSeam(deps){
           const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "ppl", chartModel: homePrimaryChart, trips: viewModel.trips });
           return {
         title: "Avg $ / lb breakdown",
-        homeTitle: "Avg $ / lb",
+        homeTitle: "Avg Pay Rate",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
-        heroLabel: "Avg pay rate / lb",
+        heroLabel: "Weighted rate",
         heroValue,
         heroClass: "rate ppl",
         comparePayload: primaryPayload,

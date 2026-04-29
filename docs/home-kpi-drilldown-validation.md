@@ -13,12 +13,12 @@ Use this lane when validating Home KPI drill-down behavior for a release candida
 For each of the four KPI drill-down screens:
 
 - Back button appears at the top and returns to Home state.
-- Compact title and selected-period context chip appear above the hero.
+- Quiet top utility row shows `← Home` on the left and selected context on the right.
+- One normal-size KPI title appears above a calm full-width hero card.
 - Hero card uses business labels and rounded values (no raw pound decimals).
-- Compact insight strip appears under hero.
 - 2x2 mini metric grid is filled (no empty grid holes on mobile).
 - Meaning note appears in plain English for the selected KPI.
-- Reports nudge appears with understated copy.
+- No duplicate insight card repeats the hero value.
 - If a simple Home chart is part of the existing free detail contract, it still renders below the card stack.
 
 Cross-surface contract:
@@ -47,6 +47,6 @@ Cross-surface contract:
 - Home pounds text shows rounded pounds (no raw decimals).
 - Snapshot section renders 4 true cards in a 2x2 layout for every KPI.
 - Meaning note is visible before chart-heavy content.
-- Reports nudge is visible in summary stack before charts.
+- No extra teaser/nudge block appears in the Home summary stack.
 - Reports metric detail still opens and preserves fractional precision behavior.
 - Mobile layout has no stretched third card pretending to be 2x2.
