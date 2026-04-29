@@ -501,7 +501,7 @@ export function createReportsMetricDetailSeam(deps){
     if(!Number.isFinite(safeValue)) return "—";
     if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
     if(metricKey === "pounds") return `${to2(safeValue)} lbs`;
-    if(metricKey === "amount") return formatMoney(Math.round(safeValue));
+    if(metricKey === "amount") return formatMoney(to2(safeValue));
     if(metricKey === "ppl") return `${formatMoney(to2(safeValue))}/lb`;
     return `${to2(safeValue)}`;
   };
