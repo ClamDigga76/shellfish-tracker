@@ -27,6 +27,7 @@ export function createSettingsListManagement(deps){
   } = deps;
   const PROTECTED_AREA_NAME = String(protectedAreaName || "Area Not Recorded").trim();
   const PROTECTED_AREA_KEY = normalizeKey(PROTECTED_AREA_NAME);
+  const BUILT_IN_SPECIES_NAME = "Soft-shell clams";
 
   function isProtectedAreaName(rawAreaName){
     const areaKey = normalizeKey(String(rawAreaName || "").trim());
@@ -59,6 +60,28 @@ export function createSettingsListManagement(deps){
         </div>
       </div>
     `).join("") : `<div class="emptyState compact" style="margin-top:10px"><div class="emptyStateTitle">No dealers yet</div><div class="emptyStateBody">Add your first dealer below so trip entry stays fast.</div></div>`;
+
+    if(m === "species"){
+      return `
+        <div style="margin-top:12px">
+          <div class="settingsSpeciesLockedSection tripsLockedPreviewSection" role="status" aria-live="polite">
+            <div class="settingsSpeciesLockedList tripsLockedPreviewList">
+              <div class="settingsSpeciesLockedRow tripsLockedPreviewRow">
+                <span class="settingsSpeciesLockedIcon tripsLockedPreviewIcon" aria-hidden="true">🔒</span>
+                <div class="settingsSpeciesLockedMeta tripsLockedPreviewMeta">
+                  <div class="settingsSpeciesLockedTitle tripsLockedPreviewTitle">
+                    ${escapeHtml(BUILT_IN_SPECIES_NAME)}
+                    <span class="settingsSpeciesLockedBadge">Built-in</span>
+                  </div>
+                  <div class="settingsSpeciesLockedText tripsLockedPreviewText">Bank the Catch currently uses ${escapeHtml(BUILT_IN_SPECIES_NAME)} as the built-in species.</div>
+                  <div class="settingsSpeciesLockedText tripsLockedPreviewText">This built-in species cannot be renamed or deleted.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     return (m === "dealers") ? `
       <div style="margin-top:12px">
@@ -257,7 +280,7 @@ export function createSettingsListManagement(deps){
     state.settings = state.settings || {};
     if(!Array.isArray(state.areas)) state.areas = [];
     if(!Array.isArray(state.dealers)) state.dealers = [];
-    state.settings.listMode = (m === "dealers") ? "dealers" : "areas";
+    state.settings.listMode = (m === "dealers" || m === "species") ? m : "areas";
     saveState();
 
     getApp().querySelectorAll("button.chip[data-listmode]").forEach((b)=>{
