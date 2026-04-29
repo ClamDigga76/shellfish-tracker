@@ -658,12 +658,22 @@ export function createReportsMetricDetailSeam(deps){
     };
   };
 
+
+  const formatHomeMoneyValue = (value)=> {
+    const safeValue = Number(value);
+    if(!Number.isFinite(safeValue)) return "—";
+    const roundedToCents = to2(safeValue);
+    const wholeDollars = Math.round(roundedToCents);
+    if(Math.abs(roundedToCents - wholeDollars) < 0.005) return formatMoney(wholeDollars);
+    return formatMoney(roundedToCents);
+  };
+
   const formatHomeSnapshotValue = ({ metricKey, value })=> {
     const safeValue = Number(value);
     if(!Number.isFinite(safeValue)) return "—";
     if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
     if(metricKey === "pounds") return `${Math.round(safeValue).toLocaleString()} lbs`;
-    if(metricKey === "amount") return formatMoney(Math.round(safeValue));
+    if(metricKey === "amount") return formatHomeMoneyValue(safeValue);
     if(metricKey === "ppl") return safeValue > 0 ? `${formatMoney(to2(safeValue))}/lb` : "—";
     return `${to2(safeValue)}`;
   };
@@ -678,9 +688,13 @@ export function createReportsMetricDetailSeam(deps){
     const tripCount = safeTrips.length;
     if(metricKey === "trips") return [
       { label: "Latest month", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
-      { label: "Busiest month", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
-      { label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
-      { label: "Trips counted", value: `${tripCount} trips` }
+      ...(formatHomeSnapshotValue({ metricKey, value: latest }) === formatHomeSnapshotValue({ metricKey, value: highest })
+        ? [{ label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
+          { label: "Trips counted", value: `${tripCount} trips` },
+          { label: "Months shown", value: `${values.length} months` }]
+        : [{ label: "Busiest month", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
+          { label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
+          { label: "Trips counted", value: `${tripCount} trips` }])
     ];
     if(metricKey === "pounds"){
       const tripPounds = safeTrips.map((trip)=> Number(trip?.pounds) || 0).filter((value)=> value > 0);
@@ -725,7 +739,7 @@ export function createReportsMetricDetailSeam(deps){
         : null;
       return [
         { label: "Highest paid trip", value: formatHomeSnapshotValue({ metricKey, value: highestTripAmount ?? highest }) },
-        { label: "Avg / trip", value: formatMoney(to2(avgTrip)) },
+        { label: "Avg / trip", value: formatHomeMoneyValue(to2(avgTrip)) },
         { label: "Latest paid", value: formatHomeSnapshotValue({ metricKey, value: latestTripAmount ?? latest }) },
         { label: "Trips counted", value: `${tripCount} trips` }
       ];
@@ -744,7 +758,7 @@ export function createReportsMetricDetailSeam(deps){
         { label: tripRates.length ? "Best trip rate" : "Top month", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }) },
         { label: "Latest rate", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
         { label: "Pounds support", value: `${Math.round(poundsSupport).toLocaleString()} lbs` },
-        { label: "Pay received", value: formatMoney(to2(safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0))) }
+        { label: "Pay received", value: formatHomeMoneyValue(to2(safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0))) }
       ];
     }
     return [
@@ -776,8 +790,6 @@ export function createReportsMetricDetailSeam(deps){
       : "";
     const pplSupportNoteText = getPplSupportNoteText({ metricKey: viewModel.metricKey, payload: meta.comparePayload, surface: "supportMeta" });
     const pplFormulaText = getPplFormulaText({ metricKey: viewModel.metricKey });
-    const pplTitleFormulaLine = getPplFormulaText({ metricKey: viewModel.metricKey, surface: "formula" });
-    const pplTitleWeightedLine = getPplFormulaText({ metricKey: viewModel.metricKey, surface: "weighted" });
     const supportMetaNote = [compareContractText, pplFormulaText, pplSupportNoteText].filter(Boolean).join(" ");
     const supportAnalysisText = viewModel.isHomeMetricDetail
       ? (toMaxTwoSentences(compareSummary.text) || String(compareSummary.text || ""))
@@ -838,8 +850,6 @@ export function createReportsMetricDetailSeam(deps){
           <div class="homeMetricTopBar"><button class="btn btn-ghost affordanceBtn ${surfaceMode.detailBackClass}" type="button" id="reportsMetricBack">← Home</button><div class="homeMetricContextChip">${escapeHtml(detailContext)}</div></div>
           <div class="homeMetricTitleHeader" aria-label="Metric title">
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
-            ${pplTitleFormulaLine ? `<div class="homeMetricTitleFormula">${escapeHtml(pplTitleFormulaLine)}</div>` : ""}
-            ${pplTitleWeightedLine ? `<div class="homeMetricTitleFormula homeMetricTitleFormula--secondary">${escapeHtml(pplTitleWeightedLine)}</div>` : ""}
           </div>
           <div class="${surfaceMode.detailHeroWrapClass}">
             <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${renderHomeHeroValue()}</div>
@@ -969,8 +979,8 @@ export function createReportsMetricDetailSeam(deps){
       const pounds = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0);
       const amount = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0);
       if(targetMetric === "trips") return `${tripCount}`;
-      if(targetMetric === "pounds") return `${Math.round(pounds).toLocaleString()}`;
-      if(targetMetric === "amount") return formatMoney(to2(amount));
+      if(targetMetric === "pounds") return `${Math.round(pounds).toLocaleString()} lbs`;
+      if(targetMetric === "amount") return formatHomeMoneyValue(Math.round(amount));
       if(targetMetric === "ppl") return pounds > 0 ? `${formatMoney(to2(amount / pounds))}` : "—";
       return "—";
     };

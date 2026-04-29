@@ -35,7 +35,7 @@ Cross-surface contract:
 ## Concise manual validation steps
 
 1. Capture runtime context with `getHomeKpiValidationSnapshot()`.
-2. Run the 11 checklist items in `formatHomeKpiValidationLedger(...)`.
+2. Run the 15 checklist items in `formatHomeKpiValidationLedger(...)`.
 3. Mark each item pass/fail/not-run.
 4. Add notes only for fails or edge observations.
 5. Save the ledger output into release notes or QA handoff.
@@ -50,3 +50,12 @@ Cross-surface contract:
 - No extra teaser/nudge block appears in the Home summary stack.
 - Reports metric detail still opens and preserves fractional precision behavior.
 - Mobile layout has no stretched third card pretending to be 2x2.
+
+
+## Final polish checks (HOME-KPI-HERO-FINAL-POLISH-1)
+- KPI title text is centered while top utility row stays split left/right.
+- Pounds hero shows the unit (for example `2,638 lbs`).
+- Amount hero displays whole dollars in Home detail hero (for example `$7,119`).
+- Home support money values suppress trailing `.00` but keep non-zero cents.
+- Avg Pay Rate title area does not repeat formula lines above the hero.
+- Trips snapshot smartly swaps `Busiest month` for `Months shown` when both month values match.
