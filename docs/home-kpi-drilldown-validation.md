@@ -55,7 +55,8 @@ Cross-surface contract:
 ## Final polish checks (HOME-KPI-HERO-FINAL-POLISH-1)
 - KPI title text is centered while top utility row stays split left/right.
 - Pounds hero shows the unit (for example `2,638 lbs`).
-- Amount hero displays whole dollars in Home detail hero (for example `$7,119`).
-- Home support money values suppress trailing `.00` but keep non-zero cents.
+- Amount hero preserves exact cents in Home detail hero, including `.00` when applicable (for example `$7,119.00`).
+- Home support money values preserve exact cents instead of suppressing trailing `.00`.
 - Avg Pay Rate title area does not repeat formula lines above the hero.
-- Trips snapshot smartly swaps `Busiest month` for `Months shown` when both month values match.
+- Trips snapshot smartly swaps `Busiest month` for `Latest trip` when both month values match, and shows compact trip date truth (`Apr 29`) or `—` when date is invalid/missing.
+- Avg Pay Rate snapshot uses `Latest trip rate` and computes it from the latest selected trip amount ÷ pounds (or `—` when that latest trip is invalid).

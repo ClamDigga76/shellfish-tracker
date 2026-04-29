@@ -270,6 +270,35 @@ function buildHomeCumulativeSeriesChart({ monthRows, metricKey, valueKey, basisL
   };
 }
 
+function parseTripDateValue(trip){
+  const dateToken = String(trip?.dateISO || trip?.date || trip?.when || trip?.tripDate || "").slice(0, 10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateToken)) return null;
+  const parsed = Date.parse(`${dateToken}T00:00:00Z`);
+  if(!Number.isFinite(parsed)) return null;
+  return { dateToken, timestamp: parsed };
+}
+
+function resolveLatestSelectedTrip(trips){
+  const safeTrips = Array.isArray(trips) ? trips : [];
+  const datedTrips = safeTrips
+    .map((trip)=> {
+      const parsedDate = parseTripDateValue(trip);
+      if(!parsedDate) return null;
+      return { trip, ...parsedDate };
+    })
+    .filter((row)=> row != null)
+    .sort((a, b)=> a.timestamp - b.timestamp);
+  if(!datedTrips.length) return null;
+  return datedTrips[datedTrips.length - 1].trip;
+}
+
+function formatCompactTripDate(trip){
+  const parsed = parseTripDateValue(trip);
+  if(!parsed) return "—";
+  const dt = new Date(parsed.timestamp);
+  return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
 function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxItems = 5, labelMode = "" }){
   const safeRows = Array.isArray(rows)
     ? rows
@@ -662,10 +691,7 @@ export function createReportsMetricDetailSeam(deps){
   const formatHomeMoneyValue = (value)=> {
     const safeValue = Number(value);
     if(!Number.isFinite(safeValue)) return "—";
-    const roundedToCents = to2(safeValue);
-    const wholeDollars = Math.round(roundedToCents);
-    if(Math.abs(roundedToCents - wholeDollars) < 0.005) return formatMoney(wholeDollars);
-    return formatMoney(roundedToCents);
+    return formatMoney(to2(safeValue));
   };
 
   const formatHomeSnapshotValue = ({ metricKey, value })=> {
@@ -686,12 +712,13 @@ export function createReportsMetricDetailSeam(deps){
     const highest = values.length ? values.reduce((max, value)=> Math.max(max, value), values[0]) : 0;
     const average = values.length ? (values.reduce((sum, value)=> sum + value, 0) / values.length) : 0;
     const tripCount = safeTrips.length;
+    const latestTrip = resolveLatestSelectedTrip(safeTrips);
     if(metricKey === "trips") return [
       { label: "Latest month", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
       ...(formatHomeSnapshotValue({ metricKey, value: latest }) === formatHomeSnapshotValue({ metricKey, value: highest })
         ? [{ label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
           { label: "Trips counted", value: `${tripCount} trips` },
-          { label: "Months shown", value: `${values.length} months` }]
+          { label: "Latest trip", value: formatCompactTripDate(latestTrip) }]
         : [{ label: "Busiest month", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
           { label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
           { label: "Trips counted", value: `${tripCount} trips` }])
@@ -746,6 +773,13 @@ export function createReportsMetricDetailSeam(deps){
     }
     if(metricKey === "ppl"){
       const poundsSupport = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0);
+      const latestTripPounds = Number(latestTrip?.pounds);
+      const latestTripAmount = Number(latestTrip?.amount);
+      const latestTripRateValue = Number.isFinite(latestTripPounds)
+        && Number.isFinite(latestTripAmount)
+        && latestTripPounds > 0
+        ? (latestTripAmount / latestTripPounds)
+        : null;
       const tripRates = safeTrips
         .map((trip)=> {
           const pounds = Number(trip?.pounds) || 0;
@@ -756,7 +790,7 @@ export function createReportsMetricDetailSeam(deps){
       const bestTripRate = tripRates.length ? tripRates.reduce((max, rate)=> Math.max(max, rate), tripRates[0]) : 0;
       return [
         { label: tripRates.length ? "Best trip rate" : "Top month", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }) },
-        { label: "Latest rate", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
+        { label: "Latest trip rate", value: latestTripRateValue > 0 ? formatHomeSnapshotValue({ metricKey, value: latestTripRateValue }) : "—" },
         { label: "Pounds support", value: `${Math.round(poundsSupport).toLocaleString()} lbs` },
         { label: "Pay received", value: formatHomeMoneyValue(to2(safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0))) }
       ];
@@ -980,7 +1014,7 @@ export function createReportsMetricDetailSeam(deps){
       const amount = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0);
       if(targetMetric === "trips") return `${tripCount}`;
       if(targetMetric === "pounds") return `${Math.round(pounds).toLocaleString()} lbs`;
-      if(targetMetric === "amount") return formatHomeMoneyValue(Math.round(amount));
+      if(targetMetric === "amount") return formatHomeMoneyValue(amount);
       if(targetMetric === "ppl") return pounds > 0 ? `${formatMoney(to2(amount / pounds))}` : "—";
       return "—";
     };
