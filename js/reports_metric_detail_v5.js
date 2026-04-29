@@ -663,7 +663,7 @@ export function createReportsMetricDetailSeam(deps){
     if(!Number.isFinite(safeValue)) return "—";
     if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
     if(metricKey === "pounds") return `${Math.round(safeValue).toLocaleString()} lbs`;
-    if(metricKey === "amount") return formatMoney(to2(safeValue));
+    if(metricKey === "amount") return formatMoney(Math.round(safeValue));
     if(metricKey === "ppl") return safeValue > 0 ? `${formatMoney(to2(safeValue))}/lb` : "—";
     return `${to2(safeValue)}`;
   };
@@ -677,7 +677,7 @@ export function createReportsMetricDetailSeam(deps){
     const average = values.length ? (values.reduce((sum, value)=> sum + value, 0) / values.length) : 0;
     const tripCount = safeTrips.length;
     if(metricKey === "trips") return [
-      { label: "Latest trip", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
+      { label: "Latest month", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
       { label: "Busiest month", value: formatHomeSnapshotValue({ metricKey, value: highest }) },
       { label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
       { label: "Trips counted", value: `${tripCount} trips` }
@@ -710,8 +710,17 @@ export function createReportsMetricDetailSeam(deps){
         : null;
       const latestTripAmount = safeTrips.length
         ? (()=> {
-          const parsedAmount = Number(safeTrips[safeTrips.length - 1]?.amount);
-          return Number.isFinite(parsedAmount) ? parsedAmount : null;
+          const datedTrips = safeTrips
+            .map((trip)=> {
+              const amountValue = Number(trip?.amount);
+              if(!Number.isFinite(amountValue)) return null;
+              const dateToken = String(trip?.dateISO || trip?.date || trip?.when || trip?.tripDate || "").slice(0, 10);
+              if(!/^\d{4}-\d{2}-\d{2}$/.test(dateToken)) return null;
+              return { amountValue, dateToken };
+            })
+            .filter((trip)=> trip != null)
+            .sort((a, b)=> a.dateToken.localeCompare(b.dateToken));
+          return datedTrips.length ? datedTrips[datedTrips.length - 1].amountValue : null;
         })()
         : null;
       return [
@@ -734,8 +743,8 @@ export function createReportsMetricDetailSeam(deps){
       return [
         { label: tripRates.length ? "Best trip rate" : "Top month", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }) },
         { label: "Latest rate", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
-        { label: "Period avg", value: formatHomeSnapshotValue({ metricKey, value: average }) },
-        { label: "Pounds support", value: `${Math.round(poundsSupport).toLocaleString()} lbs` }
+        { label: "Pounds support", value: `${Math.round(poundsSupport).toLocaleString()} lbs` },
+        { label: "Pay received", value: formatMoney(to2(safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0))) }
       ];
     }
     return [
@@ -751,7 +760,7 @@ export function createReportsMetricDetailSeam(deps){
     const homeRangeLabel = String(viewModel.homeScope?.rangeLabel || viewModel.rangeLabel || "").trim();
     const homeTripCount = Number(viewModel.homeScope?.tripCount ?? viewModel.trips?.length) || 0;
     const detailContext = viewModel.isHomeMetricDetail
-      ? `Range ${homeRangeLabel || "Active"} • ${homeTripCount} trips`
+      ? `${homeRangeLabel || "Active"} • ${homeTripCount} trips`
       : `Range ${viewModel.rangeLabel} • ${viewModel.trips.length} trips`;
     const detailChartTitle = viewModel.isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = viewModel.isHomeMetricDetail
@@ -1084,7 +1093,7 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Pounds Landed",
         homeTitleToneClass: "homeMetricSimpleTitle--pounds",
         eyebrow: "Metric breakdown",
-        heroLabel: "Pounds landed",
+        heroLabel: "Total landed",
         heroValue,
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
