@@ -60,3 +60,13 @@ Cross-surface contract:
 - Avg Pay Rate title area does not repeat formula lines above the hero.
 - Trips snapshot smartly swaps `Busiest month` for `Latest trip` when both month values match, and shows compact trip date truth (`Apr 29`) or `—` when date is invalid/missing.
 - Avg Pay Rate snapshot uses `Latest trip rate` and computes it from the latest selected trip amount ÷ pounds (or `—` when that latest trip is invalid).
+
+## Hero surface polish checks (HOME-KPI-HERO-SURFACE-POLISH-1)
+- Hero value and hero label are centered in the Home KPI hero card for Trips, Pounds, Pay Received, and Avg Pay Rate.
+- KPI title stays centered while the top utility row stays split (`← Home` left, selected context right).
+- 2x2 snapshot grid and meaning note remain left-aligned.
+- Hero label styling stays secondary/soft (no harsh dashboard-style treatment).
+- Hero card has a subtle low-contrast ombre feel and does not look flashy or glassy.
+- Home Pay Received keeps exact cents and Home Avg Pay Rate keeps exact decimals.
+- Charts and Reports behavior/precision remain unchanged.
+

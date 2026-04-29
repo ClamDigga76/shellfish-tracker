@@ -689,15 +689,18 @@
   padding:10px 12px;
   border-radius:12px;
   border:1px solid rgba(126,200,255,.2);
-  background:linear-gradient(180deg,rgba(27,47,80,.55),rgba(18,32,56,.5));
+  background:
+    radial-gradient(120% 88% at 10% 0%, rgba(166,209,255,.08), rgba(166,209,255,0) 62%),
+    linear-gradient(154deg, rgba(22,38,64,.62) 0%, rgba(18,31,53,.57) 54%, rgba(27,47,78,.52) 100%);
   box-shadow:inset 0 1px 0 rgba(196,234,255,.08);
+  text-align:center;
 }
 .homeMetricHeroLabel{
   margin-top:4px;
-  color:#c4d8f5;
+  color:#c7daef;
   font-size:11px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
+  font-weight:670;
+  letter-spacing:.025em;
 }
 .homeMetricHeroValue{
   margin-top:0;
@@ -706,6 +709,7 @@
   letter-spacing:.12px;
   display:flex;
   align-items:flex-end;
+  justify-content:center;
   gap:.16em;
 }
 .homeMetricHeroMain{display:inline-block}
