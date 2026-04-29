@@ -27,5 +27,8 @@ jobs:
       - name: Run repo checks
         run: npm run check:repo
 
+      - name: Run runtime preflight
+        run: npm run preflight
+
       - name: Run smoke checks
         run: npm run smoke
