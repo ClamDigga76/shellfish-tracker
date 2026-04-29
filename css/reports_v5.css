@@ -644,7 +644,7 @@
   color:#f4fbff;
 }
 
-.homeMetricTitleHeader{margin-top:0;padding:2px 0 6px}
+.homeMetricTitleHeader{margin-top:0;padding:1px 0 5px;text-align:center}
 .homeMetricLeadIn{
   margin-top:8px;
   margin-bottom:4px;
@@ -1095,5 +1095,5 @@
 .homeMetricTopBar .homeMetricBackBtn:hover,
 .homeMetricTopBar .homeMetricBackBtn:active{background:transparent;color:#c8dbf7}
 .homeMetricTopBar .homeMetricBackBtn:focus-visible{outline:2px solid rgba(126,200,255,.45);outline-offset:2px;border-radius:6px}
-.homeMetricTopBar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
+.homeMetricTopBar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px}
 .homeMetricMetaRow--grid .homeMetricMetaItem:last-child:nth-child(odd){grid-column:auto}
