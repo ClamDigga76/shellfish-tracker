@@ -297,7 +297,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Legal & Trust</div>
-            <div class="muted small">Terms, privacy, and open-source details.</div>
+            <div class="muted small">Terms, privacy, and software license details.</div>
           </div>
           <span class="settingsValuePill">Info</span>
         </div>
