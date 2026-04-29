@@ -99,6 +99,36 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
             </div>
 
+            <div class="tripsFiltersSection tripsLockedPreviewSection" aria-label="Advanced Filters">
+              <div class="tripsFiltersSectionLabel">Advanced Filters</div>
+              <div class="tripsLockedPreviewList">
+                <div class="tripsLockedPreviewRow" aria-hidden="true">
+                  <span class="tripsLockedPreviewIcon" aria-hidden="true">🔒</span>
+                  <div class="tripsLockedPreviewMeta">
+                    <div class="tripsLockedPreviewTitle">Custom Range</div>
+                    <div class="tripsLockedPreviewText">Pick exact start and end dates</div>
+                  </div>
+                  <span class="tripsLockedPreviewPill">Locked</span>
+                </div>
+                <div class="tripsLockedPreviewRow" aria-hidden="true">
+                  <span class="tripsLockedPreviewIcon" aria-hidden="true">🔒</span>
+                  <div class="tripsLockedPreviewMeta">
+                    <div class="tripsLockedPreviewTitle">High-Value Trips</div>
+                    <div class="tripsLockedPreviewText">Find your strongest earning or pound days</div>
+                  </div>
+                  <span class="tripsLockedPreviewPill">Upgrade</span>
+                </div>
+                <div class="tripsLockedPreviewRow" aria-hidden="true">
+                  <span class="tripsLockedPreviewIcon" aria-hidden="true">🔒</span>
+                  <div class="tripsLockedPreviewMeta">
+                    <div class="tripsLockedPreviewTitle">Advanced Ranges</div>
+                    <div class="tripsLockedPreviewText">Filter by pounds, amount, or price per lb</div>
+                  </div>
+                  <span class="tripsLockedPreviewPill">Locked</span>
+                </div>
+              </div>
+            </div>
+
             <div class="tripsFilterApplyRow">
               ${hasActiveTripsFilters ? `<button class="btn btn-ghost" id="flt_reset" type="button">Reset</button>` : "<span></span>"}
               <button class="btn good" id="flt_apply" type="button">Apply</button>
