@@ -70,6 +70,15 @@ export function createSettingsScreenOrchestrator({
     copyTextWithFeedback
   });
 
+  function shouldShowReleaseValidationSurface() {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      return ["support", "dev", "releaseValidation"].some((flag) => params.get(flag) === "1");
+    } catch (_) {
+      return false;
+    }
+  }
+
   function renderSettings(opts = {}) {
     const state = getState();
 
@@ -94,6 +103,7 @@ export function createSettingsScreenOrchestrator({
     const installModel = typeof getInstallSurfaceModel === "function"
       ? getInstallSurfaceModel()
       : null;
+    const shouldShowReleaseValidation = shouldShowReleaseValidationSurface();
     const backupTrustSurfaceHtml = statusSurfaceSeam.renderStatusSurface({
       variant: "settingsTrust",
       emphasis: "soft",
@@ -307,7 +317,7 @@ export function createSettingsScreenOrchestrator({
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Advanced</div>
             <div class="settingsAccordionTitle">Support bundle and reset tools</div>
-            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Release checks and reset tools</div>
+            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle and reset tools</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill" id="advancedStatusPill">Support</span>
@@ -320,7 +330,7 @@ export function createSettingsScreenOrchestrator({
             <button class="btn" id="refreshApp">Reload app safely</button>
           </div>
         </div>
-        <div class="settingsRow settingsRow--split settingsRow--minor">
+${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
             <div class="settingsRowTitle">Release-trial validation</div>
             <div class="muted small">Mark checks for this release candidate.</div>
@@ -401,7 +411,7 @@ export function createSettingsScreenOrchestrator({
             <button class="btn" id="copyReleaseLedger">Copy release ledger</button>
           </div>
         </div>
-        <div class="settingsRow settingsRow--minor">
+` : ""}        <div class="settingsRow settingsRow--minor">
           <div class="muted small">Copy this support bundle (privacy-safe runtime metadata only), then add a short repro note.</div>
         </div>
         <div class="settingsRow settingsRow--danger">
@@ -481,7 +491,9 @@ export function createSettingsScreenOrchestrator({
       backupSummaryLine.textContent = "Checking backup freshness";
     }
     if (advancedSummaryLine) {
-      advancedSummaryLine.textContent = "Release checks and reset tools";
+      advancedSummaryLine.textContent = shouldShowReleaseValidation
+        ? "Release checks and reset tools"
+        : "Support bundle and reset tools";
     }
     const aboutSummaryLine = document.getElementById("aboutSummaryLine");
     if (aboutSummaryLine) {
@@ -561,11 +573,12 @@ export function createSettingsScreenOrchestrator({
       updateBuildInfo();
     } catch (_) {}
 
-    const { hydrateReleaseValidationSurface } = supportRecoverySeam.createReleaseValidationController({
-      advancedSummaryLine
-    });
-
-    hydrateReleaseValidationSurface();
+    if (shouldShowReleaseValidation) {
+      const { hydrateReleaseValidationSurface } = supportRecoverySeam.createReleaseValidationController({
+        advancedSummaryLine
+      });
+      hydrateReleaseValidationSurface();
+    }
 
     try {
       settingsListManagement.bindListMgmtHandlers();
