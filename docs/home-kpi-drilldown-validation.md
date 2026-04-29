@@ -12,11 +12,14 @@ Use this lane when validating Home KPI drill-down behavior for a release candida
 
 For each of the four KPI drill-down screens:
 
-- Hero card is present and readable at the top.
-- Support card is present directly under hero content.
-- Support analysis stays at 2 sentences or fewer.
-- Compare rows are structured and readable.
-- Charts render below the card stack.
+- Back button appears at the top and returns to Home state.
+- Compact title and selected-period context chip appear above the hero.
+- Hero card uses business labels and rounded values (no raw pound decimals).
+- Compact insight strip appears under hero.
+- 2x2 mini metric grid is filled (no empty grid holes on mobile).
+- Meaning note appears in plain English for the selected KPI.
+- Reports nudge appears with understated copy.
+- If a simple Home chart is part of the existing free detail contract, it still renders below the card stack.
 
 Cross-surface contract:
 

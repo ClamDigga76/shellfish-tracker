@@ -500,7 +500,7 @@ export function createReportsMetricDetailSeam(deps){
     const safeValue = Number(value);
     if(!Number.isFinite(safeValue)) return "—";
     if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
-    if(metricKey === "pounds") return `${to2(safeValue)} lbs`;
+    if(metricKey === "pounds") return `${Math.round(safeValue).toLocaleString()} lbs`;
     if(metricKey === "amount") return formatMoney(to2(safeValue));
     if(metricKey === "ppl") return `${formatMoney(to2(safeValue))}/lb`;
     return `${to2(safeValue)}`;
@@ -662,7 +662,7 @@ export function createReportsMetricDetailSeam(deps){
     const safeValue = Number(value);
     if(!Number.isFinite(safeValue)) return "—";
     if(metricKey === "trips") return `${Math.round(safeValue)} trips`;
-    if(metricKey === "pounds") return `${to2(safeValue)} lbs`;
+    if(metricKey === "pounds") return `${Math.round(safeValue).toLocaleString()} lbs`;
     if(metricKey === "amount") return formatMoney(to2(safeValue));
     if(metricKey === "ppl") return safeValue > 0 ? `${formatMoney(to2(safeValue))}/lb` : "—";
     return `${to2(safeValue)}`;
@@ -770,9 +770,11 @@ export function createReportsMetricDetailSeam(deps){
             <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
             <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${renderHomeHeroValue()}</div>
           </div>
+          <button class="btn btn-ghost affordanceBtn ${surfaceMode.detailBackClass}" type="button" id="reportsMetricBack">← Back</button>
+          <div class="homeMetricContextChip">${escapeHtml(detailContext)}</div>
           <div class="homeMetricLeadIn">${escapeHtml(detailInsight)}</div>
           ${homeSnapshotItems.length ? `
-          <div class="homeMetricMetaRow" aria-label="Snapshot values">
+          <div class="homeMetricMetaRow homeMetricMetaRow--grid" aria-label="Snapshot values">
             ${homeSnapshotItems.map((item)=> `
               <div class="homeMetricMetaItem">
                 <span class="homeMetricMetaLabel">${escapeHtml(item.label)}</span>
@@ -830,7 +832,7 @@ export function createReportsMetricDetailSeam(deps){
         </div>
 
         ${viewModel.isHomeMetricDetail
-    ? `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(meta.homeTeaser || "")}</div>`
+    ? `<div class="homeMetricMeaningNote">${escapeHtml(meta.homeMeaningNote || "")}</div><div class="${surfaceMode.detailInsightClass}">${escapeHtml(meta.homeTeaser || "")}</div><div class="homeMetricReportsNudge">Want deeper comparisons? Reports can compare dealers, areas, months, and trends.</div>`
     : `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
       </div>
     </section>
@@ -890,10 +892,10 @@ export function createReportsMetricDetailSeam(deps){
       const tripCount = safeTrips.length;
       const pounds = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0);
       const amount = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0);
-      if(targetMetric === "trips") return `${tripCount} trips`;
-      if(targetMetric === "pounds") return `${to2(pounds)} lbs`;
+      if(targetMetric === "trips") return `${tripCount}`;
+      if(targetMetric === "pounds") return `${Math.round(pounds).toLocaleString()}`;
       if(targetMetric === "amount") return formatMoney(to2(amount));
-      if(targetMetric === "ppl") return pounds > 0 ? `${formatMoney(to2(amount / pounds))}/lb` : "—";
+      if(targetMetric === "ppl") return pounds > 0 ? `${formatMoney(to2(amount / pounds))}` : "—";
       return "—";
     };
     const resolveHeroValue = (targetMetric)=> (
@@ -967,7 +969,7 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Trips",
         homeTitleToneClass: "homeMetricSimpleTitle--trips",
         eyebrow: "Metric breakdown",
-        heroLabel: "Trips in selected period",
+        heroLabel: "Trips logged",
         heroValue,
         heroClass: "trips",
         comparePayload: primaryPayload,
@@ -994,7 +996,8 @@ export function createReportsMetricDetailSeam(deps){
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
-        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "trips", heroValue, snapshotItems: homeSnapshotItems })
+        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "trips", heroValue, snapshotItems: homeSnapshotItems }),
+        homeMeaningNote: "Trips show how many work entries were logged in this selected period."
           };
         })(),
       },
@@ -1014,7 +1017,7 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Pounds",
         homeTitleToneClass: "homeMetricSimpleTitle--pounds",
         eyebrow: "Metric breakdown",
-        heroLabel: "Pounds in selected period",
+        heroLabel: "Pounds landed",
         heroValue,
         heroClass: "lbsBlue",
         comparePayload: primaryPayload,
@@ -1041,7 +1044,8 @@ export function createReportsMetricDetailSeam(deps){
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
-        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "pounds", heroValue, snapshotItems: homeSnapshotItems })
+        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "pounds", heroValue, snapshotItems: homeSnapshotItems }),
+        homeMeaningNote: "Pounds show production strength before price is factored in."
           };
         })(),
       },
@@ -1061,7 +1065,7 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Amount",
         homeTitleToneClass: "homeMetricSimpleTitle--amount",
         eyebrow: "Metric breakdown",
-        heroLabel: "Amount in selected period",
+        heroLabel: "Pay received",
         heroValue,
         heroClass: "money",
         comparePayload: primaryPayload,
@@ -1100,7 +1104,8 @@ export function createReportsMetricDetailSeam(deps){
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
-        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "amount", heroValue, snapshotItems: homeSnapshotItems })
+        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "amount", heroValue, snapshotItems: homeSnapshotItems }),
+        homeMeaningNote: "Amount is the pay result from pounds landed and price per pound."
           };
         })(),
       },
@@ -1120,7 +1125,7 @@ export function createReportsMetricDetailSeam(deps){
         homeTitle: "Avg $ / lb",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
-        heroLabel: "Avg $ / lb in selected period",
+        heroLabel: "Avg pay rate / lb",
         heroValue,
         heroClass: "rate ppl",
         comparePayload: primaryPayload,
@@ -1147,7 +1152,8 @@ export function createReportsMetricDetailSeam(deps){
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
-        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "ppl", heroValue, snapshotItems: homeSnapshotItems })
+        homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "ppl", heroValue, snapshotItems: homeSnapshotItems }),
+        homeMeaningNote: "Avg $ / lb is calculated from total paid ÷ total pounds."
           };
         })()
       }
