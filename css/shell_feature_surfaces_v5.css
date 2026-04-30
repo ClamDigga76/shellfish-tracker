@@ -93,7 +93,7 @@
   justify-content:flex-end;
   align-items:center;
   gap:6px;
-  margin:0 0 4px;
+  margin:-2px 0 3px;
   flex-wrap:wrap;
   width:100%;
 }
@@ -129,7 +129,7 @@
   justify-items:end;
   justify-self:end;
   align-content:start;
-  gap:7px;
+  gap:6px;
   text-align:right;
   min-width:0;
   width:auto;
