@@ -128,7 +128,7 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
 
   let logoDrawn = false;
   try {
-    const logo = await loadImage("./assets/brand/backgrounds/btc-share-logo-wide.png?v=717");
+    const logo = await loadImage(`./assets/brand/backgrounds/btc-share-logo-wide.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`);
     const heroPadX = 34;
     const heroPadTop = 34;
     const drawW = innerW - (heroPadX * 2);

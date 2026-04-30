@@ -543,12 +543,14 @@ export function createHomeDashboardRenderer({
           return;
         }
         if (typeof openModal !== "function") return;
+        const appVersion = String(window?.APP_VERSION || "").trim();
+        const previewLogoSrc = `assets/brand/backgrounds/btc-share-logo-wide.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`;
         openModal({
           html: `
             <div class="homeScreenshotCardPreviewWrap">
               <div class="homeScreenshotCardPreviewSurface">
                 <div class="homeScreenshotCardPreviewHero">
-                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="assets/brand/backgrounds/btc-share-logo-wide.png?v=717" alt="Bank the Catch" loading="lazy" decoding="async" />
+                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="${previewLogoSrc}" alt="Bank the Catch" loading="lazy" decoding="async" />
                   <div class="homeScreenshotCardPreviewBrandFallback" id="homeScreenshotCardPreviewBrandFallback">Bank the Catch</div>
                 </div>
                 <div class="homeScreenshotCardPreviewLabel">Last Saved Trip</div>
