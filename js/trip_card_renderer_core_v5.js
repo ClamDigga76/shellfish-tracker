@@ -54,13 +54,14 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
       auditVariant = "",
       showTripsBrowseActions = false
     } = opts;
-    const tag = interactive ? "button" : "div";
+    const isTripsBrowse = variant === "tripsBrowse";
+    const useButtonShell = interactive && !isTripsBrowse;
+    const tag = useButtonShell ? "button" : "div";
     const role = interactive ? "button" : "group";
     const tab = interactive ? "0" : "-1";
     const idAttr = interactive ? ` data-id="${escapeHtml(model.id)}"` : "";
     const auditVariantAttr = auditVariant ? ` data-trip-card-variant="${escapeHtml(auditVariant)}"` : "";
     const modeClass = interactive ? "tripCardInteractive" : "tripCardReadOnly";
-    const isTripsBrowse = variant === "tripsBrowse";
     const variantClass = isTripsBrowse ? "tripCardVariantTripsBrowse" : "tripCardVariantStandard";
     const primaryIdentity = model.area;
     const primaryIdentityContent = model.areaUnknown
@@ -80,7 +81,7 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
       : "";
 
     return `
-      <${tag} class="trip triprow catchCard tripCardStandard ${modeClass} ${variantClass}"${idAttr}${auditVariantAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
+      <${tag} class="trip triprow catchCard tripCardStandard ${modeClass} ${variantClass}"${idAttr}${auditVariantAttr} role="${role}" tabindex="${tab}"${useButtonShell ? ' type="button"' : ""}>
         <div class="tripCardGrid">
           <div class="tripCardLeftStack">
             <div class="tripCardTextRow tripCardDate">${escapeHtml(model.dateText)}</div>
