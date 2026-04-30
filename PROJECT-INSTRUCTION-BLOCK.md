@@ -55,7 +55,7 @@ Codex may prepare, commit, attempt to push, and open pull requests when availabl
 
 Codex may not merge pull requests.
 
-Jeremy remains the final reviewer and merge authority. Do not claim a branch was pushed or a PR exists unless that is confirmed; if push or PR creation is unavailable, report the limitation and Jeremy's exact next manual step.
+Jeremy remains the final reviewer and merge authority. Do not claim a branch was pushed or a PR exists unless that is confirmed; if origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation and include Jeremy's exact next manual step.
 
 Treat pre-edit anchors as report-and-proceed steps, not approval gates, unless Jeremy explicitly asks for an approval checkpoint. The pre-edit anchor is not an approval gate; report it, then proceed directly with the scoped patch unless there is a real blocker.
 

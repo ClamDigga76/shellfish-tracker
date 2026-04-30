@@ -38,9 +38,9 @@ For runtime-facing patches, the pre-edit anchor is a **report-and-proceed** step
 - current runtime version source value
 - whether runtime/version files need a bump
 - exact intended touched files
-- whether remote `main` was verified or unavailable locally
+- whether remote `main` verification was attempted and whether it was verified or unavailable locally
 
-Use latest remote `main` as the intended base. If remote `main` cannot be verified locally, report that as a local environment limitation, not repo truth, and proceed only from the safest available base.
+Use latest remote `main` as the intended base. If remote `main` cannot be verified locally, report it as a **Push/PR setup limitation**, not repo truth, and proceed only from the safest available base.
 
 After reporting the pre-edit anchor, Codex must proceed directly with the scoped patch.
 
@@ -48,11 +48,34 @@ The pre-edit anchor is not an approval gate. It must end with proceeding-directl
 
 Use wording like:
 
-> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, attempt push and PR creation if available, and report any local environment limitation with the exact next manual step for Jeremy.
+> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, attempt push and PR creation if available, and report any Push/PR setup limitation with the exact next manual step for Jeremy.
 
 Do not end the anchor with “If you want…”, “Should I proceed?”, “I can now…”, “I’ll now execute…”, or similar approval-gate language.
 
-A local-only remote/main limitation is not a blocker by itself. It should be reported as a local environment limitation, not treated as repo truth.
+A local-only remote/main limitation is not a blocker by itself. It should be reported as a **Push/PR setup limitation**, not treated as repo truth.
+
+
+## Push/PR setup limitation reporting
+
+If origin, remote-main verification, push, or PR creation is unavailable, report it as a **Push/PR setup limitation**, not as repo truth.
+
+Use preferred wording like:
+
+```text
+Push/PR setup limitation: this local worktree has no usable origin remote, so I could not verify remote main or push/open the PR from here. The scoped local patch and checks are complete. Jeremy’s next step is to push this branch with GitHub Desktop and open the PR.
+```
+
+Avoid vague or overbroad wording such as:
+
+- “Remote main could not be verified.”
+- “No origin configured.”
+- “This repo has no origin.”
+- “This repo has no main branch.”
+
+Local patch work can continue when the scoped files are present locally, the base is safe enough for the requested patch, the patch is not destructive or high-risk, and no real blocker exists.
+
+When push or PR creation is unavailable, final report-back must include branch name, commit SHA, touched files, tests/checks run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, the Push/PR setup limitation, and Jeremy’s exact next manual step.
+
 
 Stop only for a real blocker:
 

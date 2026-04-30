@@ -42,7 +42,7 @@ Codex may prepare, commit, attempt to push, and open pull requests when availabl
 
 Codex may not merge pull requests.
 
-Jeremy remains the final reviewer and merge authority. If push or PR creation is unavailable, Codex should report the branch name, commit SHA, touched files, tests run, and exact next manual step for Jeremy.
+Jeremy remains the final reviewer and merge authority. If origin, remote-main verification, push, or PR creation is unavailable, Codex should report it as a **Push/PR setup limitation** and include the branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and the exact next manual step for Jeremy.
 
 ## Prompt shape
 Desktop/app prompts still follow the same patch slice structure:
@@ -94,7 +94,13 @@ Codex should report the anchor, then continue directly into the scoped patch unl
 
 The pre-edit anchor is not an approval gate. The generated Codex Local / Worktree prompt should say to proceed directly after the anchor, not wait for another confirmation.
 
-Do not pause after the anchor just to ask for confirmation. Do not end the anchor with “If you want…”, “Should I proceed?”, “I can now…”, “I’ll now execute…”, or similar approval-gate language. Local Git limitations should be reported clearly, but they should not stop the patch before it starts unless the scoped patch is impossible.
+Do not pause after the anchor just to ask for confirmation. Do not end the anchor with “If you want…”, “Should I proceed?”, “I can now…”, “I’ll now execute…”, or similar approval-gate language. Origin, remote-main, push, or PR creation limitations should be reported as **Push/PR setup limitations**, not repo truth. They should not stop the patch before it starts unless the scoped patch is impossible.
+
+## Push/PR setup limitation wording
+
+For Codex Local / Worktree prompts, use **Push/PR setup limitation** when origin, remote-main verification, push, or PR creation is unavailable.
+
+Do not leave the limitation as a vague routine note. State what was attempted, what could not be completed from this local environment, and Jeremy’s exact manual next step.
 
 ## Pull / Do command rule
 When the user says `Pull <item>`, treat it as the default full working execution output for that item.

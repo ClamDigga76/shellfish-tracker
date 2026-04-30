@@ -91,11 +91,36 @@ Codex must not automatically:
 
 ---
 
+## Push/PR Setup Limitation Label
+
+When Codex cannot verify remote `main`, cannot push, cannot open a PR, or has no usable `origin` remote, label the condition as:
+
+> **Push/PR setup limitation**
+
+This label means the local worktree or execution environment cannot complete the remote GitHub step from here. It is **not repo truth** unless the remote repository itself confirms it.
+
+Preferred wording:
+
+```text
+Push/PR setup limitation: this local worktree has no usable origin remote, so I could not verify remote main or push/open the PR from here. The scoped local patch and checks are complete. Jeremy’s next step is to push this branch with GitHub Desktop and open the PR.
+```
+
+Avoid vague or overbroad wording such as:
+
+- “Remote main could not be verified.”
+- “No origin configured.”
+- “This repo has no origin.”
+- “This repo has no main branch.”
+
+Use the label plus the exact practical consequence and next step.
+
+---
+
 ## Remote Base Rule
 
 Use latest remote `main` as the intended base.
 
-If remote `main` cannot be verified locally, report that as a local environment limitation, not repo truth, and proceed only from the safest available base.
+If remote `main` cannot be verified locally, report it as a **Push/PR setup limitation**, not repo truth, and proceed only from the safest available base.
 
 Remote `main` unavailable locally is not a blocker by itself and is not an approval checkpoint. Local Git limitations should affect report-back and manual next steps, not stop the patch before it starts unless the scoped patch is impossible.
 
@@ -111,15 +136,17 @@ The pre-edit anchor is not an approval gate. Report the anchor, then proceed dir
 
 Use these distinctions:
 
-- Remote `main` unavailable locally: report it, then proceed from the safest available local base unless the scoped patch is impossible.
-- Push unavailable: still patch and commit first, then report the exact manual push step for Jeremy.
-- PR creation unavailable: still patch and commit first, then report the exact manual PR step for Jeremy.
+- Remote `main` unavailable locally: report it as a **Push/PR setup limitation**, then proceed from the safest available local base unless the scoped patch is impossible.
+- Push unavailable: still patch and commit first, then report the **Push/PR setup limitation** and the exact manual push step for Jeremy.
+- PR creation unavailable: still patch and commit first, then report the **Push/PR setup limitation** and the exact manual PR step for Jeremy.
+
+Local patch work can continue when the scoped files are present locally, the base is safe enough for the requested patch, the patch is not destructive or high-risk, and no real blocker exists.
 
 ## Push / PR Fallback Rule
 
 Attempt to push the branch to GitHub.
 
-If the local environment has no configured `origin` remote, cannot push, or does not have permission to push, report that clearly as a local environment limitation and stop after the commit so Jeremy can use the Push button or the appropriate GitHub step.
+If the local environment has no usable `origin` remote, cannot push, or does not have permission to push, report a **Push/PR setup limitation** and stop after the commit so Jeremy can use the Push button or the appropriate GitHub step.
 
 Open a pull request for Jeremy to review if PR creation is available.
 
@@ -131,8 +158,10 @@ If push or PR creation is unavailable, report:
 - commit SHA
 - touched files or main surfaces changed
 - tests/checks run
+- whether remote/main verification was attempted
 - whether push was attempted
 - whether PR creation was attempted
+- **Push/PR setup limitation** statement
 - the exact next manual step for Jeremy
 
 ---
@@ -156,7 +185,10 @@ When Codex cannot push or open a PR, the report-back should include:
 - commit SHA
 - touched files or main surfaces changed
 - test commands run
-- clear limitation statement
+- whether remote/main verification was attempted
+- whether push was attempted
+- whether PR creation was attempted
+- clear **Push/PR setup limitation** statement
 - exact next manual step for Jeremy
 
 Use `ACCEPTANCE-CHECKS-VS-MANUAL-QA-RULE.md` when separating Codex-verifiable checks from Jeremy device/browser checks.
@@ -170,14 +202,15 @@ When the patch should use this workflow, include wording like:
 ```text
 GitHub PR workflow:
 - Create a new branch for this patch.
+- If origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation, not as repo truth. Continue the scoped patch only if local files are sufficient and safe.
 - Local Git limitations should affect report-back and manual next steps, not stop the patch before it starts unless the scoped patch is impossible.
 - Apply the scoped changes.
 - Commit the work with a clear commit message.
 - Attempt to push the branch to GitHub.
-- If push is unavailable because the local environment has no configured origin remote, lacks push permissions, or cannot push, report that clearly as a local environment limitation and stop after the commit so Jeremy can use the Push button or the appropriate GitHub step.
+- If push is unavailable because the local environment has no usable origin remote, lacks push permissions, or cannot push, report the Push/PR setup limitation and stop after the commit so Jeremy can use the Push button or the appropriate GitHub step.
 - Open a pull request for Jeremy to review if PR creation is available.
 - Do not claim a PR exists unless a GitHub PR number or URL is confirmed.
-- If push or PR creation is unavailable, report the branch name, commit SHA, touched files, tests run, and exact next manual step for Jeremy.
+- If push or PR creation is unavailable, report the branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, the Push/PR setup limitation, and exact next manual step for Jeremy.
 - Include a PR summary, test notes, Acceptance checks, known risks/follow-ups, and rollback note when a PR is created.
 - Do not merge the PR.
 - Do not deploy production.

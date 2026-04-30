@@ -62,7 +62,7 @@ Recommended fields:
 | Repo Truth vs Plan | What is real now vs planned/targeted |
 | Locked Decisions Applied | Relevant decisions from `DECISION-LOCK-LEDGER.md` |
 | Do Not Touch | Files, systems, or behaviors Codex should avoid |
-| Codex PR Route | Whether Codex should attempt push/PR creation, what fallback applies, and that Jeremy merges |
+| Codex PR Route | Whether Codex should attempt push/PR creation, what Push/PR setup limitation fallback applies, and that Jeremy merges |
 
 Keep this compact. Do not turn the safety header into a second Pull Sheet.
 
@@ -156,7 +156,7 @@ Pre-edit anchor, when required:
 Report the pre-edit anchor, then proceed directly with the scoped patch. The anchor is not an approval gate. Do not end with “If you want…”, “Should I proceed?”, “I can now…”, or similar confirmation language.
 
 PR Route:
-Codex may create a branch, commit, attempt to push/open a PR when available, and leave summary/test notes. If push or PR creation is unavailable, report the branch name, commit SHA, touched files, tests run, and exact next manual step for Jeremy. Jeremy reviews and merges.
+Codex may create a branch, commit, attempt to push/open a PR when available, and leave summary/test notes. If origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation and include branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and exact next manual step for Jeremy. Jeremy reviews and merges.
 ```
 
 Jeremy-level meaning:
@@ -219,6 +219,12 @@ Only include the relevant locked decisions in the Pull Sheet or Codex prompt.
 Do not dump the whole ledger into every output.
 
 ---
+
+## Push/PR setup limitation
+
+When GitHub remote setup, remote-main verification, push, or PR creation is unavailable from the local environment, label it as a **Push/PR setup limitation**.
+
+This is not repo truth unless the remote repo itself confirms it. It should affect report-back and Jeremy’s manual next step, not stop a safe scoped patch before it starts.
 
 ## What Not to Add
 

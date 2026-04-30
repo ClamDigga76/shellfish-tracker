@@ -91,11 +91,17 @@ Use wording like this inside the actual generated Codex prompt:
 
 The anchor should end with proceeding-directly language, such as:
 
-> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, attempt push and PR creation if available, and report any local environment limitation with the exact next manual step for Jeremy.
+> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, attempt push and PR creation if available, and report any Push/PR setup limitation with the exact next manual step for Jeremy.
 
 Do not end the anchor with “If you want…”, “Should I proceed?”, “I can now…”, “I’ll now execute…”, or similar confirmation language.
 
-Local Git limitations such as unavailable remote `main`, push access, or PR creation should be reported as local environment limitations. They should affect report-back and manual next steps, not stop the patch before it starts unless the scoped patch is impossible.
+Local Git limitations such as unavailable origin, unavailable remote `main`, push access, or PR creation should be reported as **Push/PR setup limitations**, not repo truth. They should affect report-back and manual next steps, not stop the patch before it starts unless the scoped patch is impossible.
+
+Future generated Codex prompts should include this language when relevant:
+
+> If origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation, not as repo truth. Continue the scoped patch only if local files are sufficient and safe. At report-back, include the exact manual push/PR step for Jeremy.
+
+Avoid vague standalone wording such as “Remote main could not be verified,” “No origin configured,” “This repo has no origin,” or “This repo has no main branch.” Use the Push/PR setup limitation label and the exact practical consequence.
 
 ## Pull / Do command rule
 When the user says `Pull <item>`, treat it as the default full working execution output.
@@ -151,7 +157,7 @@ Inside the Codex Task Prompt, include PR expectations when relevant:
 - attempt to push the branch
 - open a PR for Jeremy review if PR creation is available
 - do not claim a PR exists unless a GitHub PR number or URL is confirmed
-- if push or PR creation is unavailable, report the branch name, commit SHA, touched files, tests run, and exact next manual step for Jeremy
+- if origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation and include branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and the exact next manual step for Jeremy
 - include PR summary, test notes, Acceptance checks, known risks/follow-ups, and rollback note
 - do not merge
 - do not deploy production

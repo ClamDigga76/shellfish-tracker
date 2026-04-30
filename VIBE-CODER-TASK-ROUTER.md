@@ -176,7 +176,7 @@ Output shape:
 - make clear that Codex may create a branch, commit, attempt to push, and open a PR when available
 - make clear that Codex must not merge the PR
 - Jeremy remains the final reviewer and merge authority
-- if push or PR creation is unavailable, require branch name, commit SHA, touched files, tests run, and exact next manual step for Jeremy
+- if origin, remote-main verification, push, or PR creation is unavailable, label it as a Push/PR setup limitation and require branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and exact next manual step for Jeremy
 - include PR summary expectations, test notes, Acceptance checks, known risks/follow-ups, rollback note, and fallback report-back requirements
 - keep Manual QA for Jeremy outside the Codex prompt unless the project format says otherwise
 
@@ -396,7 +396,7 @@ When recommending a pull, audit, or next move, include one of these when useful:
 
 Use “needed” only when repo truth, PR state, file paths, or landed code must be checked.
 
-When GitHub is connected and normal patch work is ready for implementation, prefer the `CODEX-PR-PUSH-WORKFLOW.md` flow: Codex may attempt to push/open a PR when available; Jeremy reviews and merges. Do not claim a PR exists unless a PR number or URL is confirmed.
+When GitHub is connected and normal patch work is ready for implementation, prefer the `CODEX-PR-PUSH-WORKFLOW.md` flow: Codex may attempt to push/open a PR when available; Jeremy reviews and merges. Do not claim a PR exists unless a PR number or URL is confirmed. If origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation, not repo truth. If origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation, not repo truth.
 
 ---
 
