@@ -306,6 +306,18 @@ if (swJs) {
     fail("service worker manifest core ref versioned from SW_V");
   }
 
+  const requiredCoreCssRefs = [
+    "`./css/trip_form_v5.css?v=${SW_V}`",
+    "`./css/reports_v5.css?v=${SW_V}`",
+  ];
+  for (const ref of requiredCoreCssRefs) {
+    if (swJs.includes(ref)) {
+      pass(`service worker required core css ref present: ${ref}`);
+    } else {
+      fail(`service worker required core css ref present: ${ref}`);
+    }
+  }
+
   const hasGeneratedMarkers = swJs.includes(SW_CORE_GENERATED_START_MARKER) && swJs.includes(SW_CORE_GENERATED_END_MARKER);
   if (hasGeneratedMarkers) {
     pass("service worker core js generated markers present");
@@ -479,10 +491,10 @@ if (bootstrapJs && appJs) {
       fail(`startup app-owned module present: ${rel}`);
     }
 
-    if (SW_CORE_JS_EXCLUDED_PATHS.includes(rel)) {
-      pass(`startup app-owned module excluded from SW core: ${rel}`);
+    if (SW_CORE_JS_PATHS.includes(rel)) {
+      pass(`startup app-owned module included in SW core: ${rel}`);
     } else {
-      fail(`startup app-owned module excluded from SW core: ${rel}`);
+      fail(`startup app-owned module included in SW core: ${rel}`);
     }
   }
 }

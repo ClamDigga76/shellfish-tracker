@@ -42,6 +42,10 @@ const CORE_JS_PATHS = [
   "./js/runtime_orchestration_seam_v5.js",
   "./js/top_level_navigation_transition_seam_v5.js",
   "./js/app_shell_v5.js",
+  "./js/app_local_utils_v5.js",
+  "./js/trips_unified_filter_bridge_v5.js",
+  "./js/theme_runtime_seam_v5.js",
+  "./js/ui_browser_helpers_v5.js",
   "./js/app_v5.js",
 ];
 // END GENERATED: CORE_JS_PATHS
@@ -52,6 +56,8 @@ const CORE = [
   `./manifest.webmanifest?v=${SW_V}`,
   `./css/shell_shared_v5.css?v=${SW_V}`,
   `./css/shell_feature_surfaces_v5.css?v=${SW_V}`,
+  `./css/trip_form_v5.css?v=${SW_V}`,
+  `./css/reports_v5.css?v=${SW_V}`,
   `./css/boot_shell_inline_extract_v1.css?v=${SW_V}`,
   `./js/boot_fallback_gate_v1.js?v=${SW_V}`,
   `./js/bootstrap_v5.js?v=${SW_V}`,
@@ -64,6 +70,8 @@ const REQUIRED_CORE = [
   `./manifest.webmanifest?v=${SW_V}`,
   `./css/shell_shared_v5.css?v=${SW_V}`,
   `./css/shell_feature_surfaces_v5.css?v=${SW_V}`,
+  `./css/trip_form_v5.css?v=${SW_V}`,
+  `./css/reports_v5.css?v=${SW_V}`,
   `./css/boot_shell_inline_extract_v1.css?v=${SW_V}`,
   `./js/boot_fallback_gate_v1.js?v=${SW_V}`,
   `./js/bootstrap_v5.js?v=${SW_V}`,
