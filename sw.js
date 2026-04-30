@@ -42,6 +42,10 @@ const CORE_JS_PATHS = [
   "./js/runtime_orchestration_seam_v5.js",
   "./js/top_level_navigation_transition_seam_v5.js",
   "./js/app_shell_v5.js",
+  "./js/app_local_utils_v5.js",
+  "./js/trips_unified_filter_bridge_v5.js",
+  "./js/theme_runtime_seam_v5.js",
+  "./js/ui_browser_helpers_v5.js",
   "./js/app_v5.js",
 ];
 // END GENERATED: CORE_JS_PATHS

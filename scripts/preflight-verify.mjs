@@ -479,10 +479,10 @@ if (bootstrapJs && appJs) {
       fail(`startup app-owned module present: ${rel}`);
     }
 
-    if (SW_CORE_JS_EXCLUDED_PATHS.includes(rel)) {
-      pass(`startup app-owned module excluded from SW core: ${rel}`);
+    if (SW_CORE_JS_PATHS.includes(rel)) {
+      pass(`startup app-owned module included in SW core: ${rel}`);
     } else {
-      fail(`startup app-owned module excluded from SW core: ${rel}`);
+      fail(`startup app-owned module included in SW core: ${rel}`);
     }
   }
 }

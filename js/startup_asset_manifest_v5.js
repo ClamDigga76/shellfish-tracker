@@ -38,8 +38,7 @@ export const BOOTSTRAP_REQUIRED_ASSET_PATHS = [
 ];
 
 
-// Startup-time modules intentionally loaded by app_v5.js at boot but app-owned
-// (network-first), so they remain outside service worker core JS ownership.
+// Startup-time modules loaded by app_v5.js at boot.
 export const STARTUP_APP_OWNED_MODULE_PATHS = [
   "./app_local_utils_v5.js",
   "./trips_unified_filter_bridge_v5.js",
@@ -51,14 +50,11 @@ export const STARTUP_APP_OWNED_MODULE_PATHS = [
 // enforced by scripts/preflight-verify.mjs to prevent drift.
 export const SW_CORE_JS_PATHS = [
   ...STARTUP_MODULE_PATHS,
+  ...STARTUP_APP_OWNED_MODULE_PATHS,
   APP_ENTRY_MODULE_PATH
 ];
 
-// Startup-time app-owned modules stay explicitly excluded from SW core JS
-// ownership to preserve current runtime/cache behavior.
-export const SW_CORE_JS_EXCLUDED_PATHS = [
-  ...STARTUP_APP_OWNED_MODULE_PATHS
-];
+export const SW_CORE_JS_EXCLUDED_PATHS = [];
 
 export const SW_REGISTRATION_PATH = "./sw.js";
 
@@ -76,6 +72,8 @@ export const REQUIRED_CORE_CACHE_STATIC_PATHS = [
   "./manifest.webmanifest",
   "./css/shell_shared_v5.css",
   "./css/shell_feature_surfaces_v5.css",
+  "./css/trip_form_v5.css",
+  "./css/reports_v5.css",
   "./css/boot_shell_inline_extract_v1.css",
   "./js/boot_fallback_gate_v1.js",
   "./js/bootstrap_v5.js"
