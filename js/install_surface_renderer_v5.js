@@ -2,7 +2,7 @@ import { createStatusSurfaceSeam } from "./status_surface_seam_v5.js";
 
 export function resolveInstallSummary(model){
   const actionNeeded = !!(model?.actionEnabled && model?.showAction);
-  return actionNeeded ? "Install action available" : "Install setup is up to date";
+  return actionNeeded ? "Install available" : "Install status up to date";
 }
 
 export function resolveInstallStatusPill(model){
