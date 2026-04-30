@@ -1,6 +1,22 @@
 # Parking Lot
 
-## Active brand/docs items
+## Current status note — 2026-04-30
+
+This repo file is **not currently the full working master parking lot**.
+
+It currently preserves the locked/historical brand docs item below. The full working parking lot should be refreshed in a separate pass so this workflow-doc cleanup does not widen into a parking-lot source-of-truth rewrite.
+
+Follow-up item:
+
+### PARKINGLOT-REFRESH-2 — Replace repo parking lot with current working master
+
+- **Status:** Needed as a separate docs/parking-lot pass
+- **Goal:** Replace this repo parking lot with the latest confirmed working master parking lot.
+- **Do not combine with:** Vibe Coder workflow file syncs, runtime patches, visual asset patches, or release candidate runtime checks.
+
+---
+
+## Historical / locked brand docs items
 
 ### BRAND-0 — Brand Source Image Lock
 - **Status:** Locked (completed in docs lane)

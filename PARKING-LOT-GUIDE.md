@@ -1,4 +1,4 @@
-# PARKING-LOT-GUIDE.md — Bank the Catch / VibeCoder 4.5 Repo-Compatible Slim Core
+# PARKING-LOT-GUIDE.md — Vibe Coder 5.0 Router-First Core
 
 ## Purpose
 This file defines how the Parking Lot and Suggestions lane should be used.
@@ -32,6 +32,7 @@ For Parking Lot work:
 
 Do not create a separate preview stage unless the user explicitly wants one.
 
+
 ## Suggestions lane
 Keep a separate Suggestions lane for ideas that are:
 - useful
@@ -61,10 +62,6 @@ Combine items only when they share:
 - low regression risk
 - similar likely files or surfaces
 - no hidden second feature
-
-For presentation cleanup passes:
-- keep the pass narrow to one visual seam (or one safe tightly related seam batch)
-- do not silently bundle multiple visual seams into one cleanup pass
 
 ## Removal rule
 Do not remove a Parking Lot item just because a draft was written.

@@ -1,6 +1,6 @@
 # Bank the Catch
 
-Bank the Catch is a mobile-first shellfish trip logging PWA focused on local-first recordkeeping, report clarity, offline/update trust, and future release readiness for mobile-style use.
+Bank the Catch is a mobile-first shellfish trip logging PWA focused on local-first recordkeeping, Insights clarity, offline/update trust, and future release readiness for mobile-style use.
 
 ## Current posture
 
@@ -8,7 +8,7 @@ This repo is currently being prepared for an initial web release candidate.
 
 The active release workflow is:
 - keep changes small and safe
-- validate runtime version/update alignment
+- validate runtime version/update alignment for runtime-facing changes
 - run repo checks before release-sensitive changes
 - use manual device validation for release-candidate signoff
 
@@ -37,29 +37,41 @@ For runtime-facing app changes, use:
 
 - `npm run check:repo`
 - `node scripts/preflight-verify.mjs --expect-version=<new version>`
+- `npm run smoke`
 
-Run smoke checks when the touched behavior has a relevant smoke surface.
+If `npm run smoke` is unavailable in a local environment, report that clearly and run the nearest stable smoke or verification check available.
 
 For docs/workflow-only changes:
 - no runtime version bump
 - no runtime preflight required
+- verify wording clarity, helper hierarchy, and non-conflicting guidance
 
 ## Workflow docs
 
-The repo uses a slim VibeCoder 4.5 workflow-doc set.
+The repo uses a Vibe Coder 5.0 router-first workflow-doc set.
 
 Start here:
 - `AGENTS.md` — primary workflow law file
-- `START-HERE.md` — quick map
-- `PROJECT-INSTRUCTION-BLOCK.md` — project wrapper
+- `START-HERE.md` — complete helper-file index and quick map
+- `VIBE-CODER-TASK-ROUTER.md` — first-step task lane routing helper
+- `PROJECT-INSTRUCTION-BLOCK.md` — project boot layer / instruction wrapper
 - `STATE-SNAPSHOT.md` — compact handoff/resume helper
 - `RUNTIME-PULL-LOCK.md` — runtime re-sync / anti-drift helper
 - `PARKING-LOT-GUIDE.md` — Parking Lot / Suggestions behavior
-- `testing-checklist.md` — verification loop
-- `docs/PARKING-LOT.md` — active parking lot items and status
+- `patch-prompt-style.md` — browser-based Codex / web sandbox patch prompt style
+- `codex-app-style.md` — desktop app / local / worktree patch style
+- `testing-checklist.md` — verification loop and hierarchy checks
+- `PATCH-SAFETY-STACK.md` — quiet safety stack for meaningful patch work
+- `DECISION-LOCK-LEDGER.md` — locked/active/watch/deprecated/avoid decision ledger
+- `CODEX-PR-PUSH-WORKFLOW.md` — GitHub-connected PR workflow; Codex may attempt push/PR, Jeremy merges
+- `CODEX-IMAGE-PACK-HANDOFF-RULE.md` — visual reference / Codex image-pack workflow
+- `ACCEPTANCE-CHECKS-VS-MANUAL-QA-RULE.md` — separates Codex acceptance checks from Jeremy manual QA
+- `BANK-THE-CATCH-YTD-PAID-STRATEGY.md` — Bank the Catch Home / Trips / Insights / YTD / free-paid strategy
+- `BTC-REPO-ASSET-REFERENCE-GUIDE.md` — repo-side image/brand asset reference guidance
+- `docs/PARKING-LOT.md` — active parking lot status / follow-up tracking
 - `docs/brand/brand-source-of-truth.md` — current brand source-image lock
 - `docs/brand/reference/README.md` — docs-only brand source staging rules
-- `docs/brand/reference/bank-the-catch-brand-authority-2026-04-27.md` — immutable brand authority artifact
+- `docs/release-candidate-pwa-validation-matrix.md` — release-candidate device/mode validation matrix
 
 ## Release-candidate note
 
