@@ -257,7 +257,7 @@ if (shellSource) {
   checkPattern(shellSource, 'trips tab present', /key:\s*["']all_trips["']\s*,\s*label:\s*["']Trips["']/, 'all_trips tab label');
   checkPattern(shellSource, 'new trip tab present', /key:\s*["']new["']\s*,\s*label:\s*["']New["']/, 'new tab label');
   checkPattern(shellSource, 'new trip title mapping present', /new:\s*["']New Trip["']/, 'header title map for new trip');
-  checkPattern(shellSource, 'reports tab present', /key:\s*["']reports["']\s*,\s*label:\s*["']Reports["']/, 'reports tab label');
+  checkPattern(shellSource, 'reports tab present', /key:\s*["']reports["']\s*,\s*label:\s*["']Insights["']/, 'reports tab label');
   checkPattern(shellSource, 'settings tab present', /key:\s*["']settings["']\s*,\s*label:\s*["']Settings["']/, 'settings tab label');
 }
 
@@ -294,9 +294,11 @@ if (reportsScreenSource) {
 }
 
 if (reportsShellControlsSource) {
+
+  checkPattern(reportsShellControlsSource, 'reports overview tab label present', /key:\s*["']insights["']\s*,\s*label:\s*["']Overview["']/, 'reports insights key labeled Overview');
   checkIncludesAny(reportsShellControlsSource, 'reports timeframe filter marker present', [
-    'aria-label="Reports timeframe controls"',
-    'aria-label="Reports quick range filters"',
+    'aria-label="Insights timeframe controls"',
+    'aria-label="Insights quick range filters"',
     'aria-label="Reports timeframe filter"',
   ]);
 }

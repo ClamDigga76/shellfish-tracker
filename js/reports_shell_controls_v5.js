@@ -16,7 +16,7 @@ export function createReportsShellControlsSeam(deps){
   const REPORTS_PRESET_MODES = REPORTS_PRESET_FILTER_ITEMS.map((item)=> item.key);
 
   const REPORTS_SECTION_ITEMS = [
-    { key: "insights", label: "Insights", intro: "Top takeaways for this range." },
+    { key: "insights", label: "Overview", intro: "Top takeaways for this range." },
     { key: "high-value", label: "High Value Drivers", intro: "Area, dealer, rate, and productivity drivers." },
     { key: "charts", label: "Charts", intro: "Trend direction at a glance." },
     { key: "seasonality", label: "Seasonality", intro: "Matched windows across years." },
@@ -70,14 +70,14 @@ export function createReportsShellControlsSeam(deps){
 
     return `
     <div class="reportsTopShell reportsTopShell--${escapeHtml(shellMode)}">
-      <section class="reportsTimeframeShell" aria-label="Reports timeframe controls">
+      <section class="reportsTimeframeShell" aria-label="Insights timeframe controls">
         ${timeframeFilterControls.renderPresetChipRow({
             items: REPORTS_PRESET_FILTER_ITEMS,
             activeKey: activePresetFilterKey,
             dataAttr: "data-rf",
             chipClass: "reportsPrimaryFilterChip",
             groupClass: "reportsTimeframeControl reportsPrimaryFilterBar",
-            ariaLabel: "Reports quick range filters",
+            ariaLabel: "Insights quick range filters",
             role: "tablist",
             itemRole: "tab",
             includeAriaSelected: true,
@@ -85,7 +85,7 @@ export function createReportsShellControlsSeam(deps){
           })}
       </section>
 
-      <div class="reportsAdvancedShell" aria-label="Reports advanced filters">
+      <div class="reportsAdvancedShell" aria-label="Insights advanced filters">
         <button class="chip segBtn repAdvToggle reportsAdvancedDisclosure ${isAdvancedActive ? "on is-selected" : ""}" type="button" aria-expanded="${advOpen ? "true" : "false"}" aria-controls="reportsAdvancedInlinePanel">
           <span class="reportsAdvancedDisclosureTitle">Advanced</span>
           <span class="reportsAdvancedDisclosureState">${escapeHtml(activeFilterSummaryLabel)}</span>
@@ -96,8 +96,8 @@ export function createReportsShellControlsSeam(deps){
         ${advPanel}
       </div>
 
-      <section class="reportsNavShell" aria-label="Reports sections">
-        <div class="reportsSectionSwitch" role="tablist" aria-label="Reports sections">
+      <section class="reportsNavShell" aria-label="Insights sections">
+        <div class="reportsSectionSwitch" role="tablist" aria-label="Insights sections">
           ${REPORTS_SECTION_ITEMS.map((item)=> renderReportsSectionChip(item)).join("")}
         </div>
       </section>

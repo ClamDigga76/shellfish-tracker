@@ -1081,7 +1081,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         monthRows: monthRowsChronological,
         metricKey,
         windowSize: getRollingWindowForMetric(metricKey, { surface: "reports" }),
-        basisLabel: "Rolling trend • active Reports range"
+        basisLabel: "Rolling trend • active Insights range"
       })
     ])
   );

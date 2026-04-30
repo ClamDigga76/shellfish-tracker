@@ -70,7 +70,7 @@ export function createReportsOverviewSectionsSeam(deps){
     const beginnerEmpty = !hasSavedTrips;
     const title = invalidRange
       ? "Choose a valid date range"
-      : (beginnerEmpty ? "Add a trip to start Reports" : "No trips in this range");
+      : (beginnerEmpty ? "Add a trip to start Insights" : "No trips in this range");
     const body = invalidRange
       ? "Set both dates, then tap Apply."
       : (beginnerEmpty
@@ -109,10 +109,10 @@ export function createReportsOverviewSectionsSeam(deps){
       windowSize: getRollingWindowForMetric(metricKey, { surface: "reports" }),
       basisLabel
     });
-    const rollingTrips = buildRollingModel("trips", "Rolling trips trend • active Reports range");
-    const rollingPounds = buildRollingModel("pounds", "Rolling pounds trend • active Reports range");
-    const rollingAmount = buildRollingModel("amount", "Rolling amount trend • active Reports range");
-    const rollingPpl = buildRollingModel("ppl", "Rolling Price Per Pound trend • active Reports range");
+    const rollingTrips = buildRollingModel("trips", "Rolling trips trend • active Insights range");
+    const rollingPounds = buildRollingModel("pounds", "Rolling pounds trend • active Insights range");
+    const rollingAmount = buildRollingModel("amount", "Rolling amount trend • active Insights range");
+    const rollingPpl = buildRollingModel("ppl", "Rolling Price Per Pound trend • active Insights range");
 
     const trendTone = (delta, epsilon = 0.02)=> {
       if(Math.abs(delta) <= epsilon) return "steady";
@@ -293,10 +293,10 @@ export function createReportsOverviewSectionsSeam(deps){
     const chartGroups = buildHighValueChartDeckManifest();
     return reportsSection({
       title: "High Value Drivers",
-      intro: "See which areas, dealers, rates, and productivity patterns are driving value in the active Reports filters.",
+      intro: "See which areas, dealers, rates, and productivity patterns are driving value in the active Insights filters.",
       body: `<div class="reportsHeroCard homeInsightsHero">
         <div class="reportsHeroEyebrow">High Value Drivers deck</div>
-        <h2 class="reportsHeroHeadline">Decision support for your active Reports filters.</h2>
+        <h2 class="reportsHeroHeadline">Decision support for your active Insights filters.</h2>
         <p class="reportsHeroSub">Use this deck to spot where money, pounds, rate, and productivity are coming from.</p>
       </div>
       <div class="reportsChartsStack homeInsightsChartStack">
@@ -504,7 +504,7 @@ export function createReportsOverviewSectionsSeam(deps){
 
     return reportsSection({
       title: "Records",
-      intro: "High and low trip records within the active Reports range.",
+      intro: "High and low trip records within the active Insights range.",
       body: `<div class="reportsTablesStack">${renderTableCard("High / Low Summary", highLowBody)}</div>`,
       extraClass: "reportsSection--records"
     });
@@ -623,7 +623,7 @@ export function createReportsOverviewSectionsSeam(deps){
     if(activeReportsSection === "records") return renderRecordsBlock(context);
     if(activeReportsSection === "detail") return renderDetailBlock(context);
     return reportsSection({
-      title: "Insights",
+      title: "Overview",
       intro: "Range-wide summaries plus latest comparable-month window cards.",
       body: `${highlightsStrip || `<div class="reportsHighlightsEmpty"><div class="muted small">Highlights appear automatically as more trips are added.</div></div>`}`,
       extraClass: "reportsSection--highlights"

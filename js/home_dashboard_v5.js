@@ -369,7 +369,7 @@ export function createHomeDashboardRenderer({
           eyebrow: "Start here",
           title: "Add a trip to unlock Home.",
           body: "Save your first trip, then Home fills in automatically.",
-          supportHtml: `<div class="homeBeginnerSteps" aria-label="Beginner next steps"><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">1</span><span>Add a trip in New Trip.</span></div><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">2</span><span>Return to Home for your latest summary.</span></div><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">3</span><span>Open Reports after a few more trips.</span></div></div>`,
+          supportHtml: `<div class="homeBeginnerSteps" aria-label="Beginner next steps"><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">1</span><span>Add a trip in New Trip.</span></div><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">2</span><span>Return to Home for your latest summary.</span></div><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">3</span><span>Open Insights after a few more trips.</span></div></div>`,
           actions: [
             { id: "homeBeginnerPrimary", label: "＋ New Trip", tone: "primary" },
             { id: "homeBeginnerHelp", label: "Quick start help" },
