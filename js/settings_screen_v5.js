@@ -210,8 +210,8 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Install</div>
-            <div class="settingsAccordionTitle">Browser/install mode</div>
-            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Install readiness check in progress</div>
+            <div class="settingsAccordionTitle">App install status</div>
+            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Checking install status</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill" id="installStatusPill">Checking</span>
@@ -508,7 +508,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     if (installSummaryLine) {
       installSummaryLine.textContent = installModel
         ? resolveInstallSummary(installModel)
-        : "Install readiness check in progress";
+        : "Checking install status";
     }
     if (installStatusPill) {
       installStatusPill.textContent = installModel
