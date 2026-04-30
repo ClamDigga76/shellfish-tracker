@@ -127,18 +127,22 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
         <div style="margin-top:8px"><b>Storage note:</b> storage can differ by mode or device, so backup is the safe bridge when you switch.</div>
         <div style="margin-top:8px">Settings shows quick mode + action status. This section has the full install steps.</div>
         <div style="margin-top:8px"><b>iPhone/iPad Safari</b></div>
-        <ol style="margin:8px 0 0 18px">
-          <li>Open Bank the Catch in <b>Safari</b>.</li>
-          <li>Tap <b>Share</b> (square with arrow).</li>
-          <li>Choose <b>Add to Home Screen</b>, then tap <b>Add</b>.</li>
-        </ol>
+        <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+          <span class="chip small">1 Safari</span>
+          <span class="chip small">2 Share button</span>
+          <span class="chip small">3 Add to Home Screen</span>
+          <span class="chip small">4 Add</span>
+        </div>
+        <div class="muted small" style="margin-top:8px">Tap the Share button — the square with the arrow — then choose Add to Home Screen.</div>
         <div style="margin-top:8px"><b>Android Chrome</b></div>
-        <ol style="margin:8px 0 0 18px">
-          <li>Open Bank the Catch in <b>Chrome</b>.</li>
-          <li>Use Chrome’s install prompt or tap the menu.</li>
-          <li>Choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</li>
-        </ol>
-        <div style="margin-top:8px"><b>Tip:</b> If Settings says <b>Browser mode</b>, open the Home Screen icon after install to switch into Installed mode.</div>
+        <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+          <span class="chip small">1 Chrome</span>
+          <span class="chip small">2 Menu</span>
+          <span class="chip small">3 Install app</span>
+          <span class="chip small">4 Confirm</span>
+        </div>
+        <div class="muted small" style="margin-top:8px">Tap the Chrome Menu in the top-right, then choose Install app or Add to Home screen.</div>
+        <div style="margin-top:8px"><b>Tip:</b> After install: open Bank the Catch from your Home Screen app icon to switch into Installed mode.</div>
         <div style="margin-top:8px"><b>Need help?</b> Email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</div>
       </div>
     </div>
