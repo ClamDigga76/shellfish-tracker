@@ -790,7 +790,7 @@ async function ensureHomeMetricDetailRenderer(){
 
 function renderReports(options){
   if(reportsScreenRenderer?.renderReports) return reportsScreenRenderer.renderReports(options);
-  renderSurfaceLoading("reports", "Loading Reports…");
+  renderSurfaceLoading("reports", "Loading Insights…");
   void ensureReportsScreenRenderer().then(()=> {
     if(String(state.view || "home") === "reports" || options?.homeMetricOnly) render();
   }).catch((error)=> showFatal(error));

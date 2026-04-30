@@ -2,7 +2,7 @@ const TABS = [
   { key: "home", label: "Home", icon: "home" },
   { key: "all_trips", label: "Trips", icon: "trips" },
   { key: "new", label: "New", icon: "plus", aria: "New Trip", isPlus: true },
-  { key: "reports", label: "Reports", icon: "reports" },
+  { key: "reports", label: "Insights", icon: "reports" },
   { key: "settings", label: "Settings", icon: "settings" },
 ];
 
@@ -24,7 +24,7 @@ export function renderPageHeader(viewKey, { escapeHtml }){
     new: "New Trip",
     edit: "Edit Trip",
     review: "Review Trip",
-    reports: "Reports",
+    reports: "Insights",
     settings: "Settings",
     help: "Help",
     about: "About"

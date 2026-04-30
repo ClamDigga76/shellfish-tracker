@@ -63,7 +63,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
       Object.freeze({ key: "trips", title: "Latest vs previous month", context: "Bars • trip totals for the latest visible month pair" }),
       Object.freeze({ key: "tripsCumulativeTrend", title: "Cumulative trips over selected range", context: "Running trip total across visible months" })
     ]),
-    teaserText: "Unlock Reports to compare your highest and lowest days, areas, and dealers."
+    teaserText: "Unlock Full Insights to compare your highest and lowest days, areas, and dealers."
   }),
   pounds: Object.freeze({
     helperLine: "Total pounds landed in the selected period.",
@@ -73,7 +73,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
       Object.freeze({ key: "pounds", title: "Latest vs previous month", context: "Bars • pounds for the latest visible month pair" }),
       Object.freeze({ key: "poundsPerTripTrend", title: "Avg pounds per trip over time", context: "How Avg pounds per trip moved across visible months" })
     ]),
-    teaserText: "Unlock Reports to see which areas produce the strongest catches."
+    teaserText: "Unlock Full Insights to see which areas produce the strongest catches."
   }),
   amount: Object.freeze({
     helperLine: "Total paid amount from trips in the selected period.",
@@ -83,7 +83,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
       Object.freeze({ key: "amount", title: "Latest vs previous month", context: "Bars • paid totals for the latest visible month pair" }),
       Object.freeze({ key: "amountPerTripTrend", title: "Avg amount per trip over time", context: "Average paid per trip across visible months" })
     ]),
-    teaserText: "Unlock Reports to compare dealers, price trends, and deeper money insights."
+    teaserText: "Unlock Full Insights to compare dealers, price trends, and deeper money insights."
   }),
   ppl: Object.freeze({
     helperLine: "Calculated from total paid ÷ total pounds.",
@@ -93,7 +93,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
       Object.freeze({ key: "ppl", title: "Latest vs previous month", context: "Bars • Avg $ / lb for the latest visible month pair" }),
       Object.freeze({ key: "pplRateVsPoundsTrend", title: "Pounds support over time", context: "Monthly pounds context behind Avg $ / lb movement" })
     ]),
-    teaserText: "Unlock Reports to compare dealer pay rates and price-per-pound trends."
+    teaserText: "Unlock Full Insights to compare dealer pay rates and price-per-pound trends."
   })
 });
 
@@ -1208,7 +1208,7 @@ export function createReportsMetricDetailSeam(deps){
             } : null,
             detailCharts.amountTrend ? {
               title: "Amount • Monthly",
-              context: "Line • full months in the selected Reports date range",
+              context: "Line • full months in the selected Insights date range",
               canvasId: "c_amount_trend",
               chartModel: detailCharts.amountTrend,
               metricKey: "amount"

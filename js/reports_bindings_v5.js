@@ -119,7 +119,7 @@ export function createReportsBindingsSeam(){
         const key = String(btn.getAttribute('data-reports-section') || 'insights').toLowerCase();
         if(key === activeReportsSection) return;
         const section = REPORTS_SECTION_ITEMS.find((item)=> item.key === key);
-        queueReportsAnnouncement(`Reports section ${section?.label || 'updated'}.`);
+        queueReportsAnnouncement(`Insights section ${section?.label || 'updated'}.`);
         queueReportsFocusIntent({ type: 'section-tab', key });
         runReportsTransition({
           mutate: ()=>{

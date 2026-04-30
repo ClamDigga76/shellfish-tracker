@@ -303,25 +303,25 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
       monthRows,
       metricKey: "trips",
       windowSize: getRollingWindowForMetric("trips", { surface: rollingSurface }),
-      basisLabel: isHomeMetricDetail ? "Rolling trips trend • visible Home months" : "Rolling trips trend • active Reports range"
+      basisLabel: isHomeMetricDetail ? "Rolling trips trend • visible Home months" : "Rolling trips trend • active Insights range"
     }),
     poundsRollingTrend: detailCharts.poundsRollingTrend || buildRollingSeriesFromMonthRows({
       monthRows,
       metricKey: "pounds",
       windowSize: getRollingWindowForMetric("pounds", { surface: rollingSurface }),
-      basisLabel: isHomeMetricDetail ? "Rolling pounds trend • visible Home months" : "Rolling pounds trend • active Reports range"
+      basisLabel: isHomeMetricDetail ? "Rolling pounds trend • visible Home months" : "Rolling pounds trend • active Insights range"
     }),
     amountRollingTrend: detailCharts.amountRollingTrend || buildRollingSeriesFromMonthRows({
       monthRows,
       metricKey: "amount",
       windowSize: getRollingWindowForMetric("amount", { surface: rollingSurface }),
-      basisLabel: isHomeMetricDetail ? "Rolling amount trend • visible Home months" : "Rolling amount trend • active Reports range"
+      basisLabel: isHomeMetricDetail ? "Rolling amount trend • visible Home months" : "Rolling amount trend • active Insights range"
     }),
     pplRollingTrend: detailCharts.pplRollingTrend || buildRollingSeriesFromMonthRows({
       monthRows,
       metricKey: "ppl",
       windowSize: getRollingWindowForMetric("ppl", { surface: rollingSurface }),
-      basisLabel: isHomeMetricDetail ? "Rolling Price Per Pound trend • visible Home months" : "Rolling Price Per Pound trend • active Reports range"
+      basisLabel: isHomeMetricDetail ? "Rolling Price Per Pound trend • visible Home months" : "Rolling Price Per Pound trend • active Insights range"
     })
   };
   const primaryBasisByMetric = compareFoundation.primaryBasis || {};

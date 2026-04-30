@@ -935,7 +935,7 @@ export function createUpdateRuntimeStatusSeam({
       { key: "support_two_sentences", label: "Support analysis uses no more than 2 sentences" },
       { key: "compare_rows", label: "Compare rows are structured/readable" },
       { key: "charts_below", label: "Charts render below the cards" },
-      { key: "reports_metric_detail", label: "Reports metric detail still works" },
+      { key: "reports_metric_detail", label: "Insights metric detail still works" },
       { key: "back_navigation", label: "Back navigation returns cleanly" }
     ];
     const lines = [];

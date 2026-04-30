@@ -9,7 +9,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="helpHubNav" style="margin-top:10px">
         <button class="chip" type="button" data-helpjump="home">Home</button>
         <button class="chip" type="button" data-helpjump="trips">Trips</button>
-        <button class="chip" type="button" data-helpjump="reports">Reports</button>
+        <button class="chip" type="button" data-helpjump="reports">Insights</button>
         <button class="chip" type="button" data-helpjump="settings">Settings</button>
         <button class="chip" type="button" data-helpjump="newtrip">New Trip</button>
         <button class="chip" type="button" data-helpjump="backups">Backup & Restore</button>
@@ -21,11 +21,11 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <b class="helpSectionTitle">Quick start</b>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
-        <div><b>Log one trip first.</b> Home updates right away, and Reports gets more useful after a few trips.</div>
+        <div><b>Log one trip first.</b> Home updates right away, and Insights gets more useful after a few trips.</div>
         <ol style="margin:8px 0 0 18px">
           <li>Open <b>New Trip</b> and save an entry.</li>
           <li>Check <b>Home</b> for totals and your latest trip snapshot.</li>
-          <li>Use <b>Reports</b> when you want trend comparisons.</li>
+          <li>Use <b>Insights</b> when you want trend comparisons.</li>
         </ol>
       </div>
     </div>
@@ -72,7 +72,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
     </div>
 
     <div class="card">
-      <b id="help_jump_reports" class="helpSectionTitle">Reports</b>
+      <b id="help_jump_reports" class="helpSectionTitle">Insights</b>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> date-range trends by dealer, area, and month.</div>

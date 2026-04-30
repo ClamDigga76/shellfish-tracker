@@ -142,7 +142,7 @@ export function createReportsMetricRouteSeam(deps){
       ? 0
       : filteredReportsResult?.transparency?.excludedQuarantinedCount || 0);
     const quarantinedSupportCopy = excludedQuarantinedCount > 0
-      ? `Some trips are excluded from Reports date filtering because their date is invalid (quarantined): ${excludedQuarantinedCount}.`
+      ? `Some trips are excluded from Insights date filtering because their date is invalid (quarantined): ${excludedQuarantinedCount}.`
       : "";
 
     const resolvedReportsRange = isHomeMetricDetail && homeScope
