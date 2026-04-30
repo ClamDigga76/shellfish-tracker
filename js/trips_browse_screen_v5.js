@@ -13,7 +13,8 @@ export function createTripsBrowseScreenRenderer(deps){
     showToast,
     ensureTripsFilter,
     getTripsFilteredRows,
-    resetTripsFilters
+    resetTripsFilters,
+    onShareTripCard
   } = deps;
 
   function renderAllTrips(){
@@ -195,6 +196,31 @@ export function createTripsBrowseScreenRenderer(deps){
         state.view = "edit";
         saveState();
         renderApp();
+      });
+    });
+
+    root.querySelectorAll("[data-trip-action]").forEach((btn)=>{
+      btn.addEventListener("click", async (ev)=>{
+        ev.preventDefault();
+        ev.stopPropagation();
+        const action = String(btn.getAttribute("data-trip-action") || "");
+        const id = String(btn.getAttribute("data-id") || "");
+        if(!id) return;
+        if(action === "edit") {
+          state.editId = id;
+          state.view = "edit";
+          saveState();
+          renderApp();
+          return;
+        }
+        if(action === "share") {
+          const trip = sorted.find((row)=> String(row?.id || "") === id) || null;
+          if(!trip || typeof onShareTripCard !== "function") {
+            showToast("Share card unavailable");
+            return;
+          }
+          await onShareTripCard(trip);
+        }
       });
     });
 

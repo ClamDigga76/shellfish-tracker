@@ -43,7 +43,8 @@ export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, re
     return renderTripCardHTML(model, {
       interactive: true,
       variant: "tripsBrowse",
-      auditVariant: "tripsBrowse"
+      auditVariant: "tripsBrowse",
+      showTripsBrowseActions: true
     });
   }
 
