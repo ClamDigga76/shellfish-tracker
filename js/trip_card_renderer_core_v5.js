@@ -86,13 +86,13 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
           <div class="tripCardLeftStack">
             <div class="tripCardTextRow tripCardDate">${escapeHtml(model.dateText)}</div>
             ${model.quarantineStatusText ? `<div class="tripCardTextRow muted small tripCardQuarantineStatus">${escapeHtml(model.quarantineStatusText)}</div>` : ""}
-            ${tripsBrowseActions}
             <div class="tripCardTextRow ${primaryIdentityClass} tripCardIdentityPrimary${model.areaUnknown ? " tripCardAreaUnknown" : ""}">${primaryIdentityContent}</div>
             <div class="tripCardTextRow ${secondaryIdentityClass} tripCardIdentitySecondary">${escapeHtml(secondaryIdentity)}</div>
             <div class="tripCardTextRow tripCardSpecies" title="Species">${escapeHtml(model.species)}</div>
             ${model.notesPreview ? `<div class="tripCardTextRow tripCardNotes" title="Notes">${escapeHtml(model.notesPreview)}</div>` : ""}
           </div>
           <div class="catchFoot tripCardMetricsCol">
+            ${tripsBrowseActions}
             ${metricRows}
             ${model.settlementText ? `<span class="tripCardSettlementSubtle">${escapeHtml(model.settlementText)}</span>` : ""}
           </div>
