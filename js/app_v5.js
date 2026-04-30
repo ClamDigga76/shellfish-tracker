@@ -562,6 +562,13 @@ const tripsUnifiedFilterBridge = createTripsUnifiedFilterBridge({
   resolveAreaValue
 });
 
+
+const tripShareCardSeam = createTripShareCardSeam({
+  parseReportDateToISO,
+  round2: to2,
+  formatMoney
+});
+
 const { renderAllTrips } = createTripsBrowseScreenRenderer({
   getApp,
   getFilterOptionsFromTrips,
@@ -577,6 +584,15 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
   bindDatePill,
   exportTripsWithLabel,
   showToast,
+  onShareTripCard: async (trip)=> {
+    const result = await tripShareCardSeam.shareTripCard(trip);
+    if(result?.ok) {
+      showToast(result.method === "share" ? "Share opened" : "Share card saved");
+      return;
+    }
+    if(result?.reason === "share-canceled") return;
+    showToast("Share card unavailable");
+  },
   ...tripsUnifiedFilterBridge
 });
 

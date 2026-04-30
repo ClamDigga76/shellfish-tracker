@@ -74,26 +74,29 @@
 }
 .tripCardStandard{
   margin:0;
-  padding:16px 16px;
-  border:1px solid var(--border);
-  border-radius:19px;
-  background:linear-gradient(180deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.035) 100%);
-  box-shadow:0 12px 28px rgba(0,0,0,.22);
+  padding:19px 18px;
+  border:1px solid rgba(72,125,255,.36);
+  border-radius:21px;
+  background:linear-gradient(180deg, rgba(7,17,41,.94) 0%, rgba(3,10,29,.97) 100%);
+  box-shadow:inset 0 1px 0 rgba(123,170,255,.18),0 0 0 1px rgba(41,97,222,.2),0 16px 30px rgba(1,6,20,.52),0 0 20px rgba(15,74,215,.2);
   text-align:left;
 }
 .tripCardStandard.tripCardReadOnly{pointer-events:none}
 .tripCardStandard .tripCardGrid{
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,fit-content(46%));
-  gap:15px;
+  grid-template-columns:minmax(0,1fr) minmax(0,fit-content(43%));
+  gap:18px;
   align-items:start;
 }
-.tripCardStandard .tripCardLeftStack{display:grid;gap:4px;align-content:start}
+.tripCardStandard .tripCardActionsRow{display:flex;justify-content:flex-end;gap:9px;margin-bottom:8px;flex-wrap:wrap}
+.tripCardStandard .tripCardActionBtn{padding:6px 14px;border-radius:11px;border:1px solid rgba(86,140,255,.72);background:linear-gradient(180deg, rgba(21,37,77,.55) 0%, rgba(8,18,43,.84) 100%);color:rgba(204,223,255,.96);font-size:12px;line-height:1.2;font-weight:760;letter-spacing:.01em;box-shadow:inset 0 1px 0 rgba(169,199,255,.24),0 0 0 1px rgba(45,98,214,.28);}
+.tripCardStandard .tripCardActionBtn:active{transform:translateY(1px);filter:brightness(.96)}
+.tripCardStandard .tripCardLeftStack{display:grid;gap:6px;align-content:start}
 .tripCardStandard .tripCardTextRow{margin:0}
-.tripCardStandard .tripCardDate{font-size:11px;line-height:1.3;font-weight:760;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted-strong)}
-.tripCardStandard .tripCardArea{font-size:18px;line-height:1.18;font-weight:870;color:var(--text)}
-.tripCardStandard .tripCardDealer{font-size:14px;line-height:1.3;font-weight:650;color:var(--text-muted-strong)}
-.tripCardStandard .tripCardSpecies{font-size:13px;line-height:1.3;font-weight:610;color:var(--text-muted-strong)}
+.tripCardStandard .tripCardDate{font-size:12px;line-height:1.3;font-weight:760;letter-spacing:.06em;text-transform:uppercase;color:rgba(184,202,238,.86)}
+.tripCardStandard .tripCardArea{font-size:20px;line-height:1.18;font-weight:870;color:var(--text)}
+.tripCardStandard .tripCardDealer{font-size:15px;line-height:1.34;font-weight:640;color:rgba(177,194,226,.9)}
+.tripCardStandard .tripCardSpecies{font-size:15px;line-height:1.34;font-weight:640;color:rgba(177,194,226,.9)}
 .tripCardStandard .tripCardIdentityPrimary{white-space:normal}
 .tripCardStandard .tripCardAreaUnknown{display:flex;align-items:flex-start}
 .tripCardStandard .tripCardUnknownBadge{
@@ -113,12 +116,12 @@
 }
 .tripCardStandard .tripCardIdentitySecondary{white-space:normal}
 .tripCardStandard .tripCardNotes{margin-top:2px;font-size:12px;line-height:1.4;font-weight:520;color:var(--muted)}
-.tripCardStandard .tripCardMetricsCol{
+ .tripCardStandard .tripCardMetricsCol{
   display:grid;
   justify-items:end;
   justify-self:end;
   align-content:start;
-  gap:5px;
+  gap:9px;
   text-align:right;
   min-width:0;
   width:auto;
@@ -137,7 +140,7 @@
 }
 .tripCardStandard .tripCardMetricChip .metricValue{
   display:inline-block;
-  font-size:15px;
+  font-size:17px;
   line-height:1.2;
   font-weight:860;
 }
@@ -153,8 +156,8 @@
   font-weight:760;
 }
 .tripCardStandard.tripCardVariantTripsBrowse .tripCardMetricChip.tripCardMetricEmphasis .metricValue{
-  font-size:17px;
-  line-height:1.16;
+  font-size:20px;
+  line-height:1.14;
   font-weight:900;
 }
 .tripCardStandard .tripCardSettlementSubtle{
@@ -167,11 +170,11 @@
   opacity:.92;
 }
 @media (max-width:390px){
-  .tripCardStandard{
-    padding:14px 13px;
+   .tripCardStandard{
+    padding:16px 14px;
   }
   .tripCardStandard .tripCardGrid{
-    gap:10px;
+    gap:12px;
   }
   .tripCardStandard .tripCardArea{
     font-size:17px;

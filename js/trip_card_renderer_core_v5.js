@@ -51,15 +51,17 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
     const {
       interactive = false,
       variant = "standard",
-      auditVariant = ""
+      auditVariant = "",
+      showTripsBrowseActions = false
     } = opts;
-    const tag = interactive ? "button" : "div";
+    const isTripsBrowse = variant === "tripsBrowse";
+    const useButtonShell = interactive && !isTripsBrowse;
+    const tag = useButtonShell ? "button" : "div";
     const role = interactive ? "button" : "group";
     const tab = interactive ? "0" : "-1";
     const idAttr = interactive ? ` data-id="${escapeHtml(model.id)}"` : "";
     const auditVariantAttr = auditVariant ? ` data-trip-card-variant="${escapeHtml(auditVariant)}"` : "";
     const modeClass = interactive ? "tripCardInteractive" : "tripCardReadOnly";
-    const isTripsBrowse = variant === "tripsBrowse";
     const variantClass = isTripsBrowse ? "tripCardVariantTripsBrowse" : "tripCardVariantStandard";
     const primaryIdentity = model.area;
     const primaryIdentityContent = model.areaUnknown
@@ -74,12 +76,17 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
             <span class="catchMetric tripCardMetricChip"><b class="metricValue rate ppl">${escapeHtml(model.valueText)}</b></span>
         `;
 
+    const tripsBrowseActions = (isTripsBrowse && showTripsBrowseActions)
+      ? `<div class="tripCardActionsRow" role="group" aria-label="Trip actions"><button class="tripCardActionBtn" type="button" data-trip-action="edit" data-id="${escapeHtml(model.id)}">Edit Trip</button><button class="tripCardActionBtn" type="button" data-trip-action="share" data-id="${escapeHtml(model.id)}">Share Card</button></div>`
+      : "";
+
     return `
-      <${tag} class="trip triprow catchCard tripCardStandard ${modeClass} ${variantClass}"${idAttr}${auditVariantAttr} role="${role}" tabindex="${tab}"${interactive ? ' type="button"' : ""}>
+      <${tag} class="trip triprow catchCard tripCardStandard ${modeClass} ${variantClass}"${idAttr}${auditVariantAttr} role="${role}" tabindex="${tab}"${useButtonShell ? ' type="button"' : ""}>
         <div class="tripCardGrid">
           <div class="tripCardLeftStack">
             <div class="tripCardTextRow tripCardDate">${escapeHtml(model.dateText)}</div>
             ${model.quarantineStatusText ? `<div class="tripCardTextRow muted small tripCardQuarantineStatus">${escapeHtml(model.quarantineStatusText)}</div>` : ""}
+            ${tripsBrowseActions}
             <div class="tripCardTextRow ${primaryIdentityClass} tripCardIdentityPrimary${model.areaUnknown ? " tripCardAreaUnknown" : ""}">${primaryIdentityContent}</div>
             <div class="tripCardTextRow ${secondaryIdentityClass} tripCardIdentitySecondary">${escapeHtml(secondaryIdentity)}</div>
             <div class="tripCardTextRow tripCardSpecies" title="Species">${escapeHtml(model.species)}</div>
