@@ -26,7 +26,7 @@ export function createHomeDashboardRenderer({
   renderHomeMetricDetail,
   getInstallSurfaceModel,
   runInstallAction,
-  renderStandardReadOnlyTripCard,
+  renderTripsBrowseReadOnlyTripCard,
   createTripShareCardSeam,
   openModal,
   closeModal,
@@ -391,14 +391,14 @@ export function createHomeDashboardRenderer({
     const lastSavedTripHtml = newestSavedTrip
       ? (() => {
         const fallbackDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "Date not set";
-        if (typeof renderStandardReadOnlyTripCard !== "function") {
+        if (typeof renderTripsBrowseReadOnlyTripCard !== "function") {
           return `
             <div class="emptyState compact homeLastTripFallback">
               <div class="emptyStateTitle">Latest saved trip • ${escapeHtml(fallbackDate)}</div>
             </div>
           `;
         }
-        return `<div class="homeLastTripCardWrap">${renderStandardReadOnlyTripCard(newestSavedTrip, { variant: "standard" })}</div>`;
+        return `<div class="homeLastTripCardWrap">${renderTripsBrowseReadOnlyTripCard(newestSavedTrip)}</div>`;
       })()
       : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No trip saved yet</div><div class="emptyStateBody">Save your first trip to show it here.</div></div>`;
 
@@ -541,7 +541,7 @@ export function createHomeDashboardRenderer({
       homeLastTripShareBtn.onclick = () => {
         openScreenshotCardPreview({
           trip: newestSavedTrip,
-          renderStandardReadOnlyTripCard,
+          renderTripsBrowseReadOnlyTripCard,
           openModal,
           closeModal,
           showToast,

@@ -283,7 +283,7 @@ function downloadBlob(blob, filename) {
 
 export function openScreenshotCardPreview({
   trip,
-  renderStandardReadOnlyTripCard,
+  renderTripsBrowseReadOnlyTripCard,
   openModal,
   closeModal,
   showToast,
@@ -294,7 +294,7 @@ export function openScreenshotCardPreview({
     if (typeof showToast === "function") showToast("Trip preview unavailable");
     return false;
   }
-  if (typeof renderStandardReadOnlyTripCard !== "function") {
+  if (typeof renderTripsBrowseReadOnlyTripCard !== "function") {
     if (typeof showToast === "function") showToast("Trip preview unavailable");
     return false;
   }
@@ -316,7 +316,7 @@ export function openScreenshotCardPreview({
             <div class="homeScreenshotCardPreviewSubhead">${typeof escapeHtml === "function" ? escapeHtml(subtitle) : subtitle}</div>
             <div class="homeScreenshotCardPreviewDivider" aria-hidden="true"><span></span></div>
           </div>
-          <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(trip, { variant: "standard" })}</div>
+          <div class="homeScreenshotCardPreviewCard">${renderTripsBrowseReadOnlyTripCard(trip)}</div>
           <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>
         </div>
         <div class="homeScreenshotCardPreviewActions">

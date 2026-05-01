@@ -16,7 +16,7 @@ export function createTripsBrowseScreenRenderer(deps){
     resetTripsFilters,
     onShareTripCard,
     openScreenshotCardPreview,
-    renderStandardReadOnlyTripCard,
+    renderTripsBrowseReadOnlyTripCard,
     openModal,
     closeModal
   } = deps;
@@ -230,7 +230,7 @@ export function createTripsBrowseScreenRenderer(deps){
           if (typeof openScreenshotCardPreview === "function") {
             const opened = openScreenshotCardPreview({
               trip,
-              renderStandardReadOnlyTripCard,
+              renderTripsBrowseReadOnlyTripCard,
               openModal,
               closeModal,
               showToast,

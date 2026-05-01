@@ -338,6 +338,7 @@ const rootStateSaveSeam = createRootStateSaveSeam({
 const {
   renderStandardReadOnlyTripCard,
   renderStandardInteractiveTripCard,
+  renderTripsBrowseReadOnlyTripCard,
   renderTripsBrowseInteractiveTripCard
 } = createTripCardRenderHelpers({
   formatDateDMY,
@@ -585,7 +586,7 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
   exportTripsWithLabel,
   showToast,
   openScreenshotCardPreview,
-  renderStandardReadOnlyTripCard,
+  renderTripsBrowseReadOnlyTripCard,
   openModal,
   closeModal,
   onShareTripCard: async (trip)=> {
@@ -629,7 +630,7 @@ const { renderHome } = createHomeDashboardRenderer({
   renderHomeMetricDetail: () => renderHomeMetricDetail(),
   getInstallSurfaceModel: () => getInstallSurfaceModel(),
   runInstallAction: () => runInstallAction(),
-  renderStandardReadOnlyTripCard,
+  renderTripsBrowseReadOnlyTripCard,
   createTripShareCardSeam,
   openModal,
   closeModal,
