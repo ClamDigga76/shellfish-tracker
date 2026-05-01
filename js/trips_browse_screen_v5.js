@@ -228,7 +228,7 @@ export function createTripsBrowseScreenRenderer(deps){
             return;
           }
           if (typeof openScreenshotCardPreview === "function") {
-            openScreenshotCardPreview({
+            const opened = openScreenshotCardPreview({
               trip,
               renderStandardReadOnlyTripCard,
               openModal,
@@ -236,7 +236,7 @@ export function createTripsBrowseScreenRenderer(deps){
               showToast,
               escapeHtml
             });
-            return;
+            if (opened) return;
           }
           if (typeof onShareTripCard !== "function") {
             showToast("Share card unavailable");

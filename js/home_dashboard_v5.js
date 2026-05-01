@@ -545,7 +545,8 @@ export function createHomeDashboardRenderer({
           openModal,
           closeModal,
           showToast,
-          escapeHtml
+          escapeHtml,
+          subtitle: "LAST SAVED TRIP"
         });
       };
     }

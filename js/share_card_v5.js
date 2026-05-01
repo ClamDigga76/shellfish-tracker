@@ -287,7 +287,8 @@ export function openScreenshotCardPreview({
   openModal,
   closeModal,
   showToast,
-  escapeHtml
+  escapeHtml,
+  subtitle = "TRIP PREVIEW"
 }) {
   if (!trip) {
     if (typeof showToast === "function") showToast("Trip preview unavailable");
@@ -312,7 +313,7 @@ export function openScreenshotCardPreview({
               <h3 class="homeScreenshotCardPreviewTitleText">Bank the Catch</h3>
               <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
             </div>
-            <div class="homeScreenshotCardPreviewSubhead">LAST SAVED TRIP</div>
+            <div class="homeScreenshotCardPreviewSubhead">${typeof escapeHtml === "function" ? escapeHtml(subtitle) : subtitle}</div>
             <div class="homeScreenshotCardPreviewDivider" aria-hidden="true"><span></span></div>
           </div>
           <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(trip, { variant: "standard" })}</div>
