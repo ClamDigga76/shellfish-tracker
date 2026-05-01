@@ -811,12 +811,24 @@
   background:rgba(9,17,31,.54);
   white-space:nowrap;
 }
-.homeOverviewCard .reportsHeroStat{
-  padding:12px 12px;
+.homeOverviewGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border:1px solid rgba(130,168,230,.22);
+  border-radius:12px;
+  overflow:hidden;
+  background:linear-gradient(180deg, rgba(16,29,53,.24) 0%, rgba(12,21,39,.3) 100%);
+}
+.homeOverviewStat{
+  min-width:0;
+  padding:12px 13px 11px;
   position:relative;
-  border-radius:13px;
-  border:1px solid rgba(124,166,235,.24);
-  background:linear-gradient(180deg, rgba(16,29,53,.72) 0%, rgba(12,21,39,.72) 100%);
+}
+.homeOverviewStat:nth-child(odd){
+  border-right:1px dotted rgba(154,190,245,.2);
+}
+.homeOverviewStat:nth-child(-n+2){
+  border-bottom:1px solid rgba(154,190,245,.2);
 }
 .homeOverviewCard .reportsHeroLabel{
   font-size:10px;
@@ -829,6 +841,9 @@
   line-height:1.2;
   font-weight:850;
 }
+.homeOverviewCard .reportsHeroValue.homeOverviewHeroValue{
+  font-size:22px;
+}
 .homeOverviewCard .reportsHeroMeta{
   margin-top:4px;
   font-size:11px;
@@ -840,13 +855,17 @@
 }
 .homeOverviewTrend{
   position:absolute;
-  right:10px;
-  top:10px;
-  font-size:13px;
+  right:12px;
+  top:12px;
+  font-size:11px;
   line-height:1;
-  font-weight:900;
-  opacity:.78;
+  font-weight:860;
+  opacity:.86;
   pointer-events:none;
+  border:1px solid currentColor;
+  border-radius:999px;
+  padding:1px 4px;
+  background:rgba(8,14,28,.32);
 }
 .homeOverviewTrend--up{
   color:var(--good);
