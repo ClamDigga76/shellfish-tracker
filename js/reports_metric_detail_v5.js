@@ -317,6 +317,23 @@ function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxIt
   };
 }
 
+function buildTripTimelineChart({ trips, basisLabel = "Trip marks timeline" }){
+  const byDate = new Map();
+  (Array.isArray(trips) ? trips : []).forEach((trip)=> {
+    const parsed = parseTripDateValue(trip);
+    if(!parsed) return;
+    byDate.set(parsed.dateToken, (byDate.get(parsed.dateToken) || 0) + 1);
+  });
+  const dateKeys = Array.from(byDate.keys()).sort((a, b)=> a.localeCompare(b));
+  return {
+    chartType: "time-series",
+    metricKey: "trips",
+    basisLabel: String(basisLabel || "Trip marks timeline"),
+    labels: dateKeys,
+    values: dateKeys.map((key)=> byDate.get(key) || 0)
+  };
+}
+
 function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips = [] }){
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows : []);
   const labels = [
@@ -360,7 +377,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
     trips: buildHomeCompareBarChart({ labels, metricKey: "trips", currentValue: period?.current?.trips, previousValue: period?.previous?.trips }),
     tripsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
     tripsActivity: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
-    tripsTimeline: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips", basisLabel: "Trip marks timeline" }),
+    tripsTimeline: buildTripTimelineChart({ trips, basisLabel: "Trip marks timeline" }),
     tripsCumulativeTrend: buildHomeCumulativeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips", basisLabel: "Visible months in the selected period" }),
     tripsPace: buildHomeCumulativeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips", basisLabel: "Running trip count" }),
     tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
@@ -1057,7 +1074,7 @@ export function createReportsMetricDetailSeam(deps){
       if(!labels.length || !values.length) return false;
       return values.some((value)=> Number.isFinite(Number(value)));
     };
-    const buildHomeFreeChartCards = ({ targetMetricKey, fallbackTitle, fallbackContext })=> {
+  const buildHomeFreeChartCards = ({ targetMetricKey, fallbackTitle, fallbackContext })=> {
       const homeFreeConfig = resolveHomeFreeConfig(targetMetricKey);
       const configuredCharts = Array.isArray(homeFreeConfig?.freeChartKeys) ? homeFreeConfig.freeChartKeys : [];
       const chartDefs = configuredCharts.length
@@ -1066,6 +1083,8 @@ export function createReportsMetricDetailSeam(deps){
       const metricPayload = compareFoundation?.metrics?.[targetMetricKey] || null;
       const hasRealComparablePeriod = compareFoundation?.period?.comparable === true;
       const isHomeCompareSuppressed = compareFoundation?.period?.suppressed === true || metricPayload?.suppressed === true;
+      const homeFilterLabel = String(viewModel?.homeScope?.rangeLabel || viewModel?.rangeLabel || "Active").trim();
+      const resolveHomeContextLabel = (text)=> String(text || "").replaceAll("[Home filter label]", homeFilterLabel || "Active");
       return chartDefs
         .map((chartDef, index)=> {
           const chartKey = String(chartDef?.key || "").trim();
@@ -1083,7 +1102,7 @@ export function createReportsMetricDetailSeam(deps){
           return {
             title: String(chartDef?.title || fallbackTitle || "Chart"),
             explanation: index === 0 ? String(homeFreeConfig?.helperLine || "") : "",
-            context: String(chartDef?.context || fallbackContext || ""),
+            context: resolveHomeContextLabel(chartDef?.context || fallbackContext || ""),
             canvasId: index === 0
               ? HOME_PRIMARY_CANVAS_BY_METRIC[targetMetricKey]
               : `c_${targetMetricKey}_home_${index + 1}`,
