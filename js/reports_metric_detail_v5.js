@@ -400,7 +400,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
         const idx = bins.findIndex((b)=> lbs >= b.min && lbs < b.max);
         if(idx >= 0) counts[idx] += 1;
       });
-      return { chartType: "compare-bars", metricKey: "pounds", basisLabel: "Trip pounds distribution", labels: bins.map((b)=> b.label), values: counts };
+      return { chartType: "month-line", metricKey: "pounds", basisLabel: "Trip pounds distribution", labels: bins.map((b)=> b.label), values: counts };
     })(),
     poundsDealerMix: buildHomeTopRowsBarChart({
       rows: dealerRowsByPounds,
@@ -736,14 +736,10 @@ export function createReportsMetricDetailSeam(deps){
     const tripCount = safeTrips.length;
     const latestTrip = resolveLatestSelectedTrip(safeTrips);
     if(metricKey === "trips") return [
-      { label: "Latest month", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
-      ...(formatHomeSnapshotValue({ metricKey, value: latest }) === formatHomeSnapshotValue({ metricKey, value: highest })
-        ? [{ label: "Avg / month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
-          { label: "Current Run", value: tripCount ? "1 in a row" : "—" },
-          { label: "Latest Trip", value: formatCompactTripDate(latestTrip) }]
-        : [{ label: "Latest Month", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
-          { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
-          { label: "Current Run", value: tripCount ? "1 in a row" : "—" }])
+      { label: "Latest Month", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
+      { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
+      { label: "Current Run", value: tripCount ? "1 in a row" : "—" },
+      { label: "Latest Trip", value: formatCompactTripDate(latestTrip) }
     ];
     if(metricKey === "pounds"){
       const tripPounds = safeTrips.map((trip)=> Number(trip?.pounds) || 0).filter((value)=> value > 0);
