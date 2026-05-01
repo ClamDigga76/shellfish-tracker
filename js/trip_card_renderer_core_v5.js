@@ -1,6 +1,10 @@
 import { AREA_NOT_RECORDED } from "./trip_shared_engine_v5.js";
 
 export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, resolveTripPayRate, deriveTripSettlement, formatMoney, escapeHtml }){
+  // Shared Trip Card model + HTML layout seam:
+  // - Keep display model normalization and card markup centralized here.
+  // - Public callers should route through trip_cards_v5.js helpers.
+  // - Future trip-card variants should be added through wrapper/core seams, not copied markup.
   function resolveTripCardModel(t, opts = {}){
     const {
       valueOverride = "",
