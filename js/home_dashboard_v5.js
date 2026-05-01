@@ -115,7 +115,7 @@ export function createHomeDashboardRenderer({
       { key: "28D", label: "4 Weeks" }
     ].map((item)=> ({ ...quickFilterByKey.get(String(item.key || "").toUpperCase()), ...item }));
     const homeFuturePaidItems = [
-      { key: "YTD", label: "YTD" },
+      { key: "FULL_YTD", label: "YTD" },
       { key: "MONTH", label: "This Month" },
       { key: "RANGE", label: "Custom" }
     ].map((item)=> ({ ...quickFilterByKey.get(String(item.key || "").toUpperCase()), ...item }));
@@ -494,12 +494,12 @@ export function createHomeDashboardRenderer({
           <div class="homeOverviewGrid">
             <div class="homeOverviewStat homeOverviewStat--top">
               <div class="reportsHeroLabel">AVG $ / TRIP</div>
-              <div class="reportsHeroValue money homeOverviewHeroValue">${avgAmountPerTripDisplay}</div>
+              <div class="reportsHeroValue money homeOverviewHeroValue ${isSeasonPreviewMode ? "homeOverviewHeroValuePreview" : ""}">${avgAmountPerTripDisplay}</div>
               ${renderOverviewTrendArrow(avgAmountTrendTone, "Average amount trend")}
             </div>
             <div class="homeOverviewStat homeOverviewStat--top">
               <div class="reportsHeroLabel">AVG LBS / TRIP</div>
-              <div class="reportsHeroValue lbsBlue homeOverviewHeroValue">${avgPoundsPerTripDisplay}</div>
+              <div class="reportsHeroValue lbsBlue homeOverviewHeroValue ${isSeasonPreviewMode ? "homeOverviewHeroValuePreview" : ""}">${avgPoundsPerTripDisplay}</div>
               ${renderOverviewTrendArrow(avgPoundsTrendTone, "Average pounds trend")}
             </div>
             <div class="homeOverviewStat">
@@ -530,7 +530,7 @@ export function createHomeDashboardRenderer({
       btn.addEventListener("click", () => {
         ensureHomeFilter();
         const nextMode = String(btn.getAttribute("data-hf") || "SEASON_PREVIEW").toUpperCase();
-        const isFuturePaidPreview = nextMode === "MONTH" || nextMode === "ALL" || nextMode === "RANGE";
+        const isFuturePaidPreview = nextMode === "FULL_YTD" || nextMode === "MONTH" || nextMode === "ALL" || nextMode === "RANGE";
         const filterToastMessage = isFuturePaidPreview
           ? "Premium range preview — available for testing while Bank the Catch is being built."
           : "";

@@ -67,7 +67,7 @@ export function createUnifiedFiltersSeam({
       let toISO = "";
 
       if(legacyMode === "ALL") range = "all";
-      else if(legacyMode === "YTD" || legacyMode === "SEASON_PREVIEW") range = "ytd";
+      else if(legacyMode === "YTD" || legacyMode === "SEASON_PREVIEW" || legacyMode === "FULL_YTD") range = "ytd";
       else if(legacyMode === "MONTH" || legacyMode === "THIS_MONTH") range = "mtd";
       else if(legacyMode === "LAST_MONTH") range = "last_month";
       else if(legacyMode === "LAST_YEAR") range = "last_year";
@@ -162,7 +162,7 @@ export function createUnifiedFiltersSeam({
   function legacyModeToUnifiedRange(mode){
     const m = String(mode || "").toUpperCase();
     if(m === "ALL") return "all";
-    if(m === "YTD" || m === "SEASON_PREVIEW") return "ytd";
+    if(m === "YTD" || m === "SEASON_PREVIEW" || m === "FULL_YTD") return "ytd";
     if(m === "MONTH" || m === "THIS_MONTH") return "mtd";
     if(m === "LAST_MONTH") return "last_month";
     if(m === "LAST_YEAR") return "last_year";
