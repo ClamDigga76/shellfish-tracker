@@ -538,20 +538,18 @@
   margin-bottom:0;
 }
 .homeScreenShell .homeLastTripShell{
-  padding:13px 14px 14px;
-  border-radius:18px;
-  border:1px solid rgba(89,142,255,.32);
-  background:
-    radial-gradient(122% 82% at 0% 0%, rgba(64,114,220,.14) 0%, rgba(64,114,220,0) 56%),
-    linear-gradient(180deg, rgba(15,26,51,.82) 0%, rgba(9,17,35,.88) 100%);
-  box-shadow:inset 0 1px 0 rgba(170,203,255,.1),0 12px 25px rgba(2,8,22,.34);
+  padding:0;
+  border-radius:0;
+  border:0;
+  background:none;
+  box-shadow:none;
   min-width:0;
 }
 .homeScreenShell .homeLastTripFallback{
   margin-top:0;
 }
 .homeLastTripCardWrap{
-  margin-top:6px;
+  margin-top:8px;
   min-width:0;
 }
 .homeLastTripCardWrap .tripCardStandard{
@@ -562,6 +560,8 @@
 .homeLastTripHeader{
   margin:0;
   padding-inline:0;
+  color:rgba(188,210,245,.9);
+  letter-spacing:.08em;
 }
 .homeLastTripHeaderRow{
   display:flex;
