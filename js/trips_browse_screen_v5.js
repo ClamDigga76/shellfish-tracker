@@ -14,7 +14,11 @@ export function createTripsBrowseScreenRenderer(deps){
     ensureTripsFilter,
     getTripsFilteredRows,
     resetTripsFilters,
-    onShareTripCard
+    onShareTripCard,
+    openScreenshotCardPreview,
+    renderStandardReadOnlyTripCard,
+    openModal,
+    closeModal
   } = deps;
 
   function renderAllTrips(){
@@ -219,7 +223,22 @@ export function createTripsBrowseScreenRenderer(deps){
           const trip = sorted.find((row)=> String(row?.id || "") === rawId)
             || allTrips.find((row)=> String(row?.id || "") === rawId)
             || null;
-          if(!trip || typeof onShareTripCard !== "function") {
+          if(!trip) {
+            showToast("Share card unavailable");
+            return;
+          }
+          if (typeof openScreenshotCardPreview === "function") {
+            openScreenshotCardPreview({
+              trip,
+              renderStandardReadOnlyTripCard,
+              openModal,
+              closeModal,
+              showToast,
+              escapeHtml
+            });
+            return;
+          }
+          if (typeof onShareTripCard !== "function") {
             showToast("Share card unavailable");
             return;
           }

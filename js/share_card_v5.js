@@ -280,6 +280,64 @@ function downloadBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(blobUrl), 1200);
 }
 
+
+export function openScreenshotCardPreview({
+  trip,
+  renderStandardReadOnlyTripCard,
+  openModal,
+  closeModal,
+  showToast,
+  escapeHtml
+}) {
+  if (!trip) {
+    if (typeof showToast === "function") showToast("Trip preview unavailable");
+    return false;
+  }
+  if (typeof renderStandardReadOnlyTripCard !== "function") {
+    if (typeof showToast === "function") showToast("Trip preview unavailable");
+    return false;
+  }
+  if (typeof openModal !== "function") return false;
+  const appVersion = String(window?.APP_VERSION || "").trim();
+  const previewEmblemSrcRaw = `assets/brand/transparent/btc-emblem-transparent.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`;
+  const previewEmblemSrc = typeof escapeHtml === "function" ? escapeHtml(previewEmblemSrcRaw) : previewEmblemSrcRaw;
+  openModal({
+    html: `
+      <div class="homeScreenshotCardPreviewWrap">
+        <div class="homeScreenshotCardPreviewSurface">
+          <div class="homeScreenshotCardPreviewHero">
+            <div class="homeScreenshotCardPreviewTitleRow" aria-label="Bank the Catch">
+              <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
+              <img class="homeScreenshotCardPreviewEmblem" src="${previewEmblemSrc}" alt="" loading="lazy" decoding="async" />
+              <h3 class="homeScreenshotCardPreviewTitleText">Bank the Catch</h3>
+              <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
+            </div>
+            <div class="homeScreenshotCardPreviewSubhead">LAST SAVED TRIP</div>
+            <div class="homeScreenshotCardPreviewDivider" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(trip, { variant: "standard" })}</div>
+          <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>
+        </div>
+        <div class="homeScreenshotCardPreviewActions">
+          <button class="btn btn-ghost homeScreenshotCardPreviewCloseBtn" id="homeScreenshotCardClose" type="button">Close</button>
+        </div>
+      </div>
+    `,
+    backdropClose: true,
+    escClose: true,
+    showCloseButton: false,
+    onOpen: () => {
+      const previewCloseBtn = document.getElementById("homeScreenshotCardClose");
+      if (previewCloseBtn) {
+        previewCloseBtn.onclick = () => {
+          if (typeof closeModal === "function") closeModal();
+        };
+      }
+    }
+  });
+  return true;
+}
+
 export function createTripShareCardSeam({ parseReportDateToISO, round2, formatMoney }) {
   async function buildTripCardImage(trip) {
     if (!trip || !trip.id) return { ok: false, reason: "missing-trip" };
