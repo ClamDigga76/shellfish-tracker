@@ -283,8 +283,10 @@ export function createHomeDashboardRenderer({
     const toAvgPplBandLabel = (value) => {
       const numeric = Number(value);
       if (!(numeric > 0)) return "—";
-      const tier = numeric < 2.34 ? "Low" : (numeric < 2.67 ? "Mid" : "High");
-      return `${tier} $${Math.round(numeric)}/lb range`;
+      const dollarBand = Math.floor(numeric);
+      const bandProgress = numeric - dollarBand;
+      const tier = bandProgress <= 0.33 ? "Low" : (bandProgress <= 0.66 ? "Mid" : "High");
+      return `${tier} $${dollarBand}/lb range`;
     };
     const isSeasonPreviewMode = f === "YTD";
     const lbsStr = isSeasonPreviewMode ? toKiloBandLabel(lbsVal) : formatGroupedHomeNumber(lbsVal);
