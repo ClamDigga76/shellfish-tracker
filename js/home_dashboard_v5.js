@@ -559,7 +559,6 @@ export function createHomeDashboardRenderer({
                   <div class="homeScreenshotCardPreviewSubhead">LAST SAVED TRIP</div>
                   <div class="homeScreenshotCardPreviewDivider" aria-hidden="true"><span></span></div>
                 </div>
-                <div class="homeScreenshotCardPreviewLabel">Last Saved Trip</div>
                 <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(newestSavedTrip, { variant: "standard" })}</div>
                 <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>
               </div>
