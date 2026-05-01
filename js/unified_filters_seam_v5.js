@@ -134,6 +134,8 @@ export function createUnifiedFiltersSeam({
       return { fromISO, toISO, label:"Last Month" };
     }
     if(filter.range === "7d") return { fromISO:backDays(6), toISO:now, label:"Last 7 Days" };
+    if(filter.range === "14d") return { fromISO:backDays(13), toISO:now, label:"Last 14 Days" };
+    if(filter.range === "28d") return { fromISO:backDays(27), toISO:now, label:"Last 4 Weeks" };
     if(filter.range === "12m"){
       const d = new Date();
       d.setFullYear(d.getFullYear()-1);
@@ -165,6 +167,8 @@ export function createUnifiedFiltersSeam({
     if(m === "LAST_MONTH") return "last_month";
     if(m === "LAST_YEAR") return "last_year";
     if(m === "7D") return "7d";
+    if(m === "14D") return "14d";
+    if(m === "28D" || m === "4W") return "28d";
     if(m === "12M") return "12m";
     if(m === "90D") return "90d";
     if(m === "30D") return "30d";

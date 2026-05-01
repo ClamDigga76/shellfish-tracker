@@ -107,20 +107,16 @@ export function createHomeDashboardRenderer({
       timeframeFilterControls.HOME_PRESET_FILTER_ITEMS.map((item)=> [String(item?.key || "").toUpperCase(), item])
     );
     const homeQuickItems = [
-      { key: "YTD", label: "YTD" },
-      { key: "MONTH", label: "This Month" },
-      { key: "LAST_MONTH", label: "Last Month" },
-      { key: "30D", label: "30 Days" }
+      { key: "YTD", label: "Season Preview", subLabel: "(Free Preview)" },
+      { key: "7D", label: "7 Days" },
+      { key: "14D", label: "14 Days" },
+      { key: "28D", label: "4 Weeks" }
     ].map((item)=> ({ ...quickFilterByKey.get(String(item.key || "").toUpperCase()), ...item }));
     const homeFuturePaidItems = [
-      { key: "LAST_YEAR", label: "Previous Year" },
+      { key: "MONTH", label: "This Month" },
       { key: "ALL", label: "All Time" },
       { key: "RANGE", label: "Custom" }
-    ].map((item)=> ({
-      ...quickFilterByKey.get(String(item.key || "").toUpperCase()),
-      ...item,
-      labelHtml: `<span class="timeframeChipMainLabelWithIcon"><span class="timeframeChipIcon" aria-hidden="true">🔒</span><span class="timeframeChipMainLabel">${escapeHtml(item.label)}</span></span>`
-    }));
+    ].map((item)=> ({ ...quickFilterByKey.get(String(item.key || "").toUpperCase()), ...item }));
     return `
       ${timeframeFilterControls.renderPresetChipRow({
         items: homeQuickItems,
@@ -130,13 +126,14 @@ export function createHomeDashboardRenderer({
         groupClass: "homeTimeframeRow homeTimeframeRowQuick",
         ariaLabel: "Home timeframe filter"
       })}
+      <div class="homePremiumRangesLabel" aria-hidden="true">Premium ranges</div>
       ${timeframeFilterControls.renderPresetChipRow({
         items: homeFuturePaidItems,
         activeKey: fMode,
         dataAttr: "data-hf",
         chipClass: "homeTimeframeChip homeTimeframeChipLocked",
         groupClass: "homeTimeframeRow homeTimeframeRowLocked",
-        ariaLabel: "Home future paid filter preview"
+        ariaLabel: "Home premium ranges"
       })}
       ${timeframeFilterControls.renderCustomRangeRow({
         mode: fMode,
@@ -265,14 +262,40 @@ export function createHomeDashboardRenderer({
       return `${formatGroupedHomeNumber(numeric, { maximumFractionDigits })} lbs`;
     };
 
+    const f = String((state.homeFilter && state.homeFilter.mode) || "YTD").toUpperCase();
     const lbsVal = round2(totalLbs);
-    const lbsStr = formatGroupedHomeNumber(lbsVal);
+    const toKiloBandLabel = (value) => {
+      const numeric = Number(value);
+      if (!(numeric > 0)) return "—";
+      const valueInK = numeric / 1000;
+      const lowerK = Math.max(0, Math.floor(valueInK));
+      const upperK = Math.max(lowerK + 1, Math.ceil(valueInK) + 2);
+      return `${lowerK}k–${upperK}k lbs`;
+    };
+    const toMoneyBandLabel = (value) => {
+      const numeric = Number(value);
+      if (!(numeric > 0)) return "—";
+      const valueInK = numeric / 1000;
+      const lowerK = Math.max(0, Math.floor(valueInK));
+      const upperK = Math.max(lowerK + 1, Math.ceil(valueInK) + 2);
+      return `$${lowerK}k–$${upperK}k`;
+    };
+    const toAvgPplBandLabel = (value) => {
+      const numeric = Number(value);
+      if (!(numeric > 0)) return "—";
+      const tier = numeric < 2.34 ? "Low" : (numeric < 2.67 ? "Mid" : "High");
+      return `${tier} $${Math.round(numeric)}/lb range`;
+    };
+    const isSeasonPreviewMode = f === "YTD";
+    const lbsStr = isSeasonPreviewMode ? toKiloBandLabel(lbsVal) : formatGroupedHomeNumber(lbsVal);
     const tripsStr = formatGroupedHomeNumber(trips.length, { maximumFractionDigits: 0 });
     const moneyRounded = (() => {
       const v = Math.round(Number(totalAmount) || 0);
       try { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v); }
       catch { return "$" + v.toLocaleString("en-US"); }
     })();
+    const amountDisplay = isSeasonPreviewMode ? toMoneyBandLabel(totalAmount) : moneyRounded;
+    const avgPplDisplay = isSeasonPreviewMode ? toAvgPplBandLabel(avgPpl) : (avgPpl === null ? "—" : formatMoney(avgPpl));
 
     const s = state.settings || (state.settings = {});
     const isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (window.navigator && window.navigator.standalone === true);
@@ -317,8 +340,6 @@ export function createHomeDashboardRenderer({
         { id: "backupLater", label: "Not now" }
       ]
     }) : "";
-
-    const f = String((state.homeFilter && state.homeFilter.mode) || "YTD").toUpperCase();
 
     const tripsSorted = getTripsNewestFirst(trips);
     const newestSavedTrip = tripsSorted[0] || null;
@@ -424,11 +445,11 @@ export function createHomeDashboardRenderer({
             </button>
             <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="amount" aria-label="Open amount detail">
               <div class="kpiLabel money">Amount</div>
-              <div class="kpiValue money"><span class="kpiValueFit">${moneyRounded}</span></div>
+              <div class="kpiValue money"><span class="kpiValueFit">${amountDisplay}</span></div>
             </button>
             <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="ppl" aria-label="Open average dollars per pound detail">
               <div class="kpiLabel rate ppl">Avg $ / lb</div>
-              <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPpl === null ? "—" : formatMoney(avgPpl)}</span></div>
+              <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPplDisplay}</span></div>
             </button>
           </div>
         </section>
@@ -486,9 +507,9 @@ export function createHomeDashboardRenderer({
       btn.addEventListener("click", () => {
         ensureHomeFilter();
         const nextMode = String(btn.getAttribute("data-hf") || "YTD").toUpperCase();
-        const isFuturePaidPreview = nextMode === "LAST_YEAR" || nextMode === "ALL" || nextMode === "RANGE";
+        const isFuturePaidPreview = nextMode === "MONTH" || nextMode === "ALL" || nextMode === "RANGE";
         const filterToastMessage = isFuturePaidPreview
-          ? "Builder mode: future Paid feature — unlocked for testing."
+          ? "Premium range preview — available for testing while Bank the Catch is being built."
           : "";
         state.homeFilter.mode = nextMode;
         if(state.homeFilter.mode !== "RANGE") state.homeFilter.customRangeCorrectionMessages = [];
