@@ -87,13 +87,14 @@
   grid-template-columns:minmax(0,1fr) minmax(0,fit-content(43%));
   gap:11px;
   align-items:start;
+  padding-top:1px;
 }
 .tripCardStandard .tripCardActionsRow{
   display:flex;
   justify-content:flex-end;
   align-items:center;
   gap:5px;
-  margin:-1px 0 2px;
+  margin:-3px 0 1px;
   flex-wrap:wrap;
   width:100%;
 }
@@ -129,7 +130,7 @@
   justify-items:end;
   justify-self:end;
   align-content:start;
-  gap:4px;
+  gap:2px;
   text-align:right;
   min-width:0;
   width:auto;
@@ -159,6 +160,11 @@
 }
 .tripCardStandard.tripCardVariantTripsBrowse .tripCardMetricChip .metricValue{
   font-size:14px;
+}
+.tripCardStandard.tripCardVariantTripsBrowse .tripCardMetricChip .metricValue.rate{
+  font-size:19px;
+  line-height:1.12;
+  font-weight:900;
 }
 .tripCardStandard.tripCardVariantTripsBrowse .tripCardMetricChip.tripCardMetricEmphasis{
   font-size:13px;
