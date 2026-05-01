@@ -18,6 +18,10 @@ export function normalizeDealerDisplay(name){
 }
 
 export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, resolveTripPayRate, deriveTripSettlement, formatMoney, escapeHtml }){
+  // Public Trip Card render seam:
+  // - Use this wrapper for all screen-level trip card rendering.
+  // - Add new variants/helpers here instead of duplicating card markup in feature screens.
+  // - Shared model/layout ownership stays in trip_card_renderer_core_v5.js.
   const { resolveTripCardModel, renderTripCardHTML } = createTripCardRendererCore({
     formatDateDMY,
     to2,
