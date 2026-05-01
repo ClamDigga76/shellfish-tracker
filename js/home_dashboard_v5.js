@@ -90,18 +90,18 @@ export function createHomeDashboardRenderer({
   });
 
   function ensureHomeFilter() {
-    if (!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode: "YTD", from: "", to: "" };
-    if (!state.homeFilter.mode) state.homeFilter.mode = "YTD";
-    const normalizedMode = String(state.homeFilter.mode || "YTD").toUpperCase();
-    if (normalizedMode === "ALL") state.homeFilter.mode = "YTD";
+    if (!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode: "SEASON_PREVIEW", from: "", to: "" };
+    if (!state.homeFilter.mode) state.homeFilter.mode = "SEASON_PREVIEW";
+    const normalizedMode = String(state.homeFilter.mode || "SEASON_PREVIEW").toUpperCase();
+    if (normalizedMode === "ALL" || normalizedMode === "YTD") state.homeFilter.mode = "SEASON_PREVIEW";
     if (state.homeFilter.from == null) state.homeFilter.from = "";
     if (state.homeFilter.to == null) state.homeFilter.to = "";
     if (!Array.isArray(state.homeFilter.customRangeCorrectionMessages)) state.homeFilter.customRangeCorrectionMessages = [];
   }
 
 
-  function renderHomeTimeframeControls({ mode = "YTD", homeFilter = {} } = {}){
-    const fMode = String(mode || "YTD").toUpperCase();
+  function renderHomeTimeframeControls({ mode = "SEASON_PREVIEW", homeFilter = {} } = {}){
+    const fMode = String(mode || "SEASON_PREVIEW").toUpperCase();
     const correctionMessages = Array.isArray(homeFilter.customRangeCorrectionMessages)
       ? homeFilter.customRangeCorrectionMessages
       : [];
@@ -109,7 +109,7 @@ export function createHomeDashboardRenderer({
       timeframeFilterControls.HOME_PRESET_FILTER_ITEMS.map((item)=> [String(item?.key || "").toUpperCase(), item])
     );
     const homeQuickItems = [
-      { key: "YTD", label: "Season Preview", subLabel: "(Free Preview)" },
+      { key: "SEASON_PREVIEW", label: "Season Preview", subLabel: "(Free Preview)" },
       { key: "7D", label: "7 Days" },
       { key: "14D", label: "14 Days" },
       { key: "28D", label: "4 Weeks" }
@@ -203,7 +203,7 @@ export function createHomeDashboardRenderer({
 
     const tripsAll = Array.isArray(state.trips) ? state.trips : [];
     ensureHomeFilter();
-    const hf = state.homeFilter || { mode: "YTD", from: "", to: "" };
+    const hf = state.homeFilter || { mode: "SEASON_PREVIEW", from: "", to: "" };
     const unified = buildUnifiedFilterFromHomeFilter(hf);
     const trips = getHomeFilteredTrips(tripsAll, unified);
     const { totalAmount, totalLbs, strongestDealer, strongestArea } = computeHomeOverview(trips);
@@ -264,7 +264,7 @@ export function createHomeDashboardRenderer({
       return `${formatGroupedHomeNumber(numeric, { maximumFractionDigits })} lbs`;
     };
 
-    const f = String((state.homeFilter && state.homeFilter.mode) || "YTD").toUpperCase();
+    const f = String((state.homeFilter && state.homeFilter.mode) || "SEASON_PREVIEW").toUpperCase();
     const lbsVal = round2(totalLbs);
     const toKiloBandLabel = (value) => {
       const numeric = Number(value);
@@ -290,7 +290,7 @@ export function createHomeDashboardRenderer({
       const tier = bandProgress <= 0.33 ? "Low" : (bandProgress <= 0.66 ? "Mid" : "High");
       return `${tier} $${dollarBand}/lb range`;
     };
-    const isSeasonPreviewMode = f === "YTD";
+    const isSeasonPreviewMode = f === "SEASON_PREVIEW";
     const lbsStr = isSeasonPreviewMode ? toKiloBandLabel(lbsVal) : formatGroupedHomeNumber(lbsVal);
     const tripsStr = formatGroupedHomeNumber(trips.length, { maximumFractionDigits: 0 });
     const moneyRounded = (() => {
@@ -300,6 +300,25 @@ export function createHomeDashboardRenderer({
     })();
     const amountDisplay = isSeasonPreviewMode ? toMoneyBandLabel(totalAmount) : moneyRounded;
     const avgPplDisplay = isSeasonPreviewMode ? toAvgPplBandLabel(avgPpl) : (avgPpl === null ? "—" : formatMoney(avgPpl));
+    const toFriendlyMoneyPerTripLabel = (value) => {
+      const numeric = Number(value);
+      if (!(numeric > 0)) return "—";
+      const rounded = Math.max(10, Math.round(numeric / 10) * 10);
+      return `About $${formatGroupedHomeNumber(rounded, { maximumFractionDigits: 0 })}/trip`;
+    };
+    const toFriendlyPoundsPerTripLabel = (value) => {
+      const numeric = Number(value);
+      if (!(numeric > 0)) return "—";
+      const step = numeric >= 100 ? 10 : 5;
+      const rounded = Math.max(step, Math.round(numeric / step) * step);
+      return `Around ${formatGroupedHomeNumber(rounded, { maximumFractionDigits: 0 })} lbs/trip`;
+    };
+    const avgAmountPerTripDisplay = isSeasonPreviewMode
+      ? toFriendlyMoneyPerTripLabel(avgAmountPerTrip)
+      : (avgAmountPerTrip === null ? "—" : formatMoney(round2(avgAmountPerTrip)));
+    const avgPoundsPerTripDisplay = isSeasonPreviewMode
+      ? toFriendlyPoundsPerTripLabel(avgPoundsPerTrip)
+      : (avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)}`);
 
     const s = state.settings || (state.settings = {});
     const isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (window.navigator && window.navigator.standalone === true);
@@ -475,12 +494,12 @@ export function createHomeDashboardRenderer({
           <div class="homeOverviewGrid">
             <div class="homeOverviewStat homeOverviewStat--top">
               <div class="reportsHeroLabel">AVG $ / TRIP</div>
-              <div class="reportsHeroValue money homeOverviewHeroValue">${avgAmountPerTrip === null ? "—" : formatMoney(round2(avgAmountPerTrip))}</div>
+              <div class="reportsHeroValue money homeOverviewHeroValue">${avgAmountPerTripDisplay}</div>
               ${renderOverviewTrendArrow(avgAmountTrendTone, "Average amount trend")}
             </div>
             <div class="homeOverviewStat homeOverviewStat--top">
               <div class="reportsHeroLabel">AVG LBS / TRIP</div>
-              <div class="reportsHeroValue lbsBlue homeOverviewHeroValue">${avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)}`}</div>
+              <div class="reportsHeroValue lbsBlue homeOverviewHeroValue">${avgPoundsPerTripDisplay}</div>
               ${renderOverviewTrendArrow(avgPoundsTrendTone, "Average pounds trend")}
             </div>
             <div class="homeOverviewStat">
@@ -510,7 +529,7 @@ export function createHomeDashboardRenderer({
     getApp().querySelectorAll("button.chip[data-hf]").forEach((btn) => {
       btn.addEventListener("click", () => {
         ensureHomeFilter();
-        const nextMode = String(btn.getAttribute("data-hf") || "YTD").toUpperCase();
+        const nextMode = String(btn.getAttribute("data-hf") || "SEASON_PREVIEW").toUpperCase();
         const isFuturePaidPreview = nextMode === "MONTH" || nextMode === "ALL" || nextMode === "RANGE";
         const filterToastMessage = isFuturePaidPreview
           ? "Premium range preview — available for testing while Bank the Catch is being built."
@@ -575,7 +594,7 @@ export function createHomeDashboardRenderer({
         if (!metricKey) return;
         ensureHomeFilter();
         const launchedHomeFilter = {
-          mode: String(state.homeFilter?.mode || "YTD").toUpperCase(),
+          mode: String(state.homeFilter?.mode || "SEASON_PREVIEW").toUpperCase(),
           from: parseReportDateToISO(state.homeFilter?.from || "") || "",
           to: parseReportDateToISO(state.homeFilter?.to || "") || ""
         };
