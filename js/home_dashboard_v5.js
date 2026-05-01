@@ -92,6 +92,8 @@ export function createHomeDashboardRenderer({
   function ensureHomeFilter() {
     if (!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode: "YTD", from: "", to: "" };
     if (!state.homeFilter.mode) state.homeFilter.mode = "YTD";
+    const normalizedMode = String(state.homeFilter.mode || "YTD").toUpperCase();
+    if (normalizedMode === "ALL") state.homeFilter.mode = "YTD";
     if (state.homeFilter.from == null) state.homeFilter.from = "";
     if (state.homeFilter.to == null) state.homeFilter.to = "";
     if (!Array.isArray(state.homeFilter.customRangeCorrectionMessages)) state.homeFilter.customRangeCorrectionMessages = [];
@@ -113,10 +115,15 @@ export function createHomeDashboardRenderer({
       { key: "28D", label: "4 Weeks" }
     ].map((item)=> ({ ...quickFilterByKey.get(String(item.key || "").toUpperCase()), ...item }));
     const homeFuturePaidItems = [
+      { key: "YTD", label: "YTD" },
       { key: "MONTH", label: "This Month" },
-      { key: "ALL", label: "All Time" },
       { key: "RANGE", label: "Custom" }
     ].map((item)=> ({ ...quickFilterByKey.get(String(item.key || "").toUpperCase()), ...item }));
+    const premiumRowChips = homeFuturePaidItems.map((item)=> {
+      const isSelected = fMode === String(item.key || "").toUpperCase();
+      const textLabel = String(item.label || item.key || "");
+      return `<button class="chip segBtn homeTimeframeChip homeTimeframeChipLocked ${isSelected ? "on is-selected" : ""}" data-hf="${escapeHtml(String(item.key || ""))}" type="button" aria-label="${escapeHtml(textLabel)}"><span class="timeframeChipMainLabel">${escapeHtml(textLabel)}</span></button>`;
+    }).join("");
     return `
       ${timeframeFilterControls.renderPresetChipRow({
         items: homeQuickItems,
@@ -126,15 +133,10 @@ export function createHomeDashboardRenderer({
         groupClass: "homeTimeframeRow homeTimeframeRowQuick",
         ariaLabel: "Home timeframe filter"
       })}
-      <div class="homePremiumRangesLabel" aria-hidden="true">Premium ranges</div>
-      ${timeframeFilterControls.renderPresetChipRow({
-        items: homeFuturePaidItems,
-        activeKey: fMode,
-        dataAttr: "data-hf",
-        chipClass: "homeTimeframeChip homeTimeframeChipLocked",
-        groupClass: "homeTimeframeRow homeTimeframeRowLocked",
-        ariaLabel: "Home premium ranges"
-      })}
+      <div class="segWrap timeframeUnifiedControl homeTimeframeRow homeTimeframeRowLocked" role="group" aria-label="Home premium ranges">
+        <div class="homePremiumInlineLabel" aria-hidden="true">Premium 🔒</div>
+        ${premiumRowChips}
+      </div>
       ${timeframeFilterControls.renderCustomRangeRow({
         mode: fMode,
         fromValue: homeFilter.from,
