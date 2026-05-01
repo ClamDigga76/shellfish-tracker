@@ -214,12 +214,20 @@ export function createTripsBrowseScreenRenderer(deps){
           return;
         }
         if(action === "share") {
-          const trip = sorted.find((row)=> String(row?.id || "") === id) || null;
+          const rawId = String(id || "");
+          const allTrips = Array.isArray(state?.trips) ? state.trips : [];
+          const trip = sorted.find((row)=> String(row?.id || "") === rawId)
+            || allTrips.find((row)=> String(row?.id || "") === rawId)
+            || null;
           if(!trip || typeof onShareTripCard !== "function") {
             showToast("Share card unavailable");
             return;
           }
-          await onShareTripCard(trip);
+          try {
+            await onShareTripCard(trip);
+          } catch (_error) {
+            showToast("Share card unavailable");
+          }
         }
       });
     });
