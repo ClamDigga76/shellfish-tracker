@@ -26,6 +26,7 @@ export function createHomeDashboardRenderer({
   renderHomeMetricDetail,
   getInstallSurfaceModel,
   runInstallAction,
+  renderTripsBrowseInteractiveTripCard,
   renderTripsBrowseReadOnlyTripCard,
   createTripShareCardSeam,
   openModal,
@@ -391,14 +392,14 @@ export function createHomeDashboardRenderer({
     const lastSavedTripHtml = newestSavedTrip
       ? (() => {
         const fallbackDate = parseReportDateToISO(newestSavedTrip.dateISO || "") || "Date not set";
-        if (typeof renderTripsBrowseReadOnlyTripCard !== "function") {
+        if (typeof renderTripsBrowseInteractiveTripCard !== "function") {
           return `
             <div class="emptyState compact homeLastTripFallback">
               <div class="emptyStateTitle">Latest saved trip • ${escapeHtml(fallbackDate)}</div>
             </div>
           `;
         }
-        return `<div class="homeLastTripCardWrap">${renderTripsBrowseReadOnlyTripCard(newestSavedTrip)}</div>`;
+        return `<div class="homeLastTripCardWrap">${renderTripsBrowseInteractiveTripCard(newestSavedTrip)}</div>`;
       })()
       : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No trip saved yet</div><div class="emptyStateBody">Save your first trip to show it here.</div></div>`;
 
@@ -411,7 +412,7 @@ export function createHomeDashboardRenderer({
     });
     const homeOverviewRangeLabel = homeFilterLabel;
     const lastTripHeaderActionHtml = hasEditableLatestTrip
-      ? `<div class="homeLastTripActions"><button class="homeLastTripEditBtn" id="homeLastTripEditBtn" type="button">Edit Trip</button><button class="homeLastTripShareBtn" id="homeLastTripShareBtn" type="button">Screenshot Card</button></div>`
+      ? ``
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
     getApp().innerHTML = `
       ${renderPageHeader("home")}
@@ -527,27 +528,41 @@ export function createHomeDashboardRenderer({
     bindDatePill("homeRangeFrom");
     bindDatePill("homeRangeTo");
     fitHomeKpiValues();
-    const homeLastTripEditBtn = document.getElementById("homeLastTripEditBtn");
-    if (homeLastTripEditBtn && hasEditableLatestTrip) {
-      homeLastTripEditBtn.onclick = () => {
+    const homeLastTripCardWrap = getApp().querySelector(".homeLastTripCardWrap");
+    if (homeLastTripCardWrap && newestSavedTrip && hasEditableLatestTrip) {
+      const homeLastTripCardRoot = homeLastTripCardWrap.querySelector(".tripCardStandard");
+      const openLatestTripEditor = () => {
         state.editId = newestSavedTripId;
         state.view = "edit";
         saveState();
         render();
       };
-    }
-    const homeLastTripShareBtn = document.getElementById("homeLastTripShareBtn");
-    if (homeLastTripShareBtn && newestSavedTrip) {
-      homeLastTripShareBtn.onclick = () => {
-        openScreenshotCardPreview({
-          trip: newestSavedTrip,
-          renderTripsBrowseReadOnlyTripCard,
-          openModal,
-          closeModal,
-          showToast,
-          escapeHtml
+      if (homeLastTripCardRoot) {
+        homeLastTripCardRoot.addEventListener("click", (event) => {
+          const actionBtn = event.target instanceof Element ? event.target.closest("[data-trip-action]") : null;
+          if (actionBtn) return;
+          openLatestTripEditor();
         });
-      };
+      }
+      homeLastTripCardWrap.querySelectorAll("[data-trip-action]").forEach((btn) => {
+        btn.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const action = String(btn.getAttribute("data-trip-action") || "").toLowerCase();
+          if (action === "share") {
+            openScreenshotCardPreview({
+              trip: newestSavedTrip,
+              renderTripsBrowseReadOnlyTripCard,
+              openModal,
+              closeModal,
+              showToast,
+              escapeHtml
+            });
+            return;
+          }
+          if (action === "edit") openLatestTripEditor();
+        });
+      });
     }
 
     getApp().querySelectorAll("[data-kpi-detail]").forEach((btn) => {
