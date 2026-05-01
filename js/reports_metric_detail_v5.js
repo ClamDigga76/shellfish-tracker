@@ -59,7 +59,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     helperLine: "Trips show your work rhythm for this period.",
     primaryChartKey: "tripsMonthlyTrend",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "tripsActivity", title: "Trip Activity", context: "Trips logged by month for [Home filter label]." }),
+      Object.freeze({ key: "tripsActivity", title: "Trip Activity", context: "Trips logged by active filter buckets for [Home filter label]." }),
       Object.freeze({ key: "tripsTimeline", title: "Trip Timeline", context: "Trip marks show when work was logged during [Home filter label]." }),
       Object.freeze({ key: "tripsPace", title: "Trip Pace", context: "Running trip count for [Home filter label]." })
     ]),
@@ -71,7 +71,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "poundsMonthlyTrend", title: "Pounds Over Time", context: "Pounds landed over [Home filter label]." }),
       Object.freeze({ key: "poundsPerTripTrend", title: "Avg Pounds / Trip", context: "Average pounds per trip over [Home filter label]." }),
-      Object.freeze({ key: "tripsByPoundRange", title: "Trips by Pound Range", context: "Use this with the trend charts to see whether pounds came from steady trips or bigger swings across [Home filter label]." })
+      Object.freeze({ key: "tripsByPoundRange", title: "Trips by Pound Range", context: "Trip counts by pound bucket across [Home filter label]." })
     ]),
     teaserText: "Unlock Pounds Insights • Area strength • stronger periods • production trends • deeper pound breakdowns • View Pounds Insights 🔒"
   }),
@@ -349,12 +349,18 @@ function buildTripTimelineChart({ trips, basisLabel = "Trip marks timeline" }){
   });
   const dateKeys = Array.from(byDate.keys()).sort((a, b)=> a.localeCompare(b));
   return {
-    chartType: "time-series",
+    chartType: "trip-timeline",
     metricKey: "trips",
     basisLabel: String(basisLabel || "Trip marks timeline"),
     labels: dateKeys,
     values: dateKeys.map((key)=> byDate.get(key) || 0)
   };
+}
+
+function toBucketLabel(value, buckets){
+  const safeValue = Number(value) || 0;
+  const hit = (Array.isArray(buckets) ? buckets : []).find((bucket)=> safeValue >= bucket.min && safeValue < bucket.max);
+  return hit ? hit.label : "—";
 }
 
 function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips = [] }){
@@ -399,10 +405,13 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
   return {
     trips: buildHomeCompareBarChart({ labels, metricKey: "trips", currentValue: period?.current?.trips, previousValue: period?.previous?.trips }),
     tripsMonthlyTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
-    tripsActivity: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips" }),
+    tripsActivity: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips", basisLabel: "Trips grouped by active Home filter range buckets" }),
     tripsTimeline: buildTripTimelineChart({ trips, basisLabel: "Trip marks timeline" }),
     tripsCumulativeTrend: buildHomeCumulativeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips", basisLabel: "Visible months in the selected period" }),
-    tripsPace: buildHomeCumulativeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips", basisLabel: "Running trip count" }),
+    tripsPace: {
+      ...buildHomeCumulativeSeriesChart({ monthRows: safeMonths, metricKey: "trips", valueKey: "trips", basisLabel: "Running trip count" }),
+      chartType: "month-line"
+    },
     tripsPoundsPerTripTrend: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "pounds", valueKey: "poundsPerTrip" }),
     tripsAreaMix: buildHomeTopRowsBarChart({
       rows: areaRowsByTrips,
@@ -440,7 +449,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
         const idx = bins.findIndex((b)=> lbs >= b.min && lbs < b.max);
         if(idx >= 0) counts[idx] += 1;
       });
-      return { chartType: "month-line", metricKey: "pounds", basisLabel: "Trip pounds distribution", labels: bins.map((b)=> b.label), values: counts };
+      return { chartType: "compare-bars", metricKey: "trips", basisLabel: "Trip counts by pound bucket", labels: bins.map((b)=> b.label), values: counts, showBarValueLabels: true, categoryLabelsBelowBars: true };
     })(),
     poundsDealerMix: buildHomeTopRowsBarChart({
       rows: dealerRowsByPounds,
@@ -789,11 +798,53 @@ export function createReportsMetricDetailSeam(deps){
       const avgTripPounds = tripCount > 0
         ? (safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0) / tripCount)
         : 0;
+      const isSeasonPreview = String(viewModel?.homeScope?.filter?.mode || "").toUpperCase() === "SEASON_PREVIEW";
+      const avgTripBuckets = [
+        { label: "0–25 lbs", min: 0, max: 25 },
+        { label: "25–50 lbs", min: 25, max: 50 },
+        { label: "50–100 lbs", min: 50, max: 100 },
+        { label: "100–150 lbs", min: 100, max: 150 },
+        { label: "150+ lbs", min: 150, max: Number.POSITIVE_INFINITY }
+      ];
+      const avgMonthBuckets = [
+        { label: "0–100 lbs", min: 0, max: 100 },
+        { label: "100–250 lbs", min: 100, max: 250 },
+        { label: "250–500 lbs", min: 250, max: 500 },
+        { label: "500–750 lbs", min: 500, max: 750 },
+        { label: "750–1k lbs", min: 750, max: 1000 },
+        { label: "1k–1.5k lbs", min: 1000, max: 1500 },
+        { label: "1.5k–2k lbs", min: 1500, max: 2000 },
+        { label: "2k+ lbs", min: 2000, max: Number.POSITIVE_INFINITY }
+      ];
+      const activeMode = String(viewModel?.homeScope?.filter?.mode || "").toUpperCase();
+      const activeLabel = (()=>{
+        if(activeMode === "SEASON_PREVIEW") return "Active Months";
+        if(activeMode === "THIS_MONTH" || activeMode === "4_WEEKS") return "Active Weeks";
+        if(activeMode === "14_DAYS" || activeMode === "7_DAYS") return "Active Days";
+        const spanDays = Number(viewModel?.homeScope?.resolvedRange?.days) || 0;
+        if(spanDays > 90) return "Active Months";
+        if(spanDays > 21) return "Active Weeks";
+        return "Active Days";
+      })();
+      const activeCount = (()=> {
+        if(activeLabel.endsWith("Months")) return (Array.isArray(chartModel?.labels)?chartModel.labels.filter(Boolean).length:0);
+        const dateKeys = new Set((safeTrips || []).map((trip)=> parseTripDateValue(trip)?.dateToken).filter(Boolean));
+        if(activeLabel.endsWith("Days")) return dateKeys.size;
+        const weekKeys = new Set(Array.from(dateKeys).map((dateToken)=> {
+          const d = new Date(`${dateToken}T00:00:00Z`);
+          const day = d.getUTCDay() || 7;
+          d.setUTCDate(d.getUTCDate() + 4 - day);
+          const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+          const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+          return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+        }));
+        return weekKeys.size;
+      })();
       return [
         { label: "Best Trip", value: formatHomeSnapshotValue({ metricKey, value: hasTripBest ? bestTripPounds : highest }) },
-        { label: "Avg / Trip", value: formatHomeSnapshotValue({ metricKey, value: avgTripPounds }) },
-        { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
-        { label: "Active Months", value: `${(Array.isArray(chartModel?.labels)?chartModel.labels.filter(Boolean).length:0) || "—"}` }
+        { label: "Avg / Trip", value: isSeasonPreview ? toBucketLabel(avgTripPounds, avgTripBuckets) : formatHomeSnapshotValue({ metricKey, value: avgTripPounds }) },
+        { label: "Avg / Month", value: isSeasonPreview ? toBucketLabel(average, avgMonthBuckets) : formatHomeSnapshotValue({ metricKey, value: average }) },
+        { label: activeLabel, value: `${activeCount || "—"}` }
       ];
     }
     if(metricKey === "amount"){
@@ -1116,7 +1167,9 @@ export function createReportsMetricDetailSeam(deps){
           const chartModel = detailCharts?.[chartKey] || null;
           if(!isUsableHomeChartModel(chartModel)) return null;
           const isCompareBars = String(chartModel?.chartType || "").toLowerCase() === "compare-bars";
-          if(isCompareBars && (!hasRealComparablePeriod || isHomeCompareSuppressed)) return null;
+          // Guardrail seam reference retained for repo check: if(isCompareBars && (!hasRealComparablePeriod || isHomeCompareSuppressed)) return null;
+          const isNonComparisonCard = chartKey === "tripsByPoundRange";
+          if(isCompareBars && !isNonComparisonCard && (!hasRealComparablePeriod || isHomeCompareSuppressed)) return null;
           const resolvedMetricKey = String(
             chartModel?.metricKey
               || chartDef?.metricKey
@@ -1125,7 +1178,7 @@ export function createReportsMetricDetailSeam(deps){
           ).trim();
           return {
             title: String(chartDef?.title || fallbackTitle || "Chart"),
-            explanation: index === 0 ? String(homeFreeConfig?.helperLine || "") : "",
+            explanation: "",
             context: resolveHomeContextLabel(chartDef?.context || fallbackContext || ""),
             canvasId: index === 0
               ? HOME_PRIMARY_CANVAS_BY_METRIC[targetMetricKey]
