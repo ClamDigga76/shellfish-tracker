@@ -1092,6 +1092,14 @@
 .homeScreenShell .timeframeUnifiedControl.homeTimeframeRowQuick{
   grid-template-columns:repeat(4,minmax(0,1fr));
 }
+.homePremiumRangesLabel{
+  margin:8px 4px 6px;
+  color:rgba(210,219,235,.82);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:none;
+}
 .homeScreenShell .timeframeUnifiedControl.homeTimeframeRowLocked{
   grid-template-columns:repeat(3,minmax(0,1fr));
   border-color:rgba(205,180,124,.34);
