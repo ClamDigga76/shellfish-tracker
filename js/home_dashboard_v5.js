@@ -530,20 +530,12 @@ export function createHomeDashboardRenderer({
     fitHomeKpiValues();
     const homeLastTripCardWrap = getApp().querySelector(".homeLastTripCardWrap");
     if (homeLastTripCardWrap && newestSavedTrip && hasEditableLatestTrip) {
-      const homeLastTripCardRoot = homeLastTripCardWrap.querySelector(".tripCardStandard");
       const openLatestTripEditor = () => {
         state.editId = newestSavedTripId;
         state.view = "edit";
         saveState();
         render();
       };
-      if (homeLastTripCardRoot) {
-        homeLastTripCardRoot.addEventListener("click", (event) => {
-          const actionBtn = event.target instanceof Element ? event.target.closest("[data-trip-action]") : null;
-          if (actionBtn) return;
-          openLatestTripEditor();
-        });
-      }
       homeLastTripCardWrap.querySelectorAll("[data-trip-action]").forEach((btn) => {
         btn.addEventListener("click", (event) => {
           event.preventDefault();

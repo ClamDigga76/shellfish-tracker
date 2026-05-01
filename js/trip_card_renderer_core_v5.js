@@ -60,9 +60,10 @@ export function createTripCardRendererCore({ formatDateDMY, to2, computePPL, res
     } = opts;
     const isTripsBrowse = variant === "tripsBrowse";
     const useButtonShell = interactive && !isTripsBrowse;
+    const usesIntegratedTripsBrowseActions = isTripsBrowse && showTripsBrowseActions;
     const tag = useButtonShell ? "button" : "div";
-    const role = interactive ? "button" : "group";
-    const tab = interactive ? "0" : "-1";
+    const role = (interactive && !usesIntegratedTripsBrowseActions) ? "button" : "group";
+    const tab = (interactive && !usesIntegratedTripsBrowseActions) ? "0" : "-1";
     const idAttr = interactive ? ` data-id="${escapeHtml(model.id)}"` : "";
     const auditVariantAttr = auditVariant ? ` data-trip-card-variant="${escapeHtml(auditVariant)}"` : "";
     const modeClass = interactive ? "tripCardInteractive" : "tripCardReadOnly";

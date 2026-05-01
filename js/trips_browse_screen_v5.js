@@ -192,17 +192,6 @@ export function createTripsBrowseScreenRenderer(deps){
     `;
 
     bindNavHandlers(state);
-    root.querySelectorAll(".triprow").forEach(el=>{
-      el.addEventListener("click", ()=>{
-        const id = el.getAttribute("data-id") || "";
-        if(!id) return;
-        state.editId = id;
-        state.view = "edit";
-        saveState();
-        renderApp();
-      });
-    });
-
     root.querySelectorAll("[data-trip-action]").forEach((btn)=>{
       btn.addEventListener("click", async (ev)=>{
         ev.preventDefault();
