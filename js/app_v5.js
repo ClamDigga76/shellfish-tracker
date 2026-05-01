@@ -630,6 +630,7 @@ const { renderHome } = createHomeDashboardRenderer({
   renderHomeMetricDetail: () => renderHomeMetricDetail(),
   getInstallSurfaceModel: () => getInstallSurfaceModel(),
   runInstallAction: () => runInstallAction(),
+  renderTripsBrowseInteractiveTripCard,
   renderTripsBrowseReadOnlyTripCard,
   createTripShareCardSeam,
   openModal,
