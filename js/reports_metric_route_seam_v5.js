@@ -20,11 +20,14 @@ export function createReportsMetricRouteSeam(deps){
 
   function mapHomeModeToUnifiedRange(modeValue){
     const normalized = String(modeValue || "YTD").toUpperCase();
+    if(normalized === "SEASON_PREVIEW" || normalized === "FULL_YTD") return "ytd";
     if(normalized === "ALL") return "all";
     if(normalized === "MONTH" || normalized === "THIS_MONTH") return "mtd";
     if(normalized === "LAST_MONTH") return "last_month";
     if(normalized === "LAST_YEAR") return "last_year";
     if(normalized === "7D" || normalized === "LAST_7_DAYS") return "7d";
+    if(normalized === "14D" || normalized === "LAST_14_DAYS") return "14d";
+    if(normalized === "28D" || normalized === "4W" || normalized === "LAST_4_WEEKS") return "28d";
     if(normalized === "30D") return "30d";
     if(normalized === "90D") return "90d";
     if(normalized === "12M") return "12m";
