@@ -1090,10 +1090,17 @@
     0 0 10px rgba(64,143,244,.24);
 }
 .homeScreenShell .timeframeUnifiedControl.homeTimeframeRowQuick{
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:minmax(0,1.7fr) repeat(3,minmax(0,1fr));
+}
+.homeScreenShell .timeframeUnifiedControl.homeTimeframeRowQuick .segBtn.homeTimeframeChip:first-child{
+  padding-inline:10px;
+}
+.homeScreenShell .timeframeUnifiedControl.homeTimeframeRowQuick .segBtn.homeTimeframeChip:first-child .timeframeChipMainLabel{
+  font-size:11px;
+  letter-spacing:.01em;
 }
 .homePremiumRangesLabel{
-  margin:8px 4px 6px;
+  margin:6px 4px 5px;
   color:rgba(210,219,235,.82);
   font-size:12px;
   font-weight:700;
@@ -1119,6 +1126,8 @@
   color:rgba(210,219,235,.68);
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChipLocked{
+  min-height:34px;
+  padding-block:5px;
   border-color:rgba(187,162,108,.56);
   background:linear-gradient(180deg, rgba(115,91,48,.6) 0%, rgba(67,52,30,.86) 100%);
   color:rgba(245,229,192,.92);
@@ -1191,6 +1200,12 @@
   }
   .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip .timeframeChipMainLabel{
     font-size:10px;
+  }
+  .homeScreenShell .timeframeUnifiedControl.homeTimeframeRowQuick{
+    grid-template-columns:minmax(0,1.45fr) repeat(3,minmax(0,1fr));
+  }
+  .homeScreenShell .timeframeUnifiedControl.homeTimeframeRowQuick .segBtn.homeTimeframeChip:first-child .timeframeChipMainLabel{
+    font-size:9.5px;
   }
   .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip .timeframeChipSubLabel{
     font-size:8px;
