@@ -83,7 +83,7 @@ const [{ uid, toCSV, formatMoney, formatISODateToDisplayDMY: formatDateLegacyDMY
   ...STARTUP_MODULE_PATHS.map(importVersionedModule),
   ...STARTUP_APP_OWNED_MODULE_PATHS.map(importVersionedModule)
 ]);
-const { createTripShareCardSeam } = _tripShareCardModule;
+const { createTripShareCardSeam, openScreenshotCardPreview } = _tripShareCardModule;
 const APP_VERSION = (window.APP_BUILD || "v5");
 const VERSION = APP_VERSION;
 const DISPLAY_BUILD_VERSION = VERSION;
@@ -584,6 +584,10 @@ const { renderAllTrips } = createTripsBrowseScreenRenderer({
   bindDatePill,
   exportTripsWithLabel,
   showToast,
+  openScreenshotCardPreview,
+  renderStandardReadOnlyTripCard,
+  openModal,
+  closeModal,
   onShareTripCard: async (trip)=> {
     const result = await tripShareCardSeam.shareTripCard(trip);
     if(result?.ok) {
@@ -629,6 +633,7 @@ const { renderHome } = createHomeDashboardRenderer({
   createTripShareCardSeam,
   openModal,
   closeModal,
+  openScreenshotCardPreview,
   isFeatureAllowed: (featureKey, plan) => entitlements.isFeatureAllowed(featureKey, plan),
   entitlementFeatureKeys: entitlements.FEATURES
 });

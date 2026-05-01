@@ -29,7 +29,8 @@ export function createHomeDashboardRenderer({
   renderStandardReadOnlyTripCard,
   createTripShareCardSeam,
   openModal,
-  closeModal
+  closeModal,
+  openScreenshotCardPreview
 }) {
   const timeframeFilterControls = createTimeframeFilterControlsSeam({
     escapeHtml,
@@ -537,50 +538,17 @@ export function createHomeDashboardRenderer({
     }
     const homeLastTripShareBtn = document.getElementById("homeLastTripShareBtn");
     if (homeLastTripShareBtn && newestSavedTrip) {
-      const openScreenshotCardPreview = () => {
-        if (typeof renderStandardReadOnlyTripCard !== "function") {
-          showToast("Trip preview unavailable");
-          return;
-        }
-        if (typeof openModal !== "function") return;
-        const appVersion = String(window?.APP_VERSION || "").trim();
-        const previewEmblemSrc = `assets/brand/transparent/btc-emblem-transparent.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`;
-        openModal({
-          html: `
-            <div class="homeScreenshotCardPreviewWrap">
-              <div class="homeScreenshotCardPreviewSurface">
-                <div class="homeScreenshotCardPreviewHero">
-                  <div class="homeScreenshotCardPreviewTitleRow" aria-label="Bank the Catch">
-                    <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
-                    <img class="homeScreenshotCardPreviewEmblem" src="${previewEmblemSrc}" alt="" loading="lazy" decoding="async" />
-                    <h3 class="homeScreenshotCardPreviewTitleText">Bank the Catch</h3>
-                    <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
-                  </div>
-                  <div class="homeScreenshotCardPreviewSubhead">LAST SAVED TRIP</div>
-                  <div class="homeScreenshotCardPreviewDivider" aria-hidden="true"><span></span></div>
-                </div>
-                <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(newestSavedTrip, { variant: "standard" })}</div>
-                <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>
-              </div>
-              <div class="homeScreenshotCardPreviewActions">
-                <button class="btn btn-ghost homeScreenshotCardPreviewCloseBtn" id="homeScreenshotCardClose" type="button">Close</button>
-              </div>
-            </div>
-          `,
-          backdropClose: true,
-          escClose: true,
-          showCloseButton: false,
-          onOpen: () => {
-            const previewCloseBtn = document.getElementById("homeScreenshotCardClose");
-            if (previewCloseBtn) {
-              previewCloseBtn.onclick = () => {
-                if (typeof closeModal === "function") closeModal();
-              };
-            }
-          }
+      homeLastTripShareBtn.onclick = () => {
+        openScreenshotCardPreview({
+          trip: newestSavedTrip,
+          renderStandardReadOnlyTripCard,
+          openModal,
+          closeModal,
+          showToast,
+          escapeHtml,
+          subtitle: "LAST SAVED TRIP"
         });
       };
-      homeLastTripShareBtn.onclick = () => openScreenshotCardPreview();
     }
 
     getApp().querySelectorAll("[data-kpi-detail]").forEach((btn) => {
