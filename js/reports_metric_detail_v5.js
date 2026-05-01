@@ -59,7 +59,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     helperLine: "Trips logged in the selected period.",
     primaryChartKey: "tripsMonthlyTrend",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "tripsMonthlyTrend", title: "Trips over time", context: "Simple trip trend across visible months" }),
+      Object.freeze({ key: "tripsMonthlyTrend", title: "Trips over time", context: "Simple trip trend across active Home filter" }),
       Object.freeze({ key: "trips", title: "Latest vs previous month", context: "Bars • trip totals for the latest visible month pair" }),
       Object.freeze({ key: "tripsCumulativeTrend", title: "Cumulative trips over selected range", context: "Running trip total across visible months" })
     ]),
@@ -69,7 +69,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     helperLine: "Total pounds landed in the selected period.",
     primaryChartKey: "poundsMonthlyTrend",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "poundsMonthlyTrend", title: "Pounds over time", context: "Simple pounds trend across visible months" }),
+      Object.freeze({ key: "poundsMonthlyTrend", title: "Pounds over time", context: "Simple pounds trend across active Home filter" }),
       Object.freeze({ key: "pounds", title: "Latest vs previous month", context: "Bars • pounds for the latest visible month pair" }),
       Object.freeze({ key: "poundsPerTripTrend", title: "Avg pounds per trip over time", context: "How Avg pounds per trip moved across visible months" })
     ]),
@@ -79,7 +79,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     helperLine: "Total paid amount from trips in the selected period.",
     primaryChartKey: "amountTrend",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "amountTrend", title: "Paid over time", context: "Simple paid trend across visible months" }),
+      Object.freeze({ key: "amountTrend", title: "Paid over time", context: "Simple paid trend across active Home filter" }),
       Object.freeze({ key: "amount", title: "Latest vs previous month", context: "Bars • paid totals for the latest visible month pair" }),
       Object.freeze({ key: "amountPerTripTrend", title: "Avg amount per trip over time", context: "Average paid per trip across visible months" })
     ]),
@@ -89,7 +89,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     helperLine: "Calculated from total paid ÷ total pounds.",
     primaryChartKey: "pplMonthlyTrendFree",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "pplMonthlyTrendFree", title: "Avg $ / lb over time", context: "Simple Avg $ / lb trend across visible months" }),
+      Object.freeze({ key: "pplMonthlyTrendFree", title: "Avg $ / lb over time", context: "Simple Avg $ / lb trend across active Home filter" }),
       Object.freeze({ key: "ppl", title: "Latest vs previous month", context: "Bars • Avg $ / lb for the latest visible month pair" }),
       Object.freeze({ key: "pplRateVsPoundsTrend", title: "Pounds support over time", context: "Monthly pounds context behind Avg $ / lb movement" })
     ]),
@@ -1018,11 +1018,14 @@ export function createReportsMetricDetailSeam(deps){
       if(targetMetric === "ppl") return pounds > 0 ? `${formatMoney(to2(amount / pounds))}` : "—";
       return "—";
     };
-    const resolveHeroValue = (targetMetric)=> (
-      isHomeMetricDetail
-        ? formatHomeKpiHeroValue(targetMetric, viewModel.trips)
-        : formatHeroFromPrimaryBasis(targetMetric, primaryBasis)
-    );
+    const resolveHeroValue = (targetMetric)=> {
+      if(isHomeMetricDetail){
+        const contextHero = String(viewModel.homeScope?.kpiDisplayValues?.[targetMetric] || "").trim();
+        if(contextHero) return contextHero;
+        return formatHomeKpiHeroValue(targetMetric, viewModel.trips);
+      }
+      return formatHeroFromPrimaryBasis(targetMetric, primaryBasis);
+    };
     const HOME_PRIMARY_CANVAS_BY_METRIC = Object.freeze({
       trips: "c_trips",
       pounds: "c_lbs",
@@ -1079,7 +1082,7 @@ export function createReportsMetricDetailSeam(deps){
           const homeChartCards = buildHomeFreeChartCards({
             targetMetricKey: "trips",
             fallbackTitle: "Trips over time",
-            fallbackContext: "Simple trip trend across visible months"
+            fallbackContext: "Simple trip trend across active Home filter"
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("trips");
@@ -1098,7 +1101,7 @@ export function createReportsMetricDetailSeam(deps){
         homeChartTitle: homeChartCards[0]?.title || "Trips over time",
         homeChartExplanation: homeFreeConfig?.helperLine || "Trips logged in the selected period.",
         chartContext: primaryChart?.basisLabel || "Bars • trip totals for the latest matched months",
-        homeChartContext: homeChartCards[0]?.context || "Simple trip trend across visible months",
+        homeChartContext: homeChartCards[0]?.context || "Simple trip trend across active Home filter",
         chartCanvasId: "c_trips",
         secondaryCharts: isHomeMetricDetail
           ? homeChartCards.slice(1)
@@ -1127,7 +1130,7 @@ export function createReportsMetricDetailSeam(deps){
           const homeChartCards = buildHomeFreeChartCards({
             targetMetricKey: "pounds",
             fallbackTitle: "Pounds over time",
-            fallbackContext: "Simple pounds trend across visible months"
+            fallbackContext: "Simple pounds trend across active Home filter"
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("pounds");
@@ -1146,7 +1149,7 @@ export function createReportsMetricDetailSeam(deps){
         homeChartTitle: homeChartCards[0]?.title || "Pounds over time",
         homeChartExplanation: homeFreeConfig?.helperLine || "Total pounds landed in the selected period.",
         chartContext: primaryChart?.basisLabel || "Bars • pound totals for the latest matched months",
-        homeChartContext: homeChartCards[0]?.context || "Simple pounds trend across visible months",
+        homeChartContext: homeChartCards[0]?.context || "Simple pounds trend across active Home filter",
         chartCanvasId: "c_lbs",
         secondaryCharts: isHomeMetricDetail
           ? homeChartCards.slice(1)
@@ -1175,7 +1178,7 @@ export function createReportsMetricDetailSeam(deps){
           const homeChartCards = buildHomeFreeChartCards({
             targetMetricKey: "amount",
             fallbackTitle: "Paid over time",
-            fallbackContext: "Simple paid trend across visible months"
+            fallbackContext: "Simple paid trend across active Home filter"
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("amount");
@@ -1194,7 +1197,7 @@ export function createReportsMetricDetailSeam(deps){
         homeChartTitle: homeChartCards[0]?.title || "Paid over time",
         homeChartExplanation: homeFreeConfig?.helperLine || "Total paid amount from trips in the selected period.",
         chartContext: primaryChart?.basisLabel || "Bars • amount totals for the latest matched months",
-        homeChartContext: homeChartCards[0]?.context || "Simple paid trend across visible months",
+        homeChartContext: homeChartCards[0]?.context || "Simple paid trend across active Home filter",
         chartCanvasId: "c_amount_detail",
         secondaryCharts: isHomeMetricDetail
           ? homeChartCards.slice(1)
@@ -1235,7 +1238,7 @@ export function createReportsMetricDetailSeam(deps){
           const homeChartCards = buildHomeFreeChartCards({
             targetMetricKey: "ppl",
             fallbackTitle: "Price per pound over time",
-            fallbackContext: "Simple Avg $ / lb trend across visible months"
+            fallbackContext: "Simple Avg $ / lb trend across active Home filter"
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("ppl");
@@ -1254,7 +1257,7 @@ export function createReportsMetricDetailSeam(deps){
         homeChartTitle: homeChartCards[0]?.title || "Price per pound over time",
         homeChartExplanation: homeFreeConfig?.helperLine || "Calculated from total paid ÷ total pounds.",
         chartContext: `${primaryChart?.basisLabel || "Bars • Avg $ / lb for the latest matched months"} • ${getPplFormulaText({ metricKey, surface: "short" })} • ${getRateLeaderThresholdText()}${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" }) ? ` • ${getPplSupportNoteText({ metricKey, payload: primaryPayload, surface: "context" })}` : ""}`,
-        homeChartContext: homeChartCards[0]?.context || "Simple Avg $ / lb trend across visible months",
+        homeChartContext: homeChartCards[0]?.context || "Simple Avg $ / lb trend across active Home filter",
         chartCanvasId: "c_ppl",
         secondaryCharts: isHomeMetricDetail
           ? homeChartCards.slice(1)

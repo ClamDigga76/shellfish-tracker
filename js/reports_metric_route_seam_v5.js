@@ -61,15 +61,26 @@ export function createReportsMetricRouteSeam(deps){
     const tripCount = Number.isFinite(snapshotTripCount) && snapshotTripCount >= 0
       ? snapshotTripCount
       : fallbackTripCount;
-    const contextText = `Home • Range ${displayRangeLabel} • ${tripCount} trips`;
+    const snapshotRangeLabel = String(homeScopeSnapshot?.rangeLabel || "").trim();
+    const displayLabel = snapshotRangeLabel || displayRangeLabel;
+    const contextText = `${displayLabel} • ${tripCount} trips`;
+    const snapshotKpiDisplayValues = homeScopeSnapshot?.kpiDisplayValues && typeof homeScopeSnapshot.kpiDisplayValues === "object"
+      ? {
+        trips: String(homeScopeSnapshot.kpiDisplayValues.trips || "").trim(),
+        pounds: String(homeScopeSnapshot.kpiDisplayValues.pounds || "").trim(),
+        amount: String(homeScopeSnapshot.kpiDisplayValues.amount || "").trim(),
+        ppl: String(homeScopeSnapshot.kpiDisplayValues.ppl || "").trim()
+      }
+      : null;
 
     return {
       filter: normalizedFilter,
       unifiedFilter,
       resolvedRange,
-      rangeLabel: displayRangeLabel,
+      rangeLabel: displayLabel,
       tripCount,
       contextText,
+      kpiDisplayValues: snapshotKpiDisplayValues,
       trips: filtered.rows
     };
   }
