@@ -95,7 +95,8 @@ export function openModal({
   backdropClose = true,
   escClose = true,
   showCloseButton = true,
-  position = "sheet"
+  position = "sheet",
+  hideHeader = false
 }){
   const root = document.getElementById("modalRoot");
   if(!root) return;
@@ -123,10 +124,12 @@ export function openModal({
 
   root.innerHTML = `
     <div class="modalSheet${isCenter ? " modalSheet--center" : ""}" style="${sheetStyle}" role="dialog" aria-modal="true" tabindex="-1">
+      ${hideHeader ? "" : `
       <div class="modalHdr">
         <div class="modalTitle">${escapeHtml(String(title||""))}</div>
         ${closeBtnHtml}
       </div>
+      `}
       <div class="modalBody">${html||""}</div>
     </div>
   `;
