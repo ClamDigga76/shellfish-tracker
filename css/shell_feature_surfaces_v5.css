@@ -637,7 +637,8 @@
   z-index:1;
   display:grid;
   justify-items:center;
-  padding:18px 8px 20px;
+  gap:6px;
+  padding:10px 8px 12px;
 }
 .homeScreenshotCardPreviewHero::after{
   content:"";
@@ -649,28 +650,64 @@
     radial-gradient(78% 46% at 76% 70%, color-mix(in srgb, var(--btc-logo-teal) 18%, transparent) 0%, transparent 74%),
     radial-gradient(90% 52% at 16% 72%, color-mix(in srgb, var(--btc-logo-blue) 20%, transparent) 0%, transparent 76%);
 }
-.homeScreenshotCardPreviewLogo{
+.homeScreenshotCardPreviewTitleRow{
   position:relative;
   z-index:1;
-  display:block;
-  justify-self:center;
-  margin-inline:auto;
-  width:min(216px, 100%);
-  height:auto;
-  max-width:100%;
-  filter:drop-shadow(0 2px 7px color-mix(in srgb, var(--btc-logo-blue-shadow) 40%, transparent)) drop-shadow(0 0 8px color-mix(in srgb, var(--btc-logo-gold) 30%, transparent));
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
 }
-.homeScreenshotCardPreviewBrandFallback{
+.homeScreenshotCardPreviewTitleLine{
+  width:66px;
+  height:1px;
+  background:color-mix(in srgb, #d4e6ff 88%, transparent);
+  opacity:.86;
+}
+.homeScreenshotCardPreviewEmblem{
+  width:34px;
+  height:34px;
+  object-fit:contain;
+  filter:drop-shadow(0 2px 7px color-mix(in srgb, var(--btc-logo-blue-shadow) 44%, transparent));
+}
+.homeScreenshotCardPreviewTitleText{
+  margin:0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size:53px;
+  line-height:1;
+  letter-spacing:.01em;
+  color:#f1f6ff;
+  text-shadow:0 1px 0 rgba(7,16,37,.42);
+}
+.homeScreenshotCardPreviewSubhead{
   position:relative;
   z-index:1;
-  display:none;
-  margin:0;
-  text-align:center;
-  font-size:13px;
+  margin-top:-1px;
+  font-size:10px;
   line-height:1.2;
-  letter-spacing:.03em;
-  color:#edf5ff;
-  font-weight:820;
+  letter-spacing:.08em;
+  color:#bcd6f4;
+  text-transform:uppercase;
+  font-weight:780;
+}
+.homeScreenshotCardPreviewDivider{
+  position:relative;
+  z-index:1;
+  width:min(220px, 100%);
+  height:1px;
+  margin-top:1px;
+  background:color-mix(in srgb, var(--btc-logo-gold) 92%, transparent);
+}
+.homeScreenshotCardPreviewDivider span{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:7px;
+  height:7px;
+  background:var(--btc-logo-gold);
+  transform:translate(-50%, -50%);
+  border-radius:1px;
 }
 .homeScreenshotCardPreviewLabel{
   position:relative;
@@ -722,8 +759,11 @@
   background:rgba(9,16,30,.4);
 }
 @media (max-width:380px){
-  .homeScreenshotCardPreviewLogo{
-    width:min(196px, 100%);
+  .homeScreenshotCardPreviewTitleText{
+    font-size:45px;
+  }
+  .homeScreenshotCardPreviewTitleLine{
+    width:44px;
   }
 }
 

@@ -544,14 +544,20 @@ export function createHomeDashboardRenderer({
         }
         if (typeof openModal !== "function") return;
         const appVersion = String(window?.APP_VERSION || "").trim();
-        const previewLogoSrc = `assets/brand/backgrounds/btc-share-logo-wide.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`;
+        const previewEmblemSrc = `assets/brand/transparent/btc-emblem-transparent.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`;
         openModal({
           html: `
             <div class="homeScreenshotCardPreviewWrap">
               <div class="homeScreenshotCardPreviewSurface">
                 <div class="homeScreenshotCardPreviewHero">
-                  <img class="homeScreenshotCardPreviewLogo" id="homeScreenshotCardPreviewLogo" src="${previewLogoSrc}" alt="Bank the Catch" loading="lazy" decoding="async" />
-                  <div class="homeScreenshotCardPreviewBrandFallback" id="homeScreenshotCardPreviewBrandFallback">Bank the Catch</div>
+                  <div class="homeScreenshotCardPreviewTitleRow" aria-label="Bank the Catch">
+                    <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
+                    <img class="homeScreenshotCardPreviewEmblem" src="${previewEmblemSrc}" alt="" loading="lazy" decoding="async" />
+                    <h3 class="homeScreenshotCardPreviewTitleText">Bank the Catch</h3>
+                    <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
+                  </div>
+                  <div class="homeScreenshotCardPreviewSubhead">LAST SAVED TRIP</div>
+                  <div class="homeScreenshotCardPreviewDivider" aria-hidden="true"><span></span></div>
                 </div>
                 <div class="homeScreenshotCardPreviewLabel">Last Saved Trip</div>
                 <div class="homeScreenshotCardPreviewCard">${renderStandardReadOnlyTripCard(newestSavedTrip, { variant: "standard" })}</div>
@@ -566,14 +572,6 @@ export function createHomeDashboardRenderer({
           escClose: true,
           showCloseButton: false,
           onOpen: () => {
-            const previewLogo = document.getElementById("homeScreenshotCardPreviewLogo");
-            const previewBrandFallback = document.getElementById("homeScreenshotCardPreviewBrandFallback");
-            if (previewLogo && previewBrandFallback) {
-              previewLogo.addEventListener("error", () => {
-                previewLogo.style.display = "none";
-                previewBrandFallback.style.display = "block";
-              }, { once: true });
-            }
             const previewCloseBtn = document.getElementById("homeScreenshotCardClose");
             if (previewCloseBtn) {
               previewCloseBtn.onclick = () => {
