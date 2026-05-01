@@ -213,30 +213,6 @@ export function createHomeDashboardRenderer({
       avgAmountPerTrip,
       avgPoundsPerTrip
     } = getHomeRangeTotals(trips);
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const parseIsoToUtcMs = (iso) => {
-      const safeIso = String(iso || "").trim();
-      if (!safeIso) return null;
-      const utcMs = Date.parse(`${safeIso}T00:00:00Z`);
-      return Number.isFinite(utcMs) ? utcMs : null;
-    };
-    const formatUtcMsToIso = (utcMs) => {
-      if (!Number.isFinite(utcMs)) return "";
-      return new Date(utcMs).toISOString().slice(0, 10);
-    };
-    const resolvePriorRange = ({ fromISO, toISO }) => {
-      const fromMs = parseIsoToUtcMs(fromISO);
-      const toMs = parseIsoToUtcMs(toISO);
-      if (!(Number.isFinite(fromMs) && Number.isFinite(toMs) && toMs >= fromMs)) return null;
-      const spanDays = Math.floor((toMs - fromMs) / msPerDay) + 1;
-      if (!(spanDays > 0)) return null;
-      const priorToMs = fromMs - msPerDay;
-      const priorFromMs = priorToMs - ((spanDays - 1) * msPerDay);
-      return {
-        fromISO: formatUtcMsToIso(priorFromMs),
-        toISO: formatUtcMsToIso(priorToMs)
-      };
-    };
     const trendToneFromDelta = (delta, epsilon = 0.00001) => {
       if (!Number.isFinite(delta) || Math.abs(delta) <= epsilon) return "flat";
       return delta > 0 ? "up" : "down";
@@ -248,25 +224,27 @@ export function createHomeDashboardRenderer({
       return `<span class="homeOverviewTrend ${cssTone}" aria-label="${escapeHtml(label)}">${arrow}</span>`;
     };
 
-    const priorRange = resolvePriorRange({ fromISO: unified.fromISO, toISO: unified.toISO });
-    const priorUnifiedFilter = priorRange
-      ? {
-        ...unified,
-        range: "custom",
-        fromISO: priorRange.fromISO,
-        toISO: priorRange.toISO
+    const resolveLatestTickAverages = (activeTrips) => {
+      if (!Array.isArray(activeTrips) || activeTrips.length < 2) {
+        return {
+          currentAvgAmountPerTrip: null,
+          previousAvgAmountPerTrip: null,
+          currentAvgPoundsPerTrip: null,
+          previousAvgPoundsPerTrip: null
+        };
       }
-      : null;
-    const priorTrips = priorUnifiedFilter
-      ? getHomeFilteredTrips(tripsAll, priorUnifiedFilter)
-      : [];
-    const hasPriorComparison = !!(priorRange && priorTrips.length > 0);
-    const {
-      totalAmount: priorTotalAmount,
-      totalLbs: priorTotalLbs,
-      avgAmountPerTrip: priorAvgAmountPerTrip,
-      avgPoundsPerTrip: priorAvgPoundsPerTrip
-    } = getHomeRangeTotals(priorTrips);
+      const newestFirst = getTripsNewestFirst(activeTrips);
+      const oldestFirst = newestFirst.slice().reverse();
+      const beforeLatest = oldestFirst.slice(0, -1);
+      const currentTotals = getHomeRangeTotals(oldestFirst);
+      const previousTotals = getHomeRangeTotals(beforeLatest);
+      return {
+        currentAvgAmountPerTrip: currentTotals.avgAmountPerTrip,
+        previousAvgAmountPerTrip: previousTotals.avgAmountPerTrip,
+        currentAvgPoundsPerTrip: currentTotals.avgPoundsPerTrip,
+        previousAvgPoundsPerTrip: previousTotals.avgPoundsPerTrip
+      };
+    };
 
     const formatGroupedHomeNumber = (value, { maximumFractionDigits = 2 } = {}) => {
       const numeric = Number(value);
@@ -344,11 +322,20 @@ export function createHomeDashboardRenderer({
 
     const tripsSorted = getTripsNewestFirst(trips);
     const newestSavedTrip = tripsSorted[0] || null;
-    const avgAmountTrendTone = hasPriorComparison && Number.isFinite(priorAvgAmountPerTrip)
-      ? trendToneFromDelta((avgAmountPerTrip ?? 0) - priorAvgAmountPerTrip)
+    const latestTickAverages = resolveLatestTickAverages(trips);
+    const avgAmountTrendTone = Number.isFinite(latestTickAverages.currentAvgAmountPerTrip)
+      && Number.isFinite(latestTickAverages.previousAvgAmountPerTrip)
+      ? trendToneFromDelta(
+        latestTickAverages.currentAvgAmountPerTrip - latestTickAverages.previousAvgAmountPerTrip,
+        0.01
+      )
       : "flat";
-    const avgPoundsTrendTone = hasPriorComparison && Number.isFinite(priorAvgPoundsPerTrip)
-      ? trendToneFromDelta((avgPoundsPerTrip ?? 0) - priorAvgPoundsPerTrip)
+    const avgPoundsTrendTone = Number.isFinite(latestTickAverages.currentAvgPoundsPerTrip)
+      && Number.isFinite(latestTickAverages.previousAvgPoundsPerTrip)
+      ? trendToneFromDelta(
+        latestTickAverages.currentAvgPoundsPerTrip - latestTickAverages.previousAvgPoundsPerTrip,
+        0.001
+      )
       : "flat";
     const installModel = typeof getInstallSurfaceModel === "function" ? getInstallSurfaceModel() : null;
     const showInstallCard = shouldShowBeginnerCard && installModel && !installModel.isInstalled;
@@ -460,24 +447,24 @@ export function createHomeDashboardRenderer({
             <div class="reportsHeroEyebrow">Overview</div>
             <div class="homeOverviewScopePill" aria-label="Active Home filter scope">${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
           </div>
-          <div class="reportsHeroGrid">
-            <div class="reportsHeroStat">
+          <div class="homeOverviewGrid">
+            <div class="homeOverviewStat">
               <div class="reportsHeroLabel">Average amount / trip</div>
-              <div class="reportsHeroValue money">${avgAmountPerTrip === null ? "—" : formatMoney(round2(avgAmountPerTrip))}</div>
+              <div class="reportsHeroValue money homeOverviewHeroValue">${avgAmountPerTrip === null ? "—" : formatMoney(round2(avgAmountPerTrip))}</div>
               ${renderOverviewTrendArrow(avgAmountTrendTone, "Average amount trend")}
             </div>
-            <div class="reportsHeroStat">
+            <div class="homeOverviewStat">
               <div class="reportsHeroLabel">Average pounds / trip</div>
-              <div class="reportsHeroValue lbsBlue">${avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)}`}</div>
+              <div class="reportsHeroValue lbsBlue homeOverviewHeroValue">${avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)}`}</div>
               ${renderOverviewTrendArrow(avgPoundsTrendTone, "Average pounds trend")}
             </div>
-            <div class="reportsHeroStat">
-              <div class="reportsHeroLabel">Top dealer</div>
+            <div class="homeOverviewStat">
+              <div class="reportsHeroLabel">Top dealer by total paid</div>
               <div class="reportsHeroValue">${escapeHtml(strongestDealer?.dealer || "—")}</div>
               <div class="reportsHeroMeta money">${strongestDealer ? formatMoney(round2(strongestDealer.amount)) : "No trips in range"}</div>
             </div>
-            <div class="reportsHeroStat">
-              <div class="reportsHeroLabel">Strongest area</div>
+            <div class="homeOverviewStat">
+              <div class="reportsHeroLabel">Strongest area by pounds</div>
               <div class="reportsHeroValue">${escapeHtml(strongestArea?.area || "—")}</div>
               <div class="reportsHeroMeta homeOverviewMetaPounds">${strongestArea ? formatHomePounds(round2(strongestArea.pounds)) : "No trips in range"}</div>
             </div>
