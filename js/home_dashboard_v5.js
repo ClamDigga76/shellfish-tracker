@@ -92,6 +92,8 @@ export function createHomeDashboardRenderer({
   function ensureHomeFilter() {
     if (!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode: "YTD", from: "", to: "" };
     if (!state.homeFilter.mode) state.homeFilter.mode = "YTD";
+    const normalizedMode = String(state.homeFilter.mode || "YTD").toUpperCase();
+    if (normalizedMode === "ALL") state.homeFilter.mode = "YTD";
     if (state.homeFilter.from == null) state.homeFilter.from = "";
     if (state.homeFilter.to == null) state.homeFilter.to = "";
     if (!Array.isArray(state.homeFilter.customRangeCorrectionMessages)) state.homeFilter.customRangeCorrectionMessages = [];
