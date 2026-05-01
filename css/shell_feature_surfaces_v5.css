@@ -217,6 +217,11 @@
   .tripCardStandard .tripCardMetricChip .metricValue{
     font-size:14px;
   }
+  .tripCardStandard.tripCardVariantTripsBrowse .tripCardMetricChip .metricValue.rate{
+    font-size:16px;
+    line-height:1.12;
+    font-weight:900;
+  }
   .tripCardStandard .tripCardMetricChip.tripCardMetricEmphasis{
     font-size:12px;
   }
