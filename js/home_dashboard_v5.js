@@ -448,23 +448,23 @@ export function createHomeDashboardRenderer({
             <div class="homeOverviewScopePill" aria-label="Active Home filter scope">${escapeHtml(homeOverviewRangeLabel)} • ${trips.length} trips</div>
           </div>
           <div class="homeOverviewGrid">
-            <div class="homeOverviewStat">
-              <div class="reportsHeroLabel">Average amount / trip</div>
+            <div class="homeOverviewStat homeOverviewStat--top">
+              <div class="reportsHeroLabel">AVG $ / TRIP</div>
               <div class="reportsHeroValue money homeOverviewHeroValue">${avgAmountPerTrip === null ? "—" : formatMoney(round2(avgAmountPerTrip))}</div>
               ${renderOverviewTrendArrow(avgAmountTrendTone, "Average amount trend")}
             </div>
-            <div class="homeOverviewStat">
-              <div class="reportsHeroLabel">Average pounds / trip</div>
+            <div class="homeOverviewStat homeOverviewStat--top">
+              <div class="reportsHeroLabel">AVG LBS / TRIP</div>
               <div class="reportsHeroValue lbsBlue homeOverviewHeroValue">${avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)}`}</div>
               ${renderOverviewTrendArrow(avgPoundsTrendTone, "Average pounds trend")}
             </div>
             <div class="homeOverviewStat">
-              <div class="reportsHeroLabel">Top dealer by total paid</div>
-              <div class="reportsHeroValue">${escapeHtml(strongestDealer?.dealer || "—")}</div>
+              <div class="reportsHeroLabel">TOP DEALER</div>
+              <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(strongestDealer?.dealer || "—")}</div>
               <div class="reportsHeroMeta money">${strongestDealer ? formatMoney(round2(strongestDealer.amount)) : "No trips in range"}</div>
             </div>
             <div class="homeOverviewStat">
-              <div class="reportsHeroLabel">Strongest area by pounds</div>
+              <div class="reportsHeroLabel">STRONGEST AREA</div>
               <div class="reportsHeroValue">${escapeHtml(strongestArea?.area || "—")}</div>
               <div class="reportsHeroMeta homeOverviewMetaPounds">${strongestArea ? formatHomePounds(round2(strongestArea.pounds)) : "No trips in range"}</div>
             </div>
