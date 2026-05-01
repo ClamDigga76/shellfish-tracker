@@ -21,6 +21,19 @@ function trimOrFallback(value, fallback = "Not set") {
   return trimmed || fallback;
 }
 
+
+function fitTextToWidth(ctx, text, maxWidth) {
+  const value = String(text || "");
+  if (!value) return value;
+  if (ctx.measureText(value).width <= maxWidth) return value;
+  const ellipsis = "…";
+  let next = value;
+  while (next.length > 1 && ctx.measureText(`${next}${ellipsis}`).width > maxWidth) {
+    next = next.slice(0, -1).trimEnd();
+  }
+  return `${next}${ellipsis}`;
+}
+
 function buildShareCardFields({ trip, parseReportDateToISO, round2, formatMoney }) {
   const pounds = Number(trip?.pounds) || 0;
   const amount = Number(trip?.amount) || 0;
@@ -201,7 +214,9 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.fillText("AREA", leftX, cardY + 190);
   ctx.fillStyle = "#f2f8ff";
   ctx.font = "700 68px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-  ctx.fillText(fields.areaLabel, leftX, cardY + 270);
+  const maxAreaWidth = rightColX - leftX - 30;
+  const safeAreaLabel = fitTextToWidth(ctx, fields.areaLabel, maxAreaWidth);
+  ctx.fillText(safeAreaLabel, leftX, cardY + 270);
 
   ctx.fillStyle = "rgba(171,198,237,0.95)";
   ctx.font = "600 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
