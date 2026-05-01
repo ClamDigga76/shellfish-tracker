@@ -775,7 +775,7 @@ export function createReportsMetricDetailSeam(deps){
     return `${to2(safeValue)}`;
   };
 
-  const buildHomeSnapshotItems = ({ metricKey, chartModel, trips })=> {
+  const buildHomeSnapshotItems = ({ metricKey, chartModel, trips, homeScope })=> {
     const values = Array.isArray(chartModel?.values) ? chartModel.values.map((value)=> Number(value) || 0) : [];
     const safeTrips = Array.isArray(trips) ? trips : [];
     if(!values.length && !safeTrips.length) return [];
@@ -798,7 +798,8 @@ export function createReportsMetricDetailSeam(deps){
       const avgTripPounds = tripCount > 0
         ? (safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0) / tripCount)
         : 0;
-      const isSeasonPreview = String(viewModel?.homeScope?.filter?.mode || "").toUpperCase() === "SEASON_PREVIEW";
+      const activeMode = String(homeScope?.filter?.mode || homeScope?.filterMode || "").trim().toUpperCase();
+      const isSeasonPreview = activeMode === "SEASON_PREVIEW";
       const avgTripBuckets = [
         { label: "0–25 lbs", min: 0, max: 25 },
         { label: "25–50 lbs", min: 25, max: 50 },
@@ -816,12 +817,17 @@ export function createReportsMetricDetailSeam(deps){
         { label: "1.5k–2k lbs", min: 1500, max: 2000 },
         { label: "2k+ lbs", min: 2000, max: Number.POSITIVE_INFINITY }
       ];
-      const activeMode = String(viewModel?.homeScope?.filter?.mode || "").toUpperCase();
       const activeLabel = (()=>{
-        if(activeMode === "SEASON_PREVIEW") return "Active Months";
-        if(activeMode === "THIS_MONTH" || activeMode === "4_WEEKS") return "Active Weeks";
-        if(activeMode === "14_DAYS" || activeMode === "7_DAYS") return "Active Days";
-        const spanDays = Number(viewModel?.homeScope?.resolvedRange?.days) || 0;
+        if(activeMode === "SEASON_PREVIEW" || activeMode === "FULL_YTD") return "Active Months";
+        if(["MONTH", "THIS_MONTH", "28D", "4W", "LAST_4_WEEKS"].includes(activeMode)) return "Active Weeks";
+        if(["14D", "LAST_14_DAYS", "7D", "LAST_7_DAYS"].includes(activeMode)) return "Active Days";
+        const fromISO = String(homeScope?.resolvedRange?.fromISO || "").slice(0, 10);
+        const toISO = String(homeScope?.resolvedRange?.toISO || "").slice(0, 10);
+        const fromDate = /^\d{4}-\d{2}-\d{2}$/.test(fromISO) ? new Date(`${fromISO}T00:00:00Z`) : null;
+        const toDate = /^\d{4}-\d{2}-\d{2}$/.test(toISO) ? new Date(`${toISO}T00:00:00Z`) : null;
+        const spanDays = fromDate && toDate
+          ? Math.floor((toDate.getTime() - fromDate.getTime()) / 86400000) + 1
+          : 0;
         if(spanDays > 90) return "Active Months";
         if(spanDays > 21) return "Active Weeks";
         return "Active Days";
@@ -1200,7 +1206,7 @@ export function createReportsMetricDetailSeam(deps){
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("trips");
-          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart, trips: viewModel.trips });
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart, trips: viewModel.trips, homeScope: viewModel.homeScope });
           return {
         title: "Trips breakdown",
         homeTitle: "Trips Logged",
@@ -1248,7 +1254,7 @@ export function createReportsMetricDetailSeam(deps){
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("pounds");
-          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "pounds", chartModel: homePrimaryChart, trips: viewModel.trips });
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "pounds", chartModel: homePrimaryChart, trips: viewModel.trips, homeScope: viewModel.homeScope });
           return {
         title: "Pounds breakdown",
         homeTitle: "Pounds Landed",
@@ -1296,7 +1302,7 @@ export function createReportsMetricDetailSeam(deps){
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("amount");
-          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "amount", chartModel: homePrimaryChart, trips: viewModel.trips });
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "amount", chartModel: homePrimaryChart, trips: viewModel.trips, homeScope: viewModel.homeScope });
           return {
         title: "Amount breakdown",
         homeTitle: "Pay Received",
@@ -1356,7 +1362,7 @@ export function createReportsMetricDetailSeam(deps){
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("ppl");
-          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "ppl", chartModel: homePrimaryChart, trips: viewModel.trips });
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "ppl", chartModel: homePrimaryChart, trips: viewModel.trips, homeScope: viewModel.homeScope });
           return {
         title: "Avg $ / lb breakdown",
         homeTitle: "Avg Pay Rate",
