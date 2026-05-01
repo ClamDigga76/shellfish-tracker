@@ -1103,23 +1103,25 @@
   min-height:34px;
   display:flex;
   align-items:center;
-  justify-content:flex-start;
-  padding:6px 10px;
-  border-radius:9px;
-  border:1px solid rgba(195,168,110,.46);
-  background:linear-gradient(180deg, rgba(97,74,38,.58) 0%, rgba(58,43,25,.78) 100%);
-  color:rgba(247,226,177,.94);
-  font-size:12px;
-  font-weight:800;
-  letter-spacing:.02em;
+  justify-content:center;
+  padding:4px 6px;
+  border-radius:8px;
+  border:1px solid rgba(233,198,125,.2);
+  background:linear-gradient(180deg, rgba(255,223,152,.18) 0%, rgba(150,108,43,.22) 100%);
+  color:rgba(255,236,196,.9);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.01em;
+  text-shadow:0 1px 0 rgba(40,26,10,.35);
   white-space:nowrap;
 }
 .homeScreenShell .timeframeUnifiedControl.homeTimeframeRowLocked{
-  grid-template-columns:minmax(0,1.25fr) repeat(3,minmax(0,1fr));
-  gap:6px;
-  padding:6px;
-  border-color:rgba(205,180,124,.4);
-  background:linear-gradient(180deg, rgba(74,56,29,.32) 0%, rgba(33,25,16,.28) 100%);
+  grid-template-columns:minmax(0,.6fr) repeat(3,minmax(0,1fr));
+  gap:4px;
+  padding:5px;
+  border-color:rgba(214,186,126,.52);
+  background:linear-gradient(180deg, rgba(132,100,50,.34) 0%, rgba(66,47,22,.36) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,237,196,.12), 0 0 0 1px rgba(228,188,108,.08), 0 8px 20px rgba(23,17,9,.2);
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip{
   min-height:36px;
@@ -1137,21 +1139,22 @@
 .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChipLocked{
   min-height:34px;
   padding-block:5px;
-  border-color:rgba(187,162,108,.56);
-  background:linear-gradient(180deg, rgba(115,91,48,.6) 0%, rgba(67,52,30,.86) 100%);
-  color:rgba(245,229,192,.92);
+  border-color:rgba(218,186,120,.22);
+  background:linear-gradient(180deg, rgba(255,227,166,.08) 0%, rgba(156,115,50,.14) 100%);
+  color:rgba(244,225,186,.86);
+  box-shadow:none;
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChipLocked.on,
 .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChipLocked.is-selected{
-  color:rgba(255,248,230,.98);
-  border-color:rgba(255,215,132,.98);
+  color:rgba(255,246,224,.98);
+  border-color:rgba(255,223,154,.46);
   background:
-    linear-gradient(180deg, rgba(198,149,66,.92) 0%, rgba(132,92,36,.96) 56%, rgba(95,66,28,.98) 100%);
+    linear-gradient(180deg, rgba(251,214,146,.26) 0%, rgba(186,136,66,.34) 54%, rgba(123,88,41,.44) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255,243,211,.34),
-    inset 0 -1px 0 rgba(66,43,13,.45),
-    0 0 0 1px rgba(255,203,110,.34),
-    0 0 14px rgba(229,170,68,.26);
+    inset 0 1px 0 rgba(255,241,208,.2),
+    inset 0 -1px 0 rgba(81,56,23,.24),
+    0 0 0 1px rgba(255,216,141,.12),
+    0 0 8px rgba(224,167,75,.14);
 }
 .timeframeChipMainLabel{
   display:block;

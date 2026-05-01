@@ -134,7 +134,7 @@ export function createHomeDashboardRenderer({
         ariaLabel: "Home timeframe filter"
       })}
       <div class="segWrap timeframeUnifiedControl homeTimeframeRow homeTimeframeRowLocked" role="group" aria-label="Home premium ranges">
-        <div class="homePremiumInlineLabel" aria-hidden="true">Premium 🔒</div>
+        <div class="homePremiumInlineLabel" aria-hidden="true">🔒</div>
         ${premiumRowChips}
       </div>
       ${timeframeFilterControls.renderCustomRangeRow({
