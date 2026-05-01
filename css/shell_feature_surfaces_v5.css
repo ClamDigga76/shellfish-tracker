@@ -94,7 +94,7 @@
   justify-content:flex-end;
   align-items:center;
   gap:5px;
-  margin:-3px 0 1px;
+  margin:0 0 2px;
   flex-wrap:wrap;
   width:100%;
 }
@@ -154,6 +154,10 @@
   line-height:1.16;
   font-weight:860;
 }
+
+.tripCardStandard.tripCardVariantTripsBrowse:not(.tripCardReadOnly) .tripCardMetricsCol{
+  margin-top:-4px;
+}
 .tripCardStandard.tripCardVariantTripsBrowse .tripCardMetricChip{
   font-size:12px;
   line-height:1.22;
@@ -193,7 +197,7 @@
   }
   .tripCardStandard .tripCardActionsRow{
     gap:4px;
-    margin-bottom:3px;
+    margin-bottom:2px;
   }
   .tripCardStandard .tripCardActionBtn{
     padding:4px 9px;
