@@ -113,10 +113,15 @@ export function createHomeDashboardRenderer({
       { key: "28D", label: "4 Weeks" }
     ].map((item)=> ({ ...quickFilterByKey.get(String(item.key || "").toUpperCase()), ...item }));
     const homeFuturePaidItems = [
+      { key: "YTD", label: "YTD" },
       { key: "MONTH", label: "This Month" },
-      { key: "ALL", label: "All Time" },
       { key: "RANGE", label: "Custom" }
     ].map((item)=> ({ ...quickFilterByKey.get(String(item.key || "").toUpperCase()), ...item }));
+    const premiumRowChips = homeFuturePaidItems.map((item)=> {
+      const isSelected = fMode === String(item.key || "").toUpperCase();
+      const textLabel = String(item.label || item.key || "");
+      return `<button class="chip segBtn homeTimeframeChip homeTimeframeChipLocked ${isSelected ? "on is-selected" : ""}" data-hf="${escapeHtml(String(item.key || ""))}" type="button" aria-label="${escapeHtml(textLabel)}"><span class="timeframeChipMainLabel">${escapeHtml(textLabel)}</span></button>`;
+    }).join("");
     return `
       ${timeframeFilterControls.renderPresetChipRow({
         items: homeQuickItems,
@@ -126,15 +131,10 @@ export function createHomeDashboardRenderer({
         groupClass: "homeTimeframeRow homeTimeframeRowQuick",
         ariaLabel: "Home timeframe filter"
       })}
-      <div class="homePremiumRangesLabel" aria-hidden="true">Premium ranges</div>
-      ${timeframeFilterControls.renderPresetChipRow({
-        items: homeFuturePaidItems,
-        activeKey: fMode,
-        dataAttr: "data-hf",
-        chipClass: "homeTimeframeChip homeTimeframeChipLocked",
-        groupClass: "homeTimeframeRow homeTimeframeRowLocked",
-        ariaLabel: "Home premium ranges"
-      })}
+      <div class="segWrap timeframeUnifiedControl homeTimeframeRow homeTimeframeRowLocked" role="group" aria-label="Home premium ranges">
+        <div class="homePremiumInlineLabel" aria-hidden="true">Premium 🔒</div>
+        ${premiumRowChips}
+      </div>
       ${timeframeFilterControls.renderCustomRangeRow({
         mode: fMode,
         fromValue: homeFilter.from,

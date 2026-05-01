@@ -1060,7 +1060,7 @@
   margin-top:0;
 }
 .homeScreenShell .timeframeUnifiedControl{
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:minmax(0,1.25fr) repeat(3,minmax(0,1fr));
   gap:6px;
   padding:6px;
   border:1px solid rgba(176,194,224,.13);
@@ -1099,18 +1099,27 @@
   font-size:11px;
   letter-spacing:.01em;
 }
-.homePremiumRangesLabel{
-  margin:6px 4px 5px;
-  color:rgba(210,219,235,.82);
+.homePremiumInlineLabel{
+  min-height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  padding:6px 10px;
+  border-radius:9px;
+  border:1px solid rgba(195,168,110,.46);
+  background:linear-gradient(180deg, rgba(97,74,38,.58) 0%, rgba(58,43,25,.78) 100%);
+  color:rgba(247,226,177,.94);
   font-size:12px;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:none;
+  font-weight:800;
+  letter-spacing:.02em;
+  white-space:nowrap;
 }
 .homeScreenShell .timeframeUnifiedControl.homeTimeframeRowLocked{
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  border-color:rgba(205,180,124,.34);
-  background:linear-gradient(180deg, rgba(56,43,23,.24) 0%, rgba(27,22,15,.2) 100%);
+  grid-template-columns:minmax(0,1.25fr) repeat(3,minmax(0,1fr));
+  gap:6px;
+  padding:6px;
+  border-color:rgba(205,180,124,.4);
+  background:linear-gradient(180deg, rgba(74,56,29,.32) 0%, rgba(33,25,16,.28) 100%);
 }
 .homeScreenShell .timeframeUnifiedControl .segBtn.homeTimeframeChip{
   min-height:36px;
