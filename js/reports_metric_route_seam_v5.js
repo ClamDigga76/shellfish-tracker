@@ -61,13 +61,15 @@ export function createReportsMetricRouteSeam(deps){
     const tripCount = Number.isFinite(snapshotTripCount) && snapshotTripCount >= 0
       ? snapshotTripCount
       : fallbackTripCount;
-    const contextText = `Home • Range ${displayRangeLabel} • ${tripCount} trips`;
+    const snapshotRangeLabel = String(homeScopeSnapshot?.rangeLabel || "").trim();
+    const displayLabel = snapshotRangeLabel || displayRangeLabel;
+    const contextText = `${displayLabel} • ${tripCount} trips`;
 
     return {
       filter: normalizedFilter,
       unifiedFilter,
       resolvedRange,
-      rangeLabel: displayRangeLabel,
+      rangeLabel: displayLabel,
       tripCount,
       contextText,
       trips: filtered.rows

@@ -434,14 +434,14 @@ export function createHomeDashboardRenderer({
       })()
       : `<div class="emptyState compact homeLastTripFallback"><div class="emptyStateTitle">No trip saved yet</div><div class="emptyStateBody">Save your first trip to show it here.</div></div>`;
 
-    const homeFilterLabel = timeframeFilterControls.resolveRangeLabel({
+    const homeFilterLabel = timeframeFilterControls.resolveHomeFilterLabel({
       mode: f,
       fromISO: unified.fromISO,
       toISO: unified.toISO,
-      monthLabel: "Current Month",
-      lastMonthLabel: "Previous Month"
+      ytdLabel: "YTD",
+      customRangeLabel: "Custom Range"
     });
-    const homeOverviewRangeLabel = f === "SEASON_PREVIEW" ? "Season Preview" : homeFilterLabel;
+    const homeOverviewRangeLabel = homeFilterLabel;
     const lastTripHeaderActionHtml = hasEditableLatestTrip
       ? ``
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
@@ -598,12 +598,12 @@ export function createHomeDashboardRenderer({
           from: parseReportDateToISO(state.homeFilter?.from || "") || "",
           to: parseReportDateToISO(state.homeFilter?.to || "") || ""
         };
-        const launchedRangeLabel = timeframeFilterControls.resolveRangeLabel({
+        const launchedRangeLabel = timeframeFilterControls.resolveHomeFilterLabel({
           mode: launchedHomeFilter.mode,
           fromISO: launchedHomeFilter.from,
           toISO: launchedHomeFilter.to,
-          monthLabel: "Current Month",
-          lastMonthLabel: "Previous Month"
+          ytdLabel: "YTD",
+          customRangeLabel: "Custom Range"
         });
         state.homeMetricDetail = metricKey;
         state.homeMetricDetailContext = {
@@ -611,7 +611,13 @@ export function createHomeDashboardRenderer({
           homeScope: {
             rangeLabel: launchedRangeLabel,
             tripCount: trips.length,
-            contextText: `Range ${launchedRangeLabel} • ${trips.length} trips`
+            contextText: `${launchedRangeLabel} • ${trips.length} trips`,
+            kpiDisplayValues: {
+              trips: tripsStr,
+              pounds: lbsStr,
+              amount: amountDisplay,
+              ppl: avgPplDisplay
+            }
           }
         };
         state.reportsMetricDetail = "";

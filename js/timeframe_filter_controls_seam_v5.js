@@ -112,6 +112,31 @@ export function createTimeframeFilterControlsSeam({
     return "YTD";
   }
 
+
+
+  function resolveHomeFilterLabel({
+    mode = "SEASON_PREVIEW",
+    fromISO = "",
+    toISO = "",
+    ytdLabel = "YTD",
+    customRangeLabel = "Custom Range"
+  } = {}){
+    const normalizedMode = String(mode || "SEASON_PREVIEW").toUpperCase();
+    if(normalizedMode === "SEASON_PREVIEW") return "Season Preview";
+    if(normalizedMode === "7D") return "7 Days";
+    if(normalizedMode === "14D") return "14 Days";
+    if(normalizedMode === "28D") return "4 Weeks";
+    if(normalizedMode === "MONTH" || normalizedMode === "THIS_MONTH") return "This Month";
+    if(normalizedMode === "FULL_YTD" || normalizedMode === "YTD") return String(ytdLabel || "YTD");
+    if(normalizedMode === "RANGE" || normalizedMode === "CUSTOM") {
+      const from = parseReportDateToISO?.(fromISO) || "";
+      const to = parseReportDateToISO?.(toISO) || "";
+      if(!from || !to) return String(customRangeLabel || "Custom Range");
+      return `${formatDateDMY?.(from) || from} → ${formatDateDMY?.(to) || to}`;
+    }
+    return resolveRangeLabel({ mode: normalizedMode, fromISO, toISO, emptyCustomLabel: customRangeLabel, monthLabel: "This Month" });
+  }
+
   function buildActiveFilterSummary({ reportsFilter } = {}){
     const rf = reportsFilter || {};
     const tokens = [];
@@ -146,6 +171,7 @@ export function createTimeframeFilterControlsSeam({
     renderCustomRangeRow,
     renderCorrectionMessages,
     resolveRangeLabel,
+    resolveHomeFilterLabel,
     buildActiveFilterSummary
   };
 }
