@@ -176,8 +176,8 @@
   font-weight:900;
 }
 .tripCardStandard .tripCardSettlementSubtle{
-  margin-top:2px;
-  font-size:10px;
+  margin-top:0;
+  font-size:9px;
   line-height:1.42;
   color:var(--muted);
   text-align:right;
@@ -235,7 +235,7 @@
   margin-top:12px;
   padding:15px;
   border:1px solid var(--line);
-  border-radius:14px;
+  border-radius:12px;
   background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.025) 100%);
   display:grid;
   gap:9px;
@@ -503,7 +503,7 @@
   align-items:center;
   justify-content:space-between;
   flex-wrap:wrap;
-  gap:10px;
+  gap:8px;
   margin-bottom:10px;
 }
 .homeInsightsHero{
@@ -614,7 +614,7 @@
   overflow:hidden;
   border:1px solid color-mix(in srgb, var(--btc-logo-blue-highlight) 30%, transparent);
   border-radius:16px;
-  padding:14px 12px 10px;
+  padding:12px 10px 10px;
   background:
     radial-gradient(130% 96% at 86% 8%, color-mix(in srgb, var(--btc-logo-blue-shadow) 42%, transparent) 0%, transparent 54%),
     radial-gradient(116% 84% at 12% 2%, color-mix(in srgb, var(--btc-logo-blue-deep) 36%, transparent) 0%, transparent 60%),
@@ -637,8 +637,8 @@
   z-index:1;
   display:grid;
   justify-items:center;
-  gap:6px;
-  padding:10px 8px 12px;
+  gap:5px;
+  padding:8px 6px 7px;
 }
 .homeScreenshotCardPreviewHero::after{
   content:"";
@@ -660,30 +660,31 @@
   gap:10px;
 }
 .homeScreenshotCardPreviewTitleLine{
-  width:66px;
+  width:clamp(42px, 16vw, 72px);
   height:1px;
   background:color-mix(in srgb, #d4e6ff 88%, transparent);
   opacity:.86;
 }
 .homeScreenshotCardPreviewEmblem{
-  width:34px;
-  height:34px;
+  width:26px;
+  height:26px;
   object-fit:contain;
   filter:drop-shadow(0 2px 7px color-mix(in srgb, var(--btc-logo-blue-shadow) 44%, transparent));
 }
 .homeScreenshotCardPreviewTitleText{
   margin:0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size:53px;
-  line-height:1;
+  font-size:clamp(20px, 7.7vw, 52px);
+  line-height:1.02;
   letter-spacing:.01em;
   color:#f1f6ff;
   text-shadow:0 1px 0 rgba(7,16,37,.42);
+  white-space:nowrap;
 }
 .homeScreenshotCardPreviewSubhead{
   position:relative;
   z-index:1;
-  margin-top:-1px;
+  margin-top:0;
   font-size:10px;
   line-height:1.2;
   letter-spacing:.08em;
@@ -694,9 +695,9 @@
 .homeScreenshotCardPreviewDivider{
   position:relative;
   z-index:1;
-  width:min(220px, 100%);
+  width:min(200px, 90%);
   height:1px;
-  margin-top:1px;
+  margin-top:0;
   background:color-mix(in srgb, var(--btc-logo-gold) 92%, transparent);
 }
 .homeScreenshotCardPreviewDivider span{
@@ -728,6 +729,23 @@
   border:1px solid rgba(145,191,255,.24);
   background:linear-gradient(180deg, rgba(8,20,46,.62) 0%, rgba(5,14,34,.7) 100%);
 }
+
+.homeScreenshotCardPreviewCard .tripCardStandard{
+  padding:10px 10px 9px;
+  border-radius:12px;
+}
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardGrid{
+  grid-template-columns:minmax(0,1fr) minmax(86px, fit-content(35%));
+  gap:8px;
+}
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardArea{font-size:16px;}
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardDealer,
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardSpecies{font-size:11px;line-height:1.3;}
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardDate{font-size:9px;}
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardMetricChip{font-size:10px;white-space:nowrap;overflow-wrap:normal;word-break:normal;}
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardMetricChip .metricValue{font-size:12px;line-height:1.14;white-space:nowrap;}
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardMetricChip .metricValue.rate{font-size:14px;}
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardSettlementSubtle{font-size:8px;line-height:1.3;max-width:130px;}
 .homeScreenshotCardPreviewFooter{
   position:relative;
   z-index:1;
@@ -760,10 +778,10 @@
 }
 @media (max-width:380px){
   .homeScreenshotCardPreviewTitleText{
-    font-size:45px;
+    font-size:clamp(20px, 7.5vw, 30px);
   }
   .homeScreenshotCardPreviewTitleLine{
-    width:44px;
+    width:clamp(28px, 12vw, 44px);
   }
 }
 
