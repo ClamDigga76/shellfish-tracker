@@ -72,7 +72,7 @@ export function createHomeMetricDetailRenderer(deps){
       tripsTimeline
     } = getMemoizedAggregationState(trips);
 
-    const compareFoundation = reportsMetricDetailSeam.buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows });
+    const compareFoundation = reportsMetricDetailSeam.buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows, trips });
     const detailCharts = compareFoundation.detailCharts || {};
     const detailChartsWithRolling = {
       ...detailCharts,
