@@ -827,6 +827,34 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const showEmptyState = emptyStateEnabled && !hasUsableChartData(chartModel);
     toggleChartEmptyState(canvasId, showEmptyState, drawOptions?.emptyMessage);
     if(showEmptyState) return true;
+    if(chartModel.chartType === "trip-timeline"){
+      const labels = Array.isArray(chartModel?.labels) ? chartModel.labels.map((v)=> String(v || "")) : [];
+      const values = Array.isArray(chartModel?.values) ? chartModel.values.map((v)=> Number(v) || 0) : [];
+      const c = setupCanvas(document.getElementById(canvasId));
+      if(!c) return false;
+      const { ctx, w, h } = c;
+      const frame = chartFrame(w, h, frameMode, { chartKind: "line", pointCount: labels.length, labelType: "category" });
+      clear(ctx, w, h);
+      const geom = drawAxes(ctx, w, h, { ...frame, top: h - frame.bottom - 22 });
+      const slotW = labels.length > 0 ? (geom.plotW / labels.length) : geom.plotW;
+      values.forEach((count, i)=> {
+        const x = geom.x0 + (slotW * i) + (slotW * 0.5);
+        const tickHeight = count >= 2 ? 12 : 7;
+        ctx.strokeStyle = palette.trips;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, geom.y0);
+        ctx.lineTo(x, geom.y0 - tickHeight);
+        ctx.stroke();
+        if(count >= 2){
+          ctx.fillStyle = palette.label;
+          ctx.font = "10px system-ui, -apple-system, Segoe UI, Arial";
+          ctx.fillText(String(Math.round(count)), x - 3, geom.y0 - tickHeight - 4);
+        }
+      });
+      drawBottomTicks(ctx, labels, geom, h - 10, frame, { alignMode: "bar-center", labelType: "category", maxTicks: 5 });
+      return true;
+    }
     if(chartModel.chartType === "time-series"){
       const chronologicalSeries = normalizeChronologicalSeries({
         monthKeys: Array.isArray(chartModel?.monthKeys) ? chartModel.monthKeys : [],
