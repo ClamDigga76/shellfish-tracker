@@ -21,6 +21,19 @@ function trimOrFallback(value, fallback = "Not set") {
   return trimmed || fallback;
 }
 
+
+function fitTextToWidth(ctx, text, maxWidth) {
+  const value = String(text || "");
+  if (!value) return value;
+  if (ctx.measureText(value).width <= maxWidth) return value;
+  const ellipsis = "…";
+  let next = value;
+  while (next.length > 1 && ctx.measureText(`${next}${ellipsis}`).width > maxWidth) {
+    next = next.slice(0, -1).trimEnd();
+  }
+  return `${next}${ellipsis}`;
+}
+
 function buildShareCardFields({ trip, parseReportDateToISO, round2, formatMoney }) {
   const pounds = Number(trip?.pounds) || 0;
   const amount = Number(trip?.amount) || 0;
@@ -126,97 +139,112 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.ellipse(innerX + innerW - 40, innerY + 42, 190, 70, -0.5, 0, Math.PI * 2);
   ctx.fill();
 
-  let logoDrawn = false;
+  const headerCenterX = innerX + (innerW / 2);
+  const headerBaselineY = innerY + 114;
+  const emblemSize = 60;
+
+  let emblemDrawn = false;
   try {
-    const logo = await loadImage(`./assets/brand/backgrounds/btc-share-logo-wide.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`);
-    const heroPadX = 34;
-    const heroPadTop = 34;
-    const drawW = innerW - (heroPadX * 2);
-    const sourceRatio = logo.naturalWidth > 0 ? (logo.naturalHeight / logo.naturalWidth) : 0.34;
-    const drawH = Math.max(170, Math.round(drawW * sourceRatio));
-    const drawY = innerY + heroPadTop;
+    const emblem = await loadImage(`./assets/brand/transparent/btc-emblem-transparent.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`);
     ctx.save();
-    ctx.globalAlpha = 0.98;
-    ctx.drawImage(logo, innerX + heroPadX, drawY, drawW, drawH);
-
-    const logoFade = ctx.createLinearGradient(0, drawY + drawH - 78, 0, drawY + drawH + 16);
-    logoFade.addColorStop(0, "rgba(0,15,44,0)");
-    logoFade.addColorStop(1, "rgba(0,15,44,0.62)");
-    ctx.fillStyle = logoFade;
-    ctx.fillRect(innerX + heroPadX, drawY + drawH - 78, drawW, 104);
+    ctx.globalAlpha = 0.95;
+    ctx.drawImage(emblem, headerCenterX - 220, headerBaselineY - 50, emblemSize, emblemSize);
     ctx.restore();
-    logoDrawn = true;
+    emblemDrawn = true;
   } catch (_error) {
-    logoDrawn = false;
+    emblemDrawn = false;
   }
 
-  if (!logoDrawn) {
-    ctx.fillStyle = "#f4f8ff";
-    ctx.font = "700 66px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-    ctx.fillText("Bank the Catch", innerX + 82, innerY + 146);
-  }
+  const titleLeftX = emblemDrawn ? (headerCenterX - 132) : (headerCenterX - 100);
+  const sideLineY = headerBaselineY - 18;
+  ctx.strokeStyle = "rgba(187,214,255,0.58)";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(innerX + 60, sideLineY);
+  ctx.lineTo(titleLeftX - 24, sideLineY);
+  ctx.moveTo(headerCenterX + 148, sideLineY);
+  ctx.lineTo(innerX + innerW - 60, sideLineY);
+  ctx.stroke();
 
-  const heroDivider = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
-  heroDivider.addColorStop(0, "rgba(130,184,255,0)");
-  heroDivider.addColorStop(0.5, "rgba(130,184,255,0.38)");
-  heroDivider.addColorStop(1, "rgba(130,184,255,0)");
-  ctx.fillStyle = heroDivider;
-  ctx.fillRect(innerX + 12, innerY + heroHeight - 1, innerW - 24, 2);
-  ctx.restore();
+  ctx.fillStyle = "#f4f8ff";
+  ctx.font = "700 56px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillText("Bank the Catch", titleLeftX, headerBaselineY);
 
   ctx.fillStyle = "rgba(198,219,255,0.94)";
   ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-  ctx.fillText("Last Saved Trip", innerX + 58, innerY + heroHeight + 56);
+  const subtitle = "LAST SAVED TRIP";
+  const subtitleWidth = ctx.measureText(subtitle).width;
+  const subtitleY = innerY + 186;
+  ctx.fillText(subtitle, headerCenterX - (subtitleWidth / 2), subtitleY);
+
+  const heroDivider = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
+  heroDivider.addColorStop(0, "rgba(205,166,96,0)");
+  heroDivider.addColorStop(0.5, "rgba(205,166,96,0.5)");
+  heroDivider.addColorStop(1, "rgba(205,166,96,0)");
+  ctx.fillStyle = heroDivider;
+  ctx.fillRect(innerX + 64, subtitleY + 18, innerW - 128, 1);
+  ctx.restore();
 
   const fields = buildShareCardFields({ trip, parseReportDateToISO, round2, formatMoney });
-  const topMetrics = [
-    { label: "Trip Date", value: fields.dateLabel },
-    { label: "Pounds", value: fields.poundsLabel },
-    { label: "Amount", value: fields.amountLabel },
-    { label: "Avg $/lb", value: fields.avgLabel }
+  const speciesLabel = trimOrFallback(trip?.species, "Species not set");
+  const cardX = innerX + 58;
+  const cardY = innerY + heroHeight + 72;
+  const cardW = innerW - 116;
+  const cardH = 612;
+
+  drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 30);
+  ctx.fillStyle = "rgba(10,22,44,0.86)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(122,164,238,0.38)";
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+
+  const leftX = cardX + 40;
+  const rightColX = cardX + cardW - 286;
+
+  ctx.fillStyle = "rgba(171,198,237,0.95)";
+  ctx.font = "600 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillText("DATE", leftX, cardY + 62);
+  ctx.fillStyle = "#f2f8ff";
+  ctx.font = "700 44px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillText(fields.dateLabel, leftX, cardY + 112);
+
+  ctx.fillStyle = "rgba(171,198,237,0.95)";
+  ctx.font = "600 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillText("AREA", leftX, cardY + 190);
+  ctx.fillStyle = "#f2f8ff";
+  ctx.font = "700 68px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  const maxAreaWidth = rightColX - leftX - 30;
+  const safeAreaLabel = fitTextToWidth(ctx, fields.areaLabel, maxAreaWidth);
+  ctx.fillText(safeAreaLabel, leftX, cardY + 270);
+
+  ctx.fillStyle = "rgba(171,198,237,0.95)";
+  ctx.font = "600 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillText("DEALER", leftX, cardY + 348);
+  ctx.fillStyle = "#f2f8ff";
+  ctx.font = "700 38px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillText(fields.dealerLabel, leftX, cardY + 402);
+
+  ctx.fillStyle = "rgba(171,198,237,0.95)";
+  ctx.font = "600 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillText("SPECIES", leftX, cardY + 466);
+  ctx.fillStyle = "#f2f8ff";
+  ctx.font = "700 38px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillText(speciesLabel, leftX, cardY + 520);
+
+  const rightMetrics = [
+    ["POUNDS", fields.poundsLabel],
+    ["AMOUNT", fields.amountLabel],
+    ["PRICE / LB", fields.avgLabel]
   ];
-  const lowerMetrics = [
-    { label: "Dealer", value: fields.dealerLabel },
-    { label: "Area", value: fields.areaLabel }
-  ];
-
-  const cardX = innerX + 52;
-  const cardY = innerY + heroHeight + 82;
-  const cardW = innerW - 104;
-  const rowH = 126;
-
-  topMetrics.forEach((metric, idx) => {
-    const y = cardY + (idx * rowH);
-    drawRoundedRect(ctx, cardX, y, cardW, 104, 24);
-    ctx.fillStyle = "rgba(16,33,60,0.82)";
-    ctx.fill();
-    ctx.strokeStyle = "rgba(122,164,238,0.33)";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
+  rightMetrics.forEach(([label, value], idx) => {
+    const y = cardY + 106 + (idx * 156);
     ctx.fillStyle = "rgba(171,198,237,0.95)";
-    ctx.font = "600 24px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-    ctx.fillText(metric.label, cardX + 28, y + 38);
-
+    ctx.font = "600 20px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.fillText(label, rightColX, y);
     ctx.fillStyle = "#f2f8ff";
-    ctx.font = "700 42px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-    ctx.fillText(metric.value, cardX + 28, y + 84);
-  });
-
-  const lowerY = cardY + (topMetrics.length * rowH) + 10;
-  lowerMetrics.forEach((metric, idx) => {
-    const y = lowerY + (idx * 116);
-    drawRoundedRect(ctx, cardX, y, cardW, 96, 22);
-    ctx.fillStyle = "rgba(17,30,55,0.72)";
-    ctx.fill();
-
-    ctx.fillStyle = "rgba(171,198,237,0.92)";
-    ctx.font = "600 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-    ctx.fillText(metric.label, cardX + 26, y + 35);
-
-    ctx.fillStyle = "#f2f8ff";
-    ctx.font = "700 34px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-    ctx.fillText(metric.value, cardX + 26, y + 76);
+    ctx.font = "700 40px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.fillText(value, rightColX, y + 48);
   });
 
   ctx.fillStyle = "#8dc3ff";
