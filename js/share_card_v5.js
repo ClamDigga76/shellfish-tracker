@@ -129,12 +129,12 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.fillStyle = heroGradient;
   ctx.fillRect(innerX, innerY, innerW, heroHeight);
 
-  ctx.fillStyle = "rgba(88,152,236,0.14)";
+  ctx.fillStyle = "rgba(88,152,236,0.10)";
   ctx.beginPath();
   ctx.ellipse(innerX + innerW - 140, innerY + 98, 228, 124, -0.26, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(6,44,99,0.12)";
+  ctx.fillStyle = "rgba(6,44,99,0.08)";
   ctx.beginPath();
   ctx.ellipse(innerX + innerW - 40, innerY + 42, 190, 70, -0.5, 0, Math.PI * 2);
   ctx.fill();
@@ -157,32 +157,25 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
 
   const titleLeftX = emblemDrawn ? (headerCenterX - 132) : (headerCenterX - 100);
   const sideLineY = headerBaselineY - 18;
-  ctx.strokeStyle = "rgba(187,214,255,0.58)";
+  ctx.strokeStyle = "rgba(187,214,255,0.46)";
   ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.moveTo(innerX + 60, sideLineY);
-  ctx.lineTo(titleLeftX - 24, sideLineY);
-  ctx.moveTo(headerCenterX + 148, sideLineY);
-  ctx.lineTo(innerX + innerW - 60, sideLineY);
+  ctx.moveTo(innerX + 76, sideLineY);
+  ctx.lineTo(titleLeftX - 18, sideLineY);
+  ctx.moveTo(headerCenterX + 138, sideLineY);
+  ctx.lineTo(innerX + innerW - 76, sideLineY);
   ctx.stroke();
 
   ctx.fillStyle = "#f4f8ff";
   ctx.font = "700 56px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
   ctx.fillText("Bank the Catch", titleLeftX, headerBaselineY);
 
-  ctx.fillStyle = "rgba(198,219,255,0.94)";
-  ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-  const subtitle = "LAST SAVED TRIP";
-  const subtitleWidth = ctx.measureText(subtitle).width;
-  const subtitleY = innerY + 186;
-  ctx.fillText(subtitle, headerCenterX - (subtitleWidth / 2), subtitleY);
-
   const heroDivider = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
   heroDivider.addColorStop(0, "rgba(205,166,96,0)");
-  heroDivider.addColorStop(0.5, "rgba(205,166,96,0.5)");
+  heroDivider.addColorStop(0.5, "rgba(205,166,96,0.42)");
   heroDivider.addColorStop(1, "rgba(205,166,96,0)");
   ctx.fillStyle = heroDivider;
-  ctx.fillRect(innerX + 64, subtitleY + 18, innerW - 128, 1);
+  ctx.fillRect(innerX + 84, innerY + 164, innerW - 168, 1);
   ctx.restore();
 
   const fields = buildShareCardFields({ trip, parseReportDateToISO, round2, formatMoney });
@@ -288,7 +281,6 @@ export function openScreenshotCardPreview({
   closeModal,
   showToast,
   escapeHtml,
-  subtitle = "TRIP PREVIEW"
 }) {
   if (!trip) {
     if (typeof showToast === "function") showToast("Trip preview unavailable");
@@ -313,7 +305,6 @@ export function openScreenshotCardPreview({
               <h3 class="homeScreenshotCardPreviewTitleText">Bank the Catch</h3>
               <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
             </div>
-            <div class="homeScreenshotCardPreviewSubhead">${typeof escapeHtml === "function" ? escapeHtml(subtitle) : subtitle}</div>
             <div class="homeScreenshotCardPreviewDivider" aria-hidden="true"><span></span></div>
           </div>
           <div class="homeScreenshotCardPreviewCard">${renderTripsBrowseReadOnlyTripCard(trip)}</div>

@@ -93,7 +93,7 @@
   display:flex;
   justify-content:flex-end;
   align-items:center;
-  gap:5px;
+  gap:4px;
   margin:0 0 2px;
   flex-wrap:wrap;
   width:100%;
@@ -364,7 +364,7 @@
 .restorePreviewWarning--strong{border-color:rgba(255,107,107,.42);background:linear-gradient(180deg, rgba(255,107,107,.18) 0%, rgba(255,107,107,.10) 100%);color:#ffd6d6;box-shadow:0 8px 20px rgba(120,24,24,.12)}
 .restorePreviewWarningTitle{font-size:13px;font-weight:860;line-height:1.2;letter-spacing:.01em}
 .restorePreviewWarningBody,.restorePreviewWarningHint{font-size:12px;line-height:1.45;color:inherit}
-.restorePreviewWarningList{margin:0;padding-left:18px;display:grid;gap:5px;font-size:12px;line-height:1.45}
+.restorePreviewWarningList{margin:0;padding-left:18px;display:grid;gap:4px;font-size:12px;line-height:1.45}
 .restoreResultPanel{display:grid;gap:12px}
 .restoreResultLead{font-size:13px;line-height:1.5;color:var(--text-muted-strong)}
 .restoreResultGrid{display:grid;gap:8px}
@@ -618,12 +618,12 @@
   overflow:hidden;
   border:1px solid color-mix(in srgb, var(--btc-logo-blue-highlight) 30%, transparent);
   border-radius:16px;
-  padding:12px 10px 10px;
+  padding:10px 10px 10px;
   background:
-    radial-gradient(130% 96% at 86% 8%, color-mix(in srgb, var(--btc-logo-blue-shadow) 42%, transparent) 0%, transparent 54%),
-    radial-gradient(116% 84% at 12% 2%, color-mix(in srgb, var(--btc-logo-blue-deep) 36%, transparent) 0%, transparent 60%),
-    linear-gradient(160deg, var(--btc-logo-panel-navy) 0%, var(--btc-logo-panel-navy) 56%, var(--btc-logo-blue-shadow) 82%, var(--btc-logo-blue) 100%);
-  box-shadow:0 10px 22px rgba(0,0,0,.24), inset 0 1px 0 rgba(214,231,255,.05);
+    radial-gradient(130% 96% at 86% 8%, color-mix(in srgb, var(--btc-logo-blue-shadow) 26%, transparent) 0%, transparent 56%),
+    radial-gradient(116% 84% at 12% 2%, color-mix(in srgb, var(--btc-logo-blue-deep) 20%, transparent) 0%, transparent 64%),
+    linear-gradient(160deg, color-mix(in srgb, var(--btc-logo-panel-navy) 88%, #0b1327) 0%, var(--btc-logo-panel-navy) 60%, color-mix(in srgb, var(--btc-logo-blue-shadow) 74%, transparent) 84%, color-mix(in srgb, var(--btc-logo-blue) 68%, transparent) 100%);
+  box-shadow:0 8px 16px rgba(0,0,0,.2), inset 0 1px 0 rgba(214,231,255,.05);
   display:grid;
   gap:10px;
 }
@@ -633,7 +633,7 @@
   inset:0;
   pointer-events:none;
   background:
-    radial-gradient(92% 42% at 50% 18%, rgba(78,159,255,.12) 0%, rgba(78,159,255,0) 70%),
+    radial-gradient(92% 42% at 50% 18%, rgba(78,159,255,.08) 0%, rgba(78,159,255,0) 72%),
     linear-gradient(180deg, rgba(164,204,255,.07) 0, rgba(164,204,255,0) 56%);
 }
 .homeScreenshotCardPreviewHero{
@@ -641,8 +641,8 @@
   z-index:1;
   display:grid;
   justify-items:center;
-  gap:5px;
-  padding:8px 6px 7px;
+  gap:4px;
+  padding:6px 6px 5px;
 }
 .homeScreenshotCardPreviewHero::after{
   content:"";
@@ -650,9 +650,9 @@
   inset:0;
   pointer-events:none;
   background:
-    radial-gradient(80% 64% at 50% 10%, color-mix(in srgb, var(--btc-logo-blue-shine) 24%, transparent) 0%, transparent 66%),
-    radial-gradient(78% 46% at 76% 70%, color-mix(in srgb, var(--btc-logo-teal) 18%, transparent) 0%, transparent 74%),
-    radial-gradient(90% 52% at 16% 72%, color-mix(in srgb, var(--btc-logo-blue) 20%, transparent) 0%, transparent 76%);
+    radial-gradient(80% 64% at 50% 10%, color-mix(in srgb, var(--btc-logo-blue-shine) 14%, transparent) 0%, transparent 68%),
+    radial-gradient(78% 46% at 76% 70%, color-mix(in srgb, var(--btc-logo-teal) 12%, transparent) 0%, transparent 76%),
+    radial-gradient(90% 52% at 16% 72%, color-mix(in srgb, var(--btc-logo-blue) 14%, transparent) 0%, transparent 78%);
 }
 .homeScreenshotCardPreviewTitleRow{
   position:relative;
@@ -666,11 +666,11 @@
   min-width:0;
 }
 .homeScreenshotCardPreviewTitleLine{
-  flex:1 1 clamp(24px, 12vw, 64px);
+  flex:1 1 clamp(20px, 10vw, 52px);
   min-width:20px;
-  max-width:64px;
+  max-width:52px;
   height:1px;
-  background:color-mix(in srgb, #d4e6ff 88%, transparent);
+  background:color-mix(in srgb, #d4e6ff 74%, transparent);
   opacity:.86;
 }
 .homeScreenshotCardPreviewEmblem{
@@ -678,7 +678,7 @@
   height:32px;
   flex:0 0 auto;
   object-fit:contain;
-  filter:drop-shadow(0 2px 7px color-mix(in srgb, var(--btc-logo-blue-shadow) 44%, transparent));
+  filter:drop-shadow(0 2px 8px color-mix(in srgb, var(--btc-logo-blue-shadow) 32%, transparent));
 }
 .homeScreenshotCardPreviewTitleText{
   margin:0;
@@ -696,6 +696,7 @@
   flex:0 1 auto;
 }
 .homeScreenshotCardPreviewSubhead{
+  display:none;
   position:relative;
   z-index:1;
   margin-top:0;
@@ -709,20 +710,20 @@
 .homeScreenshotCardPreviewDivider{
   position:relative;
   z-index:1;
-  width:min(200px, 90%);
+  width:min(166px, 78%);
   height:1px;
   margin-top:0;
-  background:color-mix(in srgb, var(--btc-logo-gold) 92%, transparent);
+  background:color-mix(in srgb, var(--btc-logo-gold) 72%, transparent);
 }
 .homeScreenshotCardPreviewDivider span{
   position:absolute;
   left:50%;
   top:50%;
-  width:7px;
-  height:7px;
+  width:6px;
+  height:6px;
   background:var(--btc-logo-gold);
   transform:translate(-50%, -50%);
-  border-radius:1px;
+  border-radius:2px;
 }
 .homeScreenshotCardPreviewLabel{
   position:relative;
@@ -740,8 +741,8 @@
   z-index:1;
   border-radius:14px;
   overflow:hidden;
-  border:1px solid rgba(145,191,255,.24);
-  background:linear-gradient(180deg, rgba(8,20,46,.62) 0%, rgba(5,14,34,.7) 100%);
+  border:1px solid rgba(145,191,255,.2);
+  background:linear-gradient(180deg, rgba(8,20,46,.52) 0%, rgba(5,14,34,.62) 100%);
 }
 
 .homeScreenshotCardPreviewCard .tripCardStandard{
@@ -952,8 +953,8 @@
   position:absolute;
   right:10px;
   top:10px;
-  width:7px;
-  height:7px;
+  width:6px;
+  height:6px;
   border-top:2px solid var(--text-muted-strong);
   border-right:2px solid var(--text-muted-strong);
   transform:rotate(45deg);
