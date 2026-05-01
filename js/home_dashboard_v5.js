@@ -93,7 +93,7 @@ export function createHomeDashboardRenderer({
     if (!state.homeFilter || typeof state.homeFilter !== "object") state.homeFilter = { mode: "SEASON_PREVIEW", from: "", to: "" };
     if (!state.homeFilter.mode) state.homeFilter.mode = "SEASON_PREVIEW";
     const normalizedMode = String(state.homeFilter.mode || "SEASON_PREVIEW").toUpperCase();
-    if (normalizedMode === "ALL") state.homeFilter.mode = "SEASON_PREVIEW";
+    if (normalizedMode === "ALL" || normalizedMode === "YTD") state.homeFilter.mode = "SEASON_PREVIEW";
     if (state.homeFilter.from == null) state.homeFilter.from = "";
     if (state.homeFilter.to == null) state.homeFilter.to = "";
     if (!Array.isArray(state.homeFilter.customRangeCorrectionMessages)) state.homeFilter.customRangeCorrectionMessages = [];
