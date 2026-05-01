@@ -42,6 +42,16 @@ export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, re
     return renderTripCardHTML(model, { interactive: true, variant: opts.variant || "standard" });
   }
 
+  function renderTripsBrowseReadOnlyTripCard(t, opts = {}){
+    const model = resolveTripCardModel(t, opts);
+    return renderTripCardHTML(model, {
+      interactive: false,
+      variant: "tripsBrowse",
+      auditVariant: "tripsBrowseReadOnly",
+      showTripsBrowseActions: false
+    });
+  }
+
   function renderTripsBrowseInteractiveTripCard(t, opts = {}){
     const model = resolveTripCardModel(t, opts);
     return renderTripCardHTML(model, {
@@ -62,6 +72,7 @@ export function createTripCardRenderHelpers({ formatDateDMY, to2, computePPL, re
   return {
     renderStandardReadOnlyTripCard,
     renderStandardInteractiveTripCard,
+    renderTripsBrowseReadOnlyTripCard,
     renderTripsBrowseInteractiveTripCard,
     renderTripCatchCard
   };
