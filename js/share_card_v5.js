@@ -305,7 +305,6 @@ export function openScreenshotCardPreview({
               <h3 class="homeScreenshotCardPreviewTitleText">Bank the Catch</h3>
               <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
             </div>
-            <div class="homeScreenshotCardPreviewDivider" aria-hidden="true"><span></span></div>
           </div>
           <div class="homeScreenshotCardPreviewCard">${renderTripsBrowseReadOnlyTripCard(trip)}</div>
           <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>

@@ -153,6 +153,8 @@
   font-size:17px;
   line-height:1.16;
   font-weight:860;
+  font-variant-numeric:tabular-nums lining-nums;
+  letter-spacing:.01em;
 }
 
 .tripCardStandard.tripCardVariantTripsBrowse:not(.tripCardReadOnly) .tripCardMetricsCol{
@@ -558,7 +560,7 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap:8px;
 }
 .homeLastTripActions{
   display:inline-flex;
@@ -616,16 +618,16 @@
 .homeScreenshotCardPreviewSurface{
   position:relative;
   overflow:hidden;
-  border:1px solid color-mix(in srgb, var(--btc-logo-blue-highlight) 30%, transparent);
+  border:1px solid color-mix(in srgb, var(--btc-logo-blue-highlight) 22%, transparent);
   border-radius:16px;
   padding:10px 10px 10px;
   background:
-    radial-gradient(130% 96% at 86% 8%, color-mix(in srgb, var(--btc-logo-blue-shadow) 26%, transparent) 0%, transparent 56%),
-    radial-gradient(116% 84% at 12% 2%, color-mix(in srgb, var(--btc-logo-blue-deep) 20%, transparent) 0%, transparent 64%),
-    linear-gradient(160deg, color-mix(in srgb, var(--btc-logo-panel-navy) 88%, #0b1327) 0%, var(--btc-logo-panel-navy) 60%, color-mix(in srgb, var(--btc-logo-blue-shadow) 74%, transparent) 84%, color-mix(in srgb, var(--btc-logo-blue) 68%, transparent) 100%);
+    radial-gradient(130% 96% at 86% 8%, color-mix(in srgb, var(--btc-logo-blue-shadow) 18%, transparent) 0%, transparent 56%),
+    radial-gradient(116% 84% at 12% 2%, color-mix(in srgb, var(--btc-logo-blue-deep) 14%, transparent) 0%, transparent 64%),
+    linear-gradient(160deg, color-mix(in srgb, var(--btc-logo-panel-navy) 88%, #0b1327) 0%, var(--btc-logo-panel-navy) 60%, color-mix(in srgb, var(--btc-logo-blue-shadow) 58%, transparent) 84%, color-mix(in srgb, var(--btc-logo-blue) 50%, transparent) 100%);
   box-shadow:0 8px 16px rgba(0,0,0,.2), inset 0 1px 0 rgba(214,231,255,.05);
   display:grid;
-  gap:10px;
+  gap:8px;
 }
 .homeScreenshotCardPreviewSurface::before{
   content:"";
@@ -633,16 +635,16 @@
   inset:0;
   pointer-events:none;
   background:
-    radial-gradient(92% 42% at 50% 18%, rgba(78,159,255,.08) 0%, rgba(78,159,255,0) 72%),
-    linear-gradient(180deg, rgba(164,204,255,.07) 0, rgba(164,204,255,0) 56%);
+    radial-gradient(92% 42% at 50% 18%, rgba(78,159,255,.05) 0%, rgba(78,159,255,0) 72%),
+    linear-gradient(180deg, rgba(164,204,255,.05) 0, rgba(164,204,255,0) 56%);
 }
 .homeScreenshotCardPreviewHero{
   position:relative;
   z-index:1;
   display:grid;
   justify-items:center;
-  gap:4px;
-  padding:6px 6px 5px;
+  gap:2px;
+  padding:3px 4px 2px;
 }
 .homeScreenshotCardPreviewHero::after{
   content:"";
@@ -650,9 +652,9 @@
   inset:0;
   pointer-events:none;
   background:
-    radial-gradient(80% 64% at 50% 10%, color-mix(in srgb, var(--btc-logo-blue-shine) 14%, transparent) 0%, transparent 68%),
-    radial-gradient(78% 46% at 76% 70%, color-mix(in srgb, var(--btc-logo-teal) 12%, transparent) 0%, transparent 76%),
-    radial-gradient(90% 52% at 16% 72%, color-mix(in srgb, var(--btc-logo-blue) 14%, transparent) 0%, transparent 78%);
+    radial-gradient(80% 64% at 50% 10%, color-mix(in srgb, var(--btc-logo-blue-shine) 9%, transparent) 0%, transparent 68%),
+    radial-gradient(78% 46% at 76% 70%, color-mix(in srgb, var(--btc-logo-teal) 8%, transparent) 0%, transparent 76%),
+    radial-gradient(90% 52% at 16% 72%, color-mix(in srgb, var(--btc-logo-blue) 9%, transparent) 0%, transparent 78%);
 }
 .homeScreenshotCardPreviewTitleRow{
   position:relative;
@@ -707,24 +709,6 @@
   text-transform:uppercase;
   font-weight:780;
 }
-.homeScreenshotCardPreviewDivider{
-  position:relative;
-  z-index:1;
-  width:min(166px, 78%);
-  height:1px;
-  margin-top:0;
-  background:color-mix(in srgb, var(--btc-logo-gold) 72%, transparent);
-}
-.homeScreenshotCardPreviewDivider span{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:6px;
-  height:6px;
-  background:var(--btc-logo-gold);
-  transform:translate(-50%, -50%);
-  border-radius:2px;
-}
 .homeScreenshotCardPreviewLabel{
   position:relative;
   z-index:1;
@@ -741,8 +725,8 @@
   z-index:1;
   border-radius:14px;
   overflow:hidden;
-  border:1px solid rgba(145,191,255,.2);
-  background:linear-gradient(180deg, rgba(8,20,46,.52) 0%, rgba(5,14,34,.62) 100%);
+  border:1px solid rgba(145,191,255,.14);
+  background:transparent;
 }
 
 .homeScreenshotCardPreviewCard .tripCardStandard{
@@ -760,7 +744,7 @@
 .homeScreenshotCardPreviewCard .tripCardStandard .tripCardDate{font-size:9px;}
 .homeScreenshotCardPreviewCard .tripCardStandard .tripCardMetricsCol{width:100%;max-width:100%;min-width:0;}
 .homeScreenshotCardPreviewCard .tripCardStandard .tripCardMetricChip{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;word-break:normal;}
-.homeScreenshotCardPreviewCard .tripCardStandard .tripCardMetricChip .metricValue{font-size:12px;line-height:1.14;white-space:nowrap;}
+.homeScreenshotCardPreviewCard .tripCardStandard .tripCardMetricChip .metricValue{font-size:12px;line-height:1.16;white-space:nowrap;font-variant-numeric:tabular-nums lining-nums;}
 .homeScreenshotCardPreviewCard .tripCardStandard .tripCardMetricChip .metricValue.rate{font-size:14px;}
 .homeScreenshotCardPreviewCard .tripCardStandard .tripCardSettlementSubtle{font-size:8px;line-height:1.3;max-width:130px;}
 .homeScreenshotCardPreviewFooter{
