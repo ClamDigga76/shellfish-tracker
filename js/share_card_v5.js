@@ -295,6 +295,8 @@ export function openScreenshotCardPreview({
   const previewEmblemSrcRaw = `assets/brand/transparent/btc-emblem-transparent.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`;
   const previewEmblemSrc = typeof escapeHtml === "function" ? escapeHtml(previewEmblemSrcRaw) : previewEmblemSrcRaw;
   openModal({
+    position: "center",
+    hideHeader: true,
     html: `
       <div class="homeScreenshotCardPreviewWrap">
         <div class="homeScreenshotCardPreviewSurface">
