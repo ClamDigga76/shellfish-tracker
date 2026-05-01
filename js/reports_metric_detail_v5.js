@@ -299,6 +299,29 @@ function formatCompactTripDate(trip){
   return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
+function computeCurrentRunFromTrips(trips){
+  const parsedDates = (Array.isArray(trips) ? trips : [])
+    .map((trip)=> parseTripDateValue(trip))
+    .filter((row)=> row != null)
+    .map((row)=> row.dateToken);
+  if(!parsedDates.length) return 0;
+  const uniqueDates = Array.from(new Set(parsedDates)).sort((a, b)=> a.localeCompare(b));
+  if(!uniqueDates.length) return 0;
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  let run = 1;
+  for(let i = uniqueDates.length - 1; i > 0; i -= 1){
+    const currentTs = Date.parse(`${uniqueDates[i]}T00:00:00Z`);
+    const previousTs = Date.parse(`${uniqueDates[i - 1]}T00:00:00Z`);
+    if(!Number.isFinite(currentTs) || !Number.isFinite(previousTs)) break;
+    if((currentTs - previousTs) === ONE_DAY_MS){
+      run += 1;
+      continue;
+    }
+    break;
+  }
+  return run;
+}
+
 function buildHomeTopRowsBarChart({ rows, metricKey, valueKey, basisLabel, maxItems = 5, labelMode = "" }){
   const safeRows = Array.isArray(rows)
     ? rows
@@ -751,11 +774,12 @@ export function createReportsMetricDetailSeam(deps){
     const highest = values.length ? values.reduce((max, value)=> Math.max(max, value), values[0]) : 0;
     const average = values.length ? (values.reduce((sum, value)=> sum + value, 0) / values.length) : 0;
     const tripCount = safeTrips.length;
+    const currentRun = computeCurrentRunFromTrips(safeTrips);
     const latestTrip = resolveLatestSelectedTrip(safeTrips);
     if(metricKey === "trips") return [
       { label: "Latest Month", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
       { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
-      { label: "Current Run", value: tripCount ? "1 in a row" : "—" },
+      { label: "Current Run", value: currentRun > 0 ? `${currentRun} in a row` : "—" },
       { label: "Latest Trip", value: formatCompactTripDate(latestTrip) }
     ];
     if(metricKey === "pounds"){
