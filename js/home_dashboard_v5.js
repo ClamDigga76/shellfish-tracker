@@ -441,7 +441,7 @@ export function createHomeDashboardRenderer({
       monthLabel: "Current Month",
       lastMonthLabel: "Previous Month"
     });
-    const homeOverviewRangeLabel = homeFilterLabel;
+    const homeOverviewRangeLabel = f === "SEASON_PREVIEW" ? "Season Preview" : homeFilterLabel;
     const lastTripHeaderActionHtml = hasEditableLatestTrip
       ? ``
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
