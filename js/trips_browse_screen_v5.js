@@ -214,10 +214,10 @@ export function createTripsBrowseScreenRenderer(deps){
           return;
         }
         if(action === "share") {
-          const normalizedId = String(id || "").trim();
+          const rawId = String(id || "");
           const allTrips = Array.isArray(state?.trips) ? state.trips : [];
-          const trip = sorted.find((row)=> String(row?.id || "") === normalizedId)
-            || allTrips.find((row)=> String(row?.id || "") === normalizedId)
+          const trip = sorted.find((row)=> String(row?.id || "") === rawId)
+            || allTrips.find((row)=> String(row?.id || "") === rawId)
             || null;
           if(!trip || typeof onShareTripCard !== "function") {
             showToast("Share card unavailable");
