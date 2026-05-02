@@ -254,7 +254,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       for(const candidate of candidates){
         const text = String(candidate || "").trim();
         if(!text) continue;
-        const lines = isFinal && /\s+so far$/i.test(text) ? text.split(/\s+/) : [text];
+        const lines = isFinal && /\s+so far$/i.test(text) ? [text.replace(/\s+so far$/i, "").trim(), "so far"].filter(Boolean) : [text];
         const lineWidths = lines.map((line)=> ctx.measureText(line).width);
         const width = Math.max(...lineWidths);
         let tx = x - (width / 2);
