@@ -238,7 +238,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const step = Math.max(1, Math.ceil(labels.length / Math.max(1, maxTicks)));
     const alignMode = options.alignMode === "bar-center" ? "bar-center" : "index";
     const labelType = options.labelType || "category";
-    const monthOnlyCompact = options.monthOnlyCompact === true && frame.compact && labelType === "month" && labels.length > 1 && labels.length <= 6;
+    const safeMonthKeys = Array.isArray(options.monthKeys) ? options.monthKeys.map((key)=> normalizeMonthKey(key)) : [];
+    const hasAlignedMonthKeys = labelType === "month" && safeMonthKeys.length === labels.length && safeMonthKeys.every(Boolean);
+    const sameYearFromMonthKeys = hasAlignedMonthKeys && new Set(safeMonthKeys.map((key)=> key.slice(0, 4))).size <= 1;
+    const allowMonthOnlyCompact = options.monthOnlyCompact === true && (sameYearFromMonthKeys || options.yearContextKnown === true);
+    const monthOnlyCompact = allowMonthOnlyCompact && frame.compact && labelType === "month" && labels.length > 1 && labels.length <= 6;
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     const edgeInset = frame.compact ? 6 : 8;
@@ -734,7 +738,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           alignMode: "bar-center",
           labelType: xLabelType,
           maxTicks: options.maxTicks || 0,
-          finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : []
+          finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : [],
+          monthOnlyCompact: xLabelType === "month",
+          monthKeys: options.monthKeys
         });
       }
       const yLabels = [];
@@ -903,7 +909,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         labelType: xLabelType,
         maxTicks: options.maxTicks || 0,
         finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : [],
-        monthOnlyCompact: xLabelType === "month"
+        monthOnlyCompact: xLabelType === "month",
+        monthKeys: options.monthKeys
       });
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
@@ -1015,7 +1022,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
             xLabelType: "month",
             frameMode,
             emptyStateEnabled,
-            emptyMessage: drawOptions?.emptyMessage
+            emptyMessage: drawOptions?.emptyMessage,
+            monthKeys: chronologicalSeries.monthKeys
           }
         );
         return true;
@@ -1029,7 +1037,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         minBarWidth: frameMinBarWidth(labels.length),
         barPad: (frame)=> frame.compact ? 1.2 : 1.8,
         xLabelType: "month",
-        frameMode
+        frameMode,
+        monthKeys: chronologicalSeries.monthKeys
       });
       return true;
     }
@@ -1048,7 +1057,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           xLabelType: "month",
           frameMode,
           emptyStateEnabled,
-          emptyMessage: drawOptions?.emptyMessage
+          emptyMessage: drawOptions?.emptyMessage,
+          monthKeys: chronologicalSeries.monthKeys
         }
       );
       return true;
@@ -1309,7 +1319,8 @@ function normalizeChronologicalSeries({ monthKeys, labels, values }){
   if(!(safeLabels.length && safeValues.length && safeKeys.length === safeLabels.length && safeValues.length === safeLabels.length)){
     return {
       labels: safeLabels.slice(),
-      values: safeValues.slice()
+      values: safeValues.slice(),
+      monthKeys: safeKeys.slice()
     };
   }
   const tuples = safeKeys.map((key, index)=> ({
@@ -1320,7 +1331,8 @@ function normalizeChronologicalSeries({ monthKeys, labels, values }){
   tuples.sort((a,b)=> a.monthKey.localeCompare(b.monthKey));
   return {
     labels: tuples.map((row)=> row.label),
-    values: tuples.map((row)=> row.value)
+    values: tuples.map((row)=> row.value),
+    monthKeys: tuples.map((row)=> row.monthKey)
   };
 }
 
