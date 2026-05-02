@@ -79,8 +79,8 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
   const today = new Date();
   const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
   const currentDay = today.getDate();
-  const monthRows = normalizeChronologicalRows(Array.from(byMonth.entries())
-    .sort((a,b)=> a[0].localeCompare(b[0]))
+  const monthRows = normalizeChronologicalRows(fillMissingMonthEntries(Array.from(byMonth.entries())
+    .sort((a,b)=> a[0].localeCompare(b[0])))
     .map(([monthKey, x])=>{
       const year = Number(monthKey.slice(0, 4));
       const month = Number(monthKey.slice(5, 7));
@@ -102,7 +102,9 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
         daysElapsed,
         daysInMonth,
         trustLabel: isPartialMonth ? "partial-month-so-far" : "completed-month",
-        ...finalizeAggregateRow(x)
+        ...finalizeAggregateRow(x),
+        hasTrips: (Number(x?.trips) || 0) > 0,
+        isEmptyMonth: !(Number(x?.trips) || 0)
       };
     }));
   const weeklyRangeRows = Array.from(byWeek.values())
@@ -198,6 +200,26 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
     },
     dealerRangeRows
   };
+}
+
+function fillMissingMonthEntries(entries){
+  const monthEntries = Array.isArray(entries) ? entries.filter(([monthKey])=> /^\d{4}-\d{2}$/.test(String(monthKey || ""))) : [];
+  if(monthEntries.length === 0) return [];
+  const byKey = new Map(monthEntries);
+  const firstKey = String(monthEntries[0][0] || "");
+  const lastKey = String(monthEntries[monthEntries.length - 1][0] || "");
+  const [firstYear, firstMonth] = firstKey.split("-").map(Number);
+  const [lastYear, lastMonth] = lastKey.split("-").map(Number);
+  if(!(firstYear > 0 && firstMonth > 0 && lastYear > 0 && lastMonth > 0)) return monthEntries;
+  const cursor = new Date(firstYear, firstMonth - 1, 1);
+  const end = new Date(lastYear, lastMonth - 1, 1);
+  const filled = [];
+  while(cursor <= end){
+    const monthKey = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`;
+    filled.push([monthKey, byKey.get(monthKey) || { trips: 0, lbs: 0, amt: 0, _days: new Set() }]);
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  return filled;
 }
 
 function finalizeAggregateRow(row){
