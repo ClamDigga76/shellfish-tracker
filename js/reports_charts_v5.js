@@ -174,15 +174,25 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     ctx.textBaseline = "alphabetic";
   }
 
-  function formatAxisLabel(label, { labelType = "category", compact = false } = {}){
+  function formatAxisLabel(label, { labelType = "category", compact = false, monthOnly = false } = {}){
     const raw = String(label || "").trim();
     const text = labelType === "month" ? raw : stripLeadingRankPrefix(raw);
     if(!text) return "";
     if(labelType === "month"){
+      const toMonthOnlyLabel = (value)=> {
+        const source = String(value || "").trim();
+        if(!source) return "";
+        const soFarMatch = source.match(/^([A-Za-z]{3,9})(?:\s+'?\d{2,4})?\s+so\s+far$/i);
+        if(soFarMatch) return `${soFarMatch[1].slice(0,3)} so far`;
+        const monthOnlyMatch = source.match(/^([A-Za-z]{3,9})(?:\s+'?\d{2,4})?$/);
+        if(monthOnlyMatch) return monthOnlyMatch[1].slice(0,3);
+        return source;
+      };
       const directMonthMatch = text.match(/^([A-Za-z]{3,9})\s+(\d{2,4})$/);
       if(directMonthMatch){
         const mon = directMonthMatch[1].slice(0,3);
         const yearToken = directMonthMatch[2];
+        if(monthOnly && compact) return mon;
         if(compact) return `${mon} '${yearToken.slice(-2)}`;
         return `${mon} ${yearToken.slice(-2)}`;
       }
@@ -190,8 +200,10 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         const [year, month] = text.split("-");
         const monthDate = new Date(`${year}-${month}-01T00:00:00Z`);
         const mon = monthDate.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+        if(monthOnly && compact) return mon;
         return compact ? `${mon} '${year.slice(-2)}` : `${mon} ${year.slice(-2)}`;
       }
+      if(monthOnly && compact) return toMonthOnlyLabel(text);
     }
     if(labelType === "compare"){
       return compact ? text.replace(/\s+/g, " ").slice(0, 10) : text;
@@ -226,6 +238,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const step = Math.max(1, Math.ceil(labels.length / Math.max(1, maxTicks)));
     const alignMode = options.alignMode === "bar-center" ? "bar-center" : "index";
     const labelType = options.labelType || "category";
+    const monthOnlyCompact = options.monthOnlyCompact === true && frame.compact && labelType === "month" && labels.length > 1 && labels.length <= 6;
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     const edgeInset = frame.compact ? 6 : 8;
@@ -247,7 +260,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
             ? geom.x0 + (geom.plotW * 0.5)
             : geom.x0 + ((geom.plotW * i) / (labels.length - 1)));
       const isFinal = i === labels.length - 1;
-      const baseText = formatAxisLabel(lab, { labelType, compact: frame.compact });
+      const baseText = formatAxisLabel(lab, { labelType, compact: frame.compact, monthOnly: monthOnlyCompact });
       if(!baseText) return;
       const candidates = isFinal ? [baseText, ...finalLabelFallbacks] : [baseText];
       const textHeight = Math.max(10, Math.ceil(Number.parseFloat(frame.tickFont) || 11));
@@ -288,7 +301,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const renderedIndexes = new Set(pendingDraws.map((draw)=> draw.i));
       labels.forEach((label, i)=> {
         if(renderedIndexes.has(i)) return;
-        const text = formatAxisLabel(label, { labelType, compact: frame.compact });
+        const text = formatAxisLabel(label, { labelType, compact: frame.compact, monthOnly: monthOnlyCompact });
         if(!text) return;
         const slotW = labels.length > 0 ? (geom.plotW / labels.length) : geom.plotW;
         const x = alignMode === "bar-center"
@@ -889,7 +902,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         alignMode: "index",
         labelType: xLabelType,
         maxTicks: options.maxTicks || 0,
-        finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : []
+        finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : [],
+        monthOnlyCompact: xLabelType === "month"
       });
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
