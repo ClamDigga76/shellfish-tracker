@@ -991,6 +991,21 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         labels: Array.isArray(chartModel?.labels) ? chartModel.labels : [],
         values: Array.isArray(chartModel?.values) ? chartModel.values : []
       });
+      if(chartModel?.noDataGaps === true){
+        drawRollingLineChart(
+          canvasId,
+          chronologicalSeries.values,
+          chronologicalSeries.labels.map((v)=> String(v || "")),
+          metricKey || chartModel?.metricKey || "amount",
+          {
+            xLabelType: "month",
+            frameMode,
+            emptyStateEnabled,
+            emptyMessage: drawOptions?.emptyMessage
+          }
+        );
+        return true;
+      }
       const values = chronologicalSeries.values.map((v)=> Number(v) || 0);
       const labels = chronologicalSeries.labels.map((v)=> String(v || ""));
       const paletteSet = resolveMetricDetailPalette(metricKey || "amount");

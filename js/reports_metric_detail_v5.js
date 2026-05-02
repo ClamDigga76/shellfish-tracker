@@ -251,6 +251,7 @@ function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel =
     chartType: String(chartType || "time-series"),
     metricKey,
     basisLabel,
+    noDataGaps: emptyMonthNoData === true,
     monthKeys: safeMonths.map((row)=> String(row?.monthKey || "")),
     labels: safeMonths.map((row)=> String(row?.label || row?.monthKey || "")),
     values: safeMonths.map((row)=> {
