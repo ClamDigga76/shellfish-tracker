@@ -1022,6 +1022,7 @@ export function createReportsMetricDetailSeam(deps){
             ${homeIsSeasonPreview ? `<div class="homeMetricPreviewBadge">Season Preview detail</div>` : ""}
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
           </div>
+          ${homeDetailBoundaryNote ? `<div class="homeMetricPreviewNote" role="note">${escapeHtml(homeDetailBoundaryNote)} <button class="btn homeMetricUnlockBtn" type="button" id="homeMetricUnlockInsights">Unlock Full Insights</button></div>` : ""}
           <div class="${surfaceMode.detailHeroWrapClass}">
             <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${renderHomeHeroValue()}</div>
             <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
