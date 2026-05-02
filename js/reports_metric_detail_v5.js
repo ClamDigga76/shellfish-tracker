@@ -942,6 +942,10 @@ export function createReportsMetricDetailSeam(deps){
     const detailContext = viewModel.isHomeMetricDetail
       ? `${homeRangeLabel || "Active"} • ${homeTripCount} trips`
       : `Range ${viewModel.rangeLabel} • ${viewModel.trips.length} trips`;
+    const homeIsSeasonPreview = viewModel.isHomeMetricDetail && String(viewModel.homeScope?.mode || "").toUpperCase() === "SEASON_PREVIEW";
+    const homeDetailBoundaryNote = homeIsSeasonPreview
+      ? "Season Preview detail • chart signals stay visible here. Unlock Full Insights for exact totals, dealer comparisons, area strength, and deeper chart intelligence."
+      : "";
     const detailChartTitle = viewModel.isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = viewModel.isHomeMetricDetail
       ? meta.homeChartContext
@@ -1015,8 +1019,10 @@ export function createReportsMetricDetailSeam(deps){
         ${viewModel.isHomeMetricDetail ? `
           <div class="homeMetricTopBar"><button class="btn btn-ghost affordanceBtn ${surfaceMode.detailBackClass}" type="button" id="reportsMetricBack">← Home</button><div class="homeMetricContextChip">${escapeHtml(detailContext)}</div></div>
           <div class="homeMetricTitleHeader" aria-label="Metric title">
+            ${homeIsSeasonPreview ? `<div class="homeMetricPreviewBadge">Season Preview detail</div>` : ""}
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
           </div>
+          ${homeDetailBoundaryNote ? `<div class="homeMetricPreviewNote" role="note">${escapeHtml(homeDetailBoundaryNote)} <button class="btn homeMetricUnlockBtn" type="button" id="homeMetricUnlockInsights">Unlock Full Insights</button></div>` : ""}
           <div class="${surfaceMode.detailHeroWrapClass}">
             <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${renderHomeHeroValue()}</div>
             <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
@@ -1043,6 +1049,7 @@ export function createReportsMetricDetailSeam(deps){
 
         ${viewModel.isHomeMetricDetail ? "" : `
         <div class="reportsMetricStoryStack">
+          ${homeDetailBoundaryNote ? `<div class="homeMetricPreviewNote" role="note">${escapeHtml(homeDetailBoundaryNote)} <button class="btn homeMetricUnlockBtn" type="button" id="homeMetricUnlockInsights">Unlock Full Insights</button></div>` : ""}
           <div class="${surfaceMode.detailHeroWrapClass}">
             <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
             <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${escapeHtml(meta.heroValue)}</div>

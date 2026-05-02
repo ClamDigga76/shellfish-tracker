@@ -442,6 +442,9 @@ export function createHomeDashboardRenderer({
       customRangeLabel: "Custom Range"
     });
     const homeOverviewRangeLabel = homeFilterLabel;
+    const homeSeasonPreviewBoundaryNote = isSeasonPreviewMode
+      ? "Season Preview gives a free read on your year so far. Full Insights unlocks exact totals, dealer comparisons, area strength, and deeper charts."
+      : "";
     const lastTripHeaderActionHtml = hasEditableLatestTrip
       ? ``
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
@@ -486,6 +489,8 @@ export function createHomeDashboardRenderer({
           ${lastSavedTripHtml}
         </section>
 
+        ${homeSeasonPreviewBoundaryNote ? `<section class="homeSection homePreviewBoundaryCard" aria-label="Season preview boundary"><div class="homePreviewBoundaryNote">${escapeHtml(homeSeasonPreviewBoundaryNote)}</div></section>` : ""}
+
         <section class="homeSection homeOverviewCard">
           <div class="homeOverviewHeaderRow">
             <div class="reportsHeroEyebrow">Overview</div>
@@ -505,12 +510,12 @@ export function createHomeDashboardRenderer({
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">TOP DEALER</div>
               <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(strongestDealer?.dealer || "—")}</div>
-              <div class="reportsHeroMeta money">${strongestDealer ? formatMoney(round2(strongestDealer.amount)) : "No trips in range"}</div>
+              <div class="reportsHeroMeta money">${strongestDealer ? (isSeasonPreviewMode ? "Preview band • exact dealer totals in Insights" : formatMoney(round2(strongestDealer.amount))) : "No trips in range"}</div>
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">STRONGEST AREA</div>
               <div class="reportsHeroValue">${escapeHtml(strongestArea?.area || "—")}</div>
-              <div class="reportsHeroMeta homeOverviewMetaPounds">${strongestArea ? formatHomePounds(round2(strongestArea.pounds)) : "No trips in range"}</div>
+              <div class="reportsHeroMeta homeOverviewMetaPounds">${strongestArea ? (isSeasonPreviewMode ? "Preview band • exact area pounds in Insights" : formatHomePounds(round2(strongestArea.pounds))) : "No trips in range"}</div>
             </div>
           </div>
         </section>
