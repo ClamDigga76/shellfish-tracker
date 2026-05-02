@@ -229,6 +229,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     const edgeInset = frame.compact ? 6 : 8;
+    const finalEdgeInset = edgeInset + (frame.compact ? 4 : 6);
     const minGap = frame.compact ? 12 : 8;
     const placed = [];
     const pendingDraws = [];
@@ -259,7 +260,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         const width = Math.max(...lineWidths);
         let tx = x - (width / 2);
         const minX = geom.x0 + edgeInset;
-        const maxX = geom.xRight - width - edgeInset;
+        const maxX = geom.xRight - width - (isFinal ? finalEdgeInset : edgeInset);
         tx = Math.max(minX, Math.min(maxX, tx));
         const right = tx + width;
         const lastPlaced = placed[placed.length - 1];
@@ -283,6 +284,25 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       placed.push({ tx: placedLabel.tx, right: placedLabel.right, i: placedLabel.i });
       pendingDraws.push({ tx: placedLabel.tx, i: placedLabel.i, lines: placedLabel.lines, multiline: placedLabel.multiline, text: placedLabel.text, textHeight });
     });
+    if(labelType === "month" && labels.length > 1 && labels.length <= 5){
+      const renderedIndexes = new Set(pendingDraws.map((draw)=> draw.i));
+      labels.forEach((label, i)=> {
+        if(renderedIndexes.has(i)) return;
+        const text = formatAxisLabel(label, { labelType, compact: frame.compact });
+        if(!text) return;
+        const x = labels.length === 1
+          ? geom.x0 + (geom.plotW * 0.5)
+          : geom.x0 + ((geom.plotW * i) / (labels.length - 1));
+        const width = ctx.measureText(text).width;
+        const tx = Math.max(geom.x0 + edgeInset, Math.min(geom.xRight - width - edgeInset, x - (width / 2)));
+        const right = tx + width;
+        const left = tx;
+        const collides = placed.some((entry)=> !(right + minGap < entry.tx || left > entry.right + minGap));
+        if(collides) return;
+        placed.push({ tx, right, i });
+        pendingDraws.push({ tx, i, lines: [text], multiline: false, text, textHeight: Math.max(10, Math.ceil(Number.parseFloat(frame.tickFont) || 11)) });
+      });
+    }
     pendingDraws
       .sort((a,b)=> a.i - b.i)
       .forEach((draw)=> {
@@ -759,11 +779,17 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       return [String(singleLabel || "")];
     })();
     const xLabelType = options.xLabelType || "month";
-    const frame = chartFrame(w, h, options.frameMode || "default", {
-      chartKind: "rolling",
-      pointCount: count,
-      labelType: xLabelType
-    });
+      const hasFinalSoFarLabel = xLabelType === "month"
+        && axisLabels.length > 0
+        && /\s+so far$/i.test(String(axisLabels[axisLabels.length - 1] || ""));
+      const frame = chartFrame(w, h, options.frameMode || "default", {
+        chartKind: "rolling",
+        pointCount: count,
+        labelType: xLabelType
+      });
+      if(hasFinalSoFarLabel){
+        frame.bottom += frame.compact ? 6 : 10;
+      }
     const normalizedValues = values.map((value)=> {
       const numeric = Number(value);
       return Number.isFinite(numeric) ? Math.max(0, numeric) : null;
