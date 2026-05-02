@@ -89,6 +89,12 @@ export function createUnifiedFiltersSeam({
         area: "all",
         species: "all",
         text: "",
+        minLbs: "",
+        maxLbs: "",
+        minPay: "",
+        maxPay: "",
+        minPpl: "",
+        maxPpl: "",
         customRangeCorrectionMessages: []
       };
     }
@@ -100,6 +106,12 @@ export function createUnifiedFiltersSeam({
     if(f.area == null) f.area = "all";
     if(f.species == null) f.species = "all";
     if(f.text == null) f.text = "";
+    if(f.minLbs == null) f.minLbs = "";
+    if(f.maxLbs == null) f.maxLbs = "";
+    if(f.minPay == null) f.minPay = "";
+    if(f.maxPay == null) f.maxPay = "";
+    if(f.minPpl == null) f.minPpl = "";
+    if(f.maxPpl == null) f.maxPpl = "";
     if(f.fromISO == null) f.fromISO = "";
     if(f.toISO == null) f.toISO = "";
     if(!Array.isArray(f.customRangeCorrectionMessages)) f.customRangeCorrectionMessages = [];
@@ -186,6 +198,12 @@ export function createUnifiedFiltersSeam({
       species: partial?.species || "all",
       text: partial?.text || "",
       customRangeCorrectionMessages: Array.isArray(partial?.customRangeCorrectionMessages) ? partial.customRangeCorrectionMessages : []
+      ,minLbs: partial?.minLbs ?? "",
+      maxLbs: partial?.maxLbs ?? "",
+      minPay: partial?.minPay ?? "",
+      maxPay: partial?.maxPay ?? "",
+      minPpl: partial?.minPpl ?? "",
+      maxPpl: partial?.maxPpl ?? ""
     };
     const resolved = resolveUnifiedRange(f);
     return { ...f, fromISO: resolved.fromISO, toISO: resolved.toISO };
@@ -225,12 +243,25 @@ export function createUnifiedFiltersSeam({
       ? String(filter.text).trim().toLowerCase()
       : "";
     const matchesNonDateCriteria = (trip)=>{
+      const pounds = Number(trip?.pounds || 0);
+      const amount = Number(trip?.amount || 0);
+      const pricePerLb = pounds > 0 ? (amount / pounds) : 0;
+      const inRange = (value, minRaw, maxRaw)=>{
+        const min = Number(minRaw);
+        const max = Number(maxRaw);
+        if(Number.isFinite(min) && value < min) return false;
+        if(Number.isFinite(max) && value > max) return false;
+        return true;
+      };
       if(filter.dealer && filter.dealer !== "all" && trip.dealer !== filter.dealer) return false;
       if(areaFilterId && areaFilterId !== "all"){
         const resolved = resolveTripArea(trip);
         if(resolved.canonicalName !== areaFilterId) return false;
       }
       if(filter.species && filter.species !== "all" && trip.species !== filter.species) return false;
+      if(!inRange(pounds, filter.minLbs, filter.maxLbs)) return false;
+      if(!inRange(amount, filter.minPay, filter.maxPay)) return false;
+      if(!inRange(pricePerLb, filter.minPpl, filter.maxPpl)) return false;
       if(textQuery){
         const resolvedArea = resolveTripArea(trip);
         const hasTextMatch = (trip.dealer||"").toLowerCase().includes(textQuery) ||

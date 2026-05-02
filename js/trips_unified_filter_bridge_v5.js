@@ -14,7 +14,7 @@ export function createTripsUnifiedFilterBridge({
     if(state.tripsFilter.dealer == null) state.tripsFilter.dealer = "all";
     if(state.tripsFilter.area == null) state.tripsFilter.area = "all";
 
-    const allowedRanges = new Set(["mtd", "ytd", "all", "custom"]);
+    const allowedRanges = new Set(["mtd", "ytd", "all", "last_month", "custom"]);
     if(!allowedRanges.has(state.tripsFilter.range)) state.tripsFilter.range = "ytd";
 
     // Unsupported free-tier legacy fields should not silently filter Trips.
@@ -30,6 +30,16 @@ export function createTripsUnifiedFilterBridge({
 
     // Stable sort: only oldest is non-default.
     if(state.tripsFilter.sort !== "oldest") state.tripsFilter.sort = "newest";
+    const numericFields = ["minLbs","maxLbs","minPay","maxPay","minPpl","maxPpl"];
+    numericFields.forEach((key)=>{
+      const raw = state.tripsFilter[key];
+      if(raw == null || raw === "") {
+        state.tripsFilter[key] = "";
+        return;
+      }
+      const n = Number(raw);
+      state.tripsFilter[key] = Number.isFinite(n) ? String(n) : "";
+    });
   }
 
   function getTripsFilteredRows(state){
@@ -46,7 +56,8 @@ export function createTripsUnifiedFilterBridge({
       "Last 90 days": "Last 90 Days",
       "Last 30 days": "Last 30 Days",
       "Last 7 Days": "Last 7 Days",
-      "This Month": "Current Month"
+      "This Month": "This Month",
+      "Last Month": "Last Month"
     };
     const r = {
       startISO: filtered.range.fromISO,
@@ -75,7 +86,7 @@ export function createTripsUnifiedFilterBridge({
 
   function resetTripsFilters(state){
     state.filters = state.filters || {};
-    state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", sort:"newest", species:"all", text:"", customRangeCorrectionMessages:[] };
+    state.filters.active = { range:"ytd", fromISO:"", toISO:"", dealer:"all", area:"all", sort:"newest", species:"all", text:"", minLbs:"", maxLbs:"", minPay:"", maxPay:"", minPpl:"", maxPpl:"", customRangeCorrectionMessages:[] };
     state.tripsFilter = state.filters.active;
   }
 
