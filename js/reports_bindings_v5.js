@@ -168,7 +168,8 @@ export function createReportsBindingsSeam(){
     saveState,
     isHomeMetricDetail,
     activeMetricDetail,
-    renderApp
+    renderApp,
+    showToast
   }){
     const metricDetailButtons = root?.querySelectorAll?.('[data-metric-detail]') || [];
     metricDetailButtons.forEach((btn)=>{
@@ -188,6 +189,15 @@ export function createReportsBindingsSeam(){
       };
     });
 
+
+    const homeMetricUnlockInsightsBtn = document.getElementById('homeMetricUnlockInsights');
+    if(homeMetricUnlockInsightsBtn){
+      homeMetricUnlockInsightsBtn.onclick = ()=>{
+        if(typeof showToast === 'function'){
+          showToast('Full Insights unlocks exact totals, dealer comparisons, area strength, and deeper charts.');
+        }
+      };
+    }
     const reportsMetricBack = document.getElementById('reportsMetricBack');
     if(reportsMetricBack){
       reportsMetricBack.onclick = ()=>{
