@@ -210,17 +210,19 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
   function drawBottomTicks(ctx, labels, geom, y, frame, options = {}){
     const explicitMaxTicks = Number(options.maxTicks) || 0;
+    const preserveFinalLabel = options.preserveFinalLabel !== false;
     const inferredMaxTicks = (()=>{
       const count = labels.length;
       if(count <= 0) return frame.compact ? 4 : 6;
       const profile = frame.profile || {};
+      if(profile.monthLabels && count <= 6) return count;
       if(profile.compareLabels && count <= 4) return count;
       if(profile.monthLabels && profile.dense) return frame.compact ? 5 : 8;
       if(profile.rolling) return frame.compact ? 5 : 7;
       return frame.compact ? 4 : 6;
     })();
     const maxTicks = explicitMaxTicks || inferredMaxTicks;
-    const step = Math.max(1, Math.ceil(labels.length / maxTicks));
+    const step = Math.max(1, Math.ceil(labels.length / Math.max(1, maxTicks)));
     const alignMode = options.alignMode === "bar-center" ? "bar-center" : "index";
     const labelType = options.labelType || "category";
     ctx.fillStyle = palette.label;
@@ -228,7 +230,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const edgeInset = frame.compact ? 6 : 8;
     const minGap = frame.compact ? 12 : 8;
     const placed = [];
-    const tickIndexes = new Set([0, Math.max(0, labels.length - 1)]);
+    const tickIndexes = new Set([0]);
+    if(preserveFinalLabel) tickIndexes.add(Math.max(0, labels.length - 1));
     labels.forEach((_, i)=> {
       if(i % step === 0) tickIndexes.add(i);
     });
@@ -241,6 +244,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
             ? geom.x0 + (geom.plotW * 0.5)
             : geom.x0 + ((geom.plotW * i) / (labels.length - 1)));
       const text = formatAxisLabel(lab, { labelType, compact: frame.compact });
+      if(!text) return;
       const m = ctx.measureText(text);
       let tx = x - (m.width / 2);
       const minX = geom.x0 + edgeInset;
@@ -830,29 +834,51 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     if(chartModel.chartType === "trip-timeline"){
       const labels = Array.isArray(chartModel?.labels) ? chartModel.labels.map((v)=> String(v || "")) : [];
       const values = Array.isArray(chartModel?.values) ? chartModel.values.map((v)=> Number(v) || 0) : [];
+      const prettyLabels = labels.map((label)=> {
+        if(/^\d{4}-\d{2}-\d{2}/.test(label)){
+          const d = new Date(`${label.slice(0,10)}T00:00:00Z`);
+          if(!Number.isNaN(d.getTime())) return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+        }
+        return label;
+      });
       const c = setupCanvas(document.getElementById(canvasId));
       if(!c) return false;
       const { ctx, w, h } = c;
       const frame = chartFrame(w, h, frameMode, { chartKind: "line", pointCount: labels.length, labelType: "category" });
       clear(ctx, w, h);
-      const geom = drawAxes(ctx, w, h, { ...frame, top: h - frame.bottom - 22 });
+      const geom = drawAxes(ctx, w, h, { ...frame, top: h - frame.bottom - 34 });
       const slotW = labels.length > 0 ? (geom.plotW / labels.length) : geom.plotW;
+      const hasAnyTrips = values.some((count)=> count > 0);
       values.forEach((count, i)=> {
         const x = geom.x0 + (slotW * i) + (slotW * 0.5);
-        const tickHeight = count >= 2 ? 12 : 7;
+        const tickHeight = count >= 2 ? 18 : 12;
         ctx.strokeStyle = palette.trips;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = frame.compact ? 2.8 : 3.4;
         ctx.beginPath();
         ctx.moveTo(x, geom.y0);
         ctx.lineTo(x, geom.y0 - tickHeight);
         ctx.stroke();
+        ctx.beginPath();
+        ctx.fillStyle = palette.trips;
+        ctx.arc(x, geom.y0 - tickHeight, frame.compact ? 2.8 : 3.4, 0, Math.PI * 2);
+        ctx.fill();
         if(count >= 2){
           ctx.fillStyle = palette.label;
           ctx.font = "10px system-ui, -apple-system, Segoe UI, Arial";
-          ctx.fillText(String(Math.round(count)), x - 3, geom.y0 - tickHeight - 4);
+          const txt = String(Math.round(count));
+          ctx.fillText(txt, x - (ctx.measureText(txt).width / 2), geom.y0 - tickHeight - 5);
         }
       });
-      drawBottomTicks(ctx, labels, geom, h - 10, frame, { alignMode: "bar-center", labelType: "category", maxTicks: 5 });
+      if(!hasAnyTrips){
+        ctx.fillStyle = palette.label;
+        ctx.font = frame.tickFont;
+        ctx.fillText("Not enough timeline activity in this range yet.", geom.x0 + 4, geom.yTop + 14);
+      }else if(values.filter((count)=> count > 0).length <= 2){
+        ctx.fillStyle = palette.label;
+        ctx.font = frame.tickFont;
+        ctx.fillText("Each mark is a day with work logged.", geom.x0 + 4, geom.yTop + 14);
+      }
+      drawBottomTicks(ctx, prettyLabels, geom, h - 10, frame, { alignMode: "bar-center", labelType: "category", maxTicks: values.length <= 6 ? values.length : 5, preserveFinalLabel: true });
       return true;
     }
     if(chartModel.chartType === "time-series"){
