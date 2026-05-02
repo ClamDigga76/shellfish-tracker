@@ -41,7 +41,11 @@ export function buildRollingSeriesFromMonthRows({ monthRows, metricKey, windowSi
     const windowRows = safeRows.slice(index - safeWindow + 1, index + 1);
     const windowValues = windowRows.map((row)=> readMonthlyMetricValue(row, metricKey));
     const rollingValue = metricKey === "ppl"
-      ? (windowValues.reduce((sum, value)=> sum + value, 0) / Math.max(1, windowValues.length))
+      ? (()=> {
+        const rollingAmount = windowRows.reduce((sum, row)=> sum + safeNum(row?.amt), 0);
+        const rollingPounds = windowRows.reduce((sum, row)=> sum + safeNum(row?.lbs), 0);
+        return rollingPounds > 0 ? (rollingAmount / rollingPounds) : 0;
+      })()
       : windowValues.reduce((sum, value)=> sum + value, 0);
     const monthRow = safeRows[index] || {};
     rollingRows.push({

@@ -105,7 +105,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     metricKey: "ppl",
     valueKey: "avg",
     title: "Avg $ / lb by month",
-    explanation: "Shows whether your Avg $ / lb (total amount ÷ total pounds) is improving or softening over time."
+    explanation: "Shows weighted Avg $ / lb by month (total amount ÷ total pounds). The current month is shown as so far when incomplete."
   }),
   amountByMonth: Object.freeze({
     chartId: "amountByMonth",
@@ -114,7 +114,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     metricKey: "amount",
     valueKey: "amt",
     title: "Amount by month",
-    explanation: "Shows whether your total earnings are rising, falling, or holding steady over time."
+    explanation: "Shows total earnings by month. If the current month is incomplete it is labeled so far and should be treated as in progress."
   }),
   poundsByMonth: Object.freeze({
     chartId: "poundsByMonth",
@@ -123,7 +123,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     metricKey: "pounds",
     valueKey: "lbs",
     title: "Pounds by month",
-    explanation: "Shows whether your total catch volume is rising, falling, or holding steady over time."
+    explanation: "Shows total catch volume by month. If the current month is incomplete it is labeled so far and should be treated as in progress."
   }),
   amountPerTripByMonth: Object.freeze({
     chartId: "amountPerTripByMonth",
@@ -132,7 +132,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     metricKey: "amount",
     valueKey: "amountPerTrip",
     title: "Average Amount Per Trip by month",
-    explanation: "Shows whether each trip is earning more or less on average over time."
+    explanation: "Shows average amount per trip by month; the current month is labeled so far when still building."
   }),
   poundsPerTripByMonth: Object.freeze({
     chartId: "poundsPerTripByMonth",
@@ -141,7 +141,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     metricKey: "pounds",
     valueKey: "poundsPerTrip",
     title: "Average Pounds Per Trip by month",
-    explanation: "Shows whether each trip is becoming more or less productive over time."
+    explanation: "Shows average pounds per trip by month; the current month is labeled so far when still building."
   })
 });
 
@@ -189,7 +189,7 @@ function buildMonthSeriesChart({ definition, rows }) {
     metricKey: String(definition?.metricKey || ""),
     basisLabel: String(definition?.basisLabel || "Visible range"),
     monthKeys: safeRows.map((row) => String(row?.monthKey || "")),
-    labels: safeRows.map((row) => String(row?.label || row?.monthKey || "—")),
+    labels: safeRows.map((row) => String(row?.displayLabel || row?.label || row?.monthKey || "—")),
     values: safeRows.map((row) => Number(row?.[valueKey]) || 0)
   };
 }

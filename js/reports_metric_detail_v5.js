@@ -4,10 +4,10 @@ import { createChartStorySeam } from "./chart_story_seam_v5.js";
 
 const HOME_METRIC_DETAIL_COMPARE_CONTRACT = Object.freeze({
   fairWindowLabel: "Visible range",
-  compareModel: "home-full-month",
-  compareModelLabel: "Month view",
+  compareModel: "home-fair-window",
+  compareModelLabel: "Fair month window",
   supportLabel: "Visible range",
-  support: "Comparing the latest two visible months in the selected period.",
+  support: "Comparing a fair day window across the latest two visible months.",
   explanation: "",
   missingReason: "Show one more visible month to unlock month-to-month detail.",
   missingSuppressionCode: "missing-home-months",
@@ -153,8 +153,8 @@ function buildHomeComparablePeriod({ currentMonth, previousMonth, current, previ
     reason: "",
     suppressionCode: "",
     explanation: HOME_METRIC_DETAIL_COMPARE_CONTRACT.explanation,
-    currentLabel: currentMonth.label || currentMonth.monthKey,
-    previousLabel: previousMonth.label || previousMonth.monthKey,
+    currentLabel: currentMonth.displayLabel || currentMonth.label || currentMonth.monthKey,
+    previousLabel: previousMonth.displayLabel || previousMonth.label || previousMonth.monthKey,
     ...buildHomeCompareContractFields(),
     current,
     previous
@@ -171,8 +171,8 @@ function buildHomeSuppressedPeriod({ currentMonth, previousMonth, current, previ
     reason: HOME_METRIC_DETAIL_COMPARE_CONTRACT.missingReason,
     suppressionCode: HOME_METRIC_DETAIL_COMPARE_CONTRACT.missingSuppressionCode,
     explanation: HOME_METRIC_DETAIL_COMPARE_CONTRACT.missingExplanation,
-    currentLabel: currentMonth?.label || "Current month",
-    previousLabel: previousMonth?.label || "Previous month",
+    currentLabel: currentMonth?.displayLabel || currentMonth?.label || "Current month",
+    previousLabel: previousMonth?.displayLabel || previousMonth?.label || "Previous month",
     ...buildHomeCompareContractFields({ support: "Visible months in the selected period" }),
     current,
     previous
@@ -549,8 +549,22 @@ function buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows, trip
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows.filter((row)=> row?.monthKey) : []);
   const currentMonth = safeMonths[safeMonths.length - 1] || null;
   const previousMonth = safeMonths[safeMonths.length - 2] || null;
-  const current = summarizeHomeMonthRow(currentMonth);
-  const previous = summarizeHomeMonthRow(previousMonth);
+  const fairLimit = currentMonth?.isPartialMonth ? Math.max(1, Number(currentMonth?.daysElapsed) || 1) : 0;
+  const summarizeByWindow = (month)=> {
+    if(!month) return summarizeHomeMonthRow(month);
+    if(!(fairLimit > 0) || !String(month?.monthKey || "")) return summarizeHomeMonthRow(month);
+    const scoped = (Array.isArray(trips) ? trips : [])
+      .filter((trip)=> String(trip?.dateISO || "").startsWith(`${month.monthKey}-`))
+      .filter((trip)=> Number(String(trip?.dateISO || "").slice(8, 10)) <= fairLimit);
+    return summarizeHomeMonthRow({
+      trips: scoped.length,
+      lbs: scoped.reduce((sum, t)=> sum + (Number(t?.pounds) || 0), 0),
+      amt: scoped.reduce((sum, t)=> sum + (Number(t?.amount) || 0), 0),
+      fishingDays: new Set(scoped.map((t)=> String(t?.dateISO || "").slice(0, 10))).size
+    });
+  };
+  const current = summarizeByWindow(currentMonth);
+  const previous = summarizeByWindow(previousMonth);
 
   const period = currentMonth && previousMonth
     ? buildHomeComparablePeriod({ currentMonth, previousMonth, current, previous })

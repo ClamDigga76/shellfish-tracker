@@ -787,7 +787,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ctx.restore();
       }
 
-      drawBottomTicks(ctx, axisLabels, geom, h - 10, frame, {
+      drawBottomTicks(ctx, axisLabels, geom, h - (frame.compact ? 14 : 16), frame, {
         alignMode: "index",
         labelType: xLabelType,
         maxTicks: options.maxTicks || 0
@@ -804,7 +804,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           minX: geom.x0 + 2,
           maxX: geom.xRight - 2,
           minY: geom.yTop + 2,
-          maxY: geom.y0 - 2
+          maxY: geom.y0 - 6
         });
       }
       ctx.restore();

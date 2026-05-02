@@ -76,17 +76,32 @@ export function buildReportsAggregationState({ trips, canonicalDealerGroupKey, n
     .map((x)=> finalizeAggregateRow(x))
     .sort((a,b)=> b.amt - a.amt);
 
+  const today = new Date();
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  const currentDay = today.getDate();
   const monthRows = normalizeChronologicalRows(Array.from(byMonth.entries())
     .sort((a,b)=> a[0].localeCompare(b[0]))
     .map(([monthKey, x])=>{
       const year = Number(monthKey.slice(0, 4));
       const month = Number(monthKey.slice(5, 7));
       const dt = new Date(year, month - 1, 1);
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const isCurrentMonth = monthKey === currentMonthKey;
+      const daysElapsed = isCurrentMonth ? Math.min(daysInMonth, currentDay) : daysInMonth;
+      const isPartialMonth = isCurrentMonth && daysElapsed < daysInMonth;
+      const shortLabel = `${dt.toLocaleString(undefined, { month: "short" })} '${String(year).slice(-2)}`;
       return {
         monthKey,
         month,
         year,
-        label: `${dt.toLocaleString(undefined, { month: "short" })} ${year}`,
+        label: isPartialMonth ? `${dt.toLocaleString(undefined, { month: "short" })} so far` : `${dt.toLocaleString(undefined, { month: "short" })} ${year}`,
+        displayLabel: isPartialMonth ? `${dt.toLocaleString(undefined, { month: "short" })} so far` : `${dt.toLocaleString(undefined, { month: "short" })} ${year}`,
+        shortLabel: isPartialMonth ? `${dt.toLocaleString(undefined, { month: "short" })} so far` : shortLabel,
+        isCurrentMonth,
+        isPartialMonth,
+        daysElapsed,
+        daysInMonth,
+        trustLabel: isPartialMonth ? "partial-month-so-far" : "completed-month",
         ...finalizeAggregateRow(x)
       };
     }));
