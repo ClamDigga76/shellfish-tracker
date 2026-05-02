@@ -112,11 +112,13 @@ function summarizeHomeMonthRow(row){
   const amount = Number(row?.amt) || 0;
   const trips = Number(row?.trips) || 0;
   const uniqueDays = Number(row?.fishingDays) || trips;
+  const avgFromRow = Number(row?.avg);
+  const weightedPpl = pounds > 0 ? (amount / pounds) : 0;
   return {
     trips,
     lbs: pounds,
     amount,
-    ppl: pounds > 0 ? (Number(row?.avg) || 0) : 0,
+    ppl: pounds > 0 ? (Number.isFinite(avgFromRow) && avgFromRow > 0 ? avgFromRow : weightedPpl) : 0,
     uniqueDays,
     amountPerTrip: trips > 0 ? amount / trips : 0,
     poundsPerTrip: trips > 0 ? pounds / trips : 0,
