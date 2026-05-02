@@ -257,11 +257,11 @@ export function createReportsOverviewSectionsSeam(deps){
   const HIGH_VALUE_DRIVERS_GROUPS = Object.freeze([
     {
       label: "Area Drivers",
-      chartIds: ["amountByArea", "poundsByArea", "amountPerTripByArea", "poundsPerTripByArea"]
+      chartIds: ["tripsByArea", "poundsByArea", "amountByArea", "poundsPerTripByArea", "amountPerTripByArea"]
     },
     {
       label: "Dealer Drivers",
-      chartIds: ["amountByDealer", "pplByDealer"]
+      chartIds: ["tripsByDealer", "poundsByDealer", "amountByDealer", "poundsPerTripByDealer", "amountPerTripByDealer", "pplByDealer"]
     },
     {
       label: "Rate Drivers",
@@ -269,7 +269,7 @@ export function createReportsOverviewSectionsSeam(deps){
     },
     {
       label: "Monthly Context",
-      chartIds: ["amountByMonth", "poundsByMonth", "pplByMonth", "amountPerTripByMonth", "poundsPerTripByMonth"]
+      chartIds: ["tripsByMonth", "poundsByMonth", "amountByMonth", "pplByMonth", "poundsPerTripByMonth", "amountPerTripByMonth"]
     }
   ]);
 

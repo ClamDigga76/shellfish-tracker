@@ -6,11 +6,17 @@ export const HOME_RATE_RANKING_THRESHOLDS = Object.freeze({
 export const HOME_SHARED_CHART_IDS = Object.freeze([
   "amountByArea",
   "poundsByArea",
+  "tripsByArea",
   "amountPerTripByArea",
+  "poundsPerTripByArea",
   "amountByDealer",
+  "tripsByDealer",
+  "poundsByDealer",
+  "poundsPerTripByDealer",
+  "amountPerTripByDealer",
   "pplByDealer",
   "pplByArea",
-  "poundsPerTripByArea",
+  "tripsByMonth",
   "pplByMonth",
   "amountByMonth",
   "poundsByMonth",
@@ -41,6 +47,18 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     title: "Pounds by area",
     explanation: "Shows which areas are producing the most total catch volume."
   }),
+
+  tripsByArea: Object.freeze({
+    chartId: "tripsByArea",
+    datasetKey: "areaRows",
+    chartType: "compare-bars",
+    metricKey: "trips",
+    valueKey: "trips",
+    labelMode: "home-area-direct",
+    maxItems: 6,
+    title: "Trips by area",
+    explanation: "Shows which areas have the most logged work activity."
+  }),
   amountPerTripByArea: Object.freeze({
     chartId: "amountPerTripByArea",
     datasetKey: "areaRows",
@@ -62,6 +80,51 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     maxItems: 6,
     title: "Amount by dealer",
     explanation: "Shows which dealers have paid you the most overall."
+  }),
+
+  tripsByDealer: Object.freeze({
+    chartId: "tripsByDealer",
+    datasetKey: "dealerRows",
+    chartType: "compare-bars",
+    metricKey: "trips",
+    valueKey: "trips",
+    labelMode: "home-dealer-direct",
+    maxItems: 6,
+    title: "Trips by dealer",
+    explanation: "Shows which dealers are tied to the most logged trips."
+  }),
+  poundsByDealer: Object.freeze({
+    chartId: "poundsByDealer",
+    datasetKey: "dealerRows",
+    chartType: "compare-bars",
+    metricKey: "pounds",
+    valueKey: "lbs",
+    labelMode: "home-dealer-direct",
+    maxItems: 6,
+    title: "Pounds by dealer",
+    explanation: "Shows which dealers received the most total pounds."
+  }),
+  poundsPerTripByDealer: Object.freeze({
+    chartId: "poundsPerTripByDealer",
+    datasetKey: "dealerRows",
+    chartType: "compare-bars",
+    metricKey: "pounds",
+    valueKey: "poundsPerTrip",
+    labelMode: "home-dealer-direct",
+    maxItems: 6,
+    title: "Average Pounds Per Trip by dealer",
+    explanation: "Shows which dealers are tied to the strongest average pounds per trip."
+  }),
+  amountPerTripByDealer: Object.freeze({
+    chartId: "amountPerTripByDealer",
+    datasetKey: "dealerRows",
+    chartType: "compare-bars",
+    metricKey: "amount",
+    valueKey: "amountPerTrip",
+    labelMode: "home-dealer-direct",
+    maxItems: 6,
+    title: "Average Amount Per Trip by dealer",
+    explanation: "Shows which dealers are tied to the strongest average payout per trip."
   }),
   pplByDealer: Object.freeze({
     chartId: "pplByDealer",
@@ -97,6 +160,16 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     maxItems: 6,
     title: "Average Pounds Per Trip by area",
     explanation: "Shows which areas give you the strongest average catch volume per trip."
+  }),
+
+  tripsByMonth: Object.freeze({
+    chartId: "tripsByMonth",
+    datasetKey: "monthRows",
+    chartType: "month-line",
+    metricKey: "trips",
+    valueKey: "trips",
+    title: "Trips by month",
+    explanation: "Shows how many work entries were logged each month. Current month is shown as so far when incomplete."
   }),
   pplByMonth: Object.freeze({
     chartId: "pplByMonth",
