@@ -239,8 +239,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const alignMode = options.alignMode === "bar-center" ? "bar-center" : "index";
     const labelType = options.labelType || "category";
     const monthOnlyCompact = options.monthOnlyCompact === true && frame.compact && labelType === "month" && labels.length > 1 && labels.length <= 6;
-    const monthLabelYearMode = resolveMonthLabelYearMode(labels, { monthOnlyCompact, labelType });
-    const monthLabelOverrides = buildMonthLabelOverrides(labels, { mode: monthLabelYearMode, monthOnlyCompact, compact: frame.compact, labelType });
+    const monthKeys = Array.isArray(options.monthKeys) ? options.monthKeys : [];
+    const monthLabelYearMode = resolveMonthLabelYearMode(labels, { monthOnlyCompact, labelType, monthKeys });
+    const monthLabelOverrides = buildMonthLabelOverrides(labels, { mode: monthLabelYearMode, monthOnlyCompact, compact: frame.compact, labelType, monthKeys });
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     const edgeInset = frame.compact ? 6 : 8;
@@ -332,14 +333,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       });
   }
 
-  function resolveMonthLabelYearMode(labels, { monthOnlyCompact = false, labelType = "category" } = {}){
+  function resolveMonthLabelYearMode(labels, { monthOnlyCompact = false, labelType = "category", monthKeys = [] } = {}){
     if(labelType !== "month" || !monthOnlyCompact) return "default";
-    const monthYears = labels.map((label)=> extractMonthLabelYearToken(label)).filter(Boolean);
+    const monthYears = labels.map((label, i)=> extractMonthLabelYearToken(label, monthKeys[i])).filter(Boolean);
     if(!monthYears.length) return "default";
     return new Set(monthYears).size <= 1 ? "month-only" : "cross-year";
   }
 
-  function buildMonthLabelOverrides(labels, { mode = "default", monthOnlyCompact = false, compact = false, labelType = "category" } = {}){
+  function buildMonthLabelOverrides(labels, { mode = "default", monthOnlyCompact = false, compact = false, labelType = "category", monthKeys = [] } = {}){
     if(labelType !== "month" || !monthOnlyCompact || !Array.isArray(labels) || !labels.length) return {};
     if(mode === "month-only"){
       return Object.fromEntries(labels.map((label, i)=> [i, formatAxisLabel(label, { labelType: "month", compact, monthOnly: true })]));
@@ -350,7 +351,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     labels.forEach((label, i)=> {
       const normalized = formatAxisLabel(label, { labelType: "month", compact, monthOnly: false });
       const monthOnly = formatAxisLabel(label, { labelType: "month", compact, monthOnly: true });
-      const yearToken = extractMonthLabelYearToken(label);
+      const yearToken = extractMonthLabelYearToken(label, monthKeys[i]);
       if(!normalized) return;
       if(!yearToken){
         overrides[i] = monthOnly || normalized;
@@ -366,7 +367,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     return overrides;
   }
 
-  function extractMonthLabelYearToken(label){
+  function extractMonthLabelYearToken(label, monthKey = ""){
+    const keyMatch = String(monthKey || "").trim().match(/^(\d{4})-\d{2}$/);
+    if(keyMatch) return keyMatch[1];
     const text = String(label || "").trim();
     if(!text) return "";
     const yearMonthMatch = text.match(/^(\d{4})-\d{2}$/);
@@ -782,7 +785,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           alignMode: "bar-center",
           labelType: xLabelType,
           maxTicks: options.maxTicks || 0,
-          finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : []
+          finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : [],
+          monthKeys: xLabelType === "month" ? (Array.isArray(options.monthKeys) ? options.monthKeys : []) : []
         });
       }
       const yLabels = [];
@@ -951,7 +955,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         labelType: xLabelType,
         maxTicks: options.maxTicks || 0,
         finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : [],
-        monthOnlyCompact: xLabelType === "month"
+        monthOnlyCompact: xLabelType === "month",
+        monthKeys: xLabelType === "month" ? (Array.isArray(options.monthKeys) ? options.monthKeys : []) : []
       });
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
@@ -1061,6 +1066,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           metricKey || chartModel?.metricKey || "amount",
           {
             xLabelType: "month",
+            monthKeys: chronologicalSeries.monthKeys,
             frameMode,
             emptyStateEnabled,
             emptyMessage: drawOptions?.emptyMessage
@@ -1077,6 +1083,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         minBarWidth: frameMinBarWidth(labels.length),
         barPad: (frame)=> frame.compact ? 1.2 : 1.8,
         xLabelType: "month",
+        monthKeys: chronologicalSeries.monthKeys,
         frameMode
       });
       return true;
@@ -1094,6 +1101,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         metricKey || chartModel?.metricKey || "amount",
         {
           xLabelType: "month",
+          monthKeys: chronologicalSeries.monthKeys,
           frameMode,
           emptyStateEnabled,
           emptyMessage: drawOptions?.emptyMessage
