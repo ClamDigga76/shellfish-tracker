@@ -100,6 +100,7 @@ export function createReportsOverviewSectionsSeam(deps){
   function renderChartsSection(context){
     const { monthRows, dealerRows } = context;
     const latestMonth = monthRows[monthRows.length - 1] || null;
+    const latestPartial = !!latestMonth?.isPartialMonth;
     const priorMonth = monthRows.length > 1 ? monthRows[monthRows.length - 2] : null;
     const amountPerTripPeak = monthRows.reduce((best,r)=> (Number(r?.amountPerTrip)||0) > (Number(best?.amountPerTrip)||0) ? r : best, monthRows[0] || null);
     const dealerAmountPeak = dealerRows[0] || null;
@@ -128,6 +129,7 @@ export function createReportsOverviewSectionsSeam(deps){
       const baseline = Math.max(1, Math.abs(priorVal));
       const delta = (latestVal - priorVal) / baseline;
       const tone = trendTone(delta, 0.04);
+      if(latestPartial) return { text: "Current month so far (in progress)", tone: "steady" };
       if(tone === "up") return { text: "Up vs prior month", tone };
       if(tone === "down") return { text: "Down vs prior month", tone };
       return { text: "Holding steady", tone };
