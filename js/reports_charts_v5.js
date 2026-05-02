@@ -755,10 +755,15 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       pointCount: count,
       labelType: xLabelType
     });
-    const observedTop = Math.max(...values, metricKey === "trips" ? 1 : 0);
+    const normalizedValues = values.map((value)=> {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? Math.max(0, numeric) : null;
+    });
+    const positiveValues = normalizedValues.filter((value)=> Number.isFinite(value));
+    const observedTop = Math.max(...positiveValues, metricKey === "trips" ? 1 : 0);
     const valueHeadroom = computeBarValueHeadroom(observedTop, { frame, chartHeight: h });
     const targetTop = Math.max(metricKey === "trips" ? 1 : 0, observedTop + (valueHeadroom * 0.5));
-    renderAnimatedChart(canvas, values, (animatedVals, alpha)=>{
+    renderAnimatedChart(canvas, normalizedValues.map((value)=> Number.isFinite(value) ? value : 0), (animatedVals, alpha)=>{
       clear(ctx,w,h);
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -768,13 +773,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const yScale = niceScale(targetTop, 4);
       const lastIndex = Math.max(0, animatedVals.length - 1);
       const points = animatedVals.map((value, index)=>{
-        const safe = Math.max(0, Number(value) || 0);
-        const ratio = yScale.top > 0 ? (safe / yScale.top) : 0;
+        const hasData = Number.isFinite(normalizedValues[index]);
+        const safe = hasData ? Math.max(0, Number(value) || 0) : null;
+        const ratio = hasData && yScale.top > 0 ? (safe / yScale.top) : 0;
         const x = animatedVals.length <= 1
           ? geom.x0 + (geom.plotW * 0.5)
           : geom.x0 + ((geom.plotW * index) / (animatedVals.length - 1));
         const y = geom.y0 - (ratio * geom.plotH);
-        return { x, y, value: safe, index };
+        return { x, y, value: safe, index, hasData };
       });
       if(points.length){
         ctx.save();
@@ -782,21 +788,42 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ctx.rect(geom.x0, geom.yTop, geom.plotW, geom.plotH);
         ctx.clip();
 
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, geom.y0);
-        points.forEach((point)=> ctx.lineTo(point.x, point.y));
-        ctx.lineTo(points[points.length - 1].x, geom.y0);
-        ctx.closePath();
+        const segmentGroups = [];
+        let currentSegment = [];
+        points.forEach((point)=> {
+          if(point.hasData){
+            currentSegment.push(point);
+          }else if(currentSegment.length){
+            segmentGroups.push(currentSegment);
+            currentSegment = [];
+          }
+        });
+        if(currentSegment.length) segmentGroups.push(currentSegment);
+
         ctx.save();
         ctx.globalAlpha = 0.14;
         ctx.fillStyle = paletteSet.color;
-        ctx.fill();
+        segmentGroups.forEach((segment)=> {
+          if(!segment.length) return;
+          ctx.beginPath();
+          ctx.moveTo(segment[0].x, geom.y0);
+          segment.forEach((point)=> ctx.lineTo(point.x, point.y));
+          ctx.lineTo(segment[segment.length - 1].x, geom.y0);
+          ctx.closePath();
+          ctx.fill();
+        });
         ctx.restore();
 
         ctx.beginPath();
-        points.forEach((point, pointIndex)=>{
-          if(pointIndex === 0){
+        let started = false;
+        points.forEach((point)=>{
+          if(!point.hasData){
+            started = false;
+            return;
+          }
+          if(!started){
             ctx.moveTo(point.x, point.y);
+            started = true;
           }else{
             ctx.lineTo(point.x, point.y);
           }
@@ -806,7 +833,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ctx.stroke();
 
         const latestPoint = points[lastIndex];
-        if(latestPoint){
+        if(latestPoint?.hasData){
           ctx.fillStyle = paletteSet.color;
           ctx.beginPath();
           ctx.arc(latestPoint.x, latestPoint.y, frame.compact ? 3.2 : 3.8, 0, Math.PI * 2);
@@ -833,7 +860,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: paletteSet.yFormatter(v) });
       }
       drawYTickLabels(ctx, geom, frame, yLabels);
-      const latestPoint = points[lastIndex];
+      const latestPoint = [...points].reverse().find((point)=> point.hasData) || null;
       if(latestPoint){
         const chipText = String(paletteSet.yFormatter(latestPoint.value) || "").trim();
         drawPointValueChip(ctx, chipText, latestPoint.x, latestPoint.y, {
@@ -949,7 +976,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       });
       drawRollingLineChart(
         canvasId,
-        chronologicalSeries.values.map((v)=> Number(v) || 0),
+        chronologicalSeries.values,
         chronologicalSeries.labels.map((v)=> String(v || "")),
         metricKey || chartModel?.metricKey || "amount",
         {

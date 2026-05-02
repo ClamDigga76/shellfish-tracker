@@ -177,6 +177,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     chartType: "month-line",
     metricKey: "ppl",
     valueKey: "avg",
+    emptyMonthNoData: true,
     title: "Avg $ / lb by month",
     explanation: "Shows weighted Avg $ / lb by month (total amount ÷ total pounds). The current month is shown as so far when incomplete."
   }),
@@ -204,6 +205,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     chartType: "month-line",
     metricKey: "amount",
     valueKey: "amountPerTrip",
+    emptyMonthNoData: true,
     title: "Average Amount Per Trip by month",
     explanation: "Shows average amount per trip by month; the current month is labeled so far when still building."
   }),
@@ -213,6 +215,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     chartType: "month-line",
     metricKey: "pounds",
     valueKey: "poundsPerTrip",
+    emptyMonthNoData: true,
     title: "Average Pounds Per Trip by month",
     explanation: "Shows average pounds per trip by month; the current month is labeled so far when still building."
   })
@@ -263,7 +266,13 @@ function buildMonthSeriesChart({ definition, rows }) {
     basisLabel: String(definition?.basisLabel || "Visible range"),
     monthKeys: safeRows.map((row) => String(row?.monthKey || "")),
     labels: safeRows.map((row) => String(row?.displayLabel || row?.label || row?.monthKey || "—")),
-    values: safeRows.map((row) => Number(row?.[valueKey]) || 0)
+    values: safeRows.map((row) => {
+      const shouldTreatAsNoData = definition?.emptyMonthNoData === true
+        && (row?.isEmptyMonth === true || row?.hasTrips === false);
+      if (shouldTreatAsNoData) return null;
+      const numeric = Number(row?.[valueKey]);
+      return Number.isFinite(numeric) ? numeric : 0;
+    })
   };
 }
 
