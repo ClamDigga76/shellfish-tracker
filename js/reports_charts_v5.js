@@ -249,16 +249,19 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const baseText = formatAxisLabel(lab, { labelType, compact: frame.compact });
       if(!baseText) return;
       const candidates = isFinal ? [baseText, ...finalLabelFallbacks] : [baseText];
+      const textHeight = Math.max(10, Math.ceil(Number.parseFloat(frame.tickFont) || 11));
       let placedLabel = null;
       for(const candidate of candidates){
         const text = String(candidate || "").trim();
         if(!text) continue;
-        const m = ctx.measureText(text);
-        let tx = x - (m.width / 2);
+        const lines = isFinal && /\s+so far$/i.test(text) ? text.split(/\s+/) : [text];
+        const lineWidths = lines.map((line)=> ctx.measureText(line).width);
+        const width = Math.max(...lineWidths);
+        let tx = x - (width / 2);
         const minX = geom.x0 + edgeInset;
-        const maxX = geom.xRight - m.width - edgeInset;
+        const maxX = geom.xRight - width - edgeInset;
         tx = Math.max(minX, Math.min(maxX, tx));
-        const right = tx + m.width;
+        const right = tx + width;
         const lastPlaced = placed[placed.length - 1];
         if(lastPlaced && tx < lastPlaced.right + minGap){
           if(!isFinal) continue;
@@ -273,16 +276,22 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           }
           tx = forcedTx;
         }
-        placedLabel = { tx, right, i, text };
+        placedLabel = { tx, right, i, lines, multiline: lines.length > 1, text };
         break;
       }
       if(!placedLabel) return;
       placed.push({ tx: placedLabel.tx, right: placedLabel.right, i: placedLabel.i });
-      pendingDraws.push({ tx: placedLabel.tx, i: placedLabel.i, text: placedLabel.text });
+      pendingDraws.push({ tx: placedLabel.tx, i: placedLabel.i, lines: placedLabel.lines, multiline: placedLabel.multiline, text: placedLabel.text, textHeight });
     });
     pendingDraws
       .sort((a,b)=> a.i - b.i)
-      .forEach((draw)=> ctx.fillText(draw.text, draw.tx, y));
+      .forEach((draw)=> {
+        if(draw.multiline){
+          draw.lines.forEach((line, lineIdx)=> ctx.fillText(line, draw.tx, y + (lineIdx * draw.textHeight)));
+          return;
+        }
+        ctx.fillText(draw.text, draw.tx, y);
+      });
   }
 
 
@@ -292,8 +301,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const lower = text.toLowerCase();
     if(!lower.includes("so far")) return [];
     const month = text.split(/\s+/).find((part)=> /^[A-Za-z]{3,9}$/.test(part));
-    if(!month) return ["So far"];
-    return [month.slice(0,3), "So far"];
+    if(!month) return ["so far", "So far"];
+    return [text, `${month.slice(0,3)} so far`, month.slice(0,3), "So far"];
   }
   function fitLabel(ctx, text, maxW){
     const src = String(text || "");
