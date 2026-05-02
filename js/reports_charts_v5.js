@@ -239,6 +239,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const alignMode = options.alignMode === "bar-center" ? "bar-center" : "index";
     const labelType = options.labelType || "category";
     const monthOnlyCompact = options.monthOnlyCompact === true && frame.compact && labelType === "month" && labels.length > 1 && labels.length <= 6;
+    const monthLabelYearMode = resolveMonthLabelYearMode(labels, { monthOnlyCompact, labelType });
+    const monthLabelOverrides = buildMonthLabelOverrides(labels, { mode: monthLabelYearMode, monthOnlyCompact, compact: frame.compact, labelType });
     ctx.fillStyle = palette.label;
     ctx.font = frame.tickFont;
     const edgeInset = frame.compact ? 6 : 8;
@@ -260,7 +262,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
             ? geom.x0 + (geom.plotW * 0.5)
             : geom.x0 + ((geom.plotW * i) / (labels.length - 1)));
       const isFinal = i === labels.length - 1;
-      const baseText = formatAxisLabel(lab, { labelType, compact: frame.compact, monthOnly: monthOnlyCompact });
+      const baseText = monthLabelOverrides[i] || formatAxisLabel(lab, { labelType, compact: frame.compact, monthOnly: monthOnlyCompact });
       if(!baseText) return;
       const candidates = isFinal ? [baseText, ...finalLabelFallbacks] : [baseText];
       const textHeight = Math.max(10, Math.ceil(Number.parseFloat(frame.tickFont) || 11));
@@ -301,7 +303,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const renderedIndexes = new Set(pendingDraws.map((draw)=> draw.i));
       labels.forEach((label, i)=> {
         if(renderedIndexes.has(i)) return;
-        const text = formatAxisLabel(label, { labelType, compact: frame.compact, monthOnly: monthOnlyCompact });
+        const text = monthLabelOverrides[i] || formatAxisLabel(label, { labelType, compact: frame.compact, monthOnly: monthOnlyCompact });
         if(!text) return;
         const slotW = labels.length > 0 ? (geom.plotW / labels.length) : geom.plotW;
         const x = alignMode === "bar-center"
@@ -328,6 +330,52 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         }
         ctx.fillText(draw.text, draw.tx, y);
       });
+  }
+
+  function resolveMonthLabelYearMode(labels, { monthOnlyCompact = false, labelType = "category" } = {}){
+    if(labelType !== "month" || !monthOnlyCompact) return "default";
+    const monthYears = labels.map((label)=> extractMonthLabelYearToken(label)).filter(Boolean);
+    if(!monthYears.length) return "default";
+    return new Set(monthYears).size <= 1 ? "month-only" : "cross-year";
+  }
+
+  function buildMonthLabelOverrides(labels, { mode = "default", monthOnlyCompact = false, compact = false, labelType = "category" } = {}){
+    if(labelType !== "month" || !monthOnlyCompact || !Array.isArray(labels) || !labels.length) return {};
+    if(mode === "month-only"){
+      return Object.fromEntries(labels.map((label, i)=> [i, formatAxisLabel(label, { labelType: "month", compact, monthOnly: true })]));
+    }
+    if(mode !== "cross-year") return {};
+    let previousYear = "";
+    const overrides = {};
+    labels.forEach((label, i)=> {
+      const normalized = formatAxisLabel(label, { labelType: "month", compact, monthOnly: false });
+      const monthOnly = formatAxisLabel(label, { labelType: "month", compact, monthOnly: true });
+      const yearToken = extractMonthLabelYearToken(label);
+      if(!normalized) return;
+      if(!yearToken){
+        overrides[i] = monthOnly || normalized;
+        return;
+      }
+      if(yearToken !== previousYear){
+        overrides[i] = normalized;
+        previousYear = yearToken;
+        return;
+      }
+      overrides[i] = monthOnly || normalized;
+    });
+    return overrides;
+  }
+
+  function extractMonthLabelYearToken(label){
+    const text = String(label || "").trim();
+    if(!text) return "";
+    const yearMonthMatch = text.match(/^(\d{4})-\d{2}$/);
+    if(yearMonthMatch) return yearMonthMatch[1];
+    const suffixYearMatch = text.match(/\b(\d{2,4})\b(?=\s*(?:so\s+far)?$)/i);
+    if(!suffixYearMatch) return "";
+    const rawYear = suffixYearMatch[1];
+    if(rawYear.length === 2) return `20${rawYear}`;
+    return rawYear;
   }
 
 
