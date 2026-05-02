@@ -246,9 +246,15 @@ export function createUnifiedFiltersSeam({
       const pounds = Number(trip?.pounds || 0);
       const amount = Number(trip?.amount || 0);
       const pricePerLb = pounds > 0 ? (amount / pounds) : 0;
+      const parseBound = (raw)=>{
+        const text = String(raw ?? "").trim();
+        if(!text) return NaN;
+        const parsed = Number(text);
+        return Number.isFinite(parsed) ? parsed : NaN;
+      };
       const inRange = (value, minRaw, maxRaw)=>{
-        const min = Number(minRaw);
-        const max = Number(maxRaw);
+        const min = parseBound(minRaw);
+        const max = parseBound(maxRaw);
         if(Number.isFinite(min) && value < min) return false;
         if(Number.isFinite(max) && value > max) return false;
         return true;
