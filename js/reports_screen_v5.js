@@ -431,7 +431,8 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     saveState,
     isHomeMetricDetail,
     activeMetricDetail,
-    renderApp
+    renderApp,
+    showToast
   });
 
 
