@@ -290,9 +290,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         if(renderedIndexes.has(i)) return;
         const text = formatAxisLabel(label, { labelType, compact: frame.compact });
         if(!text) return;
-        const x = labels.length === 1
-          ? geom.x0 + (geom.plotW * 0.5)
-          : geom.x0 + ((geom.plotW * i) / (labels.length - 1));
+        const slotW = labels.length > 0 ? (geom.plotW / labels.length) : geom.plotW;
+        const x = alignMode === "bar-center"
+          ? geom.x0 + (slotW * i) + (slotW * 0.5)
+          : (labels.length === 1
+              ? geom.x0 + (geom.plotW * 0.5)
+              : geom.x0 + ((geom.plotW * i) / (labels.length - 1)));
         const width = ctx.measureText(text).width;
         const tx = Math.max(geom.x0 + edgeInset, Math.min(geom.xRight - width - edgeInset, x - (width / 2)));
         const right = tx + width;
@@ -782,14 +785,11 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const hasFinalSoFarLabel = xLabelType === "month"
         && axisLabels.length > 0
         && /\s+so far$/i.test(String(axisLabels[axisLabels.length - 1] || ""));
-      const frame = chartFrame(w, h, options.frameMode || "default", {
-        chartKind: "rolling",
-        pointCount: count,
-        labelType: xLabelType
-      });
-      if(hasFinalSoFarLabel){
-        frame.bottom += frame.compact ? 6 : 10;
-      }
+    const frame = chartFrame(w, h, options.frameMode || "default", {
+      chartKind: "rolling",
+      pointCount: count,
+      labelType: xLabelType
+    });
     const normalizedValues = values.map((value)=> {
       const numeric = Number(value);
       return Number.isFinite(numeric) ? Math.max(0, numeric) : null;
@@ -884,7 +884,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ctx.restore();
       }
 
-      drawBottomTicks(ctx, axisLabels, geom, h - (frame.compact ? 14 : 16), frame, {
+      const tickBaseline = h - (frame.compact ? 14 : 16) - (hasFinalSoFarLabel ? (frame.compact ? 6 : 8) : 0);
+      drawBottomTicks(ctx, axisLabels, geom, tickBaseline, frame, {
         alignMode: "index",
         labelType: xLabelType,
         maxTicks: options.maxTicks || 0,
