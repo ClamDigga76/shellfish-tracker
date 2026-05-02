@@ -211,6 +211,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   function drawBottomTicks(ctx, labels, geom, y, frame, options = {}){
     const explicitMaxTicks = Number(options.maxTicks) || 0;
     const preserveFinalLabel = options.preserveFinalLabel !== false;
+    const finalLabelFallbacks = Array.isArray(options.finalLabelFallbacks) ? options.finalLabelFallbacks : [];
     const inferredMaxTicks = (()=>{
       const count = labels.length;
       if(count <= 0) return frame.compact ? 4 : 6;
@@ -230,6 +231,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const edgeInset = frame.compact ? 6 : 8;
     const minGap = frame.compact ? 12 : 8;
     const placed = [];
+    const pendingDraws = [];
     const tickIndexes = new Set([0]);
     if(preserveFinalLabel) tickIndexes.add(Math.max(0, labels.length - 1));
     labels.forEach((_, i)=> {
@@ -243,28 +245,56 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         : (labels.length === 1
             ? geom.x0 + (geom.plotW * 0.5)
             : geom.x0 + ((geom.plotW * i) / (labels.length - 1)));
-      const text = formatAxisLabel(lab, { labelType, compact: frame.compact });
-      if(!text) return;
-      const m = ctx.measureText(text);
-      let tx = x - (m.width / 2);
-      const minX = geom.x0 + edgeInset;
-      const maxX = geom.xRight - m.width - edgeInset;
-      tx = Math.max(minX, Math.min(maxX, tx));
-      const right = tx + m.width;
-      const lastPlaced = placed[placed.length - 1];
-      if(lastPlaced && tx < lastPlaced.right + minGap){
-        if(i !== labels.length - 1) return;
-        const forcedTx = Math.max(minX, maxX);
-        if(forcedTx < lastPlaced.right + minGap){
-          return;
+      const isFinal = i === labels.length - 1;
+      const baseText = formatAxisLabel(lab, { labelType, compact: frame.compact });
+      if(!baseText) return;
+      const candidates = isFinal ? [baseText, ...finalLabelFallbacks] : [baseText];
+      let placedLabel = null;
+      for(const candidate of candidates){
+        const text = String(candidate || "").trim();
+        if(!text) continue;
+        const m = ctx.measureText(text);
+        let tx = x - (m.width / 2);
+        const minX = geom.x0 + edgeInset;
+        const maxX = geom.xRight - m.width - edgeInset;
+        tx = Math.max(minX, Math.min(maxX, tx));
+        const right = tx + m.width;
+        const lastPlaced = placed[placed.length - 1];
+        if(lastPlaced && tx < lastPlaced.right + minGap){
+          if(!isFinal) continue;
+          const forcedTx = Math.max(minX, maxX);
+          if(forcedTx < lastPlaced.right + minGap){
+            const canDropPrev = placed.length > 0 && i > 0;
+            if(canDropPrev){
+              placed.pop();
+              continue;
+            }
+            continue;
+          }
+          tx = forcedTx;
         }
-        tx = forcedTx;
+        placedLabel = { tx, right, i, text };
+        break;
       }
-      ctx.fillText(text, tx, y);
-      placed.push({ tx, right: tx + m.width, i });
+      if(!placedLabel) return;
+      placed.push({ tx: placedLabel.tx, right: placedLabel.right, i: placedLabel.i });
+      pendingDraws.push({ tx: placedLabel.tx, i: placedLabel.i, text: placedLabel.text });
     });
+    pendingDraws
+      .sort((a,b)=> a.i - b.i)
+      .forEach((draw)=> ctx.fillText(draw.text, draw.tx, y));
   }
 
+
+  function buildFinalMonthLabelFallbacks(label){
+    const text = String(label || "").trim();
+    if(!text) return [];
+    const lower = text.toLowerCase();
+    if(!lower.includes("so far")) return [];
+    const month = text.split(/\s+/).find((part)=> /^[A-Za-z]{3,9}$/.test(part));
+    if(!month) return ["So far"];
+    return [month.slice(0,3), "So far"];
+  }
   function fitLabel(ctx, text, maxW){
     const src = String(text || "");
     if(!src) return "";
@@ -658,7 +688,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         drawBottomTicks(ctx, labels, geom, categoryLabelY, frame, {
           alignMode: "bar-center",
           labelType: xLabelType,
-          maxTicks: options.maxTicks || 0
+          maxTicks: options.maxTicks || 0,
+          finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : []
         });
       }
       const yLabels = [];
@@ -794,7 +825,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       drawBottomTicks(ctx, axisLabels, geom, h - (frame.compact ? 14 : 16), frame, {
         alignMode: "index",
         labelType: xLabelType,
-        maxTicks: options.maxTicks || 0
+        maxTicks: options.maxTicks || 0,
+        finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : []
       });
       const yLabels = [];
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
@@ -846,12 +878,16 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       const { ctx, w, h } = c;
       const frame = chartFrame(w, h, frameMode, { chartKind: "line", pointCount: labels.length, labelType: "category" });
       clear(ctx, w, h);
-      const geom = drawAxes(ctx, w, h, { ...frame, top: h - frame.bottom - 34 });
+      const stripHeight = frame.compact ? 26 : 30;
+      const stripBottomLift = frame.compact ? 20 : 24;
+      const stripBottom = Math.max(frame.top + stripHeight + 4, frame.bottom + stripBottomLift);
+      const stripTop = h - stripBottom - stripHeight;
+      const geom = drawAxes(ctx, w, h, { ...frame, top: stripTop, bottom: stripBottom });
       const slotW = labels.length > 0 ? (geom.plotW / labels.length) : geom.plotW;
       const hasAnyTrips = values.some((count)=> count > 0);
       values.forEach((count, i)=> {
         const x = geom.x0 + (slotW * i) + (slotW * 0.5);
-        const tickHeight = count >= 2 ? 18 : 12;
+        const tickHeight = count >= 2 ? (frame.compact ? 16 : 20) : (frame.compact ? 10 : 13);
         ctx.strokeStyle = palette.trips;
         ctx.lineWidth = frame.compact ? 2.8 : 3.4;
         ctx.beginPath();
@@ -878,7 +914,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         ctx.font = frame.tickFont;
         ctx.fillText("Each mark is a day with work logged.", geom.x0 + 4, geom.yTop + 14);
       }
-      drawBottomTicks(ctx, prettyLabels, geom, h - 10, frame, { alignMode: "bar-center", labelType: "category", maxTicks: values.length <= 6 ? values.length : 5, preserveFinalLabel: true });
+      drawBottomTicks(ctx, prettyLabels, geom, h - (frame.compact ? 9 : 10), frame, {
+        alignMode: "bar-center",
+        labelType: "category",
+        maxTicks: values.length <= 6 ? values.length : 5,
+        preserveFinalLabel: true
+      });
       return true;
     }
     if(chartModel.chartType === "time-series"){
