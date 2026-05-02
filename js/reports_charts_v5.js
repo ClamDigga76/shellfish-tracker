@@ -231,6 +231,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const edgeInset = frame.compact ? 6 : 8;
     const minGap = frame.compact ? 12 : 8;
     const placed = [];
+    const pendingDraws = [];
     const tickIndexes = new Set([0]);
     if(preserveFinalLabel) tickIndexes.add(Math.max(0, labels.length - 1));
     labels.forEach((_, i)=> {
@@ -276,9 +277,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         break;
       }
       if(!placedLabel) return;
-      ctx.fillText(placedLabel.text, placedLabel.tx, y);
       placed.push({ tx: placedLabel.tx, right: placedLabel.right, i: placedLabel.i });
+      pendingDraws.push({ tx: placedLabel.tx, i: placedLabel.i, text: placedLabel.text });
     });
+    pendingDraws
+      .sort((a,b)=> a.i - b.i)
+      .forEach((draw)=> ctx.fillText(draw.text, draw.tx, y));
   }
 
 
