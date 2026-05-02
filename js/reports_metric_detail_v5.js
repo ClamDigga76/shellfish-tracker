@@ -245,15 +245,21 @@ function buildHomeCompareBarChart({ labels, metricKey, currentValue, previousVal
   };
 }
 
-function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel = "Visible range", chartType = "time-series" }){
+function buildHomeTimeSeriesChart({ monthRows, metricKey, valueKey, basisLabel = "Visible range", chartType = "time-series", emptyMonthNoData = false }){
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows : []);
   return {
     chartType: String(chartType || "time-series"),
     metricKey,
     basisLabel,
+    noDataGaps: emptyMonthNoData === true,
     monthKeys: safeMonths.map((row)=> String(row?.monthKey || "")),
     labels: safeMonths.map((row)=> String(row?.label || row?.monthKey || "")),
-    values: safeMonths.map((row)=> Number(row?.[valueKey]) || 0)
+    values: safeMonths.map((row)=> {
+      const treatAsNoData = emptyMonthNoData === true
+        && (row?.isEmptyMonth === true || row?.hasTrips === false);
+      if(treatAsNoData) return null;
+      return Number(row?.[valueKey]) || 0;
+    })
   };
 }
 
@@ -477,7 +483,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
       ...buildHomeSharedChartModel({ chartId: "pplByMonth", monthRows: safeMonths, dealerRows, areaRows }),
       basisLabel: `Visible months in the selected period • ${rateLeaderSupportLabel}`
     },
-    pplMonthlyTrendFree: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg", basisLabel: "Visible months in the selected period" }),
+    pplMonthlyTrendFree: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg", basisLabel: "Visible months in the selected period", emptyMonthNoData: true }),
     tripsRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "trips",
