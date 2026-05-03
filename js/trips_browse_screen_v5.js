@@ -143,7 +143,7 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
               <div class="tripsFiltersSection">
                 <div class="tripsFiltersSectionLabel">Date Range</div>
-                <button class="btn tripsDateRangeBtn" id="tripsDateRangePick" type="button"><span class="tripsDateRangeIcon" aria-hidden="true">📅</span><span class="tripsDateRangeLabel">${escapeHtml(tf.range === "custom" ? (resolvedRangeLabel || "Custom dates") : "Custom dates")}</span><span class="tripsDateRangeChevron" aria-hidden="true">›</span></button>
+                <button class="btn tripsDateRangeBtn" id="tripsDateRangePick" type="button"><span class="tripsDateRangeLabel">${escapeHtml(tf.range === "custom" ? (resolvedRangeLabel || "Custom dates") : "Custom dates")}</span><span class="tripsDateRangeChevron" aria-hidden="true">›</span></button>
               </div>
             </div>
 
@@ -291,9 +291,10 @@ export function createTripsBrowseScreenRenderer(deps){
     document.getElementById("flt_species")?.addEventListener("change", ()=>{ tf.species = "all"; rerender(); });
     document.getElementById("tripsDateRangePick")?.addEventListener("click", ()=>{
       openModal({
-        title: "Custom dates",
+        title: "CUSTOM DATES",
+        position: "center",
         html: `
-          <div class="row gap10 wrap dateRangeRow tripsDateRangeModalRow">
+          <div class="tripsDateRangeModalCard">
             <div class="homeRangeInputs reportsSharedRangeInputs">
               <label class="tripsRangeFieldLabel" for="tripsRangeFrom">Start date</label>
               <input class="input" id="tripsRangeFrom" type="date" value="${escapeHtml(String(tf.fromISO || ""))}" />
