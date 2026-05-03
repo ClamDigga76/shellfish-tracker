@@ -16,6 +16,8 @@ export function createRootStateSaveSeam({
   const SAFE_MODE_SESSION_KEY = "shellfish-safe-mode-session";
 
   let emergencyDraftRecoveredOnBoot = false;
+  let safeModeRequestedOnBoot = false;
+  let legacyRecoveryMarkerClearedOnBoot = false;
 
   function hasMeaningfulTripDraft(draft){
     if(!draft || typeof draft !== "object") return false;
@@ -70,9 +72,18 @@ export function createRootStateSaveSeam({
 
   function loadState(){
     const loaded = loadStateWithLegacyFallback(localStorage, ensureNavState, buildDefaultAppState);
-    if(isSafeModeEnabled() && loaded && typeof loaded === "object"){
-      loaded.__safeMode = true;
-      loaded.__recoveryMode = true;
+    safeModeRequestedOnBoot = isSafeModeEnabled();
+    if(loaded && typeof loaded === "object"){
+      if(safeModeRequestedOnBoot){
+        loaded.__safeMode = true;
+        loaded.__recoveryMode = true;
+      }else{
+        const hadLegacySafeMode = loaded.__safeMode === true;
+        const hadLegacyRecoveryMode = loaded.__recoveryMode === true;
+        delete loaded.__safeMode;
+        delete loaded.__recoveryMode;
+        legacyRecoveryMarkerClearedOnBoot = hadLegacySafeMode || hadLegacyRecoveryMode;
+      }
     }
     const hasNormalDraft = hasMeaningfulTripDraft(loaded?.draft);
     if(hasNormalDraft) return loaded;
@@ -91,6 +102,14 @@ export function createRootStateSaveSeam({
 
   function wasEmergencyDraftRecoveredOnBoot(){
     return emergencyDraftRecoveredOnBoot;
+  }
+
+  function wasSafeModeRequestedOnBoot(){
+    return safeModeRequestedOnBoot;
+  }
+
+  function wasLegacyRecoveryMarkerClearedOnBoot(){
+    return legacyRecoveryMarkerClearedOnBoot;
   }
 
   function createStateSaveFlow({ getState } = {}){
@@ -173,6 +192,8 @@ export function createRootStateSaveSeam({
     loadState,
     clearSafeModeFlag,
     wasEmergencyDraftRecoveredOnBoot,
+    wasSafeModeRequestedOnBoot,
+    wasLegacyRecoveryMarkerClearedOnBoot,
     createStateSaveFlow
   };
 }
