@@ -440,7 +440,7 @@ window.__showModuleError = function (err) {
             <button class="btn" id="safeMode">Open Recovery Mode</button>
             <button class="btn" id="resetCache">Reset Cache & Reload</button>
           </div>
-          <div class="muted small" style="margin-top:8px">Reload now tries the latest hosted build. Reset Cache & Reload is the stronger recovery step when files look stale or mismatched. Recovery Mode starts with a temporary clean session and does not erase trips.</div>
+          <div class="muted small" style="margin-top:8px">Reload now tries the latest hosted build. Reset Cache & Reload is the stronger recovery step when files look stale or mismatched. Recovery tools open support options without changing your saved app data.</div>
         </div>
       `;
 

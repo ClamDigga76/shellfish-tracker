@@ -69,13 +69,11 @@ export function createRootStateSaveSeam({
   }
 
   function loadState(){
-    if(isSafeModeEnabled()){
-      const safeState = ensureNavState(buildDefaultAppState());
-      safeState.__safeMode = true;
-      return safeState;
-    }
-
     const loaded = loadStateWithLegacyFallback(localStorage, ensureNavState, buildDefaultAppState);
+    if(isSafeModeEnabled() && loaded && typeof loaded === "object"){
+      loaded.__safeMode = true;
+      loaded.__recoveryMode = true;
+    }
     const hasNormalDraft = hasMeaningfulTripDraft(loaded?.draft);
     if(hasNormalDraft) return loaded;
 
@@ -127,8 +125,21 @@ export function createRootStateSaveSeam({
       }
     }
 
+    function buildDurableStateSnapshot(){
+      const state = getState?.();
+      if(!state || typeof state !== "object") return state;
+      const snapshot = { ...state };
+      delete snapshot.__safeMode;
+      delete snapshot.__recoveryMode;
+      return snapshot;
+    }
+
     function baseSaveState(){
-      const ok = safeSetItem(LS_KEY, JSON.stringify(getState?.()));
+      const runtimeState = getState?.();
+      if(runtimeState?.__safeMode === true){
+        return false;
+      }
+      const ok = safeSetItem(LS_KEY, JSON.stringify(buildDurableStateSnapshot()));
       if(ok) clearEmergencyTripDraftFallback();
       return ok;
     }
