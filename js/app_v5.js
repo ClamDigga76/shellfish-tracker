@@ -462,6 +462,8 @@ ensureDealers();
 const SAFE_MODE_ACTIVE = Boolean(state?.__safeMode);
 if(SAFE_MODE_ACTIVE){
   rootStateSaveSeam.clearSafeModeFlag();
+  state.__safeMode = true;
+  state.__recoveryMode = true;
   state.view = "settings";
 }
 if(Array.isArray(state.trips)) {
@@ -479,7 +481,7 @@ if(rootStateSaveSeam.wasEmergencyDraftRecoveredOnBoot()){
   try{ showToast("Recovered your unsaved trip draft"); }catch(_){ }
 }
 if(SAFE_MODE_ACTIVE){
-  try{ showToast("Recovery Mode is on. Loaded a temporary clean session."); }catch(_){ }
+  try{ showToast("Recovery tools are open. Your saved app data has not been changed."); }catch(_){ }
 }
 bindRuntimeBootHandlers();
 const {

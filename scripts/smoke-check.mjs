@@ -328,6 +328,25 @@ if (updateStatusSource) {
   checkIncludes(updateStatusSource, 'runtime build badge marker present', 'App ${displayBuildVersion}');
 }
 
+const rootStateSaveSource = readSource('js/root_state_save_seam_v5.js');
+const bootstrapSource = readSource('js/bootstrap_v5.js');
+
+if (appSource) {
+  if (!appSource.includes('Recovery Mode is on. Loaded a temporary clean session.')) pass('legacy recovery temporary session toast removed');
+  else fail('legacy recovery temporary session toast removed', 'legacy toast still present');
+}
+
+if (bootstrapSource) {
+  if (!bootstrapSource.includes('Recovery Mode starts with a temporary clean session')) pass('legacy bootstrap temporary clean session copy removed');
+  else fail('legacy bootstrap temporary clean session copy removed', 'legacy copy still present');
+}
+
+if (rootStateSaveSource) {
+  checkIncludes(rootStateSaveSource, 'recovery save guard blocks __safeMode persistence', 'if(runtimeState?.__safeMode === true)');
+  checkIncludes(rootStateSaveSource, 'durable save strips __safeMode marker', 'delete snapshot.__safeMode;');
+  checkIncludes(rootStateSaveSource, 'durable save strips __recoveryMode marker', 'delete snapshot.__recoveryMode;');
+}
+
 let passCount = 0;
 let failCount = 0;
 
