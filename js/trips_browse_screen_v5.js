@@ -85,6 +85,7 @@ export function createTripsBrowseScreenRenderer(deps){
       .slice(0, 2)
       .join(" · ");
     const isLegacyCustomRange = tf.range === "custom";
+    const isCustomDatesExpanded = ui.tripsCustomDatesExpanded === true;
 
     const filtersCard = `
       <div class="card tripsFiltersCard tripsBrowseFiltersCard">
@@ -147,6 +148,15 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
             </div>
 
+            ${isCustomDatesExpanded ? `
+              <div class="tripsFiltersSection tripsCustomDatesDropdown" aria-label="Custom dates">
+                <div class="homeRangeInputs reportsSharedRangeInputs">
+                  <input class="input" id="tripsRangeFrom" type="date" aria-label="Start date" value="${escapeHtml(String(tf.fromISO || ""))}" />
+                  <input class="input" id="tripsRangeTo" type="date" aria-label="End date" value="${escapeHtml(String(tf.toISO || ""))}" />
+                </div>
+                <button class="btn good tripsRangeApplyBtn" id="tripsRangeApply" type="button">Apply</button>
+              </div>
+            ` : ""}
 
             <div class="tripsFiltersSection">
               <button class="btn btn-ghost tripsMoreFiltersToggleBtn ${moreFiltersExpanded || hasActiveMoreFilters ? "is-active" : ""}" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span class="tripsFilterStackIcon tripsFilterStackIconSubtle" aria-hidden="true"><span></span><span></span><span></span></span><span>${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</span></button>
@@ -290,34 +300,20 @@ export function createTripsBrowseScreenRenderer(deps){
     document.getElementById("flt_area")?.addEventListener("change", (ev)=>{ tf.area = ev.target.value; rerender(); });
     document.getElementById("flt_species")?.addEventListener("change", ()=>{ tf.species = "all"; rerender(); });
     document.getElementById("tripsDateRangePick")?.addEventListener("click", ()=>{
-      openModal({
-        title: "CUSTOM DATES",
-        position: "center",
-        html: `
-            <div class="tripsDateRangeModalCard">
-              <div class="tripsRangeControlRow">
-                <label class="sr-only" for="tripsRangeFrom">Start date</label>
-                <input class="input tripsRangeCompactInput" id="tripsRangeFrom" type="date" aria-label="Start date" value="${escapeHtml(String(tf.fromISO || ""))}" />
-                <label class="sr-only" for="tripsRangeTo">End date</label>
-                <input class="input tripsRangeCompactInput" id="tripsRangeTo" type="date" aria-label="End date" value="${escapeHtml(String(tf.toISO || ""))}" />
-                <button class="btn good tripsRangeApplyBtn" id="tripsRangeApply" type="button">Apply</button>
-              </div>
-            </div>
-        `,
-        onOpen: ()=>{
-          if (typeof bindDatePill === "function") {
-            bindDatePill("tripsRangeFrom");
-            bindDatePill("tripsRangeTo");
-          }
-          document.getElementById("tripsRangeApply")?.addEventListener("click", ()=>{
-            tf.range = "custom";
-            tf.fromISO = String(document.getElementById("tripsRangeFrom")?.value || "").trim();
-            tf.toISO = String(document.getElementById("tripsRangeTo")?.value || "").trim();
-            closeModal();
-            rerender();
-          });
-        }
-      });
+      ui.tripsCustomDatesExpanded = !isCustomDatesExpanded;
+      rerender();
+    });
+
+    if (typeof bindDatePill === "function") {
+      bindDatePill("tripsRangeFrom");
+      bindDatePill("tripsRangeTo");
+    }
+    document.getElementById("tripsRangeApply")?.addEventListener("click", ()=>{
+      tf.range = "custom";
+      tf.fromISO = String(document.getElementById("tripsRangeFrom")?.value || "").trim();
+      tf.toISO = String(document.getElementById("tripsRangeTo")?.value || "").trim();
+      ui.tripsCustomDatesExpanded = false;
+      rerender();
     });
     document.getElementById("tripsMoreFiltersToggle")?.addEventListener("click", ()=>{
       ui.tripsMoreFiltersExpanded = !moreFiltersExpanded;
@@ -339,12 +335,15 @@ export function createTripsBrowseScreenRenderer(deps){
 
     document.getElementById("flt_apply")?.addEventListener("click", ()=>{
       ui.tripsFiltersExpanded = false;
+      ui.tripsCustomDatesExpanded = false;
       scheduleStateSave();
       renderAllTrips();
     });
 
     document.getElementById("flt_reset")?.addEventListener("click", ()=>{
       resetTripsFilters(state);
+      state.ui = state.ui || {};
+      state.ui.tripsCustomDatesExpanded = false;
       saveState();
       renderAllTrips();
     });
