@@ -81,7 +81,7 @@ export function createTripsBrowseScreenRenderer(deps){
             <div class="tripsFiltersSummarySecondary" title="${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}">${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}</div>
           </div>
           <div class="tripsFiltersSummaryActions">
-            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true">≡</span><span>${isFiltersExpanded ? "Hide filters" : "Filters"}</span></button>
+            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true">⛃</span><span>${isFiltersExpanded ? "Hide filters" : "Filter / Sort"}</span></button>
           </div>
         </div>
 
@@ -92,6 +92,13 @@ export function createTripsBrowseScreenRenderer(deps){
               <div class="tripsFiltersSectionLabel">Quick Picks</div>
               <div class="tripsFiltersQuickRange" role="group" aria-label="Quick Range">
                 ${quickRangeOptions.map(([k,l])=>`<button class="btn tripsFilterChip ${tf.range===k?"is-selected":""}" type="button" data-trips-range="${k}">${l}</button>`).join("")}
+              </div>
+            </div>
+            <div class="tripsFiltersSection">
+              <div class="tripsFiltersSectionLabel">Sort</div>
+              <div class="tripsFiltersQuickRange" role="group" aria-label="Sort Trips">
+                <button class="btn tripsFilterChip ${tf.sort !== "oldest" ? "is-selected" : ""}" type="button" data-trips-sort="newest">Newest first</button>
+                <button class="btn tripsFilterChip ${tf.sort === "oldest" ? "is-selected" : ""}" type="button" data-trips-sort="oldest">Oldest first</button>
               </div>
             </div>
 
@@ -123,28 +130,26 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
               <div class="tripsFiltersSection">
                 <div class="tripsFiltersSectionLabel">Date Range</div>
-                <button class="btn tripsDateRangeBtn" id="tripsDateRangePick" type="button">${escapeHtml(tf.range === "custom" ? (resolvedRangeLabel || "Custom dates") : "Custom dates")}</button>
+                <button class="btn tripsDateRangeBtn" id="tripsDateRangePick" type="button"><span class="tripsDateRangeIcon" aria-hidden="true">📅</span><span>${escapeHtml(tf.range === "custom" ? (resolvedRangeLabel || "Custom dates") : "Custom dates")}</span><span class="tripsDateRangeChevron" aria-hidden="true">›</span></button>
+                <div class="tripsCustomRangeRow ${tf.range === "custom" ? "is-open" : ""}">
+                  <div class="homeRangeInputs reportsSharedRangeInputs">
+                    <input class="input" id="tripsRangeFrom" type="date" value="${escapeHtml(String(tf.fromISO || ""))}" />
+                    <input class="input" id="tripsRangeTo" type="date" value="${escapeHtml(String(tf.toISO || ""))}" />
+                  </div>
+                  <button class="btn" id="tripsRangeApply" type="button">Apply dates</button>
+                </div>
               </div>
             </div>
 
 
             <div class="tripsFiltersSection">
-              <div class="tripsFiltersSectionLabel">Sort</div>
-              <div class="tripsFiltersQuickRange" role="group" aria-label="Sort Trips">
-                <button class="btn tripsFilterChip ${tf.sort !== "oldest" ? "is-selected" : ""}" type="button" data-trips-sort="newest">Newest first</button>
-                <button class="btn tripsFilterChip ${tf.sort === "oldest" ? "is-selected" : ""}" type="button" data-trips-sort="oldest">Oldest first</button>
-              </div>
-            </div>
-
-            <div class="tripsFiltersSection">
-              <button class="btn btn-ghost" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}">${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</button>
+              <button class="btn btn-ghost tripsMoreFiltersToggleBtn" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span aria-hidden="true">⛃</span><span>${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</span></button>
               ${moreFiltersExpanded ? `
                 <div class="tripsMoreFiltersFields">
                   <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Pounds</div><div class="tripsFiltersPairedFields"><input id="flt_min_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.minLbs || ""))}" placeholder="Min lbs"><input id="flt_max_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxLbs || ""))}" placeholder="Max lbs"></div></div>
                   <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Pay</div><div class="tripsFiltersPairedFields"><input id="flt_min_pay" class="select" type="number" step="any" value="${escapeHtml(String(tf.minPay || ""))}" placeholder="Min $"><input id="flt_max_pay" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxPay || ""))}" placeholder="Max $"></div></div>
                   <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Price/lb</div><div class="tripsFiltersPairedFields"><input id="flt_min_ppl" class="select" type="number" step="any" value="${escapeHtml(String(tf.minPpl || ""))}" placeholder="Min $/lb"><input id="flt_max_ppl" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxPpl || ""))}" placeholder="Max $/lb"></div></div>
                 </div>
-                <button class="btn" id="tripsClearMoreFilters" type="button">Clear More Filters</button>
               ` : ""}
             </div>
             <div class="tripsFiltersSection tripsLockedPreviewSection" aria-label="Full Insights">
@@ -154,7 +159,7 @@ export function createTripsBrowseScreenRenderer(deps){
             </div>
 
             <div class="tripsFilterApplyRow">
-              ${hasActiveTripsFilters ? `<button class="btn btn-ghost" id="flt_reset" type="button">Reset</button>` : "<span></span>"}
+              <button class="btn btn-ghost" id="flt_reset" type="button">Reset</button>
               <button class="btn good" id="flt_apply" type="button">Apply</button>
             </div>
 
@@ -279,13 +284,13 @@ export function createTripsBrowseScreenRenderer(deps){
     document.getElementById("flt_area")?.addEventListener("change", (ev)=>{ tf.area = ev.target.value; rerender(); });
     document.getElementById("flt_species")?.addEventListener("change", ()=>{ tf.species = "all"; rerender(); });
     document.getElementById("tripsDateRangePick")?.addEventListener("click", ()=>{
-      const from = window.prompt("Start date (YYYY-MM-DD)", String(tf.fromISO || ""));
-      if(from == null) return;
-      const to = window.prompt("End date (YYYY-MM-DD)", String(tf.toISO || ""));
-      if(to == null) return;
       tf.range = "custom";
-      tf.fromISO = String(from || "").trim();
-      tf.toISO = String(to || "").trim();
+      rerender();
+    });
+    document.getElementById("tripsRangeApply")?.addEventListener("click", ()=>{
+      tf.range = "custom";
+      tf.fromISO = String(document.getElementById("tripsRangeFrom")?.value || "").trim();
+      tf.toISO = String(document.getElementById("tripsRangeTo")?.value || "").trim();
       rerender();
     });
     document.getElementById("tripsMoreFiltersToggle")?.addEventListener("click", ()=>{
@@ -294,10 +299,6 @@ export function createTripsBrowseScreenRenderer(deps){
     });
     [["flt_min_lbs","minLbs"],["flt_max_lbs","maxLbs"],["flt_min_pay","minPay"],["flt_max_pay","maxPay"],["flt_min_ppl","minPpl"],["flt_max_ppl","maxPpl"]].forEach(([id,key])=>{
       document.getElementById(id)?.addEventListener("input", (ev)=>{ tf[key] = String(ev.target.value || ""); });
-    });
-    document.getElementById("tripsClearMoreFilters")?.addEventListener("click", ()=>{
-      tf.minLbs = ""; tf.maxLbs = ""; tf.minPay = ""; tf.maxPay = ""; tf.minPpl = ""; tf.maxPpl = "";
-      rerender();
     });
     document.getElementById("tripsViewInsights")?.addEventListener("click", ()=>{
       state.view = "reports";
