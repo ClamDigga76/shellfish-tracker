@@ -158,8 +158,9 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
             ` : ""}
 
-            <div class="tripsFiltersSection">
-              <button class="btn btn-ghost tripsMoreFiltersToggleBtn ${moreFiltersExpanded || hasActiveMoreFilters ? "is-active" : ""}" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span class="tripsFilterStackIcon tripsFilterStackIconSubtle" aria-hidden="true"><span></span><span></span><span></span></span><span class="tripsMoreFiltersToggleCopy"><span class="tripsMoreFiltersToggleMain">${activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 Filter Active" : `${activeMoreFiltersCount} Filters Active`) : "More Ways to Filter"}</span><span class="tripsMoreFiltersToggleSub">${activeMoreFiltersSummary || "Pounds • Pay • Price/lb"}</span></span><span class="tripsMoreFiltersToggleChevron" aria-hidden="true">${moreFiltersExpanded ? "˄" : "˅"}</span></button>
+            <div class="tripsFiltersSection tripsMoreFiltersSection">
+              <div class="tripsFiltersSectionLabel tripsMoreFiltersHeading">MORE FILTER OPTIONS</div>
+              <button class="btn btn-ghost tripsMoreFiltersToggleBtn ${moreFiltersExpanded || hasActiveMoreFilters ? "is-active" : ""}" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span class="tripsMoreFiltersToggleCopy"><span class="tripsMoreFiltersToggleMain">${activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active" : `${activeMoreFiltersCount} filters active`) : "Pounds • Pay • Price/lb"}</span><span class="tripsMoreFiltersToggleAction">${activeMoreFiltersCount > 0 ? "Edit" : (moreFiltersExpanded ? "Close" : "Open")}</span></span><span class="tripsMoreFiltersToggleChevron" aria-hidden="true">${moreFiltersExpanded ? "˄" : "˅"}</span></button>
               ${moreFiltersExpanded ? `
                 <div class="tripsMoreFiltersFields">
                   <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Pounds</div><div class="tripsFiltersPairedFields"><input id="flt_min_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.minLbs || ""))}" placeholder="Min lbs"><input id="flt_max_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxLbs || ""))}" placeholder="Max lbs"></div></div>
@@ -168,10 +169,8 @@ export function createTripsBrowseScreenRenderer(deps){
                 </div>
               ` : ""}
             </div>
-            <div class="tripsFiltersSection tripsLockedPreviewSection" aria-label="Full Insights">
-              <div class="tripsFiltersSectionLabel">FULL INSIGHTS</div>
-              <div class="tripsLockedPreviewText">Unlock exact season totals, best days, dealer trends, and area strength.</div>
-              <button class="btn" id="tripsViewInsights" type="button">View Insights 🔒</button>
+            <div class="tripsFiltersSection tripsPaidVersionStrip" aria-label="Paid version info">
+              <div class="tripsPaidVersionStripText">Paid version unlocks exact season totals, best days, dealer trends, and area strength.</div>
             </div>
 
             <div class="tripsFilterApplyRow">
