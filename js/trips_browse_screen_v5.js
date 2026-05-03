@@ -94,7 +94,7 @@ export function createTripsBrowseScreenRenderer(deps){
             <div class="tripsFiltersSummarySecondary" title="${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}">${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}</div>
           </div>
           <div class="tripsFiltersSummaryActions">
-            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true">🎚️</span><span>${isFiltersExpanded ? "Hide filters" : "Filter / Sort"}</span></button>
+            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true"><span class="tripsFilterStackIcon" aria-hidden="true"><span></span><span></span><span></span></span><span>${isFiltersExpanded ? "Hide filters" : "Filter / Sort"}</span></button>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export function createTripsBrowseScreenRenderer(deps){
 
 
             <div class="tripsFiltersSection">
-              <button class="btn btn-ghost tripsMoreFiltersToggleBtn" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span aria-hidden="true">🎚️</span><span>${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</span></button>
+              <button class="btn btn-ghost tripsMoreFiltersToggleBtn" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span class="tripsFilterStackIcon tripsFilterStackIconSubtle" aria-hidden="true"><span></span><span></span><span></span></span><span>${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</span></button>
               ${moreFiltersExpanded ? `
                 <div class="tripsMoreFiltersFields">
                   <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Pounds</div><div class="tripsFiltersPairedFields"><input id="flt_min_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.minLbs || ""))}" placeholder="Min lbs"><input id="flt_max_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxLbs || ""))}" placeholder="Max lbs"></div></div>
