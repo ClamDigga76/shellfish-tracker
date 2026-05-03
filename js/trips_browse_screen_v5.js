@@ -18,8 +18,17 @@ export function createTripsBrowseScreenRenderer(deps){
     openScreenshotCardPreview,
     renderTripsBrowseReadOnlyTripCard,
     openModal,
-    closeModal
+    closeModal,
+    bindDatePill
   } = deps;
+  const compactDateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  const formatCompactDate = (iso)=>{
+    const safeIso = String(iso || "").slice(0, 10);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(safeIso)) return "";
+    const dt = new Date(`${safeIso}T00:00:00Z`);
+    if(Number.isNaN(dt.getTime())) return "";
+    return compactDateFormatter.format(dt);
+  };
 
   function renderAllTrips(){
     const state = getState();
@@ -40,7 +49,9 @@ export function createTripsBrowseScreenRenderer(deps){
       String(tf.sort || "newest") !== "newest"
     );
     const isFiltersExpanded = ui.tripsFiltersExpanded === true;
-    const resolvedRangeLabel = r.label || "YTD";
+    const resolvedRangeLabel = (tf.range === "custom" && tf.fromISO && tf.toISO)
+      ? `${formatCompactDate(tf.fromISO)} – ${formatCompactDate(tf.toISO)}`
+      : (r.label || "YTD");
     const dealerSummary = String(tf.dealer || "all") === "all" ? "All dealers" : `${tf.dealer}`;
     const areaSummary = String(tf.area || "all") === "all" ? "All areas" : `${tf.area}`;
     const tripsCountSummary = `${sorted.length} ${sorted.length === 1 ? "trip" : "trips"}`;
@@ -81,7 +92,7 @@ export function createTripsBrowseScreenRenderer(deps){
             <div class="tripsFiltersSummarySecondary" title="${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}">${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}</div>
           </div>
           <div class="tripsFiltersSummaryActions">
-            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true">⛃</span><span>${isFiltersExpanded ? "Hide filters" : "Filter / Sort"}</span></button>
+            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true">⛭</span><span>${isFiltersExpanded ? "Hide filters" : "Filter / Sort"}</span></button>
           </div>
         </div>
 
@@ -130,20 +141,13 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
               <div class="tripsFiltersSection">
                 <div class="tripsFiltersSectionLabel">Date Range</div>
-                <button class="btn tripsDateRangeBtn" id="tripsDateRangePick" type="button"><span class="tripsDateRangeIcon" aria-hidden="true">📅</span><span>${escapeHtml(tf.range === "custom" ? (resolvedRangeLabel || "Custom dates") : "Custom dates")}</span><span class="tripsDateRangeChevron" aria-hidden="true">›</span></button>
-                <div class="tripsCustomRangeRow ${tf.range === "custom" ? "is-open" : ""}">
-                  <div class="homeRangeInputs reportsSharedRangeInputs">
-                    <input class="input" id="tripsRangeFrom" type="date" value="${escapeHtml(String(tf.fromISO || ""))}" />
-                    <input class="input" id="tripsRangeTo" type="date" value="${escapeHtml(String(tf.toISO || ""))}" />
-                  </div>
-                  <button class="btn" id="tripsRangeApply" type="button">Apply dates</button>
-                </div>
+                <button class="btn tripsDateRangeBtn" id="tripsDateRangePick" type="button"><span class="tripsDateRangeIcon" aria-hidden="true">📅</span><span class="tripsDateRangeLabel">${escapeHtml(tf.range === "custom" ? (resolvedRangeLabel || "Custom dates") : "Custom dates")}</span><span class="tripsDateRangeChevron" aria-hidden="true">›</span></button>
               </div>
             </div>
 
 
             <div class="tripsFiltersSection">
-              <button class="btn btn-ghost tripsMoreFiltersToggleBtn" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span aria-hidden="true">⛃</span><span>${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</span></button>
+              <button class="btn btn-ghost tripsMoreFiltersToggleBtn" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span aria-hidden="true">⛭</span><span>${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</span></button>
               ${moreFiltersExpanded ? `
                 <div class="tripsMoreFiltersFields">
                   <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Pounds</div><div class="tripsFiltersPairedFields"><input id="flt_min_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.minLbs || ""))}" placeholder="Min lbs"><input id="flt_max_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxLbs || ""))}" placeholder="Max lbs"></div></div>
@@ -284,14 +288,31 @@ export function createTripsBrowseScreenRenderer(deps){
     document.getElementById("flt_area")?.addEventListener("change", (ev)=>{ tf.area = ev.target.value; rerender(); });
     document.getElementById("flt_species")?.addEventListener("change", ()=>{ tf.species = "all"; rerender(); });
     document.getElementById("tripsDateRangePick")?.addEventListener("click", ()=>{
-      tf.range = "custom";
-      rerender();
-    });
-    document.getElementById("tripsRangeApply")?.addEventListener("click", ()=>{
-      tf.range = "custom";
-      tf.fromISO = String(document.getElementById("tripsRangeFrom")?.value || "").trim();
-      tf.toISO = String(document.getElementById("tripsRangeTo")?.value || "").trim();
-      rerender();
+      openModal({
+        title: "Custom dates",
+        html: `
+          <div class="row gap10 wrap dateRangeRow tripsDateRangeModalRow">
+            <div class="homeRangeInputs reportsSharedRangeInputs">
+              <input class="input" id="tripsRangeFrom" type="date" value="${escapeHtml(String(tf.fromISO || ""))}" />
+              <input class="input" id="tripsRangeTo" type="date" value="${escapeHtml(String(tf.toISO || ""))}" />
+            </div>
+            <button class="btn" id="tripsRangeApply" type="button">Apply</button>
+          </div>
+        `,
+        onOpen: ()=>{
+          if (typeof bindDatePill === "function") {
+            bindDatePill("tripsRangeFrom");
+            bindDatePill("tripsRangeTo");
+          }
+          document.getElementById("tripsRangeApply")?.addEventListener("click", ()=>{
+            tf.range = "custom";
+            tf.fromISO = String(document.getElementById("tripsRangeFrom")?.value || "").trim();
+            tf.toISO = String(document.getElementById("tripsRangeTo")?.value || "").trim();
+            closeModal();
+            rerender();
+          });
+        }
+      });
     });
     document.getElementById("tripsMoreFiltersToggle")?.addEventListener("click", ()=>{
       ui.tripsMoreFiltersExpanded = !moreFiltersExpanded;
