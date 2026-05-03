@@ -70,7 +70,8 @@ export function createTripsBrowseScreenRenderer(deps){
       { label: "Price/lb", min: tf.minPpl, max: tf.maxPpl, unit: "$/lb" }
     ];
     const hasActiveMoreFilters = activeMoreFiltersEntries.some((entry)=> String(entry.min || "").trim() !== "" || String(entry.max || "").trim() !== "");
-    const moreFiltersExpanded = hasActiveMoreFilters || ui.tripsMoreFiltersExpanded === true;
+    const hasUserMoreFiltersExpansionPref = typeof ui.tripsMoreFiltersExpanded === "boolean";
+    const moreFiltersExpanded = hasUserMoreFiltersExpansionPref ? ui.tripsMoreFiltersExpanded : hasActiveMoreFilters;
     const activeMoreFiltersCount = activeMoreFiltersEntries.reduce((count, entry)=> count + (String(entry.min || "").trim() !== "" ? 1 : 0) + (String(entry.max || "").trim() !== "" ? 1 : 0), 0);
     const activeMoreFiltersSummary = activeMoreFiltersEntries
       .map((entry)=>{
