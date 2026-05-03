@@ -48,6 +48,7 @@
 .tripsBrowseFiltersCard .tripsFilterChip{min-height:35px;padding:7px 11px;font-size:12px}
 .tripsBrowseFiltersCard .tripsFiltersBody .select{min-height:36px;padding:7px 11px;font-size:13px}
 .tripsBrowseFiltersCard .tripsDateRangeBtn{min-height:36px;padding:0 11px;display:flex;align-items:center;justify-content:flex-start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tripsBrowseFiltersCard .tripsDateRangeLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tripsBrowseFiltersCard .tripsFilterApplyRow{gap:6px;padding-top:0;margin-top:2px}
 .tripsBrowseFiltersCard .tripsFilterApplyRow .btn{min-height:35px;padding:0 12px}
 .tripsBrowseFiltersCard .tripsLockedPreviewSection{margin-top:1px;padding:8px 10px;border:1px solid rgba(187,162,108,.44);border-radius:12px;background:linear-gradient(180deg, rgba(102,81,45,.38) 0%, rgba(62,47,27,.62) 100%)}
@@ -1327,8 +1328,9 @@
 .tripsDateRangeIcon{font-size:14px;opacity:.9}
 .tripsDateRangeChevron{font-size:16px;opacity:.8}
 .tripsMoreFiltersToggleBtn{display:flex;align-items:center;justify-content:flex-start;gap:8px}
-.tripsBrowseFiltersCard .tripsMoreFiltersFields .select{min-height:34px;font-size:12px;padding:6px 10px}
-.tripsCustomRangeRow{display:none;gap:8px;align-items:center}
-.tripsCustomRangeRow.is-open{display:grid}
-.tripsCustomRangeRow .homeRangeInputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.tripsBrowseFiltersCard .tripsMoreFiltersFields .select{min-height:32px;font-size:11px;padding:4px 8px}
+.tripsBrowseFiltersCard .tripsMoreFiltersGroup{gap:2px}
+.tripsBrowseFiltersCard .tripsMoreFiltersFields{gap:6px}
+.tripsBrowseFiltersCard .tripsFiltersBody{padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px))}
+.tripsDateRangeModalRow .homeRangeInputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .screenFirstCard{padding-bottom:max(82px,calc(14px + env(safe-area-inset-bottom)))}
