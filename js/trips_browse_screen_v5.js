@@ -154,7 +154,7 @@ export function createTripsBrowseScreenRenderer(deps){
                   <input class="input" id="tripsRangeFrom" type="date" aria-label="Start date" value="${escapeHtml(String(tf.fromISO || ""))}" />
                   <input class="input" id="tripsRangeTo" type="date" aria-label="End date" value="${escapeHtml(String(tf.toISO || ""))}" />
                 </div>
-                <button class="btn good tripsRangeApplyBtn" id="tripsRangeApply" type="button">Apply</button>
+                <button class="btn good tripsRangeApplyBtn" id="tripsRangeApply" type="button">Set Dates</button>
               </div>
             ` : ""}
 
