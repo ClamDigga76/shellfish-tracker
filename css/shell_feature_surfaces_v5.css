@@ -3,7 +3,7 @@
 .tripsFiltersSummaryRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tripsFiltersSummaryBlock{min-width:0;display:grid;gap:3px;flex:1}
 .tripsFiltersSummaryPrimary{font-size:14px;line-height:1.3;font-weight:760;color:var(--text)}
-.tripsFiltersSummarySecondary{font-size:12px;line-height:1.25;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tripsFiltersSummarySecondary{font-size:12px;line-height:1.25;color:var(--text-muted);white-space:normal;overflow:visible;text-overflow:clip}
 .tripsFiltersSummaryActions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px;flex:0 0 auto}
 .tripsFiltersToggleBtn{min-width:86px;min-height:36px;padding:0 12px;border-radius:999px;font-size:12px;font-weight:760;line-height:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(139,176,245,.55);background:linear-gradient(180deg, rgba(63,108,194,.45) 0%, rgba(36,73,150,.58) 100%);color:rgba(233,242,255,.98);box-shadow:inset 0 1px 0 rgba(229,240,255,.28),inset 0 -1px 0 rgba(8,20,43,.34),0 5px 12px rgba(6,16,35,.34);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease,background .12s ease}
 .tripsFiltersToggleBtn:hover{border-color:rgba(164,197,255,.72);background:linear-gradient(180deg, rgba(73,119,212,.56) 0%, rgba(43,83,168,.68) 100%);box-shadow:inset 0 1px 0 rgba(240,247,255,.34),inset 0 -1px 0 rgba(9,22,46,.36),0 6px 13px rgba(8,20,43,.36)}
@@ -41,15 +41,18 @@
 .tripsBrowseFiltersCard.tripsFiltersCard{padding:10px 12px;border-color:rgba(125,162,238,.26);background:linear-gradient(180deg, rgba(21,35,66,.9) 0%, rgba(13,24,45,.95) 100%);box-shadow:inset 0 1px 0 rgba(201,220,255,.12),inset 0 0 0 1px rgba(87,122,191,.16),0 10px 26px rgba(5,12,28,.36),0 0 0 1px rgba(39,73,135,.2),0 0 14px rgba(66,118,219,.12)}
 .tripsBrowseFiltersCard .tripsFiltersBody{margin-top:8px;padding-top:8px;gap:8px}
 .tripsBrowseFiltersCard .tripsFiltersSection{gap:5px}
-.tripsBrowseFiltersCard .tripsFiltersQuickRange{gap:6px}
+.tripsBrowseFiltersCard .tripsFiltersQuickRange{gap:6px;flex-wrap:wrap}
 .tripsBrowseFiltersCard .tripsFiltersPairedFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;align-items:end}
 .tripsBrowseFiltersCard .tripsFiltersPairedFields .tripsFiltersSection{min-width:0}
 .tripsBrowseFiltersCard .tripsFiltersPairedFields .select{width:100%;min-width:0}
 .tripsBrowseFiltersCard .tripsFilterChip{min-height:35px;padding:7px 11px;font-size:12px}
 .tripsBrowseFiltersCard .tripsFiltersBody .select{min-height:36px;padding:7px 11px;font-size:13px}
+.tripsBrowseFiltersCard .tripsDateRangeBtn{min-height:36px;padding:0 11px;display:flex;align-items:center;justify-content:flex-start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tripsBrowseFiltersCard .tripsFilterApplyRow{gap:6px;padding-top:0;margin-top:2px}
 .tripsBrowseFiltersCard .tripsFilterApplyRow .btn{min-height:35px;padding:0 12px}
-.tripsBrowseFiltersCard .tripsLockedPreviewSection{margin-top:1px}
+.tripsBrowseFiltersCard .tripsLockedPreviewSection{margin-top:1px;padding:8px 10px;border:1px solid rgba(187,162,108,.44);border-radius:12px;background:linear-gradient(180deg, rgba(102,81,45,.38) 0%, rgba(62,47,27,.62) 100%)}
+.tripsBrowseFiltersCard .tripsLockedPreviewSection .tripsFiltersSectionLabel{font-size:10px;letter-spacing:.08em}
+.tripsBrowseFiltersCard .tripsLockedPreviewSection .btn{min-height:32px;padding:0 10px}
 .tripsBrowseFiltersCard .tripsLockedPreviewList{display:grid;gap:5px}
 .tripsBrowseFiltersCard .tripsLockedPreviewRow{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:8px;padding:7px 10px;border-radius:12px;border:1px solid rgba(187,162,108,.56);background:linear-gradient(180deg, rgba(115,91,48,.6) 0%, rgba(67,52,30,.86) 100%);box-shadow:inset 0 1px 0 rgba(255,243,211,.2),0 0 0 1px rgba(255,203,110,.2),0 0 12px rgba(229,170,68,.12)}
 .tripsBrowseFiltersCard .tripsLockedPreviewIcon{width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;color:rgba(255,210,96,.95);text-shadow:0 0 8px rgba(229,170,68,.25)}
@@ -71,7 +74,10 @@
 .tripsBrowseList .trip + .trip{margin-top:0}
 .screenFirstCard{
   margin-top:var(--section-gap-tight);
+  padding-bottom:max(14px, env(safe-area-inset-bottom));
 }
+.tripsMoreFiltersFields{display:grid;gap:8px}
+.tripsMoreFiltersGroup{display:grid;gap:4px}
 .tripCardStandard{
   margin:0;
   padding:13px 16px 12px;

@@ -44,7 +44,6 @@ export function createTripsBrowseScreenRenderer(deps){
     const dealerSummary = String(tf.dealer || "all") === "all" ? "All dealers" : `${tf.dealer}`;
     const areaSummary = String(tf.area || "all") === "all" ? "All areas" : `${tf.area}`;
     const tripsCountSummary = `${sorted.length} ${sorted.length === 1 ? "trip" : "trips"}`;
-    const sortSummary = tf.sort === "oldest" ? "Oldest first" : "Newest first";
     const excludedQuarantinedCount = Number(transparency?.excludedQuarantinedCount || 0);
     const totalTripsCount = Array.isArray(state.trips) ? state.trips.length : 0;
     const hasAnyTrips = totalTripsCount > 0;
@@ -55,7 +54,23 @@ export function createTripsBrowseScreenRenderer(deps){
 
     const quickRangeOptions = [["ytd","YTD"],["mtd","This Month"],["last_month","Last Month"],["all","All Time"]];
     const moreFiltersExpanded = ui.tripsMoreFiltersExpanded === true;
-    const activeMoreFiltersCount = [tf.minLbs, tf.maxLbs, tf.minPay, tf.maxPay, tf.minPpl, tf.maxPpl].filter((value)=> String(value || "").trim() !== "").length;
+    const activeMoreFiltersEntries = [
+      { label: "Pounds", min: tf.minLbs, max: tf.maxLbs, unit: "lbs" },
+      { label: "Pay", min: tf.minPay, max: tf.maxPay, unit: "$" },
+      { label: "Price/lb", min: tf.minPpl, max: tf.maxPpl, unit: "$/lb" }
+    ];
+    const activeMoreFiltersCount = activeMoreFiltersEntries.reduce((count, entry)=> count + (String(entry.min || "").trim() !== "" ? 1 : 0) + (String(entry.max || "").trim() !== "" ? 1 : 0), 0);
+    const activeMoreFiltersSummary = activeMoreFiltersEntries
+      .map((entry)=>{
+        const min = String(entry.min || "").trim();
+        const max = String(entry.max || "").trim();
+        if(!min && !max) return "";
+        if(min && max) return `${entry.label} ${min}–${max}`;
+        return min ? `${entry.label} ${min}+` : `${entry.label} ≤ ${max}`;
+      })
+      .filter(Boolean)
+      .slice(0, 2)
+      .join(" · ");
     const isLegacyCustomRange = tf.range === "custom";
 
     const filtersCard = `
@@ -63,7 +78,7 @@ export function createTripsBrowseScreenRenderer(deps){
         <div class="tripsFiltersSummaryRow">
           <div class="tripsFiltersSummaryBlock">
             <div class="tripsFiltersSummaryPrimary">${escapeHtml(`YTD records · ${tripsCountSummary}`)}</div>
-            <div class="tripsFiltersSummarySecondary" title="${escapeHtml(`All species · ${dealerSummary} · ${areaSummary} · ${sortSummary}`)}">${escapeHtml(`All species · ${dealerSummary} · ${areaSummary} · ${sortSummary}`)}</div>
+            <div class="tripsFiltersSummarySecondary" title="${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}">${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}</div>
           </div>
           <div class="tripsFiltersSummaryActions">
             <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true">≡</span><span>${isFiltersExpanded ? "Hide filters" : "Filters"}</span></button>
@@ -98,13 +113,6 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
             </div>
 
-            <div class="tripsFiltersSection">
-              <div class="tripsFiltersSectionLabel">Sort</div>
-              <div class="tripsFiltersQuickRange" role="group" aria-label="Sort Trips">
-                <button class="btn tripsFilterChip ${tf.sort !== "oldest" ? "is-selected" : ""}" type="button" data-trips-sort="newest">Newest first</button>
-                <button class="btn tripsFilterChip ${tf.sort === "oldest" ? "is-selected" : ""}" type="button" data-trips-sort="oldest">Oldest first</button>
-              </div>
-            </div>
             <div class="tripsFiltersPairedFields">
               <div class="tripsFiltersSection">
                 <div class="tripsFiltersSectionLabel">Species</div>
@@ -115,20 +123,26 @@ export function createTripsBrowseScreenRenderer(deps){
               </div>
               <div class="tripsFiltersSection">
                 <div class="tripsFiltersSectionLabel">Date Range</div>
-                <button class="btn" id="tripsDateRangePick" type="button">${escapeHtml(tf.range === "custom" ? resolvedRangeLabel : "Custom dates / Pick dates")}</button>
+                <button class="btn tripsDateRangeBtn" id="tripsDateRangePick" type="button">${escapeHtml(tf.range === "custom" ? (resolvedRangeLabel || "Custom dates") : "Custom dates")}</button>
+              </div>
+            </div>
+
+
+            <div class="tripsFiltersSection">
+              <div class="tripsFiltersSectionLabel">Sort</div>
+              <div class="tripsFiltersQuickRange" role="group" aria-label="Sort Trips">
+                <button class="btn tripsFilterChip ${tf.sort !== "oldest" ? "is-selected" : ""}" type="button" data-trips-sort="newest">Newest first</button>
+                <button class="btn tripsFilterChip ${tf.sort === "oldest" ? "is-selected" : ""}" type="button" data-trips-sort="oldest">Oldest first</button>
               </div>
             </div>
 
             <div class="tripsFiltersSection">
-              <button class="btn btn-ghost" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}">${activeMoreFiltersCount > 0 ? `${activeMoreFiltersCount} filters active ˄` : "Pounds · Pay · Price/lb filters ˅"}</button>
+              <button class="btn btn-ghost" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}">${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</button>
               ${moreFiltersExpanded ? `
-                <div class="tripsFiltersPairedFields">
-                  <input id="flt_min_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.minLbs || ""))}" placeholder="Pounds: Min lbs">
-                  <input id="flt_max_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxLbs || ""))}" placeholder="Pounds: Max lbs">
-                  <input id="flt_min_pay" class="select" type="number" step="any" value="${escapeHtml(String(tf.minPay || ""))}" placeholder="Pay: Min $">
-                  <input id="flt_max_pay" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxPay || ""))}" placeholder="Pay: Max $">
-                  <input id="flt_min_ppl" class="select" type="number" step="any" value="${escapeHtml(String(tf.minPpl || ""))}" placeholder="Price/lb: Min $/lb">
-                  <input id="flt_max_ppl" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxPpl || ""))}" placeholder="Price/lb: Max $/lb">
+                <div class="tripsMoreFiltersFields">
+                  <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Pounds</div><div class="tripsFiltersPairedFields"><input id="flt_min_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.minLbs || ""))}" placeholder="Min lbs"><input id="flt_max_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxLbs || ""))}" placeholder="Max lbs"></div></div>
+                  <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Pay</div><div class="tripsFiltersPairedFields"><input id="flt_min_pay" class="select" type="number" step="any" value="${escapeHtml(String(tf.minPay || ""))}" placeholder="Min $"><input id="flt_max_pay" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxPay || ""))}" placeholder="Max $"></div></div>
+                  <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Price/lb</div><div class="tripsFiltersPairedFields"><input id="flt_min_ppl" class="select" type="number" step="any" value="${escapeHtml(String(tf.minPpl || ""))}" placeholder="Min $/lb"><input id="flt_max_ppl" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxPpl || ""))}" placeholder="Max $/lb"></div></div>
                 </div>
                 <button class="btn" id="tripsClearMoreFilters" type="button">Clear More Filters</button>
               ` : ""}
