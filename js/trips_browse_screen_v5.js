@@ -179,7 +179,7 @@ export function createTripsBrowseScreenRenderer(deps){
               <button class="btn good" id="flt_apply" type="button">Apply</button>
             </div>
 
-            ${isLegacyCustomRange ? '<div class="muted small">Legacy custom range is active. Reset to return to YTD quick filters.</div>' : ''}
+            ${isLegacyCustomRange ? '<div class="muted small">Custom dates are active. Tap Reset to return to YTD.</div>' : ''}
           </div>
         ` : ""}
         ${quarantinedSupportNote}
