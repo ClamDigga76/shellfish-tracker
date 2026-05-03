@@ -1322,3 +1322,13 @@
   .settingsHelpGuideRow{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
   .settingsHelpGuideRow .settingsInlineBtn{width:100%;justify-content:center}
 }
+.tripsBrowseFiltersCard .tripsFiltersToggleIcon{font-size:14px;width:18px;height:18px}
+.tripsBrowseFiltersCard .tripsDateRangeBtn{justify-content:space-between;gap:8px}
+.tripsDateRangeIcon{font-size:14px;opacity:.9}
+.tripsDateRangeChevron{font-size:16px;opacity:.8}
+.tripsMoreFiltersToggleBtn{display:flex;align-items:center;justify-content:flex-start;gap:8px}
+.tripsBrowseFiltersCard .tripsMoreFiltersFields .select{min-height:34px;font-size:12px;padding:6px 10px}
+.tripsCustomRangeRow{display:none;gap:8px;align-items:center}
+.tripsCustomRangeRow.is-open{display:grid}
+.tripsCustomRangeRow .homeRangeInputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.screenFirstCard{padding-bottom:max(82px,calc(14px + env(safe-area-inset-bottom)))}
