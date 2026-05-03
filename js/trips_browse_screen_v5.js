@@ -71,8 +71,8 @@ export function createTripsBrowseScreenRenderer(deps){
       ? `<div class="muted small mt8 tripsQuarantineSupportNote" role="status">Some trips are excluded from date filters because their date is invalid (quarantined): ${excludedQuarantinedCount}.</div>`
       : "";
     const hasUserMoreFiltersExpansionPref = typeof ui.tripsMoreFiltersExpanded === "boolean";
-    const moreFiltersExpanded = hasUserMoreFiltersExpansionPref ? ui.tripsMoreFiltersExpanded : hasActiveMoreFilters;
-    const activeMoreFiltersCount = activeMoreFiltersEntries.reduce((count, entry)=> count + (String(entry.min || "").trim() !== "" ? 1 : 0) + (String(entry.max || "").trim() !== "" ? 1 : 0), 0);
+    const moreFiltersExpanded = hasUserMoreFiltersExpansionPref ? ui.tripsMoreFiltersExpanded : false;
+    const activeMoreFiltersCount = activeMoreFiltersEntries.reduce((count, entry)=> count + ((String(entry.min || "").trim() !== "" || String(entry.max || "").trim() !== "") ? 1 : 0), 0);
     const activeMoreFiltersSummary = activeMoreFiltersEntries
       .map((entry)=>{
         const min = String(entry.min || "").trim();
@@ -329,6 +329,7 @@ export function createTripsBrowseScreenRenderer(deps){
     document.getElementById("flt_apply")?.addEventListener("click", ()=>{
       ui.tripsFiltersExpanded = false;
       ui.tripsCustomDatesExpanded = false;
+      ui.tripsMoreFiltersExpanded = false;
       scheduleStateSave();
       renderAllTrips();
     });
