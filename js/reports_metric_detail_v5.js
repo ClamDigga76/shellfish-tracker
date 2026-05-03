@@ -59,8 +59,8 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     helperLine: "Trips show your work rhythm for this period.",
     primaryChartKey: "tripsMonthlyTrend",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "tripsActivity", title: "Trip Activity", context: "Trips logged by active filter buckets for [Home filter label]." }),
-      Object.freeze({ key: "tripsTimeline", title: "Trip Timeline", context: "Trip marks show when work was logged during [Home filter label]." }),
+      Object.freeze({ key: "tripsActivity", title: "Trip Activity", context: "Trips logged by month for [Home filter label]." }),
+      Object.freeze({ key: "tripsDealerMix", title: "Trips by Dealer", context: "Trips counted by dealer for [Home filter label]." }),
       Object.freeze({ key: "tripsPace", title: "Trip Pace", context: "Running trip count for [Home filter label]." })
     ]),
     teaserText: "Unlock Trip Insights • Best days • trip patterns • area activity • dealer activity • View Trip Insights 🔒"
@@ -71,7 +71,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "poundsMonthlyTrend", title: "Pounds Over Time", context: "Pounds landed over [Home filter label]." }),
       Object.freeze({ key: "poundsPerTripTrend", title: "Avg Pounds / Trip", context: "Average pounds per trip over [Home filter label]." }),
-      Object.freeze({ key: "tripsByPoundRange", title: "Trips by Pound Range", context: "Trip counts by pound bucket across [Home filter label]." })
+      Object.freeze({ key: "tripsByPoundRange", title: "Trips by Pound Range", context: "Trips counted by pound range for [Home filter label]." })
     ]),
     teaserText: "Unlock Pounds Insights • Area strength • stronger periods • production trends • deeper pound breakdowns • View Pounds Insights 🔒"
   }),
@@ -443,21 +443,23 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
 
     tripsByPoundRange: (()=> {
       const bins = [
-        { label: "0–50 lbs", min: 0, max: 50 },
-        { label: "50–100 lbs", min: 50, max: 100 },
-        { label: "100–150 lbs", min: 100, max: 150 },
-        { label: "150–200 lbs", min: 150, max: 200 },
-        { label: "200–300 lbs", min: 200, max: 300 },
-        { label: "300–400 lbs", min: 300, max: 400 },
-        { label: "400+ lbs", min: 400, max: Infinity }
+        { label: "0–50", min: 0, max: 50 },
+        { label: "50–75", min: 50, max: 75 },
+        { label: "75–100", min: 75, max: 100 },
+        { label: "100–150", min: 100, max: 150 },
+        { label: "150–200", min: 150, max: 200 },
+        { label: "200–300", min: 200, max: 300 },
+        { label: "300–400", min: 300, max: 400 },
+        { label: "400+", min: 400, max: Infinity }
       ];
       const counts = bins.map(()=>0);
       (Array.isArray(trips) ? trips : []).forEach((trip)=>{
-        const lbs = Number(trip?.pounds) || 0;
+        const lbs = Number(trip?.pounds);
+        if(!Number.isFinite(lbs)) return;
         const idx = bins.findIndex((b)=> lbs >= b.min && lbs < b.max);
         if(idx >= 0) counts[idx] += 1;
       });
-      return { chartType: "compare-bars", metricKey: "trips", basisLabel: "Trip counts by pound bucket", labels: bins.map((b)=> b.label), values: counts, showBarValueLabels: true, categoryLabelsBelowBars: true };
+      return { chartType: "compare-bars", metricKey: "trips", basisLabel: "Trips by pound range", labels: bins.map((b)=> b.label), values: counts, showBarValueLabels: true, categoryLabelsBelowBars: true };
     })(),
     poundsDealerMix: buildHomeTopRowsBarChart({
       rows: dealerRowsByPounds,
@@ -1263,7 +1265,7 @@ export function createReportsMetricDetailSeam(deps){
             } : null
           ],
         insight: "Read the compare card with the chart to confirm trip movement in the same latest matched months.",
-        homeInsight: homeFreeConfig?.helperLine || "Trips logged in the selected period.",
+        homeInsight: "Trips show your work rhythm for " + (String(viewModel?.homeScope?.rangeLabel || viewModel?.rangeLabel || "this period").trim() || "this period") + ".",
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
@@ -1311,7 +1313,7 @@ export function createReportsMetricDetailSeam(deps){
             } : null
           ],
         insight: "Use the compare card and chart together so the headline and values stay aligned to the latest matched months.",
-        homeInsight: homeFreeConfig?.helperLine || "Total pounds landed in the selected period.",
+        homeInsight: homeFreeConfig?.helperLine || "Pounds show production before price is factored in.",
         homeTeaser: homeFreeConfig?.teaserText || "",
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
