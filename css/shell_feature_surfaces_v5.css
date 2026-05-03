@@ -55,10 +55,10 @@
 .tripsBrowseFiltersCard .tripsFiltersBody .select{min-height:36px;padding:7px 11px;font-size:13px}
 .tripsBrowseFiltersCard .tripsDateRangeBtn{min-height:36px;padding:0 11px;display:flex;align-items:center;justify-content:flex-start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tripsBrowseFiltersCard .tripsDateRangeLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tripsBrowseFiltersCard .tripsCustomDatesDropdown{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding-top:2px}
-.tripsBrowseFiltersCard .tripsCustomDatesDropdown .homeRangeInputs{min-width:0}
-.tripsBrowseFiltersCard .tripsCustomDatesDropdown .input{min-height:36px}
-.tripsBrowseFiltersCard .tripsRangeApplyBtn{min-height:36px;padding:0 12px;white-space:nowrap}
+.tripsBrowseFiltersCard .tripsCustomDatesDropdown{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:center;padding-top:2px}
+.tripsBrowseFiltersCard .tripsCustomDatesDropdown .homeRangeInputs{display:contents;min-width:0}
+.tripsBrowseFiltersCard .tripsCustomDatesDropdown .input{min-height:36px;min-width:0;padding:7px 9px;font-size:12px}
+.tripsBrowseFiltersCard .tripsRangeApplyBtn{min-height:36px;padding:0 10px;white-space:nowrap;justify-self:end}
 .tripsBrowseFiltersCard .tripsFilterApplyRow{gap:6px;padding-top:0;margin-top:2px}
 .tripsBrowseFiltersCard .tripsFilterApplyRow .btn{min-height:35px;padding:0 12px}
 .tripsBrowseFiltersCard .tripsPaidVersionStrip{margin-top:1px;padding:3px 2px 1px}
