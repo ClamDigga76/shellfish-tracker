@@ -55,14 +55,6 @@ export function createTripsBrowseScreenRenderer(deps){
     const dealerSummary = String(tf.dealer || "all") === "all" ? "All dealers" : `${tf.dealer}`;
     const areaSummary = String(tf.area || "all") === "all" ? "All areas" : `${tf.area}`;
     const tripsCountSummary = `${sorted.length} ${sorted.length === 1 ? "trip" : "trips"}`;
-    const excludedQuarantinedCount = Number(transparency?.excludedQuarantinedCount || 0);
-    const totalTripsCount = Array.isArray(state.trips) ? state.trips.length : 0;
-    const hasAnyTrips = totalTripsCount > 0;
-    const isDefaultYtdEmpty = !hasActiveTripsFilters && hasAnyTrips && sorted.length === 0 && String(tf.range || "ytd") === "ytd";
-    const quarantinedSupportNote = excludedQuarantinedCount > 0
-      ? `<div class="muted small mt8 tripsQuarantineSupportNote" role="status">Some trips are excluded from date filters because their date is invalid (quarantined): ${excludedQuarantinedCount}.</div>`
-      : "";
-
     const quickRangeOptions = [["ytd","YTD"],["mtd","This Month"],["last_month","Last Month"],["all","All Time"]];
     const activeMoreFiltersEntries = [
       { label: "Pounds", min: tf.minLbs, max: tf.maxLbs, unit: "lbs" },
@@ -71,6 +63,13 @@ export function createTripsBrowseScreenRenderer(deps){
     ];
     const hasActiveMoreFilters = activeMoreFiltersEntries.some((entry)=> String(entry.min || "").trim() !== "" || String(entry.max || "").trim() !== "");
     const hasActiveTripsFilters = hasActiveTripsCoreFilters || hasActiveMoreFilters;
+    const excludedQuarantinedCount = Number(transparency?.excludedQuarantinedCount || 0);
+    const totalTripsCount = Array.isArray(state.trips) ? state.trips.length : 0;
+    const hasAnyTrips = totalTripsCount > 0;
+    const isDefaultYtdEmpty = !hasActiveTripsFilters && hasAnyTrips && sorted.length === 0 && String(tf.range || "ytd") === "ytd";
+    const quarantinedSupportNote = excludedQuarantinedCount > 0
+      ? `<div class="muted small mt8 tripsQuarantineSupportNote" role="status">Some trips are excluded from date filters because their date is invalid (quarantined): ${excludedQuarantinedCount}.</div>`
+      : "";
     const hasUserMoreFiltersExpansionPref = typeof ui.tripsMoreFiltersExpanded === "boolean";
     const moreFiltersExpanded = hasUserMoreFiltersExpansionPref ? ui.tripsMoreFiltersExpanded : hasActiveMoreFilters;
     const activeMoreFiltersCount = activeMoreFiltersEntries.reduce((count, entry)=> count + (String(entry.min || "").trim() !== "" ? 1 : 0) + (String(entry.max || "").trim() !== "" ? 1 : 0), 0);
