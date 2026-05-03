@@ -71,7 +71,7 @@
 .settingsSpeciesLockedText{max-width:50ch;font-size:11px;line-height:1.3;color:rgba(227,205,161,.82)}
 .tripsFiltersEyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong)}
 .tripsFiltersTitle{font-size:17px;font-weight:860;line-height:1.2;margin-top:2px}
-.tripsBrowseList{display:grid;gap:var(--card-stack-gap)}
+.tripsBrowseList{display:grid;gap:var(--card-stack-gap);margin-top:14px}
 .tripsBrowseList .trip + .trip{margin-top:0}
 .screenFirstCard{
   margin-top:var(--section-gap-tight);
@@ -1331,6 +1331,11 @@
 .tripsBrowseFiltersCard .tripsMoreFiltersFields .select{min-height:32px;font-size:11px;padding:4px 8px}
 .tripsBrowseFiltersCard .tripsMoreFiltersGroup{gap:2px}
 .tripsBrowseFiltersCard .tripsMoreFiltersFields{gap:6px}
-.tripsBrowseFiltersCard .tripsFiltersBody{padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px))}
+.tripsBrowseFiltersCard .tripsFiltersBody{padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px))}
 .tripsDateRangeModalRow .homeRangeInputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .screenFirstCard{padding-bottom:max(82px,calc(14px + env(safe-area-inset-bottom)))}
+
+.tripsRangeFieldLabel{font-size:11px;font-weight:700;color:var(--text-muted-strong)}
+.tripsDateRangeModalRow{display:grid;gap:10px}
+.tripsRangeActionRow{display:flex;justify-content:space-between;gap:8px}
+.tripsRangeActionRow .btn{min-height:36px;flex:1}

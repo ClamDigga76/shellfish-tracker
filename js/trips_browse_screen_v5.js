@@ -64,12 +64,13 @@ export function createTripsBrowseScreenRenderer(deps){
       : "";
 
     const quickRangeOptions = [["ytd","YTD"],["mtd","This Month"],["last_month","Last Month"],["all","All Time"]];
-    const moreFiltersExpanded = ui.tripsMoreFiltersExpanded === true;
     const activeMoreFiltersEntries = [
       { label: "Pounds", min: tf.minLbs, max: tf.maxLbs, unit: "lbs" },
       { label: "Pay", min: tf.minPay, max: tf.maxPay, unit: "$" },
       { label: "Price/lb", min: tf.minPpl, max: tf.maxPpl, unit: "$/lb" }
     ];
+    const hasActiveMoreFilters = activeMoreFiltersEntries.some((entry)=> String(entry.min || "").trim() !== "" || String(entry.max || "").trim() !== "");
+    const moreFiltersExpanded = hasActiveMoreFilters || ui.tripsMoreFiltersExpanded === true;
     const activeMoreFiltersCount = activeMoreFiltersEntries.reduce((count, entry)=> count + (String(entry.min || "").trim() !== "" ? 1 : 0) + (String(entry.max || "").trim() !== "" ? 1 : 0), 0);
     const activeMoreFiltersSummary = activeMoreFiltersEntries
       .map((entry)=>{
@@ -92,7 +93,7 @@ export function createTripsBrowseScreenRenderer(deps){
             <div class="tripsFiltersSummarySecondary" title="${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}">${escapeHtml(`All species · ${dealerSummary} · ${areaSummary}`)}</div>
           </div>
           <div class="tripsFiltersSummaryActions">
-            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true">⛭</span><span>${isFiltersExpanded ? "Hide filters" : "Filter / Sort"}</span></button>
+            <button class="btn btn-ghost tripsFiltersToggleBtn" id="tripsFiltersToggle" type="button" aria-expanded="${isFiltersExpanded ? "true" : "false"}" aria-controls="tripsFiltersBody"><span class="tripsFiltersToggleIcon" aria-hidden="true">🎚️</span><span>${isFiltersExpanded ? "Hide filters" : "Filter / Sort"}</span></button>
           </div>
         </div>
 
@@ -147,7 +148,7 @@ export function createTripsBrowseScreenRenderer(deps){
 
 
             <div class="tripsFiltersSection">
-              <button class="btn btn-ghost tripsMoreFiltersToggleBtn" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span aria-hidden="true">⛭</span><span>${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</span></button>
+              <button class="btn btn-ghost tripsMoreFiltersToggleBtn" id="tripsMoreFiltersToggle" type="button" aria-expanded="${moreFiltersExpanded ? "true" : "false"}"><span aria-hidden="true">🎚️</span><span>${activeMoreFiltersSummary ? `${activeMoreFiltersSummary} ˄` : (activeMoreFiltersCount > 0 ? (activeMoreFiltersCount === 1 ? "1 filter active ˄" : `${activeMoreFiltersCount} filters active ˄`) : "Pounds · Pay · Price/lb filters ˅")}</span></button>
               ${moreFiltersExpanded ? `
                 <div class="tripsMoreFiltersFields">
                   <div class="tripsMoreFiltersGroup"><div class="tripsFiltersSectionLabel">Pounds</div><div class="tripsFiltersPairedFields"><input id="flt_min_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.minLbs || ""))}" placeholder="Min lbs"><input id="flt_max_lbs" class="select" type="number" step="any" value="${escapeHtml(String(tf.maxLbs || ""))}" placeholder="Max lbs"></div></div>
@@ -293,10 +294,15 @@ export function createTripsBrowseScreenRenderer(deps){
         html: `
           <div class="row gap10 wrap dateRangeRow tripsDateRangeModalRow">
             <div class="homeRangeInputs reportsSharedRangeInputs">
+              <label class="tripsRangeFieldLabel" for="tripsRangeFrom">Start date</label>
               <input class="input" id="tripsRangeFrom" type="date" value="${escapeHtml(String(tf.fromISO || ""))}" />
+              <label class="tripsRangeFieldLabel" for="tripsRangeTo">End date</label>
               <input class="input" id="tripsRangeTo" type="date" value="${escapeHtml(String(tf.toISO || ""))}" />
             </div>
-            <button class="btn" id="tripsRangeApply" type="button">Apply</button>
+            <div class="tripsRangeActionRow">
+              <button class="btn btn-ghost" id="tripsRangeReset" type="button">Reset</button>
+              <button class="btn good" id="tripsRangeApply" type="button">Apply</button>
+            </div>
           </div>
         `,
         onOpen: ()=>{
@@ -304,6 +310,13 @@ export function createTripsBrowseScreenRenderer(deps){
             bindDatePill("tripsRangeFrom");
             bindDatePill("tripsRangeTo");
           }
+          document.getElementById("tripsRangeReset")?.addEventListener("click", ()=>{
+            tf.range = "ytd";
+            tf.fromISO = "";
+            tf.toISO = "";
+            closeModal();
+            rerender();
+          });
           document.getElementById("tripsRangeApply")?.addEventListener("click", ()=>{
             tf.range = "custom";
             tf.fromISO = String(document.getElementById("tripsRangeFrom")?.value || "").trim();
