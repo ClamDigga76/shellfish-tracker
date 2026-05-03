@@ -1044,7 +1044,13 @@ function render(){
     onRedirectToNew: ()=>{ state.view = "new"; saveState(); renderNewTrip(); },
     renderTabBar,
     bindHeaderHelpButtons,
-    onBeforeTopLevelViewChange: ()=>{ clearMilestoneCelebration(); },
+    onBeforeTopLevelViewChange: ({ fromView, toView })=>{
+      clearMilestoneCelebration();
+      if(String(fromView || "") === "all_trips" && String(toView || "") !== "all_trips"){
+        state.ui = state.ui || {};
+        state.ui.tripsFiltersExpanded = false;
+      }
+    },
     onAfterTopLevelViewChange: ()=>{ focusTopLevelLanding(); }
   });
 }
