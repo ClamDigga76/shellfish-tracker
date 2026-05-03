@@ -321,12 +321,6 @@ export function createTripsBrowseScreenRenderer(deps){
     [["flt_min_lbs","minLbs"],["flt_max_lbs","maxLbs"],["flt_min_pay","minPay"],["flt_max_pay","maxPay"],["flt_min_ppl","minPpl"],["flt_max_ppl","maxPpl"]].forEach(([id,key])=>{
       document.getElementById(id)?.addEventListener("input", (ev)=>{ tf[key] = String(ev.target.value || ""); });
     });
-    document.getElementById("tripsViewInsights")?.addEventListener("click", ()=>{
-      state.view = "reports";
-      saveState();
-      renderApp();
-    });
-
     document.getElementById("tripsFiltersToggle")?.addEventListener("click", ()=>{
       ui.tripsFiltersExpanded = !isFiltersExpanded;
       rerender();
