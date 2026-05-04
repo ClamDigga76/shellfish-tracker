@@ -300,9 +300,7 @@ export function createHomeDashboardRenderer({
         { min: 25000, max: null, size: 15000, anchor: 25000 }
       ]);
       if (!range) return "—";
-      const guardedLower = range.lower >= 25000 ? Math.max(25000, Math.floor(Number(value) / 15000) * 15000) : range.lower;
-      const guardedUpper = range.lower >= 25000 ? guardedLower + 15000 : range.upper;
-      return `${formatHomeCompactK(guardedLower)}–${formatHomeCompactK(guardedUpper)} lbs`;
+      return `${formatHomeCompactK(range.lower)}–${formatHomeCompactK(range.upper)} lbs`;
     };
     const toMoneyBandLabel = (value) => {
       const range = toSteppedRange(value, [
@@ -351,9 +349,7 @@ export function createHomeDashboardRenderer({
         { min: 300, max: null, size: 100, anchor: 300 }
       ]);
       if (!range) return "—";
-      const guardedLower = range.lower >= 25000 ? Math.max(25000, Math.floor(Number(value) / 15000) * 15000) : range.lower;
-      const guardedUpper = range.lower >= 25000 ? guardedLower + 15000 : range.upper;
-      return `${formatHomeCompactK(guardedLower)}–${formatHomeCompactK(guardedUpper)} lbs`;
+      return `${formatHomeCompactK(range.lower)}–${formatHomeCompactK(range.upper)} lbs`;
     };
     const avgAmountPerTripDisplay = isSeasonPreviewMode
       ? toBucketedMoneyPerTripLabel(avgAmountPerTrip)
