@@ -459,12 +459,14 @@ applyThemeMode();
 ensureAreas();
 ensureDealers();
 
-const SAFE_MODE_ACTIVE = Boolean(state?.__safeMode);
+const SAFE_MODE_ACTIVE = rootStateSaveSeam.wasSafeModeRequestedOnBoot() || state?.__safeMode === true;
 if(SAFE_MODE_ACTIVE){
   rootStateSaveSeam.clearSafeModeFlag();
   state.__safeMode = true;
   state.__recoveryMode = true;
   state.view = "settings";
+}else if(rootStateSaveSeam.wasLegacyRecoveryMarkerClearedOnBoot()){
+  markNeedsBootStateSave();
 }
 if(Array.isArray(state.trips)) {
   let changed = false;
