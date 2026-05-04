@@ -292,12 +292,18 @@ export function createHomeDashboardRenderer({
       return null;
     };
     const toPoundsBandLabel = (value) => {
-      const range = toSteppedRange(value, [
+      const numeric = Number(value);
+      if (!(numeric > 0)) return "—";
+      if (numeric >= 25000) {
+        const lower = Math.max(25000, Math.floor(numeric / 15000) * 15000);
+        const upper = lower + 15000;
+        return `${formatHomeCompactK(lower)}–${formatHomeCompactK(upper)} lbs`;
+      }
+      const range = toSteppedRange(numeric, [
         { min: 0, max: 500, size: 100, anchor: 0 },
         { min: 500, max: 2000, size: 500, anchor: 500 },
         { min: 2000, max: 10000, size: 2500, anchor: 2000 },
-        { min: 10000, max: 25000, size: 5000, anchor: 10000 },
-        { min: 25000, max: null, size: 15000, anchor: 25000 }
+        { min: 10000, max: 25000, size: 5000, anchor: 10000 }
       ]);
       if (!range) return "—";
       return `${formatHomeCompactK(range.lower)}–${formatHomeCompactK(range.upper)} lbs`;
