@@ -300,24 +300,28 @@ export function createHomeDashboardRenderer({
     })();
     const amountDisplay = isSeasonPreviewMode ? toMoneyBandLabel(totalAmount) : moneyRounded;
     const avgPplDisplay = isSeasonPreviewMode ? toAvgPplBandLabel(avgPpl) : (avgPpl === null ? "—" : formatMoney(avgPpl));
-    const toFriendlyMoneyPerTripLabel = (value) => {
+    const toDynamicRangeLabel = (value, { bucketSize, formatter, suffix }) => {
       const numeric = Number(value);
-      if (!(numeric > 0)) return "—";
-      const rounded = Math.max(10, Math.round(numeric / 10) * 10);
-      return `About $${formatGroupedHomeNumber(rounded, { maximumFractionDigits: 0 })}/trip`;
+      if (!(numeric > 0) || !(bucketSize > 0)) return "—";
+      const lower = Math.floor(numeric / bucketSize) * bucketSize;
+      const upper = lower + bucketSize;
+      return `${formatter(lower)}–${formatter(upper)}${suffix}`;
     };
-    const toFriendlyPoundsPerTripLabel = (value) => {
-      const numeric = Number(value);
-      if (!(numeric > 0)) return "—";
-      const step = numeric >= 100 ? 10 : 5;
-      const rounded = Math.max(step, Math.round(numeric / step) * step);
-      return `Around ${formatGroupedHomeNumber(rounded, { maximumFractionDigits: 0 })} lbs/trip`;
-    };
+    const toBucketedMoneyPerTripLabel = (value) => toDynamicRangeLabel(value, {
+      bucketSize: 50,
+      formatter: (amount) => `$${formatGroupedHomeNumber(amount, { maximumFractionDigits: 0 })}`,
+      suffix: " / trip"
+    });
+    const toBucketedPoundsPerTripLabel = (value) => toDynamicRangeLabel(value, {
+      bucketSize: 20,
+      formatter: (lbs) => formatGroupedHomeNumber(lbs, { maximumFractionDigits: 0 }),
+      suffix: " lbs / trip"
+    });
     const avgAmountPerTripDisplay = isSeasonPreviewMode
-      ? toFriendlyMoneyPerTripLabel(avgAmountPerTrip)
+      ? toBucketedMoneyPerTripLabel(avgAmountPerTrip)
       : (avgAmountPerTrip === null ? "—" : formatMoney(round2(avgAmountPerTrip)));
     const avgPoundsPerTripDisplay = isSeasonPreviewMode
-      ? toFriendlyPoundsPerTripLabel(avgPoundsPerTrip)
+      ? toBucketedPoundsPerTripLabel(avgPoundsPerTrip)
       : (avgPoundsPerTrip === null ? "—" : `${round2(avgPoundsPerTrip)}`);
 
     const s = state.settings || (state.settings = {});
@@ -371,16 +375,25 @@ export function createHomeDashboardRenderer({
       && Number.isFinite(latestTickAverages.previousAvgAmountPerTrip)
       ? trendToneFromDelta(
         latestTickAverages.currentAvgAmountPerTrip - latestTickAverages.previousAvgAmountPerTrip,
-        0.01
+        0.999999
       )
       : "flat";
     const avgPoundsTrendTone = Number.isFinite(latestTickAverages.currentAvgPoundsPerTrip)
       && Number.isFinite(latestTickAverages.previousAvgPoundsPerTrip)
       ? trendToneFromDelta(
         latestTickAverages.currentAvgPoundsPerTrip - latestTickAverages.previousAvgPoundsPerTrip,
-        0.001
+        0.999999
       )
       : "flat";
+    const topDealerAvgPpl = strongestDealer && Number(strongestDealer.pounds) > 0
+      ? (Number(strongestDealer.amount) / Number(strongestDealer.pounds))
+      : null;
+    const topDealerSupport = strongestDealer
+      ? `${formatMoney(round2(strongestDealer.amount))}${Number.isFinite(topDealerAvgPpl) ? ` · Avg ${formatMoney(round2(topDealerAvgPpl))}/lb` : ""}`
+      : "No trips in range";
+    const strongestAreaSupport = strongestArea
+      ? `${formatHomePounds(round2(strongestArea.pounds))} · ${formatGroupedHomeNumber(strongestArea.trips, { maximumFractionDigits: 0 })} trips`
+      : "No trips in range";
     const installModel = typeof getInstallSurfaceModel === "function" ? getInstallSurfaceModel() : null;
     const showInstallCard = shouldShowBeginnerCard && installModel && !installModel.isInstalled;
     const installCardHTML = showInstallCard
@@ -509,13 +522,13 @@ export function createHomeDashboardRenderer({
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">TOP DEALER</div>
-              <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(strongestDealer?.dealer || "—")}</div>
-              <div class="reportsHeroMeta money">${strongestDealer ? (isSeasonPreviewMode ? "Preview band • exact dealer totals in Insights" : formatMoney(round2(strongestDealer.amount))) : "No trips in range"}</div>
+              <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(isSeasonPreviewMode ? (strongestDealer ? "Full version preview" : "—") : (strongestDealer?.dealer || "—"))}</div>
+              <div class="reportsHeroMeta money">${isSeasonPreviewMode ? (strongestDealer ? "Full version shows dealer totals" : "No trips in range") : topDealerSupport}</div>
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">STRONGEST AREA</div>
-              <div class="reportsHeroValue">${escapeHtml(strongestArea?.area || "—")}</div>
-              <div class="reportsHeroMeta homeOverviewMetaPounds">${strongestArea ? (isSeasonPreviewMode ? "Preview band • exact area pounds in Insights" : formatHomePounds(round2(strongestArea.pounds))) : "No trips in range"}</div>
+              <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? (strongestArea ? "Full version preview" : "—") : (strongestArea?.area || "—"))}</div>
+              <div class="reportsHeroMeta homeOverviewMetaPounds">${isSeasonPreviewMode ? (strongestArea ? "Full version shows area strength" : "No trips in range") : strongestAreaSupport}</div>
             </div>
           </div>
         </section>
