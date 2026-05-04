@@ -955,26 +955,32 @@ function renderHelp(){
 
   getApp().scrollTop = 0;
 
-  // Quick links inside Help
+  const helpAccordionEls = Array.from(document.querySelectorAll("[data-help-accordion]"));
+  const openHelpAccordion = (key = "", behavior = "smooth")=>{
+    const normalizedKey = String(key || "").toLowerCase();
+    if(!normalizedKey) return;
+    const detailsEl = helpAccordionEls.find((el)=> String(el.getAttribute("data-help-key") || "").toLowerCase() === normalizedKey);
+    if(!(detailsEl instanceof HTMLDetailsElement)) return;
+    helpAccordionEls.forEach((otherEl)=> { if(otherEl !== detailsEl) otherEl.removeAttribute("open"); });
+    detailsEl.setAttribute("open", "");
+    detailsEl.scrollIntoView?.({ block: "start", behavior });
+  };
+
   try{
-    document.querySelectorAll('[data-helpjump]').forEach(btn=>{
-      btn.onclick = ()=>{
-        const k = String(btn.getAttribute('data-helpjump')||'').toLowerCase();
-        const el = document.getElementById(`help_jump_${k}`);
-        if(el && el.scrollIntoView) el.scrollIntoView({ block:"start", behavior:"smooth" });
-      };
+    helpAccordionEls.forEach((detailsEl)=> {
+      detailsEl.addEventListener("toggle", ()=>{
+        if(!detailsEl.open) return;
+        helpAccordionEls.forEach((otherEl)=> { if(otherEl !== detailsEl) otherEl.removeAttribute("open"); });
+      });
+    });
+    document.querySelectorAll('[data-helpjump]').forEach((btn)=>{
+      btn.onclick = ()=> openHelpAccordion(btn.getAttribute("data-helpjump"), "smooth");
     });
   }catch(_e){}
 
-  // If a section Help button opened this screen, jump to that section
   try{
     const k = String(state.helpJump||"").toLowerCase();
-    if(k){
-      const el = document.getElementById(`help_jump_${k}`);
-      if(el && el.scrollIntoView){
-        el.scrollIntoView({ block: "start", behavior: "instant" });
-      }
-    }
+    if(k) openHelpAccordion(k, "instant");
   }catch(_e){}
 
   if (typeof bindNavHandlers === "function") bindNavHandlers(state);

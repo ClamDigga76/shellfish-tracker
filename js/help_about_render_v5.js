@@ -37,6 +37,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       </div>
       <div class="muted small helpHubLead">Jump to the section you need. Help covers install, backup, updates, and troubleshooting.</div>
       <div class="helpHubRows" role="list" aria-label="Help sections">
+        <button class="helpHubRow" type="button" data-helpjump="quickstart" role="listitem"><span class="helpHubRowIcon">🚀</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Quick start</span><span class="helpHubRowDesc">Fast first-run checklist</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
         <button class="helpHubRow" type="button" data-helpjump="home" role="listitem"><span class="helpHubRowIcon">🏠</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Home</span><span class="helpHubRowDesc">Latest trip and season snapshot</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
         <button class="helpHubRow" type="button" data-helpjump="trips" role="listitem"><span class="helpHubRowIcon">🗂️</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Trips</span><span class="helpHubRowDesc">Review saved trips and edit entries</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
         <button class="helpHubRow" type="button" data-helpjump="reports" role="listitem"><span class="helpHubRowIcon">📈</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Insights</span><span class="helpHubRowDesc">Trend comparisons across saved trips</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
@@ -47,8 +48,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       </div>
     </div>
 
-    <div class="card">
-      <b class="helpSectionTitle">Quick start</b>
+    <details class="card helpAccordionCard" data-help-accordion data-help-key="quickstart">
+      <summary class="helpAccordionSummary" id="help_jump_quickstart">
+        <span class="helpAccordionIcon" aria-hidden="true">🚀</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Quick start</b><span class="helpAccordionDesc">Log one trip, check Home, then use Insights.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span>
+      </summary>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Log one trip first.</b> Home updates right away, and Insights gets more useful after a few trips.</div>
@@ -58,10 +61,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li><b>Use Insights</b> — compare trends after a few trips are saved.</li>
         </ol>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <b id="help_jump_home" class="helpSectionTitle">Home</b>
+    <details class="card helpAccordionCard" data-help-accordion data-help-key="home">
+      <summary class="helpAccordionSummary" id="help_jump_home"><span class="helpAccordionIcon" aria-hidden="true">🏠</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Home</b><span class="helpAccordionDesc">Latest trip and season snapshot.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> quick status checks before or after a trip.</div>
@@ -71,10 +74,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>If stats look light, widen the range first.</li>
         </ul>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <b id="help_jump_trips" class="helpSectionTitle">Trips</b>
+    <details class="card helpAccordionCard" data-help-accordion data-help-key="trips">
+      <summary class="helpAccordionSummary" id="help_jump_trips"><span class="helpAccordionIcon" aria-hidden="true">🗂️</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Trips</b><span class="helpAccordionDesc">Review saved trips and edit entries.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> browsing and editing saved entries.</div>
@@ -84,10 +87,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>Duplicate warning on save means: check date/dealer/area before saving anyway.</li>
         </ul>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <b id="help_jump_newtrip" class="helpSectionTitle">New Trip</b>
+    <details class="card helpAccordionCard" data-help-accordion data-help-key="newtrip">
+      <summary class="helpAccordionSummary" id="help_jump_newtrip"><span class="helpAccordionIcon" aria-hidden="true">📝</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">New Trip</b><span class="helpAccordionDesc">Log pounds, pay, dealer, and area.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> logging one harvest trip at a time.</div>
@@ -99,10 +102,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
         </ol>
         <div style="margin-top:8px"><b>Tip:</b> chips fill in as you save more trips. Use list pickers first if chips are empty.</div>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <b id="help_jump_reports" class="helpSectionTitle">Insights</b>
+    <details class="card helpAccordionCard" data-help-accordion data-help-key="reports">
+      <summary class="helpAccordionSummary" id="help_jump_reports"><span class="helpAccordionIcon" aria-hidden="true">📈</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Insights</b><span class="helpAccordionDesc">Trend comparisons across saved trips.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> date-range trends by dealer, area, and month.</div>
@@ -112,10 +115,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>Add optional dealer/area filters, then switch between charts and table views.</li>
         </ol>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <b id="help_jump_settings" class="helpSectionTitle">Settings</b>
+    <details class="card helpAccordionCard" data-help-accordion data-help-key="settings">
+      <summary class="helpAccordionSummary" id="help_jump_settings"><span class="helpAccordionIcon" aria-hidden="true">⚙️</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Settings</b><span class="helpAccordionDesc">Updates, install status, and lists.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> quick actions and status checks.</div>
@@ -126,10 +129,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li><b>List Management:</b> maintain Dealers and Areas.</li>
         </ul>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <b id="help_jump_backups" class="helpSectionTitle">Backup & Restore guidance</b>
+    <details class="card helpAccordionCard" data-help-accordion data-help-key="backups">
+      <summary class="helpAccordionSummary" id="help_jump_backups"><span class="helpAccordionIcon" aria-hidden="true">💾</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Backup & Restore</b><span class="helpAccordionDesc">Protect and move your trip history.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Create backup</b></div>
@@ -146,10 +149,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
         </ol>
         <div style="margin-top:8px"><b>Tip:</b> Before switching phones, browsers, or app modes, create backup first.</div>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <b id="help_jump_install" class="helpSectionTitle">Install app</b>
+    <details class="card helpAccordionCard" data-help-accordion data-help-key="install">
+      <summary class="helpAccordionSummary" id="help_jump_install"><span class="helpAccordionIcon" aria-hidden="true">📲</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Install app</b><span class="helpAccordionDesc">Browser and installed mode steps.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <div><b>Current mode:</b> ${escapeHtml(String(installModel?.statusPill || (isStandalone ? "Installed" : "Browser")))}</div>
@@ -175,10 +178,10 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
         <div style="margin-top:8px"><b>Tip:</b> After install: open Bank the Catch from your Home Screen app icon to switch into Installed mode.</div>
         <div style="margin-top:8px"><b>Need help?</b> Email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</div>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <b class="helpSectionTitle">Support, updates & troubleshooting</b>
+    <details class="card helpAccordionCard" data-help-accordion data-help-key="updates">
+      <summary class="helpAccordionSummary" id="help_jump_updates"><span class="helpAccordionIcon" aria-hidden="true">🛟</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Updates & troubleshooting</b><span class="helpAccordionDesc">Reload, reset cache, and contact support.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
       <div class="sep"></div>
       <div class="muted helpSectionLead">
         <ul style="margin:0 0 0 18px">
@@ -217,6 +220,6 @@ export function renderAboutViewHTML({ renderPageHeader, displayBuildVersion }) {
         <button class="btn" id="copyDebug">Copy support bundle</button>
         <button class="btn" id="feedback">Send Feedback</button>
       </div>
-    </div>
+    </details>
   `;
 }
