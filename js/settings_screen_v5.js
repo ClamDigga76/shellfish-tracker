@@ -190,7 +190,7 @@ export function createSettingsScreenOrchestrator({
             <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Version check in progress</div>
           </div>
           <div class="settingsAccordionRight settingsAccordionRight--updates">
-            <button class="btn settingsSummaryActionBtn" id="settingsUpdateSummaryAction" type="button" aria-label="Run update action">Check</button>
+            <button class="btn settingsSummaryActionBtn" id="settingsUpdateSummaryAction" type="button" aria-label="Run update action">Reload</button>
             <span class="settingsAccordionPill" id="updatesStatusPill">Checking</span>
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
@@ -206,7 +206,7 @@ export function createSettingsScreenOrchestrator({
           <div class="muted settingsBodyTiny" id="updateVersionLine"></div>
         </div>
         <div class="settingsRow settingsRow--action">
-          <button class="btn settingsInlineBtn" id="updatePrimary">Reload latest build</button>
+          <button class="btn settingsInlineBtn" id="updatePrimary">Reload latest build now</button>
           <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
         <details class="settingsDetails settingsRow">
@@ -487,6 +487,19 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     const settingsHealthInstall = document.getElementById("settingsHealthInstall");
     const settingsHealthBackup = document.getElementById("settingsHealthBackup");
     const settingsHealthChoices = document.getElementById("settingsHealthChoices");
+    const toCompactBackupHealth = (summaryText) => {
+      const normalized = String(summaryText || "").trim();
+      if (!normalized) return "Checking";
+      const lower = normalized.toLowerCase();
+      if (lower.includes("checking")) return "Checking";
+      if (lower.includes("today")) return "Today";
+      if (lower.includes("yesterday") || /\b1\s+day(?:\b|s\b)/.test(lower)) return "1 day ago";
+      if (lower.includes("never") || lower.includes("none")) return "None yet";
+      if (lower.includes("backed up") || lower.includes("fresh")) return "Backed up";
+      const dayMatch = lower.match(/(\d+)\s+day/);
+      if (dayMatch) return `${dayMatch[1]} days ago`;
+      return "Backed up";
+    };
 
     const dataListsSummaryText = `${areaCount} areas • ${dealerCount} dealers`;
     const dataListsPillText = `${areaCount}A/${dealerCount}D`;
@@ -510,7 +523,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
       backupSummaryLine.textContent = "Checking backup freshness";
     }
     if (settingsHealthBackup) {
-      settingsHealthBackup.textContent = backupSummaryLine?.textContent || "Checking";
+      settingsHealthBackup.textContent = toCompactBackupHealth(backupSummaryLine?.textContent || "");
     }
     if (advancedSummaryLine) {
       advancedSummaryLine.textContent = shouldShowReleaseValidation
@@ -618,7 +631,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
         deletedTripsCount: deletedTrips.length
       });
       if (settingsHealthBackup) {
-        settingsHealthBackup.textContent = backupSummaryLine?.textContent || "Checking";
+        settingsHealthBackup.textContent = toCompactBackupHealth(backupSummaryLine?.textContent || "");
         settingsHealthBackup.title = backupSummaryLine?.textContent || "Backup freshness status";
       }
     };
