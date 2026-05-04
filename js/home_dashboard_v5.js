@@ -389,10 +389,10 @@ export function createHomeDashboardRenderer({
       ? (Number(strongestDealer.amount) / Number(strongestDealer.pounds))
       : null;
     const topDealerSupport = strongestDealer
-      ? `${formatMoney(round2(strongestDealer.amount))}${Number.isFinite(topDealerAvgPpl) ? ` · Avg ${formatMoney(round2(topDealerAvgPpl))}/lb` : ""}`
+      ? `<span class="money">${escapeHtml(formatMoney(round2(strongestDealer.amount)))}</span>${Number.isFinite(topDealerAvgPpl) ? `<span class="homeOverviewMetaSeparator"> · </span><span class="rate ppl">Avg ${escapeHtml(formatMoney(round2(topDealerAvgPpl)))}/lb</span>` : ""}`
       : "No trips in range";
     const strongestAreaSupport = strongestArea
-      ? `${formatHomePounds(round2(strongestArea.pounds))} · ${formatGroupedHomeNumber(strongestArea.trips, { maximumFractionDigits: 0 })} trips`
+      ? `<span class="lbsBlue">${escapeHtml(formatHomePounds(round2(strongestArea.pounds)))}</span><span class="homeOverviewMetaSeparator"> · </span><span class="tripsMetric">${escapeHtml(formatGroupedHomeNumber(strongestArea.trips, { maximumFractionDigits: 0 }))} trips</span>`
       : "No trips in range";
     const installModel = typeof getInstallSurfaceModel === "function" ? getInstallSurfaceModel() : null;
     const showInstallCard = shouldShowBeginnerCard && installModel && !installModel.isInstalled;
@@ -523,12 +523,12 @@ export function createHomeDashboardRenderer({
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">TOP DEALER</div>
               <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(isSeasonPreviewMode ? (strongestDealer ? "Full version" : "—") : (strongestDealer?.dealer || "—"))}</div>
-              <div class="reportsHeroMeta money">${isSeasonPreviewMode ? (strongestDealer ? "Dealer totals" : "No trips in range") : topDealerSupport}</div>
+              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestDealer ? "Dealer totals" : "No trips in range") : topDealerSupport}</div>
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">STRONGEST AREA</div>
               <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? (strongestArea ? "Full version" : "—") : (strongestArea?.area || "—"))}</div>
-              <div class="reportsHeroMeta homeOverviewMetaPounds">${isSeasonPreviewMode ? (strongestArea ? "Area strength" : "No trips in range") : strongestAreaSupport}</div>
+              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestArea ? "Area strength" : "No trips in range") : strongestAreaSupport}</div>
             </div>
           </div>
         </section>
