@@ -1,3 +1,31 @@
+function renderInstallStepIcon(name) {
+  const icons = {
+    safari: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="6.5"></circle><path d="M12 12 L16.8 7.8"></path><path d="M12 12 L8.9 15.9"></path></svg>',
+    share: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="9" width="14" height="10" rx="2"></rect><path d="M12 14V4"></path><path d="M8.5 7.5 12 4l3.5 3.5"></path></svg>',
+    addhome: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="4.5" width="15" height="15" rx="4"></rect><path d="M12 8.5v7"></path><path d="M8.5 12h7"></path></svg>',
+    add: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="m8.8 12.2 2.1 2.2 4.3-4.6"></path></svg>',
+    chrome: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3.3"></circle><path d="M12 3v9l7.7 4.4"></path><path d="M4.3 8.2h7.7"></path></svg>',
+    menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="18" r="1.8"></circle></svg>',
+    install: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v9"></path><path d="m8.7 10.4 3.3 3.4 3.3-3.4"></path><rect x="5" y="15" width="14" height="4.5" rx="1.8"></rect></svg>',
+    confirm: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="m8.8 12.2 2.1 2.2 4.3-4.6"></path></svg>'
+  };
+  return icons[name] || icons.confirm;
+}
+
+function renderInstallStepCards(items, platformClass = "") {
+  return `
+    <div class="installStepCards ${platformClass}">
+      ${items.map((item) => `
+        <div class="installStepCard">
+          <div class="installStepBadge">${item.step}</div>
+          <div class="installStepGlyph">${renderInstallStepIcon(item.icon)}</div>
+          <div class="installStepLabel">${item.label}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
 export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildVersion, schemaVersion, isStandalone, hasSWController, installModel }) {
   return `
     ${renderPageHeader("help")}
@@ -127,20 +155,20 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
         <div style="margin-top:8px"><b>Storage note:</b> storage can differ by mode or device, so backup is the safe bridge when you switch.</div>
         <div style="margin-top:8px">Settings shows quick mode + action status. This section has the full install steps.</div>
         <div style="margin-top:8px"><b>iPhone/iPad Safari</b></div>
-        <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
-          <span class="chip small">1 Safari</span>
-          <span class="chip small">2 Share button</span>
-          <span class="chip small">3 Add to Home Screen</span>
-          <span class="chip small">4 Add</span>
-        </div>
+        ${renderInstallStepCards([
+          { step: 1, icon: "safari", label: "Safari" },
+          { step: 2, icon: "share", label: "Share" },
+          { step: 3, icon: "addhome", label: "Add to Home Screen" },
+          { step: 4, icon: "add", label: "Add" }
+        ], "ios")}
         <div class="muted small" style="margin-top:8px">Tap the Share button — the square with the arrow — then choose Add to Home Screen.</div>
         <div style="margin-top:8px"><b>Android Chrome</b></div>
-        <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
-          <span class="chip small">1 Chrome</span>
-          <span class="chip small">2 Menu</span>
-          <span class="chip small">3 Install app</span>
-          <span class="chip small">4 Confirm</span>
-        </div>
+        ${renderInstallStepCards([
+          { step: 1, icon: "chrome", label: "Chrome" },
+          { step: 2, icon: "menu", label: "Menu" },
+          { step: 3, icon: "install", label: "Install app" },
+          { step: 4, icon: "confirm", label: "Confirm" }
+        ], "android")}
         <div class="muted small" style="margin-top:8px">Tap the Chrome Menu in the top-right, then choose Install app or Add to Home screen.</div>
         <div style="margin-top:8px"><b>Tip:</b> After install: open Bank the Catch from your Home Screen app icon to switch into Installed mode.</div>
         <div style="margin-top:8px"><b>Need help?</b> Email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</div>
