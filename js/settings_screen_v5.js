@@ -168,7 +168,8 @@ export function createSettingsScreenOrchestrator({
             <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Checking backup freshness</div>
           </div>
           <div class="settingsAccordionRight">
-            <span class="settingsAccordionPill" id="safetyStatusPill">Checking</span>
+            <span class="settingsAccordionAction">Backup</span>
+            <span class="settingsAccordionPill settingsAccordionPill--ghost" id="safetyStatusPill">Checking</span>
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
         </summary>
@@ -208,8 +209,8 @@ export function createSettingsScreenOrchestrator({
             <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Version check in progress</div>
           </div>
           <div class="settingsAccordionRight settingsAccordionRight--updates">
-            <button class="btn settingsSummaryActionBtn" id="settingsUpdateSummaryAction" type="button" aria-label="Run update action">Reload App</button>
-            <span class="settingsAccordionPill" id="updatesStatusPill">Checking</span>
+            <button class="btn settingsSummaryActionBtn" id="settingsUpdateSummaryAction" type="button" aria-label="Run update action">Update</button>
+            <span class="settingsAccordionPill settingsAccordionPill--ghost" id="updatesStatusPill">Checking</span>
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
         </summary>
@@ -251,7 +252,7 @@ export function createSettingsScreenOrchestrator({
             <div class="muted small settingsAccordionStatus" id="installSummaryLine">Installed on this device</div>
           </div>
           <div class="settingsAccordionRight">
-            <span class="settingsAccordionPill" id="installStatusPill">Checking</span>
+            <span class="settingsAccordionPill settingsAccordionPill--ghost" id="installStatusPill">Checking</span>
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
         </summary>
@@ -275,7 +276,8 @@ export function createSettingsScreenOrchestrator({
             <div class="muted small settingsAccordionStatus" id="dataListsSummaryLine">${areaCount} areas • ${dealerCount} dealers</div>
           </div>
           <div class="settingsAccordionRight">
-            <span class="settingsAccordionPill" id="dataListsStatusPill">${areaCount} / ${dealerCount}</span>
+            <span class="settingsAccordionAction">Manage</span>
+            <span class="settingsAccordionPill settingsAccordionPill--ghost" id="dataListsStatusPill">${areaCount} / ${dealerCount}</span>
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
         </summary>
@@ -310,7 +312,7 @@ export function createSettingsScreenOrchestrator({
             <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build details • Privacy • Terms</div>
           </div>
           <div class="settingsAccordionRight">
-            <span class="settingsAccordionPill" id="aboutStatusPill">${displayBuildVersion}</span>
+            <span class="settingsAccordionPill settingsAccordionPill--ghost" id="aboutStatusPill">${displayBuildVersion}</span>
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
         </summary>
@@ -357,7 +359,7 @@ export function createSettingsScreenOrchestrator({
             <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Help, safe reload, and reset tools</div>
           </div>
           <div class="settingsAccordionRight">
-            <span class="settingsAccordionPill" id="advancedStatusPill">Support</span>
+            <span class="settingsAccordionPill settingsAccordionPill--ghost" id="advancedStatusPill">Support</span>
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
         </summary>
