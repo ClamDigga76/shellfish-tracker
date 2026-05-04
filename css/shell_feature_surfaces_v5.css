@@ -319,15 +319,15 @@
 
 /* Settings grouped-list polish (P3) */
 .settingsGroupBlock{margin-bottom:10px}
-.settingsJumpNavCard{margin-top:var(--section-gap-tight);margin-bottom:8px;padding:8px 10px;border:1px solid rgba(86,144,255,.22);background:linear-gradient(170deg,rgba(10,22,48,.94),rgba(5,12,30,.9));box-shadow:0 8px 22px rgba(4,10,30,.38)}
-.settingsJumpHub{display:flex;flex-wrap:wrap;gap:8px}
-.settingsJumpChip{width:auto;justify-content:center;white-space:nowrap;min-height:30px;padding:6px 12px;border:1px solid rgba(108,165,255,.28);background:linear-gradient(180deg,rgba(48,84,148,.34),rgba(17,36,77,.3));font-size:11px;font-weight:760;color:#d8e7ff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
-.settingsHealthStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:8px 10px;border:1px solid rgba(84,142,255,.24);background:linear-gradient(180deg,rgba(8,18,41,.9),rgba(4,10,24,.94));margin-bottom:var(--card-stack-gap)}
+.settingsJumpNavCard{margin-top:var(--section-gap-tight);margin-bottom:10px;padding:6px 8px;border:1px solid rgba(86,144,255,.16);background:linear-gradient(170deg,rgba(8,18,40,.78),rgba(5,11,28,.74));box-shadow:0 5px 14px rgba(4,10,30,.24)}
+.settingsJumpHub{display:flex;flex-wrap:wrap;gap:6px}
+.settingsJumpChip{width:auto;justify-content:center;white-space:nowrap;min-height:26px;padding:4px 10px;border:1px solid rgba(108,165,255,.2);background:linear-gradient(180deg,rgba(38,70,126,.24),rgba(14,30,66,.2));font-size:10px;font-weight:730;color:#cfe1ff;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.settingsHealthStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:10px 12px;border:1px solid rgba(84,142,255,.24);background:linear-gradient(180deg,rgba(9,21,46,.92),rgba(5,12,29,.96));margin-top:2px;margin-bottom:var(--card-stack-gap);box-shadow:inset 0 1px 0 rgba(165,203,255,.08),0 8px 20px rgba(2,8,22,.28)}
 .settingsHealthCell{min-width:0}
-.settingsHealthLabel{display:flex;align-items:center;gap:5px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#9fb9e8;font-weight:760}
+.settingsHealthLabel{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#9fb9e8;font-weight:760}
 .settingsHealthIcon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;color:#b7d3ff;opacity:.95}
 .settingsHealthIcon svg{width:14px;height:14px;display:block}
-.settingsHealthValue{margin-top:2px;font-size:11px;font-weight:760;color:#e5efff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
+.settingsHealthValue{margin-top:4px;padding-left:20px;font-size:11px;font-weight:760;color:#e5efff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
 .settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px var(--card-title-gap)}
 .settingsSectionCard.settingsGroupedCard{margin-bottom:0;padding:0;overflow:hidden;border:1px solid rgba(90,150,255,.22);background:linear-gradient(176deg,rgba(10,22,50,.94),rgba(6,14,34,.96));box-shadow:0 10px 24px rgba(3,8,23,.42), inset 0 0 0 1px rgba(52,93,170,.17)}
 .settingsAccordionCard{border-radius:18px}
@@ -343,7 +343,7 @@
 .settingsAccordionStatus{line-height:1.26;white-space:normal;overflow:hidden;max-width:100%;font-size:11px;color:#abc4eb;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .settingsAccordionRight{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:0 0 120px;min-width:120px}
 .settingsAccordionRight--updates{flex:0 0 auto;min-width:0;gap:5px}
-.settingsAccordionPill{display:inline-flex;align-items:center;justify-content:center;max-width:86px;padding:3px 8px;border-radius:999px;border:1px solid rgba(109,166,255,.34);font-size:10px;font-weight:830;letter-spacing:.03em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(20,40,82,.5);color:#d9e8ff}
+.settingsAccordionPill{display:inline-flex;align-items:center;justify-content:center;max-width:86px;padding:3px 8px;border-radius:999px;border:1px solid rgba(109,166,255,.34);font-size:10px;font-weight:830;letter-spacing:.03em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(20,40,82,.5);color:#d9e8ff}.settingsAccordionPill--ghost{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}.settingsAccordionAction{display:inline-flex;align-items:center;justify-content:center;min-height:24px;padding:3px 10px;border-radius:999px;border:1px solid rgba(111,169,255,.28);background:rgba(26,51,101,.38);font-size:10px;font-weight:760;letter-spacing:.03em;text-transform:uppercase;color:#d4e6ff}
 .settingsSummaryActionBtn{min-height:26px;padding:4px 9px;font-size:10px;font-weight:780;line-height:1.05;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
 .settingsAccordionChevron{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;height:24px;min-width:24px;min-height:24px;border-radius:999px;border:1px solid rgba(117,173,255,.33);font-size:12px;line-height:1;color:#d4e5ff;background:rgba(19,37,78,.52);transition:transform var(--motion-duration-fast) var(--motion-ease-standard), background var(--motion-duration-fast) var(--motion-ease-standard)}
 .settingsAccordionCard[open] .settingsAccordionChevron{transform:rotate(180deg);background:rgba(56,102,180,.35)}
