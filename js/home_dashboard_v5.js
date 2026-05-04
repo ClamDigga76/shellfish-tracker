@@ -266,32 +266,53 @@ export function createHomeDashboardRenderer({
 
     const f = String((state.homeFilter && state.homeFilter.mode) || "SEASON_PREVIEW").toUpperCase();
     const lbsVal = round2(totalLbs);
-    const toKiloBandLabel = (value) => {
+    const toSteppedRange = (value, steps) => {
       const numeric = Number(value);
-      if (!(numeric > 0)) return "—";
-      const valueInK = numeric / 1000;
-      const lowerK = Math.max(0, Math.floor(valueInK));
-      const upperK = Math.max(lowerK + 1, Math.ceil(valueInK) + 2);
-      return `${lowerK}k–${upperK}k lbs`;
+      if (!(numeric > 0) || !Array.isArray(steps) || !steps.length) return null;
+      for (const step of steps) {
+        if (!step || !(step.size > 0)) continue;
+        if (step.min == null || numeric >= step.min) {
+          if (step.max == null || numeric < step.max) {
+            const anchor = Number(step.anchor || 0);
+            const lower = anchor + (Math.floor((numeric - anchor) / step.size) * step.size);
+            return { lower, upper: lower + step.size };
+          }
+        }
+      }
+      return null;
+    };
+    const toPoundsBandLabel = (value) => {
+      const range = toSteppedRange(value, [
+        { min: 0, max: 500, size: 100, anchor: 0 },
+        { min: 500, max: 2000, size: 500, anchor: 500 },
+        { min: 2000, max: 10000, size: 2500, anchor: 2000 },
+        { min: 10000, max: 25000, size: 5000, anchor: 10000 },
+        { min: 25000, max: null, size: 15000, anchor: 0 }
+      ]);
+      if (!range) return "—";
+      return `${formatGroupedHomeNumber(range.lower, { maximumFractionDigits: 0 })}–${formatGroupedHomeNumber(range.upper, { maximumFractionDigits: 0 })} lbs`;
     };
     const toMoneyBandLabel = (value) => {
-      const numeric = Number(value);
-      if (!(numeric > 0)) return "—";
-      const valueInK = numeric / 1000;
-      const lowerK = Math.max(0, Math.floor(valueInK));
-      const upperK = Math.max(lowerK + 1, Math.ceil(valueInK) + 2);
-      return `$${lowerK}k–$${upperK}k`;
+      const range = toSteppedRange(value, [
+        { min: 0, max: 1000, size: 500, anchor: 0 },
+        { min: 1000, max: 5000, size: 1500, anchor: 1000 },
+        { min: 5000, max: 20000, size: 5000, anchor: 5000 },
+        { min: 20000, max: 50000, size: 15000, anchor: 20000 },
+        { min: 50000, max: null, size: 25000, anchor: 50000 }
+      ]);
+      if (!range) return "—";
+      return `$${formatGroupedHomeNumber(range.lower, { maximumFractionDigits: 0 })}–$${formatGroupedHomeNumber(range.upper, { maximumFractionDigits: 0 })}`;
     };
     const toAvgPplBandLabel = (value) => {
       const numeric = Number(value);
       if (!(numeric > 0)) return "—";
       const dollarBand = Math.floor(numeric);
-      const bandProgress = numeric - dollarBand;
-      const tier = bandProgress <= 0.33 ? "Low" : (bandProgress <= 0.66 ? "Mid" : "High");
+      const cents = Math.floor((Math.round(numeric * 100) % 100 + 100) % 100);
+      const tier = cents <= 24 ? "Low" : (cents <= 74 ? "Mid" : "High");
       return `${tier} $${dollarBand}/lb range`;
     };
     const isSeasonPreviewMode = f === "SEASON_PREVIEW";
-    const lbsStr = isSeasonPreviewMode ? toKiloBandLabel(lbsVal) : formatGroupedHomeNumber(lbsVal);
+    const lbsStr = isSeasonPreviewMode ? toPoundsBandLabel(lbsVal) : formatGroupedHomeNumber(lbsVal);
     const tripsStr = formatGroupedHomeNumber(trips.length, { maximumFractionDigits: 0 });
     const moneyRounded = (() => {
       const v = Math.round(Number(totalAmount) || 0);
@@ -300,23 +321,25 @@ export function createHomeDashboardRenderer({
     })();
     const amountDisplay = isSeasonPreviewMode ? toMoneyBandLabel(totalAmount) : moneyRounded;
     const avgPplDisplay = isSeasonPreviewMode ? toAvgPplBandLabel(avgPpl) : (avgPpl === null ? "—" : formatMoney(avgPpl));
-    const toDynamicRangeLabel = (value, { bucketSize, formatter, suffix }) => {
-      const numeric = Number(value);
-      if (!(numeric > 0) || !(bucketSize > 0)) return "—";
-      const lower = Math.floor(numeric / bucketSize) * bucketSize;
-      const upper = lower + bucketSize;
-      return `${formatter(lower)}–${formatter(upper)}${suffix}`;
+    const toBucketedMoneyPerTripLabel = (value) => {
+      const range = toSteppedRange(value, [
+        { min: 0, max: 250, size: 50, anchor: 0 },
+        { min: 250, max: 1000, size: 250, anchor: 250 },
+        { min: 1000, max: 3000, size: 500, anchor: 1000 },
+        { min: 3000, max: null, size: 1000, anchor: 3000 }
+      ]);
+      if (!range) return "—";
+      return `$${formatGroupedHomeNumber(range.lower, { maximumFractionDigits: 0 })}–$${formatGroupedHomeNumber(range.upper, { maximumFractionDigits: 0 })}`;
     };
-    const toBucketedMoneyPerTripLabel = (value) => toDynamicRangeLabel(value, {
-      bucketSize: 50,
-      formatter: (amount) => `$${formatGroupedHomeNumber(amount, { maximumFractionDigits: 0 })}`,
-      suffix: ""
-    });
-    const toBucketedPoundsPerTripLabel = (value) => toDynamicRangeLabel(value, {
-      bucketSize: 20,
-      formatter: (lbs) => formatGroupedHomeNumber(lbs, { maximumFractionDigits: 0 }),
-      suffix: " lbs"
-    });
+    const toBucketedPoundsPerTripLabel = (value) => {
+      const range = toSteppedRange(value, [
+        { min: 0, max: 100, size: 20, anchor: 0 },
+        { min: 100, max: 300, size: 50, anchor: 100 },
+        { min: 300, max: null, size: 100, anchor: 300 }
+      ]);
+      if (!range) return "—";
+      return `${formatGroupedHomeNumber(range.lower, { maximumFractionDigits: 0 })}–${formatGroupedHomeNumber(range.upper, { maximumFractionDigits: 0 })} lbs`;
+    };
     const avgAmountPerTripDisplay = isSeasonPreviewMode
       ? toBucketedMoneyPerTripLabel(avgAmountPerTrip)
       : (avgAmountPerTrip === null ? "—" : formatMoney(round2(avgAmountPerTrip)));
