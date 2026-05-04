@@ -22,7 +22,7 @@ function renderInstallStepCards(items, platformClass = "") {
           <div class="installStepLabel">${item.label}</div>
         </div>
       `).join("")}
-    </details>
+    </div>
   `;
 }
 
