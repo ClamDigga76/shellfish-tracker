@@ -689,7 +689,7 @@ export function createUpdateRuntimeStatusSeam({
       applyUpdateAction({
         statusText: "Could not confirm latest build on this device",
         primaryLabel: "Reset cache & reload",
-        summaryLabel: "Reset",
+        summaryLabel: "Update",
         action: async ()=>{ await swCheckNow({ hardReset: true }); },
         inlineText: runtimeDiag.requiredCoreCacheIncomplete
           ? `Required core cache is incomplete (${runtimeDiag.requiredCoreCacheFoundCount}/${runtimeDiag.requiredCoreCacheExpectedCount}). Use Reset cache & reload to recover.`

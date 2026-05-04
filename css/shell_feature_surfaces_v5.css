@@ -319,9 +319,9 @@
 
 /* Settings grouped-list polish (P3) */
 .settingsGroupBlock{margin-bottom:10px}
-.settingsHealthStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:11px 12px;border:1px solid rgba(90,150,255,.22);background:linear-gradient(176deg,rgba(10,22,50,.94),rgba(6,14,34,.96));margin-top:0;margin-bottom:var(--card-stack-gap);box-shadow:0 10px 24px rgba(3,8,23,.42), inset 0 0 0 1px rgba(52,93,170,.17)}
+.settingsHealthStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:11px 12px;border:1px solid rgba(90,150,255,.22);border-radius:18px;background:linear-gradient(176deg,rgba(12,30,68,.95),rgba(7,20,48,.97));margin-top:0;margin-bottom:var(--card-stack-gap);box-shadow:0 10px 24px rgba(3,8,23,.42), inset 0 0 0 1px rgba(52,93,170,.2)}
 .settingsHealthCell{min-width:0;padding:2px 9px 2px 4px;position:relative}
-.settingsHealthCell + .settingsHealthCell::before{content:"";position:absolute;left:-4px;top:3px;bottom:3px;width:1px;background:linear-gradient(180deg,rgba(141,188,255,.06),rgba(141,188,255,.30),rgba(141,188,255,.06))}
+.settingsHealthCell + .settingsHealthCell::before{content:"";position:absolute;left:-4px;top:3px;bottom:3px;width:1px;background:linear-gradient(180deg,rgba(168,207,255,.08),rgba(154,198,255,.34),rgba(168,207,255,.08))}
 .settingsHealthLabel{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#9fb9e8;font-weight:760}
 .settingsHealthIcon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;color:#b7d3ff;opacity:.95}
 .settingsHealthIcon svg{width:14px;height:14px;display:block}
