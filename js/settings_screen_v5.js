@@ -487,6 +487,19 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     const settingsHealthInstall = document.getElementById("settingsHealthInstall");
     const settingsHealthBackup = document.getElementById("settingsHealthBackup");
     const settingsHealthChoices = document.getElementById("settingsHealthChoices");
+    const toCompactBackupHealth = (summaryText) => {
+      const normalized = String(summaryText || "").trim();
+      if (!normalized) return "Checking";
+      const lower = normalized.toLowerCase();
+      if (lower.includes("checking")) return "Checking";
+      if (lower.includes("today")) return "Today";
+      if (lower.includes("yesterday") || lower.includes("1 day")) return "1 day ago";
+      if (lower.includes("never") || lower.includes("none")) return "None yet";
+      if (lower.includes("backed up") || lower.includes("fresh")) return "Backed up";
+      const dayMatch = lower.match(/(\d+)\s+day/);
+      if (dayMatch) return `${dayMatch[1]} days ago`;
+      return "Backed up";
+    };
 
     const dataListsSummaryText = `${areaCount} areas • ${dealerCount} dealers`;
     const dataListsPillText = `${areaCount}A/${dealerCount}D`;
@@ -609,20 +622,6 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     try {
       settingsListManagement.bindListMgmtHandlers();
     } catch (_) {}
-
-    const toCompactBackupHealth = (summaryText) => {
-      const normalized = String(summaryText || "").trim();
-      if (!normalized) return "Checking";
-      const lower = normalized.toLowerCase();
-      if (lower.includes("checking")) return "Checking";
-      if (lower.includes("today")) return "Today";
-      if (lower.includes("yesterday") || lower.includes("1 day")) return "1 day ago";
-      if (lower.includes("never") || lower.includes("none")) return "None yet";
-      if (lower.includes("backed up") || lower.includes("fresh")) return "Backed up";
-      const dayMatch = lower.match(/(\d+)\s+day/);
-      if (dayMatch) return `${dayMatch[1]} days ago`;
-      return "Backed up";
-    };
 
     supportRecoverySeam.bindBackupRestoreControls();
     const syncBackupSummaryLine = () => {
