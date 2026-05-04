@@ -324,12 +324,16 @@
 .settingsJumpChip{width:auto;justify-content:center;white-space:nowrap;min-height:30px;padding:6px 12px;border:1px solid rgba(108,165,255,.28);background:linear-gradient(180deg,rgba(48,84,148,.34),rgba(17,36,77,.3));font-size:11px;font-weight:760;color:#d8e7ff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
 .settingsHealthStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:8px 10px;border:1px solid rgba(84,142,255,.24);background:linear-gradient(180deg,rgba(8,18,41,.9),rgba(4,10,24,.94));margin-bottom:var(--card-stack-gap)}
 .settingsHealthCell{min-width:0}
-.settingsHealthLabel{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#9fb9e8;font-weight:760}
+.settingsHealthLabel{display:flex;align-items:center;gap:5px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#9fb9e8;font-weight:760}
+.settingsHealthIcon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;color:#b7d3ff;opacity:.95}
+.settingsHealthIcon svg{width:14px;height:14px;display:block}
 .settingsHealthValue{margin-top:2px;font-size:11px;font-weight:760;color:#e5efff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
 .settingsGroupLabel{font-size:11px;font-weight:860;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted-strong);margin:0 4px var(--card-title-gap)}
 .settingsSectionCard.settingsGroupedCard{margin-bottom:0;padding:0;overflow:hidden;border:1px solid rgba(90,150,255,.22);background:linear-gradient(176deg,rgba(10,22,50,.94),rgba(6,14,34,.96));box-shadow:0 10px 24px rgba(3,8,23,.42), inset 0 0 0 1px rgba(52,93,170,.17)}
 .settingsAccordionCard{border-radius:18px}
-.settingsAccordionSummary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;cursor:pointer;list-style:none;background:linear-gradient(180deg, rgba(41,74,136,.25) 0%, rgba(13,29,64,.2) 100%)}
+.settingsAccordionSummary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;list-style:none;background:linear-gradient(180deg, rgba(41,74,136,.25) 0%, rgba(13,29,64,.2) 100%)}
+.settingsCardBadge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;color:#cfe3ff;background:radial-gradient(circle at 35% 30%,rgba(98,166,255,.45),rgba(30,72,148,.38) 46%,rgba(11,28,65,.56) 100%);border:1px solid rgba(134,186,255,.4);box-shadow:0 0 0 1px rgba(78,132,220,.2),0 8px 18px rgba(34,85,170,.3)}
+.settingsCardBadge svg{width:19px;height:19px;display:block}
 .settingsAccordionSummary::-webkit-details-marker{display:none}
 .settingsAccordionSummary::-moz-list-bullet{font-size:0}
 .settingsAccordionSummary::marker{display:none;content:""}
@@ -397,6 +401,8 @@
 @media (max-width:380px){
   .settingsJumpHub{gap:5px}
   .settingsAccordionSummary{align-items:flex-start;gap:8px;padding:8px 10px}
+  .settingsCardBadge{width:32px;height:32px}
+  .settingsCardBadge svg{width:17px;height:17px}
   .settingsAccordionMeta{gap:2px}
   .settingsAccordionTitle{font-size:12px;line-height:1.18}
   .settingsAccordionStatus{font-size:10px;line-height:1.25}

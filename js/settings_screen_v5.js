@@ -3,6 +3,22 @@ import { escapeSettingsHtml } from "./settings_utils_v5.js";
 import { renderInstallSurface, resolveInstallSummary, resolveInstallStatusPill } from "./install_surface_renderer_v5.js";
 import { createStatusSurfaceSeam } from "./status_surface_seam_v5.js";
 
+function settingsIconSvg(name) {
+  const iconMap = {
+    build: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5v-7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 4v16M4 8.5l8 4.5 8-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+    install: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m8.5 12.2 2.4 2.4 4.6-5.1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    backup: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18.2A4.8 4.8 0 1 1 8.2 9a5.5 5.5 0 0 1 10.3 2.2A3.8 3.8 0 0 1 18 18.2H7Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m12 9.4-.01 6m0 0-2.2-2.2m2.2 2.2 2.2-2.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    updates: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8.8V5.5h-3.3M5 15.2v3.3h3.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 12a6 6 0 0 0-10.2-4.2L5.7 10M6 12a6 6 0 0 0 10.2 4.2l2.1-2.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    choices: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s6-4.7 6-9.1a6 6 0 1 0-12 0c0 4.4 6 9.1 6 9.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`,
+    about: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.1v5.2M12 7.8h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>`,
+    support: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 13.6v-1.4a6.5 6.5 0 0 1 13 0v1.4M7.6 16.6h-1a1.6 1.6 0 0 1-1.6-1.6v-2a1.6 1.6 0 0 1 1.6-1.6h1.2v5.2ZM16.4 16.6h1a1.6 1.6 0 0 0 1.6-1.6v-2a1.6 1.6 0 0 0-1.6-1.6h-1.2v5.2ZM8 18.4c.8.7 2.1 1.1 4 1.1h1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    reload: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.6 11.3a6.8 6.8 0 1 0-.8 4.5M18.6 11.3V7.6h-3.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    restore: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 8.2A6.2 6.2 0 1 1 6 12h2.8M8.2 8.2V4.9M8.2 8.2h3.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    deleted: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 7h11M9.2 7V5.5h5.6V7m-7 0 1 11h6.4l1-11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.5 10.4v4.7M13.5 10.4v4.7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
+  };
+  return iconMap[name] || iconMap.about;
+}
+
 export function createSettingsScreenOrchestrator({
   getState,
   getApp,
@@ -125,19 +141,19 @@ export function createSettingsScreenOrchestrator({
     </div>
     <div class="settingsHealthStrip card" aria-label="Settings health summary">
       <div class="settingsHealthCell">
-        <div class="settingsHealthLabel">Build</div>
+        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("build")}</span>Build</div>
         <div class="settingsHealthValue" id="settingsHealthBuild">${displayBuildVersion}</div>
       </div>
       <div class="settingsHealthCell">
-        <div class="settingsHealthLabel">Install</div>
+        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("install")}</span>Install</div>
         <div class="settingsHealthValue" id="settingsHealthInstall">${installModel ? resolveInstallStatusPill(installModel) : "Checking"}</div>
       </div>
       <div class="settingsHealthCell">
-        <div class="settingsHealthLabel">Backup</div>
+        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("backup")}</span>Backup</div>
         <div class="settingsHealthValue" id="settingsHealthBackup">Checking</div>
       </div>
       <div class="settingsHealthCell">
-        <div class="settingsHealthLabel">Choices</div>
+        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("choices")}</span>Choices</div>
         <div class="settingsHealthValue" id="settingsHealthChoices">${areaCount}A / ${dealerCount}D</div>
       </div>
     </div>
@@ -145,9 +161,10 @@ export function createSettingsScreenOrchestrator({
     <div class="settingsGroupBlock" id="settingsSafetyRecovery">
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
+          <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("backup")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Backup</div>
-            <div class="settingsAccordionTitle">Backup, restore, and deleted trips</div>
+            <div class="settingsAccordionTitle">Backup & restore</div>
             <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Checking backup freshness</div>
           </div>
           <div class="settingsAccordionRight">
@@ -166,8 +183,8 @@ export function createSettingsScreenOrchestrator({
           <div class="muted small" id="lastBackupLine"></div>
         </div>
         <div class="settingsRow settingsRow--action settingsBackupRow">
-          <button class="btn primary settingsFlexBtn" id="downloadBackup">💾 Create Backup</button>
-          <button class="btn settingsFlexBtn" id="restoreBackup">📥 Restore Backup</button>
+          <button class="btn primary settingsFlexBtn" id="downloadBackup">Create Backup</button>
+          <button class="btn settingsFlexBtn" id="restoreBackup">Restore</button>
           <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
         </div>
         <div class="settingsRow settingsRow--minor settingsRow--statusSurface">${backupTrustSurfaceHtml}</div>
@@ -175,7 +192,7 @@ export function createSettingsScreenOrchestrator({
           <div class="muted small" id="restoreRollbackLine"></div>
         </div>
         <div class="settingsRow settingsRow--action">
-          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Rollback / undo last restore</button>
+          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>Rollback / undo last restore</button>
         </div>
         ${deletedTripsHtml}
       </details>
@@ -184,13 +201,14 @@ export function createSettingsScreenOrchestrator({
     <div class="settingsGroupBlock" id="settingsUpdatesSupport">
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
+          <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("updates")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Updates</div>
-            <div class="settingsAccordionTitle">App version and update status</div>
+            <div class="settingsAccordionTitle">Version & update status</div>
             <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Version check in progress</div>
           </div>
           <div class="settingsAccordionRight settingsAccordionRight--updates">
-            <button class="btn settingsSummaryActionBtn" id="settingsUpdateSummaryAction" type="button" aria-label="Run update action">Reload</button>
+            <button class="btn settingsSummaryActionBtn" id="settingsUpdateSummaryAction" type="button" aria-label="Run update action">Reload App</button>
             <span class="settingsAccordionPill" id="updatesStatusPill">Checking</span>
             <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
           </div>
@@ -226,10 +244,11 @@ export function createSettingsScreenOrchestrator({
     <div class="settingsGroupBlock" id="settingsInstallApp">
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
+          <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("install")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Install</div>
-            <div class="settingsAccordionTitle">App install status</div>
-            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Checking install status</div>
+            <div class="settingsAccordionTitle">Web app setup</div>
+            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Installed on this device</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill" id="installStatusPill">Checking</span>
@@ -249,6 +268,7 @@ export function createSettingsScreenOrchestrator({
     <div class="settingsGroupBlock" id="settingsDataLists">
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
+          <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("choices")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Trip Choices</div>
             <div class="settingsAccordionTitle">Areas & dealers</div>
@@ -283,10 +303,11 @@ export function createSettingsScreenOrchestrator({
     <div class="settingsGroupBlock" id="settingsAbout">
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
+          <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("about")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">About</div>
             <div class="settingsAccordionTitle">Version, support, and legal</div>
-            <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build and support details</div>
+            <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build details • Privacy • Terms</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill" id="aboutStatusPill">${displayBuildVersion}</span>
@@ -329,10 +350,11 @@ export function createSettingsScreenOrchestrator({
     <div class="settingsGroupBlock" id="settingsAdvanced">
       <details class="card settingsSectionCard settingsGroupedCard settingsAdvancedCard settingsAccordionCard" id="advancedBox" data-settings-accordion>
         <summary class="settingsAccordionSummary">
+          <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("support")}</span>
           <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Support & Reset</div>
-            <div class="settingsAccordionTitle">Support bundle, safe reload, and erase tools</div>
-            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Support bundle, safe reload, and erase tools</div>
+            <div class="settingsGroupLabel">SUPPORT</div>
+            <div class="settingsAccordionTitle">Help, safe reload, and reset tools</div>
+            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Help, safe reload, and reset tools</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill" id="advancedStatusPill">Support</span>
@@ -528,11 +550,11 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     if (advancedSummaryLine) {
       advancedSummaryLine.textContent = shouldShowReleaseValidation
         ? "Release checks and reset tools"
-        : "Support bundle, safe reload, and erase tools";
+        : "Help, safe reload, and reset tools";
     }
     const aboutSummaryLine = document.getElementById("aboutSummaryLine");
     if (aboutSummaryLine) {
-      aboutSummaryLine.textContent = "Build and support details";
+      aboutSummaryLine.textContent = "Build details • Privacy • Terms";
     }
     if (aboutStatusPill) {
       aboutStatusPill.textContent = displayBuildVersion;
