@@ -108,14 +108,6 @@ export function createSettingsScreenOrchestrator({
 
     const areaCount = Array.isArray(state.areas) ? state.areas.length : 0;
     const dealerCount = Array.isArray(state.dealers) ? state.dealers.length : 0;
-    const settingsJumpTargets = [
-      { id: "settingsSafetyRecovery", label: "Backup" },
-      { id: "settingsUpdatesSupport", label: "Updates" },
-      { id: "settingsInstallApp", label: "Install" },
-      { id: "settingsDataLists", label: "Choices" },
-      { id: "settingsAbout", label: "About" },
-      { id: "settingsAdvanced", label: "Support" }
-    ];
     const installModel = typeof getInstallSurfaceModel === "function"
       ? getInstallSurfaceModel()
       : null;
@@ -134,11 +126,6 @@ export function createSettingsScreenOrchestrator({
 
     getApp().innerHTML = `
     ${renderPageHeader("settings")}
-    <div class="settingsJumpNavCard card" aria-label="Settings section quick links">
-      <div class="settingsJumpHub" role="navigation" aria-label="Jump to section">
-        ${settingsJumpTargets.map((target) => `<button class="chip settingsJumpChip" type="button" data-settings-jump="${target.id}">${target.label}</button>`).join("")}
-      </div>
-    </div>
     <div class="settingsHealthStrip card" aria-label="Settings health summary">
       <div class="settingsHealthCell">
         <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("build")}</span>Build</div>
@@ -475,19 +462,6 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
           otherEl.open = false;
         });
       });
-    });
-
-    const jumpButtons = Array.from(document.querySelectorAll("[data-settings-jump]"));
-    jumpButtons.forEach((button) => {
-      button.onclick = () => {
-        const targetId = String(button.getAttribute("data-settings-jump") || "").trim();
-        if (!targetId) return;
-        const targetEl = document.getElementById(targetId);
-        if (!targetEl) return;
-        const detailsEl = targetEl.querySelector("[data-settings-accordion]");
-        if (detailsEl) detailsEl.open = true;
-        targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
-      };
     });
 
     document.getElementById("openHelp").onclick = () => {
