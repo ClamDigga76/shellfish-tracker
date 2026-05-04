@@ -645,7 +645,7 @@ export function createBackupRestoreSubsystem(deps){
       const warningCount = Array.isArray(preview.warnings) ? preview.warnings.length : 0;
       const warningHtml = warningCount
         ? `<div class="restorePreviewWarning ${warningCount >= 2 ? "restorePreviewWarning--strong" : ""}" role="status" aria-live="polite"><div class="restorePreviewWarningTitle">Review carefully before restoring</div><div class="restorePreviewWarningBody">${warningCount === 1 ? "This file can still be restored, but one part of it needs extra attention." : `This file can still be restored, but ${escapeHtml(String(warningCount))} parts of it need extra attention.`}</div><ul class="restorePreviewWarningList">${preview.warnings.map(w=>`<li>${escapeHtml(String(w || ""))}</li>`).join("")}</ul><div class="restorePreviewWarningHint">If anything looks unfamiliar, stop here and confirm the file source before continuing.</div></div>`
-        : `<div class="muted small mt10">No restore warnings found. File shape looks complete.</div>`;
+        : `<div class="restorePreviewSafeNote" role="status" aria-live="polite">Backup looks complete.</div>`;
 
       const counts = preview.counts || {};
       openModal({
@@ -655,40 +655,49 @@ export function createBackupRestoreSubsystem(deps){
         showCloseButton: false,
         position: "center",
         html: `
-          <div class="muted small">File: <b>${escapeHtml(preview.fileName || "bank-the-catch_backup.json")}</b> (${escapeHtml(__formatFileSize(preview.fileSize))})</div>
-          <div class="sep" style="margin:10px 0"></div>
-          <div class="muted small">Backup contents that will be read</div>
-          <div class="mt8" style="display:grid;gap:6px">
-            <div class="row" style="justify-content:space-between"><span class="muted">Trips</span><b>${escapeHtml(String(counts.trips || 0))}</b></div>
-            <div class="row" style="justify-content:space-between"><span class="muted">Areas</span><b>${escapeHtml(String(counts.areas || 0))}</b></div>
-            <div class="row" style="justify-content:space-between"><span class="muted">Dealers</span><b>${escapeHtml(String(counts.dealers || 0))}</b></div>
-            <div class="row" style="justify-content:space-between"><span class="muted">Recently deleted</span><b>${escapeHtml(String(counts.deletedTrips || 0))}</b></div>
+          <div class="restorePreviewLayout">
+            <div class="restorePreviewTopSummary">
+              <div class="restorePreviewTopTitle">Backup ready to restore</div>
+              <div class="restorePreviewTopCount">${escapeHtml(String(counts.trips || 0))} trips found</div>
+            </div>
+            ${warningHtml}
+            <section class="restorePreviewCard" aria-label="Backup contents">
+              <div class="restorePreviewCardLabel">What will be restored</div>
+              <div class="restorePreviewCountsGrid">
+                <div class="restorePreviewCountRow"><span>Trips</span><b>${escapeHtml(String(counts.trips || 0))}</b></div>
+                <div class="restorePreviewCountRow"><span>Areas</span><b>${escapeHtml(String(counts.areas || 0))}</b></div>
+                <div class="restorePreviewCountRow"><span>Dealers</span><b>${escapeHtml(String(counts.dealers || 0))}</b></div>
+                <div class="restorePreviewCountRow"><span>Recently Deleted</span><b>${escapeHtml(String(counts.deletedTrips || 0))}</b></div>
+              </div>
+            </section>
+            <section class="restorePreviewModes" aria-label="Restore method">
+              <div class="restorePreviewModesTitle">Restore method</div>
+              <label class="restorePreviewChoice">
+                <input id="${modeMergeId}" type="radio" name="${uidBase}_restore_mode" value="merge" checked />
+                <span><b>Merge backup — recommended</b><small>Adds missing trips and keeps your current trips safe.</small></span>
+              </label>
+              <label class="restorePreviewChoice">
+                <input id="${modeReplaceId}" type="radio" name="${uidBase}_restore_mode" value="replace" />
+                <span><b>Replace this device’s data</b><small>Removes current trips and lists on this device, then imports this backup.</small></span>
+              </label>
+            </section>
+            <label class="restorePreviewChoice restorePreviewChoice--checkbox">
+              <input id="${includeSettingsId}" type="checkbox" />
+              <span><b>Also import app settings from this backup</b><small>Optional. Your current app settings stay unchanged unless this is turned on.</small></span>
+            </label>
+            <details class="restorePreviewDetails">
+              <summary>Backup details</summary>
+              <div class="restorePreviewDetailsGrid">
+                <div class="restorePreviewDetailRow"><span>File name</span><b>${escapeHtml(preview.fileName || "bank-the-catch_backup.json")}</b></div>
+                <div class="restorePreviewDetailRow"><span>File size</span><b>${escapeHtml(__formatFileSize(preview.fileSize))}</b></div>
+                <div class="restorePreviewDetailRow"><span>Exported date</span><b>${escapeHtml(__formatRestoreMetaDate(preview?.metadata?.exportedAt))}</b></div>
+                <div class="restorePreviewDetailRow"><span>Build/Version</span><b>${escapeHtml(String(preview?.metadata?.appVersion || "unknown"))}</b></div>
+                <div class="restorePreviewDetailRow"><span>Schema</span><b>${escapeHtml(String(preview?.metadata?.schemaVersion || "unknown"))}</b></div>
+                <div class="restorePreviewDetailRow"><span>Backup ID</span><b>${escapeHtml(String(preview?.metadata?.backupId || "not included"))}</b></div>
+                <div class="restorePreviewDetailRow"><span>Created by</span><b>${escapeHtml(String(preview?.metadata?.createdBy || "unknown"))}</b></div>
+              </div>
+            </details>
           </div>
-          <div class="muted small" style="margin-top:8px">This restore reads trips, recently deleted trips, and list entries (areas/dealers) from this file.</div>
-          <div class="sep" style="margin:10px 0"></div>
-          <div class="muted small">Metadata</div>
-          <div class="mt8" style="display:grid;gap:6px">
-            <div class="row" style="justify-content:space-between"><span class="muted">Exported</span><b>${escapeHtml(__formatRestoreMetaDate(preview?.metadata?.exportedAt))}</b></div>
-            <div class="row" style="justify-content:space-between"><span class="muted">Build/Version</span><b>${escapeHtml(String(preview?.metadata?.appVersion || "unknown"))}</b></div>
-            <div class="row" style="justify-content:space-between"><span class="muted">Schema</span><b>${escapeHtml(String(preview?.metadata?.schemaVersion || "unknown"))}</b></div>
-            <div class="row" style="justify-content:space-between"><span class="muted">Backup ID</span><b>${escapeHtml(String(preview?.metadata?.backupId || "not included"))}</b></div>
-            <div class="row" style="justify-content:space-between"><span class="muted">Created by</span><b>${escapeHtml(String(preview?.metadata?.createdBy || "unknown"))}</b></div>
-          </div>
-          ${warningHtml}
-          <div class="sep" style="margin:10px 0"></div>
-          <div class="muted small" style="margin-bottom:6px">Restore mode</div>
-          <label class="row" style="gap:8px;align-items:flex-start">
-            <input id="${modeMergeId}" type="radio" name="${uidBase}_restore_mode" value="merge" checked />
-            <span>Merge (recommended): keep current trips/lists and only add entries that do not look like duplicates.</span>
-          </label>
-          <label class="row" style="gap:8px;align-items:flex-start;margin-top:6px">
-            <input id="${modeReplaceId}" type="radio" name="${uidBase}_restore_mode" value="replace" />
-            <span>Replace: remove current trips/lists on this device, then import from this backup file.</span>
-          </label>
-          <label class="row" style="gap:8px;align-items:flex-start;margin-top:10px">
-            <input id="${includeSettingsId}" type="checkbox" />
-            <span>Also import settings from this backup (optional, off by default).</span>
-          </label>
           <label class="row" id="${replaceConfirmId}_row" style="gap:8px;align-items:flex-start;margin-top:10px;display:none">
             <input id="${replaceConfirmId}" type="checkbox" />
             <span>I understand Replace first removes current trips and list entries on this device. I should protect current data with a fresh backup before continuing.</span>

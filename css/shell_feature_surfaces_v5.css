@@ -383,6 +383,27 @@
 .restorePreviewWarningTitle{font-size:13px;font-weight:860;line-height:1.2;letter-spacing:.01em}
 .restorePreviewWarningBody,.restorePreviewWarningHint{font-size:12px;line-height:1.45;color:inherit}
 .restorePreviewWarningList{margin:0;padding-left:18px;display:grid;gap:4px;font-size:12px;line-height:1.45}
+.restorePreviewLayout{display:grid;gap:12px}
+.restorePreviewTopSummary{display:grid;gap:4px}
+.restorePreviewTopTitle{font-size:16px;line-height:1.2;font-weight:850;color:var(--text)}
+.restorePreviewTopCount{font-size:13px;line-height:1.3;color:var(--text-muted-strong)}
+.restorePreviewSafeNote{padding:10px 12px;border-radius:12px;border:1px solid rgba(114,196,146,.32);background:linear-gradient(180deg, rgba(81,163,117,.16) 0%, rgba(81,163,117,.08) 100%);font-size:12px;line-height:1.4;color:#ddf7e7}
+.restorePreviewCard{padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);display:grid;gap:8px}
+.restorePreviewCardLabel,.restorePreviewModesTitle{font-size:12px;line-height:1.2;font-weight:780;letter-spacing:.02em;text-transform:uppercase;color:var(--text-muted-strong)}
+.restorePreviewCountsGrid,.restorePreviewDetailsGrid{display:grid;gap:6px}
+.restorePreviewCountRow,.restorePreviewDetailRow{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;font-size:12px;line-height:1.35}
+.restorePreviewCountRow span,.restorePreviewDetailRow span{color:var(--text-muted)}
+.restorePreviewCountRow b,.restorePreviewDetailRow b{color:var(--text);font-weight:760;text-align:right;overflow-wrap:anywhere}
+.restorePreviewModes{display:grid;gap:8px}
+.restorePreviewChoice{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:flex-start;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+.restorePreviewChoice input{margin-top:2px}
+.restorePreviewChoice span{display:grid;gap:3px}
+.restorePreviewChoice b{font-size:13px;line-height:1.25;color:var(--text)}
+.restorePreviewChoice small{font-size:12px;line-height:1.4;color:var(--text-muted-strong)}
+.restorePreviewChoice--checkbox{margin-top:2px}
+.restorePreviewDetails{margin-top:2px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.02)}
+.restorePreviewDetails summary{cursor:pointer;font-size:12px;font-weight:780;line-height:1.2;letter-spacing:.02em;text-transform:uppercase;color:var(--text-muted-strong)}
+.restorePreviewDetails[open] summary{margin-bottom:8px}
 .restoreResultPanel{display:grid;gap:12px}
 .restoreResultLead{font-size:13px;line-height:1.5;color:var(--text-muted-strong)}
 .restoreResultGrid{display:grid;gap:8px}
