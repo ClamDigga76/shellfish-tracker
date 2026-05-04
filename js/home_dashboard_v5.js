@@ -389,10 +389,10 @@ export function createHomeDashboardRenderer({
       ? (Number(strongestDealer.amount) / Number(strongestDealer.pounds))
       : null;
     const topDealerSupport = strongestDealer
-      ? `<span class="money">${escapeHtml(formatMoney(round2(strongestDealer.amount)))}</span>${Number.isFinite(topDealerAvgPpl) ? `<span class="homeOverviewMetaSeparator" aria-hidden="true"> · </span><span class="rate ppl">Avg ${escapeHtml(formatMoney(round2(topDealerAvgPpl)))}/lb</span>` : ""}`
+      ? `<span class="money">${escapeHtml(formatMoney(round2(strongestDealer.amount)))}</span>${Number.isFinite(topDealerAvgPpl) ? `<span class="homeOverviewMetaSeparator"> · </span><span class="rate ppl">Avg ${escapeHtml(formatMoney(round2(topDealerAvgPpl)))}/lb</span>` : ""}`
       : "No trips in range";
     const strongestAreaSupport = strongestArea
-      ? `<span class="lbsBlue">${escapeHtml(formatHomePounds(round2(strongestArea.pounds)))}</span><span class="homeOverviewMetaSeparator" aria-hidden="true"> · </span><span class="tripsMetric">${escapeHtml(formatGroupedHomeNumber(strongestArea.trips, { maximumFractionDigits: 0 }))} trips</span>`
+      ? `<span class="lbsBlue">${escapeHtml(formatHomePounds(round2(strongestArea.pounds)))}</span><span class="homeOverviewMetaSeparator"> · </span><span class="tripsMetric">${escapeHtml(formatGroupedHomeNumber(strongestArea.trips, { maximumFractionDigits: 0 }))} trips</span>`
       : "No trips in range";
     const installModel = typeof getInstallSurfaceModel === "function" ? getInstallSurfaceModel() : null;
     const showInstallCard = shouldShowBeginnerCard && installModel && !installModel.isInstalled;
