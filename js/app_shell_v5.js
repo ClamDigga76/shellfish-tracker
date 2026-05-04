@@ -29,13 +29,18 @@ export function renderPageHeader(viewKey, { escapeHtml }){
     help: "Help",
     about: "About"
   };
+  const descriptionByView = {
+    all_trips: "Search, filter, and review saved trips"
+  };
   const headerTitle = titleByView[viewKey] || "Bank the Catch";
+  const headerDescription = descriptionByView[viewKey] || "";
   return `
     <div class="pageHeader">
       <span class="phActionStub" aria-hidden="true"></span>
       <div class="phTitleSlot">
         ${showLandingTarget ? `<span class="pageLandingTarget sr-only" data-top-level-landing="true" tabindex="-1" aria-label="${escapeHtml(`${headerTitle} page`)}"></span>` : ""}
         <h2 class="phTitle">${escapeHtml(headerTitle)}</h2>
+        ${headerDescription ? `<p class="phDescription">${escapeHtml(headerDescription)}</p>` : ""}
       </div>
       ${showHelp
         ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">${helpIconSvg()}</button>`

@@ -626,10 +626,21 @@ header{padding:14px 18px 12px}
 .phTitleSlot{
   flex:1 1 auto;
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
   text-align:center;
   padding:0 2px;
+  gap:4px;
+}
+.phDescription{
+  margin:0;
+  color:var(--text-muted-strong, var(--muted));
+  font-size:13px;
+  line-height:1.25;
+  letter-spacing:.01em;
+  max-width:min(86%, 360px);
+  text-wrap:balance;
 }
 .phActionStub{
   width:42px;
