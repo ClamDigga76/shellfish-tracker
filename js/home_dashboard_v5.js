@@ -522,13 +522,13 @@ export function createHomeDashboardRenderer({
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">TOP DEALER</div>
-              <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(isSeasonPreviewMode ? "Full version preview" : (strongestDealer?.dealer || "—"))}</div>
-              <div class="reportsHeroMeta money">${isSeasonPreviewMode ? "Full version shows dealer totals" : topDealerSupport}</div>
+              <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(isSeasonPreviewMode ? (strongestDealer ? "Full version preview" : "—") : (strongestDealer?.dealer || "—"))}</div>
+              <div class="reportsHeroMeta money">${isSeasonPreviewMode ? (strongestDealer ? "Full version shows dealer totals" : "No trips in range") : topDealerSupport}</div>
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">STRONGEST AREA</div>
-              <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? "Full version preview" : (strongestArea?.area || "—"))}</div>
-              <div class="reportsHeroMeta homeOverviewMetaPounds">${isSeasonPreviewMode ? "Full version shows area strength" : strongestAreaSupport}</div>
+              <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? (strongestArea ? "Full version preview" : "—") : (strongestArea?.area || "—"))}</div>
+              <div class="reportsHeroMeta homeOverviewMetaPounds">${isSeasonPreviewMode ? (strongestArea ? "Full version shows area strength" : "No trips in range") : strongestAreaSupport}</div>
             </div>
           </div>
         </section>
