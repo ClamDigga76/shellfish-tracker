@@ -30,18 +30,20 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
   return `
     ${renderPageHeader("help")}
 
-    <div class="card">
-      <b style="font-size:1.05rem">Help hub</b>
-      <div class="sep"></div>
-      <div class="muted small" style="line-height:1.5">Jump to what you need. Help is the full guide for install, backup, updates, and support.</div>
-      <div class="helpHubNav" style="margin-top:10px">
-        <button class="chip" type="button" data-helpjump="home">Home</button>
-        <button class="chip" type="button" data-helpjump="trips">Trips</button>
-        <button class="chip" type="button" data-helpjump="reports">Insights</button>
-        <button class="chip" type="button" data-helpjump="settings">Settings</button>
-        <button class="chip" type="button" data-helpjump="newtrip">New Trip</button>
-        <button class="chip" type="button" data-helpjump="backups">Backup & Restore</button>
-        <button class="chip" type="button" data-helpjump="install">Install app</button>
+    <div class="card helpHubCard">
+      <div class="helpHubHeader">
+        <b class="helpHubTitle">Help hub</b>
+        <span class="helpHubPill">Quick links</span>
+      </div>
+      <div class="muted small helpHubLead">Jump to the section you need. Help covers install, backup, updates, and troubleshooting.</div>
+      <div class="helpHubRows" role="list" aria-label="Help sections">
+        <button class="helpHubRow" type="button" data-helpjump="home" role="listitem"><span class="helpHubRowIcon">🏠</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Home</span><span class="helpHubRowDesc">Latest trip and season snapshot</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
+        <button class="helpHubRow" type="button" data-helpjump="trips" role="listitem"><span class="helpHubRowIcon">🗂️</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Trips</span><span class="helpHubRowDesc">Review saved trips and edit entries</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
+        <button class="helpHubRow" type="button" data-helpjump="reports" role="listitem"><span class="helpHubRowIcon">📈</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Insights</span><span class="helpHubRowDesc">Trend comparisons across saved trips</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
+        <button class="helpHubRow" type="button" data-helpjump="newtrip" role="listitem"><span class="helpHubRowIcon">📝</span><span class="helpHubRowBody"><span class="helpHubRowLabel">New Trip</span><span class="helpHubRowDesc">Log pounds, pay, dealer, and area</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
+        <button class="helpHubRow" type="button" data-helpjump="settings" role="listitem"><span class="helpHubRowIcon">⚙️</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Settings</span><span class="helpHubRowDesc">Updates, install status, and lists</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
+        <button class="helpHubRow" type="button" data-helpjump="backups" role="listitem"><span class="helpHubRowIcon">💾</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Backup & Restore</span><span class="helpHubRowDesc">Protect and move your trip history</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
+        <button class="helpHubRow" type="button" data-helpjump="install" role="listitem"><span class="helpHubRowIcon">📲</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Install app</span><span class="helpHubRowDesc">Browser and installed mode steps</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
       </div>
     </div>
 
@@ -51,9 +53,9 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Log one trip first.</b> Home updates right away, and Insights gets more useful after a few trips.</div>
         <ol style="margin:8px 0 0 18px">
-          <li>Open <b>New Trip</b> and save an entry.</li>
-          <li>Check <b>Home</b> for totals and your latest trip snapshot.</li>
-          <li>Use <b>Insights</b> when you want trend comparisons.</li>
+          <li><b>Save a trip</b> — enter pounds, pay, dealer, and area.</li>
+          <li><b>Check Home</b> — see your latest trip and season preview.</li>
+          <li><b>Use Insights</b> — compare trends after a few trips are saved.</li>
         </ol>
       </div>
     </div>
@@ -77,7 +79,7 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       <div class="muted helpSectionLead">
         <div><b>Use it for:</b> browsing and editing saved entries.</div>
         <ul style="margin:8px 0 0 18px">
-          <li>Tap a trip card to view and edit details.</li>
+          <li>Review saved trips from the card. Use <b>Edit Trip</b> when you need to change an entry.</li>
           <li>Use filters to narrow by range, dealer, or area.</li>
           <li>Duplicate warning on save means: check date/dealer/area before saving anyway.</li>
         </ul>
@@ -185,16 +187,6 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
           <li>If things still seem off after updating, reopen the app, then check current build vs latest build status again.</li>
           <li>For support, email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</li>
         </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <b>Support details</b>
-      <div class="sep"></div>
-      <div class="muted small" style="line-height:1.6">
-        <div>App version: <b>${escapeHtml(String(displayBuildVersion))}</b> (data format ${escapeHtml(String(schemaVersion || ""))})</div>
-        <div>Installed mode: <b>${isStandalone ? "yes" : "no"}</b></div>
-        <div>Offline update control active: <b>${hasSWController ? "yes" : "no"}</b></div>
       </div>
     </div>
   `;
