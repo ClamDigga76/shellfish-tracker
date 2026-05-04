@@ -493,7 +493,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
       const lower = normalized.toLowerCase();
       if (lower.includes("checking")) return "Checking";
       if (lower.includes("today")) return "Today";
-      if (lower.includes("yesterday") || lower.includes("1 day")) return "1 day ago";
+      if (lower.includes("yesterday") || /\b1\s+day(?:\b|s\b)/.test(lower)) return "1 day ago";
       if (lower.includes("never") || lower.includes("none")) return "None yet";
       if (lower.includes("backed up") || lower.includes("fresh")) return "Backed up";
       const dayMatch = lower.match(/(\d+)\s+day/);
