@@ -702,7 +702,7 @@ export function createUpdateRuntimeStatusSeam({
       applyUpdateAction({
         statusText: "Latest build check is still pending on this device",
         primaryLabel: "Reload latest build",
-        summaryLabel: "Check",
+        summaryLabel: "Update",
         action: async ()=>{ await swCheckNow(); },
         inlineText: runtimeDiag?.requiredCoreCachePreRegistration
           ? "Service worker registration has not started yet in this tab. This can be normal on first open; wait for load completion, then re-check."
@@ -717,7 +717,7 @@ export function createUpdateRuntimeStatusSeam({
       applyUpdateAction({
         statusText: "Installed app may be on an older build",
         primaryLabel: "Reload latest build",
-        summaryLabel: "Reload",
+        summaryLabel: "Update",
         action: async ()=>{ await swCheckNow(); },
         inlineText: "Reload, then fully close and reopen the Home Screen app."
       });
@@ -743,7 +743,7 @@ export function createUpdateRuntimeStatusSeam({
     applyUpdateAction({
       statusText: runtimeDiag?.requiredCoreCacheIncomplete ? "Core cache integrity needs attention" : "Up to date on this device",
       primaryLabel: "Reload latest build",
-      summaryLabel: runtimeDiag?.requiredCoreCacheIncomplete ? "Check" : "Reload",
+      summaryLabel: "Update",
       action: async ()=>{ await swCheckNow(); },
       inlineText: stableInlineText
     });
