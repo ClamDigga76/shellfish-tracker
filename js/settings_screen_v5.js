@@ -93,10 +93,10 @@ export function createSettingsScreenOrchestrator({
     const areaCount = Array.isArray(state.areas) ? state.areas.length : 0;
     const dealerCount = Array.isArray(state.dealers) ? state.dealers.length : 0;
     const settingsJumpTargets = [
-      { id: "settingsUpdatesSupport", label: "Updates" },
       { id: "settingsSafetyRecovery", label: "Backup" },
+      { id: "settingsUpdatesSupport", label: "Updates" },
       { id: "settingsInstallApp", label: "Install" },
-      { id: "settingsDataLists", label: "Areas" },
+      { id: "settingsDataLists", label: "Choices" },
       { id: "settingsAbout", label: "About" },
       { id: "settingsAdvanced", label: "Support" }
     ];
@@ -122,6 +122,63 @@ export function createSettingsScreenOrchestrator({
       <div class="settingsJumpHub" role="navigation" aria-label="Jump to section">
         ${settingsJumpTargets.map((target) => `<button class="chip settingsJumpChip" type="button" data-settings-jump="${target.id}">${target.label}</button>`).join("")}
       </div>
+    </div>
+    <div class="settingsHealthStrip card" aria-label="Settings health summary">
+      <div class="settingsHealthCell">
+        <div class="settingsHealthLabel">Build</div>
+        <div class="settingsHealthValue" id="settingsHealthBuild">${displayBuildVersion}</div>
+      </div>
+      <div class="settingsHealthCell">
+        <div class="settingsHealthLabel">Install</div>
+        <div class="settingsHealthValue" id="settingsHealthInstall">${installModel ? resolveInstallStatusPill(installModel) : "Checking"}</div>
+      </div>
+      <div class="settingsHealthCell">
+        <div class="settingsHealthLabel">Backup</div>
+        <div class="settingsHealthValue" id="settingsHealthBackup">Checking</div>
+      </div>
+      <div class="settingsHealthCell">
+        <div class="settingsHealthLabel">Choices</div>
+        <div class="settingsHealthValue" id="settingsHealthChoices">${areaCount}A / ${dealerCount}D</div>
+      </div>
+    </div>
+
+    <div class="settingsGroupBlock" id="settingsSafetyRecovery">
+      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
+        <summary class="settingsAccordionSummary">
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">Backup</div>
+            <div class="settingsAccordionTitle">Backup, restore, and deleted trips</div>
+            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Checking backup freshness</div>
+          </div>
+          <div class="settingsAccordionRight">
+            <span class="settingsAccordionPill" id="safetyStatusPill">Checking</span>
+            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          </div>
+        </summary>
+        <div class="settingsRow settingsRow--split">
+          <div>
+            <div class="settingsRowTitle">Backup & Restore</div>
+          </div>
+          <span class="settingsValuePill">Freshness</span>
+        </div>
+        <div class="settingsRow settingsRow--status">
+          <div id="backupHealthLane" class="settingsBackupHealth" hidden aria-live="polite" aria-hidden="true"></div>
+          <div class="muted small" id="lastBackupLine"></div>
+        </div>
+        <div class="settingsRow settingsRow--action settingsBackupRow">
+          <button class="btn primary settingsFlexBtn" id="downloadBackup">💾 Create Backup</button>
+          <button class="btn settingsFlexBtn" id="restoreBackup">📥 Restore Backup</button>
+          <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
+        </div>
+        <div class="settingsRow settingsRow--minor settingsRow--statusSurface">${backupTrustSurfaceHtml}</div>
+        <div class="settingsRow settingsRow--status">
+          <div class="muted small" id="restoreRollbackLine"></div>
+        </div>
+        <div class="settingsRow settingsRow--action">
+          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Rollback / undo last restore</button>
+        </div>
+        ${deletedTripsHtml}
+      </details>
     </div>
 
     <div class="settingsGroupBlock" id="settingsUpdatesSupport">
@@ -166,45 +223,6 @@ export function createSettingsScreenOrchestrator({
       </details>
     </div>
 
-    <div class="settingsGroupBlock" id="settingsSafetyRecovery">
-      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
-        <summary class="settingsAccordionSummary">
-          <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Backup</div>
-            <div class="settingsAccordionTitle">Backup, restore, and deleted trips</div>
-            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Checking backup freshness</div>
-          </div>
-          <div class="settingsAccordionRight">
-            <span class="settingsAccordionPill" id="safetyStatusPill">Checking</span>
-            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
-          </div>
-        </summary>
-        <div class="settingsRow settingsRow--split">
-          <div>
-            <div class="settingsRowTitle">Backup & Restore</div>
-          </div>
-          <span class="settingsValuePill">Freshness</span>
-        </div>
-        <div class="settingsRow settingsRow--status">
-          <div id="backupHealthLane" class="settingsBackupHealth" hidden aria-live="polite" aria-hidden="true"></div>
-          <div class="muted small" id="lastBackupLine"></div>
-        </div>
-        <div class="settingsRow settingsRow--action settingsBackupRow">
-          <button class="btn primary settingsFlexBtn" id="downloadBackup">💾 Create Backup</button>
-          <button class="btn settingsFlexBtn" id="restoreBackup">📥 Restore Backup</button>
-          <input id="backupFile" type="file" accept="application/json,.json,text/plain,.txt" class="hiddenInput" />
-        </div>
-        <div class="settingsRow settingsRow--minor settingsRow--statusSurface">${backupTrustSurfaceHtml}</div>
-        <div class="settingsRow settingsRow--status">
-          <div class="muted small" id="restoreRollbackLine"></div>
-        </div>
-        <div class="settingsRow settingsRow--action">
-          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>↩ Rollback / undo last restore</button>
-        </div>
-        ${deletedTripsHtml}
-      </details>
-    </div>
-
     <div class="settingsGroupBlock" id="settingsInstallApp">
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
@@ -232,8 +250,8 @@ export function createSettingsScreenOrchestrator({
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
           <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Areas & Dealers</div>
-            <div class="settingsAccordionTitle">Manage trip choices</div>
+            <div class="settingsGroupLabel">Trip Choices</div>
+            <div class="settingsAccordionTitle">Areas & dealers</div>
             <div class="muted small settingsAccordionStatus" id="dataListsSummaryLine">${areaCount} areas • ${dealerCount} dealers</div>
           </div>
           <div class="settingsAccordionRight">
@@ -243,7 +261,7 @@ export function createSettingsScreenOrchestrator({
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
-            <div class="settingsRowTitle">List Management</div>
+            <div class="settingsRowTitle">Manage Choices</div>
             <div class="muted small">Edit the lists used in New Trip and Edit Trip.</div>
           </div>
           <span class="settingsValuePill">Edit</span>
@@ -466,6 +484,9 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     const advancedStatusPill = document.getElementById("advancedStatusPill");
     const dataListsSummaryLine = document.getElementById("dataListsSummaryLine");
     const dataListsStatusPill = document.getElementById("dataListsStatusPill");
+    const settingsHealthInstall = document.getElementById("settingsHealthInstall");
+    const settingsHealthBackup = document.getElementById("settingsHealthBackup");
+    const settingsHealthChoices = document.getElementById("settingsHealthChoices");
 
     const dataListsSummaryText = `${areaCount} areas • ${dealerCount} dealers`;
     const dataListsPillText = `${areaCount}A/${dealerCount}D`;
@@ -474,6 +495,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
       dataListsStatusPill.textContent = dataListsPillText;
       dataListsStatusPill.title = dataListsSummaryText;
     }
+    if (settingsHealthChoices) settingsHealthChoices.textContent = `${areaCount}A / ${dealerCount}D`;
 
     if (updatesSummaryLine) {
       updatesSummaryLine.textContent = "Version check in progress";
@@ -486,6 +508,9 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     }
     if (backupSummaryLine) {
       backupSummaryLine.textContent = "Checking backup freshness";
+    }
+    if (settingsHealthBackup) {
+      settingsHealthBackup.textContent = backupSummaryLine?.textContent || "Checking";
     }
     if (advancedSummaryLine) {
       advancedSummaryLine.textContent = shouldShowReleaseValidation
@@ -515,6 +540,10 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
         ? resolveInstallStatusPill(installModel)
         : "Checking";
       installStatusPill.title = installSummaryLine?.textContent || "Install readiness status";
+    }
+    if (settingsHealthInstall) {
+      settingsHealthInstall.textContent = installStatusPill?.textContent || "Checking";
+      settingsHealthInstall.title = installSummaryLine?.textContent || "Install readiness status";
     }
     if (installActionBtn && installModel) {
       installActionBtn.onclick = async () => {
@@ -588,6 +617,10 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
         backupStatusPill: safetyStatusPill,
         deletedTripsCount: deletedTrips.length
       });
+      if (settingsHealthBackup) {
+        settingsHealthBackup.textContent = backupSummaryLine?.textContent || "Checking";
+        settingsHealthBackup.title = backupSummaryLine?.textContent || "Backup freshness status";
+      }
     };
     syncBackupSummaryLine();
     const lastBackupLineEl = document.getElementById("lastBackupLine");
