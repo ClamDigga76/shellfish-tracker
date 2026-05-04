@@ -884,8 +884,8 @@
   line-height:1.33;
   font-weight:720;
 }
-.homeOverviewCard .reportsHeroMeta.homeOverviewMetaPounds{
-  color:var(--lbs);
+.homeOverviewCard .reportsHeroMeta .homeOverviewMetaSeparator{
+  color:var(--text-muted);
 }
 .homeOverviewTrend{
   position:absolute;
