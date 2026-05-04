@@ -287,7 +287,7 @@ export function createHomeDashboardRenderer({
         { min: 500, max: 2000, size: 500, anchor: 500 },
         { min: 2000, max: 10000, size: 2500, anchor: 2000 },
         { min: 10000, max: 25000, size: 5000, anchor: 10000 },
-        { min: 25000, max: null, size: 15000, anchor: 0 }
+        { min: 25000, max: null, size: 15000, anchor: 25000 }
       ]);
       if (!range) return "—";
       return `${formatGroupedHomeNumber(range.lower, { maximumFractionDigits: 0 })}–${formatGroupedHomeNumber(range.upper, { maximumFractionDigits: 0 })} lbs`;
