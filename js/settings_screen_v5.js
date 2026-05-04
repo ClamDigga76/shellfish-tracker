@@ -617,6 +617,10 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
         backupStatusPill: safetyStatusPill,
         deletedTripsCount: deletedTrips.length
       });
+      if (settingsHealthBackup) {
+        settingsHealthBackup.textContent = backupSummaryLine?.textContent || "Checking";
+        settingsHealthBackup.title = backupSummaryLine?.textContent || "Backup freshness status";
+      }
     };
     syncBackupSummaryLine();
     const lastBackupLineEl = document.getElementById("lastBackupLine");
