@@ -229,30 +229,6 @@ export function createSettingsScreenOrchestrator({
       </details>
     </div>
 
-    <div class="settingsGroupBlock" id="settingsInstallApp">
-      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
-        <summary class="settingsAccordionSummary">
-          <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("install")}</span>
-          <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Install</div>
-            <div class="settingsAccordionTitle">Web app setup</div>
-            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Installed on this device</div>
-          </div>
-          <div class="settingsAccordionRight">
-            <span class="settingsAccordionPill settingsAccordionPill--ghost" id="installStatusPill">Checking</span>
-            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
-          </div>
-        </summary>
-        ${renderInstallSurface({
-          model: installModel,
-          mode: "full",
-          escapeHtml: escapeSettingsHtml,
-          actionId: "installActionBtn",
-          helpId: "installHelpBtn"
-        })}
-      </details>
-    </div>
-
     <div class="settingsGroupBlock" id="settingsDataLists">
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
@@ -286,6 +262,30 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--field">
           <div id="listMgmtPanel">${settingsListManagement.renderListMgmtPanel(listMode)}</div>
         </div>
+      </details>
+    </div>
+
+    <div class="settingsGroupBlock" id="settingsInstallApp">
+      <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
+        <summary class="settingsAccordionSummary">
+          <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("install")}</span>
+          <div class="settingsAccordionMeta">
+            <div class="settingsGroupLabel">Install</div>
+            <div class="settingsAccordionTitle">Web app setup</div>
+            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Installed on this device</div>
+          </div>
+          <div class="settingsAccordionRight">
+            <span class="settingsAccordionPill settingsAccordionPill--ghost" id="installStatusPill">Checking</span>
+            <span class="settingsAccordionChevron" aria-hidden="true">▾</span>
+          </div>
+        </summary>
+        ${renderInstallSurface({
+          model: installModel,
+          mode: "full",
+          escapeHtml: escapeSettingsHtml,
+          actionId: "installActionBtn",
+          helpId: "installHelpBtn"
+        })}
       </details>
     </div>
 
