@@ -37,159 +37,15 @@ export function renderHelpViewHTML({ renderPageHeader, escapeHtml, displayBuildV
       </div>
       <div class="muted small helpHubLead">Jump to the section you need. Help covers install, backup, updates, and troubleshooting.</div>
       <div class="helpHubRows" role="list" aria-label="Help sections">
-        <button class="helpHubRow" type="button" data-helpjump="quickstart" role="listitem"><span class="helpHubRowIcon">🚀</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Quick start</span><span class="helpHubRowDesc">Fast first-run checklist</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
-        <button class="helpHubRow" type="button" data-helpjump="home" role="listitem"><span class="helpHubRowIcon">🏠</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Home</span><span class="helpHubRowDesc">Latest trip and season snapshot</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
-        <button class="helpHubRow" type="button" data-helpjump="trips" role="listitem"><span class="helpHubRowIcon">🗂️</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Trips</span><span class="helpHubRowDesc">Review saved trips and edit entries</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
-        <button class="helpHubRow" type="button" data-helpjump="reports" role="listitem"><span class="helpHubRowIcon">📈</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Insights</span><span class="helpHubRowDesc">Trend comparisons across saved trips</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
-        <button class="helpHubRow" type="button" data-helpjump="newtrip" role="listitem"><span class="helpHubRowIcon">📝</span><span class="helpHubRowBody"><span class="helpHubRowLabel">New Trip</span><span class="helpHubRowDesc">Log pounds, pay, dealer, and area</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
-        <button class="helpHubRow" type="button" data-helpjump="settings" role="listitem"><span class="helpHubRowIcon">⚙️</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Settings</span><span class="helpHubRowDesc">Updates, install status, and lists</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
-        <button class="helpHubRow" type="button" data-helpjump="backups" role="listitem"><span class="helpHubRowIcon">💾</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Backup & Restore</span><span class="helpHubRowDesc">Protect and move your trip history</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
-        <button class="helpHubRow" type="button" data-helpjump="install" role="listitem"><span class="helpHubRowIcon">📲</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Install app</span><span class="helpHubRowDesc">Browser and installed mode steps</span></span><span class="helpHubRowChevron" aria-hidden="true">›</span></button>
-      </div>
-    </div>
-
-    <details class="card helpAccordionCard" data-help-accordion data-help-key="quickstart">
-      <summary class="helpAccordionSummary" id="help_jump_quickstart">
-        <span class="helpAccordionIcon" aria-hidden="true">🚀</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Quick start</b><span class="helpAccordionDesc">Log one trip, check Home, then use Insights.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span>
-      </summary>
-      <div class="sep"></div>
-      <div class="muted helpSectionLead">
-        <div><b>Log one trip first.</b> Home updates right away, and Insights gets more useful after a few trips.</div>
-        <ol style="margin:8px 0 0 18px">
-          <li><b>Save a trip</b> — enter pounds, pay, dealer, and area.</li>
-          <li><b>Check Home</b> — see your latest trip and season preview.</li>
-          <li><b>Use Insights</b> — compare trends after a few trips are saved.</li>
-        </ol>
-      </div>
-    </details>
-
-    <details class="card helpAccordionCard" data-help-accordion data-help-key="home">
-      <summary class="helpAccordionSummary" id="help_jump_home"><span class="helpAccordionIcon" aria-hidden="true">🏠</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Home</b><span class="helpAccordionDesc">Latest trip and season snapshot.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
-      <div class="sep"></div>
-      <div class="muted helpSectionLead">
-        <div><b>Use it for:</b> quick status checks before or after a trip.</div>
-        <ul style="margin:8px 0 0 18px">
-          <li>On first run, Home points you to <b>New Trip</b>.</li>
-          <li>Totals and trend cards follow your selected range.</li>
-          <li>If stats look light, widen the range first.</li>
-        </ul>
-      </div>
-    </details>
-
-    <details class="card helpAccordionCard" data-help-accordion data-help-key="trips">
-      <summary class="helpAccordionSummary" id="help_jump_trips"><span class="helpAccordionIcon" aria-hidden="true">🗂️</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Trips</b><span class="helpAccordionDesc">Review saved trips and edit entries.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
-      <div class="sep"></div>
-      <div class="muted helpSectionLead">
-        <div><b>Use it for:</b> browsing and editing saved entries.</div>
-        <ul style="margin:8px 0 0 18px">
-          <li>Review saved trips from the card. Use <b>Edit Trip</b> when you need to change an entry.</li>
-          <li>Use filters to narrow by range, dealer, or area.</li>
-          <li>Duplicate warning on save means: check date/dealer/area before saving anyway.</li>
-        </ul>
-      </div>
-    </details>
-
-    <details class="card helpAccordionCard" data-help-accordion data-help-key="newtrip">
-      <summary class="helpAccordionSummary" id="help_jump_newtrip"><span class="helpAccordionIcon" aria-hidden="true">📝</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">New Trip</b><span class="helpAccordionDesc">Log pounds, pay, dealer, and area.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
-      <div class="sep"></div>
-      <div class="muted helpSectionLead">
-        <div><b>Use it for:</b> logging one harvest trip at a time.</div>
-        <ol style="margin:8px 0 0 18px">
-          <li>Set <b>Date</b>.</li>
-          <li>Enter <b>Pounds</b> and <b>Amount</b>.</li>
-          <li>Choose <b>Dealer</b> and <b>Area</b>.</li>
-          <li>Tap <b>Save Trip</b>.</li>
-        </ol>
-        <div style="margin-top:8px"><b>Tip:</b> chips fill in as you save more trips. Use list pickers first if chips are empty.</div>
-      </div>
-    </details>
-
-    <details class="card helpAccordionCard" data-help-accordion data-help-key="reports">
-      <summary class="helpAccordionSummary" id="help_jump_reports"><span class="helpAccordionIcon" aria-hidden="true">📈</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Insights</b><span class="helpAccordionDesc">Trend comparisons across saved trips.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
-      <div class="sep"></div>
-      <div class="muted helpSectionLead">
-        <div><b>Use it for:</b> date-range trends by dealer, area, and month.</div>
-        <ol style="margin:8px 0 0 18px">
-          <li>Insights start after your first trip and improve as you log more.</li>
-          <li>Pick a date window.</li>
-          <li>Add optional dealer/area filters, then switch between charts and table views.</li>
-        </ol>
-      </div>
-    </details>
-
-    <details class="card helpAccordionCard" data-help-accordion data-help-key="settings">
-      <summary class="helpAccordionSummary" id="help_jump_settings"><span class="helpAccordionIcon" aria-hidden="true">⚙️</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Settings</b><span class="helpAccordionDesc">Updates, install status, and lists.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
-      <div class="sep"></div>
-      <div class="muted helpSectionLead">
-        <div><b>Use it for:</b> quick actions and status checks.</div>
-        <ul style="margin:8px 0 0 18px">
-          <li><b>Updates:</b> Check current build and latest build status, then run <b>Reload latest build</b> or <b>Reset cache &amp; reload</b> when prompted.</li>
-          <li><b>Install App:</b> Browser mode and Installed mode are both valid. Installed mode is recommended for app-like use.</li>
-          <li><b>Backup &amp; Restore:</b> Create backup, restore backup, and rollback / undo last restore.</li>
-          <li><b>List Management:</b> maintain Dealers and Areas.</li>
-        </ul>
-      </div>
-    </details>
-
-    <details class="card helpAccordionCard" data-help-accordion data-help-key="backups">
-      <summary class="helpAccordionSummary" id="help_jump_backups"><span class="helpAccordionIcon" aria-hidden="true">💾</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Backup & Restore</b><span class="helpAccordionDesc">Protect and move your trip history.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
-      <div class="sep"></div>
-      <div class="muted helpSectionLead">
-        <div><b>Create backup</b></div>
-        <ol style="margin:8px 0 0 18px">
-          <li>Open Settings → <b>Backup & Restore</b>.</li>
-          <li>Tap <b>Create Backup</b>.</li>
-          <li>Keep one current copy and one older copy in iCloud Drive or Google Drive.</li>
-        </ol>
-        <div style="margin-top:8px"><b>Restore backup</b></div>
-        <ol style="margin:8px 0 0 18px">
-          <li>In Settings, tap <b>Restore Backup</b>.</li>
-          <li>Review preview details before confirming.</li>
-          <li>Choose <b>Merge</b> or <b>Replace</b>.</li>
-        </ol>
-        <div style="margin-top:8px"><b>Tip:</b> Before switching phones, browsers, or app modes, create backup first.</div>
-      </div>
-    </details>
-
-    <details class="card helpAccordionCard" data-help-accordion data-help-key="install">
-      <summary class="helpAccordionSummary" id="help_jump_install"><span class="helpAccordionIcon" aria-hidden="true">📲</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Install app</b><span class="helpAccordionDesc">Browser and installed mode steps.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
-      <div class="sep"></div>
-      <div class="muted helpSectionLead">
-        <div><b>Current mode:</b> ${escapeHtml(String(installModel?.statusPill || (isStandalone ? "Installed" : "Browser")))}</div>
-        <div style="margin-top:8px">${escapeHtml(String(installModel?.statusLine || "Bank the Catch can run in Browser mode or Installed mode. Both are valid. Installed mode is recommended for app-like use."))}</div>
-        <div style="margin-top:8px"><b>Storage note:</b> storage can differ by mode or device, so backup is the safe bridge when you switch.</div>
-        <div style="margin-top:8px">Settings shows quick mode + action status. This section has the full install steps.</div>
-        <div style="margin-top:8px"><b>iPhone/iPad Safari</b></div>
-        ${renderInstallStepCards([
-          { step: 1, icon: "safari", label: "Safari" },
-          { step: 2, icon: "share", label: "Share" },
-          { step: 3, icon: "addhome", label: "Add to Home Screen" },
-          { step: 4, icon: "add", label: "Add" }
-        ], "ios")}
-        <div class="muted small" style="margin-top:8px">Tap the Share button — the square with the arrow — then choose Add to Home Screen.</div>
-        <div style="margin-top:8px"><b>Android Chrome</b></div>
-        ${renderInstallStepCards([
-          { step: 1, icon: "chrome", label: "Chrome" },
-          { step: 2, icon: "menu", label: "Menu" },
-          { step: 3, icon: "install", label: "Install app" },
-          { step: 4, icon: "confirm", label: "Confirm" }
-        ], "android")}
-        <div class="muted small" style="margin-top:8px">Tap the Chrome Menu in the top-right, then choose Install app or Add to Home screen.</div>
-        <div style="margin-top:8px"><b>Tip:</b> After install: open Bank the Catch from your Home Screen app icon to switch into Installed mode.</div>
-        <div style="margin-top:8px"><b>Need help?</b> Email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</div>
-      </div>
-    </details>
-
-    <details class="card helpAccordionCard" data-help-accordion data-help-key="updates">
-      <summary class="helpAccordionSummary" id="help_jump_updates"><span class="helpAccordionIcon" aria-hidden="true">🛟</span><span class="helpAccordionSummaryBody"><b class="helpAccordionTitle">Updates & troubleshooting</b><span class="helpAccordionDesc">Reload, reset cache, and contact support.</span></span><span class="helpAccordionChevron" aria-hidden="true">⌄</span></summary>
-      <div class="sep"></div>
-      <div class="muted helpSectionLead">
-        <ul style="margin:0 0 0 18px">
-          <li>If the app looks stale, open <b>Settings</b> and run <b>Reload latest build</b>. If prompted, run <b>Reset cache &amp; reload</b>.</li>
-          <li>Use <b>Settings → Install App</b> for a quick mode check, then follow the install steps above when needed.</li>
-          <li>If things still seem off after updating, reopen the app, then check current build vs latest build status again.</li>
-          <li>For support, email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</li>
-        </ul>
+        <details class="helpHubRowWrap" data-help-accordion data-help-key="quickstart" role="listitem"><summary class="helpHubRow" id="help_jump_quickstart"><span class="helpHubRowIcon">🚀</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Quick start</span><span class="helpHubRowDesc">Fast first-run checklist</span></span><span class="helpHubRowChevron" aria-hidden="true">⌄</span></summary><div class="helpHubRowContent muted helpSectionLead"><div><b>Log one trip first.</b> Home updates right away, and Insights gets more useful after a few trips.</div><ol style="margin:8px 0 0 18px"><li><b>Save a trip</b> — enter pounds, pay, dealer, and area.</li><li><b>Check Home</b> — see your latest trip and season preview.</li><li><b>Use Insights</b> — compare trends after a few trips are saved.</li></ol></div></details>
+        <details class="helpHubRowWrap" data-help-accordion data-help-key="home" role="listitem"><summary class="helpHubRow" id="help_jump_home"><span class="helpHubRowIcon">🏠</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Home</span><span class="helpHubRowDesc">Latest trip and season snapshot</span></span><span class="helpHubRowChevron" aria-hidden="true">⌄</span></summary><div class="helpHubRowContent muted helpSectionLead"><div><b>Use it for:</b> quick status checks before or after a trip.</div><ul style="margin:8px 0 0 18px"><li>On first run, Home points you to <b>New Trip</b>.</li><li>Totals and trend cards follow your selected range.</li><li>If stats look light, widen the range first.</li></ul></div></details>
+        <details class="helpHubRowWrap" data-help-accordion data-help-key="trips" role="listitem"><summary class="helpHubRow" id="help_jump_trips"><span class="helpHubRowIcon">🗂️</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Trips</span><span class="helpHubRowDesc">Review saved trips and edit entries</span></span><span class="helpHubRowChevron" aria-hidden="true">⌄</span></summary><div class="helpHubRowContent muted helpSectionLead"><div><b>Use it for:</b> browsing and editing saved entries.</div><ul style="margin:8px 0 0 18px"><li>Review saved trips from the card. Use <b>Edit Trip</b> when you need to change an entry.</li><li>Use filters to narrow by range, dealer, or area.</li><li>Duplicate warning on save means: check date/dealer/area before saving anyway.</li></ul></div></details>
+        <details class="helpHubRowWrap" data-help-accordion data-help-key="reports" role="listitem"><summary class="helpHubRow" id="help_jump_reports"><span class="helpHubRowIcon">📈</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Insights</span><span class="helpHubRowDesc">Trend comparisons across saved trips</span></span><span class="helpHubRowChevron" aria-hidden="true">⌄</span></summary><div class="helpHubRowContent muted helpSectionLead"><div><b>Use it for:</b> date-range trends by dealer, area, and month.</div><ol style="margin:8px 0 0 18px"><li>Insights start after your first trip and improve as you log more.</li><li>Pick a date window.</li><li>Add optional dealer/area filters, then switch between charts and table views.</li></ol></div></details>
+        <details class="helpHubRowWrap" data-help-accordion data-help-key="newtrip" role="listitem"><summary class="helpHubRow" id="help_jump_newtrip"><span class="helpHubRowIcon">📝</span><span class="helpHubRowBody"><span class="helpHubRowLabel">New Trip</span><span class="helpHubRowDesc">Log pounds, pay, dealer, and area</span></span><span class="helpHubRowChevron" aria-hidden="true">⌄</span></summary><div class="helpHubRowContent muted helpSectionLead"><div><b>Use it for:</b> logging one harvest trip at a time.</div><ol style="margin:8px 0 0 18px"><li>Set <b>Date</b>.</li><li>Enter <b>Pounds</b> and <b>Amount</b>.</li><li>Choose <b>Dealer</b> and <b>Area</b>.</li><li>Tap <b>Save Trip</b>.</li></ol><div style="margin-top:8px"><b>Tip:</b> chips fill in as you save more trips. Use list pickers first if chips are empty.</div></div></details>
+        <details class="helpHubRowWrap" data-help-accordion data-help-key="settings" role="listitem"><summary class="helpHubRow" id="help_jump_settings"><span class="helpHubRowIcon">⚙️</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Settings</span><span class="helpHubRowDesc">Updates, install status, and lists</span></span><span class="helpHubRowChevron" aria-hidden="true">⌄</span></summary><div class="helpHubRowContent muted helpSectionLead"><div><b>Use it for:</b> quick actions and status checks.</div><ul style="margin:8px 0 0 18px"><li><b>Updates:</b> Check current build and latest build status, then run <b>Reload latest build</b> or <b>Reset cache &amp; reload</b> when prompted.</li><li><b>Install App:</b> Browser mode and Installed mode are both valid. Installed mode is recommended for app-like use.</li><li><b>Backup &amp; Restore:</b> Create backup, restore backup, and rollback / undo last restore.</li><li><b>List Management:</b> maintain Dealers and Areas.</li></ul></div></details>
+        <details class="helpHubRowWrap" data-help-accordion data-help-key="backups" role="listitem"><summary class="helpHubRow" id="help_jump_backups"><span class="helpHubRowIcon">💾</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Backup & Restore</span><span class="helpHubRowDesc">Protect and move your trip history</span></span><span class="helpHubRowChevron" aria-hidden="true">⌄</span></summary><div class="helpHubRowContent muted helpSectionLead"><div><b>Create backup</b></div><ol style="margin:8px 0 0 18px"><li>Open Settings → <b>Backup & Restore</b>.</li><li>Tap <b>Create Backup</b>.</li><li>Keep one current copy and one older copy in iCloud Drive or Google Drive.</li></ol><div style="margin-top:8px"><b>Restore backup</b></div><ol style="margin:8px 0 0 18px"><li>In Settings, tap <b>Restore Backup</b>.</li><li>Review preview details before confirming.</li><li>Choose <b>Merge</b> or <b>Replace</b>.</li></ol><div style="margin-top:8px"><b>Tip:</b> Before switching phones, browsers, or app modes, create backup first.</div></div></details>
+        <details class="helpHubRowWrap" data-help-accordion data-help-key="install" role="listitem"><summary class="helpHubRow" id="help_jump_install"><span class="helpHubRowIcon">📲</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Install app</span><span class="helpHubRowDesc">Browser and installed mode steps</span></span><span class="helpHubRowChevron" aria-hidden="true">⌄</span></summary><div class="helpHubRowContent muted helpSectionLead"><div><b>Current mode:</b> ${escapeHtml(String(installModel?.statusPill || (isStandalone ? "Installed" : "Browser")))}</div><div style="margin-top:8px">${escapeHtml(String(installModel?.statusLine || "Bank the Catch can run in Browser mode or Installed mode. Both are valid. Installed mode is recommended for app-like use."))}</div><div style="margin-top:8px"><b>Storage note:</b> storage can differ by mode or device, so backup is the safe bridge when you switch.</div><div style="margin-top:8px">Settings shows quick mode + action status. This section has the full install steps.</div><div style="margin-top:8px"><b>iPhone/iPad Safari</b></div>${renderInstallStepCards([{ step: 1, icon: "safari", label: "Safari" },{ step: 2, icon: "share", label: "Share" },{ step: 3, icon: "addhome", label: "Add to Home Screen" },{ step: 4, icon: "add", label: "Add" }], "ios")}<div class="muted small" style="margin-top:8px">Tap the Share button — the square with the arrow — then choose Add to Home Screen.</div><div style="margin-top:8px"><b>Android Chrome</b></div>${renderInstallStepCards([{ step: 1, icon: "chrome", label: "Chrome" },{ step: 2, icon: "menu", label: "Menu" },{ step: 3, icon: "install", label: "Install app" },{ step: 4, icon: "confirm", label: "Confirm" }], "android")}<div class="muted small" style="margin-top:8px">Tap the Chrome Menu in the top-right, then choose Install app or Add to Home screen.</div><div style="margin-top:8px"><b>Tip:</b> After install: open Bank the Catch from your Home Screen app icon to switch into Installed mode.</div><div style="margin-top:8px"><b>Need help?</b> Email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</div></div></details>
+        <details class="helpHubRowWrap" data-help-accordion data-help-key="updates" role="listitem"><summary class="helpHubRow" id="help_jump_updates"><span class="helpHubRowIcon">🛟</span><span class="helpHubRowBody"><span class="helpHubRowLabel">Updates & troubleshooting</span><span class="helpHubRowDesc">Reload, reset cache, and contact support</span></span><span class="helpHubRowChevron" aria-hidden="true">⌄</span></summary><div class="helpHubRowContent muted helpSectionLead"><ul style="margin:0 0 0 18px"><li>If the app looks stale, open <b>Settings</b> and run <b>Reload latest build</b>. If prompted, run <b>Reset cache &amp; reload</b>.</li><li>Use <b>Settings → Install App</b> for a quick mode check, then follow the install steps above when needed.</li><li>If things still seem off after updating, reopen the app, then check current build vs latest build status again.</li><li>For support, email <a class="settingsEmail" href="mailto:jmwlegacyllc@gmail.com">jmwlegacyllc@gmail.com</a>.</li></ul></div></details>
       </div>
     </div>
   `;
@@ -220,6 +76,6 @@ export function renderAboutViewHTML({ renderPageHeader, displayBuildVersion }) {
         <button class="btn" id="copyDebug">Copy support bundle</button>
         <button class="btn" id="feedback">Send Feedback</button>
       </div>
-    </details>
+    </div>
   `;
 }
