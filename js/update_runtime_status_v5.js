@@ -743,7 +743,7 @@ export function createUpdateRuntimeStatusSeam({
     applyUpdateAction({
       statusText: runtimeDiag?.requiredCoreCacheIncomplete ? "Core cache integrity needs attention" : "Up to date on this device",
       primaryLabel: "Reload latest build",
-      summaryLabel: runtimeDiag?.requiredCoreCacheIncomplete ? "Reset" : "Update",
+      summaryLabel: "Update",
       action: async ()=>{ await swCheckNow(); },
       inlineText: stableInlineText
     });
