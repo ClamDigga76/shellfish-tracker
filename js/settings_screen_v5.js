@@ -128,7 +128,7 @@ export function createSettingsScreenOrchestrator({
     ${renderPageHeader("settings")}
     <div class="settingsHealthStrip card" aria-label="Settings health summary">
       <div class="settingsHealthCell">
-        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("build")}</span>Build</div>
+        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("build")}</span>Version</div>
         <div class="settingsHealthValue" id="settingsHealthBuild">${displayBuildVersion}</div>
       </div>
       <div class="settingsHealthCell">
@@ -305,7 +305,7 @@ export function createSettingsScreenOrchestrator({
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
-            <div class="settingsRowTitle">Build</div>
+            <div class="settingsRowTitle">Version</div>
             <div class="muted small">Current build on this device.</div>
           </div>
           <span class="settingsValuePill">${displayBuildVersion}</span>
