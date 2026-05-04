@@ -319,9 +319,10 @@
 
 /* Settings grouped-list polish (P3) */
 .settingsGroupBlock{margin-bottom:10px}
-.settingsHealthStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:11px 12px;border:1px solid rgba(90,150,255,.22);border-radius:18px;background:linear-gradient(176deg,rgba(10,22,50,.94),rgba(6,14,34,.96));margin-top:0;margin-bottom:var(--card-stack-gap);box-shadow:0 10px 24px rgba(3,8,23,.42), inset 0 0 0 1px rgba(52,93,170,.17)}
-.settingsHealthCell{min-width:0;padding:2px 9px 2px 4px;position:relative}
-.settingsHealthCell + .settingsHealthCell::before{content:"";position:absolute;left:-4px;top:3px;bottom:3px;width:1px;background:linear-gradient(180deg,rgba(176,214,255,.08),rgba(161,204,255,.28),rgba(176,214,255,.08))}
+.settingsHealthStrip{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:11px 12px;border:1px solid rgba(90,150,255,.22);border-radius:18px;background:linear-gradient(176deg,rgba(10,22,50,.94),rgba(6,14,34,.96));margin-top:0;margin-bottom:var(--card-stack-gap);box-shadow:0 10px 24px rgba(3,8,23,.42), inset 0 0 0 1px rgba(52,93,170,.17);overflow:hidden}
+.settingsHealthStrip::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg, rgba(41,74,136,.58) 0%, rgba(13,29,64,.46) 100%);pointer-events:none;z-index:0}
+.settingsHealthCell{min-width:0;padding:2px 9px 2px 4px;position:relative;z-index:1}
+.settingsHealthCell + .settingsHealthCell::before{content:"";position:absolute;left:-4px;top:3px;bottom:3px;width:1px;background:linear-gradient(180deg,rgba(187,222,255,.1),rgba(176,214,255,.32),rgba(187,222,255,.1))}
 .settingsHealthLabel{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#aecbfd;font-weight:760}
 .settingsHealthIcon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;color:#c7deff;opacity:.95}
 .settingsHealthIcon svg{width:14px;height:14px;display:block}
