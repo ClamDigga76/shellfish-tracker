@@ -310,12 +310,12 @@ export function createHomeDashboardRenderer({
     const toBucketedMoneyPerTripLabel = (value) => toDynamicRangeLabel(value, {
       bucketSize: 50,
       formatter: (amount) => `$${formatGroupedHomeNumber(amount, { maximumFractionDigits: 0 })}`,
-      suffix: " / trip"
+      suffix: ""
     });
     const toBucketedPoundsPerTripLabel = (value) => toDynamicRangeLabel(value, {
       bucketSize: 20,
       formatter: (lbs) => formatGroupedHomeNumber(lbs, { maximumFractionDigits: 0 }),
-      suffix: " lbs / trip"
+      suffix: " lbs"
     });
     const avgAmountPerTripDisplay = isSeasonPreviewMode
       ? toBucketedMoneyPerTripLabel(avgAmountPerTrip)
@@ -522,13 +522,13 @@ export function createHomeDashboardRenderer({
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">TOP DEALER</div>
-              <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(isSeasonPreviewMode ? (strongestDealer ? "Full version preview" : "—") : (strongestDealer?.dealer || "—"))}</div>
-              <div class="reportsHeroMeta money">${isSeasonPreviewMode ? (strongestDealer ? "Full version shows dealer totals" : "No trips in range") : topDealerSupport}</div>
+              <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(isSeasonPreviewMode ? (strongestDealer ? "Full version" : "—") : (strongestDealer?.dealer || "—"))}</div>
+              <div class="reportsHeroMeta money">${isSeasonPreviewMode ? (strongestDealer ? "Dealer totals" : "No trips in range") : topDealerSupport}</div>
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">STRONGEST AREA</div>
-              <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? (strongestArea ? "Full version preview" : "—") : (strongestArea?.area || "—"))}</div>
-              <div class="reportsHeroMeta homeOverviewMetaPounds">${isSeasonPreviewMode ? (strongestArea ? "Full version shows area strength" : "No trips in range") : strongestAreaSupport}</div>
+              <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? (strongestArea ? "Full version" : "—") : (strongestArea?.area || "—"))}</div>
+              <div class="reportsHeroMeta homeOverviewMetaPounds">${isSeasonPreviewMode ? (strongestArea ? "Area strength" : "No trips in range") : strongestAreaSupport}</div>
             </div>
           </div>
         </section>
