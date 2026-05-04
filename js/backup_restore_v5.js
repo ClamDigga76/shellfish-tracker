@@ -580,6 +580,16 @@ export function createBackupRestoreSubsystem(deps){
     return `${day} ${hh}:${mm}`;
   }
 
+  function __formatRestorePreviewDateLine(iso){
+    const s = String(iso || "").trim();
+    if(!s) return "Backup date unavailable";
+    const d = new Date(s);
+    if(isNaN(d.getTime())) return "Backup date unavailable";
+    const dateLabel = d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+    const timeLabel = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    return `Backup from ${dateLabel} at ${timeLabel}`;
+  }
+
   function __pluralize(count, singular, plural=`${singular}s`){
     const n = Number(count) || 0;
     return `${n} ${n === 1 ? singular : plural}`;
@@ -659,6 +669,7 @@ export function createBackupRestoreSubsystem(deps){
             <div class="restorePreviewTopSummary">
               <div class="restorePreviewTopTitle">Backup ready to restore</div>
               <div class="restorePreviewTopCount">${escapeHtml(String(counts.trips || 0))} trips found</div>
+              <div class="restorePreviewTopDate">${escapeHtml(__formatRestorePreviewDateLine(preview?.metadata?.exportedAt))}</div>
             </div>
             ${warningHtml}
             <section class="restorePreviewCard" aria-label="Backup contents">
