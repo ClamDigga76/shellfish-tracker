@@ -263,6 +263,16 @@ export function createHomeDashboardRenderer({
       if (!Number.isFinite(numeric)) return "0 lbs";
       return `${formatGroupedHomeNumber(numeric, { maximumFractionDigits })} lbs`;
     };
+    const formatHomeCompactK = (value) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return "0";
+      const absolute = Math.abs(numeric);
+      if (absolute < 1000) return formatGroupedHomeNumber(numeric, { maximumFractionDigits: 0 });
+      const compact = numeric / 1000;
+      const roundedTenth = Math.round(compact * 10) / 10;
+      const hasFraction = Math.abs(roundedTenth % 1) > 0.00001;
+      return `${formatGroupedHomeNumber(roundedTenth, { maximumFractionDigits: hasFraction ? 1 : 0 })}k`;
+    };
 
     const f = String((state.homeFilter && state.homeFilter.mode) || "SEASON_PREVIEW").toUpperCase();
     const lbsVal = round2(totalLbs);
@@ -290,7 +300,9 @@ export function createHomeDashboardRenderer({
         { min: 25000, max: null, size: 15000, anchor: 25000 }
       ]);
       if (!range) return "—";
-      return `${formatGroupedHomeNumber(range.lower, { maximumFractionDigits: 0 })}–${formatGroupedHomeNumber(range.upper, { maximumFractionDigits: 0 })} lbs`;
+      const guardedLower = range.lower >= 25000 ? Math.max(25000, Math.floor(Number(value) / 15000) * 15000) : range.lower;
+      const guardedUpper = range.lower >= 25000 ? guardedLower + 15000 : range.upper;
+      return `${formatHomeCompactK(guardedLower)}–${formatHomeCompactK(guardedUpper)} lbs`;
     };
     const toMoneyBandLabel = (value) => {
       const range = toSteppedRange(value, [
@@ -301,13 +313,14 @@ export function createHomeDashboardRenderer({
         { min: 50000, max: null, size: 25000, anchor: 50000 }
       ]);
       if (!range) return "—";
-      return `$${formatGroupedHomeNumber(range.lower, { maximumFractionDigits: 0 })}–$${formatGroupedHomeNumber(range.upper, { maximumFractionDigits: 0 })}`;
+      return `$${formatHomeCompactK(range.lower)}–$${formatHomeCompactK(range.upper)}`;
     };
     const toAvgPplBandLabel = (value) => {
       const numeric = Number(value);
       if (!(numeric > 0)) return "—";
-      const dollarBand = Math.floor(numeric);
-      const cents = Math.floor((Math.round(numeric * 100) % 100 + 100) % 100);
+      const totalCents = Math.round(numeric * 100);
+      const dollarBand = Math.floor(totalCents / 100);
+      const cents = ((totalCents % 100) + 100) % 100;
       const tier = cents <= 24 ? "Low" : (cents <= 74 ? "Mid" : "High");
       return `${tier} $${dollarBand}/lb range`;
     };
@@ -329,7 +342,7 @@ export function createHomeDashboardRenderer({
         { min: 3000, max: null, size: 1000, anchor: 3000 }
       ]);
       if (!range) return "—";
-      return `$${formatGroupedHomeNumber(range.lower, { maximumFractionDigits: 0 })}–$${formatGroupedHomeNumber(range.upper, { maximumFractionDigits: 0 })}`;
+      return `$${formatHomeCompactK(range.lower)}–$${formatHomeCompactK(range.upper)}`;
     };
     const toBucketedPoundsPerTripLabel = (value) => {
       const range = toSteppedRange(value, [
@@ -338,7 +351,9 @@ export function createHomeDashboardRenderer({
         { min: 300, max: null, size: 100, anchor: 300 }
       ]);
       if (!range) return "—";
-      return `${formatGroupedHomeNumber(range.lower, { maximumFractionDigits: 0 })}–${formatGroupedHomeNumber(range.upper, { maximumFractionDigits: 0 })} lbs`;
+      const guardedLower = range.lower >= 25000 ? Math.max(25000, Math.floor(Number(value) / 15000) * 15000) : range.lower;
+      const guardedUpper = range.lower >= 25000 ? guardedLower + 15000 : range.upper;
+      return `${formatHomeCompactK(guardedLower)}–${formatHomeCompactK(guardedUpper)} lbs`;
     };
     const avgAmountPerTripDisplay = isSeasonPreviewMode
       ? toBucketedMoneyPerTripLabel(avgAmountPerTrip)
