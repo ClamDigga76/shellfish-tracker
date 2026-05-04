@@ -304,10 +304,22 @@
 .helpHubNav .chip{width:100%;justify-content:center}
 .helpSectionTitle{font-size:1.03rem;font-weight:840;letter-spacing:.01em}
 .helpSectionLead{line-height:1.5;font-size:.95rem}
+.installStepCards{margin-top:8px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.installStepCard{min-width:0;display:grid;gap:6px;justify-items:center;text-align:center;padding:9px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.installStepBadge{font-size:10px;font-weight:840;line-height:1;color:var(--text-muted-strong);padding:2px 7px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.installStepGlyph{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;border:1px solid rgba(140,178,255,.28);background:rgba(34,72,144,.2);color:#dce8ff}
+.installStepGlyph svg{width:22px;height:22px;display:block;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.installStepGlyph svg circle,.installStepGlyph svg rect{vector-effect:non-scaling-stroke}
+.installStepGlyph svg circle[fill],.installStepGlyph svg rect[fill]{fill:currentColor}
+.installStepLabel{font-size:11px;line-height:1.28;font-weight:730;color:var(--text-muted-strong);overflow-wrap:anywhere}
 
 @media (max-width:380px){
   .helpHubNav{grid-template-columns:1fr}
   .emptyStateAction .btn,.statusSurfaceActions .btn{min-width:0}
+}
+
+@media (max-width:640px){
+  .installStepCards{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
 @media (max-width:380px){
