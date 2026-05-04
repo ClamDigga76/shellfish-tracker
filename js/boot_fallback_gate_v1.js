@@ -5,6 +5,8 @@
   const fallbackVisibilityAttr = "data-boot-fallback";
   const bootStateAttr = "data-boot-state";
   let startupSettled = false;
+  let revealTimerId = 0;
+  const FALLBACK_REVEAL_DELAY_MS = 1300;
 
   function getFallbackEl() {
     return doc.getElementById(bootFallbackId);
@@ -29,11 +31,27 @@
   function settleStartupSuccess() {
     if (startupSettled) return;
     startupSettled = true;
+    if (revealTimerId) {
+      window.clearTimeout(revealTimerId);
+      revealTimerId = 0;
+    }
     setFallbackHidden();
   }
 
-  setFallbackVisible();
-  if (startupHasCompleted()) settleStartupSuccess();
+  function revealFallbackForDelayedStartup() {
+    if (startupSettled || startupHasCompleted()) {
+      settleStartupSuccess();
+      return;
+    }
+    setFallbackVisible();
+  }
+
+  setFallbackHidden();
+  if (startupHasCompleted()) {
+    settleStartupSuccess();
+  } else {
+    revealTimerId = window.setTimeout(revealFallbackForDelayedStartup, FALLBACK_REVEAL_DELAY_MS);
+  }
 
   window.addEventListener("shellfish-app-started", settleStartupSuccess, { once: true });
 })();
