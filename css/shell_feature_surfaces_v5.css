@@ -537,13 +537,11 @@
   color:var(--text-muted-strong);
 }
 .homeScreenShell .homeOverviewCard{
-  padding:16px 16px 15px;
-  border-radius:18px;
-  border:1px solid rgba(123,180,255,.28);
-  background:
-    radial-gradient(120% 90% at 6% 0%, rgba(78,139,255,.24) 0%, rgba(78,139,255,0) 58%),
-    linear-gradient(180deg, rgba(24,37,64,.92) 0%, rgba(13,21,37,.9) 62%, rgba(9,15,27,.9) 100%);
-  box-shadow:0 14px 30px rgba(1,7,22,.4), inset 0 1px 0 rgba(205,225,255,.08);
+  padding:2px 0 0;
+  border-radius:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
   margin-bottom:0;
 }
 .homeScreenShell .homeLastTripShell{
@@ -806,8 +804,8 @@
   align-items:center;
   justify-content:space-between;
   flex-wrap:wrap;
-  gap:10px;
-  margin-bottom:10px;
+  gap:8px;
+  margin:0 2px 7px;
 }
 .homeOverviewScopePill{
   font-size:11px;
@@ -823,10 +821,13 @@
 .homeOverviewGrid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  border:1px solid rgba(130,168,230,.16);
-  border-radius:12px;
+  border:1px solid rgba(126,188,255,.34);
+  border-radius:16px;
   overflow:hidden;
-  background:linear-gradient(180deg, rgba(16,29,53,.2) 0%, rgba(12,21,39,.24) 100%);
+  background:
+    radial-gradient(125% 88% at 9% 0%, rgba(77,138,255,.2) 0%, rgba(77,138,255,0) 56%),
+    linear-gradient(180deg, rgba(22,34,60,.92) 0%, rgba(12,21,40,.94) 62%, rgba(8,14,27,.95) 100%);
+  box-shadow:0 14px 30px rgba(1,7,22,.4), inset 0 1px 0 rgba(205,225,255,.08);
 }
 .homeOverviewStat{
   min-width:0;
