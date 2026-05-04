@@ -2,11 +2,8 @@
   const doc = document;
   const root = doc.documentElement;
   const bootFallbackId = "bootFallback";
-  const revealDelayMs = 2000;
   const fallbackVisibilityAttr = "data-boot-fallback";
   const bootStateAttr = "data-boot-state";
-  let revealTimer = null;
-  let revealTimerStarted = false;
   let startupSettled = false;
 
   function getFallbackEl() {
@@ -32,39 +29,11 @@
   function settleStartupSuccess() {
     if (startupSettled) return;
     startupSettled = true;
-    if (revealTimer !== null) {
-      clearTimeout(revealTimer);
-      revealTimer = null;
-    }
     setFallbackHidden();
   }
 
-  function maybeRevealFallback() {
-    if (startupSettled) return;
-    if (startupHasCompleted()) {
-      settleStartupSuccess();
-      return;
-    }
-    setFallbackVisible();
-  }
-
-  function startRevealTimer() {
-    if (revealTimerStarted || startupSettled) return;
-    revealTimerStarted = true;
-    if (startupHasCompleted()) {
-      settleStartupSuccess();
-      return;
-    }
-    revealTimer = window.setTimeout(maybeRevealFallback, revealDelayMs);
-  }
-
-  setFallbackHidden();
+  setFallbackVisible();
   if (startupHasCompleted()) settleStartupSuccess();
 
   window.addEventListener("shellfish-app-started", settleStartupSuccess, { once: true });
-  if (doc.readyState === "loading") {
-    doc.addEventListener("DOMContentLoaded", startRevealTimer, { once: true });
-  } else {
-    startRevealTimer();
-  }
 })();
