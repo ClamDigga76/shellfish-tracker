@@ -473,6 +473,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     });
 
     document.getElementById("settingsHelpNav").onclick = () => {
+      state.helpJump = "settings";
       pushView(state, "help");
     };
 
