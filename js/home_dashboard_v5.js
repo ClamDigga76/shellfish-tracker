@@ -495,9 +495,7 @@ export function createHomeDashboardRenderer({
       customRangeLabel: "Custom Range"
     });
     const homeOverviewRangeLabel = homeFilterLabel;
-    const homeSeasonPreviewBoundaryNote = isSeasonPreviewMode
-      ? "Season Preview gives a free read on your year so far. Full Insights unlocks exact totals, dealer comparisons, area strength, and deeper charts."
-      : "";
+    const homeSeasonPreviewBoundaryNote = "";
     const lastTripHeaderActionHtml = hasEditableLatestTrip
       ? ``
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
