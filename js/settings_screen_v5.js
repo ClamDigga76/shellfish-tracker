@@ -146,7 +146,7 @@ export function createSettingsScreenOrchestrator({
     </div>
 
     <div class="settingsGroupBlock">
-      <button class="card settingsSectionCard settingsGroupedCard settingsNavCard" id="settingsHelpNav" type="button">
+      <button class="card settingsSectionCard settingsGroupedCard settingsNavCard settingsAccordionSummary" id="settingsHelpNav" type="button">
         <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("support")}</span>
         <div class="settingsAccordionMeta">
           <div class="settingsGroupLabel">Help</div>
@@ -473,7 +473,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     });
 
     document.getElementById("settingsHelpNav").onclick = () => {
-      state.helpJump = "settings";
+      state.helpJump = "";
       pushView(state, "help");
     };
 
