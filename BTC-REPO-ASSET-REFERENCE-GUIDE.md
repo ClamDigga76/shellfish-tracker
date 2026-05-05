@@ -197,7 +197,7 @@ If `npm run smoke` is unavailable, report that clearly and run the nearest stabl
 
 Keep `BANK-THE-CATCH-REPO-ASSET-REFERENCE-PACK.zip` uploaded as a project source/reference file.
 
-Keep this guide with the Vibe Coder 5.0 project files as an optional Bank the Catch resource guide.
+Keep this guide with the Vibe Coder 5.1 project files as an optional Bank the Catch resource guide.
 
 Do not merge the image zip into the Vibe Coder core markdown pack.
 

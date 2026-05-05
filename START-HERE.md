@@ -1,7 +1,7 @@
-# START-HERE.md — Vibe Coder 5.0 Router-First Core
+# START-HERE.md — Vibe Coder 5.1 Router-First Core
 
 ## Purpose
-This file is the complete quick map for the router-first Vibe Coder 5.0 pack.
+This file is the complete quick map for the router-first Vibe Coder 5.1 pack.
 
 Use it to find the right helper file fast.
 Do not treat this file as stronger than `AGENTS.md`.
@@ -14,7 +14,7 @@ For normal work, use this order:
 3. the specific helper file for the task
 
 ## Active core file index
-These are the generic Vibe Coder 5.0 operating files.
+These are the generic Vibe Coder 5.1 operating files.
 
 | File | Role |
 |---|---|
@@ -30,7 +30,7 @@ These are the generic Vibe Coder 5.0 operating files.
 | `testing-checklist.md` | Verification loop and hierarchy checks |
 | `CODEX-IMAGE-PACK-HANDOFF-RULE.md` | Visual reference / Codex image pack workflow |
 | `ACCEPTANCE-CHECKS-VS-MANUAL-QA-RULE.md` | Separates Codex acceptance checks from Jeremy manual QA |
-| `CODEX-PR-PUSH-WORKFLOW.md` | Preferred GitHub-connected flow where Codex attempts push/PR creation when available and Jeremy merges |
+| `CODEX-PR-PUSH-WORKFLOW.md` | Explicit PR workflow, Codex Cloud vs App/local split, PR success standard, and Jeremy-only merge authority |
 | `PATCH-SAFETY-STACK.md` | Quiet safety stack for meaningful Pull Sheets, Codex prompts, audits, and visual patches |
 | `DECISION-LOCK-LEDGER.md` | Locked/active/watch/deprecated/avoid decision ledger for drift control |
 
@@ -57,7 +57,7 @@ Pack notes are delivery/install documentation, not operating rules.
 
 | File | Role |
 |---|---|
-| `_pack-notes/VIBE-CODER-5.0-PACK-NOTES.md` | Pack summary, install notes, and repo update checklist |
+| `_pack-notes/VIBE-CODER-5.1-PACK-NOTES.md` | Pack summary, install notes, and repo update checklist |
 
 ## Official commands
 Command behavior is defined by `AGENTS.md`.
@@ -84,12 +84,12 @@ Quick reference:
 - verification and hierarchy check → `testing-checklist.md`
 - screenshot, mockup, crop, or Codex image pack work → `CODEX-IMAGE-PACK-HANDOFF-RULE.md`
 - Codex acceptance checks vs Jeremy device/manual QA → `ACCEPTANCE-CHECKS-VS-MANUAL-QA-RULE.md`
-- GitHub-connected patch work / Codex PR-ready flow → `CODEX-PR-PUSH-WORKFLOW.md`
+- explicit PR creation, PR review, or Codex Cloud vs App/local PR behavior → `CODEX-PR-PUSH-WORKFLOW.md`
 - patch safety header, risk meter, smallest safe path, Codex patch contract, or repo-truth labels → `PATCH-SAFETY-STACK.md`
 - locked/active/watch/deprecated decisions or drift protection → `DECISION-LOCK-LEDGER.md`
 - Bank the Catch Home / Trips / Insights / YTD / free-paid strategy → `BANK-THE-CATCH-YTD-PAID-STRATEGY.md` wherever it is installed
 - Bank the Catch repo image/brand asset selection or available-asset review → `BTC-REPO-ASSET-REFERENCE-GUIDE.md` when installed
-- pack install/update notes → `_pack-notes/VIBE-CODER-5.0-PACK-NOTES.md`
+- pack install/update notes → `_pack-notes/VIBE-CODER-5.1-PACK-NOTES.md`
 
 ## Router-first note
 This installed pack keeps the existing helper seams intact while adding a first-step router for task lane selection.

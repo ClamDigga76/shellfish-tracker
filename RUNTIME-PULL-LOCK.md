@@ -1,4 +1,4 @@
-# RUNTIME-PULL-LOCK.md — Runtime Re-sync / Live-lock Guardrails (Vibe Coder 5.0 Router-First Core)
+# RUNTIME-PULL-LOCK.md — Runtime Re-sync / Live-lock Guardrails (Vibe Coder 5.1 Router-First Core)
 
 ## Purpose
 This helper file isolates runtime-facing re-sync and anti-drift guardrails.
@@ -40,7 +40,7 @@ For runtime-facing patches, the pre-edit anchor is a **report-and-proceed** step
 - exact intended touched files
 - whether remote `main` verification was attempted and whether it was verified or unavailable locally
 
-Use latest remote `main` as the intended base. If remote `main` cannot be verified locally, report it as a **Push/PR setup limitation**, not repo truth, and proceed only from the safest available base.
+Use latest remote `main` as the intended base when the execution surface can verify it safely. For Codex Cloud / Web, do not require persistent `origin` after setup as proof of readiness. For Codex App / Local / Worktree, if remote `main` cannot be verified locally, report it as a **Push/PR setup limitation**, not repo truth, and proceed only from the safest available base.
 
 After reporting the pre-edit anchor, Codex must proceed directly with the scoped patch.
 
@@ -48,16 +48,16 @@ The pre-edit anchor is not an approval gate. It must end with proceeding-directl
 
 Use wording like:
 
-> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, attempt push and PR creation if available, and report any Push/PR setup limitation with the exact next manual step for Jeremy.
+> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, and follow the selected PR Mode. I will create/open a PR only if Jeremy explicitly requested PR creation or the active workflow requires it.
 
 Do not end the anchor with “If you want…”, “Should I proceed?”, “I can now…”, “I’ll now execute…”, or similar approval-gate language.
 
-A local-only remote/main limitation is not a blocker by itself. It should be reported as a **Push/PR setup limitation**, not treated as repo truth.
+A local-only remote/main limitation is not a blocker by itself. In Codex App / Local / Worktree lanes, report it as a **Push/PR setup limitation**, not repo truth. In Codex Cloud / Web lanes, missing persistent `origin` after setup is not by itself proof of a Push/PR setup limitation.
 
 
 ## Push/PR setup limitation reporting
 
-If origin, remote-main verification, push, or PR creation is unavailable, report it as a **Push/PR setup limitation**, not as repo truth.
+For Codex App / Local / Worktree lanes, if origin, remote-main verification, push, or PR creation is unavailable when relevant, report it as a **Push/PR setup limitation**, not as repo truth.
 
 Use preferred wording like:
 

@@ -1,4 +1,4 @@
-# testing-checklist.md — Vibe Coder 5.0 Router-First Core
+# testing-checklist.md — Vibe Coder 5.1 Router-First Core
 
 ## Purpose
 This is the default post-patch verification loop.

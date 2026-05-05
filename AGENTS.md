@@ -1,4 +1,4 @@
-# AGENTS.md — Vibe Coder 5.0 Router-First Core
+# AGENTS.md — Vibe Coder 5.1 Router-First Core
 
 This project uses a one-change-at-a-time workflow for Vibe Coder-guided build, patch, audit, and rescue work.
 
@@ -17,12 +17,12 @@ If instructions conflict, use this order:
 2. this `AGENTS.md`
 3. project helper docs
 
-## Vibe Coder 5.0 router-first identity
+## Vibe Coder 5.1 router-first identity
 This pack keeps the one-change-at-a-time workflow while adding router-first task classification and clearer helper-file routing.
 
 The router helps choose the right lane. It does not replace this file.
 
-This 5.0 pack stays compatible with the repo's existing markdown helper seams while adding quiet safety layers:
+This 5.1 pack stays compatible with the repo's existing markdown helper seams while adding quiet safety layers:
 
 - a locked compact command layer
 - a Jeremy response layer
@@ -42,7 +42,7 @@ When the task lane, output shape, or helper-file choice is unclear, use `VIBE-CO
 
 Optional project overlays, such as Bank the Catch strategy files, apply only when intentionally installed for that project.
 
-When GitHub is connected and normal patch work should move toward a pull request, use `CODEX-PR-PUSH-WORKFLOW.md` as the helper for Codex branch, commit, attempted push, PR creation, fallback reporting, and Jeremy-only merge authority. Codex may not claim a push or PR succeeded unless it confirms the result. If origin, remote-main verification, push, or PR creation is unavailable, label it as a **Push/PR setup limitation**, not repo truth.
+Codex PR creation is explicit, not automatic. Use `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy asks for PR creation, when a PR is being reviewed, or when the active workflow requires a PR. Codex may not claim a PR exists unless a real GitHub PR URL or PR number is confirmed. Distinguish Codex Cloud / Web from Codex App / Desktop / Local / Worktree before applying remote/push assumptions.
 
 For meaningful patches, use `PATCH-SAFETY-STACK.md` and `DECISION-LOCK-LEDGER.md` as quiet safety helpers when relevant. Do not make Jeremy manage new commands for the safety stack.
 
@@ -340,12 +340,14 @@ Before reporting branch or remote limitations, distinguish **repo truth** from *
 ### Repo truth
 - The GitHub remote is the source of truth for default branch and branch existence.
 - Do not say the repo has no `main` branch unless the remote repo itself confirms that.
-- Use latest remote `main` as the intended base. If remote `main` cannot be verified locally, report it as a **Push/PR setup limitation**, not repo truth, and proceed only from the safest available base.
+- Distinguish Codex Cloud / Web from Codex App / Desktop / Local / Worktree before applying Git remote assumptions.
+- For Codex Cloud / Web, do not treat missing persistent local `origin` after setup as proof of repo failure or PR unavailability.
+- For Codex App / Desktop / Local / Worktree, use latest remote `main` as the intended base when it can be verified safely. If remote `main` cannot be verified locally, report it as a **Push/PR setup limitation**, not repo truth, and proceed only from the safest available base.
 
 Pre-edit anchors are not approval gates unless Jeremy explicitly asks for an approval checkpoint. After reporting one, proceed directly with the scoped patch unless there is a real blocker; do not end with “If you want…” or similar confirmation language.
 
 ### Local worktree limitations
-If the current local worktree does not have a usable `origin` remote, does not have a local `main`, cannot fetch `origin/main`, cannot push, or cannot open a PR, report that as a **Push/PR setup limitation**, not repo truth.
+For Codex App / Desktop / Local / Worktree lanes, if the current local worktree does not have a usable `origin` remote, does not have a local `main`, cannot fetch `origin/main`, cannot push, or cannot open a PR when that remote step was requested/required, report that as a **Push/PR setup limitation**, not repo truth.
 
 Use wording like:
 - `Push/PR setup limitation: the local worktree does not have a usable origin remote.`

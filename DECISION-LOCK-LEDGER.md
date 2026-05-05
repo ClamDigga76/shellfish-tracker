@@ -1,4 +1,4 @@
-# DECISION-LOCK-LEDGER.md — Vibe Coder 5.0
+# DECISION-LOCK-LEDGER.md — Vibe Coder 5.1
 
 ## Purpose
 
@@ -32,7 +32,7 @@ If Jeremy explicitly changes a decision, update the ledger status instead of arg
 
 ---
 
-## Generic Vibe Coder 5.0 Decisions
+## Generic Vibe Coder 5.1 Decisions
 
 | Decision | Status | Applies To | Why It Matters |
 |---|---|---|---|
@@ -44,9 +44,9 @@ If Jeremy explicitly changes a decision, update the ledger status instead of arg
 | Separate Repo Truth from Approved Plan | Locked | Pull Sheets / audits | Prevents planned decisions from being treated as already coded |
 | Use Acceptance checks inside Codex prompts | Locked | Codex prompts | Gives Codex pass/fail completion criteria |
 | Use Manual QA for Jeremy outside Codex prompts | Locked | Post-patch/user checks | Keeps human device/browser checks separate |
-| Codex may attempt to push/open PRs when available, but Jeremy merges | Locked | GitHub / Codex workflow | Speeds work while preserving final merge control and avoiding false PR claims |
+| Codex PR creation is explicit, not automatic; Jeremy merges | Locked | GitHub / Codex workflow | Preserves final merge control, prevents false PR claims, and avoids auto-PR drift |
 | Visual references require role-based handling | Locked | Visual patches | Prevents screenshots from causing unrelated redesigns |
-| Do not add Launch Readiness Board to active 5.0 workflow | Locked | 5.0 scope | Keeps 5.0 low-intrusion |
+| Do not add Launch Readiness Board to active 5.1 workflow | Locked | 5.1 scope | Keeps 5.1 low-intrusion |
 
 ---
 
@@ -84,7 +84,7 @@ Example:
 
 ```text
 Locked Decisions Applied:
-- Codex may attempt to push/open a PR when available, but Jeremy merges.
+- Codex may create/open a PR only when Jeremy explicitly asks or the active workflow requires it, and Jeremy merges.
 - Use Smallest Safe Patch.
 - Do not treat planned direction as current repo truth.
 ```

@@ -1,4 +1,4 @@
-# STATE-SNAPSHOT.md — Vibe Coder 5.0 Router-First Core
+# STATE-SNAPSHOT.md — Vibe Coder 5.1 Router-First Core
 
 ## Purpose
 This file defines the compact current-state snapshot for handoff and resumption.

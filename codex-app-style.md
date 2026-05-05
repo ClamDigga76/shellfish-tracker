@@ -1,4 +1,4 @@
-# codex-app-style.md — Vibe Coder 5.0 Router-First Core
+# codex-app-style.md — Vibe Coder 5.1 Router-First Core
 
 ## Purpose
 This file defines the **desktop app / local / worktree** patch style.
@@ -17,6 +17,8 @@ Use the smallest clear label that fits:
 - `Codex Local`
 - `Codex Worktree`
 - `GitHub PR review`
+- `PR requested by Jeremy`
+- `PR required by active workflow`
 
 Do not add ceremony when the execution surface is already obvious.
 
@@ -31,40 +33,24 @@ Use this pattern:
 6. run the relevant repo checks
 7. review in the app diff / review flow
 8. stage, revert, and commit in-app or locally when useful
-9. when GitHub is connected and the patch should become a PR, use `CODEX-PR-PUSH-WORKFLOW.md` so Codex can attempt to push the branch and open a PR for Jeremy review when available
+9. when Jeremy explicitly requests PR creation or the active workflow requires a PR, use `CODEX-PR-PUSH-WORKFLOW.md`; do not make PR creation automatic for every local/worktree patch
 10. verify after PR review, merge, or handoff
 
 
-## Codex PR push workflow
-When GitHub is connected and normal patch work should move toward a pull request, use `CODEX-PR-PUSH-WORKFLOW.md`.
+## Codex App / Local / Worktree PR behavior
+This file applies to Codex App, desktop, local, and worktree workflows.
 
-Codex may prepare, commit, attempt to push, and open pull requests when available.
+In this lane, normal Git concepts such as `origin`, branch, commit, push, and manual PR steps may apply.
 
-Codex may not merge pull requests.
+Codex PR creation is explicit, not automatic. Use `CODEX-PR-PUSH-WORKFLOW.md` only when Jeremy explicitly asks for PR creation or the active workflow requires a PR.
 
-Jeremy remains the final reviewer and merge authority. If origin, remote-main verification, push, or PR creation is unavailable, Codex should report it as a **Push/PR setup limitation** and include the branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and the exact next manual step for Jeremy.
+When PR creation is requested/required, Codex may prepare, commit, push, and open a PR only if the local/worktree setup supports it.
 
-## Prompt shape
-Desktop/app prompts still follow the same patch slice structure:
+If push or PR creation is unavailable, report it as a **Push/PR setup limitation** and provide Jeremy’s exact next manual step.
 
-1. Goal
-2. Now → Change → Better
-3. Repro (if this is a bug, regression, or visible trust seam)
-4. Done when
-5. Not in this patch
-6. Likely files / surfaces
-7. Execution surface recommendation
-8. Codex Task Prompt
-   - include **Suggested commit message** inside the task prompt
-   - include **Acceptance checks** inside the task prompt when needed
-9. Manual QA for Jeremy, outside the Codex Task Prompt when needed
-10. Real-World / In-App Explanation Layer from `AGENTS.md` when useful
-    - In real app use
-    - What the user will notice
-    - What stays the same
-    - Why this matters
-11. Changelog
-12. Rollback rope
+Do not apply Codex Cloud-specific assumptions here. Codex Cloud / Web may use a different connected-repo PR creation flow and should not be forced to prove readiness through persistent local `origin` state after setup.
+
+Codex may not merge pull requests. Jeremy remains the final reviewer and merge authority.
 
 ## Real-World / In-App Explanation Layer
 For technical, runtime-facing, visual, or user-facing patches, include this layer near the end of the Pull Sheet, after Manual QA for Jeremy and before Changelog / Rollback rope.

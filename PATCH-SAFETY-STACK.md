@@ -1,4 +1,4 @@
-# PATCH-SAFETY-STACK.md — Vibe Coder 5.0
+# PATCH-SAFETY-STACK.md — Vibe Coder 5.1
 
 ## Purpose
 
@@ -25,7 +25,7 @@ Warn Jeremy about risk.
 Respect locked decisions.
 Separate repo truth from plans.
 Use visuals correctly when visual references are present.
-Let Codex attempt to push/open PRs when appropriate and available, but Jeremy merges.
+Keep PR creation explicit, not automatic; Jeremy remains final reviewer and merge authority.
 
 ---
 
@@ -62,7 +62,9 @@ Recommended fields:
 | Repo Truth vs Plan | What is real now vs planned/targeted |
 | Locked Decisions Applied | Relevant decisions from `DECISION-LOCK-LEDGER.md` |
 | Do Not Touch | Files, systems, or behaviors Codex should avoid |
-| Codex PR Route | Whether Codex should attempt push/PR creation, what Push/PR setup limitation fallback applies, and that Jeremy merges |
+| Codex Surface | Codex Cloud / Web OR Codex App / Desktop / Local / Worktree when PR behavior matters |
+| PR Mode | No PR requested / PR requested by Jeremy / PR required by active workflow / PR unavailable |
+| Codex PR Route | Whether PR creation is requested/required, what Push/PR setup limitation fallback applies, and that Jeremy merges |
 
 Keep this compact. Do not turn the safety header into a second Pull Sheet.
 
@@ -139,7 +141,7 @@ Use the contract fields that fit the patch:
 | Do Not Touch | Specific files, systems, or behaviors to avoid |
 | Pre-edit anchor | If required, report the anchor and proceed directly; the anchor is not an approval gate |
 | Acceptance checks | Pass/fail checks Codex should verify or protect |
-| PR Rule | Codex may attempt to push/open a PR when available; Jeremy merges |
+| PR Rule | PR creation is explicit, not automatic; Jeremy merges |
 
 Example wording:
 
@@ -156,7 +158,7 @@ Pre-edit anchor, when required:
 Report the pre-edit anchor, then proceed directly with the scoped patch. The anchor is not an approval gate. Do not end with “If you want…”, “Should I proceed?”, “I can now…”, or similar confirmation language.
 
 PR Route:
-Codex may create a branch, commit, attempt to push/open a PR when available, and leave summary/test notes. If origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation and include branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and exact next manual step for Jeremy. Jeremy reviews and merges.
+State Codex Surface and PR Mode. Codex may create/open a PR only when Jeremy explicitly requests PR creation or the active workflow requires it. Do not claim PR success unless a real GitHub PR URL or PR number is confirmed. For Codex Cloud / Web, use the connected-repository PR creation flow and do not require persistent local `origin` after setup. For Codex App / Desktop / Local / Worktree, report true local push/PR failures as a Push/PR setup limitation and include branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and exact next manual step for Jeremy. Jeremy reviews and merges.
 ```
 
 Jeremy-level meaning:
@@ -165,7 +167,7 @@ Jeremy-level meaning:
 
 Use `ACCEPTANCE-CHECKS-VS-MANUAL-QA-RULE.md` when separating Codex checks from Jeremy device/browser QA.
 
-Use `CODEX-PR-PUSH-WORKFLOW.md` when GitHub is connected and Codex should attempt to push/open a PR when available.
+Use `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy explicitly asks for PR creation, PR review/diagnosis, or the active workflow requires a PR.
 
 ---
 
@@ -222,13 +224,17 @@ Do not dump the whole ledger into every output.
 
 ## Push/PR setup limitation
 
-When GitHub remote setup, remote-main verification, push, or PR creation is unavailable from the local environment, label it as a **Push/PR setup limitation**.
+Use **Push/PR setup limitation** when the current execution surface cannot complete a remote GitHub step that was requested or required.
+
+For Codex App / Desktop / Local / Worktree lanes, this can include unavailable Git remote setup, remote-main verification, push, or PR creation.
+
+For Codex Cloud / Web lanes, missing persistent local `origin` after setup is not by itself a Push/PR setup limitation.
 
 This is not repo truth unless the remote repo itself confirms it. It should affect report-back and Jeremy’s manual next step, not stop a safe scoped patch before it starts.
 
 ## What Not to Add
 
-Do not add a Launch Readiness Board as part of this 5.0 safety stack.
+Do not add a Launch Readiness Board as part of this 5.1 safety stack.
 
 That may be useful later, but it is not active workflow now.
 

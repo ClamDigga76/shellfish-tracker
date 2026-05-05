@@ -1,4 +1,4 @@
-# VIBE-CODER-TASK-ROUTER.md — Vibe Coder 5.0
+# VIBE-CODER-TASK-ROUTER.md — Vibe Coder 5.1
 
 ## Purpose
 
@@ -112,7 +112,7 @@ Read when useful:
 - `testing-checklist.md` for checks
 - `PATCH-SAFETY-STACK.md` for meaningful patch safety headers, risk labels, Smallest Safe Patch, Codex Patch Contract, and Repo Truth vs Plan Guard
 - `DECISION-LOCK-LEDGER.md` for relevant locked decisions
-- `CODEX-PR-PUSH-WORKFLOW.md` when GitHub is connected and Codex should attempt to push/open a PR when available
+- `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy explicitly asks for PR creation, PR review, or the active workflow requires a PR
 - task-specific helper files
 
 Output shape:
@@ -126,7 +126,7 @@ Output shape:
 - include the Real-World / In-App Explanation Layer near the end when the patch is technical, runtime-facing, PWA/cache-related, visual, user-facing, or hard to judge from code wording alone
 - include rollback guidance when useful
 - say whether GitHub/repo access is needed, helpful, or not needed
-- when GitHub is connected, say whether Codex should attempt to push/open a PR for Jeremy review
+- when PR behavior matters, state Codex Surface and PR Mode; do not make PR creation automatic
 
 Do not invent a new Pull Sheet format if the project files already define one.
 
@@ -151,15 +151,18 @@ Output shape:
 - Repo Truth vs Plan when there is any chance of confusion
 - Locked Decisions Applied, but only the relevant ones
 - Do Not Touch guardrails
-- Codex PR Route when GitHub is connected
+- Codex Surface and PR Mode when PR behavior matters
+- Codex PR Route only when PR creation is requested or required
 
 Keep this quiet and compact. Do not make Jeremy manage another workflow.
 
 ---
 
-### 5. GitHub PR Push / Review Lane
+### 5. GitHub PR / Cloud-vs-Local Workflow Lane
 
-Use when GitHub is connected and normal patch work can safely move toward a branch and pull request.
+Use this lane when Jeremy explicitly asks to create/open a PR, review a PR, diagnose PR creation, or route Codex Cloud vs Codex App / local workflow behavior.
+
+Do not route every patch into PR creation automatically.
 
 Read when useful:
 
@@ -167,17 +170,22 @@ Read when useful:
 - `PATCH-SAFETY-STACK.md`
 - `DECISION-LOCK-LEDGER.md` when relevant
 - `patch-prompt-style.md`
-- `codex-app-style.md` when app/runtime behavior is involved
+- `codex-app-style.md` when app/runtime or local/worktree behavior is involved
 - `ACCEPTANCE-CHECKS-VS-MANUAL-QA-RULE.md`
 - `CODEX-IMAGE-PACK-HANDOFF-RULE.md` when screenshots or visual references are involved
 
 Output shape:
 
-- make clear that Codex may create a branch, commit, attempt to push, and open a PR when available
+- state Codex Surface: Codex Cloud / Web OR Codex App / Desktop / Local / Worktree
+- state PR Mode: No PR requested / PR requested by Jeremy / PR required by active workflow / PR unavailable / Push/PR setup limitation
+- for Codex Cloud / Web, follow the connected-repo PR creation flow and do not require persistent local `origin` after setup
+- for Codex App / Local / Worktree, local Git remote/push/manual-step handling may apply
 - make clear that Codex must not merge the PR
 - Jeremy remains the final reviewer and merge authority
-- if origin, remote-main verification, push, or PR creation is unavailable, label it as a Push/PR setup limitation and require branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and exact next manual step for Jeremy
-- include PR summary expectations, test notes, Acceptance checks, known risks/follow-ups, rollback note, and fallback report-back requirements
+- do not claim a PR exists unless a real GitHub PR URL or PR number is confirmed
+- local branch names, commits, tool metadata, `make_pr` metadata, or task status messages are not enough to claim PR success
+- if Push/PR setup limitation applies, require branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and exact next manual step for Jeremy
+- include PR summary expectations, test notes, Acceptance checks, known risks/follow-ups, rollback note, and fallback report-back requirements when a PR is created or attempted
 - keep Manual QA for Jeremy outside the Codex prompt unless the project format says otherwise
 
 Do not use this lane to bypass review, deploy production, approve Codex's own work, or merge into `main`.
@@ -396,7 +404,7 @@ When recommending a pull, audit, or next move, include one of these when useful:
 
 Use “needed” only when repo truth, PR state, file paths, or landed code must be checked.
 
-When GitHub is connected and normal patch work is ready for implementation, prefer the `CODEX-PR-PUSH-WORKFLOW.md` flow: Codex may attempt to push/open a PR when available; Jeremy reviews and merges. Do not claim a PR exists unless a PR number or URL is confirmed. If origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation, not repo truth. If origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation, not repo truth.
+When PR behavior matters, state the Codex Surface and PR Mode. PR creation is explicit, not automatic. Use `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy asks for PR creation, when reviewing/diagnosing a PR, or when the active workflow requires a PR. Do not claim a PR exists unless a PR number or URL is confirmed. In local/worktree lanes, report true push/PR limitations as Push/PR setup limitations, not repo truth.
 
 ---
 
@@ -427,9 +435,9 @@ Use screenshots especially for:
 
 ---
 
-## 5.0 Success Test
+## 5.1 Success Test
 
-Vibe Coder 5.0 should handle a request like:
+Vibe Coder 5.1 should handle a request like:
 
 > Pull the new app filter/card polish using these screenshots.
 
@@ -447,5 +455,5 @@ And then automatically:
 - put Acceptance checks in the Codex prompt
 - keep Manual QA for Jeremy outside the Codex prompt
 - say whether GitHub/repo access is needed
-- use the Codex PR push workflow when GitHub is connected and the patch should become PR-ready
+- use the Codex PR workflow only when PR creation is requested, required, or being diagnosed
 - avoid widening into unrelated subscription, routing, backend, or analytics logic

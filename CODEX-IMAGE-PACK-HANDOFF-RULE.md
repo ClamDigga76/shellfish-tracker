@@ -8,7 +8,7 @@ The image pack is only for transporting the images.
 
 The actual patch prompt stays outside the zip and gets pasted directly into Codex.
 
-This file is the Visual Patch Protocol for Vibe Coder 5.0 screenshot, mockup, crop, and image-pack work.
+This file is the Visual Patch Protocol for Vibe Coder 5.1 screenshot, mockup, crop, and image-pack work.
 
 This file supports visual Codex patches. It does not replace `AGENTS.md`, `PATCH-SAFETY-STACK.md`, `patch-prompt-style.md`, or the project workflow files.
 

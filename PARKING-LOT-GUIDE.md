@@ -1,4 +1,4 @@
-# PARKING-LOT-GUIDE.md — Vibe Coder 5.0 Router-First Core
+# PARKING-LOT-GUIDE.md — Vibe Coder 5.1 Router-First Core
 
 ## Purpose
 This file defines how the Parking Lot and Suggestions lane should be used.

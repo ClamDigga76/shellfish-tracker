@@ -1,4 +1,4 @@
-# patch-prompt-style.md — Vibe Coder 5.0 Router-First Core
+# patch-prompt-style.md — Vibe Coder 5.1 Router-First Core
 
 ## Purpose
 This file defines the default **browser-based Codex / web sandbox** patch prompt style.
@@ -29,7 +29,8 @@ Use this order:
    - Do Not Touch
 8. Repo connection recommendation
    - use GitHub needed / GitHub helpful / GitHub not needed when useful
-   - when GitHub is connected and the patch is ready for implementation, use `CODEX-PR-PUSH-WORKFLOW.md` when appropriate
+   - include **Codex Surface** and **PR Mode** when PR behavior matters
+   - use `CODEX-PR-PUSH-WORKFLOW.md` only when Jeremy explicitly requests PR creation or the active workflow requires a PR
 9. Codex Task Prompt
    - include **Suggested commit message** inside the task prompt
    - include **Acceptance checks** inside the task prompt when needed
@@ -91,17 +92,19 @@ Use wording like this inside the actual generated Codex prompt:
 
 The anchor should end with proceeding-directly language, such as:
 
-> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, attempt push and PR creation if available, and report any Push/PR setup limitation with the exact next manual step for Jeremy.
+> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, and follow the selected PR Mode. I will create/open a PR only if Jeremy explicitly requested PR creation or the active workflow requires it.
 
 Do not end the anchor with “If you want…”, “Should I proceed?”, “I can now…”, “I’ll now execute…”, or similar confirmation language.
 
-Local Git limitations such as unavailable origin, unavailable remote `main`, push access, or PR creation should be reported as **Push/PR setup limitations**, not repo truth. They should affect report-back and manual next steps, not stop the patch before it starts unless the scoped patch is impossible.
+For Codex App / Local / Worktree prompts, local Git limitations such as unavailable origin, unavailable remote `main`, push access, or PR creation should be reported as **Push/PR setup limitations**, not repo truth. They should affect report-back and manual next steps, not stop the patch before it starts unless the scoped patch is impossible.
+
+For Codex Cloud / Web prompts, do not require persistent local `origin` after setup. Do not use raw `git fetch origin main` or `git push origin` as the default readiness gate. A blank `git remote -v` after setup is not by itself proof that PR creation is unavailable.
 
 Future generated Codex prompts should include this language when relevant:
 
-> If origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation, not as repo truth. Continue the scoped patch only if local files are sufficient and safe. At report-back, include the exact manual push/PR step for Jeremy.
+> If origin, remote-main verification, push, or PR creation is unavailable in a local/worktree lane, report it as a Push/PR setup limitation, not as repo truth. For Codex Cloud / Web, do not treat missing persistent origin after setup as a failure by itself. Continue the scoped patch only if local files are sufficient and safe. At report-back, include the exact manual push/PR step for Jeremy when one is needed.
 
-Avoid vague standalone wording such as “Remote main could not be verified,” “No origin configured,” “This repo has no origin,” or “This repo has no main branch.” Use the Push/PR setup limitation label and the exact practical consequence.
+Avoid vague standalone wording such as “Remote main could not be verified,” “No origin configured,” “This repo has no origin,” or “This repo has no main branch.” Use the Push/PR setup limitation label only when it is the accurate practical consequence.
 
 ## Pull / Do command rule
 When the user says `Pull <item>`, treat it as the default full working execution output.
@@ -133,6 +136,8 @@ When useful, include the safety header fields from `PATCH-SAFETY-STACK.md`:
 - Repo Truth vs Plan
 - relevant Locked Decisions Applied
 - Do Not Touch
+- Codex Surface
+- PR Mode
 - Codex PR Route
 
 Then include **Acceptance checks** inside the Codex Task Prompt when needed.
@@ -143,28 +148,37 @@ Use `DECISION-LOCK-LEDGER.md` for settled decisions that apply to the patch seam
 
 Do not dump the whole ledger into the output.
 
-## Codex PR push workflow
-When GitHub is connected and normal patch work should move toward a branch and pull request, use `CODEX-PR-PUSH-WORKFLOW.md`.
+## Codex PR workflow
+Codex PR creation is explicit, not automatic.
 
-Preferred policy:
+For normal patch work, ask Codex to prepare the patch, commit when appropriate, and report clearly.
 
-> Codex may prepare, commit, attempt to push, and open pull requests when available. Codex may not merge pull requests. Jeremy remains the final reviewer and merge authority.
+Ask Codex to create/open a PR only when Jeremy explicitly requests PR creation or the active workflow requires it.
 
-Inside the Codex Task Prompt, include PR expectations when relevant:
+When PR creation is requested or required, use `CODEX-PR-PUSH-WORKFLOW.md`.
 
-- create a new branch
-- commit the scoped work
-- attempt to push the branch
-- open a PR for Jeremy review if PR creation is available
+When PR behavior matters, include these fields near the safety header:
+
+- Codex Surface: Codex Cloud / Web OR Codex App / Desktop / Local / Worktree
+- PR Mode: No PR requested / PR requested by Jeremy / PR required by active workflow / PR unavailable / Push/PR setup limitation
+
+Inside the Codex Task Prompt, include PR expectations only when PR creation is requested or required:
+
+- identify the Codex Surface
+- identify PR Mode
+- create or use the appropriate branch when needed
+- commit the scoped work when appropriate
+- create/open a PR only in explicit PR mode
+- for Codex Cloud / Web, use the connected-repository PR creation flow and do not require persistent local `origin` after setup
+- for Codex App / Desktop / Local / Worktree, use local Git push/PR behavior only when the local setup supports it
 - do not claim a PR exists unless a GitHub PR number or URL is confirmed
-- if origin, remote-main verification, push, or PR creation is unavailable, report it as a Push/PR setup limitation and include branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and the exact next manual step for Jeremy
-- include PR summary, test notes, Acceptance checks, known risks/follow-ups, and rollback note
+- local branch names, commits, tool metadata, `make_pr` metadata, or task status messages are not enough to claim a PR exists
+- if Push/PR setup limitation applies, include branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and the exact next manual step for Jeremy
+- include PR summary, test notes, Acceptance checks, known risks/follow-ups, and rollback note when a PR is created
 - do not merge
 - do not deploy production
 
-Do not claim a PR exists unless a GitHub PR number or URL is confirmed.
-
-Do not use PR push workflow to bypass review or approve Codex's own work.
+Do not use PR workflow to bypass review or approve Codex's own work.
 
 ## Acceptance checks vs Manual QA
 Use `ACCEPTANCE-CHECKS-VS-MANUAL-QA-RULE.md` when a patch needs both Codex-verifiable checks and Jeremy device/browser checks.
