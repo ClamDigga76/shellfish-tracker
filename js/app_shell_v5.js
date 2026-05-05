@@ -35,7 +35,7 @@ export function renderPageHeader(viewKey, { escapeHtml }){
   const headerTitle = titleByView[viewKey] || "Bank the Catch";
   const headerDescription = descriptionByView[viewKey] || "";
   return `
-    <div class="pageHeader">
+    <div class="pageHeader${viewKey === "all_trips" ? " pageHeader--all-trips" : ""}" data-view="${escapeHtml(viewKey)}">
       <span class="phActionStub" aria-hidden="true"></span>
       <div class="phTitleSlot">
         ${showLandingTarget ? `<span class="pageLandingTarget sr-only" data-top-level-landing="true" tabindex="-1" aria-label="${escapeHtml(`${headerTitle} page`)}"></span>` : ""}
