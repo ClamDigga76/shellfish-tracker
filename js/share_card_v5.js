@@ -302,14 +302,13 @@ export function openScreenshotCardPreview({
         <div class="homeScreenshotCardPreviewSurface">
           <div class="homeScreenshotCardPreviewHero">
             <div class="homeScreenshotCardPreviewTitleRow" aria-label="Bank the Catch">
-              <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
               <img class="homeScreenshotCardPreviewEmblem" src="${previewEmblemSrc}" alt="" loading="lazy" decoding="async" />
               <h3 class="homeScreenshotCardPreviewTitleText">Bank the Catch</h3>
-              <span class="homeScreenshotCardPreviewTitleLine" aria-hidden="true"></span>
             </div>
+            <p class="homeScreenshotCardPreviewSupport">Logged with Bank the Catch</p>
+            <span class="homeScreenshotCardPreviewGoldDivider" aria-hidden="true"></span>
           </div>
           <div class="homeScreenshotCardPreviewCard">${renderTripsBrowseReadOnlyTripCard(trip)}</div>
-          <div class="homeScreenshotCardPreviewFooter">Logged with Bank the Catch</div>
         </div>
         <div class="homeScreenshotCardPreviewActions">
           <button class="btn btn-ghost homeScreenshotCardPreviewCloseBtn" id="homeScreenshotCardClose" type="button">Close</button>

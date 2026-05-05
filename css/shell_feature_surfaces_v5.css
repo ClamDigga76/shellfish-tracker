@@ -699,8 +699,8 @@
   z-index:1;
   display:grid;
   justify-items:center;
-  gap:2px;
-  padding:3px 4px 2px;
+  gap:3px;
+  padding:4px 4px 3px;
 }
 .homeScreenshotCardPreviewHero::after{
   content:"";
@@ -719,21 +719,13 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
+  gap:7px;
   flex-wrap:nowrap;
   min-width:0;
 }
-.homeScreenshotCardPreviewTitleLine{
-  flex:1 1 clamp(20px, 10vw, 52px);
-  min-width:20px;
-  max-width:52px;
-  height:1px;
-  background:color-mix(in srgb, #d4e6ff 74%, transparent);
-  opacity:.86;
-}
 .homeScreenshotCardPreviewEmblem{
-  width:32px;
-  height:32px;
+  width:21px;
+  height:21px;
   flex:0 0 auto;
   object-fit:contain;
   filter:drop-shadow(0 2px 8px color-mix(in srgb, var(--btc-logo-blue-shadow) 32%, transparent));
@@ -741,9 +733,9 @@
 .homeScreenshotCardPreviewTitleText{
   margin:0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size:clamp(17px, 5.2vw, 30px);
+  font-size:clamp(20px, 5.1vw, 26px);
   line-height:1.02;
-  letter-spacing:.01em;
+  letter-spacing:.012em;
   color:#f4f1e8;
   text-shadow:0 1px 0 rgba(7,16,37,.42);
   white-space:nowrap;
@@ -753,6 +745,29 @@
   text-overflow:clip;
   flex:0 1 auto;
 }
+.homeScreenshotCardPreviewSupport{
+  position:relative;
+  z-index:1;
+  margin:0;
+  font-size:10px;
+  line-height:1.2;
+  letter-spacing:.08em;
+  color:rgba(206,227,255,.9);
+  text-transform:uppercase;
+  font-weight:760;
+  text-align:center;
+}
+.homeScreenshotCardPreviewGoldDivider{
+  position:relative;
+  z-index:1;
+  display:block;
+  width:clamp(84px, 34vw, 146px);
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,210,124,0) 0%, rgba(255,222,156,.9) 18%, rgba(244,188,83,.98) 50%, rgba(255,222,156,.9) 82%, rgba(255,210,124,0) 100%);
+  box-shadow:0 0 8px rgba(236,179,78,.34);
+}
+
 .homeScreenshotCardPreviewSubhead{
   display:none;
   position:relative;
@@ -796,18 +811,6 @@
   max-width:100%;
   min-width:0;
 }
-.homeScreenshotCardPreviewFooter{
-  position:relative;
-  z-index:1;
-  font-size:10px;
-  line-height:1.35;
-  letter-spacing:.03em;
-  color:#8ec2ff;
-  font-weight:650;
-  text-align:center;
-  text-shadow:0 0 10px rgba(88,165,255,.2);
-  opacity:.96;
-}
 .homeScreenshotCardPreviewActions{
   display:flex;
   justify-content:center;
@@ -828,10 +831,7 @@
 }
 @media (max-width:380px){
   .homeScreenshotCardPreviewTitleText{
-    font-size:clamp(18px, 6.1vw, 24px);
-  }
-  .homeScreenshotCardPreviewTitleLine{
-    max-width:44px;
+    font-size:clamp(18px, 6.1vw, 22px);
   }
 }
 
