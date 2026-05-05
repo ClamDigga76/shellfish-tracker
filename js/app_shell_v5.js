@@ -15,7 +15,7 @@ export function getActiveTabKey(view){
 
 export function renderPageHeader(viewKey, { escapeHtml }){
   const helpKey = (viewKey === "all_trips") ? "trips" : viewKey;
-  const showHelp = (helpKey === "home" || helpKey === "trips" || helpKey === "reports" || helpKey === "settings");
+  const showHelp = (helpKey === "home" || helpKey === "trips" || helpKey === "reports");
   const topLevelViews = new Set(["home", "all_trips", "reports", "settings"]);
   const showLandingTarget = topLevelViews.has(viewKey);
   const titleByView = {
