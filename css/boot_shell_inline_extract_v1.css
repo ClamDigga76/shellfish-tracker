@@ -663,34 +663,64 @@ header{padding:14px 18px 12px}
   box-shadow:0 0 8px rgba(212,175,55,.28);
 }
 .phActionStub{
-  width:42px;
-  height:42px;
-  flex:0 0 42px;
+  width:58px;
+  height:64px;
+  display:block;
 }
 .phHelpBtn{
-  width:42px;
-  height:42px;
-  min-width:42px;
-  min-height:42px;
-  display:inline-flex;
+  width:58px;
+  min-height:64px;
+  border-radius:19px;
+  border:1px solid rgba(115,190,255,.72);
+  background:
+    linear-gradient(180deg, rgba(48,79,122,.52), rgba(10,18,34,.9)),
+    radial-gradient(130% 110% at 50% -20%, rgba(126,196,255,.35), rgba(17,30,54,0));
+  box-shadow:
+    inset 0 1px 0 rgba(186,229,255,.24),
+    inset 0 -8px 14px rgba(0,0,0,.38),
+    0 0 0 1px rgba(65,131,205,.24),
+    0 7px 18px rgba(4,10,24,.46),
+    0 0 18px rgba(62,145,236,.3);
+  color:#f4fbff;
+  padding:8px 6px 7px;
+  display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);
-  color:var(--text-muted-strong);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
-  transition:background-color .12s ease,border-color .12s ease,transform .08s ease;
+  gap:3px;
+}
+.phHelpIconWrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  line-height:0;
 }
 .phHelpBtn svg{
-  width:18px;
-  height:18px;
+  width:25px;
+  height:25px;
   display:block;
+}
+.phHelpLabel{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.02em;
+  line-height:1;
+  color:#f6fbff;
+  text-align:center;
+  text-shadow:0 1px 0 rgba(0,0,0,.45);
 }
 .phHelpBtn:active{
   transform:translateY(1px);
-  border-color:var(--color-border-strong);
-  background:linear-gradient(180deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.06) 100%);
+  background:
+    linear-gradient(180deg, rgba(25,45,75,.62), rgba(7,14,28,.95)),
+    radial-gradient(120% 120% at 50% -25%, rgba(106,176,242,.22), rgba(8,17,34,0));
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.48),
+    inset 0 -2px 1px rgba(140,205,255,.16),
+    0 2px 10px rgba(2,8,18,.36),
+    0 0 14px rgba(56,132,214,.2);
 }
 .phIcon svg{
   width:18px;

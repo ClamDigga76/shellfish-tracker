@@ -49,7 +49,7 @@ export function renderPageHeader(viewKey, { escapeHtml }){
         ${headerDescription ? `<p class="phDescription">${escapeHtml(headerDescription)}</p>` : ""}
       </div>
       ${showHelp
-        ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}">${helpIconSvg()}</button>`
+        ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}"><span class="phHelpIconWrap" aria-hidden="true">${helpIconSvg()}</span><span class="phHelpLabel">Help</span></button>`
         : `<span class="phActionStub" aria-hidden="true"></span>`
       }
     </div>
