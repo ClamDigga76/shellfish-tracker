@@ -30,12 +30,16 @@ export function renderPageHeader(viewKey, { escapeHtml }){
     about: "About"
   };
   const descriptionByView = {
-    all_trips: "Search, filter, and review saved trips"
+    home: "Your season at a glance",
+    all_trips: "Search, filter, and review saved trips",
+    reports: "Track trends and performance",
+    settings: "Manage app tools",
+    help: "Learn how it works"
   };
   const headerTitle = titleByView[viewKey] || "Bank the Catch";
   const headerDescription = descriptionByView[viewKey] || "";
   return `
-    <div class="pageHeader${viewKey === "all_trips" ? " pageHeader--all-trips" : ""}" data-view="${escapeHtml(viewKey)}">
+    <div class="pageHeader${["home", "all_trips", "reports", "settings", "help"].includes(viewKey) ? " pageHeader--masthead-standard" : ""}${viewKey === "all_trips" ? " pageHeader--all-trips" : ""}" data-view="${escapeHtml(viewKey)}">
       <span class="phActionStub" aria-hidden="true"></span>
       <div class="phTitleSlot">
         ${showLandingTarget ? `<span class="pageLandingTarget sr-only" data-top-level-landing="true" tabindex="-1" aria-label="${escapeHtml(`${headerTitle} page`)}"></span>` : ""}
