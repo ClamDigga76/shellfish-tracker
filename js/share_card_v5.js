@@ -77,30 +77,30 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   if (!ctx) throw new Error("canvas-unavailable");
 
   const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, "#000f2c");
-  gradient.addColorStop(0.58, "#031c45");
-  gradient.addColorStop(1, "#062c63");
+  gradient.addColorStop(0, "#020711");
+  gradient.addColorStop(0.58, "#05111f");
+  gradient.addColorStop(1, "#071a33");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const topGlow = ctx.createRadialGradient(830, 140, 48, 830, 140, 520);
-  topGlow.addColorStop(0, "rgba(6,44,99,0.24)");
-  topGlow.addColorStop(0.44, "rgba(6,44,99,0.1)");
-  topGlow.addColorStop(1, "rgba(6,44,99,0)");
+  topGlow.addColorStop(0, "rgba(70,150,255,0.2)");
+  topGlow.addColorStop(0.44, "rgba(70,150,255,0.1)");
+  topGlow.addColorStop(1, "rgba(70,150,255,0)");
   ctx.fillStyle = topGlow;
   ctx.fillRect(0, 0, canvas.width, 620);
 
   const blueBloom = ctx.createRadialGradient(228, 264, 34, 228, 264, 516);
-  blueBloom.addColorStop(0, "rgba(3,28,69,0.28)");
-  blueBloom.addColorStop(0.56, "rgba(3,28,69,0.12)");
-  blueBloom.addColorStop(1, "rgba(3,28,69,0)");
+  blueBloom.addColorStop(0, "rgba(7,26,51,0.3)");
+  blueBloom.addColorStop(0.56, "rgba(7,26,51,0.14)");
+  blueBloom.addColorStop(1, "rgba(7,26,51,0)");
   ctx.fillStyle = blueBloom;
   ctx.fillRect(0, 0, canvas.width, 720);
 
   const accentGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-  accentGradient.addColorStop(0, "rgba(98,155,238,0.24)");
-  accentGradient.addColorStop(0.58, "rgba(98,155,238,0.12)");
-  accentGradient.addColorStop(1, "rgba(98,155,238,0.2)");
+  accentGradient.addColorStop(0, "rgba(29,111,255,0.24)");
+  accentGradient.addColorStop(0.58, "rgba(29,111,255,0.12)");
+  accentGradient.addColorStop(1, "rgba(29,111,255,0.2)");
   ctx.fillStyle = accentGradient;
   ctx.fillRect(0, 0, canvas.width, 14);
 
@@ -111,9 +111,9 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   const heroHeight = 280;
 
   drawRoundedRect(ctx, innerX, innerY, innerW, innerH, 42);
-  ctx.fillStyle = "rgba(2,12,38,0.56)";
+  ctx.fillStyle = "rgba(5,17,31,0.6)";
   ctx.fill();
-  ctx.strokeStyle = "rgba(124,172,243,0.36)";
+  ctx.strokeStyle = "rgba(29,111,255,0.44)";
   ctx.lineWidth = 2;
   ctx.stroke();
 
@@ -122,19 +122,19 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.clip();
 
   const heroGradient = ctx.createLinearGradient(innerX, innerY, innerX + innerW, innerY + heroHeight);
-  heroGradient.addColorStop(0, "rgba(0,15,44,0.99)");
-  heroGradient.addColorStop(0.6, "rgba(0,15,44,0.97)");
-  heroGradient.addColorStop(0.88, "rgba(3,28,69,0.94)");
-  heroGradient.addColorStop(1, "rgba(6,44,99,0.9)");
+  heroGradient.addColorStop(0, "rgba(2,7,17,0.99)");
+  heroGradient.addColorStop(0.6, "rgba(5,17,31,0.97)");
+  heroGradient.addColorStop(0.88, "rgba(7,26,51,0.95)");
+  heroGradient.addColorStop(1, "rgba(7,26,51,0.92)");
   ctx.fillStyle = heroGradient;
   ctx.fillRect(innerX, innerY, innerW, heroHeight);
 
-  ctx.fillStyle = "rgba(88,152,236,0.10)";
+  ctx.fillStyle = "rgba(70,150,255,0.12)";
   ctx.beginPath();
   ctx.ellipse(innerX + innerW - 140, innerY + 98, 228, 124, -0.26, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(6,44,99,0.08)";
+  ctx.fillStyle = "rgba(7,26,51,0.2)";
   ctx.beginPath();
   ctx.ellipse(innerX + innerW - 40, innerY + 42, 190, 70, -0.5, 0, Math.PI * 2);
   ctx.fill();
@@ -157,24 +157,24 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.shadowColor = "rgba(106,180,255,0.45)";
+  ctx.shadowColor = "rgba(75,170,255,0.55)";
   ctx.shadowBlur = 14;
-  ctx.fillStyle = "#8ac8ff";
+  ctx.fillStyle = "#7ec8ff";
   ctx.font = "700 54px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
   ctx.fillText("Bank the Catch", headerCenterX, titleY);
   ctx.restore();
 
-  ctx.fillStyle = "rgba(202,224,255,0.92)";
+  ctx.fillStyle = "#d7e6f8";
   ctx.font = "620 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("Logged with Bank the Catch", headerCenterX, supportY);
 
   const heroDivider = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
-  heroDivider.addColorStop(0, "rgba(244,198,112,0)");
-  heroDivider.addColorStop(0.2, "rgba(252,219,151,0.72)");
-  heroDivider.addColorStop(0.5, "rgba(244,190,88,0.92)");
-  heroDivider.addColorStop(0.8, "rgba(252,219,151,0.72)");
-  heroDivider.addColorStop(1, "rgba(244,198,112,0)");
+  heroDivider.addColorStop(0, "rgba(240,185,77,0)");
+  heroDivider.addColorStop(0.2, "rgba(255,220,138,0.74)");
+  heroDivider.addColorStop(0.5, "rgba(240,185,77,0.9)");
+  heroDivider.addColorStop(0.8, "rgba(255,220,138,0.74)");
+  heroDivider.addColorStop(1, "rgba(240,185,77,0)");
   ctx.fillStyle = heroDivider;
   ctx.fillRect(innerX + 56, dividerY, innerW - 112, 2);
   ctx.restore();
@@ -187,9 +187,9 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   const cardH = 612;
 
   drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 30);
-  ctx.fillStyle = "rgba(10,22,44,0.86)";
+  ctx.fillStyle = "rgba(5,12,24,0.9)";
   ctx.fill();
-  ctx.strokeStyle = "rgba(122,164,238,0.38)";
+  ctx.strokeStyle = "rgba(29,111,255,0.42)";
   ctx.lineWidth = 1.6;
   ctx.stroke();
 
