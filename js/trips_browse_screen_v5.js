@@ -169,10 +169,6 @@ export function createTripsBrowseScreenRenderer(deps){
                 </div>
               ` : ""}
             </div>
-            <div class="tripsFiltersSection tripsPaidVersionStrip" aria-label="Paid version info">
-              <div class="tripsPaidVersionStripText">Paid version unlocks exact season totals, best days, dealer trends, and area strength.</div>
-            </div>
-
             <div class="tripsFilterApplyRow">
               <button class="btn btn-ghost" id="flt_reset" type="button">Reset</button>
               <button class="btn good" id="flt_apply" type="button">Apply</button>
