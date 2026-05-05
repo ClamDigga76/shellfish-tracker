@@ -140,7 +140,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsHealthValue" id="settingsHealthBackup">Checking</div>
       </div>
       <div class="settingsHealthCell">
-        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("choices")}</span>Trip Setup</div>
+        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("choices")}</span>Lists</div>
         <div class="settingsHealthValue" id="settingsHealthChoices">${areaCount}A / ${dealerCount}D</div>
       </div>
     </div>
@@ -235,7 +235,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("choices")}</span>
           <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Trip Setup</div>
+            <div class="settingsGroupLabel">Lists</div>
             <div class="settingsAccordionTitle">Areas & dealers</div>
             <div class="muted small settingsAccordionStatus" id="dataListsSummaryLine">${areaCount} areas • ${dealerCount} dealers</div>
           </div>
