@@ -243,7 +243,7 @@ function wireServiceWorkerUpdateBanner(reg) {
     banner.style.display = "block";
     banner.dataset.state = "ready";
     if (bannerMsg) {
-      bannerMsg.textContent = `Build v5.${APP_VERSION} is ready on this device. Load it now to avoid staying on an older runtime.`;
+      bannerMsg.textContent = "The latest app copy is ready. This only reloads Bank the Catch on this device. Your saved trips stay safe.";
     }
     emitSwUpdateState("ready");
     if (!__swUpdateReadyNotified) {
@@ -268,18 +268,33 @@ function wireServiceWorkerUpdateBanner(reg) {
   if (btnApply) {
     btnApply.onclick = async () => {
       emitSwUpdateState("applying");
-      try {
-        if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
-      } catch (_) {}
-      hideBanner();
-      // Reload once when the new SW takes control (avoids reload loops on iOS).
+      btnApply.textContent = "Finishing…";
+      btnApply.disabled = true;
+      if (btnDismiss) btnDismiss.disabled = true;
+
       let reloaded = false;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
+      const reloadOnce = (state) => {
         if (reloaded) return;
         reloaded = true;
-        emitSwUpdateState("controller-changed");
+        emitSwUpdateState(state);
         location.reload();
-      });
+      };
+
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        reloadOnce("controller-changed");
+      }, { once: true });
+
+      setTimeout(() => {
+        reloadOnce("fallback-reload");
+      }, 1500);
+
+      try {
+        if (reg.waiting) {
+          reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        } else {
+          emitSwUpdateState("no-waiting-worker");
+        }
+      } catch (_) {}
     };
   }
 
