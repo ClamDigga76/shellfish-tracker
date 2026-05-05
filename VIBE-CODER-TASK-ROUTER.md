@@ -112,7 +112,7 @@ Read when useful:
 - `testing-checklist.md` for checks
 - `PATCH-SAFETY-STACK.md` for meaningful patch safety headers, risk labels, Smallest Safe Patch, Codex Patch Contract, and Repo Truth vs Plan Guard
 - `DECISION-LOCK-LEDGER.md` for relevant locked decisions
-- `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy explicitly asks for PR creation, PR review, or the active workflow requires a PR
+- `CODEX-PR-PUSH-WORKFLOW.md` when PR behavior matters, including normal Bank the Catch app Pulls, explicit PR requests, PR review/diagnosis, or active workflows that require a PR
 - task-specific helper files
 
 Output shape:
@@ -126,7 +126,7 @@ Output shape:
 - include the Real-World / In-App Explanation Layer near the end when the patch is technical, runtime-facing, PWA/cache-related, visual, user-facing, or hard to judge from code wording alone
 - include rollback guidance when useful
 - say whether GitHub/repo access is needed, helpful, or not needed
-- when PR behavior matters, state Codex Surface and PR Mode; do not make PR creation automatic
+- when PR behavior matters, state Codex Surface and PR Mode; default normal Bank the Catch app Pulls to Codex Cloud / Web and PR requested by Pull command
 
 Do not invent a new Pull Sheet format if the project files already define one.
 
@@ -160,9 +160,11 @@ Keep this quiet and compact. Do not make Jeremy manage another workflow.
 
 ### 5. GitHub PR / Cloud-vs-Local Workflow Lane
 
-Use this lane when Jeremy explicitly asks to create/open a PR, review a PR, diagnose PR creation, or route Codex Cloud vs Codex App / local workflow behavior.
+Use this lane when Jeremy says `Pull <item>` for normal Bank the Catch app work, explicitly asks to create/open a PR, reviews a PR, diagnoses PR creation, or routes Codex Cloud vs Codex App / local workflow behavior.
 
-Do not route every patch into PR creation automatically.
+For normal Bank the Catch app `Pull <item>` work, default to `Codex Surface: Codex Cloud / Web` and `PR Mode: PR requested by Pull command` unless Jeremy says no PR, audit-only, planning-only, docs-only, local-only, or otherwise limits the task away from PR creation.
+
+Do not route ordinary app Pulls as `PR Mode: No PR requested` unless Jeremy explicitly limits the task away from PR creation.
 
 Read when useful:
 
@@ -176,8 +178,8 @@ Read when useful:
 
 Output shape:
 
-- state Codex Surface: Codex Cloud / Web OR Codex App / Desktop / Local / Worktree
-- state PR Mode: No PR requested / PR requested by Jeremy / PR required by active workflow / PR unavailable / Push/PR setup limitation
+- state Codex Surface: Codex Cloud / Web by default OR Codex App / Desktop / Local / Worktree only when Jeremy says local/worktree
+- state PR Mode: PR requested by Pull command / PR requested explicitly / PR required by active workflow / No PR requested / PR unavailable / Push/PR setup limitation
 - for Codex Cloud / Web, follow the connected-repo PR creation flow and do not require persistent local `origin` after setup
 - for Codex App / Local / Worktree, local Git remote/push/manual-step handling may apply
 - make clear that Codex must not merge the PR
@@ -404,7 +406,7 @@ When recommending a pull, audit, or next move, include one of these when useful:
 
 Use “needed” only when repo truth, PR state, file paths, or landed code must be checked.
 
-When PR behavior matters, state the Codex Surface and PR Mode. PR creation is explicit, not automatic. Use `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy asks for PR creation, when reviewing/diagnosing a PR, or when the active workflow requires a PR. Do not claim a PR exists unless a PR number or URL is confirmed. In local/worktree lanes, report true push/PR limitations as Push/PR setup limitations, not repo truth.
+When PR behavior matters, state the Codex Surface and PR Mode. Default normal Bank the Catch app Pulls to Codex Cloud / Web and `PR Mode: PR requested by Pull command`. Use `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy says Pull for app work, asks for PR creation, reviews/diagnoses a PR, or when the active workflow requires a PR. Do not claim a PR exists unless a PR number or URL is confirmed. In local/worktree lanes, report true push/PR limitations as Push/PR setup limitations, not repo truth.
 
 ---
 
@@ -455,5 +457,5 @@ And then automatically:
 - put Acceptance checks in the Codex prompt
 - keep Manual QA for Jeremy outside the Codex prompt
 - say whether GitHub/repo access is needed
-- use the Codex PR workflow only when PR creation is requested, required, or being diagnosed
+- use the Codex PR workflow for normal app Pulls, explicit PR requests, required PR workflows, or PR diagnosis
 - avoid widening into unrelated subscription, routing, backend, or analytics logic

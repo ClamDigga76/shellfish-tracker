@@ -30,7 +30,8 @@ Use this order:
 8. Repo connection recommendation
    - use GitHub needed / GitHub helpful / GitHub not needed when useful
    - include **Codex Surface** and **PR Mode** when PR behavior matters
-   - use `CODEX-PR-PUSH-WORKFLOW.md` only when Jeremy explicitly requests PR creation or the active workflow requires a PR
+   - default normal Bank the Catch app Pulls to `Codex Surface: Codex Cloud / Web` and `PR Mode: PR requested by Pull command` unless Jeremy says no PR, audit-only, planning-only, docs-only, or local-only
+   - use `CODEX-PR-PUSH-WORKFLOW.md` when PR behavior matters
 9. Codex Task Prompt
    - include **Suggested commit message** inside the task prompt
    - include **Acceptance checks** inside the task prompt when needed
@@ -92,7 +93,7 @@ Use wording like this inside the actual generated Codex prompt:
 
 The anchor should end with proceeding-directly language, such as:
 
-> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, and follow the selected PR Mode. I will create/open a PR only if Jeremy explicitly requested PR creation or the active workflow requires it.
+> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, and follow the selected PR Mode. I will create/open a PR when PR creation is intended by Pull command, explicitly requested, or required, and only when the connected surface supports it.
 
 Do not end the anchor with “If you want…”, “Should I proceed?”, “I can now…”, “I’ll now execute…”, or similar confirmation language.
 
@@ -149,34 +150,39 @@ Use `DECISION-LOCK-LEDGER.md` for settled decisions that apply to the patch seam
 Do not dump the whole ledger into the output.
 
 ## Codex PR workflow
-Codex PR creation is explicit, not automatic.
+Default normal Bank the Catch app Pulls to:
 
-For normal patch work, ask Codex to prepare the patch, commit when appropriate, and report clearly.
+- Codex Surface: Codex Cloud / Web
+- PR Mode: PR requested by Pull command
 
-Ask Codex to create/open a PR only when Jeremy explicitly requests PR creation or the active workflow requires it.
+Do not label normal `Pull <item>` app patches as `PR Mode: No PR requested` unless Jeremy explicitly says no PR, audit-only, planning-only, docs-only, local-only, or otherwise limits the task away from PR creation.
 
-When PR creation is requested or required, use `CODEX-PR-PUSH-WORKFLOW.md`.
+For normal app Pull work, ask Codex to prepare the patch, commit when appropriate, and create/open a real PR through the connected Codex Cloud / GitHub flow when supported.
+
+When PR behavior matters, use `CODEX-PR-PUSH-WORKFLOW.md`.
 
 When PR behavior matters, include these fields near the safety header:
 
-- Codex Surface: Codex Cloud / Web OR Codex App / Desktop / Local / Worktree
-- PR Mode: No PR requested / PR requested by Jeremy / PR required by active workflow / PR unavailable / Push/PR setup limitation
+- Codex Surface: Codex Cloud / Web by default OR Codex App / Desktop / Local / Worktree only when Jeremy says local/worktree
+- PR Mode: PR requested by Pull command / PR requested explicitly / PR required by active workflow / No PR requested / PR unavailable / Push/PR setup limitation
 
-Inside the Codex Task Prompt, include PR expectations only when PR creation is requested or required:
+Inside the Codex Task Prompt, include PR expectations when PR creation is intended, requested, or required:
 
 - identify the Codex Surface
 - identify PR Mode
 - create or use the appropriate branch when needed
 - commit the scoped work when appropriate
-- create/open a PR only in explicit PR mode
+- create/open a real PR through the connected Codex Cloud / GitHub flow when supported
 - for Codex Cloud / Web, use the connected-repository PR creation flow and do not require persistent local `origin` after setup
-- for Codex App / Desktop / Local / Worktree, use local Git push/PR behavior only when the local setup supports it
+- for Codex App / Desktop / Local / Worktree, use local Git push/PR behavior only when Jeremy explicitly says he is using that surface and the local setup supports it
 - do not claim a PR exists unless a GitHub PR number or URL is confirmed
 - local branch names, commits, tool metadata, `make_pr` metadata, or task status messages are not enough to claim a PR exists
 - if Push/PR setup limitation applies, include branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and the exact next manual step for Jeremy
 - include PR summary, test notes, Acceptance checks, known risks/follow-ups, and rollback note when a PR is created
 - do not merge
 - do not deploy production
+
+If Jeremy explicitly says no PR, audit-only, planning-only, docs-only, or local-only, honor that and do not force PR creation.
 
 Do not use PR workflow to bypass review or approve Codex's own work.
 

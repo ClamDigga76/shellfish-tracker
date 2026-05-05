@@ -3,12 +3,19 @@
 ## Purpose
 This file defines the **desktop app / local / worktree** patch style.
 
-Use this when the workflow clearly involves the Codex desktop app, a local checkout, a worktree handoff, desktop review flow, or desktop tools.
+Use this only when the workflow clearly involves the Codex desktop app, a local checkout, a worktree handoff, desktop review flow, or desktop tools. Jeremy's default Codex surface is Codex Cloud / Web unless he explicitly says desktop/app/local/worktree.
 
 ## Source-of-truth reminder
 `AGENTS.md` is the operational source of truth.
 
 Use this file as helper style for desktop/app work, not as a competing rule set.
+
+## Codex App / Local / Worktree opt-in rule
+Codex App / Desktop / Local / Worktree behavior is opt-in by Jeremy's wording.
+
+Use this file when Jeremy explicitly says he is using Codex App, desktop app, local checkout, local worktree, or asks for local/worktree behavior.
+
+Do not apply local/worktree Git assumptions to Codex Cloud / Web prompts by default.
 
 ## Execution surface note
 When useful, name the execution surface clearly enough to prevent drift.
@@ -33,7 +40,7 @@ Use this pattern:
 6. run the relevant repo checks
 7. review in the app diff / review flow
 8. stage, revert, and commit in-app or locally when useful
-9. when Jeremy explicitly requests PR creation or the active workflow requires a PR, use `CODEX-PR-PUSH-WORKFLOW.md`; do not make PR creation automatic for every local/worktree patch
+9. when PR creation is intended by Pull command, explicitly requested, or required, use `CODEX-PR-PUSH-WORKFLOW.md`; if this is truly local/worktree and PR creation is unavailable, commit when safe and report the Push/PR setup limitation
 10. verify after PR review, merge, or handoff
 
 
@@ -42,13 +49,13 @@ This file applies to Codex App, desktop, local, and worktree workflows.
 
 In this lane, normal Git concepts such as `origin`, branch, commit, push, and manual PR steps may apply.
 
-Codex PR creation is explicit, not automatic. Use `CODEX-PR-PUSH-WORKFLOW.md` only when Jeremy explicitly asks for PR creation or the active workflow requires a PR.
+Normal app Pulls are PR-intended by default in Jeremy's workflow, but this local/worktree file applies only when Jeremy explicitly says he is using that surface. Use `CODEX-PR-PUSH-WORKFLOW.md` when PR creation is intended, explicitly requested, or required.
 
-When PR creation is requested/required, Codex may prepare, commit, push, and open a PR only if the local/worktree setup supports it.
+When PR creation is intended/requested/required, Codex may prepare, commit, push, and open a PR only if the local/worktree setup supports it.
 
-If push or PR creation is unavailable, report it as a **Push/PR setup limitation** and provide Jeremy’s exact next manual step.
+If the patch is PR-intended but push or PR creation is unavailable, report it as a **Push/PR setup limitation** and provide Jeremy’s exact next manual step.
 
-Do not apply Codex Cloud-specific assumptions here. Codex Cloud / Web may use a different connected-repo PR creation flow and should not be forced to prove readiness through persistent local `origin` state after setup.
+Do not turn local push/origin limitations into `No PR requested`. Do not apply Codex Cloud-specific assumptions here. Codex Cloud / Web may use a different connected-repo PR creation flow and should not be forced to prove readiness through persistent local `origin` state after setup.
 
 Codex may not merge pull requests. Jeremy remains the final reviewer and merge authority.
 

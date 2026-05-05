@@ -25,7 +25,7 @@ Warn Jeremy about risk.
 Respect locked decisions.
 Separate repo truth from plans.
 Use visuals correctly when visual references are present.
-Keep PR creation explicit, not automatic; Jeremy remains final reviewer and merge authority.
+Default Jeremy's normal app Pulls to Codex Cloud / Web and PR-intended; Jeremy remains final reviewer and merge authority.
 
 ---
 
@@ -62,11 +62,13 @@ Recommended fields:
 | Repo Truth vs Plan | What is real now vs planned/targeted |
 | Locked Decisions Applied | Relevant decisions from `DECISION-LOCK-LEDGER.md` |
 | Do Not Touch | Files, systems, or behaviors Codex should avoid |
-| Codex Surface | Codex Cloud / Web OR Codex App / Desktop / Local / Worktree when PR behavior matters |
-| PR Mode | No PR requested / PR requested by Jeremy / PR required by active workflow / PR unavailable |
+| Codex Surface | Codex Cloud / Web by default; Codex App / Desktop / Local / Worktree only when Jeremy explicitly says local/worktree |
+| PR Mode | PR requested by Pull command / PR requested explicitly / PR required by active workflow / No PR requested / PR unavailable |
 | Codex PR Route | Whether PR creation is requested/required, what Push/PR setup limitation fallback applies, and that Jeremy merges |
 
 Keep this compact. Do not turn the safety header into a second Pull Sheet.
+
+For normal Bank the Catch app Pulls, do not use `PR Mode: No PR requested` unless Jeremy explicitly says no PR, audit-only, planning-only, docs-only, or local-only.
 
 ---
 
@@ -141,7 +143,7 @@ Use the contract fields that fit the patch:
 | Do Not Touch | Specific files, systems, or behaviors to avoid |
 | Pre-edit anchor | If required, report the anchor and proceed directly; the anchor is not an approval gate |
 | Acceptance checks | Pass/fail checks Codex should verify or protect |
-| PR Rule | PR creation is explicit, not automatic; Jeremy merges |
+| PR Rule | Normal app Pulls are PR-intended by default; Jeremy merges |
 
 Example wording:
 
@@ -158,7 +160,7 @@ Pre-edit anchor, when required:
 Report the pre-edit anchor, then proceed directly with the scoped patch. The anchor is not an approval gate. Do not end with “If you want…”, “Should I proceed?”, “I can now…”, or similar confirmation language.
 
 PR Route:
-State Codex Surface and PR Mode. Codex may create/open a PR only when Jeremy explicitly requests PR creation or the active workflow requires it. Do not claim PR success unless a real GitHub PR URL or PR number is confirmed. For Codex Cloud / Web, use the connected-repository PR creation flow and do not require persistent local `origin` after setup. For Codex App / Desktop / Local / Worktree, report true local push/PR failures as a Push/PR setup limitation and include branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and exact next manual step for Jeremy. Jeremy reviews and merges.
+State Codex Surface and PR Mode. For Jeremy's normal app Pulls, use `Codex Surface: Codex Cloud / Web` and `PR Mode: PR requested by Pull command` unless Jeremy says no PR, audit-only, planning-only, docs-only, or local-only. Codex may create/open a PR when PR creation is intended by Pull command, explicitly requested, or required. Do not claim PR success unless a real GitHub PR URL or PR number is confirmed. For Codex Cloud / Web, use the connected-repository PR creation flow and do not require persistent local `origin` after setup. For Codex App / Desktop / Local / Worktree, report true local push/PR failures as a Push/PR setup limitation and include branch name, commit SHA, touched files, tests run, whether remote/main verification was attempted, whether push was attempted, whether PR creation was attempted, and exact next manual step for Jeremy. Jeremy reviews and merges.
 ```
 
 Jeremy-level meaning:
@@ -167,7 +169,7 @@ Jeremy-level meaning:
 
 Use `ACCEPTANCE-CHECKS-VS-MANUAL-QA-RULE.md` when separating Codex checks from Jeremy device/browser QA.
 
-Use `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy explicitly asks for PR creation, PR review/diagnosis, or the active workflow requires a PR.
+Use `CODEX-PR-PUSH-WORKFLOW.md` when PR behavior matters, including Jeremy's normal app `Pull <item>` workflow, explicit PR creation, PR review/diagnosis, or active workflows that require a PR.
 
 ---
 

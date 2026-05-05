@@ -2,35 +2,62 @@
 
 ## Purpose
 
-Use this helper when a task involves pull-request creation, pull-request review, or deciding whether Codex Cloud / Web or Codex App / local worktree behavior applies.
+Use this helper when a task involves pull-request creation, pull-request review, diagnosing PR creation, or deciding whether Codex Cloud / Web or Codex App / Desktop / Local / Worktree behavior applies.
 
-This file defines explicit PR behavior for Vibe Coder 5.1:
+This file defines the Vibe Coder 5.1 PR workflow split:
 
-**Codex PR creation is explicit, not automatic. Codex may prepare a patch, branch, commit, and report results. Codex should create/open a pull request only when Jeremy explicitly asks for PR creation or when the active workflow requires a PR. Codex may not merge pull requests. Jeremy remains the final reviewer and merge authority.**
+- default Codex surface for Jeremy's normal app pulls is **Codex Cloud / Web**
+- Codex App / Desktop / Local / Worktree behavior is opt-in by Jeremy's wording
+- normal Bank the Catch `Pull <item>` work is **PR-intended** unless Jeremy says no PR
+- Codex may not merge pull requests
+- Jeremy remains the final reviewer and merge authority
 
 This helper does not replace `AGENTS.md`, `START-HERE.md`, `patch-prompt-style.md`, `codex-app-style.md`, or project-specific rules.
 
 ---
 
-## Core Rule: PR Creation Is Explicit, Not Automatic
+## Core Rule: Pull Is PR-Intended for Jeremy's Normal App Workflow
 
-For normal patch work, Codex should:
+For Jeremy's normal Bank the Catch app workflow, `Pull <item>` counts as explicit PR intent unless Jeremy says no PR, audit-only, planning-only, docs-only, local-only, or otherwise limits the task.
 
-1. create or use the appropriate branch when needed
-2. apply the requested code changes
-3. commit the work when appropriate
-4. report branch, commit, touched files, checks, risks, and next steps
+For normal app `Pull <item>` work, Codex should:
 
-Codex should create/open a PR only when:
-
-- Jeremy explicitly asks for PR creation, or
-- the active workflow specifically requires a PR
+1. use **Codex Cloud / Web** as the default Codex surface
+2. create or use the appropriate branch when needed
+3. apply the requested scoped changes
+4. commit the work when appropriate
+5. create/open a real PR through the connected Codex Cloud / GitHub flow when supported
+6. report the result clearly
 
 Core policy:
 
-> Codex prepares the patch and commit. Codex creates/opens a PR only in explicit PR mode. Jeremy reviews. Jeremy merges only after approval.
+> Pull prepares the patch, commit, and PR when the connected Codex Cloud / GitHub surface supports it. Codex may not merge. Jeremy reviews and merges only after approval.
 
-Do not make every Codex prompt auto-PR by default.
+Do not label ordinary Bank the Catch app pulls as `PR Mode: No PR requested` unless Jeremy explicitly says no PR or the task is audit-only, planning-only, docs-only, local-only, or otherwise not PR-bound.
+
+---
+
+## General PR Rule
+
+For general tasks outside Jeremy's normal app `Pull <item>` workflow, PR creation is explicit, not automatic.
+
+Create/open a PR only when:
+
+- Jeremy's command or wording requests PR creation, including normal app `Pull <item>` work
+- Jeremy explicitly asks for PR creation
+- the active workflow specifically requires a PR
+
+Do not infer PR mode from “GitHub connected” alone.
+
+---
+
+## Default Codex Surface
+
+Default to **Codex Cloud / Web** for Codex prompts, Pull Sheets, PR-intended app patches, and Bank the Catch workflow work.
+
+Use **Codex App / Desktop / Local / Worktree** only when Jeremy explicitly says he is using the desktop app, Codex App, local checkout, local worktree, or asks for local/worktree behavior.
+
+Do not apply local/worktree Git assumptions to Codex Cloud / Web prompts by default.
 
 ---
 
@@ -40,12 +67,13 @@ Use one of these labels when a task touches GitHub / PR flow:
 
 | PR Mode | Meaning |
 |---|---|
-| No PR requested | Prepare the patch/commit/report only. Do not create/open a PR. |
-| PR requested by Jeremy | Jeremy explicitly asked for PR creation. Use the correct Codex surface behavior. |
+| PR requested by Pull command | Normal Bank the Catch `Pull <item>` app work. Create/open a real PR through the connected Codex Cloud / GitHub flow when supported. |
+| PR requested explicitly | Jeremy explicitly asked for PR creation outside the normal Pull command. Use the correct Codex surface behavior. |
 | PR required by active workflow | The current workflow requires a PR. Use the correct Codex surface behavior. |
-| PR unavailable / Push/PR setup limitation | PR creation was requested/required, but the current surface cannot complete it. |
+| No PR requested | Jeremy explicitly said no PR, or the task is audit-only, planning-only, docs-only, local-only, or otherwise not PR-bound. |
+| PR unavailable / Push/PR setup limitation | PR creation was requested/intended/required, but the current surface cannot complete it. |
 
-Do not infer PR mode from “GitHub connected” alone.
+Do not use `No PR requested` for normal Bank the Catch app Pulls unless Jeremy explicitly limits the task away from PR creation.
 
 ---
 
@@ -55,9 +83,9 @@ Use one of these labels when the distinction matters:
 
 | Codex Surface | Meaning |
 |---|---|
-| Codex Cloud / Web | Browser/cloud connected-repo task. PR creation may use Codex Cloud's connected GitHub flow. |
-| Codex App / Desktop / Local / Worktree | Local or worktree task where normal Git remote, branch, push, and manual PR behavior may apply. |
-| Unknown / to verify | The surface is unclear. Ask or state the assumption when it affects PR/push behavior. |
+| Codex Cloud / Web | Browser/cloud connected-repo task. This is the default surface for Jeremy's normal app pulls. PR creation may use Codex Cloud's connected GitHub flow. |
+| Codex App / Desktop / Local / Worktree | Local or worktree task where normal Git remote, branch, push, and manual PR behavior may apply. Use only when Jeremy explicitly says this is the surface. |
+| Unknown / to verify | The surface is unclear. Use Codex Cloud / Web as the default unless Jeremy's wording points to local/worktree behavior. |
 
 ---
 
@@ -71,7 +99,7 @@ A blank `git remote -v` after setup is not, by itself, proof that PR creation is
 
 Do not use persistent local `origin`, raw `git fetch origin main`, or raw `git push origin` as the default PR-readiness gate for Codex Cloud.
 
-When Jeremy explicitly asks for PR creation, or the active workflow requires a PR, use Codex Cloud's connected-repository PR creation flow.
+When PR creation is intended or requested, use Codex Cloud's connected-repository PR creation flow.
 
 Do not claim PR success unless a real GitHub PR URL or PR number is confirmed.
 
@@ -81,11 +109,13 @@ A local branch, commit, tool metadata, `make_pr` metadata, or task status messag
 
 ## Codex App / Desktop / Local / Worktree Behavior
 
+Use this lane only when Jeremy explicitly says he is using Codex App, desktop app, local checkout, local worktree, or asks for local/worktree behavior.
+
 For Codex App, desktop, local, or worktree tasks, normal Git remote behavior may apply.
 
 In this lane, `origin`, remote branch verification, local branch creation, commit, push access, and manual PR steps can be relevant.
 
-If origin, remote-main verification, push, or PR creation is unavailable locally when PR/push work was requested or required, report it as a **Push/PR setup limitation** and provide Jeremy's exact next manual step.
+If origin, remote-main verification, push, or PR creation is unavailable locally when PR/push work was requested or intended, report it as a **Push/PR setup limitation** and provide Jeremy's exact next manual step.
 
 Do not apply Codex Cloud-specific assumptions to local/worktree tasks.
 
@@ -110,7 +140,7 @@ If no PR URL or number is confirmed, say that no confirmed PR exists yet.
 
 ## Push/PR Setup Limitation Label
 
-Use **Push/PR setup limitation** when the current execution surface cannot complete the remote GitHub step that was requested or required.
+Use **Push/PR setup limitation** when the current execution surface cannot complete the remote GitHub step that was requested, intended, or required.
 
 This is most common in Codex App / Desktop / Local / Worktree workflows.
 
@@ -173,11 +203,11 @@ Real blockers stay narrow:
 
 ---
 
-## Explicit PR Workflow
+## PR Workflow
 
-Use this only when PR creation is requested or required.
+Use this when PR creation is requested, intended by Pull command, or required.
 
-When PR creation is requested/required:
+When PR creation is requested/intended/required:
 
 1. identify the Codex Surface
 2. identify PR Mode
@@ -186,6 +216,13 @@ When PR creation is requested/required:
 5. use the correct PR creation path for the surface
 6. confirm a PR number or URL before claiming success
 7. leave PR summary, test notes, Acceptance checks, risks/follow-ups, and rollback notes when a PR is created
+
+For Jeremy's normal app Pulls, default to:
+
+```text
+Codex Surface: Codex Cloud / Web
+PR Mode: PR requested by Pull command
+```
 
 For Codex Cloud / Web, use the connected-repository PR creation flow.
 
@@ -216,20 +253,22 @@ Use `ACCEPTANCE-CHECKS-VS-MANUAL-QA-RULE.md` when separating Codex-verifiable ch
 
 ## Codex Prompt Add-On
 
-When explicit PR mode applies, include wording like:
+When PR creation is requested, intended by Pull command, or required, include wording like:
 
 ```text
-Codex Surface: <Codex Cloud / Web OR Codex App / Desktop / Local / Worktree>
-PR Mode: <PR requested by Jeremy OR PR required by active workflow>
+Codex Surface: Codex Cloud / Web
+PR Mode: PR requested by Pull command
 
-Create/open a PR only because PR creation is explicitly requested or required for this task. Do not claim PR success unless a real GitHub PR URL or PR number is confirmed. A local branch, commit, tool metadata, or task status message alone is not enough.
+Create/open a real PR through the connected Codex Cloud / GitHub flow when supported. Do not claim PR success unless a real GitHub PR URL or PR number is confirmed. A local branch, commit, tool metadata, or task status message alone is not enough.
 
 For Codex Cloud / Web, do not require persistent local origin after setup. Use the connected-repository PR creation flow.
 
-For Codex App / Desktop / Local / Worktree, local Git remote/push behavior may apply. If origin, remote-main verification, push, or PR creation is unavailable, report a Push/PR setup limitation and Jeremy's exact next manual step.
+For Codex App / Desktop / Local / Worktree, use that lane only when Jeremy explicitly says he is using it. If origin, remote-main verification, push, or PR creation is unavailable, report a Push/PR setup limitation and Jeremy's exact next manual step.
 
 Codex may not merge. Jeremy remains the final reviewer and merge authority.
 ```
+
+If Jeremy explicitly says no PR, audit-only, planning-only, docs-only, or local-only, set the PR Mode accordingly and do not force PR creation.
 
 ---
 
@@ -237,7 +276,6 @@ Codex may not merge. Jeremy remains the final reviewer and merge authority.
 
 Codex must not automatically:
 
-- create/open a PR when PR creation was not requested or required
 - merge into `main`
 - deploy production
 - bypass PR review
@@ -248,11 +286,15 @@ Codex must not automatically:
 - claim a branch was pushed if push failed or was unavailable
 - claim a PR exists unless a GitHub PR number or URL is confirmed
 
+Codex should not create/open a PR when Jeremy explicitly says no PR, audit-only, planning-only, docs-only, local-only, or otherwise limits the task away from PR creation.
+
 ---
 
 ## Optional Project Overlay Note: Bank the Catch
 
-For Bank the Catch, PR review is especially important because the app is close to free-tier launch.
+For Bank the Catch, normal `Pull <item>` app workflow is PR-intended unless Jeremy says no PR.
+
+PR review is especially important because the app is close to free-tier launch.
 
 Use `BANK-THE-CATCH-YTD-PAID-STRATEGY.md` wherever it is installed.
 
@@ -262,7 +304,7 @@ Default pack path:
 _optional-overlays/BANK-THE-CATCH-YTD-PAID-STRATEGY.md
 ```
 
-Codex may prepare PR-ready work when PR creation is explicitly requested or required, but Jeremy still protects:
+Codex may prepare and create PR-ready work when PR creation is intended by Pull command, explicitly requested, or required, but Jeremy still protects:
 
 - free vs paid boundaries
 - trip history access
@@ -278,4 +320,4 @@ Codex may prepare PR-ready work when PR creation is explicitly requested or requ
 
 Use this as the standing PR policy:
 
-> Codex PR creation is explicit, not automatic. Codex may prepare branches and commits, and may create/open pull requests only when Jeremy explicitly asks or when the active workflow requires it. Codex may not merge pull requests. Jeremy remains the final reviewer and merge authority.
+> Default to Codex Cloud / Web for Jeremy's normal app pulls. `Pull <item>` is PR-intended unless Jeremy says no PR. Codex may prepare branches and commits, and may create/open real pull requests when PR creation is intended, requested, or required. Codex may not merge pull requests. Jeremy remains the final reviewer and merge authority.

@@ -42,7 +42,7 @@ When the task lane, output shape, or helper-file choice is unclear, use `VIBE-CO
 
 Optional project overlays, such as Bank the Catch strategy files, apply only when intentionally installed for that project.
 
-Codex PR creation is explicit, not automatic. Use `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy asks for PR creation, when a PR is being reviewed, or when the active workflow requires a PR. Codex may not claim a PR exists unless a real GitHub PR URL or PR number is confirmed. Distinguish Codex Cloud / Web from Codex App / Desktop / Local / Worktree before applying remote/push assumptions.
+Default Codex work to **Codex Cloud / Web** unless Jeremy explicitly says he is using Codex App, desktop, local checkout, or local worktree. For Jeremy's normal Bank the Catch app workflow, `Pull <item>` is PR-intended unless Jeremy says no PR, audit-only, planning-only, docs-only, or local-only. Use `CODEX-PR-PUSH-WORKFLOW.md` when PR behavior matters. Codex may not claim a PR exists unless a real GitHub PR URL or PR number is confirmed, and Codex may not merge.
 
 For meaningful patches, use `PATCH-SAFETY-STACK.md` and `DECISION-LOCK-LEDGER.md` as quiet safety helpers when relevant. Do not make Jeremy manage new commands for the safety stack.
 
@@ -76,6 +76,7 @@ When relevant, state:
 Execution surface can include:
 - ChatGPT
 - ChatGPT + GitHub app
+- Codex Cloud / Web
 - Codex Local
 - Codex Worktree
 - GitHub PR review
@@ -156,6 +157,8 @@ Use it to get back on the rails, not to widen the task.
 
 ### `Pull <item>`
 Default execution command.
+
+For Jeremy's normal Bank the Catch app workflow, `Pull <item>` is PR-intended unless Jeremy says no PR, audit-only, planning-only, docs-only, or local-only. Default Codex Surface is **Codex Cloud / Web** and default PR Mode is **PR requested by Pull command**.
 
 Use it to do the real working pass for one Parking Lot item or one safe combined batch.
 
@@ -340,9 +343,10 @@ Before reporting branch or remote limitations, distinguish **repo truth** from *
 ### Repo truth
 - The GitHub remote is the source of truth for default branch and branch existence.
 - Do not say the repo has no `main` branch unless the remote repo itself confirms that.
-- Distinguish Codex Cloud / Web from Codex App / Desktop / Local / Worktree before applying Git remote assumptions.
+- Default Codex Surface is Codex Cloud / Web unless Jeremy explicitly says Codex App, desktop, local checkout, or local worktree.
 - For Codex Cloud / Web, do not treat missing persistent local `origin` after setup as proof of repo failure or PR unavailability.
 - For Codex App / Desktop / Local / Worktree, use latest remote `main` as the intended base when it can be verified safely. If remote `main` cannot be verified locally, report it as a **Push/PR setup limitation**, not repo truth, and proceed only from the safest available base.
+- Do not downgrade a normal Bank the Catch `Pull <item>` to `PR Mode: No PR requested` just because local Git remote state is unavailable.
 
 Pre-edit anchors are not approval gates unless Jeremy explicitly asks for an approval checkpoint. After reporting one, proceed directly with the scoped patch unless there is a real blocker; do not end with “If you want…” or similar confirmation language.
 

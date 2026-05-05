@@ -44,7 +44,7 @@ If Jeremy explicitly changes a decision, update the ledger status instead of arg
 | Separate Repo Truth from Approved Plan | Locked | Pull Sheets / audits | Prevents planned decisions from being treated as already coded |
 | Use Acceptance checks inside Codex prompts | Locked | Codex prompts | Gives Codex pass/fail completion criteria |
 | Use Manual QA for Jeremy outside Codex prompts | Locked | Post-patch/user checks | Keeps human device/browser checks separate |
-| Codex PR creation is explicit, not automatic; Jeremy merges | Locked | GitHub / Codex workflow | Preserves final merge control, prevents false PR claims, and avoids auto-PR drift |
+| Normal Bank the Catch Pulls are Codex Cloud / Web and PR-intended; Jeremy merges | Locked | GitHub / Codex workflow | Restores Jeremy's normal Pull-to-PR workflow while preserving final merge control and preventing false PR claims |
 | Visual references require role-based handling | Locked | Visual patches | Prevents screenshots from causing unrelated redesigns |
 | Do not add Launch Readiness Board to active 5.1 workflow | Locked | 5.1 scope | Keeps 5.1 low-intrusion |
 
@@ -84,7 +84,7 @@ Example:
 
 ```text
 Locked Decisions Applied:
-- Codex may create/open a PR only when Jeremy explicitly asks or the active workflow requires it, and Jeremy merges.
+- Normal Bank the Catch Pulls use Codex Cloud / Web and are PR-intended unless Jeremy says no PR; Jeremy merges.
 - Use Smallest Safe Patch.
 - Do not treat planned direction as current repo truth.
 ```

@@ -45,11 +45,18 @@ Use these to keep changes small, label risk, respect locked decisions, separate 
 
 Do not make Jeremy manage extra commands or dashboards for the safety stack.
 
+
+## Default Codex Surface and Pull PR Intent
+
+Default Codex prompts and PR-intended app pulls to **Codex Cloud / Web** unless Jeremy explicitly says he is using Codex App, desktop, local, or worktree.
+
+For normal Bank the Catch `Pull <item>` work, treat Pull as PR-intended unless Jeremy says no PR, audit-only, planning-only, docs-only, or local-only. Codex may create/open a PR when the connected Cloud/GitHub surface supports it, but Jeremy always reviews and merges.
+
 ## Codex / PR Workflow
 
-Use `CODEX-PR-PUSH-WORKFLOW.md` when Jeremy explicitly asks for PR creation or when the active workflow requires a PR.
+Use `CODEX-PR-PUSH-WORKFLOW.md` when PR behavior matters, including normal Bank the Catch Pulls, explicit PR creation, PR review/diagnosis, or active workflows that require a PR.
 
-Do not make PR creation automatic for every Codex task.
+Do not label normal app Pulls as no-PR unless Jeremy says no PR or the task is audit-only, planning-only, docs-only, or local-only.
 
 Codex may prepare patches and commits, but Jeremy remains the final reviewer and merge authority.
 

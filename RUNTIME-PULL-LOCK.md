@@ -40,7 +40,7 @@ For runtime-facing patches, the pre-edit anchor is a **report-and-proceed** step
 - exact intended touched files
 - whether remote `main` verification was attempted and whether it was verified or unavailable locally
 
-Use latest remote `main` as the intended base when the execution surface can verify it safely. For Codex Cloud / Web, do not require persistent `origin` after setup as proof of readiness. For Codex App / Local / Worktree, if remote `main` cannot be verified locally, report it as a **Push/PR setup limitation**, not repo truth, and proceed only from the safest available base.
+Use latest remote `main` as the intended base when the execution surface can verify it safely. For Codex Cloud / Web, do not require persistent `origin` after setup as proof of readiness. For Jeremy's normal Pull workflow, do not downgrade a PR-intended patch to `No PR requested` only because local Git remote state is unavailable. For Codex App / Local / Worktree, if remote `main` cannot be verified locally, report it as a **Push/PR setup limitation**, not repo truth, and proceed only from the safest available base.
 
 After reporting the pre-edit anchor, Codex must proceed directly with the scoped patch.
 
@@ -48,7 +48,7 @@ The pre-edit anchor is not an approval gate. It must end with proceeding-directl
 
 Use wording like:
 
-> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, and follow the selected PR Mode. I will create/open a PR only if Jeremy explicitly requested PR creation or the active workflow requires it.
+> Proceeding directly with the scoped patch. I will stay within the listed touched-file scope, run the required checks, commit the work when appropriate, and follow the selected PR Mode. I will create/open a PR when PR creation is intended by Pull command, explicitly requested, or required, and only when the connected surface supports it.
 
 Do not end the anchor with “If you want…”, “Should I proceed?”, “I can now…”, “I’ll now execute…”, or similar approval-gate language.
 
