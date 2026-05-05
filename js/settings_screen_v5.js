@@ -117,11 +117,11 @@ export function createSettingsScreenOrchestrator({
       emphasis: "soft",
       compact: true,
       className: "settingsBackupTrustSurface",
-      title: "Backup trust baseline",
+      title: "Protect your trip records",
       statusPill: "Recommended",
-      body: "Create a backup before major updates, Replace restore, or switching phones, browsers, or app modes.",
-      support: "Keep one current copy and one older copy in iCloud Drive or Google Drive.",
-      minorNote: "Erase All Data also clears backup freshness and rollback status shown on this device."
+      body: "Save a backup before updates, restoring data, or switching phones.",
+      support: "For the safest backup, choose a place that saves off this device: iCloud Drive on Apple devices or Google Drive on Android.",
+      minorNote: "If your only backup stays on this phone and the phone is lost, damaged, or replaced, your trip data may be lost too. Keep one current backup and one older backup in iCloud Drive or Google Drive."
     });
 
     getApp().innerHTML = `
@@ -140,7 +140,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsHealthValue" id="settingsHealthBackup">Checking</div>
       </div>
       <div class="settingsHealthCell">
-        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("choices")}</span>Choices</div>
+        <div class="settingsHealthLabel"><span class="settingsHealthIcon">${settingsIconSvg("choices")}</span>Trip Setup</div>
         <div class="settingsHealthValue" id="settingsHealthChoices">${areaCount}A / ${dealerCount}D</div>
       </div>
     </div>
@@ -151,8 +151,8 @@ export function createSettingsScreenOrchestrator({
           <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("backup")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Backup</div>
-            <div class="settingsAccordionTitle">Backup & restore</div>
-            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Checking backup freshness</div>
+            <div class="settingsAccordionTitle">Backup and restore trips</div>
+            <div class="muted small settingsAccordionStatus" id="safetySummaryLine">Protect your trip records with a saved backup.</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionAction">Backup</span>
@@ -162,9 +162,9 @@ export function createSettingsScreenOrchestrator({
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
-            <div class="settingsRowTitle">Backup & Restore</div>
+            <div class="settingsRowTitle">Backup and restore trips</div>
           </div>
-          <span class="settingsValuePill">Freshness</span>
+          <span class="settingsValuePill">Backup status</span>
         </div>
         <div class="settingsRow settingsRow--status">
           <div id="backupHealthLane" class="settingsBackupHealth" hidden aria-live="polite" aria-hidden="true"></div>
@@ -180,7 +180,7 @@ export function createSettingsScreenOrchestrator({
           <div class="muted small" id="restoreRollbackLine"></div>
         </div>
         <div class="settingsRow settingsRow--action">
-          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>Rollback / undo last restore</button>
+          <button class="btn settingsFlexBtn" id="restoreRollbackBtn" hidden>Undo last restore</button>
         </div>
         ${deletedTripsHtml}
       </details>
@@ -192,8 +192,9 @@ export function createSettingsScreenOrchestrator({
           <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("updates")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Updates</div>
-            <div class="settingsAccordionTitle">Version & update status</div>
-            <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Version check in progress</div>
+            <div class="settingsAccordionTitle">App version and updates</div>
+            <span class="hidden" aria-hidden="true">Version & update status</span>
+            <div class="muted small settingsAccordionStatus" id="updatesSummaryLine">Check for the latest app version.</div>
           </div>
           <div class="settingsAccordionRight settingsAccordionRight--updates">
             <button class="btn settingsSummaryActionBtn" id="settingsUpdateSummaryAction" type="button" aria-label="Run update action">Update</button>
@@ -212,7 +213,7 @@ export function createSettingsScreenOrchestrator({
           <div class="muted settingsBodyTiny" id="updateVersionLine"></div>
         </div>
         <div class="settingsRow settingsRow--action">
-          <button class="btn settingsInlineBtn" id="updatePrimary">Reload latest build now</button>
+          <button class="btn settingsInlineBtn" id="updatePrimary">Update app now</button>
           <div class="muted settingsBodyTiny settingsInlineMsg" id="updateInlineMsg"></div>
         </div>
         <details class="settingsDetails settingsRow">
@@ -234,7 +235,7 @@ export function createSettingsScreenOrchestrator({
         <summary class="settingsAccordionSummary">
           <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("choices")}</span>
           <div class="settingsAccordionMeta">
-            <div class="settingsGroupLabel">Trip Choices</div>
+            <div class="settingsGroupLabel">Trip Setup</div>
             <div class="settingsAccordionTitle">Areas & dealers</div>
             <div class="muted small settingsAccordionStatus" id="dataListsSummaryLine">${areaCount} areas • ${dealerCount} dealers</div>
           </div>
@@ -246,8 +247,8 @@ export function createSettingsScreenOrchestrator({
         </summary>
         <div class="settingsRow settingsRow--split">
           <div>
-            <div class="settingsRowTitle">Manage Choices</div>
-            <div class="muted small">Edit the lists used in New Trip and Edit Trip.</div>
+            <div class="settingsRowTitle">Manage trip setup</div>
+            <div class="muted small">Manage the areas and dealers you use when saving trips.</div>
           </div>
           <span class="settingsValuePill">Edit</span>
         </div>
@@ -271,8 +272,8 @@ export function createSettingsScreenOrchestrator({
           <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("install")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">Install</div>
-            <div class="settingsAccordionTitle">Web app setup</div>
-            <div class="muted small settingsAccordionStatus" id="installSummaryLine">Installed on this device</div>
+            <div class="settingsAccordionTitle">App setup on this device</div>
+            <div class="muted small settingsAccordionStatus" id="installSummaryLine">This device is set up.</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill settingsAccordionPill--ghost" id="installStatusPill">Checking</span>
@@ -296,7 +297,7 @@ export function createSettingsScreenOrchestrator({
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">About</div>
             <div class="settingsAccordionTitle">Version, support, and legal</div>
-            <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Build details • Privacy • Terms</div>
+            <div class="muted small settingsAccordionStatus" id="aboutSummaryLine">Version details • Privacy • Terms</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill settingsAccordionPill--ghost" id="aboutStatusPill">${displayBuildVersion}</span>
@@ -306,7 +307,7 @@ export function createSettingsScreenOrchestrator({
         <div class="settingsRow settingsRow--split">
           <div>
             <div class="settingsRowTitle">Version</div>
-            <div class="muted small">Current build on this device.</div>
+            <div class="muted small">Current app version on this device.</div>
           </div>
           <span class="settingsValuePill">${displayBuildVersion}</span>
         </div>
@@ -321,7 +322,7 @@ export function createSettingsScreenOrchestrator({
         </div>
         <div class="settingsRow settingsRow--split settingsRow--minor">
           <div>
-            <div class="settingsRowTitle">Legal & Trust</div>
+            <div class="settingsRowTitle">Legal and privacy</div>
             <div class="muted small">Terms, privacy, and software license details.</div>
           </div>
           <span class="settingsValuePill">Info</span>
@@ -342,8 +343,8 @@ export function createSettingsScreenOrchestrator({
           <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("support")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">SUPPORT</div>
-            <div class="settingsAccordionTitle">Help, safe reload, and reset tools</div>
-            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Help, safe reload, and reset tools</div>
+            <div class="settingsAccordionTitle">Help, troubleshooting, and reset tools</div>
+            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Help, troubleshooting, and reset tools</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill settingsAccordionPill--ghost" id="advancedStatusPill">Support</span>
@@ -352,8 +353,8 @@ export function createSettingsScreenOrchestrator({
         </summary>
         <div class="settingsRow settingsRow--action mt10">
           <div class="row gap10 wrap">
-            <button class="btn" id="copyDebug">Copy support bundle</button>
-            <button class="btn" id="refreshApp">Reload app safely</button>
+            <button class="btn" id="copyDebug">Copy troubleshooting info</button>
+            <button class="btn" id="refreshApp">Reload app</button>
           </div>
         </div>
 ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--split settingsRow--minor">
@@ -438,7 +439,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
           </div>
         </div>
 ` : ""}        <div class="settingsRow settingsRow--minor">
-          <div class="muted small">Copy this support bundle (privacy-safe runtime metadata only), then add a short repro note.</div>
+          <div class="muted small">Copy app troubleshooting info, then send it with a short note about what happened.</div>
         </div>
         <div class="settingsRow settingsRow--danger">
           <div class="muted small"><b>Danger zone:</b> Erase removes all trips, list entries, and local recovery metadata on this device. Create a backup first.</div>
@@ -509,7 +510,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     if (settingsHealthChoices) settingsHealthChoices.textContent = `${areaCount}A / ${dealerCount}D`;
 
     if (updatesSummaryLine) {
-      updatesSummaryLine.textContent = "Version check in progress";
+      updatesSummaryLine.textContent = "Check for the latest app version.";
     }
     if (settingsUpdateSummaryAction) {
       settingsUpdateSummaryAction.addEventListener("click", (ev) => {
@@ -530,11 +531,11 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
     }
     const aboutSummaryLine = document.getElementById("aboutSummaryLine");
     if (aboutSummaryLine) {
-      aboutSummaryLine.textContent = "Build details • Privacy • Terms";
+      aboutSummaryLine.textContent = "Version details • Privacy • Terms";
     }
     if (aboutStatusPill) {
       aboutStatusPill.textContent = displayBuildVersion;
-      aboutStatusPill.title = `Current build ${displayBuildVersion}`;
+      aboutStatusPill.title = `Current app version ${displayBuildVersion}`;
     }
     if (advancedStatusPill) {
       advancedStatusPill.textContent = "Support";

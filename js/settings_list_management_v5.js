@@ -82,7 +82,7 @@ export function createSettingsListManagement(deps){
                     ${escapeHtml(BUILT_IN_SPECIES_NAME)}
                     <span class="settingsSpeciesLockedBadge">Built-in</span>
                   </div>
-                  <div class="settingsSpeciesLockedText tripsLockedPreviewText">Bank the Catch currently uses ${escapeHtml(BUILT_IN_SPECIES_NAME)} as the built-in species.</div>
+                  <div class="settingsSpeciesLockedText tripsLockedPreviewText">${escapeHtml(BUILT_IN_SPECIES_NAME)} is included for this version and cannot be changed yet.</div>
                   <div class="settingsSpeciesLockedText tripsLockedPreviewText">This built-in species cannot be renamed or deleted.</div>
                 </div>
               </div>
