@@ -146,7 +146,7 @@ export function createSettingsScreenOrchestrator({
     </div>
 
     <div class="settingsGroupBlock">
-      <button class="card settingsSectionCard settingsGroupedCard settingsNavCard settingsAccordionSummary" id="settingsHelpNav" type="button">
+      <button class="card settingsSectionCard settingsGroupedCard settingsNavCard settingsAccordionCard settingsAccordionSummary" id="settingsHelpNav" type="button">
         <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("support")}</span>
         <div class="settingsAccordionMeta">
           <div class="settingsGroupLabel">Help</div>
