@@ -145,6 +145,20 @@ export function createSettingsScreenOrchestrator({
       </div>
     </div>
 
+    <div class="settingsGroupBlock">
+      <button class="card settingsSectionCard settingsGroupedCard settingsNavCard" id="settingsHelpNav" type="button">
+        <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("support")}</span>
+        <div class="settingsAccordionMeta">
+          <div class="settingsGroupLabel">Help</div>
+          <div class="settingsAccordionTitle">App guide</div>
+          <div class="muted small settingsAccordionStatus">Open help for trips, backup, updates, install, and troubleshooting.</div>
+        </div>
+        <div class="settingsAccordionRight">
+          <span class="settingsAccordionChevron settingsAccordionChevron--nav" aria-hidden="true">›</span>
+        </div>
+      </button>
+    </div>
+
     <div class="settingsGroupBlock" id="settingsSafetyRecovery">
       <details class="card settingsSectionCard settingsGroupedCard settingsAccordionCard" data-settings-accordion>
         <summary class="settingsAccordionSummary">
@@ -220,13 +234,6 @@ export function createSettingsScreenOrchestrator({
           <summary class="muted settingsBodyTiny">Technical details</summary>
           <div class="muted settingsBodyTiny settingsBuildInfo" id="buildInfoDetails"></div>
         </details>
-        <div class="settingsRow settingsRow--split settingsRow--minor settingsHelpGuideRow">
-          <div>
-            <div class="settingsRowTitle">Help guide</div>
-            <div class="muted small">Open full help for install, backup, updates, and support.</div>
-          </div>
-          <button class="btn settingsInlineBtn" id="openHelp">Open help guide</button>
-        </div>
       </details>
     </div>
 
@@ -343,8 +350,8 @@ export function createSettingsScreenOrchestrator({
           <span class="settingsCardBadge" aria-hidden="true">${settingsIconSvg("support")}</span>
           <div class="settingsAccordionMeta">
             <div class="settingsGroupLabel">SUPPORT</div>
-            <div class="settingsAccordionTitle">Help, troubleshooting, and reset tools</div>
-            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Help, troubleshooting, and reset tools</div>
+            <div class="settingsAccordionTitle">Troubleshooting and reset tools</div>
+            <div class="muted small settingsAccordionStatus" id="advancedSummaryLine">Copy troubleshooting info, reload the app, or erase data if needed.</div>
           </div>
           <div class="settingsAccordionRight">
             <span class="settingsAccordionPill settingsAccordionPill--ghost" id="advancedStatusPill">Support</span>
@@ -465,7 +472,7 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
       });
     });
 
-    document.getElementById("openHelp").onclick = () => {
+    document.getElementById("settingsHelpNav").onclick = () => {
       pushView(state, "help");
     };
 
