@@ -642,6 +642,19 @@ header{padding:14px 18px 12px}
   max-width:min(86%, 360px);
   text-wrap:balance;
 }
+
+.pageHeader--all-trips::after{
+  height:2px;
+  background:linear-gradient(90deg, rgba(212,175,55,0) 0%, rgba(212,175,55,.48) 20%, rgba(255,215,120,.95) 50%, rgba(212,175,55,.48) 80%, rgba(212,175,55,0) 100%);
+  box-shadow:0 0 8px rgba(212,175,55,.28);
+}
+.pageHeader--all-trips .phDescription{
+  white-space:nowrap;
+  text-wrap:normal;
+  max-width:100%;
+  font-size:clamp(11px, 2.85vw, 13px);
+  overflow:visible;
+}
 .phActionStub{
   width:42px;
   height:42px;
