@@ -663,31 +663,32 @@ header{padding:14px 18px 12px}
   box-shadow:0 0 8px rgba(212,175,55,.28);
 }
 .phActionStub{
-  width:58px;
-  height:64px;
+  width:50px;
+  height:56px;
+  flex:0 0 50px;
   display:block;
 }
 .phHelpBtn{
-  width:58px;
-  min-height:64px;
-  border-radius:19px;
-  border:1px solid rgba(115,190,255,.72);
+  width:50px;
+  min-height:56px;
+  border-radius:16px;
+  border:1px solid rgba(115,190,255,.56);
   background:
     linear-gradient(180deg, rgba(48,79,122,.52), rgba(10,18,34,.9)),
     radial-gradient(130% 110% at 50% -20%, rgba(126,196,255,.35), rgba(17,30,54,0));
   box-shadow:
-    inset 0 1px 0 rgba(186,229,255,.24),
-    inset 0 -8px 14px rgba(0,0,0,.38),
-    0 0 0 1px rgba(65,131,205,.24),
-    0 7px 18px rgba(4,10,24,.46),
-    0 0 18px rgba(62,145,236,.3);
+    inset 0 1px 0 rgba(186,229,255,.2),
+    inset 0 -6px 12px rgba(0,0,0,.34),
+    0 0 0 1px rgba(65,131,205,.2),
+    0 5px 14px rgba(4,10,24,.4),
+    0 0 12px rgba(62,145,236,.2);
   color:#f4fbff;
-  padding:8px 6px 7px;
+  padding:7px 5px 6px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:3px;
+  gap:2px;
 }
 .phHelpIconWrap{
   display:flex;
@@ -697,14 +698,14 @@ header{padding:14px 18px 12px}
   line-height:0;
 }
 .phHelpBtn svg{
-  width:25px;
-  height:25px;
+  width:22px;
+  height:22px;
   display:block;
 }
 .phHelpLabel{
   display:block;
-  font-size:11px;
-  font-weight:700;
+  font-size:10.8px;
+  font-weight:640;
   letter-spacing:.02em;
   line-height:1;
   color:#f6fbff;
@@ -719,8 +720,8 @@ header{padding:14px 18px 12px}
   box-shadow:
     inset 0 2px 6px rgba(0,0,0,.48),
     inset 0 -2px 1px rgba(140,205,255,.16),
-    0 2px 10px rgba(2,8,18,.36),
-    0 0 14px rgba(56,132,214,.2);
+    0 2px 9px rgba(2,8,18,.32),
+    0 0 10px rgba(56,132,214,.16);
 }
 .phIcon svg{
   width:18px;
