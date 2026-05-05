@@ -77,30 +77,30 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   if (!ctx) throw new Error("canvas-unavailable");
 
   const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, "#020711");
-  gradient.addColorStop(0.58, "#05111f");
-  gradient.addColorStop(1, "#071a33");
+  gradient.addColorStop(0, "#071327");
+  gradient.addColorStop(0.48, "#040b16");
+  gradient.addColorStop(1, "#020711");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const topGlow = ctx.createRadialGradient(830, 140, 48, 830, 140, 520);
-  topGlow.addColorStop(0, "rgba(70,150,255,0.2)");
-  topGlow.addColorStop(0.44, "rgba(70,150,255,0.1)");
+  topGlow.addColorStop(0, "rgba(86,139,210,0.2)");
+  topGlow.addColorStop(0.44, "rgba(20,44,82,0.12)");
   topGlow.addColorStop(1, "rgba(70,150,255,0)");
   ctx.fillStyle = topGlow;
   ctx.fillRect(0, 0, canvas.width, 620);
 
   const blueBloom = ctx.createRadialGradient(228, 264, 34, 228, 264, 516);
-  blueBloom.addColorStop(0, "rgba(7,26,51,0.3)");
-  blueBloom.addColorStop(0.56, "rgba(7,26,51,0.14)");
-  blueBloom.addColorStop(1, "rgba(7,26,51,0)");
+  blueBloom.addColorStop(0, "rgba(6,18,38,0.34)");
+  blueBloom.addColorStop(0.56, "rgba(6,18,38,0.16)");
+  blueBloom.addColorStop(1, "rgba(6,18,38,0)");
   ctx.fillStyle = blueBloom;
   ctx.fillRect(0, 0, canvas.width, 720);
 
   const accentGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-  accentGradient.addColorStop(0, "rgba(29,111,255,0.24)");
-  accentGradient.addColorStop(0.58, "rgba(29,111,255,0.12)");
-  accentGradient.addColorStop(1, "rgba(29,111,255,0.2)");
+  accentGradient.addColorStop(0, "rgba(29,111,255,0.34)");
+  accentGradient.addColorStop(0.58, "rgba(29,111,255,0.18)");
+  accentGradient.addColorStop(1, "rgba(29,111,255,0.3)");
   ctx.fillStyle = accentGradient;
   ctx.fillRect(0, 0, canvas.width, 14);
 
@@ -111,30 +111,35 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   const heroHeight = 280;
 
   drawRoundedRect(ctx, innerX, innerY, innerW, innerH, 42);
-  ctx.fillStyle = "rgba(5,17,31,0.6)";
+  ctx.fillStyle = "rgba(4,11,22,0.78)";
   ctx.fill();
-  ctx.strokeStyle = "rgba(29,111,255,0.44)";
+  ctx.strokeStyle = "rgba(29,111,255,0.82)";
   ctx.lineWidth = 2;
   ctx.stroke();
+  ctx.shadowColor = "rgba(29,111,255,0.42)";
+  ctx.shadowBlur = 26;
+  ctx.stroke();
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
 
   ctx.save();
   drawRoundedRect(ctx, innerX, innerY, innerW, innerH, 42);
   ctx.clip();
 
   const heroGradient = ctx.createLinearGradient(innerX, innerY, innerX + innerW, innerY + heroHeight);
-  heroGradient.addColorStop(0, "rgba(2,7,17,0.99)");
-  heroGradient.addColorStop(0.6, "rgba(5,17,31,0.97)");
-  heroGradient.addColorStop(0.88, "rgba(7,26,51,0.95)");
-  heroGradient.addColorStop(1, "rgba(7,26,51,0.92)");
+  heroGradient.addColorStop(0, "rgba(7,19,39,0.99)");
+  heroGradient.addColorStop(0.6, "rgba(4,11,22,0.97)");
+  heroGradient.addColorStop(0.88, "rgba(2,7,17,0.95)");
+  heroGradient.addColorStop(1, "rgba(2,7,17,0.92)");
   ctx.fillStyle = heroGradient;
   ctx.fillRect(innerX, innerY, innerW, heroHeight);
 
-  ctx.fillStyle = "rgba(70,150,255,0.12)";
+  ctx.fillStyle = "rgba(70,150,255,0.14)";
   ctx.beginPath();
   ctx.ellipse(innerX + innerW - 140, innerY + 98, 228, 124, -0.26, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(7,26,51,0.2)";
+  ctx.fillStyle = "rgba(7,26,51,0.3)";
   ctx.beginPath();
   ctx.ellipse(innerX + innerW - 40, innerY + 42, 190, 70, -0.5, 0, Math.PI * 2);
   ctx.fill();
@@ -157,7 +162,7 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.shadowColor = "rgba(75,170,255,0.55)";
+  ctx.shadowColor = "rgba(75,170,255,0.62)";
   ctx.shadowBlur = 14;
   ctx.fillStyle = "#7ec8ff";
   ctx.font = "700 54px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
@@ -187,11 +192,30 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   const cardH = 612;
 
   drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 30);
-  ctx.fillStyle = "rgba(5,12,24,0.9)";
+  const cardGradient = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+  cardGradient.addColorStop(0, "#0a1428");
+  cardGradient.addColorStop(0.54, "#050d1b");
+  cardGradient.addColorStop(1, "#020711");
+  ctx.fillStyle = cardGradient;
   ctx.fill();
-  ctx.strokeStyle = "rgba(29,111,255,0.42)";
+  ctx.strokeStyle = "rgba(38,118,255,0.78)";
   ctx.lineWidth = 1.6;
   ctx.stroke();
+  ctx.save();
+  drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 30);
+  ctx.clip();
+  const cardRadial = ctx.createRadialGradient(cardX + (cardW * 0.24), cardY + (cardH * 0.18), 20, cardX + (cardW * 0.24), cardY + (cardH * 0.18), cardW * 0.65);
+  cardRadial.addColorStop(0, "rgba(62,104,178,0.12)");
+  cardRadial.addColorStop(0.34, "rgba(62,104,178,0)");
+  cardRadial.addColorStop(1, "rgba(62,104,178,0)");
+  ctx.fillStyle = cardRadial;
+  ctx.fillRect(cardX, cardY, cardW, cardH);
+  ctx.restore();
+  ctx.shadowColor = "rgba(29,111,255,0.34)";
+  ctx.shadowBlur = 20;
+  ctx.stroke();
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
 
   const leftX = cardX + 40;
   const rightColX = cardX + cardW - 286;

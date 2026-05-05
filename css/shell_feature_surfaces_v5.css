@@ -674,14 +674,13 @@
 .homeScreenshotCardPreviewSurface{
   position:relative;
   overflow:hidden;
-  border:1px solid rgba(29,111,255,.44);
+  border:1px solid rgba(29,111,255,.82);
   border-radius:16px;
   padding:10px 10px 10px;
   background:
-    radial-gradient(132% 98% at 12% 10%, rgba(70,150,255,.14) 0%, transparent 58%),
-    radial-gradient(120% 90% at 88% 92%, rgba(7,26,51,.36) 0%, transparent 66%),
-    linear-gradient(160deg, #05111f 0%, #071a33 52%, #020711 100%);
-  box-shadow:0 8px 16px rgba(0,0,0,.34), inset 0 1px 0 rgba(126,180,255,.07), 0 0 0 1px rgba(29,111,255,.22), 0 0 18px rgba(70,150,255,.28);
+    radial-gradient(circle at 24% 14%, rgba(86,139,210,.18) 0%, rgba(20,44,82,.12) 26%, transparent 48%),
+    linear-gradient(145deg, #071327 0%, #040b16 48%, #020711 100%);
+  box-shadow:0 0 0 1px rgba(95,156,255,.22) inset, 0 0 26px rgba(29,111,255,.42), 0 18px 44px rgba(0,0,0,.52);
   display:grid;
   gap:8px;
 }
@@ -691,8 +690,8 @@
   inset:0;
   pointer-events:none;
   background:
-    radial-gradient(92% 42% at 42% 18%, rgba(70,150,255,.16) 0%, rgba(70,150,255,0) 72%),
-    linear-gradient(180deg, rgba(126,186,255,.1) 0, rgba(126,186,255,0) 58%);
+    radial-gradient(92% 42% at 42% 18%, rgba(70,150,255,.2) 0%, rgba(70,150,255,0) 72%),
+    linear-gradient(180deg, rgba(126,186,255,.08) 0, rgba(126,186,255,0) 58%);
 }
 .homeScreenshotCardPreviewHero{
   position:relative;
@@ -708,9 +707,9 @@
   inset:0;
   pointer-events:none;
   background:
-    radial-gradient(80% 64% at 50% 10%, rgba(70,150,255,.13) 0%, transparent 68%),
-    radial-gradient(78% 46% at 76% 70%, rgba(29,111,255,.11) 0%, transparent 76%),
-    radial-gradient(90% 52% at 16% 72%, rgba(7,26,51,.25) 0%, transparent 78%);
+    radial-gradient(80% 64% at 50% 10%, rgba(70,150,255,.14) 0%, transparent 68%),
+    radial-gradient(78% 46% at 76% 70%, rgba(29,111,255,.14) 0%, transparent 76%),
+    radial-gradient(90% 52% at 16% 72%, rgba(7,26,51,.34) 0%, transparent 78%);
 }
 .homeScreenshotCardPreviewTitleRow{
   position:relative;
@@ -737,7 +736,7 @@
   line-height:1.04;
   letter-spacing:.014em;
   color:#7ec8ff;
-  text-shadow:0 0 12px rgba(75,170,255,.55), 0 1px 0 rgba(7,16,37,.45);
+  text-shadow:0 0 12px rgba(75,170,255,.62), 0 2px 8px rgba(0,0,0,.52);
   white-space:nowrap;
   min-width:0;
   max-width:min(100%, 100%);
@@ -796,12 +795,18 @@
   z-index:1;
   border-radius:14px;
   overflow:hidden;
-  border:1px solid rgba(29,111,255,.28);
-  background:transparent;
+  border:1px solid rgba(38,118,255,.78);
+  background:
+    radial-gradient(circle at 24% 18%, rgba(62,104,178,.12) 0%, transparent 34%),
+    linear-gradient(145deg, #0a1428 0%, #050d1b 54%, #020711 100%);
+  box-shadow:0 0 0 1px rgba(101,161,255,.18) inset, 0 0 20px rgba(29,111,255,.34), 0 14px 26px rgba(0,0,0,.42);
 }
 
 .homeScreenshotCardPreviewCard .tripCardStandard{
   border-radius:12px;
+  background:transparent;
+  border-color:rgba(70,132,255,.4);
+  box-shadow:0 0 0 1px rgba(87,146,255,.14) inset;
 }
 .homeScreenshotCardPreviewCard .tripCardStandard .tripCardGrid{
   overflow:hidden;
