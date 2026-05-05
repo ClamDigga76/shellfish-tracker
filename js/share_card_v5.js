@@ -140,42 +140,43 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
   ctx.fill();
 
   const headerCenterX = innerX + (innerW / 2);
-  const headerBaselineY = innerY + 114;
   const emblemSize = 60;
+  const emblemY = innerY + 38;
+  const titleY = emblemY + emblemSize + 54;
+  const supportY = titleY + 38;
+  const dividerY = supportY + 20;
 
-  let emblemDrawn = false;
   try {
     const emblem = await loadImage(`./assets/brand/transparent/btc-emblem-transparent.png${appVersion ? `?v=${encodeURIComponent(appVersion)}` : ""}`);
     ctx.save();
-    ctx.globalAlpha = 0.95;
-    ctx.drawImage(emblem, headerCenterX - 220, headerBaselineY - 50, emblemSize, emblemSize);
+    ctx.globalAlpha = 0.96;
+    ctx.drawImage(emblem, headerCenterX - (emblemSize / 2), emblemY, emblemSize, emblemSize);
     ctx.restore();
-    emblemDrawn = true;
-  } catch (_error) {
-    emblemDrawn = false;
-  }
+  } catch (_error) {}
 
-  const titleLeftX = emblemDrawn ? (headerCenterX - 132) : (headerCenterX - 100);
-  const sideLineY = headerBaselineY - 18;
-  ctx.strokeStyle = "rgba(187,214,255,0.46)";
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.moveTo(innerX + 76, sideLineY);
-  ctx.lineTo(titleLeftX - 18, sideLineY);
-  ctx.moveTo(headerCenterX + 138, sideLineY);
-  ctx.lineTo(innerX + innerW - 76, sideLineY);
-  ctx.stroke();
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.shadowColor = "rgba(106,180,255,0.45)";
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = "#8ac8ff";
+  ctx.font = "700 54px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.fillText("Bank the Catch", headerCenterX, titleY);
+  ctx.restore();
 
-  ctx.fillStyle = "#f4f8ff";
-  ctx.font = "700 56px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-  ctx.fillText("Bank the Catch", titleLeftX, headerBaselineY);
+  ctx.fillStyle = "rgba(202,224,255,0.92)";
+  ctx.font = "620 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Logged with Bank the Catch", headerCenterX, supportY);
 
   const heroDivider = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
-  heroDivider.addColorStop(0, "rgba(205,166,96,0)");
-  heroDivider.addColorStop(0.5, "rgba(205,166,96,0.42)");
-  heroDivider.addColorStop(1, "rgba(205,166,96,0)");
+  heroDivider.addColorStop(0, "rgba(244,198,112,0)");
+  heroDivider.addColorStop(0.2, "rgba(252,219,151,0.72)");
+  heroDivider.addColorStop(0.5, "rgba(244,190,88,0.92)");
+  heroDivider.addColorStop(0.8, "rgba(252,219,151,0.72)");
+  heroDivider.addColorStop(1, "rgba(244,198,112,0)");
   ctx.fillStyle = heroDivider;
-  ctx.fillRect(innerX + 84, innerY + 164, innerW - 168, 1);
+  ctx.fillRect(innerX + 56, dividerY, innerW - 112, 2);
   ctx.restore();
 
   const fields = buildShareCardFields({ trip, parseReportDateToISO, round2, formatMoney });
@@ -240,13 +241,6 @@ async function buildShareCardBlob({ trip, parseReportDateToISO, round2, formatMo
     ctx.fillText(value, rightColX, y + 48);
   });
 
-  ctx.fillStyle = "#8dc3ff";
-  ctx.shadowColor = "rgba(95,171,255,0.25)";
-  ctx.shadowBlur = 8;
-  ctx.font = "600 24px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-  ctx.fillText("Logged with Bank the Catch", innerX + 58, innerY + innerH - 60);
-  ctx.shadowColor = "transparent";
-  ctx.shadowBlur = 0;
 
   const blob = await new Promise((resolve, reject) => {
     canvas.toBlob((nextBlob) => {
