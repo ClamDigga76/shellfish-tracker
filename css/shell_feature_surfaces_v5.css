@@ -1405,6 +1405,7 @@
 .helpHubPill{display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;border-radius:999px;border:1px solid rgba(137,176,250,.6);background:rgba(53,98,186,.34);color:rgba(222,235,255,.96);font-size:11px;font-weight:740;text-transform:uppercase;letter-spacing:.05em}
 .helpHubLead{margin-top:8px;line-height:1.45}
 .helpHubRows{display:grid;gap:8px;margin-top:10px}
+.helpHubRowsDirect{margin-top:12px}
 .helpHubRowWrap{border:1px solid rgba(108,151,236,.34);border-radius:13px;background:linear-gradient(180deg, rgba(28,50,95,.7) 0%, rgba(14,29,58,.86) 100%);box-shadow:inset 0 1px 0 rgba(216,230,255,.1);overflow:hidden}
 .helpHubRowWrap>summary{list-style:none}
 .helpHubRowWrap>summary::-webkit-details-marker{display:none}
