@@ -371,7 +371,7 @@ function toBucketLabel(value, buckets){
   return hit ? hit.label : "—";
 }
 
-function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips = [] }){
+function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips = [], isSeasonPreview = false }){
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows : []);
   const labels = [
     String(period?.previousLabel || "Previous month"),
@@ -575,7 +575,7 @@ function buildMetricDetailPrimaryBasisMap({ period, metrics, detailCharts, sourc
   };
 }
 
-function buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows, trips = [] }){
+function buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows, trips = [], isSeasonPreview = false }){
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows.filter((row)=> row?.monthKey) : []);
   const currentMonth = safeMonths[safeMonths.length - 1] || null;
   const previousMonth = safeMonths[safeMonths.length - 2] || null;
@@ -600,7 +600,7 @@ function buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows, trip
     ? buildHomeComparablePeriod({ currentMonth, previousMonth, current, previous })
     : buildHomeSuppressedPeriod({ currentMonth, previousMonth, current, previous });
   const metrics = buildHomeMetricPayloads(period);
-  const detailCharts = buildHomeDetailCharts({ monthRows: safeMonths, dealerRows, areaRows, period, trips });
+  const detailCharts = buildHomeDetailCharts({ monthRows: safeMonths, dealerRows, areaRows, period, trips, isSeasonPreview });
 
   return {
     period,

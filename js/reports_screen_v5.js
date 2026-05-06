@@ -285,8 +285,9 @@ function renderReportsScreen({ homeMetricOnly = false } = {}){
     ? null
     : buildReportsSeasonalityFoundation({ trips: seasonalityTrips, nowDate: new Date() });
 
+  const homeMode = String(routeContext?.homeScope?.filter?.mode || routeContext?.homeScope?.mode || "").trim().toUpperCase();
   const compareFoundation = isHomeMetricDetail
-    ? reportsMetricDetailSeam.buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows })
+    ? reportsMetricDetailSeam.buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows, isSeasonPreview: homeMode === "SEASON_PREVIEW" })
     : buildReportsCompareFoundation({ trips, monthRows, dealerRows, areaRows });
   const highlightsStrip = renderReportsHighlightsStrip({
     dealerRows,
