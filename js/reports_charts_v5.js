@@ -919,7 +919,15 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       for(let v=0; v<=yScale.top + 1e-9; v += yScale.step){
         yLabels.push({ pos: yScale.top ? (v / yScale.top) : 0, label: paletteSet.yFormatter(v) });
       }
-      drawYTickLabels(ctx, geom, frame, yLabels);
+      const yAxisLabelMode = String(options.yAxisLabelMode || "").toLowerCase();
+      const renderedYLabels = yAxisLabelMode === "soft"
+        ? [
+          { pos: 0, label: "Low" },
+          { pos: 0.5, label: "Mid" },
+          { pos: 1, label: "High" }
+        ]
+        : yLabels;
+      drawYTickLabels(ctx, geom, frame, renderedYLabels);
       const latestPoint = [...points].reverse().find((point)=> point.hasData) || null;
       const showLatestPointChip = options.showLatestPointChip !== false;
       if(latestPoint && showLatestPointChip){
@@ -1029,7 +1037,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
             emptyMessage: drawOptions?.emptyMessage,
             monthKeys: chronologicalSeries.monthKeys,
             showLatestPointChip: chartModel?.showLatestPointChip !== false,
-            extraRightPad: chartModel?.frameRightPad
+            extraRightPad: chartModel?.frameRightPad,
+            yAxisLabelMode: chartModel?.yAxisLabelMode
           }
         );
         return true;
@@ -1066,7 +1075,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           emptyMessage: drawOptions?.emptyMessage,
           monthKeys: chronologicalSeries.monthKeys,
           showLatestPointChip: chartModel?.showLatestPointChip !== false,
-          extraRightPad: chartModel?.frameRightPad
+          extraRightPad: chartModel?.frameRightPad,
+          yAxisLabelMode: chartModel?.yAxisLabelMode
         }
       );
       return true;

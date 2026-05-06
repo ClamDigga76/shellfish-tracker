@@ -465,8 +465,8 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
       labelMode: "home-dealer-direct"
     }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
-    poundsMonthlyTrend: { ...buildHomeSharedChartModel({ chartId: "poundsByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview, frameRightPad: isSeasonPreview ? 10 : 0 },
-    poundsPerTripTrend: { ...buildHomeSharedChartModel({ chartId: "poundsPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview, frameRightPad: isSeasonPreview ? 10 : 0 },
+    poundsMonthlyTrend: { ...buildHomeSharedChartModel({ chartId: "poundsByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview, frameRightPad: isSeasonPreview ? 10 : 0, yAxisLabelMode: isSeasonPreview ? "soft" : "default" },
+    poundsPerTripTrend: { ...buildHomeSharedChartModel({ chartId: "poundsPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview, frameRightPad: isSeasonPreview ? 10 : 0, yAxisLabelMode: isSeasonPreview ? "soft" : "default" },
     poundsLast5Trips: buildHomeLast5TripPoundsChart({ trips, isSeasonPreview }),
 
     tripsByPoundRange: (()=> {
