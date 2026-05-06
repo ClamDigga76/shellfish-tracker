@@ -1060,7 +1060,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           frameMode,
           emptyStateEnabled,
           emptyMessage: drawOptions?.emptyMessage,
-          monthKeys: chronologicalSeries.monthKeys
+          monthKeys: chronologicalSeries.monthKeys,
+          showLatestPointChip: chartModel?.showLatestPointChip !== false
         }
       );
       return true;
