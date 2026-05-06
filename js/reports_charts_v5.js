@@ -5,6 +5,10 @@ let reportsChartResizeObserver = null;
 let reportsChartResizeWindowListenerBound = false;
 let reportsChartResizeRafId = 0;
 let latestDrawReportsChartsArgs = null;
+const CHART_DISPLAY_HEIGHT_ATTR = "data-chart-display-height";
+const CHART_MIN_DISPLAY_HEIGHT = 140;
+const CHART_MAX_DISPLAY_HEIGHT = 520;
+const chartResizeObservationState = new WeakMap();
 
 export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, options = {}){
   latestDrawReportsChartsArgs = {
@@ -17,17 +21,35 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   const monthRowsChronological = normalizeChronologicalRows(monthRows);
   const tripsTimelineChronological = normalizeChronologicalRows(tripsOrTimeline);
 
+  function sanitizeDisplayHeight(heightCandidate, fallback = 180){
+    const numeric = Number(heightCandidate);
+    const safeFallback = Math.min(CHART_MAX_DISPLAY_HEIGHT, Math.max(CHART_MIN_DISPLAY_HEIGHT, Number(fallback) || 180));
+    if(!Number.isFinite(numeric) || numeric <= 0) return safeFallback;
+    return Math.min(CHART_MAX_DISPLAY_HEIGHT, Math.max(CHART_MIN_DISPLAY_HEIGHT, Math.round(numeric)));
+  }
+
+  function resolveCanvasDisplayHeight(canvas){
+    const attrHeight = canvas?.getAttribute?.(CHART_DISPLAY_HEIGHT_ATTR);
+    const heightAttr = canvas?.getAttribute?.("height");
+    const styleHeight = String(canvas?.style?.height || "").trim().replace(/px$/i, "");
+    const fallback = Number(heightAttr) || Number(styleHeight) || CHART_MIN_DISPLAY_HEIGHT;
+    const displayHeight = sanitizeDisplayHeight(attrHeight, fallback);
+    canvas.setAttribute(CHART_DISPLAY_HEIGHT_ATTR, String(displayHeight));
+    return displayHeight;
+  }
+
   function setupCanvas(canvas){
     if(!canvas) return null;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
     const rect = canvas.getBoundingClientRect();
     const w = Math.max(280, rect.width || canvas.parentElement?.clientWidth || 320);
-    const h = canvas.height || 180;
+    const h = resolveCanvasDisplayHeight(canvas);
     canvas.width = Math.floor(w * dpr);
     canvas.height = Math.floor(h * dpr);
     canvas.style.width = w + "px";
     canvas.style.height = h + "px";
     const ctx = canvas.getContext("2d");
+    if(!ctx) return null;
     ctx.setTransform(dpr,0,0,dpr,0,0);
     return { canvas, ctx, w, h };
   }
@@ -1405,14 +1427,37 @@ function ensureChartResizeProtection(){
   }
   if(typeof ResizeObserver === "function"){
     if(!reportsChartResizeObserver){
-      reportsChartResizeObserver = new ResizeObserver(()=> scheduleRedraw());
+      reportsChartResizeObserver = new ResizeObserver((entries)=> {
+        let hasSizeChange = false;
+        entries.forEach((entry)=> {
+          const target = entry?.target;
+          if(!target) return;
+          const bounds = target.getBoundingClientRect();
+          const width = Math.round(bounds.width || 0);
+          const height = Math.round(bounds.height || 0);
+          const last = chartResizeObservationState.get(target);
+          if(!last || last.width !== width || last.height !== height){
+            chartResizeObservationState.set(target, { width, height });
+            if(width > 0 && height > 0) hasSizeChange = true;
+          }
+        });
+        if(hasSizeChange) scheduleRedraw();
+      });
     }
     reportsChartResizeObserver.disconnect();
     if(!isReportsChartSurfaceActive()) return;
-    const canvases = document.querySelectorAll("canvas.chart[id]");
+    const root = document.getElementById("reportsTransitionRoot");
+    if(!root) return;
+    const canvases = root.querySelectorAll("canvas.chart[id]");
     canvases.forEach((canvas)=> {
       const host = canvas.closest(".chartCard") || canvas.parentElement;
-      if(host) reportsChartResizeObserver.observe(host);
+      if(!host) return;
+      const bounds = host.getBoundingClientRect();
+      chartResizeObservationState.set(host, {
+        width: Math.round(bounds.width || 0),
+        height: Math.round(bounds.height || 0)
+      });
+      reportsChartResizeObserver.observe(host);
     });
   }
 }
