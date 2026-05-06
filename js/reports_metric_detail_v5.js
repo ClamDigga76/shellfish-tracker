@@ -86,12 +86,12 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     teaserText: "Unlock Full Insights to compare dealers, price trends, and deeper money insights."
   }),
   ppl: Object.freeze({
-    helperLine: "Calculated from total paid ÷ total pounds.",
+    helperLine: "Average price per pound over [Home filter label].",
     primaryChartKey: "pplMonthlyTrendFree",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "pplMonthlyTrendFree", title: "Avg $ / lb over time", context: "Simple Avg $ / lb trend across active Home filter" }),
-      Object.freeze({ key: "ppl", title: "Latest vs previous month", context: "Bars • Avg $ / lb for the latest visible month pair" }),
-      Object.freeze({ key: "pplRateVsPoundsTrend", title: "Pounds support over time", context: "Monthly pounds context behind Avg $ / lb movement" })
+      Object.freeze({ key: "pplMonthlyTrendFree", title: "Avg Pay Rate Over Time", context: "Average price per pound over [Home filter label]." }),
+      Object.freeze({ key: "pplPriceRangeByTrip", title: "Price Range by Trip", context: "Trips counted by price-per-pound range." }),
+      Object.freeze({ key: "pplLast5Trips", title: "Last 5 Trip Rates", context: "Price per pound from your latest saved trips." })
     ]),
     teaserText: "Unlock Full Insights to compare dealer pay rates and price-per-pound trends."
   })
@@ -362,6 +362,46 @@ function buildHomeLast5TripPayChart({ trips }){
   };
 }
 
+function resolveTripPayRate(trip){
+  const explicitRate = Number(trip?.ppl ?? trip?.payRate ?? trip?.pricePerPound ?? trip?.rate);
+  if(Number.isFinite(explicitRate) && explicitRate > 0) return explicitRate;
+  const pounds = Number(trip?.pounds);
+  const amount = Number(trip?.amount);
+  if(Number.isFinite(pounds) && pounds > 0 && Number.isFinite(amount)) return amount / pounds;
+  return null;
+}
+
+function buildHomePriceRangeByTripChart({ trips }){
+  const buckets = [
+    { label: "Under $1.80", min: Number.NEGATIVE_INFINITY, max: 1.8 },
+    { label: "$1.80–$2.00", min: 1.8, max: 2.0 },
+    { label: "$2.00–$2.25", min: 2.0, max: 2.25 },
+    { label: "$2.25+", min: 2.25, max: Number.POSITIVE_INFINITY }
+  ];
+  const counts = buckets.map(()=> 0);
+  (Array.isArray(trips) ? trips : []).forEach((trip)=> {
+    const rate = resolveTripPayRate(trip);
+    if(!Number.isFinite(rate)) return;
+    const idx = buckets.findIndex((bucket)=> rate >= bucket.min && rate < bucket.max);
+    if(idx >= 0) counts[idx] += 1;
+  });
+  return { chartType: "compare-bars", metricKey: "trips", basisLabel: "Trips by price range", categoryLabelsBelowBars: true, showBarValueLabels: true, labels: buckets.map((bucket)=> bucket.label), values: counts };
+}
+
+function buildHomeLast5TripRatesChart({ trips }){
+  const datedTrips = (Array.isArray(trips) ? trips : [])
+    .map((trip)=> {
+      const parsedDate = parseTripDateValue(trip);
+      const rate = resolveTripPayRate(trip);
+      if(!parsedDate || !Number.isFinite(rate)) return null;
+      return { parsedDate, trip, rate };
+    })
+    .filter((row)=> row != null)
+    .sort((a, b)=> a.parsedDate.timestamp - b.parsedDate.timestamp);
+  const lastFive = datedTrips.slice(-5);
+  return { chartType: "compare-bars", metricKey: "ppl", basisLabel: "Last 5 saved trips", categoryLabelsBelowBars: true, showBarValueLabels: true, labels: lastFive.map((row)=> formatCompactTripDate(row.trip)), values: lastFive.map((row)=> row.rate) };
+}
+
 function computeCurrentRunFromTrips(trips){
   const parsedDates = (Array.isArray(trips) ? trips : [])
     .map((trip)=> parseTripDateValue(trip))
@@ -563,7 +603,9 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
       ...buildHomeSharedChartModel({ chartId: "pplByMonth", monthRows: safeMonths, dealerRows, areaRows }),
       basisLabel: `Visible months in the selected period • ${rateLeaderSupportLabel}`
     },
-    pplMonthlyTrendFree: buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg", basisLabel: "Visible months in the selected period", emptyMonthNoData: true }),
+    pplMonthlyTrendFree: { ...buildHomeTimeSeriesChart({ monthRows: safeMonths, metricKey: "ppl", valueKey: "avg", basisLabel: "Visible months in the selected period", emptyMonthNoData: true }), showLatestPointChip: !isSeasonPreview, frameRightPad: isSeasonPreview ? 10 : 0, yAxisLabelMode: isSeasonPreview ? "soft" : "default" },
+    pplPriceRangeByTrip: buildHomePriceRangeByTripChart({ trips }),
+    pplLast5Trips: buildHomeLast5TripRatesChart({ trips }),
     tripsRollingTrend: buildRollingSeriesFromMonthRows({
       monthRows: safeMonths,
       metricKey: "trips",
@@ -1001,18 +1043,17 @@ export function createReportsMetricDetailSeam(deps){
         ? (latestTripAmount / latestTripPounds)
         : null;
       const tripRates = safeTrips
-        .map((trip)=> {
-          const pounds = Number(trip?.pounds) || 0;
-          const amount = Number(trip?.amount) || 0;
-          return pounds > 0 ? amount / pounds : 0;
-        })
-        .filter((rate)=> rate > 0);
+        .map((trip)=> resolveTripPayRate(trip))
+        .filter((rate)=> Number.isFinite(rate) && rate > 0);
       const bestTripRate = tripRates.length ? tripRates.reduce((max, rate)=> Math.max(max, rate), tripRates[0]) : 0;
+      const totalPayReceived = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0);
+      const poundsBuckets = [{ label: "Under 250 lbs", min: 0, max: 250 }, { label: "250–750 lbs", min: 250, max: 750 }, { label: "750–1.5k lbs", min: 750, max: 1500 }, { label: "1.5k+ lbs", min: 1500, max: Number.POSITIVE_INFINITY }];
+      const payBuckets = [{ label: "Under $500", min: 0, max: 500 }, { label: "$500–$1.5k", min: 500, max: 1500 }, { label: "$1.5k–$3k", min: 1500, max: 3000 }, { label: "$3k+", min: 3000, max: Number.POSITIVE_INFINITY }];
       return [
-        { label: tripRates.length ? "Best trip rate" : "Top month", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }) },
-        { label: "Latest trip rate", value: latestTripRateValue > 0 ? formatHomeSnapshotValue({ metricKey, value: latestTripRateValue }) : "—" },
-        { label: "Pounds support", value: `${Math.round(poundsSupport).toLocaleString()} lbs` },
-        { label: "Pay received", value: formatHomeMoneyValue(to2(safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0))) }
+        { label: "Best Trip Rate", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }) },
+        { label: "Latest Trip Rate", value: latestTripRateValue > 0 ? formatHomeSnapshotValue({ metricKey, value: latestTripRateValue }) : "—" },
+        { label: "Pounds Counted", value: isSeasonPreview ? toBucketLabel(poundsSupport, poundsBuckets) : `${Math.round(poundsSupport).toLocaleString()} lbs` },
+        { label: "Pay Received", value: isSeasonPreview ? toBucketLabel(totalPayReceived, payBuckets) : formatHomeMoneyValue(to2(totalPayReceived)) }
       ];
     }
     return [
@@ -1219,7 +1260,7 @@ export function createReportsMetricDetailSeam(deps){
       }
       if(targetMetricKey === "ppl"){
         return latestItem
-          ? `Average rate is based on total paid ÷ total pounds. Backed by ${safeSnapshotItems.find((i)=>i.label==='Pounds support')?.value || '—'}.`
+          ? `Average rate is based on total paid ÷ total pounds. Backed by ${safeSnapshotItems.find((i)=>i.label==='Pounds Counted')?.value || '—'}.`
           : `Average rate is based on total paid ÷ total pounds.`;
       }
       return "";
@@ -1284,7 +1325,7 @@ export function createReportsMetricDetailSeam(deps){
           if(!isUsableHomeChartModel(chartModel)) return null;
           const isCompareBars = String(chartModel?.chartType || "").toLowerCase() === "compare-bars";
           // Guardrail seam reference retained for repo check: if(isCompareBars && (!hasRealComparablePeriod || isHomeCompareSuppressed)) return null;
-          const isNonComparisonCard = chartKey === "tripsByPoundRange" || chartKey === "tripsDealerMix" || chartKey === "poundsByTripSize" || chartKey === "poundsLast5Trips" || chartKey === "amountLast5Trips";
+          const isNonComparisonCard = chartKey === "tripsByPoundRange" || chartKey === "tripsDealerMix" || chartKey === "poundsByTripSize" || chartKey === "poundsLast5Trips" || chartKey === "amountLast5Trips" || chartKey === "pplPriceRangeByTrip" || chartKey === "pplLast5Trips";
           if(isCompareBars && !isNonComparisonCard && (!hasRealComparablePeriod || isHomeCompareSuppressed)) return null;
           const resolvedMetricKey = String(
             chartModel?.metricKey
@@ -1468,13 +1509,13 @@ export function createReportsMetricDetailSeam(deps){
           const homeChartCards = buildHomeFreeChartCards({
             targetMetricKey: "ppl",
             fallbackTitle: "Price per pound over time",
-            fallbackContext: "Simple Avg $ / lb trend across active Home filter"
+            fallbackContext: "Average price per pound over [Home filter label]."
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("ppl");
           const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "ppl", chartModel: homePrimaryChart, trips: viewModel.trips, homeScope: viewModel.homeScope });
           return {
-        title: "Avg $ / lb breakdown",
+        title: "Avg Pay Rate breakdown",
         homeTitle: "Avg Pay Rate",
         homeTitleToneClass: "homeMetricSimpleTitle--ppl",
         eyebrow: "Metric breakdown",
