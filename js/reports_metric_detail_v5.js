@@ -79,9 +79,9 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     helperLine: "Total paid amount from trips in the selected period.",
     primaryChartKey: "amountTrend",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "amountTrend", title: "Paid over time", context: "Simple paid trend across active Home filter" }),
-      Object.freeze({ key: "amount", title: "Latest vs previous month", context: "Bars • paid totals for the latest visible month pair" }),
-      Object.freeze({ key: "amountPerTripTrend", title: "Avg amount per trip over time", context: "Average paid per trip across visible months" })
+      Object.freeze({ key: "amountTrend", title: "Pay Over Time", context: "Pay received over [Home filter label]." }),
+      Object.freeze({ key: "amountPerTripTrend", title: "Avg Pay / Trip", context: "Average pay per trip over [Home filter label]." }),
+      Object.freeze({ key: "amountLast5Trips", title: "Last 5 Trip Pay", context: "Pay from your latest saved trips." })
     ]),
     teaserText: "Unlock Full Insights to compare dealers, price trends, and deeper money insights."
   }),
@@ -334,6 +334,34 @@ function buildHomeLast5TripPoundsChart({ trips, isSeasonPreview = false }){
   };
 }
 
+
+
+function buildHomeLast5TripPayChart({ trips }){
+  const datedTrips = (Array.isArray(trips) ? trips : [])
+    .map((trip)=> {
+      const parsedDate = parseTripDateValue(trip);
+      if(!parsedDate) return null;
+      const amount = Number(trip?.amount);
+      if(!Number.isFinite(amount)) return null;
+      return { amount, parsedDate, trip };
+    })
+    .filter((row)=> row != null)
+    .sort((a, b)=> a.parsedDate.timestamp - b.parsedDate.timestamp);
+  const lastFive = datedTrips.slice(-5);
+  return {
+    chartType: "compare-bars",
+    metricKey: "amount",
+    basisLabel: "Last 5 saved trips",
+    categoryLabelsBelowBars: true,
+    showBarValueLabels: true,
+    labels: lastFive.map((row)=> {
+      const formatted = formatCompactTripDate(row.trip);
+      return formatted && formatted !== "Invalid Date" ? formatted : "—";
+    }),
+    values: lastFive.map((row)=> row.amount)
+  };
+}
+
 function computeCurrentRunFromTrips(trips){
   const parsedDates = (Array.isArray(trips) ? trips : [])
     .map((trip)=> parseTripDateValue(trip))
@@ -519,8 +547,9 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
       labelMode: "home-dealer-direct"
     }),
     amount: buildHomeCompareBarChart({ labels, metricKey: "amount", currentValue: period?.current?.amount, previousValue: period?.previous?.amount }),
-    amountTrend: buildHomeSharedChartModel({ chartId: "amountByMonth", monthRows: safeMonths, dealerRows, areaRows }),
-    amountPerTripTrend: buildHomeSharedChartModel({ chartId: "amountPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }),
+    amountTrend: { ...buildHomeSharedChartModel({ chartId: "amountByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview, frameRightPad: isSeasonPreview ? 10 : 0, yAxisLabelMode: isSeasonPreview ? "soft" : "default" },
+    amountPerTripTrend: { ...buildHomeSharedChartModel({ chartId: "amountPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview, frameRightPad: isSeasonPreview ? 10 : 0, yAxisLabelMode: isSeasonPreview ? "soft" : "default" },
+    amountLast5Trips: buildHomeLast5TripPayChart({ trips }),
     amountDealerMix: buildHomeSharedChartModel({ chartId: "amountByDealer", monthRows: safeMonths, dealerRows, areaRows }),
     amountAreaMix: buildHomeTopRowsBarChart({
       rows: areaRowsByAmount,
@@ -858,6 +887,8 @@ export function createReportsMetricDetailSeam(deps){
     const tripCount = safeTrips.length;
     const currentRun = computeCurrentRunFromTrips(safeTrips);
     const latestTrip = resolveLatestSelectedTrip(safeTrips);
+    const activeMode = String(homeScope?.filter?.mode || homeScope?.filterMode || "").trim().toUpperCase();
+    const isSeasonPreview = activeMode === "SEASON_PREVIEW";
     if(metricKey === "trips") return [
       { label: "Latest Month", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
       { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
@@ -955,7 +986,7 @@ export function createReportsMetricDetailSeam(deps){
         : null;
       return [
         { label: "Highest paid trip", value: formatHomeSnapshotValue({ metricKey, value: highestTripAmount ?? highest }) },
-        { label: "Avg / trip", value: formatHomeMoneyValue(to2(avgTrip)) },
+        { label: "Avg / trip", value: isSeasonPreview ? toBucketLabel(avgTrip, [{ label: "Under $100", min: 0, max: 100 }, { label: "$100–$250", min: 100, max: 250 }, { label: "$250–$500", min: 250, max: 500 }, { label: "$500+", min: 500, max: Number.POSITIVE_INFINITY }]) : formatHomeMoneyValue(to2(avgTrip)) },
         { label: "Latest paid", value: formatHomeSnapshotValue({ metricKey, value: latestTripAmount ?? latest }) },
         { label: "Trips counted", value: `${tripCount} trips` }
       ];
@@ -1376,8 +1407,8 @@ export function createReportsMetricDetailSeam(deps){
           const homeFreeConfig = resolveHomeFreeConfig("amount");
           const homeChartCards = buildHomeFreeChartCards({
             targetMetricKey: "amount",
-            fallbackTitle: "Paid over time",
-            fallbackContext: "Simple paid trend across active Home filter"
+            fallbackTitle: "Pay Over Time",
+            fallbackContext: "Pay received over [Home filter label]."
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("amount");
