@@ -72,7 +72,14 @@ export function createHomeMetricDetailRenderer(deps){
       tripsTimeline
     } = getMemoizedAggregationState(trips);
 
-    const compareFoundation = reportsMetricDetailSeam.buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows, trips });
+    const homeMode = String(routeContext?.homeScope?.filter?.mode || routeContext?.homeScope?.mode || "").trim().toUpperCase();
+    const compareFoundation = reportsMetricDetailSeam.buildHomeMetricDetailFoundation({
+      monthRows,
+      dealerRows,
+      areaRows,
+      trips,
+      isSeasonPreview: homeMode === "SEASON_PREVIEW"
+    });
     const detailCharts = compareFoundation.detailCharts || {};
     const detailChartsWithRolling = {
       ...detailCharts,
