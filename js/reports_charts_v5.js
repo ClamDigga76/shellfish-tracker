@@ -918,7 +918,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       }
       drawYTickLabels(ctx, geom, frame, yLabels);
       const latestPoint = [...points].reverse().find((point)=> point.hasData) || null;
-      if(latestPoint){
+      const showLatestPointChip = options.showLatestPointChip !== false;
+      if(latestPoint && showLatestPointChip){
         const chipText = String(paletteSet.yFormatter(latestPoint.value) || "").trim();
         drawPointValueChip(ctx, chipText, latestPoint.x, latestPoint.y, {
           minX: geom.x0 + 2,
@@ -1023,7 +1024,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
             frameMode,
             emptyStateEnabled,
             emptyMessage: drawOptions?.emptyMessage,
-            monthKeys: chronologicalSeries.monthKeys
+            monthKeys: chronologicalSeries.monthKeys,
+            showLatestPointChip: chartModel?.showLatestPointChip !== false
           }
         );
         return true;
@@ -1058,7 +1060,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           frameMode,
           emptyStateEnabled,
           emptyMessage: drawOptions?.emptyMessage,
-          monthKeys: chronologicalSeries.monthKeys
+          monthKeys: chronologicalSeries.monthKeys,
+          showLatestPointChip: chartModel?.showLatestPointChip !== false
         }
       );
       return true;
