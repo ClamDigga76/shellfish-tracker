@@ -90,8 +90,8 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     primaryChartKey: "pplMonthlyTrendFree",
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "pplMonthlyTrendFree", title: "Avg Pay Rate Over Time", context: "Average price per pound over [Home filter label]." }),
-      Object.freeze({ key: "pplPriceRangeByTrip", title: "Price Range by Trip", context: "Trips counted by price-per-pound range." }),
-      Object.freeze({ key: "pplLast5Trips", title: "Last 5 Trip Rates", context: "Price per pound from your latest saved trips." })
+      Object.freeze({ key: "pplLast5Trips", title: "Last 5 Trip Rates", context: "Price per pound from your latest saved trips." }),
+      Object.freeze({ key: "pplPriceRangeByTrip", title: "Price Range by Trip", context: "Trips counted by price-per-pound range." })
     ]),
     teaserText: "Unlock Full Insights to compare dealer pay rates and price-per-pound trends."
   })
@@ -375,12 +375,17 @@ function resolveTripPayRate(trip){
 }
 
 function buildHomePriceRangeByTripChart({ trips }){
-  const buckets = [
-    { label: "Under $1.80", min: Number.NEGATIVE_INFINITY, max: 1.8 },
-    { label: "$1.80–$2.00", min: 1.8, max: 2.0 },
-    { label: "$2.00–$2.25", min: 2.0, max: 2.25 },
-    { label: "$2.25+", min: 2.25, max: Number.POSITIVE_INFINITY }
-  ];
+  const buckets = [{ label: "Under $1.50", min: Number.NEGATIVE_INFINITY, max: 1.5 }];
+  for(let min = 1.5; min < 10; min += 0.5){
+    const max = min + 0.5;
+    buckets.push({
+      label: `$${min.toFixed(2)}–$${max.toFixed(2)}`,
+      min,
+      max
+    });
+  }
+  buckets.push({ label: "$10+", min: 10, max: Number.POSITIVE_INFINITY });
+
   const counts = buckets.map(()=> 0);
   (Array.isArray(trips) ? trips : []).forEach((trip)=> {
     const rate = resolveTripPayRate(trip);
@@ -388,7 +393,20 @@ function buildHomePriceRangeByTripChart({ trips }){
     const idx = buckets.findIndex((bucket)=> rate >= bucket.min && rate < bucket.max);
     if(idx >= 0) counts[idx] += 1;
   });
-  return { chartType: "compare-bars", metricKey: "trips", basisLabel: "Trips by price range", categoryLabelsBelowBars: true, showBarValueLabels: true, labels: buckets.map((bucket)=> bucket.label), values: counts };
+
+  const populated = buckets
+    .map((bucket, index)=> ({ label: bucket.label, count: counts[index] }))
+    .filter((entry)=> entry.count > 0);
+
+  return {
+    chartType: "compare-bars",
+    metricKey: "trips",
+    basisLabel: "Trips by price range",
+    categoryLabelsBelowBars: true,
+    showBarValueLabels: true,
+    labels: populated.map((entry)=> entry.label),
+    values: populated.map((entry)=> entry.count)
+  };
 }
 
 function buildHomeLast5TripRatesChart({ trips }){
@@ -1050,13 +1068,13 @@ export function createReportsMetricDetailSeam(deps){
         .filter((rate)=> Number.isFinite(rate) && rate > 0);
       const bestTripRate = tripRates.length ? tripRates.reduce((max, rate)=> Math.max(max, rate), tripRates[0]) : 0;
       const totalPayReceived = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0);
-      const poundsBuckets = [{ label: "Under 250 lbs", min: 0, max: 250 }, { label: "250–750 lbs", min: 250, max: 750 }, { label: "750–1.5k lbs", min: 750, max: 1500 }, { label: "1.5k+ lbs", min: 1500, max: Number.POSITIVE_INFINITY }];
-      const payBuckets = [{ label: "Under $500", min: 0, max: 500 }, { label: "$500–$1.5k", min: 500, max: 1500 }, { label: "$1.5k–$3k", min: 1500, max: 3000 }, { label: "$3k+", min: 3000, max: Number.POSITIVE_INFINITY }];
+      const seasonPreviewPoundsDisplay = String(homeScope?.kpiDisplayValues?.pounds || "").trim();
+      const seasonPreviewPayDisplay = String(homeScope?.kpiDisplayValues?.amount || "").trim();
       return [
         { label: "Best Trip Rate", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }) },
         { label: "Latest Trip Rate", value: latestTripRateValue > 0 ? formatHomeSnapshotValue({ metricKey, value: latestTripRateValue }) : "—" },
-        { label: "Pounds Counted", value: isSeasonPreview ? toBucketLabel(poundsSupport, poundsBuckets) : `${Math.round(poundsSupport).toLocaleString()} lbs` },
-        { label: "Pay Received", value: isSeasonPreview ? toBucketLabel(totalPayReceived, payBuckets) : formatHomeMoneyValue(to2(totalPayReceived)) }
+        { label: "Pounds Counted", value: isSeasonPreview ? (seasonPreviewPoundsDisplay || `${Math.round(poundsSupport).toLocaleString()} lbs`) : `${Math.round(poundsSupport).toLocaleString()} lbs` },
+        { label: "Pay Received", value: isSeasonPreview ? (seasonPreviewPayDisplay || formatHomeMoneyValue(to2(totalPayReceived))) : formatHomeMoneyValue(to2(totalPayReceived)) }
       ];
     }
     return [
