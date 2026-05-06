@@ -66,7 +66,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const topBase = isHomeInsights ? (compact ? 16 : 18) : (compact ? 20 : 24);
     const bottomBase = isHomeInsights ? (compact ? 46 : 44) : (compact ? 54 : 50);
     const left = leftBase + (profile.dense && !compact ? -2 : 0);
-    const right = rightBase + (profile.sparse ? (compact ? 4 : 6) : 0) + (profile.dense ? -2 : 0);
+    const extraRightPad = Math.max(0, Number(context?.extraRightPad) || 0);
+    const right = rightBase + (profile.sparse ? (compact ? 4 : 6) : 0) + (profile.dense ? -2 : 0) + extraRightPad;
     const top = topBase + (profile.sparse ? 2 : 0);
     const compareCountBoost = profile.compareLabels && profile.pointCount > 0
       ? (profile.pointCount <= 2
@@ -674,7 +675,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const frame = chartFrame(w,h, options.frameMode || "default", {
       chartKind: "bar",
       pointCount: count,
-      labelType: xLabelType
+      labelType: xLabelType,
+      extraRightPad: options.extraRightPad
     });
     const observedTop = Math.max(...values, 0);
     const showBarValueLabels = options.showBarValueLabels !== false;
@@ -807,7 +809,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const frame = chartFrame(w, h, options.frameMode || "default", {
       chartKind: "rolling",
       pointCount: count,
-      labelType: xLabelType
+      labelType: xLabelType,
+      extraRightPad: options.extraRightPad
     });
     const normalizedValues = values.map((value)=> {
       const numeric = Number(value);
@@ -1025,7 +1028,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
             emptyStateEnabled,
             emptyMessage: drawOptions?.emptyMessage,
             monthKeys: chronologicalSeries.monthKeys,
-            showLatestPointChip: chartModel?.showLatestPointChip !== false
+            showLatestPointChip: chartModel?.showLatestPointChip !== false,
+            extraRightPad: chartModel?.frameRightPad
           }
         );
         return true;
@@ -1061,7 +1065,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           emptyStateEnabled,
           emptyMessage: drawOptions?.emptyMessage,
           monthKeys: chronologicalSeries.monthKeys,
-          showLatestPointChip: chartModel?.showLatestPointChip !== false
+          showLatestPointChip: chartModel?.showLatestPointChip !== false,
+          extraRightPad: chartModel?.frameRightPad
         }
       );
       return true;
