@@ -407,6 +407,7 @@ function buildHomePriceRangeByTripChart({ trips }){
     categoryLabelsBelowBars: true,
     showBarValueLabels: true,
     xAxisLabelMode: "stacked-price-range",
+    xAxisLabelMetricKey: "ppl",
     labels: populated.map((entry)=> entry.label),
     values: populated.map((entry)=> entry.count)
   };
@@ -579,7 +580,20 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
         const idx = bins.findIndex((b)=> lbs >= b.min && lbs < b.max);
         if(idx >= 0) counts[idx] += 1;
       });
-      return { chartType: "compare-bars", metricKey: "trips", basisLabel: "Trips by pound range", labels: bins.map((b)=> b.label), values: counts, showBarValueLabels: true, categoryLabelsBelowBars: true };
+      const populated = bins
+        .map((bucket, index)=> ({ label: bucket.label, count: counts[index] }))
+        .filter((entry)=> entry.count > 0);
+      return {
+        chartType: "compare-bars",
+        metricKey: "trips",
+        basisLabel: "Trips by pound range",
+        labels: populated.map((entry)=> entry.label),
+        values: populated.map((entry)=> entry.count),
+        showBarValueLabels: true,
+        categoryLabelsBelowBars: true,
+        xAxisLabelMode: "stacked-pound-range",
+        xAxisLabelMetricKey: "pounds"
+      };
     })(),
     // Retained for compatibility with prior chart keys; no longer used in free Home Pounds drill-down.
     poundsByTripSize: (()=> {
@@ -956,10 +970,10 @@ export function createReportsMetricDetailSeam(deps){
     const activeMode = String(homeScope?.filter?.mode || homeScope?.filterMode || "").trim().toUpperCase();
     const isSeasonPreview = activeMode === "SEASON_PREVIEW";
     if(metricKey === "trips") return [
-      { label: "Latest Month", value: formatHomeSnapshotValue({ metricKey, value: latest }) },
-      { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }) },
-      { label: "Current Run", value: currentRun > 0 ? `${currentRun} in a row` : "—" },
-      { label: "Latest Trip", value: formatCompactTripDate(latestTrip) }
+      { label: "Latest Month", value: formatHomeSnapshotValue({ metricKey, value: latest }), valueToneClass: "" },
+      { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }), valueToneClass: "" },
+      { label: "Current Run", value: currentRun > 0 ? `${currentRun} in a row` : "—", valueToneClass: "" },
+      { label: "Latest Trip", value: formatCompactTripDate(latestTrip), valueToneClass: "" }
     ];
     if(metricKey === "pounds"){
       const tripPounds = safeTrips.map((trip)=> Number(trip?.pounds) || 0).filter((value)=> value > 0);
@@ -1017,10 +1031,10 @@ export function createReportsMetricDetailSeam(deps){
         return weekKeys.size;
       })();
       return [
-        { label: "Best Trip", value: formatHomeSnapshotValue({ metricKey, value: hasTripBest ? bestTripPounds : highest }) },
-        { label: "Avg / Trip", value: isSeasonPreview ? toBucketLabel(avgTripPounds, avgTripBuckets) : formatHomeSnapshotValue({ metricKey, value: avgTripPounds }) },
-        { label: "Avg / Month", value: isSeasonPreview ? toBucketLabel(average, avgMonthBuckets) : formatHomeSnapshotValue({ metricKey, value: average }) },
-        { label: activeLabel, value: `${activeCount || "—"}` }
+        { label: "Best Trip", value: formatHomeSnapshotValue({ metricKey, value: hasTripBest ? bestTripPounds : highest }), valueToneClass: "lbsBlue" },
+        { label: "Avg / Trip", value: isSeasonPreview ? toBucketLabel(avgTripPounds, avgTripBuckets) : formatHomeSnapshotValue({ metricKey, value: avgTripPounds }), valueToneClass: "lbsBlue" },
+        { label: "Avg / Month", value: isSeasonPreview ? toBucketLabel(average, avgMonthBuckets) : formatHomeSnapshotValue({ metricKey, value: average }), valueToneClass: "lbsBlue" },
+        { label: activeLabel, value: `${activeCount || "—"}`, valueToneClass: "" }
       ];
     }
     if(metricKey === "amount"){
@@ -1051,10 +1065,10 @@ export function createReportsMetricDetailSeam(deps){
         })()
         : null;
       return [
-        { label: "Highest paid trip", value: formatHomeSnapshotValue({ metricKey, value: highestTripAmount ?? highest }) },
-        { label: "Avg / trip", value: isSeasonPreview ? toBucketLabel(avgTrip, [{ label: "Under $100", min: 0, max: 100 }, { label: "$100–$250", min: 100, max: 250 }, { label: "$250–$500", min: 250, max: 500 }, { label: "$500+", min: 500, max: Number.POSITIVE_INFINITY }]) : formatHomeMoneyValue(to2(avgTrip)) },
-        { label: "Latest paid", value: formatHomeSnapshotValue({ metricKey, value: latestTripAmount ?? latest }) },
-        { label: "Trips counted", value: `${tripCount} trips` }
+        { label: "Highest Paid Trip", value: formatHomeSnapshotValue({ metricKey, value: highestTripAmount ?? highest }), valueToneClass: "money" },
+        { label: "Avg / Trip", value: isSeasonPreview ? toBucketLabel(avgTrip, [{ label: "Under $100", min: 0, max: 100 }, { label: "$100–$250", min: 100, max: 250 }, { label: "$250–$500", min: 250, max: 500 }, { label: "$500+", min: 500, max: Number.POSITIVE_INFINITY }]) : formatHomeMoneyValue(to2(avgTrip)), valueToneClass: "money" },
+        { label: "Latest Paid", value: formatHomeSnapshotValue({ metricKey, value: latestTripAmount ?? latest }), valueToneClass: "money" },
+        { label: "Trips Counted", value: `${tripCount} trips`, valueToneClass: "" }
       ];
     }
     if(metricKey === "ppl"){
@@ -1074,10 +1088,10 @@ export function createReportsMetricDetailSeam(deps){
       const seasonPreviewPoundsDisplay = String(homeScope?.kpiDisplayValues?.pounds || "").trim();
       const seasonPreviewPayDisplay = String(homeScope?.kpiDisplayValues?.amount || "").trim();
       return [
-        { label: "Best Trip Rate", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }) },
-        { label: "Latest Trip Rate", value: latestTripRateValue > 0 ? formatHomeSnapshotValue({ metricKey, value: latestTripRateValue }) : "—" },
-        { label: "Pounds Counted", value: isSeasonPreview ? (seasonPreviewPoundsDisplay || `${Math.round(poundsSupport).toLocaleString()} lbs`) : `${Math.round(poundsSupport).toLocaleString()} lbs` },
-        { label: "Pay Received", value: isSeasonPreview ? (seasonPreviewPayDisplay || formatHomeMoneyValue(to2(totalPayReceived))) : formatHomeMoneyValue(to2(totalPayReceived)) }
+        { label: "Best Trip Rate", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }), valueToneClass: "rate ppl" },
+        { label: "Latest Trip Rate", value: latestTripRateValue > 0 ? formatHomeSnapshotValue({ metricKey, value: latestTripRateValue }) : "—", valueToneClass: "rate ppl" },
+        { label: "Pounds Counted", value: isSeasonPreview ? (seasonPreviewPoundsDisplay || `${Math.round(poundsSupport).toLocaleString()} lbs`) : `${Math.round(poundsSupport).toLocaleString()} lbs`, valueToneClass: "lbsBlue" },
+        { label: "Pay Received", value: isSeasonPreview ? (seasonPreviewPayDisplay || formatHomeMoneyValue(to2(totalPayReceived))) : formatHomeMoneyValue(to2(totalPayReceived)), valueToneClass: "money" }
       ];
     }
     return [
@@ -1182,7 +1196,7 @@ export function createReportsMetricDetailSeam(deps){
             ${homeSnapshotItems.map((item)=> `
               <div class="homeMetricMetaItem">
                 <span class="homeMetricMetaLabel">${escapeHtml(item.label)}</span>
-                <span class="homeMetricMetaValue">${escapeHtml(item.value)}</span>
+                <span class="homeMetricMetaValue ${escapeHtml(item.valueToneClass || "")}">${escapeHtml(item.value)}</span>
               </div>
             `).join("")}
           </div>
