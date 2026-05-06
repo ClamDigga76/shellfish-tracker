@@ -309,6 +309,8 @@ export function createReportsOverviewSectionsSeam(deps){
             canvasId,
             title,
             explanation,
+            chartSurface: "insights-high-value",
+            chartSizePreset: "standard",
             cardTag: "article",
             cardClass: "chartCard chartCard--standard homeInsightsChartCard",
             emptyClass: "reportsChartEmpty reportsChartEmpty--standard homeInsightsChartEmpty"
