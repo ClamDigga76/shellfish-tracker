@@ -14,8 +14,6 @@ export function getActiveTabKey(view){
 }
 
 export function renderPageHeader(viewKey, { escapeHtml }){
-  const helpKey = (viewKey === "all_trips") ? "trips" : viewKey;
-  const showHelp = (helpKey === "home" || helpKey === "trips" || helpKey === "reports");
   const topLevelViews = new Set(["home", "all_trips", "reports", "settings"]);
   const showLandingTarget = topLevelViews.has(viewKey);
   const titleByView = {
@@ -48,23 +46,9 @@ export function renderPageHeader(viewKey, { escapeHtml }){
         <h2 class="phTitle">${escapeHtml(headerTitle)}</h2>
         ${headerDescription ? `<p class="phDescription">${escapeHtml(headerDescription)}</p>` : ""}
       </div>
-      ${showHelp
-        ? `<button class="phHelpBtn" type="button" aria-label="Help" data-help="${escapeHtml(helpKey)}"><span class="phHelpIconWrap" aria-hidden="true">${helpIconSvg()}</span><span class="phHelpLabel">Help</span></button>`
-        : `<span class="phActionStub" aria-hidden="true"></span>`
-      }
+      <span class="phActionStub" aria-hidden="true"></span>
     </div>
   `;
-}
-
-export function bindHeaderHelpButtons({ onHelpClick }){
-  try{
-    document.querySelectorAll('.phHelpBtn[data-help]').forEach(btn=>{
-      btn.onclick = ()=>{
-        const k = String(btn.getAttribute('data-help')||'').toLowerCase();
-        onHelpClick(k || "");
-      };
-    });
-  }catch(_e){}
 }
 
 function iconSvg(name){
@@ -98,14 +82,6 @@ function iconSvg(name){
     </svg>`;
   }
   return "";
-}
-
-function helpIconSvg(){
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="8.5"></circle>
-    <path d="M9.6 9.4a2.7 2.7 0 0 1 4.7 1.8c0 1.8-2.3 2.3-2.3 4"></path>
-    <path d="M12 17h.01"></path>
-  </svg>`;
 }
 
 export function renderTabBar({
@@ -149,7 +125,6 @@ export function renderTabBar({
 
 export function createAppShellBindings({
   escapeHtml,
-  onHelpClick,
   onTabNavigate,
   hasUnsavedDraft,
   confirmUnsavedLeave
@@ -157,9 +132,6 @@ export function createAppShellBindings({
   return {
     renderPageHeader(viewKey){
       return renderPageHeader(viewKey, { escapeHtml });
-    },
-    bindHeaderHelpButtons(){
-      return bindHeaderHelpButtons({ onHelpClick });
     },
     renderTabBar(activeView){
       return renderTabBar({

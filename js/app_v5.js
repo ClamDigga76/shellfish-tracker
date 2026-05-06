@@ -207,16 +207,9 @@ const { navigateTopLevelView } = createTopLevelNavigationTransitionSeam({
 
 const {
   renderPageHeader,
-  bindHeaderHelpButtons,
   renderTabBar
 } = createAppShellBindings({
   escapeHtml,
-  onHelpClick: (helpKey)=>{
-    state.helpJump = helpKey;
-    state.view = "help";
-    saveState();
-    render();
-  },
   onTabNavigate: (next)=>{
     navigateTopLevelView(next);
   },
@@ -1053,7 +1046,7 @@ function render(){
     renderers: screenRenderers,
     onRedirectToNew: ()=>{ state.view = "new"; saveState(); renderNewTrip(); },
     renderTabBar,
-    bindHeaderHelpButtons,
+    bindHeaderHelpButtons: ()=>{},
     onBeforeTopLevelViewChange: ({ fromView, toView })=>{
       clearMilestoneCelebration();
       if(String(fromView || "") === "all_trips" && String(toView || "") !== "all_trips"){
