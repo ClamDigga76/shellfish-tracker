@@ -452,6 +452,27 @@
 .reportsMetricCompareRow:last-child{border-bottom:0}
 .reportsMetricCompareLabel{display:block;min-width:0;line-height:1.35}
 .reportsMetricCompareValue{display:block;font-size:13px;color:#f4f8ff;line-height:1.25;text-align:right;white-space:normal;overflow-wrap:anywhere}
+
+.reportsMetricHeroValue.lbsBlue,
+.reportsMetricCompareValue.lbsBlue,
+.homeMetricMetaValue.lbsBlue,
+.homeMetricHeroValue.lbsBlue,
+.homeMetricCompareValue.lbsBlue{color:var(--lbs);}
+.reportsMetricHeroValue.money,
+.reportsMetricCompareValue.money,
+.homeMetricMetaValue.money,
+.homeMetricHeroValue.money,
+.homeMetricCompareValue.money{color:var(--money);}
+.reportsMetricHeroValue.ppl,
+.reportsMetricHeroValue.rate.ppl,
+.reportsMetricCompareValue.ppl,
+.reportsMetricCompareValue.rate.ppl,
+.homeMetricMetaValue.ppl,
+.homeMetricMetaValue.rate.ppl,
+.homeMetricHeroValue.ppl,
+.homeMetricHeroValue.rate.ppl,
+.homeMetricCompareValue.ppl,
+.homeMetricCompareValue.rate.ppl{color:var(--ppl);}
 .reportsMetricSupportMetaBlock{margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.08);display:grid;gap:2px}
 .reportsMetricSupportMeta{margin-top:0;color:#aeb7c8}
 .reportsMetricSupportMeta b{color:#e5ebf8}
