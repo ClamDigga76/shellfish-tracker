@@ -56,7 +56,7 @@ const METRIC_DETAIL_SURFACE_MODES = Object.freeze({
 
 const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
   trips: Object.freeze({
-    helperLine: "Trips show your work rhythm for this period.",
+    helperLine: "Trips show how often work was logged in this period.",
     primaryChartKey: "tripsMonthlyTrend",
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "tripsActivity", title: "Trip Activity", context: "Trips logged by month for [Home filter label]." }),
@@ -76,7 +76,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     teaserText: "Unlock Full Insights for exact season totals, pay-rate trends, area strength, and deeper chart intelligence."
   }),
   amount: Object.freeze({
-    helperLine: "Total paid amount from trips in the selected period.",
+    helperLine: "Amount is the pay result from pounds landed and price per pound.",
     primaryChartKey: "amountTrend",
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "amountTrend", title: "Pay Over Time", context: "Pay received over [Home filter label]." }),
@@ -86,7 +86,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     teaserText: "Unlock Full Insights to compare dealers, price trends, and deeper money insights."
   }),
   ppl: Object.freeze({
-    helperLine: "Average price per pound over [Home filter label].",
+    helperLine: "Avg $ / lb is calculated from total paid ÷ total pounds.",
     primaryChartKey: "pplMonthlyTrendFree",
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "pplMonthlyTrendFree", title: "Avg Pay Rate Over Time", context: "Average price per pound over [Home filter label]." }),
@@ -326,6 +326,7 @@ function buildHomeLast5TripPoundsChart({ trips, isSeasonPreview = false }){
     basisLabel: "Last 5 saved trips",
     categoryLabelsBelowBars: true,
     showBarValueLabels: true,
+    xAxisLabelMode: "all-bar-labels",
     labels: lastFive.map((row)=> {
       const formatted = formatCompactTripDate(row.trip);
       return formatted && formatted !== "Invalid Date" ? formatted : "—";
@@ -354,6 +355,7 @@ function buildHomeLast5TripPayChart({ trips }){
     basisLabel: "Last 5 saved trips",
     categoryLabelsBelowBars: true,
     showBarValueLabels: true,
+    xAxisLabelMode: "all-bar-labels",
     labels: lastFive.map((row)=> {
       const formatted = formatCompactTripDate(row.trip);
       return formatted && formatted !== "Invalid Date" ? formatted : "—";
@@ -421,7 +423,7 @@ function buildHomeLast5TripRatesChart({ trips }){
     .filter((row)=> row != null)
     .sort((a, b)=> a.parsedDate.timestamp - b.parsedDate.timestamp);
   const lastFive = datedTrips.slice(-5);
-  return { chartType: "compare-bars", metricKey: "ppl", basisLabel: "Last 5 saved trips", categoryLabelsBelowBars: true, showBarValueLabels: true, labels: lastFive.map((row)=> formatCompactTripDate(row.trip)), values: lastFive.map((row)=> row.rate) };
+  return { chartType: "compare-bars", metricKey: "ppl", basisLabel: "Last 5 saved trips", categoryLabelsBelowBars: true, showBarValueLabels: true, xAxisLabelMode: "all-bar-labels", labels: lastFive.map((row)=> formatCompactTripDate(row.trip)), values: lastFive.map((row)=> row.rate) };
 }
 
 function computeCurrentRunFromTrips(trips){
@@ -1094,9 +1096,6 @@ export function createReportsMetricDetailSeam(deps){
       ? `${homeRangeLabel || "Active"} • ${homeTripCount} trips`
       : `Range ${viewModel.rangeLabel} • ${viewModel.trips.length} trips`;
     const homeIsSeasonPreview = viewModel.isHomeMetricDetail && String(viewModel.homeScope?.filter?.mode || viewModel.homeScope?.mode || "").toUpperCase() === "SEASON_PREVIEW";
-    const homeDetailBoundaryNote = homeIsSeasonPreview
-      ? "Season Preview detail • chart signals stay visible here."
-      : "";
     const detailChartTitle = viewModel.isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = viewModel.isHomeMetricDetail
       ? meta.homeChartContext
@@ -1173,7 +1172,7 @@ export function createReportsMetricDetailSeam(deps){
             ${homeIsSeasonPreview ? `<div class="homeMetricPreviewBadge">Season Preview detail</div>` : ""}
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
           </div>
-          ${homeDetailBoundaryNote ? `<div class="homeMetricPreviewNote" role="note">${escapeHtml(homeDetailBoundaryNote)}</div>` : ""}
+          <div class="homeMetricMeaningNote">${escapeHtml(meta.homeMeaningNote || "")}</div>
           <div class="${surfaceMode.detailHeroWrapClass}">
             <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${renderHomeHeroValue()}</div>
             <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
@@ -1209,10 +1208,6 @@ export function createReportsMetricDetailSeam(deps){
         </div>
         `}
 
-        ${viewModel.isHomeMetricDetail
-    ? `<div class="homeMetricMeaningNote">${escapeHtml(meta.homeMeaningNote || "")}</div>`
-    : ``}
-
         <div class="reportsMetricChartsStack">
           ${viewModel.isHomeMetricDetail
     ? (hasHomePrimaryChart ? renderSharedChartCard({
@@ -1241,7 +1236,7 @@ export function createReportsMetricDetailSeam(deps){
         </div>
 
         ${viewModel.isHomeMetricDetail
-    ? `${homeDetailBoundaryNote ? `<div class="homeMetricBottomPromo"><div class="homeMetricBottomPromoText">Unlock Full Insights for exact season totals, pay-rate trends, area strength, and deeper chart intelligence.</div><button class="btn homeMetricUnlockBtn" type="button" id="homeMetricUnlockInsights">Unlock Full Insights</button></div>` : ""}`
+    ? ""
     : `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
       </div>
     </section>
