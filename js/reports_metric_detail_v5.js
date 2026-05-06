@@ -404,6 +404,7 @@ function buildHomePriceRangeByTripChart({ trips }){
     basisLabel: "Trips by price range",
     categoryLabelsBelowBars: true,
     showBarValueLabels: true,
+    xAxisLabelMode: "stacked-price-range",
     labels: populated.map((entry)=> entry.label),
     values: populated.map((entry)=> entry.count)
   };
