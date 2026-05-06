@@ -1080,7 +1080,7 @@
 .homeMetricMetaRow--grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .homeMetricMetaRow--grid .homeMetricMetaItem:last-child:nth-child(odd){grid-column:1 / -1}
 
-.homeMetricMeaningNote{margin-top:10px;font-size:12px;color:#cdd6e6;line-height:1.45}
+.homeMetricMeaningNote{margin:8px auto 18px;max-width:36ch;font-size:clamp(18px,4.4vw,20px);font-weight:600;line-height:1.35;letter-spacing:.01em;color:var(--text-muted-strong,#d9e2f2);text-align:center;text-wrap:balance}
 .homeMetricReportsNudge{margin-top:8px;font-size:12px;color:#9fb2cf}
 @media (max-width:480px){.homeMetricMetaRow--grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}}
 
