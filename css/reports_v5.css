@@ -1106,4 +1106,6 @@
 .homePreviewBoundaryNote{font-size:12px;line-height:1.45;color:#d7e7ff}
 .homeMetricPreviewBadge{display:inline-flex;align-items:center;gap:6px;margin:0 0 8px;padding:5px 9px;border-radius:999px;border:1px solid rgba(138,172,236,.52);background:rgba(38,67,118,.3);color:#d9e9ff;font-size:11px;font-weight:760;letter-spacing:.04em;text-transform:uppercase}
 .homeMetricPreviewNote{margin:0 0 10px;padding:9px 10px;border-radius:10px;border:1px solid rgba(137,170,229,.38);background:rgba(20,35,64,.42);color:#d5e6ff;font-size:12px;line-height:1.4}
+.homeMetricBottomPromo{display:flex;justify-content:flex-start;margin:10px 0 2px}
+.homeMetricBottomPromo .homeMetricUnlockBtn{margin-left:0}
 .homeMetricUnlockBtn{margin-left:8px;min-height:28px;padding:0 9px;border-radius:999px;border:1px solid rgba(255,211,132,.52);background:rgba(44,79,136,.45);color:#edf5ff;font-size:11px;font-weight:760}

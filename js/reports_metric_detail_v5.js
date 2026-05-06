@@ -61,7 +61,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "tripsActivity", title: "Trip Activity", context: "Trips logged by month for [Home filter label]." }),
       Object.freeze({ key: "tripsDealerMix", title: "Trips by Dealer", context: "Trips counted by dealer for [Home filter label]." }),
-      Object.freeze({ key: "tripsPace", title: "Trip Pace", context: "Running trip count for [Home filter label]." })
+      Object.freeze({ key: "tripsByPoundRange", title: "Trips by Pound Range", context: "Trips counted by pound range for [Home filter label]." })
     ]),
     teaserText: "Unlock Trip Insights • Best days • trip patterns • area activity • dealer activity • View Trip Insights 🔒"
   }),
@@ -71,7 +71,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "poundsMonthlyTrend", title: "Pounds Over Time", context: "Pounds landed over [Home filter label]." }),
       Object.freeze({ key: "poundsPerTripTrend", title: "Avg Pounds / Trip", context: "Average pounds per trip over [Home filter label]." }),
-      Object.freeze({ key: "tripsByPoundRange", title: "Trips by Pound Range", context: "Trips counted by pound range for [Home filter label]." })
+      Object.freeze({ key: "poundsByTripSize", title: "Pounds by Trip Size", context: "Pounds landed by trip-size range for [Home filter label]." })
     ]),
     teaserText: "Unlock Pounds Insights • Area strength • stronger periods • production trends • deeper pound breakdowns • View Pounds Insights 🔒"
   }),
@@ -460,6 +460,26 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
         if(idx >= 0) counts[idx] += 1;
       });
       return { chartType: "compare-bars", metricKey: "trips", basisLabel: "Trips by pound range", labels: bins.map((b)=> b.label), values: counts, showBarValueLabels: true, categoryLabelsBelowBars: true };
+    })(),
+    poundsByTripSize: (()=> {
+      const bins = [
+        { label: "0–50", min: 0, max: 50 },
+        { label: "50–75", min: 50, max: 75 },
+        { label: "75–100", min: 75, max: 100 },
+        { label: "100–150", min: 100, max: 150 },
+        { label: "150–200", min: 150, max: 200 },
+        { label: "200–300", min: 200, max: 300 },
+        { label: "300–400", min: 300, max: 400 },
+        { label: "400+", min: 400, max: Infinity }
+      ];
+      const totals = bins.map(()=>0);
+      (Array.isArray(trips) ? trips : []).forEach((trip)=> {
+        const lbs = Number(trip?.pounds);
+        if(!Number.isFinite(lbs)) return;
+        const idx = bins.findIndex((b)=> lbs >= b.min && lbs < b.max);
+        if(idx >= 0) totals[idx] += lbs;
+      });
+      return { chartType: "compare-bars", metricKey: "pounds", basisLabel: "Pounds by trip size", labels: bins.map((b)=> b.label), values: totals, showBarValueLabels: !isSeasonPreview, categoryLabelsBelowBars: true };
     })(),
     poundsDealerMix: buildHomeTopRowsBarChart({
       rows: dealerRowsByPounds,
@@ -1030,7 +1050,7 @@ export function createReportsMetricDetailSeam(deps){
             ${homeIsSeasonPreview ? `<div class="homeMetricPreviewBadge">Season Preview detail</div>` : ""}
             <h2 class="homeMetricSimpleTitle ${escapeHtml(meta.homeTitleToneClass || "")}">${escapeHtml(meta.homeTitle)}</h2>
           </div>
-          ${homeDetailBoundaryNote ? `<div class="homeMetricPreviewNote" role="note">${escapeHtml(homeDetailBoundaryNote)} <button class="btn homeMetricUnlockBtn" type="button" id="homeMetricUnlockInsights">Unlock Full Insights</button></div>` : ""}
+          ${homeDetailBoundaryNote ? `<div class="homeMetricPreviewNote" role="note">${escapeHtml(homeDetailBoundaryNote)}</div>` : ""}
           <div class="${surfaceMode.detailHeroWrapClass}">
             <div class="${surfaceMode.detailHeroValueClass} ${escapeHtml(meta.heroClass)}">${renderHomeHeroValue()}</div>
             <div class="${surfaceMode.detailHeroLabelClass}">${escapeHtml(meta.heroLabel)}</div>
@@ -1098,7 +1118,7 @@ export function createReportsMetricDetailSeam(deps){
         </div>
 
         ${viewModel.isHomeMetricDetail
-    ? ``
+    ? `${homeDetailBoundaryNote ? `<div class="homeMetricBottomPromo"><button class="btn homeMetricUnlockBtn" type="button" id="homeMetricUnlockInsights">Unlock Full Insights</button></div>` : ""}`
     : `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
       </div>
     </section>
