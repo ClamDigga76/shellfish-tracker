@@ -856,8 +856,8 @@
   gap:12px;
 }
 .homeMetricDetail .reportsMetricChartsStack{
-  gap:12px;
-  padding-bottom:0;
+  gap:14px;
+  padding-bottom:2px;
 }
 .homeMetricChartBlock{
   margin-top:0;
@@ -865,32 +865,35 @@
   border-top:0;
 }
 .homeMetricChartStory{
-  padding:0;
+  padding:10px 10px 8px;
+  border:1px solid rgba(126,200,255,.2);
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(18,34,58,.42), rgba(10,18,33,.2));
 }
 .homeMetricChartStory .homeMetricChartTitle{
   margin-top:0;
-  margin-bottom:0;
-  font-size:17px;
+  margin-bottom:3px;
+  font-size:17.5px;
   line-height:1.24;
   letter-spacing:.08px;
 }
 .homeMetricChartStory .chart{
-  margin-top:7px;
+  margin-top:9px;
 }
 .homeMetricChartStory .homeMetricChartSupport{
-  margin-top:5px;
+  margin-top:4px;
   color:#c4d9ef;
   line-height:1.42;
 }
 .homeMetricChartStory .homeMetricChartContext.chartContext{
-  margin-top:5px;
+  margin-top:6px;
   font-size:12px;
   line-height:1.42;
   color:#cde2f8;
 }
 .homeMetricChartStory .homeMetricChartEmpty{
-  margin-top:11px;
-  padding:11px 12px;
+  margin-top:12px;
+  padding:12px 12px;
 }
 .homeMetricChartStory .homeMetricChartEmpty::before{
   content:"Chart waiting for enough points";
@@ -934,8 +937,8 @@
   .reportsMetricChartBlock,.homeMetricChartBlock{padding-top:14px;padding-bottom:2px}
   .homeMetricChartStory .chart{margin-top:9px}
   .homeMetricChartStory .homeMetricChartTitle{font-size:16px}
-  .homeMetricChartStory .homeMetricChartSupport{font-size:11.5px}
-  .homeMetricChartStory .homeMetricChartContext.chartContext{font-size:11.5px}
+  .homeMetricChartStory .homeMetricChartSupport{font-size:12px}
+  .homeMetricChartStory .homeMetricChartContext.chartContext{font-size:12px}
   .reportsMetricInsight,.homeMetricInsight{margin-top:10px;padding-top:10px}
   .homeMetricCompareText{font-size:12.5px;line-height:1.5}
   .homeMetricSupportMeta{font-size:10px;line-height:1.34}
