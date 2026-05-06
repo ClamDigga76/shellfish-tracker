@@ -325,7 +325,7 @@ function buildHomeLast5TripPoundsChart({ trips, isSeasonPreview = false }){
     metricKey: "pounds",
     basisLabel: "Last 5 saved trips",
     categoryLabelsBelowBars: true,
-    showBarValueLabels: !isSeasonPreview,
+    showBarValueLabels: true,
     labels: lastFive.map((row)=> {
       const formatted = formatCompactTripDate(row.trip);
       return formatted && formatted !== "Invalid Date" ? formatted : "—";
@@ -465,8 +465,8 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
       labelMode: "home-dealer-direct"
     }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
-    poundsMonthlyTrend: { ...buildHomeSharedChartModel({ chartId: "poundsByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview },
-    poundsPerTripTrend: { ...buildHomeSharedChartModel({ chartId: "poundsPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview },
+    poundsMonthlyTrend: { ...buildHomeSharedChartModel({ chartId: "poundsByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview, frameRightPad: isSeasonPreview ? 10 : 0 },
+    poundsPerTripTrend: { ...buildHomeSharedChartModel({ chartId: "poundsPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview, frameRightPad: isSeasonPreview ? 10 : 0 },
     poundsLast5Trips: buildHomeLast5TripPoundsChart({ trips, isSeasonPreview }),
 
     tripsByPoundRange: (()=> {
@@ -508,7 +508,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
         const idx = bins.findIndex((b)=> lbs >= b.min && lbs < b.max);
         if(idx >= 0) totals[idx] += lbs;
       });
-      return { chartType: "compare-bars", metricKey: "pounds", basisLabel: "Pounds by trip size", labels: bins.map((b)=> b.label), values: totals, showBarValueLabels: !isSeasonPreview, categoryLabelsBelowBars: true };
+      return { chartType: "compare-bars", metricKey: "pounds", basisLabel: "Pounds by trip size", labels: bins.map((b)=> b.label), values: totals, showBarValueLabels: true, categoryLabelsBelowBars: true };
     })(),
     poundsDealerMix: buildHomeTopRowsBarChart({
       rows: dealerRowsByPounds,
