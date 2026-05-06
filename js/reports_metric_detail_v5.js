@@ -1068,13 +1068,13 @@ export function createReportsMetricDetailSeam(deps){
         .filter((rate)=> Number.isFinite(rate) && rate > 0);
       const bestTripRate = tripRates.length ? tripRates.reduce((max, rate)=> Math.max(max, rate), tripRates[0]) : 0;
       const totalPayReceived = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0);
-      const seasonPreviewPoundsDisplay = String(viewModel?.homeScope?.kpiDisplayValues?.pounds || "").trim();
-      const seasonPreviewPayDisplay = String(viewModel?.homeScope?.kpiDisplayValues?.amount || "").trim();
+      const seasonPreviewPoundsDisplay = String(homeScope?.kpiDisplayValues?.pounds || "").trim();
+      const seasonPreviewPayDisplay = String(homeScope?.kpiDisplayValues?.amount || "").trim();
       return [
         { label: "Best Trip Rate", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }) },
         { label: "Latest Trip Rate", value: latestTripRateValue > 0 ? formatHomeSnapshotValue({ metricKey, value: latestTripRateValue }) : "—" },
-        { label: "Pounds Counted", value: isSeasonPreview ? (seasonPreviewPoundsDisplay || "—") : `${Math.round(poundsSupport).toLocaleString()} lbs` },
-        { label: "Pay Received", value: isSeasonPreview ? (seasonPreviewPayDisplay || "—") : formatHomeMoneyValue(to2(totalPayReceived)) }
+        { label: "Pounds Counted", value: isSeasonPreview ? (seasonPreviewPoundsDisplay || `${Math.round(poundsSupport).toLocaleString()} lbs`) : `${Math.round(poundsSupport).toLocaleString()} lbs` },
+        { label: "Pay Received", value: isSeasonPreview ? (seasonPreviewPayDisplay || formatHomeMoneyValue(to2(totalPayReceived))) : formatHomeMoneyValue(to2(totalPayReceived)) }
       ];
     }
     return [
