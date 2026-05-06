@@ -1377,11 +1377,19 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
 function ensureChartResizeProtection(){
   if(typeof window === "undefined" || typeof document === "undefined") return;
+  const isReportsChartSurfaceActive = ()=> {
+    const root = document.getElementById("reportsTransitionRoot");
+    if(!root) return false;
+    if(!root.querySelector("canvas.chart[id]")) return false;
+    const surface = String(root.getAttribute("data-reports-view") || "").toLowerCase();
+    return surface === "overview" || surface === "metric-detail";
+  };
   const scheduleRedraw = ()=> {
     if(reportsChartResizeRafId) return;
     reportsChartResizeRafId = requestAnimationFrame(()=> {
       reportsChartResizeRafId = 0;
       if(!latestDrawReportsChartsArgs) return;
+      if(!isReportsChartSurfaceActive()) return;
       drawReportsCharts(
         latestDrawReportsChartsArgs.monthRows,
         latestDrawReportsChartsArgs.dealerRows,
@@ -1399,6 +1407,8 @@ function ensureChartResizeProtection(){
     if(!reportsChartResizeObserver){
       reportsChartResizeObserver = new ResizeObserver(()=> scheduleRedraw());
     }
+    reportsChartResizeObserver.disconnect();
+    if(!isReportsChartSurfaceActive()) return;
     const canvases = document.querySelectorAll("canvas.chart[id]");
     canvases.forEach((canvas)=> {
       const host = canvas.closest(".chartCard") || canvas.parentElement;
