@@ -1030,8 +1030,10 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
   function drawMetricDetailChart(canvasId, chartModel, metricKeyOverride = "", drawOptions = {}){
     const metricKey = String(metricKeyOverride || chartModel?.metricKey || "").toLowerCase();
-    if(!canvasId || !chartModel || !document.getElementById(canvasId)) return false;
-    const inferredKpiDetailMode = document.body?.classList?.contains("homeMetricDetail") === true;
+    if(!canvasId || !chartModel) return false;
+    const canvasEl = document.getElementById(canvasId);
+    if(!canvasEl) return false;
+    const inferredKpiDetailMode = canvasEl.closest(".homeMetricDetail") != null;
     const frameMode = drawOptions?.frameMode || chartModel?.frameMode || (inferredKpiDetailMode ? "kpi-detail" : "default");
     const emptyStateEnabled = drawOptions?.emptyStateEnabled === true;
     const showEmptyState = emptyStateEnabled && !hasUsableChartData(chartModel);
