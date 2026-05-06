@@ -224,6 +224,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
   function drawBottomTicks(ctx, labels, geom, y, frame, options = {}){
     const stackedPriceRangeMode = options.xAxisLabelMode === "stacked-price-range";
+    const stackedPoundRangeMode = options.xAxisLabelMode === "stacked-pound-range";
     const forceAllBarLabelsMode = options.xAxisLabelMode === "all-bar-labels";
     const explicitMaxTicks = Number(options.maxTicks) || 0;
     const preserveFinalLabel = options.preserveFinalLabel !== false;
@@ -253,11 +254,14 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const sameYearFromMonthKeys = hasAlignedMonthKeys && new Set(safeMonthKeys.map((key)=> key.slice(0, 4))).size <= 1;
     const allowMonthOnlyCompact = options.monthOnlyCompact === true && (sameYearFromMonthKeys || options.yearContextKnown === true);
     const monthOnlyCompact = allowMonthOnlyCompact && frame.compact && labelType === "month" && labels.length > 1 && labels.length <= 6;
-    ctx.fillStyle = palette.label;
+    const xAxisLabelMetricKey = String(options.xAxisLabelMetricKey || "").toLowerCase();
+    ctx.fillStyle = xAxisLabelMetricKey === "amount"
+      ? palette.money
+      : (xAxisLabelMetricKey === "pounds" ? palette.lbs : (xAxisLabelMetricKey === "ppl" ? palette.ppl : palette.label));
     ctx.font = frame.tickFont;
     const edgeInset = frame.compact ? 6 : 8;
     const finalEdgeInset = edgeInset + (frame.compact ? 4 : 6);
-    const minGap = stackedPriceRangeMode ? (frame.compact ? 5 : 4) : (frame.compact ? 12 : 8);
+    const minGap = (stackedPriceRangeMode || stackedPoundRangeMode) ? (frame.compact ? 5 : 4) : (frame.compact ? 12 : 8);
     const placed = [];
     const pendingDraws = [];
     const tickIndexes = new Set([0]);
@@ -284,7 +288,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         if(!text) continue;
         const lines = stackedPriceRangeMode
           ? splitStackedPriceRangeLabel(text)
-          : (isFinal && /\s+so far$/i.test(text) ? [text.replace(/\s+so far$/i, "").trim(), "so far"].filter(Boolean) : [text]);
+          : (stackedPoundRangeMode
+            ? splitStackedPoundRangeLabel(text)
+            : (isFinal && /\s+so far$/i.test(text) ? [text.replace(/\s+so far$/i, "").trim(), "so far"].filter(Boolean) : [text]));
         const lineWidths = lines.map((line)=> ctx.measureText(line).width);
         const width = Math.max(...lineWidths);
         let tx = x - (width / 2);
@@ -367,6 +373,15 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     if(rangeMatch){
       return [`${rangeMatch[1]}–`, rangeMatch[2]];
     }
+    return [text];
+  }
+
+  function splitStackedPoundRangeLabel(label){
+    const text = String(label || "").trim();
+    if(!text) return [""];
+    const rangeMatch = text.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);
+    if(rangeMatch) return [`${rangeMatch[1]}–`, `${rangeMatch[2]} lbs`];
+    if(/^\d+(?:\.\d+)?\+$/.test(text)) return [text];
     return [text];
   }
   function fitLabel(ctx, text, maxW){
@@ -767,6 +782,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           labelType: xLabelType,
           maxTicks: options.maxTicks || 0,
           xAxisLabelMode: options.xAxisLabelMode || "",
+          xAxisLabelMetricKey: options.xAxisLabelMetricKey || "",
           finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : [],
           monthOnlyCompact: xLabelType === "month",
           monthKeys: options.monthKeys
@@ -1145,6 +1161,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         showBarValueLabels,
         categoryLabelsBelowBars,
         xAxisLabelMode,
+        xAxisLabelMetricKey: String(chartModel?.xAxisLabelMetricKey || ""),
         frameMode
       }
     );
