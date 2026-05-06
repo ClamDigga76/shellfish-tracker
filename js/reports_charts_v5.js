@@ -77,12 +77,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const categoryLabelBoost = profile.compareLabels
       ? compareCountBoost
       : (compact ? 5 : 7);
+    const extraBottomPad = Math.max(0, Number(context?.extraBottomPad) || 0);
     const bottom = Math.max(
       compact ? 40 : 44,
       bottomBase
         + categoryLabelBoost
         + (profile.monthLabels && profile.dense ? (compact ? -8 : -10) : 0)
-    );
+    ) + extraBottomPad;
     return {
       compact,
       left,
@@ -222,10 +223,17 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   }
 
   function drawBottomTicks(ctx, labels, geom, y, frame, options = {}){
+    const stackedPriceRangeMode = options.xAxisLabelMode === "stacked-price-range";
     const explicitMaxTicks = Number(options.maxTicks) || 0;
     const preserveFinalLabel = options.preserveFinalLabel !== false;
     const finalLabelFallbacks = Array.isArray(options.finalLabelFallbacks) ? options.finalLabelFallbacks : [];
     const inferredMaxTicks = (()=>{
+      if(stackedPriceRangeMode){
+        const count = labels.length;
+        if(count <= 0) return frame.compact ? 6 : 8;
+        if(count >= 7) return count;
+        return Math.max(count, frame.compact ? 6 : 7);
+      }
       const count = labels.length;
       if(count <= 0) return frame.compact ? 4 : 6;
       const profile = frame.profile || {};
@@ -248,7 +256,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     ctx.font = frame.tickFont;
     const edgeInset = frame.compact ? 6 : 8;
     const finalEdgeInset = edgeInset + (frame.compact ? 4 : 6);
-    const minGap = frame.compact ? 12 : 8;
+    const minGap = stackedPriceRangeMode ? (frame.compact ? 5 : 4) : (frame.compact ? 12 : 8);
     const placed = [];
     const pendingDraws = [];
     const tickIndexes = new Set([0]);
@@ -273,7 +281,9 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       for(const candidate of candidates){
         const text = String(candidate || "").trim();
         if(!text) continue;
-        const lines = isFinal && /\s+so far$/i.test(text) ? [text.replace(/\s+so far$/i, "").trim(), "so far"].filter(Boolean) : [text];
+        const lines = stackedPriceRangeMode
+          ? splitStackedPriceRangeLabel(text)
+          : (isFinal && /\s+so far$/i.test(text) ? [text.replace(/\s+so far$/i, "").trim(), "so far"].filter(Boolean) : [text]);
         const lineWidths = lines.map((line)=> ctx.measureText(line).width);
         const width = Math.max(...lineWidths);
         let tx = x - (width / 2);
@@ -344,6 +354,19 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const month = text.split(/\s+/).find((part)=> /^[A-Za-z]{3,9}$/.test(part));
     if(!month) return ["so far", "So far"];
     return [text, `${month.slice(0,3)} so far`, month.slice(0,3), "So far"];
+  }
+
+  function splitStackedPriceRangeLabel(label){
+    const text = String(label || "").trim();
+    if(!text) return [""];
+    if(/^Under\s+\$/i.test(text)){
+      return ["Under", text.replace(/^Under\s+/i, "").trim()].filter(Boolean);
+    }
+    const rangeMatch = text.match(/^(\$\d+(?:\.\d+)?)\s*[-–]\s*(\$\d+(?:\.\d+)?)$/);
+    if(rangeMatch){
+      return [`${rangeMatch[1]}–`, rangeMatch[2]];
+    }
+    return [text];
   }
   function fitLabel(ctx, text, maxW){
     const src = String(text || "");
@@ -672,11 +695,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const { canvas, ctx, w, h } = c;
     const count = Math.max(0, values.length || 0);
     const xLabelType = options.xLabelType || "category";
+    const stackedPriceRangeMode = options.xAxisLabelMode === "stacked-price-range";
     const frame = chartFrame(w,h, options.frameMode || "default", {
       chartKind: "bar",
       pointCount: count,
       labelType: xLabelType,
-      extraRightPad: options.extraRightPad
+      extraRightPad: options.extraRightPad,
+      extraBottomPad: stackedPriceRangeMode ? (w < 360 ? 15 : 12) : 0
     });
     const observedTop = Math.max(...values, 0);
     const showBarValueLabels = options.showBarValueLabels !== false;
@@ -740,6 +765,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           alignMode: "bar-center",
           labelType: xLabelType,
           maxTicks: options.maxTicks || 0,
+          xAxisLabelMode: options.xAxisLabelMode || "",
           finalLabelFallbacks: xLabelType === "month" ? buildFinalMonthLabelFallbacks(labels[labels.length - 1]) : [],
           monthOnlyCompact: xLabelType === "month",
           monthKeys: options.monthKeys
@@ -1088,6 +1114,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const labelMode = String(chartModel?.labelMode || "").trim();
     const showBarValueLabels = chartModel?.showBarValueLabels !== false;
     const categoryLabelsBelowBars = chartModel?.categoryLabelsBelowBars !== false;
+    const xAxisLabelMode = String(chartModel?.xAxisLabelMode || "").trim();
     const customLabels = labelMode === "home-area-direct"
       ? ({ ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY })=>{
         drawAreaIdentityLabels(labels, { ctx, frame, geom, barW, canvasHeight, bars, categoryLabelY });
@@ -1116,6 +1143,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         customLabels,
         showBarValueLabels,
         categoryLabelsBelowBars,
+        xAxisLabelMode,
         frameMode
       }
     );
