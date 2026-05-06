@@ -4,6 +4,24 @@ export function createChartStorySeam({ escapeHtml }) {
     : (value) => String(value == null ? "" : value);
 
   const DEFAULT_EMPTY_MESSAGE = "Not enough data in this range yet.";
+  const CHART_SURFACE_HEIGHT_PRESETS = Object.freeze({
+    standard: Object.freeze({ min: 300, preferred: 320, max: 340 }),
+    compact: Object.freeze({ min: 280, preferred: 300, max: 320 })
+  });
+
+  function resolveChartCardHeight({
+    chartSurface = "default",
+    chartSizePreset = "standard",
+    viewportWidth = (typeof window !== "undefined" ? window.innerWidth : 390),
+    fallbackHeight = 300
+  } = {}){
+    const preset = CHART_SURFACE_HEIGHT_PRESETS[String(chartSizePreset || "standard")] || CHART_SURFACE_HEIGHT_PRESETS.standard;
+    const width = Math.max(280, Number(viewportWidth) || 390);
+    const preferred = width <= 360 ? preset.min : (width >= 460 ? preset.max : preset.preferred);
+    const surface = String(chartSurface || "").toLowerCase();
+    if(surface === "kpi-detail" || surface === "insights-high-value") return preferred;
+    return Number(fallbackHeight) || preset.min;
+  }
 
   function renderLeanStoryCard({
     canvasId,
@@ -14,6 +32,8 @@ export function createChartStorySeam({ escapeHtml }) {
     explanationClass = "homeInsightsChartExplanation",
     contextClass = "chartContext",
     height = 300,
+    chartSurface = "default",
+    chartSizePreset = "standard",
     cardTag = "article",
     cardClass = "chartCard chartCard--standard",
     emptyClass = "reportsChartEmpty reportsChartEmpty--standard",
@@ -24,7 +44,7 @@ export function createChartStorySeam({ escapeHtml }) {
         <h3 class="${safeEscape(titleClass)}">${safeEscape(title)}</h3>
         ${explanation ? `<p class="${safeEscape(explanationClass)}">${safeEscape(explanation)}</p>` : ""}
         ${context ? `<div class="${safeEscape(contextClass)}">${safeEscape(context)}</div>` : ""}
-        <canvas class="chart" id="${safeEscape(canvasId)}" height="${safeEscape(height)}"></canvas>
+        <canvas class="chart" id="${safeEscape(canvasId)}" height="${safeEscape(resolveChartCardHeight({ chartSurface, chartSizePreset, fallbackHeight: height }))}"></canvas>
         <div class="${safeEscape(emptyClass)}" data-chart-empty-for="${safeEscape(canvasId)}" hidden>${safeEscape(emptyMessage)}</div>
       </${cardTag}>
     `;
@@ -38,6 +58,8 @@ export function createChartStorySeam({ escapeHtml }) {
     hero,
     context,
     height = 270,
+    chartSurface = "default",
+    chartSizePreset = "standard",
     cardTag = "div",
     cardClass = "chartCard chartCard--standard",
     emptyClass = "reportsChartEmpty reportsChartEmpty--standard",
@@ -52,7 +74,7 @@ export function createChartStorySeam({ escapeHtml }) {
         <div class="chartSubhead">${safeEscape(subhead)}</div>
         <div class="chartHero">${hero || ""}</div>
         <div class="chartContext">${context || ""}</div>
-        <canvas class="chart" id="${safeEscape(canvasId)}" height="${safeEscape(height)}"></canvas>
+        <canvas class="chart" id="${safeEscape(canvasId)}" height="${safeEscape(resolveChartCardHeight({ chartSurface, chartSizePreset, fallbackHeight: height }))}"></canvas>
         <div class="${safeEscape(emptyClass)}" data-chart-empty-for="${safeEscape(canvasId)}" hidden>${safeEscape(emptyMessage)}</div>
       </${cardTag}>
     `;
@@ -66,6 +88,7 @@ export function createChartStorySeam({ escapeHtml }) {
   }
 
   return {
-    renderChartStoryCard
+    renderChartStoryCard,
+    resolveChartCardHeight
   };
 }

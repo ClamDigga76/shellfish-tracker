@@ -1159,6 +1159,8 @@ export function createReportsMetricDetailSeam(deps){
       explanation: chart.explanation || "",
       context: chart.context || "",
       canvasId: chart.canvasId,
+      chartSurface: forHome ? "kpi-detail" : "reports-metric-detail",
+      chartSizePreset: "standard",
       height: forHome ? 300 : 290,
       emptyClass: `reportsChartEmpty reportsChartEmpty--standard ${forHome ? "homeMetricChartEmpty" : "reportsMetricChartEmpty"}`.trim(),
       emptyMessage: chart.emptyMessage || "Not enough data in the selected period yet."

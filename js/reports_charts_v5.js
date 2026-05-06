@@ -1,8 +1,19 @@
 import { buildRollingSeriesFromMonthRows, getRollingWindowForMetric } from "./reports_rolling_trends_v5.js";
 
 const chartAnimationState = new Map();
+let reportsChartResizeObserver = null;
+let reportsChartResizeWindowListenerBound = false;
+let reportsChartResizeRafId = 0;
+let latestDrawReportsChartsArgs = null;
 
 export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, options = {}){
+  latestDrawReportsChartsArgs = {
+    monthRows: Array.isArray(monthRows) ? monthRows.slice() : [],
+    dealerRows: Array.isArray(dealerRows) ? dealerRows.slice() : [],
+    tripsOrTimeline: Array.isArray(tripsOrTimeline) ? tripsOrTimeline.slice() : [],
+    options: options && typeof options === "object" ? { ...options } : {}
+  };
+  ensureChartResizeProtection();
   const monthRowsChronological = normalizeChronologicalRows(monthRows);
   const tripsTimelineChronological = normalizeChronologicalRows(tripsOrTimeline);
 
@@ -1362,6 +1373,38 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     });
   });
 
+}
+
+function ensureChartResizeProtection(){
+  if(typeof window === "undefined" || typeof document === "undefined") return;
+  const scheduleRedraw = ()=> {
+    if(reportsChartResizeRafId) return;
+    reportsChartResizeRafId = requestAnimationFrame(()=> {
+      reportsChartResizeRafId = 0;
+      if(!latestDrawReportsChartsArgs) return;
+      drawReportsCharts(
+        latestDrawReportsChartsArgs.monthRows,
+        latestDrawReportsChartsArgs.dealerRows,
+        latestDrawReportsChartsArgs.tripsOrTimeline,
+        latestDrawReportsChartsArgs.options
+      );
+    });
+  };
+  if(!reportsChartResizeWindowListenerBound){
+    reportsChartResizeWindowListenerBound = true;
+    window.addEventListener("resize", scheduleRedraw, { passive: true });
+    window.addEventListener("orientationchange", scheduleRedraw, { passive: true });
+  }
+  if(typeof ResizeObserver === "function"){
+    if(!reportsChartResizeObserver){
+      reportsChartResizeObserver = new ResizeObserver(()=> scheduleRedraw());
+    }
+    const canvases = document.querySelectorAll("canvas.chart[id]");
+    canvases.forEach((canvas)=> {
+      const host = canvas.closest(".chartCard") || canvas.parentElement;
+      if(host) reportsChartResizeObserver.observe(host);
+    });
+  }
 }
 
 function normalizeChronologicalRows(rows){
