@@ -71,9 +71,9 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "poundsMonthlyTrend", title: "Pounds Over Time", context: "Pounds landed over [Home filter label]." }),
       Object.freeze({ key: "poundsPerTripTrend", title: "Avg Pounds / Trip", context: "Average pounds per trip over [Home filter label]." }),
-      Object.freeze({ key: "poundsByTripSize", title: "Pounds by Trip Size", context: "Pounds landed by trip-size range for [Home filter label]." })
+      Object.freeze({ key: "poundsLast5Trips", title: "Last 5 Trip Pounds", context: "Pounds from your latest saved trips." })
     ]),
-    teaserText: "Unlock Pounds Insights • Area strength • stronger periods • production trends • deeper pound breakdowns • View Pounds Insights 🔒"
+    teaserText: "Unlock Full Insights for exact season totals, pay-rate trends, area strength, and deeper chart intelligence."
   }),
   amount: Object.freeze({
     helperLine: "Total paid amount from trips in the selected period.",
@@ -307,6 +307,33 @@ function formatCompactTripDate(trip){
   return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
+
+function buildHomeLast5TripPoundsChart({ trips, isSeasonPreview = false }){
+  const datedTrips = (Array.isArray(trips) ? trips : [])
+    .map((trip)=> {
+      const parsedDate = parseTripDateValue(trip);
+      if(!parsedDate) return null;
+      const pounds = Number(trip?.pounds);
+      if(!Number.isFinite(pounds)) return null;
+      return { pounds, parsedDate, trip };
+    })
+    .filter((row)=> row != null)
+    .sort((a, b)=> a.parsedDate.timestamp - b.parsedDate.timestamp);
+  const lastFive = datedTrips.slice(-5);
+  return {
+    chartType: "compare-bars",
+    metricKey: "pounds",
+    basisLabel: "Last 5 saved trips",
+    categoryLabelsBelowBars: true,
+    showBarValueLabels: !isSeasonPreview,
+    labels: lastFive.map((row)=> {
+      const formatted = formatCompactTripDate(row.trip);
+      return formatted && formatted !== "Invalid Date" ? formatted : "—";
+    }),
+    values: lastFive.map((row)=> row.pounds)
+  };
+}
+
 function computeCurrentRunFromTrips(trips){
   const parsedDates = (Array.isArray(trips) ? trips : [])
     .map((trip)=> parseTripDateValue(trip))
@@ -438,8 +465,9 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
       labelMode: "home-dealer-direct"
     }),
     pounds: buildHomeCompareBarChart({ labels, metricKey: "pounds", currentValue: period?.current?.lbs, previousValue: period?.previous?.lbs }),
-    poundsMonthlyTrend: buildHomeSharedChartModel({ chartId: "poundsByMonth", monthRows: safeMonths, dealerRows, areaRows }),
-    poundsPerTripTrend: buildHomeSharedChartModel({ chartId: "poundsPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }),
+    poundsMonthlyTrend: { ...buildHomeSharedChartModel({ chartId: "poundsByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview },
+    poundsPerTripTrend: { ...buildHomeSharedChartModel({ chartId: "poundsPerTripByMonth", monthRows: safeMonths, dealerRows, areaRows }), showLatestPointChip: !isSeasonPreview },
+    poundsLast5Trips: buildHomeLast5TripPoundsChart({ trips, isSeasonPreview }),
 
     tripsByPoundRange: (()=> {
       const bins = [
@@ -461,6 +489,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
       });
       return { chartType: "compare-bars", metricKey: "trips", basisLabel: "Trips by pound range", labels: bins.map((b)=> b.label), values: counts, showBarValueLabels: true, categoryLabelsBelowBars: true };
     })(),
+    // Retained for compatibility with prior chart keys; no longer used in free Home Pounds drill-down.
     poundsByTripSize: (()=> {
       const bins = [
         { label: "0–50", min: 0, max: 50 },
@@ -972,7 +1001,7 @@ export function createReportsMetricDetailSeam(deps){
       : `Range ${viewModel.rangeLabel} • ${viewModel.trips.length} trips`;
     const homeIsSeasonPreview = viewModel.isHomeMetricDetail && String(viewModel.homeScope?.filter?.mode || viewModel.homeScope?.mode || "").toUpperCase() === "SEASON_PREVIEW";
     const homeDetailBoundaryNote = homeIsSeasonPreview
-      ? "Season Preview detail • chart signals stay visible here. Unlock Full Insights for exact totals, dealer comparisons, area strength, and deeper chart intelligence."
+      ? "Season Preview detail • chart signals stay visible here."
       : "";
     const detailChartTitle = viewModel.isHomeMetricDetail ? meta.homeChartTitle : meta.chartTitle;
     const detailChartContext = viewModel.isHomeMetricDetail
@@ -1096,7 +1125,7 @@ export function createReportsMetricDetailSeam(deps){
       forHome: true,
       chart: {
         title: detailChartTitle,
-        explanation: meta.homeChartExplanation || "",
+        explanation: "",
         context: detailChartContext,
         canvasId: meta.chartCanvasId
       }
@@ -1118,7 +1147,7 @@ export function createReportsMetricDetailSeam(deps){
         </div>
 
         ${viewModel.isHomeMetricDetail
-    ? `${homeDetailBoundaryNote ? `<div class="homeMetricBottomPromo"><button class="btn homeMetricUnlockBtn" type="button" id="homeMetricUnlockInsights">Unlock Full Insights</button></div>` : ""}`
+    ? `${homeDetailBoundaryNote ? `<div class="homeMetricBottomPromo"><div class="homeMetricBottomPromoText">Unlock Full Insights for exact season totals, pay-rate trends, area strength, and deeper chart intelligence.</div><button class="btn homeMetricUnlockBtn" type="button" id="homeMetricUnlockInsights">Unlock Full Insights</button></div>` : ""}`
     : `<div class="${surfaceMode.detailInsightClass}">${escapeHtml(detailInsight)}</div>`}
       </div>
     </section>
