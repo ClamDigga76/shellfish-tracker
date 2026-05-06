@@ -1037,7 +1037,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
             emptyMessage: drawOptions?.emptyMessage,
             monthKeys: chronologicalSeries.monthKeys,
             showLatestPointChip: chartModel?.showLatestPointChip !== false,
-            extraRightPad: chartModel?.frameRightPad
+            extraRightPad: chartModel?.frameRightPad,
+            yAxisLabelMode: chartModel?.yAxisLabelMode
           }
         );
         return true;
@@ -1074,7 +1075,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
           emptyMessage: drawOptions?.emptyMessage,
           monthKeys: chronologicalSeries.monthKeys,
           showLatestPointChip: chartModel?.showLatestPointChip !== false,
-          extraRightPad: chartModel?.frameRightPad
+          extraRightPad: chartModel?.frameRightPad,
+          yAxisLabelMode: chartModel?.yAxisLabelMode
         }
       );
       return true;
