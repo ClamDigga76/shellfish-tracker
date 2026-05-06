@@ -6,7 +6,8 @@ export function createChartStorySeam({ escapeHtml }) {
   const DEFAULT_EMPTY_MESSAGE = "Not enough data in this range yet.";
   const CHART_SURFACE_HEIGHT_PRESETS = Object.freeze({
     standard: Object.freeze({ min: 300, preferred: 320, max: 340 }),
-    compact: Object.freeze({ min: 280, preferred: 300, max: 320 })
+    compact: Object.freeze({ min: 280, preferred: 300, max: 320 }),
+    kpi: Object.freeze({ min: 280, preferred: 300, max: 320 })
   });
 
   function resolveChartCardHeight({
@@ -15,10 +16,12 @@ export function createChartStorySeam({ escapeHtml }) {
     viewportWidth = (typeof window !== "undefined" ? window.innerWidth : 390),
     fallbackHeight = 300
   } = {}){
-    const preset = CHART_SURFACE_HEIGHT_PRESETS[String(chartSizePreset || "standard")] || CHART_SURFACE_HEIGHT_PRESETS.standard;
+    const surface = String(chartSurface || "").toLowerCase();
+    const requestedPreset = String(chartSizePreset || "standard");
+    const presetKey = surface === "kpi-detail" ? "kpi" : requestedPreset;
+    const preset = CHART_SURFACE_HEIGHT_PRESETS[presetKey] || CHART_SURFACE_HEIGHT_PRESETS.standard;
     const width = Math.max(280, Number(viewportWidth) || 390);
     const preferred = width <= 360 ? preset.min : (width >= 460 ? preset.max : preset.preferred);
-    const surface = String(chartSurface || "").toLowerCase();
     if(surface === "kpi-detail" || surface === "insights-high-value") return preferred;
     return Number(fallbackHeight) || preset.min;
   }
