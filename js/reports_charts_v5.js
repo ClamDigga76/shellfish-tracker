@@ -224,6 +224,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
   function drawBottomTicks(ctx, labels, geom, y, frame, options = {}){
     const stackedPriceRangeMode = options.xAxisLabelMode === "stacked-price-range";
+    const forceAllBarLabelsMode = options.xAxisLabelMode === "all-bar-labels";
     const explicitMaxTicks = Number(options.maxTicks) || 0;
     const preserveFinalLabel = options.preserveFinalLabel !== false;
     const finalLabelFallbacks = Array.isArray(options.finalLabelFallbacks) ? options.finalLabelFallbacks : [];
@@ -244,7 +245,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
       return frame.compact ? 4 : 6;
     })();
     const maxTicks = explicitMaxTicks || inferredMaxTicks;
-    const step = Math.max(1, Math.ceil(labels.length / Math.max(1, maxTicks)));
+    const step = forceAllBarLabelsMode ? 1 : Math.max(1, Math.ceil(labels.length / Math.max(1, maxTicks)));
     const alignMode = options.alignMode === "bar-center" ? "bar-center" : "index";
     const labelType = options.labelType || "category";
     const safeMonthKeys = Array.isArray(options.monthKeys) ? options.monthKeys.map((key)=> normalizeMonthKey(key)) : [];
@@ -262,7 +263,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const tickIndexes = new Set([0]);
     if(preserveFinalLabel) tickIndexes.add(Math.max(0, labels.length - 1));
     labels.forEach((_, i)=> {
-      if(i % step === 0) tickIndexes.add(i);
+      if(forceAllBarLabelsMode || i % step === 0) tickIndexes.add(i);
     });
     Array.from(tickIndexes).sort((a,b)=> a - b).forEach((i)=>{
       const lab = labels[i];
