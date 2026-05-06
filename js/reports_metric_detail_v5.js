@@ -1284,7 +1284,7 @@ export function createReportsMetricDetailSeam(deps){
           if(!isUsableHomeChartModel(chartModel)) return null;
           const isCompareBars = String(chartModel?.chartType || "").toLowerCase() === "compare-bars";
           // Guardrail seam reference retained for repo check: if(isCompareBars && (!hasRealComparablePeriod || isHomeCompareSuppressed)) return null;
-          const isNonComparisonCard = chartKey === "tripsByPoundRange" || chartKey === "tripsDealerMix" || chartKey === "poundsByTripSize" || chartKey === "poundsLast5Trips";
+          const isNonComparisonCard = chartKey === "tripsByPoundRange" || chartKey === "tripsDealerMix" || chartKey === "poundsByTripSize" || chartKey === "poundsLast5Trips" || chartKey === "amountLast5Trips";
           if(isCompareBars && !isNonComparisonCard && (!hasRealComparablePeriod || isHomeCompareSuppressed)) return null;
           const resolvedMetricKey = String(
             chartModel?.metricKey
