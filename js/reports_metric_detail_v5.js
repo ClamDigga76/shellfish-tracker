@@ -367,7 +367,10 @@ function resolveTripPayRate(trip){
   if(Number.isFinite(explicitRate) && explicitRate > 0) return explicitRate;
   const pounds = Number(trip?.pounds);
   const amount = Number(trip?.amount);
-  if(Number.isFinite(pounds) && pounds > 0 && Number.isFinite(amount)) return amount / pounds;
+  if(Number.isFinite(pounds) && pounds > 0 && Number.isFinite(amount) && amount > 0){
+    const derivedRate = amount / pounds;
+    if(Number.isFinite(derivedRate) && derivedRate > 0) return derivedRate;
+  }
   return null;
 }
 
