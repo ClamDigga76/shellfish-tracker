@@ -864,6 +864,12 @@
   padding-top:0;
   border-top:0;
 }
+.homeMetricDetail .reportsMetricChartsStack .homeMetricChartBlock{
+  width:calc(100% + 16px);
+  margin-left:-8px;
+  margin-right:-8px;
+  max-width:none;
+}
 .homeMetricChartStory{
   padding:8px 10px 12px;
   border:1px solid rgba(126,200,255,.16);
@@ -935,6 +941,11 @@
   .reportsMetricCompare{padding-left:12px}
   .reportsMetricChartsStack{margin-top:12px;gap:12px}
   .homeMetricDetail .reportsMetricChartsStack{gap:12px;padding-bottom:0}
+  .homeMetricDetail .reportsMetricChartsStack .homeMetricChartBlock{
+    width:calc(100% + 12px);
+    margin-left:-6px;
+    margin-right:-6px;
+  }
   .reportsMetricChartBlock,.homeMetricChartBlock{padding-top:14px;padding-bottom:2px}
   .homeMetricChartStory .chart{margin-top:9px}
   .homeMetricChartStory .homeMetricChartTitle{font-size:16px}
