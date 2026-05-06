@@ -865,34 +865,34 @@
   border-top:0;
 }
 .homeMetricDetail .reportsMetricChartsStack .homeMetricChartBlock{
-  width:calc(100% + 16px);
-  margin-left:-8px;
-  margin-right:-8px;
+  width:calc(100% + 8px);
+  margin-left:-4px;
+  margin-right:-4px;
   max-width:none;
 }
 .homeMetricChartStory{
-  padding:8px 10px 12px;
-  border:1px solid rgba(126,200,255,.16);
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(18,34,58,.34), rgba(10,18,33,.14));
+  padding:4px 6px 8px;
+  border:0;
+  border-radius:0;
+  background:transparent;
 }
 .homeMetricChartStory .homeMetricChartTitle{
   margin-top:0;
-  margin-bottom:3px;
-  font-size:17.5px;
+  margin-bottom:2px;
+  font-size:17px;
   line-height:1.24;
   letter-spacing:.08px;
 }
 .homeMetricChartStory .chart{
-  margin-top:8px;
+  margin-top:7px;
 }
 .homeMetricChartStory .homeMetricChartSupport{
-  margin-top:4px;
+  margin-top:3px;
   color:#c4d9ef;
   line-height:1.42;
 }
 .homeMetricChartStory .homeMetricChartContext.chartContext{
-  margin-top:7px;
+  margin-top:6px;
   padding-bottom:2px;
   font-size:12px;
   line-height:1.42;
@@ -942,9 +942,9 @@
   .reportsMetricChartsStack{margin-top:12px;gap:12px}
   .homeMetricDetail .reportsMetricChartsStack{gap:12px;padding-bottom:0}
   .homeMetricDetail .reportsMetricChartsStack .homeMetricChartBlock{
-    width:calc(100% + 12px);
-    margin-left:-6px;
-    margin-right:-6px;
+    width:calc(100% + 6px);
+    margin-left:-3px;
+    margin-right:-3px;
   }
   .reportsMetricChartBlock,.homeMetricChartBlock{padding-top:14px;padding-bottom:2px}
   .homeMetricChartStory .chart{margin-top:9px}

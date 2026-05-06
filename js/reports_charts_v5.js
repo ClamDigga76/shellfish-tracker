@@ -745,12 +745,13 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     const count = Math.max(0, values.length || 0);
     const xLabelType = options.xLabelType || "category";
     const stackedPriceRangeMode = options.xAxisLabelMode === "stacked-price-range";
+    const kpiBottomLabelMode = options.frameMode === "kpi-detail";
     const frame = chartFrame(w,h, options.frameMode || "default", {
       chartKind: "bar",
       pointCount: count,
       labelType: xLabelType,
       extraRightPad: options.extraRightPad,
-      extraBottomPad: stackedPriceRangeMode ? (w < 360 ? 15 : 12) : 0
+      extraBottomPad: (stackedPriceRangeMode ? (w < 360 ? 15 : 12) : 0) + (kpiBottomLabelMode ? (w < 360 ? 10 : 8) : 0)
     });
     const observedTop = Math.max(...values, 0);
     const showBarValueLabels = options.showBarValueLabels !== false;
@@ -1030,7 +1031,8 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
   function drawMetricDetailChart(canvasId, chartModel, metricKeyOverride = "", drawOptions = {}){
     const metricKey = String(metricKeyOverride || chartModel?.metricKey || "").toLowerCase();
     if(!canvasId || !chartModel || !document.getElementById(canvasId)) return false;
-    const frameMode = drawOptions?.frameMode || chartModel?.frameMode || "default";
+    const inferredKpiDetailMode = document.body?.classList?.contains("homeMetricDetail") === true;
+    const frameMode = drawOptions?.frameMode || chartModel?.frameMode || (inferredKpiDetailMode ? "kpi-detail" : "default");
     const emptyStateEnabled = drawOptions?.emptyStateEnabled === true;
     const showEmptyState = emptyStateEnabled && !hasUsableChartData(chartModel);
     toggleChartEmptyState(canvasId, showEmptyState, drawOptions?.emptyMessage);
