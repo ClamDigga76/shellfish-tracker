@@ -7,7 +7,7 @@ export function createChartStorySeam({ escapeHtml }) {
   const CHART_SURFACE_HEIGHT_PRESETS = Object.freeze({
     standard: Object.freeze({ min: 300, preferred: 320, max: 340 }),
     compact: Object.freeze({ min: 280, preferred: 300, max: 320 }),
-    kpi: Object.freeze({ min: 280, preferred: 300, max: 320 })
+    kpi: Object.freeze({ min: 300, preferred: 320, max: 340 })
   });
 
   function resolveChartCardHeight({
@@ -18,7 +18,7 @@ export function createChartStorySeam({ escapeHtml }) {
   } = {}){
     const surface = String(chartSurface || "").toLowerCase();
     const requestedPreset = String(chartSizePreset || "standard");
-    const presetKey = surface === "kpi-detail" ? "kpi" : requestedPreset;
+    const presetKey = requestedPreset;
     const preset = CHART_SURFACE_HEIGHT_PRESETS[presetKey] || CHART_SURFACE_HEIGHT_PRESETS.standard;
     const width = Math.max(280, Number(viewportWidth) || 390);
     const preferred = width <= 360 ? preset.min : (width >= 460 ? preset.max : preset.preferred);
@@ -44,12 +44,16 @@ export function createChartStorySeam({ escapeHtml }) {
   }) {
     const resolvedHeight = resolveChartCardHeight({ chartSurface, chartSizePreset, fallbackHeight: height });
     return `
-      <${cardTag} class="${safeEscape(cardClass)}">
-        <h3 class="${safeEscape(titleClass)}">${safeEscape(title)}</h3>
-        ${explanation ? `<p class="${safeEscape(explanationClass)}">${safeEscape(explanation)}</p>` : ""}
-        ${context ? `<div class="${safeEscape(contextClass)}">${safeEscape(context)}</div>` : ""}
-        <canvas class="chart" id="${safeEscape(canvasId)}" height="${safeEscape(resolvedHeight)}" data-chart-display-height="${safeEscape(resolvedHeight)}"></canvas>
-        <div class="${safeEscape(emptyClass)}" data-chart-empty-for="${safeEscape(canvasId)}" hidden>${safeEscape(emptyMessage)}</div>
+      <${cardTag} class="${safeEscape(cardClass)}" data-chart-story-card="true">
+        <div class="chartHeader" data-chart-header="true">
+          <h3 class="${safeEscape(titleClass)}">${safeEscape(title)}</h3>
+          ${explanation ? `<p class="${safeEscape(explanationClass)}">${safeEscape(explanation)}</p>` : ""}
+          ${context ? `<div class="${safeEscape(contextClass)}">${safeEscape(context)}</div>` : ""}
+        </div>
+        <div class="chartViewport" data-chart-viewport="true">
+          <canvas class="chart" data-chart-canvas="true" id="${safeEscape(canvasId)}" height="${safeEscape(resolvedHeight)}" data-chart-display-height="${safeEscape(resolvedHeight)}"></canvas>
+          <div class="${safeEscape(emptyClass)}" data-chart-empty="true" data-chart-empty-for="${safeEscape(canvasId)}" hidden>${safeEscape(emptyMessage)}</div>
+        </div>
       </${cardTag}>
     `;
   }
@@ -73,14 +77,18 @@ export function createChartStorySeam({ escapeHtml }) {
     const resolvedHeight = resolveChartCardHeight({ chartSurface, chartSizePreset, fallbackHeight: height });
     const takeawayText = String(takeaway?.text || "Holding steady");
     return `
-      <${cardTag} class="${safeEscape(cardClass)}">
-        <div class="chartTakeaway tone-${safeEscape(tone)}">${safeEscape(takeawayText)}</div>
+      <${cardTag} class="${safeEscape(cardClass)}" data-chart-story-card="true">
+        <div class="chartHeader" data-chart-header="true">
+          <div class="chartTakeaway tone-${safeEscape(tone)}">${safeEscape(takeawayText)}</div>
         <div class="chartTitle">${safeEscape(title)}</div>
         <div class="chartSubhead">${safeEscape(subhead)}</div>
         <div class="chartHero">${hero || ""}</div>
         <div class="chartContext">${context || ""}</div>
-        <canvas class="chart" id="${safeEscape(canvasId)}" height="${safeEscape(resolvedHeight)}" data-chart-display-height="${safeEscape(resolvedHeight)}"></canvas>
-        <div class="${safeEscape(emptyClass)}" data-chart-empty-for="${safeEscape(canvasId)}" hidden>${safeEscape(emptyMessage)}</div>
+        </div>
+        <div class="chartViewport" data-chart-viewport="true">
+          <canvas class="chart" data-chart-canvas="true" id="${safeEscape(canvasId)}" height="${safeEscape(resolvedHeight)}" data-chart-display-height="${safeEscape(resolvedHeight)}"></canvas>
+          <div class="${safeEscape(emptyClass)}" data-chart-empty="true" data-chart-empty-for="${safeEscape(canvasId)}" hidden>${safeEscape(emptyMessage)}</div>
+        </div>
       </${cardTag}>
     `;
   }
