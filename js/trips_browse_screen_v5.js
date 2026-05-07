@@ -170,11 +170,10 @@ export function createTripsBrowseScreenRenderer(deps){
               ` : ""}
             </div>
             <div class="tripsFilterApplyRow">
-              <button class="btn btn-ghost" id="flt_reset" type="button">Reset</button>
               <button class="btn good" id="flt_apply" type="button">Apply</button>
             </div>
 
-            ${isLegacyCustomRange ? '<div class="muted small">Custom dates are active. Tap Reset to return to YTD.</div>' : ''}
+            ${isLegacyCustomRange ? '<div class="muted small">Custom dates are active. Use Clear filters to return to YTD.</div>' : ''}
           </div>
         ` : ""}
         ${quarantinedSupportNote}
@@ -327,14 +326,6 @@ export function createTripsBrowseScreenRenderer(deps){
       ui.tripsCustomDatesExpanded = false;
       ui.tripsMoreFiltersExpanded = false;
       scheduleStateSave();
-      renderAllTrips();
-    });
-
-    document.getElementById("flt_reset")?.addEventListener("click", ()=>{
-      resetTripsFilters(state);
-      state.ui = state.ui || {};
-      state.ui.tripsCustomDatesExpanded = false;
-      saveState();
       renderAllTrips();
     });
 

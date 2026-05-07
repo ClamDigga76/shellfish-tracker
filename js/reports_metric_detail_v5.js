@@ -220,10 +220,10 @@ function buildHomeMetricPayloads(period){
   return {
     trips: buildHomeMetricPayload({ metricKey: "trips", label: "Trips", currentValue: current.trips, previousValue: previous.trips, period }),
     pounds: buildHomeMetricPayload({ metricKey: "pounds", label: "Pounds", currentValue: current.lbs, previousValue: previous.lbs, period }),
-    amount: buildHomeMetricPayload({ metricKey: "amount", label: "Amount", currentValue: current.amount, previousValue: previous.amount, period }),
+    amount: buildHomeMetricPayload({ metricKey: "amount", label: "Total Pay", currentValue: current.amount, previousValue: previous.amount, period }),
     ppl: buildHomeMetricPayload({
       metricKey: "ppl",
-      label: "Avg $ / lb",
+      label: "Avg price/lb",
       currentValue: current.ppl,
       previousValue: previous.ppl,
       period,
@@ -715,8 +715,15 @@ function buildMetricDetailPrimaryBasisMap({ period, metrics, detailCharts, sourc
 
 function buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows, trips = [], isSeasonPreview = false }){
   const safeMonths = normalizeChronologicalRows(Array.isArray(monthRows) ? monthRows.filter((row)=> row?.monthKey) : []);
-  const currentMonth = safeMonths[safeMonths.length - 1] || null;
-  const previousMonth = safeMonths[safeMonths.length - 2] || null;
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentMonthIndex = safeMonths.findIndex((row)=> String(row?.monthKey || "") === currentMonthKey);
+  const currentMonth = currentMonthIndex >= 0
+    ? safeMonths[currentMonthIndex]
+    : { monthKey: currentMonthKey, label: "Current month", displayLabel: "Current month", trips: 0, lbs: 0, amt: 0, fishingDays: 0, avg: 0, isPartialMonth: true, daysElapsed: now.getDate() };
+  const previousMonth = currentMonthIndex >= 1
+    ? safeMonths[currentMonthIndex - 1]
+    : (currentMonthIndex === -1 ? (safeMonths[safeMonths.length - 1] || null) : null);
   const fairLimit = currentMonth?.isPartialMonth ? Math.max(1, Number(currentMonth?.daysElapsed) || 1) : 0;
   const summarizeByWindow = (month)=> {
     if(!month) return summarizeHomeMonthRow(month);
@@ -1031,7 +1038,7 @@ export function createReportsMetricDetailSeam(deps){
         return weekKeys.size;
       })();
       return [
-        { label: "Best Trip", value: formatHomeSnapshotValue({ metricKey, value: hasTripBest ? bestTripPounds : highest }), valueToneClass: "lbsBlue" },
+        { label: "Highest Trip", value: formatHomeSnapshotValue({ metricKey, value: hasTripBest ? bestTripPounds : highest }), valueToneClass: "lbsBlue" },
         { label: "Avg / Trip", value: isSeasonPreview ? toBucketLabel(avgTripPounds, avgTripBuckets) : formatHomeSnapshotValue({ metricKey, value: avgTripPounds }), valueToneClass: "lbsBlue" },
         { label: "Avg / Month", value: isSeasonPreview ? toBucketLabel(average, avgMonthBuckets) : formatHomeSnapshotValue({ metricKey, value: average }), valueToneClass: "lbsBlue" },
         { label: activeLabel, value: `${activeCount || "—"}`, valueToneClass: "" }
@@ -1088,7 +1095,7 @@ export function createReportsMetricDetailSeam(deps){
       const seasonPreviewPoundsDisplay = String(homeScope?.kpiDisplayValues?.pounds || "").trim();
       const seasonPreviewPayDisplay = String(homeScope?.kpiDisplayValues?.amount || "").trim();
       return [
-        { label: "Best Trip Rate", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }), valueToneClass: "rate ppl" },
+        { label: "Highest Trip Rate", value: formatHomeSnapshotValue({ metricKey, value: tripRates.length ? bestTripRate : highest }), valueToneClass: "rate ppl" },
         { label: "Latest Trip Rate", value: latestTripRateValue > 0 ? formatHomeSnapshotValue({ metricKey, value: latestTripRateValue }) : "—", valueToneClass: "rate ppl" },
         { label: "Pounds Counted", value: isSeasonPreview ? (seasonPreviewPoundsDisplay || `${Math.round(poundsSupport).toLocaleString()} lbs`) : `${Math.round(poundsSupport).toLocaleString()} lbs`, valueToneClass: "lbsBlue" },
         { label: "Pay Received", value: isSeasonPreview ? (seasonPreviewPayDisplay || formatHomeMoneyValue(to2(totalPayReceived))) : formatHomeMoneyValue(to2(totalPayReceived)), valueToneClass: "money" }

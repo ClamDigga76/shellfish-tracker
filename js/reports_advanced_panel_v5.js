@@ -64,9 +64,6 @@ export function createReportsAdvancedPanelSeam(deps){
             </div>
           </div>
         </div>
-        <div class="row reportsAdvancedActions">
-          <button class="btn" id="repAdvReset" type="button">Reset</button>
-        </div>
       </div>
     `;
   }
@@ -132,25 +129,6 @@ export function createReportsAdvancedPanelSeam(deps){
       };
     }
 
-    const advReset = root.querySelector("#repAdvReset");
-    if(advReset){
-      advReset.onclick = ()=>{
-        if(variant === "empty"){
-          state.reportsFilter.mode = "YTD";
-          state.reportsFilter.from = "";
-          state.reportsFilter.to = "";
-          state.reportsFilter.dealer = "";
-          state.reportsFilter.area = "";
-          state.reportsFilter.customRangeCorrectionMessages = [];
-        }else{
-          state.reportsFilter = { mode:"YTD", from:"", to:"", dealer:"", area:"", adv:false, customRangeCorrectionMessages:[] };
-        }
-
-        saveState();
-        showToast("Filters reset");
-        renderReports();
-      };
-    }
   }
 
   return {
