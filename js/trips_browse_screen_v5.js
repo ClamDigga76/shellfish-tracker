@@ -170,6 +170,7 @@ export function createTripsBrowseScreenRenderer(deps){
               ` : ""}
             </div>
             <div class="tripsFilterApplyRow">
+              <button class="btn" id="flt_reset" type="button">Reset</button>
               <button class="btn good" id="flt_apply" type="button">Apply</button>
             </div>
 
@@ -319,6 +320,13 @@ export function createTripsBrowseScreenRenderer(deps){
     document.getElementById("tripsFiltersToggle")?.addEventListener("click", ()=>{
       ui.tripsFiltersExpanded = !isFiltersExpanded;
       rerender();
+    });
+
+    document.getElementById("flt_reset")?.addEventListener("click", ()=>{
+      resetTripsFilters(state);
+      ui.tripsCustomDatesExpanded = false;
+      scheduleStateSave();
+      renderAllTrips();
     });
 
     document.getElementById("flt_apply")?.addEventListener("click", ()=>{

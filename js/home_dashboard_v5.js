@@ -431,9 +431,6 @@ export function createHomeDashboardRenderer({
     const topDealerSupport = strongestDealer
       ? `<span class="money">${escapeHtml(formatMoney(round2(strongestDealer.amount)))}</span>${Number.isFinite(topDealerAvgPpl) ? `<span class="homeOverviewMetaSeparator"> · </span><span class="rate ppl">Avg ${escapeHtml(formatMoney(round2(topDealerAvgPpl)))}/lb</span>` : ""}`
       : "No trips in range";
-    const strongestAreaSupport = strongestArea
-      ? `<span class="lbsBlue">${escapeHtml(formatHomePounds(round2(strongestArea.pounds)))}</span><span class="homeOverviewMetaSeparator"> · </span><span class="tripsMetric">${escapeHtml(formatGroupedHomeNumber(strongestArea.trips, { maximumFractionDigits: 0 }))} trips</span>`
-      : "No trips in range";
     const installModel = typeof getInstallSurfaceModel === "function" ? getInstallSurfaceModel() : null;
     const showInstallCard = shouldShowBeginnerCard && installModel && !installModel.isInstalled;
     const installCardHTML = showInstallCard
@@ -549,12 +546,12 @@ export function createHomeDashboardRenderer({
           </div>
           <div class="homeOverviewGrid">
             <div class="homeOverviewStat homeOverviewStat--top">
-              <div class="reportsHeroLabel">AVG $ / TRIP</div>
+              <div class="reportsHeroLabel">Avg pay/trip</div>
               <div class="reportsHeroValue money homeOverviewHeroValue ${isSeasonPreviewMode ? "homeOverviewHeroValuePreview" : ""}">${avgAmountPerTripDisplay}</div>
               ${renderOverviewTrendArrow(avgAmountTrendTone, "Average amount trend")}
             </div>
             <div class="homeOverviewStat homeOverviewStat--top">
-              <div class="reportsHeroLabel">AVG LBS / TRIP</div>
+              <div class="reportsHeroLabel">Avg lbs/trip</div>
               <div class="reportsHeroValue lbsBlue homeOverviewHeroValue ${isSeasonPreviewMode ? "homeOverviewHeroValuePreview" : ""}">${avgPoundsPerTripDisplay}</div>
               ${renderOverviewTrendArrow(avgPoundsTrendTone, "Average pounds trend")}
             </div>
@@ -566,7 +563,7 @@ export function createHomeDashboardRenderer({
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">STRONGEST AREA</div>
               <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? (strongestArea ? "Full Insights" : "—") : (strongestArea?.area || "—"))}</div>
-              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestArea ? "Area strength is coming with Full Insights." : "No trips in range") : strongestAreaSupport}</div>
+              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestArea ? "Area strength is coming with Full Insights." : "No trips in range") : "Area strength is based mostly on pounds, with pay shown for context."}</div>
             </div>
           </div>
         </section>
