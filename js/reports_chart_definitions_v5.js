@@ -136,7 +136,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     maxItems: 6,
     rateRanked: true,
     title: "Average price per pound by dealer",
-    explanation: "Shows which dealers are paying the strongest Avg $ / lb (total pay ÷ total pounds), ranked for groups with at least 2 trips and 150 lbs."
+    explanation: "Shows which dealers are paying the strongest average price per pound (total pay ÷ total pounds), ranked for groups with at least 2 trips and 150 lbs."
   }),
   pplByArea: Object.freeze({
     chartId: "pplByArea",
@@ -148,7 +148,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     maxItems: 6,
     rateRanked: true,
     title: "Average price per pound by area",
-    explanation: "Shows which areas are producing the strongest Avg $ / lb (total pay ÷ total pounds), ranked for groups with at least 2 trips and 150 lbs."
+    explanation: "Shows which areas are producing the strongest average price per pound (total pay ÷ total pounds), ranked for groups with at least 2 trips and 150 lbs."
   }),
   poundsPerTripByArea: Object.freeze({
     chartId: "poundsPerTripByArea",

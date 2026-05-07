@@ -228,7 +228,7 @@ function buildHomeMetricPayloads(period){
       previousValue: previous.ppl,
       period,
       suppressed: !(current.lbs > 0 && previous.lbs > 0),
-      reason: "Log pounds in both visible months in the selected period to compare Avg $ / lb."
+      reason: "Log pounds in both visible months in the selected period to compare average price per pound."
     })
   };
 }
@@ -825,7 +825,7 @@ export function createReportsMetricDetailSeam(deps){
   };
   const getPplFormulaText = ({ metricKey, surface = "default" } = {})=> {
     if(metricKey !== "ppl") return "";
-    if(surface === "short") return "Avg $ / lb = total amount ÷ total pounds.";
+    if(surface === "short") return "Average price per pound = total amount ÷ total pounds.";
     if(surface === "formula") return "Total amount ÷ total pounds";
     if(surface === "weighted") return "Weighted by pounds across selected trips";
     return "Total amount ÷ total pounds. Weighted by pounds across selected trips.";
@@ -901,12 +901,12 @@ export function createReportsMetricDetailSeam(deps){
         const cause = poundsPayload?.compareTone === "up" && pplPayload?.compareTone !== "up"
           ? "higher pounds landed"
           : (pplPayload?.compareTone === "up" && poundsPayload?.compareTone !== "up"
-            ? "stronger Avg $ / lb"
+            ? "stronger average price per pound"
             : (poundsPayload?.compareTone === "down" && pplPayload?.compareTone !== "down"
               ? "lighter pounds landed"
               : (pplPayload?.compareTone === "down" && poundsPayload?.compareTone !== "down"
-                ? "softer Avg $ / lb"
-                : "a combined shift in pounds and Avg $ / lb")));
+                ? "softer average price per pound"
+                : "a combined shift in pounds and Average price per pound")));
         const evidence = `Evidence: amount per trip was ${toneWord(amountPerTripTone)} and amount per day was ${toneWord(amountPerDayTone)}.`;
         return `${metricMoveLead("Amount")} mainly from ${cause}. ${evidence}`;
       },
@@ -917,7 +917,7 @@ export function createReportsMetricDetailSeam(deps){
           : (tone === "down" ? "softer pricing" : "stable pricing");
         const amountDirection = toneWord(amountPayload?.compareTone, { up: "up", down: "down", steady: "flat" });
         const poundsDirection = toneWord(poundsPayload?.compareTone, { up: "up", down: "down", steady: "flat" });
-        return `${metricMoveLead("Avg $ / lb")}${pctMove} mainly from ${cause}. Evidence: amount was ${amountDirection} while pounds were ${poundsDirection}.`;
+        return `${metricMoveLead("Average price per pound")}${pctMove} mainly from ${cause}. Evidence: amount was ${amountDirection} while pounds were ${poundsDirection}.`;
       }
     };
     const summaryText = (summaryBuilders[metricKey] || summaryBuilders.amount)();
