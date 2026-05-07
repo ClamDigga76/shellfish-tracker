@@ -84,7 +84,8 @@ export function createReportsMetricRouteSeam(deps){
       tripCount,
       contextText,
       kpiDisplayValues: snapshotKpiDisplayValues,
-      trips: filtered.rows
+      trips: filtered.rows,
+      allTrips: Array.isArray(tripsAll) ? tripsAll : []
     };
   }
 

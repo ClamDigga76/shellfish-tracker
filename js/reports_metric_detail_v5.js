@@ -964,9 +964,10 @@ export function createReportsMetricDetailSeam(deps){
     return `${to2(safeValue)}`;
   };
 
-  const buildHomeSnapshotItems = ({ metricKey, chartModel, trips, homeScope })=> {
+  const buildHomeSnapshotItems = ({ metricKey, chartModel, trips, homeScope, allTripsForCurrentMonth = null })=> {
     const values = Array.isArray(chartModel?.values) ? chartModel.values.map((value)=> Number(value) || 0) : [];
     const safeTrips = Array.isArray(trips) ? trips : [];
+    const safeCurrentMonthTripsSource = Array.isArray(allTripsForCurrentMonth) ? allTripsForCurrentMonth : safeTrips;
     if(!values.length && !safeTrips.length) return [];
     const highest = values.length ? values.reduce((max, value)=> Math.max(max, value), values[0]) : 0;
     const average = values.length ? (values.reduce((sum, value)=> sum + value, 0) / values.length) : 0;
@@ -978,7 +979,7 @@ export function createReportsMetricDetailSeam(deps){
     const now = new Date();
     const currentMonthDate = new Date(now.getFullYear(), now.getMonth(), 1);
     const currentMonthKey = `${currentMonthDate.getFullYear()}-${String(currentMonthDate.getMonth() + 1).padStart(2, "0")}`;
-    const currentMonthTrips = safeTrips.reduce((count, trip)=> {
+    const currentMonthTrips = safeCurrentMonthTripsSource.reduce((count, trip)=> {
       const parsed = parseTripDateValue(trip);
       return parsed && parsed.dateToken.startsWith(`${currentMonthKey}-`) ? count + 1 : count;
     }, 0);
@@ -1328,6 +1329,7 @@ export function createReportsMetricDetailSeam(deps){
     };
     const formatHomeKpiHeroValue = (targetMetric, trips)=> {
       const safeTrips = Array.isArray(trips) ? trips : [];
+    const safeCurrentMonthTripsSource = Array.isArray(allTripsForCurrentMonth) ? allTripsForCurrentMonth : safeTrips;
       const tripCount = safeTrips.length;
       const pounds = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.pounds) || 0), 0);
       const amount = safeTrips.reduce((sum, trip)=> sum + (Number(trip?.amount) || 0), 0);
@@ -1409,7 +1411,7 @@ export function createReportsMetricDetailSeam(deps){
           });
           const homePrimaryChart = homeChartCards[0]?.chartModel || null;
           const heroValue = resolveHeroValue("trips");
-          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart, trips: viewModel.trips, homeScope: viewModel.homeScope });
+          const homeSnapshotItems = buildHomeSnapshotItems({ metricKey: "trips", chartModel: homePrimaryChart, trips: viewModel.trips, homeScope: viewModel.homeScope, allTripsForCurrentMonth: viewModel.homeScope?.allTrips });
           return {
         title: "Trips breakdown",
         homeTitle: "Trips Logged",
