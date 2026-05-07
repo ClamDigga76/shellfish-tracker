@@ -358,7 +358,7 @@ export function createTripMutationLifecycleSeam({
     saveState();
     triggerHaptic("light");
     render();
-    showUndoToast({ message: "Trip saved", snapshot: undoSnapshot });
+    showUndoToast({ message: "Trip saved.", snapshot: undoSnapshot });
     if(milestoneToast){
       let celebrationShown = false;
       try{

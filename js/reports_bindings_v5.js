@@ -194,7 +194,7 @@ export function createReportsBindingsSeam(){
     if(homeMetricUnlockInsightsBtn){
       homeMetricUnlockInsightsBtn.onclick = ()=>{
         if(typeof showToast === 'function'){
-          showToast('Full Insights unlocks exact totals, dealer comparisons, area strength, and deeper charts.');
+          showToast('Full Insights — Coming Soon.');
         }
       };
     }

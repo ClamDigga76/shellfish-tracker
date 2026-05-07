@@ -33,7 +33,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     valueKey: "amt",
     labelMode: "home-area-direct",
     maxItems: 6,
-    title: "Amount by area",
+    title: "Pay by area",
     explanation: "Shows which fishing areas are making you the most money."
   }),
   poundsByArea: Object.freeze({
@@ -67,7 +67,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     valueKey: "amountPerTrip",
     labelMode: "home-area-direct",
     maxItems: 6,
-    title: "Average Amount Per Trip by area",
+    title: "Average pay per trip by area",
     explanation: "Shows which areas give you the best average money return for each trip."
   }),
   amountByDealer: Object.freeze({
@@ -78,7 +78,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     valueKey: "amt",
     labelMode: "home-dealer-direct",
     maxItems: 6,
-    title: "Amount by dealer",
+    title: "Pay by dealer",
     explanation: "Shows which dealers have paid you the most overall."
   }),
 
@@ -123,7 +123,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     valueKey: "amountPerTrip",
     labelMode: "home-dealer-direct",
     maxItems: 6,
-    title: "Average Amount Per Trip by dealer",
+    title: "Average pay per trip by dealer",
     explanation: "Shows which dealers are tied to the strongest average payout per trip."
   }),
   pplByDealer: Object.freeze({
@@ -187,7 +187,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     chartType: "month-line",
     metricKey: "amount",
     valueKey: "amt",
-    title: "Amount by month",
+    title: "Pay by month",
     explanation: "Shows total earnings by month. If the current month is incomplete it is labeled so far and should be treated as in progress."
   }),
   poundsByMonth: Object.freeze({
@@ -206,7 +206,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     metricKey: "amount",
     valueKey: "amountPerTrip",
     emptyMonthNoData: true,
-    title: "Average Amount Per Trip by month",
+    title: "Average pay per trip by month",
     explanation: "Shows average amount per trip by month; the current month is labeled so far when still building."
   }),
   poundsPerTripByMonth: Object.freeze({
