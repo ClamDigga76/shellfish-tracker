@@ -964,8 +964,24 @@ export function createReportsMetricDetailSeam(deps){
     return `${to2(safeValue)}`;
   };
 
+  const getLocalCurrentMonthSnapshot = ()=> {
+    const now = new Date();
+    const year = now.getFullYear();
+    const monthIndex = now.getMonth();
+    const monthKey = `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
+    const monthNameLong = new Intl.DateTimeFormat(undefined, { month: "long" }).format(now);
+    const monthNameShort = new Intl.DateTimeFormat(undefined, { month: "short" }).format(now);
+    return {
+      monthKey,
+      label: `Trips in ${monthNameLong} so far`,
+      compactLabel: `${monthNameShort} so far`
+    };
+  };
+
   const buildHomeSnapshotItems = ({ metricKey, chartModel, trips, homeScope })=> {
     const values = Array.isArray(chartModel?.values) ? chartModel.values.map((value)=> Number(value) || 0) : [];
+    const labels = Array.isArray(chartModel?.labels) ? chartModel.labels.map((label)=> String(label || "").trim()) : [];
+    const monthKeys = Array.isArray(chartModel?.monthKeys) ? chartModel.monthKeys.map((key)=> String(key || "").trim()) : [];
     const safeTrips = Array.isArray(trips) ? trips : [];
     if(!values.length && !safeTrips.length) return [];
     const latest = values.length ? values[values.length - 1] : 0;
@@ -976,12 +992,24 @@ export function createReportsMetricDetailSeam(deps){
     const latestTrip = resolveLatestSelectedTrip(safeTrips);
     const activeMode = String(homeScope?.filter?.mode || homeScope?.filterMode || "").trim().toUpperCase();
     const isSeasonPreview = activeMode === "SEASON_PREVIEW";
-    if(metricKey === "trips") return [
-      { label: "Latest Month", value: formatHomeSnapshotValue({ metricKey, value: latest }), valueToneClass: "" },
+    if(metricKey === "trips"){
+      const currentMonthSnapshot = getLocalCurrentMonthSnapshot();
+      const currentMonthValue = (()=> {
+        const keysForLookup = monthKeys.length === values.length ? monthKeys : labels;
+        const rowIndex = keysForLookup.findIndex((entry)=> entry === currentMonthSnapshot.monthKey);
+        if(rowIndex < 0) return 0;
+        return Number(values[rowIndex]) || 0;
+      })();
+      const currentMonthLabel = currentMonthSnapshot.label.length <= 20
+        ? currentMonthSnapshot.label
+        : currentMonthSnapshot.compactLabel;
+      return [
+      { label: currentMonthLabel, value: formatHomeSnapshotValue({ metricKey, value: currentMonthValue }), valueToneClass: "" },
       { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }), valueToneClass: "" },
       { label: "Current Run", value: currentRun > 0 ? `${currentRun} in a row` : "—", valueToneClass: "" },
       { label: "Latest Trip", value: formatCompactTripDate(latestTrip), valueToneClass: "" }
     ];
+    }
     if(metricKey === "pounds"){
       const tripPounds = safeTrips.map((trip)=> Number(trip?.pounds) || 0).filter((value)=> value > 0);
       const hasTripBest = tripPounds.length > 0;
