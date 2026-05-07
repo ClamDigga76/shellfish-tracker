@@ -34,7 +34,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     labelMode: "home-area-direct",
     maxItems: 6,
     title: "Pay by area",
-    explanation: "Shows which fishing areas are making you the most money."
+    explanation: "Shows total pay by area in the selected date range. Pounds are still the main way to judge area strength."
   }),
   poundsByArea: Object.freeze({
     chartId: "poundsByArea",
@@ -68,7 +68,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     labelMode: "home-area-direct",
     maxItems: 6,
     title: "Average pay per trip by area",
-    explanation: "Shows which areas give you the best average money return for each trip."
+    explanation: "Shows average pay per trip by area in the selected date range."
   }),
   amountByDealer: Object.freeze({
     chartId: "amountByDealer",
@@ -79,7 +79,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     labelMode: "home-dealer-direct",
     maxItems: 6,
     title: "Pay by dealer",
-    explanation: "Shows which dealers have paid you the most overall."
+    explanation: "Shows total pay by dealer in the selected date range."
   }),
 
   tripsByDealer: Object.freeze({
@@ -112,7 +112,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     valueKey: "poundsPerTrip",
     labelMode: "home-dealer-direct",
     maxItems: 6,
-    title: "Average Pounds Per Trip by dealer",
+    title: "Average pounds per trip by dealer",
     explanation: "Shows which dealers are tied to the strongest average pounds per trip."
   }),
   amountPerTripByDealer: Object.freeze({
@@ -124,7 +124,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     labelMode: "home-dealer-direct",
     maxItems: 6,
     title: "Average pay per trip by dealer",
-    explanation: "Shows which dealers are tied to the strongest average payout per trip."
+    explanation: "Shows average pay per trip by dealer in the selected date range."
   }),
   pplByDealer: Object.freeze({
     chartId: "pplByDealer",
@@ -135,8 +135,8 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     labelMode: "home-dealer-direct",
     maxItems: 6,
     rateRanked: true,
-    title: "Avg $ / lb by dealer",
-    explanation: "Shows which dealers are paying the strongest Avg $ / lb (total amount ÷ total pounds), ranked for groups with at least 2 trips and 150 lbs."
+    title: "Average price per pound by dealer",
+    explanation: "Shows which dealers are paying the strongest Avg $ / lb (total pay ÷ total pounds), ranked for groups with at least 2 trips and 150 lbs."
   }),
   pplByArea: Object.freeze({
     chartId: "pplByArea",
@@ -147,8 +147,8 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     labelMode: "home-area-direct",
     maxItems: 6,
     rateRanked: true,
-    title: "Avg $ / lb by area",
-    explanation: "Shows which areas are producing the strongest Avg $ / lb (total amount ÷ total pounds), ranked for groups with at least 2 trips and 150 lbs."
+    title: "Average price per pound by area",
+    explanation: "Shows which areas are producing the strongest Avg $ / lb (total pay ÷ total pounds), ranked for groups with at least 2 trips and 150 lbs."
   }),
   poundsPerTripByArea: Object.freeze({
     chartId: "poundsPerTripByArea",
@@ -158,7 +158,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     valueKey: "poundsPerTrip",
     labelMode: "home-area-direct",
     maxItems: 6,
-    title: "Average Pounds Per Trip by area",
+    title: "Average pounds per trip by area",
     explanation: "Shows which areas give you the strongest average catch volume per trip."
   }),
 
@@ -178,8 +178,8 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     metricKey: "ppl",
     valueKey: "avg",
     emptyMonthNoData: true,
-    title: "Avg $ / lb by month",
-    explanation: "Shows weighted Avg $ / lb by month (total amount ÷ total pounds). The current month is shown as so far when incomplete."
+    title: "Average price per pound by month",
+    explanation: "Shows weighted Average price per pound by month (total pay ÷ total pounds). The current month is shown as so far when incomplete."
   }),
   amountByMonth: Object.freeze({
     chartId: "amountByMonth",
@@ -188,7 +188,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     metricKey: "amount",
     valueKey: "amt",
     title: "Pay by month",
-    explanation: "Shows total earnings by month. If the current month is incomplete it is labeled so far and should be treated as in progress."
+    explanation: "Shows total pay by month in the selected date range. If the current month is incomplete it is labeled so far and should be treated as in progress."
   }),
   poundsByMonth: Object.freeze({
     chartId: "poundsByMonth",
@@ -207,7 +207,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     valueKey: "amountPerTrip",
     emptyMonthNoData: true,
     title: "Average pay per trip by month",
-    explanation: "Shows average amount per trip by month; the current month is labeled so far when still building."
+    explanation: "Shows average pay per trip by month in the selected date range."
   }),
   poundsPerTripByMonth: Object.freeze({
     chartId: "poundsPerTripByMonth",
@@ -216,7 +216,7 @@ export const HOME_SHARED_CHART_DEFINITIONS = Object.freeze({
     metricKey: "pounds",
     valueKey: "poundsPerTrip",
     emptyMonthNoData: true,
-    title: "Average Pounds Per Trip by month",
+    title: "Average pounds per trip by month",
     explanation: "Shows average pounds per trip by month; the current month is labeled so far when still building."
   })
 });
