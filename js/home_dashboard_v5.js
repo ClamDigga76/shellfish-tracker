@@ -376,7 +376,7 @@ export function createHomeDashboardRenderer({
       title: "Installed app check",
       statusPill: "Trust",
       body: "Browser version and installed app are both valid. Use the installed app for the best experience.",
-      support: "Storage can differ by mode or device, so create backup and restore backup when switching phones, browsers, or app modes.",
+      support: "Storage can differ by mode or device, so create backup and restore backup when switching phones, browsers, or app icons.",
       actions: [
         { id: "pwaNoteHelp", label: "Review safe transfer" },
         { id: "pwaNoteDismiss", label: "Got it" }
@@ -591,7 +591,11 @@ export function createHomeDashboardRenderer({
           ? "Full Insights — Coming Soon."
           : "";
         state.homeFilter.mode = nextMode;
-        if(state.homeFilter.mode !== "RANGE") state.homeFilter.customRangeCorrectionMessages = [];
+        if(state.homeFilter.mode !== "RANGE") {
+          state.homeFilter.from = "";
+          state.homeFilter.to = "";
+          state.homeFilter.customRangeCorrectionMessages = [];
+        }
         saveState();
         if (filterToastMessage) showToast(filterToastMessage);
         renderHome();
