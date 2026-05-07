@@ -61,8 +61,6 @@
 .tripsBrowseFiltersCard .tripsRangeApplyBtn{min-height:36px;padding:0 10px;white-space:nowrap;justify-self:end}
 .tripsBrowseFiltersCard .tripsFilterApplyRow{gap:6px;padding-top:0;margin-top:2px}
 .tripsBrowseFiltersCard .tripsFilterApplyRow .btn{min-height:35px;padding:0 12px}
-.tripsBrowseFiltersCard .tripsPaidVersionStrip{margin-top:1px;padding:3px 2px 1px}
-.tripsBrowseFiltersCard .tripsPaidVersionStripText{font-size:11px;line-height:1.25;color:rgba(236,201,126,.94)}
 .settingsSpeciesLockedSection{margin-top:4px}
 .settingsSpeciesLockedList{display:grid;gap:6px}
 .settingsSpeciesLockedRow{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:8px;padding:8px 11px;border-radius:14px;border:1px solid rgba(187,162,108,.56);background:linear-gradient(180deg, rgba(115,91,48,.6) 0%, rgba(67,52,30,.86) 100%);box-shadow:inset 0 1px 0 rgba(255,243,211,.2),0 0 0 1px rgba(255,203,110,.2),0 0 12px rgba(229,170,68,.12)}

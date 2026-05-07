@@ -492,7 +492,6 @@ export function createHomeDashboardRenderer({
       customRangeLabel: "Custom Range"
     });
     const homeOverviewRangeLabel = homeFilterLabel;
-    const homeSeasonPreviewBoundaryNote = "";
     const lastTripHeaderActionHtml = hasEditableLatestTrip
       ? ``
       : `<div class="homeLastTripRangePill">Range ${escapeHtml(homeOverviewRangeLabel)}</div>`;
@@ -537,7 +536,6 @@ export function createHomeDashboardRenderer({
           ${lastSavedTripHtml}
         </section>
 
-        ${homeSeasonPreviewBoundaryNote ? `<section class="homeSection homePreviewBoundaryCard" aria-label="Season preview boundary"><div class="homePreviewBoundaryNote">${escapeHtml(homeSeasonPreviewBoundaryNote)}</div></section>` : ""}
 
         <section class="homeSection homeOverviewCard">
           <div class="homeOverviewHeaderRow">
