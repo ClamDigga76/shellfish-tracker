@@ -2,30 +2,39 @@
 
 Effective Date: 2026-01-01
 
-This Privacy Policy applies to Bank the Catch (Shellfish Tracker PWA).
+This Privacy Policy applies to Bank the Catch, which is privately owned and operated by JMW Legacy LLC.
 
-This app does not collect, transmit, or store personal data on external servers.
+## 1. Local-Only Storage (Current Version)
+Current app records are stored locally on your device/browser storage.
 
-## Local Storage Only
-Trip records and related app data are stored locally on your device using browser storage.
+## 2. What JMW Legacy LLC Can and Cannot Access
+JMW Legacy LLC does not have access to your trip records, harvest records, earnings records, dealer records, area records, backups, exports, or other locally stored app data unless you choose to send that information to JMW Legacy LLC.
 
-## No Tracking
-This app:
+## 3. No Tracking or Third-Party Analytics (Current Version)
+In the current version, Bank the Catch:
 - Does not use analytics
-- Does not use cookies
-- Does not share data with third parties
-- Does not transmit user information
+- Does not use advertising trackers
+- Does not use cookies for behavioral tracking
+- Does not automatically transmit your trip/harvest records to JMW Legacy LLC
 
-## Backups and Exports
-When you create a backup/export file, that file is saved to a location you choose (for example, your Files app or cloud drive). You control how those files are stored and shared.
+## 4. Backups and Exports Are User-Controlled
+When you create a backup/export file, that file is saved to a location you choose. Backup/export files are controlled by you.
 
-## User Control
-You may clear locally stored app data at any time from your browser/device storage.
+If you store backup/export files in iCloud, Google Drive, email, messages, or another provider, that storage is controlled by you and that provider, not by Bank the Catch or JMW Legacy LLC.
 
-## Contact
-Privacy questions can be sent to: jeremywwood76@gmail.com
+## 5. Your Responsibilities
+You are responsible for:
+- Protecting your device access
+- Protecting backup/export files you create
+- Managing how and where your backup/export files are stored and shared
 
-## Future Updates
-If future versions include accounts, subscriptions, payments, or analytics, this policy will be updated accordingly.
+## 6. Voluntary Sharing
+If you choose to share records or exports with agencies, dealers, accountants, attorneys, or others, that sharing is your decision and responsibility.
 
-By using this app, you acknowledge this privacy policy.
+## 7. Future Feature Changes
+If future versions add accounts, subscriptions, payments, analytics, cloud sync, or server storage, this Privacy Policy will be updated before or when those features are made available.
+
+## 8. Contact
+Privacy questions can be sent to: jmwlegacyllc@gmail.com
+
+By using Bank the Catch, you acknowledge this Privacy Policy.
