@@ -563,7 +563,7 @@ export function createHomeDashboardRenderer({
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">STRONGEST AREA</div>
               <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? (strongestArea ? "Full Insights" : "—") : (strongestArea?.area || "—"))}</div>
-              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestArea ? "Area strength is coming with Full Insights." : "No trips in range") : "Area strength is based mostly on pounds, with pay shown for context."}</div>
+              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestArea ? "Area strength is coming with Full Insights." : "No trips in range") : (strongestArea ? `${formatHomePounds(strongestArea.pounds, { maximumFractionDigits: 1 })} · ${Math.round(Number(strongestArea.trips) || 0)} trips` : "No trips in range")}</div>
             </div>
           </div>
         </section>
