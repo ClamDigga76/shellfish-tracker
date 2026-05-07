@@ -1185,7 +1185,7 @@
   white-space:nowrap;
 }
 .homeScreenShell .timeframeUnifiedControl.homeTimeframeRowLocked{
-  grid-template-columns:minmax(14px,.2fr) repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:4px;
   padding:6px;
   border-color:rgba(214,186,126,.42);
