@@ -968,7 +968,6 @@ export function createReportsMetricDetailSeam(deps){
     const values = Array.isArray(chartModel?.values) ? chartModel.values.map((value)=> Number(value) || 0) : [];
     const safeTrips = Array.isArray(trips) ? trips : [];
     if(!values.length && !safeTrips.length) return [];
-    const latest = values.length ? values[values.length - 1] : 0;
     const highest = values.length ? values.reduce((max, value)=> Math.max(max, value), values[0]) : 0;
     const average = values.length ? (values.reduce((sum, value)=> sum + value, 0) / values.length) : 0;
     const tripCount = safeTrips.length;
@@ -976,8 +975,21 @@ export function createReportsMetricDetailSeam(deps){
     const latestTrip = resolveLatestSelectedTrip(safeTrips);
     const activeMode = String(homeScope?.filter?.mode || homeScope?.filterMode || "").trim().toUpperCase();
     const isSeasonPreview = activeMode === "SEASON_PREVIEW";
+    const now = new Date();
+    const currentMonthDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthKey = `${currentMonthDate.getFullYear()}-${String(currentMonthDate.getMonth() + 1).padStart(2, "0")}`;
+    const currentMonthTrips = safeTrips.reduce((count, trip)=> {
+      const parsed = parseTripDateValue(trip);
+      return parsed && parsed.dateToken.startsWith(`${currentMonthKey}-`) ? count + 1 : count;
+    }, 0);
+    const currentMonthLabelLong = currentMonthDate.toLocaleDateString("en-US", { month: "long" });
+    const currentMonthLabelShort = currentMonthDate.toLocaleDateString("en-US", { month: "short" });
+    const preferredCurrentMonthLabel = `Trips in ${currentMonthLabelLong} so far`;
+    const currentMonthLabel = preferredCurrentMonthLabel.length <= 22
+      ? preferredCurrentMonthLabel
+      : `Trips in ${currentMonthLabelShort} so far`;
     if(metricKey === "trips") return [
-      { label: "Current Month", value: formatHomeSnapshotValue({ metricKey, value: latest }), valueToneClass: "" },
+      { label: currentMonthLabel, value: formatHomeSnapshotValue({ metricKey, value: currentMonthTrips }), valueToneClass: "" },
       { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }), valueToneClass: "" },
       { label: "Current Run", value: currentRun > 0 ? `${currentRun} in a row` : "—", valueToneClass: "" },
       { label: "Latest Trip", value: formatCompactTripDate(latestTrip), valueToneClass: "" }
