@@ -18,7 +18,7 @@ export function renderInstallSurface({
 } = {}){
   if (!model) return "";
 
-  const trustNote = "Browser mode and Installed mode can store different local data. Create a backup before switching devices, browsers, or app modes.";
+  const trustNote = "Browser version and installed app can store different local data. Create a backup before switching phones, browsers, or app icons.";
   const statusSurface = createStatusSurfaceSeam({ escapeHtml });
   const primaryActionHtml = model.showAction
     ? `<button class="btn ${mode === "full" ? "primary settingsInlineBtn" : ""}" id="${escapeHtml(actionId)}" type="button" ${model.actionEnabled ? "" : "disabled"}>${escapeHtml(model.actionLabel)}</button>`

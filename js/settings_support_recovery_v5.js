@@ -442,8 +442,8 @@ export function createSettingsSupportRecoverySeam(deps) {
         } else {
           const lines = [
             `Build ${displayBuildVersion} release validation`,
-            `Browser mode: ${releaseStatusLabel(selections.browser_mode)}`,
-            `Installed mode: ${releaseStatusLabel(selections.installed_mode)}`,
+            `Browser version: ${releaseStatusLabel(selections.browser_mode)}`,
+            `Installed app: ${releaseStatusLabel(selections.installed_mode)}`,
             `Update pickup: ${releaseStatusLabel(selections.update_pickup)}`,
             `Reopen behavior: ${releaseStatusLabel(selections.reopen_behavior)}`,
             `Recovery/reset: ${releaseStatusLabel(selections.recovery_reset)}`

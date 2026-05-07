@@ -17,11 +17,11 @@ export function createReportsShellControlsSeam(deps){
 
   const REPORTS_SECTION_ITEMS = [
     { key: "insights", label: "Overview", intro: "Main takeaways for this range." },
-    { key: "high-value", label: "High Value Drivers", intro: "Area, dealer, rate, and productivity drivers." },
+    { key: "high-value", label: "Top Drivers", intro: "See what affected pounds, total pay, price/lb, dealers, and areas in this range." },
     { key: "charts", label: "Charts", intro: "See how your season changes over time." },
-    { key: "seasonality", label: "Seasonality", intro: "Matched windows across years." },
+    { key: "seasonality", label: "Season Trends", intro: "See how your season changes over time." },
     { key: "records", label: "Records", intro: "High and low trip records." },
-    { key: "detail", label: "Detail", intro: "Dealer, area, and monthly tables." }
+    { key: "detail", label: "Breakdowns", intro: "Review trips, dealers, areas, and months in more detail." }
   ];
 
   function ensureReportsFilter(state){

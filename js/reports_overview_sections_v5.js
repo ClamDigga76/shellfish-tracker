@@ -294,10 +294,10 @@ export function createReportsOverviewSectionsSeam(deps){
   function renderHighValueSection(){
     const chartGroups = buildHighValueChartDeckManifest();
     return reportsSection({
-      title: "High Value Drivers",
+      title: "Top Drivers",
       intro: "See which areas, dealers, rates, and productivity patterns are driving value in the active Insights filters.",
       body: `<div class="reportsHeroCard homeInsightsHero">
-        <div class="reportsHeroEyebrow">High Value Drivers deck</div>
+        <div class="reportsHeroEyebrow">Top Drivers deck</div>
         <h2 class="reportsHeroHeadline">Decision support for your active Insights filters.</h2>
         <p class="reportsHeroSub">Use this deck to spot where money, pounds, rate, and productivity are coming from.</p>
       </div>
@@ -322,8 +322,8 @@ export function createReportsOverviewSectionsSeam(deps){
   }
 
   function renderSeasonalitySection(context){
-    const { isHomeMetricDetail, seasonalityFoundation } = context;
-    if(isHomeMetricDetail || !seasonalityFoundation || !seasonalityFoundation.hasHistory) return "";
+    const { isHomeMetricBreakdowns, seasonalityFoundation } = context;
+    if(isHomeMetricBreakdowns || !seasonalityFoundation || !seasonalityFoundation.hasHistory) return "";
     const monthRowsAllYears = Array.isArray(seasonalityFoundation.monthOfYearBuckets)
       ? seasonalityFoundation.monthOfYearBuckets.filter((row)=> row.contributingYears > 0)
       : [];
@@ -383,7 +383,7 @@ export function createReportsOverviewSectionsSeam(deps){
         </div>`
       : "";
     return reportsSection({
-      title: "Seasonality",
+      title: "Season Trends",
       intro: "Matched windows across years.",
       body: `<div class="reportsSeasonalityGrid">
         <div class="card reportsSeasonalityCard">
@@ -514,7 +514,7 @@ export function createReportsOverviewSectionsSeam(deps){
     });
   }
 
-  function renderDetailBlock(context){
+  function renderBreakdownsBlock(context){
     const { dealerRows, areaRows, monthRows, dealerRangeRows } = context;
 
     const renderSummaryAverageLine = (row)=> {
@@ -597,7 +597,7 @@ export function createReportsOverviewSectionsSeam(deps){
     };
 
     return reportsSection({
-      title: "Detail",
+      title: "Breakdowns",
       intro: "Dealer, area, and monthly tables.",
       body: `<div class="reportsTablesStack">${[
         renderTableCard("Dealer Summary", renderSummaryAggList(sortDealerRowsForSummary(dealerRows), "Add a trip in this range to populate dealer totals.")),
@@ -619,13 +619,13 @@ export function createReportsOverviewSectionsSeam(deps){
       extraClass: "reportsSection--charts"
     });
     if(activeReportsSection === "seasonality") return renderSeasonalitySection(context) || reportsSection({
-      title: "Seasonality",
+      title: "Season Trends",
       intro: "Available after enough dated history builds.",
       body: `<div class="reportsHighlightsEmpty"><div class="muted small">Add more dated trips across multiple months to reveal seasonality reads.</div></div>`,
       extraClass: "reportsSection--seasonality"
     });
     if(activeReportsSection === "records") return renderRecordsBlock(context);
-    if(activeReportsSection === "detail") return renderDetailBlock(context);
+    if(activeReportsSection === "detail") return renderBreakdownsBlock(context);
     return reportsSection({
       title: "Overview",
       intro: "Range-wide summaries plus latest comparable-month window cards.",
@@ -640,7 +640,7 @@ export function createReportsOverviewSectionsSeam(deps){
     renderHighValueSection,
     renderSeasonalitySection,
     renderRecordsBlock,
-    renderDetailBlock,
+    renderBreakdownsBlock,
     renderActiveReportsSection
   };
 }
