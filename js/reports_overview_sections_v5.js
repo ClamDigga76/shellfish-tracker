@@ -228,7 +228,7 @@ export function createReportsOverviewSectionsSeam(deps){
         title: "Amount/Trip • Monthly",
         subhead: "Bars • average payout per trip",
         hero: `<span class="money">${latestMonth ? formatMoney(to2(latestMonth.amountPerTrip)) : "—"}</span>`,
-        context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Latest month"}</span> • High <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
+        context: `<span class="chartContextValue">${latestMonth ? escapeHtml(latestMonth.label) : "Current month"}</span> • High <span class="money">${amountPerTripPeak ? formatMoney(to2(amountPerTripPeak.amountPerTrip)) : "—"}</span>`,
         canvasId: "c_amount_per_trip"
       }),
       chartStorySeam.renderChartStoryCard({
