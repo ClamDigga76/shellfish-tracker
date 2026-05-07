@@ -59,39 +59,39 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
     helperLine: "Trips show how often work was logged in this period.",
     primaryChartKey: "tripsMonthlyTrend",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "tripsActivity", title: "Trips Over Time", context: "Shows how often trips were logged in this period." }),
+      Object.freeze({ key: "tripsActivity", title: "Trip activity", context: "Shows how often trips were logged in this period." }),
       Object.freeze({ key: "tripsDealerMix", title: "Trips by Dealer", context: "Shows how many trips were tied to each dealer." }),
       Object.freeze({ key: "tripsByPoundRange", title: "Trips by Pound Range", context: "Shows how many trips landed in each pound range." })
     ]),
-    teaserText: "Unlock Trip Insights • Best days • trip patterns • area activity • dealer activity • View Trip Insights 🔒"
+    teaserText: "More detail is coming with Full Insights."
   }),
   pounds: Object.freeze({
     helperLine: "Pounds show production before price is factored in.",
     primaryChartKey: "poundsMonthlyTrend",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "poundsMonthlyTrend", title: "Pounds Landed Over Time", context: "Shows how your landed pounds changed through this period." }),
-      Object.freeze({ key: "poundsPerTripTrend", title: "Average Pounds Per Trip by Month", context: "Shows average pounds per trip by month; the current month is labeled so far when still building." }),
-      Object.freeze({ key: "poundsLast5Trips", title: "Last 5 Trip Pounds", context: "Shows how many pounds were landed on each of your last 5 trips." })
+      Object.freeze({ key: "poundsMonthlyTrend", title: "Pounds by month", context: "Shows how your landed pounds changed through this period." }),
+      Object.freeze({ key: "poundsPerTripTrend", title: "Average pounds per trip by month", context: "Shows average pounds per trip by month; the current month is labeled so far when still building." }),
+      Object.freeze({ key: "poundsLast5Trips", title: "Pounds from last 5 trips", context: "Shows how many pounds were landed on each of your last 5 trips." })
     ]),
     teaserText: "Exact season totals are coming with Full Insights."
   }),
   amount: Object.freeze({
-    helperLine: "Amount is the pay result from pounds landed and price per pound.",
+    helperLine: "Total pay is calculated from pounds and price per pound.",
     primaryChartKey: "amountTrend",
     freeChartKeys: Object.freeze([
-      Object.freeze({ key: "amountTrend", title: "Pay Earned by Month", context: "Shows total pay earned by month during this period." }),
-      Object.freeze({ key: "amountPerTripTrend", title: "Average Pay Per Trip by Month", context: "Shows average pay earned per trip by month." }),
+      Object.freeze({ key: "amountTrend", title: "Pay by month", context: "Shows total pay earned by month during this period." }),
+      Object.freeze({ key: "amountPerTripTrend", title: "Average pay per trip by month", context: "Shows average pay earned per trip by month." }),
       Object.freeze({ key: "amountLast5Trips", title: "Pay from Last 5 Trips", context: "Shows how much pay was earned on each of your last 5 trips." })
     ]),
     teaserText: "More detail is coming with Full Insights."
   }),
   ppl: Object.freeze({
-    helperLine: "Avg $ / lb is calculated from total paid ÷ total pounds.",
+    helperLine: "Average price/lb is calculated from total pay ÷ total pounds.",
     primaryChartKey: "pplMonthlyTrendFree",
     freeChartKeys: Object.freeze([
       Object.freeze({ key: "pplMonthlyTrendFree", title: "Average Price Per Pound by Month", context: "Shows your average price per pound by month." }),
-      Object.freeze({ key: "pplLast5Trips", title: "Price Per Pound from Last 5 Trips", context: "Shows the price per pound from each of your last 5 trips." }),
-      Object.freeze({ key: "pplPriceRangeByTrip", title: "Trips by Price Range", context: "Shows how many trips landed in each price-per-pound range." })
+      Object.freeze({ key: "pplLast5Trips", title: "Price per pound from last 5 trips", context: "Shows the price per pound from each of your last 5 trips." }),
+      Object.freeze({ key: "pplPriceRangeByTrip", title: "Trips by price per pound range", context: "Shows how many trips landed in each price-per-pound range." })
     ]),
     teaserText: "More charts are coming with Full Insights."
   })
@@ -1532,7 +1532,7 @@ export function createReportsMetricDetailSeam(deps){
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
         homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "amount", heroValue, snapshotItems: homeSnapshotItems }),
-        homeMeaningNote: "Amount is the pay result from pounds landed and price per pound."
+        homeMeaningNote: "Total pay is calculated from pounds and price per pound."
           };
         })(),
       },
@@ -1580,7 +1580,7 @@ export function createReportsMetricDetailSeam(deps){
         homePrimaryChartModel: homePrimaryChart,
         homeSnapshotItems,
         homeInsightCompact: buildHomeCompactInsight({ targetMetricKey: "ppl", heroValue, snapshotItems: homeSnapshotItems }),
-        homeMeaningNote: "Avg $ / lb is calculated from total paid ÷ total pounds."
+        homeMeaningNote: "Average price/lb is calculated from total pay ÷ total pounds."
           };
         })()
       }

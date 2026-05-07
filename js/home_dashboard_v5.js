@@ -134,7 +134,7 @@ export function createHomeDashboardRenderer({
         ariaLabel: "Home timeframe filter"
       })}
       <div class="segWrap timeframeUnifiedControl homeTimeframeRow homeTimeframeRowLocked" role="group" aria-label="Home premium ranges">
-        <div class="homePremiumInlineLabel" aria-hidden="true">🔒</div>
+        
         ${premiumRowChips}
       </div>
       ${timeframeFilterControls.renderCustomRangeRow({
@@ -453,7 +453,7 @@ export function createHomeDashboardRenderer({
           emphasis: "soft",
           className: "homeBeginnerCard",
           eyebrow: "Start here",
-          title: "Add a trip to unlock Home.",
+          title: "Add a trip to start Home.",
           body: "Save your first trip, then Home fills in automatically.",
           supportHtml: `<div class="homeBeginnerSteps" aria-label="Beginner next steps"><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">1</span><span>Add a trip in New Trip.</span></div><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">2</span><span>Return to Home for your latest summary.</span></div><div class="homeBeginnerStep"><span class="homeBeginnerStepNum">3</span><span>Open Insights after a few more trips.</span></div></div>`,
           actions: [
@@ -512,20 +512,20 @@ export function createHomeDashboardRenderer({
 
         <section class="homeSection homeKpiSection">
           <div class="kpiRow">
-            <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="trips" aria-label="Open trips detail">
+            <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="trips" aria-label="Open trips details">
               <div class="kpiLabel trips">Trips</div>
               <div class="kpiValue trips"><span class="kpiValueFit">${tripsStr}</span></div>
             </button>
-            <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="pounds" aria-label="Open pounds detail">
+            <button class="kpiCard kpiCardTap" type="button" data-kpi-detail="pounds" aria-label="Open pounds details">
               <div class="kpiLabel lbsBlue">Pounds</div>
               <div class="kpiValue lbsBlue"><span class="kpiValueFit">${lbsStr}</span></div>
             </button>
-            <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="amount" aria-label="Open amount detail">
-              <div class="kpiLabel money">Amount</div>
+            <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="amount" aria-label="Open total pay details">
+              <div class="kpiLabel money">Total Pay</div>
               <div class="kpiValue money"><span class="kpiValueFit">${amountDisplay}</span></div>
             </button>
-            <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="ppl" aria-label="Open average dollars per pound detail">
-              <div class="kpiLabel rate ppl">Avg $ / lb</div>
+            <button class="kpiCard kpiCardPrimary kpiCardTap" type="button" data-kpi-detail="ppl" aria-label="Open average price per pound details">
+              <div class="kpiLabel rate ppl">Avg price/lb</div>
               <div class="kpiValue rate ppl"><span class="kpiValueFit">${avgPplDisplay}</span></div>
             </button>
           </div>
@@ -560,13 +560,13 @@ export function createHomeDashboardRenderer({
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">TOP DEALER</div>
-              <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(isSeasonPreviewMode ? (strongestDealer ? "Full version" : "—") : (strongestDealer?.dealer || "—"))}</div>
-              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestDealer ? "Dealer totals" : "No trips in range") : topDealerSupport}</div>
+              <div class="reportsHeroValue homeOverviewDealerValue">${escapeHtml(isSeasonPreviewMode ? (strongestDealer ? "Full Insights" : "—") : (strongestDealer?.dealer || "—"))}</div>
+              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestDealer ? "Coming Soon" : "No trips in range") : topDealerSupport}</div>
             </div>
             <div class="homeOverviewStat">
               <div class="reportsHeroLabel">STRONGEST AREA</div>
-              <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? (strongestArea ? "Full version" : "—") : (strongestArea?.area || "—"))}</div>
-              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestArea ? "Area strength" : "No trips in range") : strongestAreaSupport}</div>
+              <div class="reportsHeroValue">${escapeHtml(isSeasonPreviewMode ? (strongestArea ? "Full Insights" : "—") : (strongestArea?.area || "—"))}</div>
+              <div class="reportsHeroMeta">${isSeasonPreviewMode ? (strongestArea ? "Area strength is coming with Full Insights." : "No trips in range") : strongestAreaSupport}</div>
             </div>
           </div>
         </section>
@@ -588,7 +588,7 @@ export function createHomeDashboardRenderer({
         const nextMode = String(btn.getAttribute("data-hf") || "SEASON_PREVIEW").toUpperCase();
         const isFuturePaidPreview = nextMode === "FULL_YTD" || nextMode === "MONTH" || nextMode === "ALL" || nextMode === "RANGE";
         const filterToastMessage = isFuturePaidPreview
-          ? "Premium range preview — available for testing while Bank the Catch is being built."
+          ? "Full Insights — Coming Soon."
           : "";
         state.homeFilter.mode = nextMode;
         if(state.homeFilter.mode !== "RANGE") state.homeFilter.customRangeCorrectionMessages = [];
