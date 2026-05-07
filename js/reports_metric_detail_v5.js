@@ -73,7 +73,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
       Object.freeze({ key: "poundsPerTripTrend", title: "Average Pounds Per Trip by Month", context: "Shows average pounds per trip by month; the current month is labeled so far when still building." }),
       Object.freeze({ key: "poundsLast5Trips", title: "Last 5 Trip Pounds", context: "Shows how many pounds were landed on each of your last 5 trips." })
     ]),
-    teaserText: "Unlock Full Insights for exact season totals, pay-rate trends, area strength, and deeper chart intelligence."
+    teaserText: "Exact season totals are coming with Full Insights."
   }),
   amount: Object.freeze({
     helperLine: "Amount is the pay result from pounds landed and price per pound.",
@@ -83,7 +83,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
       Object.freeze({ key: "amountPerTripTrend", title: "Average Pay Per Trip by Month", context: "Shows average pay earned per trip by month." }),
       Object.freeze({ key: "amountLast5Trips", title: "Pay from Last 5 Trips", context: "Shows how much pay was earned on each of your last 5 trips." })
     ]),
-    teaserText: "Unlock Full Insights to compare dealers, price trends, and deeper money insights."
+    teaserText: "More detail is coming with Full Insights."
   }),
   ppl: Object.freeze({
     helperLine: "Avg $ / lb is calculated from total paid ÷ total pounds.",
@@ -93,7 +93,7 @@ const HOME_FREE_KPI_DETAIL_CONFIG = Object.freeze({
       Object.freeze({ key: "pplLast5Trips", title: "Price Per Pound from Last 5 Trips", context: "Shows the price per pound from each of your last 5 trips." }),
       Object.freeze({ key: "pplPriceRangeByTrip", title: "Trips by Price Range", context: "Shows how many trips landed in each price-per-pound range." })
     ]),
-    teaserText: "Unlock Full Insights to compare dealer pay rates and price-per-pound trends."
+    teaserText: "More charts are coming with Full Insights."
   })
 });
 
@@ -633,7 +633,7 @@ function buildHomeDetailCharts({ monthRows, dealerRows, areaRows, period, trips 
       rows: areaRowsByAmount,
       metricKey: "amount",
       valueKey: "amt",
-      basisLabel: "Amount by area",
+      basisLabel: "Pay by area",
       labelMode: "home-area-direct"
     }),
     ppl: buildHomeCompareBarChart({ labels, metricKey: "ppl", currentValue: period?.current?.ppl, previousValue: period?.previous?.ppl }),

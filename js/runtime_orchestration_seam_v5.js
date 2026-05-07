@@ -74,7 +74,7 @@ export function createRuntimeOrchestrationSeam({
           : isAndroidChrome
             ? "Open Help for Chrome steps, then add to Home Screen."
             : "Open Help for manual install steps. Safari on iPhone/iPad and Chrome on Android are best.");
-    const whyTitle = isInstalled ? "Installed mode ready." : "Why install";
+    const whyTitle = isInstalled ? "Installed app ready" : "Why install";
     const whyBody = isInstalled
       ? "Use the Home Screen icon to keep opening this installed copy."
       : "Install adds a Home Screen launch and keeps app mode more consistent.";

@@ -109,7 +109,7 @@ export function createHomeDashboardRenderer({
       timeframeFilterControls.HOME_PRESET_FILTER_ITEMS.map((item)=> [String(item?.key || "").toUpperCase(), item])
     );
     const homeQuickItems = [
-      { key: "SEASON_PREVIEW", label: "Season Preview", subLabel: "(Free Preview)" },
+      { key: "SEASON_PREVIEW", label: "Season Preview", subLabel: "" },
       { key: "7D", label: "7 Days" },
       { key: "14D", label: "14 Days" },
       { key: "28D", label: "4 Weeks" }
@@ -375,7 +375,7 @@ export function createHomeDashboardRenderer({
       emphasis: "soft",
       title: "Installed app check",
       statusPill: "Trust",
-      body: "Browser mode and Installed mode are both valid. Installed mode is recommended for app-like use.",
+      body: "Browser version and installed app are both valid. Use the installed app for the best experience.",
       support: "Storage can differ by mode or device, so create backup and restore backup when switching phones, browsers, or app modes.",
       actions: [
         { id: "pwaNoteHelp", label: "Review safe transfer" },

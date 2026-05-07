@@ -799,7 +799,7 @@ export function createUpdateRuntimeStatusSeam({
     const waitingLine = runtimeDiag.swWaitingVersion ? `v${runtimeDiag.swWaitingVersion}` : "none";
 
     const checks = [
-      { key: "browser_mode", label: "Browser mode opens current release", suggested: "not-run" },
+      { key: "browser_mode", label: "Browser version opens current release", suggested: "not-run" },
       { key: "installed_mode", label: "Installed app opens current release", suggested: runtimeDiag.standalone ? (runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging || (!requiredCoreSettled && runtimeDiag.requiredCoreCacheIncomplete) ? "fail" : (swControlConfirmed ? "pass" : "not-run")) : "not-run" },
       { key: "update_pickup", label: "Update pickup after reload", suggested: runtimeDiag.hasExplicitVersionMismatch || (!requiredCoreSettled && runtimeDiag.requiredCoreCacheIncomplete) ? "fail" : (swControlConfirmed ? "pass" : "not-run") },
       { key: "reopen_behavior", label: "Reopen keeps expected build", suggested: runtimeDiag.hasExplicitVersionMismatch || runtimeDiag.installedAppLikelyLagging || (!requiredCoreSettled && runtimeDiag.requiredCoreCacheIncomplete) ? "fail" : (reopenReady ? "pass" : "not-run") },
@@ -939,7 +939,7 @@ export function createUpdateRuntimeStatusSeam({
       { key: "back_navigation", label: "Back navigation returns cleanly" }
     ];
     const lines = [];
-    lines.push("Bank the Catch Home KPI drill-down validation ledger");
+    lines.push("Bank the Catch Home Key Stats drill-down validation ledger");
     lines.push(`Build: ${String(snap.buildVersion || displayBuildVersion || "")}`);
     lines.push(`Snapshot: ${formatLedgerStamp(snap.at) || "(unknown)"}`);
     lines.push(`Runtime mode: ${String(snap.runtimeMode || "(unknown)")}`);

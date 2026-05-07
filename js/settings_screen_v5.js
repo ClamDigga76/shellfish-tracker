@@ -381,9 +381,9 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
           <div id="releaseValidationSignals" class="muted settingsBodyTiny"></div>
         </div>
         <div class="settingsRow settingsRow--field">
-          <label class="muted small" for="releaseCheckBrowser">Browser mode opens current release</label>
+          <label class="muted small" for="releaseCheckBrowser">Browser version opens current release</label>
           <div class="selectRowWrap settingsSelectWrap mt6">
-            <select id="releaseCheckBrowser" class="select" aria-label="Browser mode validation">
+            <select id="releaseCheckBrowser" class="select" aria-label="Browser version validation">
               <option value="not-run">Not run</option>
               <option value="pass">Pass</option>
               <option value="fail">Fail</option>
@@ -392,9 +392,9 @@ ${shouldShowReleaseValidation ? `        <div class="settingsRow settingsRow--sp
           </div>
         </div>
         <div class="settingsRow settingsRow--field">
-          <label class="muted small" for="releaseCheckInstalled">Installed mode opens current release</label>
+          <label class="muted small" for="releaseCheckInstalled">Installed app opens current release</label>
           <div class="selectRowWrap settingsSelectWrap mt6">
-            <select id="releaseCheckInstalled" class="select" aria-label="Installed mode validation">
+            <select id="releaseCheckInstalled" class="select" aria-label="Installed app validation">
               <option value="not-run">Not run</option>
               <option value="pass">Pass</option>
               <option value="fail">Fail</option>
