@@ -723,7 +723,7 @@ function buildHomeMetricDetailFoundation({ monthRows, dealerRows, areaRows, trip
     : { monthKey: currentMonthKey, label: "Current month", displayLabel: "Current month", trips: 0, lbs: 0, amt: 0, fishingDays: 0, avg: 0, isPartialMonth: true, daysElapsed: now.getDate() };
   const previousMonth = currentMonthIndex >= 1
     ? safeMonths[currentMonthIndex - 1]
-    : null;
+    : (currentMonthIndex === -1 ? (safeMonths[safeMonths.length - 1] || null) : null);
   const fairLimit = currentMonth?.isPartialMonth ? Math.max(1, Number(currentMonth?.daysElapsed) || 1) : 0;
   const summarizeByWindow = (month)=> {
     if(!month) return summarizeHomeMonthRow(month);
