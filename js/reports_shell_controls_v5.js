@@ -16,9 +16,9 @@ export function createReportsShellControlsSeam(deps){
   const REPORTS_PRESET_MODES = REPORTS_PRESET_FILTER_ITEMS.map((item)=> item.key);
 
   const REPORTS_SECTION_ITEMS = [
-    { key: "insights", label: "Overview", intro: "Top takeaways for this range." },
+    { key: "insights", label: "Overview", intro: "Main takeaways for this range." },
     { key: "high-value", label: "High Value Drivers", intro: "Area, dealer, rate, and productivity drivers." },
-    { key: "charts", label: "Charts", intro: "Trend direction at a glance." },
+    { key: "charts", label: "Charts", intro: "See how your season changes over time." },
     { key: "seasonality", label: "Seasonality", intro: "Matched windows across years." },
     { key: "records", label: "Records", intro: "High and low trip records." },
     { key: "detail", label: "Detail", intro: "Dealer, area, and monthly tables." }
