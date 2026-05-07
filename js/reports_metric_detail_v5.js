@@ -981,6 +981,7 @@ export function createReportsMetricDetailSeam(deps){
   const buildHomeSnapshotItems = ({ metricKey, chartModel, trips, homeScope })=> {
     const values = Array.isArray(chartModel?.values) ? chartModel.values.map((value)=> Number(value) || 0) : [];
     const labels = Array.isArray(chartModel?.labels) ? chartModel.labels.map((label)=> String(label || "").trim()) : [];
+    const monthKeys = Array.isArray(chartModel?.monthKeys) ? chartModel.monthKeys.map((key)=> String(key || "").trim()) : [];
     const safeTrips = Array.isArray(trips) ? trips : [];
     if(!values.length && !safeTrips.length) return [];
     const latest = values.length ? values[values.length - 1] : 0;
@@ -994,7 +995,8 @@ export function createReportsMetricDetailSeam(deps){
     if(metricKey === "trips"){
       const currentMonthSnapshot = getLocalCurrentMonthSnapshot();
       const currentMonthValue = (()=> {
-        const rowIndex = labels.findIndex((label)=> label === currentMonthSnapshot.monthKey);
+        const keysForLookup = monthKeys.length === values.length ? monthKeys : labels;
+        const rowIndex = keysForLookup.findIndex((entry)=> entry === currentMonthSnapshot.monthKey);
         if(rowIndex < 0) return 0;
         return Number(values[rowIndex]) || 0;
       })();
