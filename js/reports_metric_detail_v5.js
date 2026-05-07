@@ -977,7 +977,7 @@ export function createReportsMetricDetailSeam(deps){
     const activeMode = String(homeScope?.filter?.mode || homeScope?.filterMode || "").trim().toUpperCase();
     const isSeasonPreview = activeMode === "SEASON_PREVIEW";
     if(metricKey === "trips") return [
-      { label: "Latest Month", value: formatHomeSnapshotValue({ metricKey, value: latest }), valueToneClass: "" },
+      { label: "Current Month", value: formatHomeSnapshotValue({ metricKey, value: latest }), valueToneClass: "" },
       { label: "Avg / Month", value: formatHomeSnapshotValue({ metricKey, value: average }), valueToneClass: "" },
       { label: "Current Run", value: currentRun > 0 ? `${currentRun} in a row` : "—", valueToneClass: "" },
       { label: "Latest Trip", value: formatCompactTripDate(latestTrip), valueToneClass: "" }
