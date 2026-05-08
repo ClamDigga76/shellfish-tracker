@@ -117,12 +117,19 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         + categoryLabelBoost
         + (profile.monthLabels && profile.dense ? (compact ? -8 : -10) : 0)
     ) + extraBottomPad;
+    const xAxisLabelZoneHeight = Math.max(
+      compact ? 26 : 28,
+      Math.min(bottom - 8, compact ? 36 : 40)
+    );
+    const xAxisLabelTopPad = compact ? 8 : 9;
     return {
       compact,
       left,
       right,
       top,
       bottom,
+      xAxisLabelZoneHeight,
+      xAxisLabelTopPad,
       profile,
       tickFont: compact ? "11px system-ui, -apple-system, Segoe UI, Arial" : "12px system-ui, -apple-system, Segoe UI, Arial"
     };
@@ -153,9 +160,12 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
 
   function drawAxes(ctx, w, h, frame){
     const x0 = frame.left;
+    const labelZoneHeight = Math.max(18, Number(frame?.xAxisLabelZoneHeight) || 0);
     const y0 = h - frame.bottom;
     const yTop = frame.top;
     const xRight = w - frame.right;
+    const labelZoneTop = y0 + Math.max(4, Number(frame?.xAxisLabelTopPad) || 0);
+    const labelZoneBottom = Math.min(h - 2, labelZoneTop + labelZoneHeight);
 
     ctx.strokeStyle = palette.grid;
     ctx.lineWidth = 1;
@@ -175,7 +185,7 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
     ctx.lineTo(x0, y0);
     ctx.lineTo(xRight, y0);
     ctx.stroke();
-    return { x0, y0, yTop, xRight, plotW: xRight - x0, plotH: y0 - yTop };
+    return { x0, y0, yTop, xRight, plotW: xRight - x0, plotH: y0 - yTop, labelZoneTop, labelZoneBottom, labelZoneHeight };
   }
 
   function drawYLabel(ctx, text, frame){
@@ -374,14 +384,23 @@ export function drawReportsCharts(monthRows, dealerRows, tripsOrTimeline, option
         pendingDraws.push({ tx, i, lines: [text], multiline: false, text, textHeight: Math.max(10, Math.ceil(Number.parseFloat(frame.tickFont) || 11)) });
       });
     }
+    const lineStep = Math.max(10, Math.ceil(Number.parseFloat(frame.tickFont) || 11));
+    const requestedBaseline = Number.isFinite(Number(y)) ? Number(y) : geom.labelZoneTop;
+    const maxLineCount = pendingDraws.reduce((max, draw)=> Math.max(max, Array.isArray(draw.lines) ? draw.lines.length : 1), 1);
+    const zoneTop = Number.isFinite(Number(geom.labelZoneTop)) ? Number(geom.labelZoneTop) : requestedBaseline;
+    const zoneBottom = Number.isFinite(Number(geom.labelZoneBottom)) ? Number(geom.labelZoneBottom) : (requestedBaseline + lineStep);
+    const zoneHeight = Math.max(lineStep, zoneBottom - zoneTop);
+    const contentHeight = maxLineCount * lineStep;
+    const centeredBaseline = zoneTop + Math.max(lineStep, ((zoneHeight - contentHeight) * 0.5) + lineStep);
+    const safeBaseline = Math.max(zoneTop + lineStep, Math.min(zoneBottom - ((maxLineCount - 1) * lineStep), Math.max(requestedBaseline, centeredBaseline)));
     pendingDraws
       .sort((a,b)=> a.i - b.i)
       .forEach((draw)=> {
         if(draw.multiline){
-          draw.lines.forEach((line, lineIdx)=> ctx.fillText(line, draw.tx, y + (lineIdx * draw.textHeight)));
+          draw.lines.forEach((line, lineIdx)=> ctx.fillText(line, draw.tx, safeBaseline + (lineIdx * draw.textHeight)));
           return;
         }
-        ctx.fillText(draw.text, draw.tx, y);
+        ctx.fillText(draw.text, draw.tx, safeBaseline);
       });
   }
 
